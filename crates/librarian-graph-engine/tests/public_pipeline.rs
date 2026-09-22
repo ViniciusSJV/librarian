@@ -1,5 +1,5 @@
-use bibliotecario_core::BibliotecarioFact;
-use bibliotecario_graph_engine::{filesystem::SourceChecks, prepare_query, Evidence, Source};
+use librarian_core::LibrarianFact;
+use librarian_graph_engine::{filesystem::SourceChecks, prepare_query, Evidence, Source};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
 use std::{
@@ -37,8 +37,8 @@ impl Fixture {
                 unknowns: Some(vec!["Synthetic data".into()]),
                 sources: vec![source],
                 facts: vec![
-                    BibliotecarioFact::new("F1", "Inspecao mensal", "S1", 2),
-                    BibliotecarioFact::new("F2", "Registrar resultado", "S1", 3),
+                    LibrarianFact::new("F1", "Inspecao mensal", "S1", 2),
+                    LibrarianFact::new("F2", "Registrar resultado", "S1", 3),
                 ],
             },
         }

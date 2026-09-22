@@ -1,4 +1,4 @@
-use bibliotecario_core::{BibliotecarioFact, EvidenceBundle, Selection, SourceRef};
+use librarian_core::{EvidenceBundle, LibrarianFact, Selection, SourceRef};
 
 fn fixture() -> EvidenceBundle {
     EvidenceBundle::new(
@@ -7,7 +7,7 @@ fn fixture() -> EvidenceBundle {
             path: "manual.txt".into(),
             lines: vec!["instruction".into()],
         },
-        vec![BibliotecarioFact::new("F", "instruction", "S", 1)],
+        vec![LibrarianFact::new("F", "instruction", "S", 1)],
         Selection::new(vec!["F"], 1),
     )
 }

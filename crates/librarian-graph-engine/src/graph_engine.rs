@@ -10,9 +10,9 @@ pub mod filesystem;
 #[path = "graph_engine/metrics.rs"]
 pub mod metrics;
 
-pub use bibliotecario_core::BibliotecarioFact as Fact;
-pub type Source = bibliotecario_core::Source<ExecutionRecord, CaptureLink>;
-pub type Evidence = bibliotecario_core::Evidence<Source>;
+pub use librarian_core::LibrarianFact as Fact;
+pub type Source = librarian_core::Source<ExecutionRecord, CaptureLink>;
+pub type Evidence = librarian_core::Evidence<Source>;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Review {
@@ -521,9 +521,8 @@ mod tests {
     }
 
     #[test]
-    fn graph_fact_accepts_bibliotecario_core_fact() {
-        let core_fact =
-            bibliotecario_core::BibliotecarioFact::new("F-1", "a generic fact", "source-1", 4);
+    fn graph_fact_accepts_librarian_core_fact() {
+        let core_fact = librarian_core::LibrarianFact::new("F-1", "a generic fact", "source-1", 4);
         let graph_fact: Fact = core_fact.into();
 
         assert_eq!(graph_fact.id, "F-1");

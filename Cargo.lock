@@ -3,23 +3,6 @@
 version = 4
 
 [[package]]
-name = "bibliotecario-core"
-version = "0.1.0"
-dependencies = [
- "serde",
-]
-
-[[package]]
-name = "bibliotecario-graph-engine"
-version = "0.1.0"
-dependencies = [
- "bibliotecario-core",
- "serde",
- "serde_json",
- "sha2",
-]
-
-[[package]]
 name = "block-buffer"
 version = "0.10.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -86,11 +69,28 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3eaf3ede3fee6db1a4c2ee091bf8a8b4dccdc6d17f656fb07896ee72867612f2"
 
 [[package]]
+name = "librarian-core"
+version = "0.1.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "librarian-graph-engine"
+version = "0.1.0"
+dependencies = [
+ "librarian-core",
+ "serde",
+ "serde_json",
+ "sha2",
+]
+
+[[package]]
 name = "maintenance-example"
 version = "0.1.0"
 dependencies = [
- "bibliotecario-core",
- "bibliotecario-graph-engine",
+ "librarian-core",
+ "librarian-graph-engine",
  "serde_json",
  "sha2",
 ]

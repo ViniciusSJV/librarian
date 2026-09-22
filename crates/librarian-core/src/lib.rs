@@ -17,8 +17,8 @@ mod tests {
             lines: vec!["a".into(), "b".into(), "c".into()],
         };
         let facts = vec![
-            BibliotecarioFact::new("F-2", "second fact", "source-1", 2),
-            BibliotecarioFact::new("F-1", "first fact", "source-1", 1),
+            LibrarianFact::new("F-2", "second fact", "source-1", 2),
+            LibrarianFact::new("F-1", "first fact", "source-1", 1),
         ];
         let selection = Selection::new(vec!["F-2", "F-1"], 1);
         let bundle = EvidenceBundle::new(source, facts.clone(), selection.clone());
@@ -33,10 +33,10 @@ mod tests {
 
     #[test]
     fn validation_rejects_empty_fact_and_empty_selection() {
-        let valid = BibliotecarioFact::new("F-1", "statement", "source-1", 1);
+        let valid = LibrarianFact::new("F-1", "statement", "source-1", 1);
         assert!(valid.validate().ok);
 
-        let invalid = BibliotecarioFact::new("", "statement", "source-1", 1);
+        let invalid = LibrarianFact::new("", "statement", "source-1", 1);
         assert!(!invalid.validate().ok);
 
         let empty_selection = Selection::new(vec![], 0);
@@ -65,7 +65,7 @@ pub struct SourceRef {
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
-pub struct BibliotecarioFact {
+pub struct LibrarianFact {
     pub authorship: Option<String>,
     pub id: String,
     pub statement: String,
@@ -73,7 +73,7 @@ pub struct BibliotecarioFact {
     pub line: usize,
 }
 
-impl BibliotecarioFact {
+impl LibrarianFact {
     pub fn new(id: &str, statement: &str, source_id: &str, line: usize) -> Self {
         Self {
             authorship: None,
@@ -156,12 +156,12 @@ impl ValidationOutcome {
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
 pub struct EvidenceBundle {
     pub source: SourceRef,
-    pub facts: Vec<BibliotecarioFact>,
+    pub facts: Vec<LibrarianFact>,
     pub selection: Selection,
 }
 
 impl EvidenceBundle {
-    pub fn new(source: SourceRef, facts: Vec<BibliotecarioFact>, selection: Selection) -> Self {
+    pub fn new(source: SourceRef, facts: Vec<LibrarianFact>, selection: Selection) -> Self {
         Self {
             source,
             facts,
@@ -251,5 +251,8 @@ pub struct Evidence<S = Source> {
     pub unknowns: Option<Vec<String>>,
     pub id: Option<String>,
     pub sources: Vec<S>,
-    pub facts: Vec<BibliotecarioFact>,
+    pub facts: Vec<LibrarianFact>,
 }
+
+/// Compatibility name for consumers predating the Librarian rename.
+pub type BibliotecarioFact = LibrarianFact;

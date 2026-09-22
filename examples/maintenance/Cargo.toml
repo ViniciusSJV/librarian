@@ -5,7 +5,7 @@ edition = "2021"
 publish = false
 
 [dependencies]
-bibliotecario-core = { path = "../../crates/bibliotecario-core" }
-bibliotecario-graph-engine = { path = "../../crates/bibliotecario-graph-engine" }
+librarian-core = { path = "../../crates/librarian-core" }
+librarian-graph-engine = { path = "../../crates/librarian-graph-engine" }
 serde_json = "1"
 sha2 = "0.10"

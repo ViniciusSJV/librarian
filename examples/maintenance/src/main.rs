@@ -1,6 +1,6 @@
 //! Synthetic maintenance catalogue: no renderer, LLM or database dependency.
-use bibliotecario_core::BibliotecarioFact;
-use bibliotecario_graph_engine::{filesystem::SourceChecks, prepare_query, Evidence, Source};
+use librarian_core::LibrarianFact;
+use librarian_graph_engine::{filesystem::SourceChecks, prepare_query, Evidence, Source};
 use sha2::{Digest, Sha256};
 use std::{fs, path::Path};
 
@@ -26,13 +26,13 @@ fn run(source_path: &Path, destination: &Path) -> Result<(), String> {
         ]),
         sources: vec![source],
         facts: vec![
-            BibliotecarioFact::new(
+            LibrarianFact::new(
                 "F_INSPECTION",
                 "O manual registra inspeção mensal.",
                 "MANUAL_V1",
                 2,
             ),
-            BibliotecarioFact::new(
+            LibrarianFact::new(
                 "F_RECORD",
                 "O manual pede registro da inspeção.",
                 "MANUAL_V1",

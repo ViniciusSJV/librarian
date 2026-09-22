@@ -1,17 +1,17 @@
-# Bibliotecário
+# Librarian
 
 Bibliotecas Rust para catalogar fatos com fontes, conferir referências e preparar
 consultas rastreáveis. Extraídas do projeto renderer; não dependem dele.
 
 ```text
-consumidor → bibliotecario-core (contratos)
-          → bibliotecario-graph-engine (conferência, seleção, consulta e bundle)
+consumidor → librarian-core (contratos)
+          → librarian-graph-engine (conferência, seleção, consulta e bundle)
                                               ↓
                                   LLM do consumidor, se necessário
 ```
 
-- `bibliotecario-core`: fato compartilhado, fonte com metadados genéricos e dossiê.
-- `bibliotecario-graph-engine`: metadados de execução/captura, validação, janelas,
+- `librarian-core`: fato compartilhado, fonte com metadados genéricos e dossiê.
+- `librarian-graph-engine`: metadados de execução/captura, validação, janelas,
   seleção ordenada, exportação e conferência local de arquivos.
 - `maintenance-example`: consumidor de outro domínio com dados fictícios.
 
@@ -30,8 +30,8 @@ caminho local novo. Nenhum renderer, banco ou servidor LLM é necessário.
 ## API
 
 ```rust,ignore
-let mut checks = bibliotecario_graph_engine::filesystem::SourceChecks::default();
-let prepared = bibliotecario_graph_engine::prepare_query(
+let mut checks = librarian_graph_engine::filesystem::SourceChecks::default();
+let prepared = librarian_graph_engine::prepare_query(
     &dossier_json, Some(&question), &["F1"], 2,
     |source| checks.validate(source),
 )?;
@@ -52,10 +52,10 @@ que não deve ser tratado como bundle concluído nem sobrescrito numa nova tenta
 
 ## Contratos e limites
 
-`bibliotecario_graph_engine::Fact` é o próprio `BibliotecarioFact` do core.
+`librarian_graph_engine::Fact` é o próprio `LibrarianFact` do core.
 `Source` especializa o contrato genérico do core com `ExecutionRecord` e
 `CaptureLink`; `Evidence` também é compartilhado. A autoria opcional faz parte do
-fato. Os tipos antigos `SourceRef`/`EvidenceBundle`/`QueryExport` são uma fachada
+fato. `BibliotecarioFact` permanece como alias de compatibilidade para `LibrarianFact`. Os tipos antigos `SourceRef`/`EvidenceBundle`/`QueryExport` são uma fachada
 de compatibilidade de fonte única; novos consumidores devem usar o dossiê
 multi-fonte e `prepare_query`. `EvidenceBundle::to_query` apenas serializa seus
 dados: valide explicitamente ou use o pipeline novo.
@@ -76,7 +76,7 @@ arquivo pela API do Graph Engine, seleciona fatos e publica um bundle. Os testes
 públicos verificam referências inválidas, ordem, fontes alteradas fora da seleção,
 preservação do bundle anterior e recusa de sobrescrita.
 
-Isso prova o fluxo Bibliotecário → Graph Engine → bundle fora do renderer.
+Isso prova o fluxo Librarian → Graph Engine → bundle fora do renderer.
 Não prova uma avaliação semântica por LLM no domínio de manutenção; nenhuma
 consulta real foi feita neste exemplo.
 
