@@ -4,6 +4,9 @@ O Librarian é um bibliotecário de evidências: organiza informações, conserv
 fontes e prepara consultas que permitem conferir de onde veio cada afirmação.
 É desenvolvido em Rust para ser usado por aplicações de diferentes domínios.
 
+> *“Condensar fatos a partir de vapores de nuances.”*  
+> — *Snow Crash*, Neal Stephenson
+
 ## Motivação
 
 A inspiração vem do Bibliotecário de *Snow Crash*, de Neal Stephenson. A ideia que
