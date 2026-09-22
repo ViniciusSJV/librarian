@@ -1,0 +1,11 @@
+[package]
+name = "maintenance-example"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+bibliotecario-core = { path = "../../crates/bibliotecario-core" }
+bibliotecario-graph-engine = { path = "../../crates/bibliotecario-graph-engine" }
+serde_json = "1"
+sha2 = "0.10"

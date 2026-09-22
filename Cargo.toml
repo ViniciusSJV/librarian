@@ -1,0 +1,3 @@
+[workspace]
+members = ["crates/bibliotecario-core", "crates/bibliotecario-graph-engine", "examples/maintenance"]
+resolver = "2"

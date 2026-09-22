@@ -1,0 +1,3 @@
+Manual fictício de manutenção — versão 1
+Inspecionar o equipamento mensalmente.
+Registrar a data e o resultado da inspeção.
