@@ -1,33 +1,80 @@
 # Librarian
 
-Bibliotecas Rust para catalogar fatos com fontes, conferir referências e preparar
-consultas rastreáveis. Extraídas do projeto renderer; não dependem dele.
+O Librarian é um bibliotecário de evidências: organiza informações, conserva suas
+fontes e prepara consultas que permitem conferir de onde veio cada afirmação.
+É desenvolvido em Rust para ser usado por aplicações de diferentes domínios.
+
+## Motivação
+
+A inspiração vem do Bibliotecário de *Snow Crash*, de Neal Stephenson. A ideia que
+motiva o projeto é construir um assistente que ajude a encontrar e relacionar
+informações sem perder o caminho até suas fontes.
+
+Para isso, o Librarian separa o acervo, a conferência das evidências e a explicação.
+Uma resposta convincente não deve substituir uma verificação, e uma informação
+não deve perder sua origem ao ser usada em uma conversa.
+
+## Princípio dos engines
+
+> **Graph Engine → testa sem explicar.**
+>
+> **LLM Engine → explica sem interpretar.**
+
+O **Graph Engine** aplica verificações determinísticas: confere referências,
+linhas, hashes e registros de captura, seleciona evidências e prepara a consulta.
+“Testar” aqui significa verificar esses vínculos e critérios explícitos; não
+significa provar automaticamente que uma afirmação é verdadeira.
+
+O **LLM Engine** tem o papel de apresentar as evidências em linguagem natural.
+“Explicar sem interpretar” é a diretriz de não acrescentar conclusões próprias,
+preencher lacunas ou transformar hipóteses em fatos. A explicação deve citar suas
+fontes e conservar os limites do material recebido. Essa diretriz precisa ser
+avaliada nas respostas; não é uma garantia automática de um modelo de linguagem.
+
+O acervo pertence ao **Librarian**. A conferência pertence ao **Graph Engine**.
+A explicação cabe ao **LLM Engine**, e sua avaliação permanece uma etapa separada.
 
 ```text
-consumidor → librarian-core (contratos)
-          → librarian-graph-engine (conferência, seleção, consulta e bundle)
-                                              ↓
-                                  LLM do consumidor, se necessário
+Fontes → Librarian → Graph Engine → LLM Engine → avaliação
+         organiza    testa          explica
 ```
 
-- `librarian-core`: fato compartilhado, fonte com metadados genéricos e dossiê.
-- `librarian-graph-engine`: metadados de execução/captura, validação, janelas,
-  seleção ordenada, exportação e conferência local de arquivos.
-- `maintenance-example`: consumidor de outro domínio com dados fictícios.
+## O que existe hoje
 
-## Executar
+- **`librarian-core`**: contratos de fatos, fontes, seleção e dossiês.
+- **`librarian-graph-engine`**: conferência de evidências, seleção ordenada,
+  contexto por linhas e exportação de consultas com registros de origem.
+- **`maintenance-example`**: exemplo com um manual de manutenção fictício,
+  mostrando o fluxo de cadastro, conferência e exportação.
 
-Na raiz deste repositório:
+O LLM Engine faz parte da arquitetura proposta, mas ainda não é implementado
+como biblioteca neste repositório. O fluxo disponível termina na preparação do
+material que uma aplicação pode enviar a um modelo.
+
+## Como as informações são organizadas
+
+Uma **fonte** contém o texto e seus metadados. Um **fato catalogado** registra uma
+afirmação com referência à fonte e à linha correspondente. Um **dossiê** reúne
+fontes, fatos e lacunas declaradas. Uma **seleção** indica quais fatos serão usados
+na consulta e quanto contexto será incluído.
+
+A exportação gera um **bundle** com o dossiê, a pergunta, a consulta e um registro
+de origem com hashes. Isso permite conferir a correspondência entre os arquivos
+usados e o material preparado para explicação.
+
+## Experimentar
+
+Na raiz do projeto:
 
 ```sh
 cargo test --workspace --locked
-cargo run --locked -p maintenance-example -- examples/maintenance/manual.txt /tmp/maintenance-bundle
+cargo run --locked -p maintenance-example -- examples/maintenance/manual.txt ./maintenance-bundle
 ```
 
-O destino deve ser novo. No Windows, substitua `/tmp/maintenance-bundle` por um
-caminho local novo. Nenhum renderer, banco ou servidor LLM é necessário.
+O diretório de destino deve ser novo. O exemplo usa dados fictícios e não exige
+banco de dados ou servidor LLM.
 
-## API
+## Usar a biblioteca
 
 ```rust,ignore
 let mut checks = librarian_graph_engine::filesystem::SourceChecks::default();
@@ -38,59 +85,21 @@ let prepared = librarian_graph_engine::prepare_query(
 prepared.write_bundle(destination, "dossier.json", "question.txt")?;
 ```
 
-`prepare_query` valida todas as fontes e referências do dossiê, incluindo as não
-selecionadas. O callback faz as verificações de armazenamento e captura; retornar
-`Ok(None)` sem verificar arquivos limita a operação aos dados fornecidos.
-`SourceChecks` verifica caminhos, hashes, linhas e capturas locais. Caminhos
-relativos são resolvidos a partir do diretório atual, como na CLI original.
+`prepare_query` confere todas as fontes e referências do dossiê, inclusive as que
+não foram selecionadas. O callback define a verificação do armazenamento;
+`SourceChecks` oferece a conferência de arquivos e capturas locais. Caminhos
+relativos são resolvidos a partir do diretório atual.
 
-O resultado mantém os bytes originais do dossiê e da pergunta. `write_bundle`
-preserva esses bytes, a consulta e os hashes em um diretório novo. A escrita não
-reconfere fontes: o consumidor deve reconferir antes de um envio posterior.
-`origin.json` é publicado por último; uma falha pode deixar um diretório parcial,
-que não deve ser tratado como bundle concluído nem sobrescrito numa nova tentativa.
+`write_bundle` preserva os bytes preparados em um diretório novo. A publicação de
+`origin.json` conclui a escrita; uma falha pode deixar um diretório parcial.
+Fontes não são reconferidas nessa escrita nem em um envio posterior: a aplicação
+precisa solicitar uma nova conferência quando necessário.
 
-## Contratos e limites
+## Limites
 
-`librarian_graph_engine::Fact` é o próprio `LibrarianFact` do core.
-`Source` especializa o contrato genérico do core com `ExecutionRecord` e
-`CaptureLink`; `Evidence` também é compartilhado. A autoria opcional faz parte do
-fato. `BibliotecarioFact` permanece como alias de compatibilidade para `LibrarianFact`. Os tipos antigos `SourceRef`/`EvidenceBundle`/`QueryExport` são uma fachada
-de compatibilidade de fonte única; novos consumidores devem usar o dossiê
-multi-fonte e `prepare_query`. `EvidenceBundle::to_query` apenas serializa seus
-dados: valide explicitamente ou use o pipeline novo.
-
-IDs são locais ao dossiê. Caminho e hash identificam uma edição observada, mas
-ainda não há um catálogo persistente de versões ou IDs globais. Essa decisão deve
-preceder a implementação do banco de grafo.
-
-Referência válida não prova que a afirmação é verdadeira. Hashes conferem bytes,
-não autenticam autoria, computador, execução ou código compilado. Fatos são
-fornecidos pelos adapters; não há extração automática nem promoção de resposta
-LLM a fato. Este Graph Engine ainda não é um banco de grafos.
-
-## Prova em outro domínio
-
-O exemplo de manutenção cria fontes e fatos pelos contratos do core, confere o
-arquivo pela API do Graph Engine, seleciona fatos e publica um bundle. Os testes
-públicos verificam referências inválidas, ordem, fontes alteradas fora da seleção,
-preservação do bundle anterior e recusa de sobrescrita.
-
-Isso prova o fluxo Librarian → Graph Engine → bundle fora do renderer.
-Não prova uma avaliação semântica por LLM no domínio de manutenção; nenhuma
-consulta real foi feita neste exemplo.
-
-## Origem e próximos passos
-
-Origem: `ViniciusSJV/renderer`, base `68dde8f` e alterações locais posteriores
-revisadas em 22/09/2026. Este repositório inicia um histórico próprio; não contém
-ZIPs de consultas, cenas ou dados privados do consumidor.
-
-O renderer permanece consumidor de referência. O LLM Engine continua nele e
-será extraído posteriormente. A integração planejada deve distinguir provedor,
-endpoint e modelo; Qwen/DeepSeek via Ollama serão escolhas de configuração,
-enquanto APIs hospedadas exigirão adapters e validação próprios.
-
-Depois: definir contrato de armazenamento e versionamento, implementar um adapter
-de banco de grafo e comparar sua consulta com o pipeline em arquivos. Não há banco
-implementado nesta versão.
+- Uma referência válida não comprova a verdade da afirmação.
+- Hashes conferem bytes; não autenticam autoria ou execução.
+- Os fatos são fornecidos pela aplicação; não há extração automática de evidências.
+- IDs são locais ao dossiê; ainda não existe um catálogo persistente de versões.
+- O Graph Engine não inclui um banco de grafos nesta versão.
+- Respostas de um LLM não são promovidas automaticamente a fatos do acervo.
