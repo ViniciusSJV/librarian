@@ -70,6 +70,9 @@ pub fn validate_source_ids(sources: &[Source]) -> Result<(), String> {
     let mut seen = HashSet::new();
 
     for source in sources {
+        if source.id.trim().is_empty() {
+            return Err("source.id must not be empty".into());
+        }
         if !seen.insert(source.id.as_str()) {
             return Err(format!("Fonte duplicada: \"{}\".", source.id));
         }
@@ -82,6 +85,10 @@ pub fn validate_fact_ids(facts: &[Fact]) -> Result<(), String> {
     let mut seen = HashSet::new();
 
     for fact in facts {
+        let outcome = fact.validate();
+        if !outcome.ok {
+            return Err(outcome.reason.unwrap_or_default());
+        }
         if !seen.insert(fact.id.as_str()) {
             return Err(format!("Fato duplicado: \"{}\".", fact.id));
         }

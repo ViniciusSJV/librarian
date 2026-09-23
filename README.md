@@ -1,5 +1,8 @@
 # Librarian
 
+Comece pelo [TESTME](TESTME.md) para executar uma consulta e pelo
+[fluxograma](WORKFLOW.md) para entender as regras e os limites.
+
 O Librarian é um bibliotecário de evidências: organiza informações, conserva suas
 fontes e prepara consultas que permitem conferir de onde veio cada afirmação.
 É desenvolvido em Rust para ser usado por aplicações de diferentes domínios.
@@ -77,6 +80,9 @@ cargo run --locked -p maintenance-example -- examples/maintenance/manual.txt ./m
 O diretório de destino deve ser novo. O exemplo usa dados fictícios e não exige
 banco de dados ou servidor LLM.
 
+Veja o [roteiro de consulta de uma fonte](examples/maintenance/README.md) para
+entender o cadastro, inspecionar o bundle e selecionar novamente um único fato.
+
 ## Usar a biblioteca
 
 ```rust,ignore
@@ -99,6 +105,14 @@ Fontes não são reconferidas nessa escrita nem em um envio posterior: a aplica�
 precisa solicitar uma nova conferência quando necessário.
 
 ## Limites
+
+Os [critérios da versão 0.1 e a auditoria da API](V0.1.md) delimitam o fechamento
+determinístico. Para exportar um dossiê de outro projeto, execute a partir da
+base dos caminhos das fontes (o destino deve ser novo):
+
+```sh
+cargo run --manifest-path /caminho/Librarian/Cargo.toml --locked -p librarian-graph-engine --example export -- dossier.json question.txt bundle-novo 2 F1 F2
+```
 
 - Uma referência válida não comprova a verdade da afirmação.
 - Hashes conferem bytes; não autenticam autoria ou execução.

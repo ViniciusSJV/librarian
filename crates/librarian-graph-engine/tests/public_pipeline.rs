@@ -153,3 +153,53 @@ fn checks_each_source_once_and_requires_question_for_bundle() {
     assert!(prepared.write_bundle(&destination, "d", "q").is_err());
     assert!(!destination.exists());
 }
+
+#[test]
+fn rejects_empty_fields_even_on_unselected_facts() {
+    for field in ["id", "statement", "source_id"] {
+        let f = Fixture::new();
+        let mut dossier: Value = serde_json::from_str(&f.dossier()).unwrap();
+        dossier["facts"][1][field] = json!(" \t");
+        let error = prepare_query(&dossier.to_string(), Some("Question"), &["F1"], 0, |_| {
+            Ok(None)
+        })
+        .unwrap_err();
+        assert!(
+            error.contains(&format!("fact.{field} must not be empty")),
+            "{error}"
+        );
+    }
+    let mut f = Fixture::new();
+    f.evidence.sources[0].id = " ".into();
+    f.evidence
+        .facts
+        .iter_mut()
+        .for_each(|fact| fact.source_id = " ".into());
+    assert!(prepare_query(&f.dossier(), None, &["F1"], 0, |_| Ok(None))
+        .unwrap_err()
+        .contains("source.id must not be empty"));
+}
+
+#[test]
+fn public_boundary_rejects_duplicate_sources_empty_question_and_callback_failure() {
+    let mut f = Fixture::new();
+    f.evidence.sources.push(f.evidence.sources[0].clone());
+    assert!(prepare_query(&f.dossier(), None, &["F1"], 0, |_| Ok(None)).is_err());
+    f.evidence.sources.pop();
+    assert!(prepare_query(&f.dossier(), Some(" \n"), &["F1"], 0, |_| Ok(None)).is_err());
+    assert!(prepare_query(&f.dossier(), Some("Q"), &["F1"], 0, |_| Err(
+        "storage unavailable".into()
+    ))
+    .unwrap_err()
+    .contains("storage unavailable"));
+    let prepared =
+        prepare_query(&f.dossier(), Some("Q"), &["F1"], usize::MAX, |_| Ok(None)).unwrap();
+    let query: Value = serde_json::from_str(prepared.query_json().unwrap()).unwrap();
+    assert_eq!(
+        query["evidence"]["source"]["context"]["lines"]
+            .as_array()
+            .unwrap()
+            .len(),
+        3
+    );
+}
