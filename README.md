@@ -1,15 +1,30 @@
 # Librarian
 
-Comece pelo [TESTME](TESTME.md) para executar uma consulta e pelo
-[fluxograma](WORKFLOW.md) para entender as regras e os limites.
+O Librarian organiza fontes e prepara evidências rastreáveis. A implementação
+atual extrai código Rust em snapshots/símbolos/trechos, confere hashes e oferece
+busca lexical com relações sintáticas em memória, sem banco ou LLM.
 
-O Librarian é um bibliotecário de evidências: organiza informações, conserva suas
-fontes e prepara consultas que permitem conferir de onde veio cada afirmação.
-É desenvolvido em Rust para ser usado por aplicações de diferentes domínios.
+## Comece por uma única trilha
 
-> *“Condensar fatos a partir de vapores de nuances.”*  
-> — *Snow Crash*, Neal Stephenson
+Siga o **[TESTME do renderer](../renderer/TESTME.md)**: criar acervo → pergunta →
+léxico → ranking → grafo → inspecionar seleção → prompt → servidor/Modelfile →
+API Ollama → avaliação. O [TESTME local](TESTME.md) é apenas uma entrada para o
+mesmo documento, não uma segunda sequência de comandos. Os links entre projetos
+pressupõem checkouts locais lado a lado.
 
+O roteiro fica no renderer porque ele fornece o projeto estudado, o vocabulário,
+o Modelfile e o cliente HTTP. O código de ingestão/busca pertence ao Librarian e
+pode ser usado em outros projetos Rust. O [WORKFLOW](WORKFLOW.md) mostra os papéis
+dos dois projetos e do Ollama no mesmo fluxo.
+
+Uma tentativa real já teve transporte/hashes conferidos e explicação parcialmente
+correta; avaliação semântica continua separada. Busca → envelope manual → API foi
+exercitado; a ponte automática até PreparedQuery e a biblioteca LLM independente
+permanecem pendentes. A capacidade nova usa o checkout local e não está na release 0.1.0.
+
+Referências técnicas, para consultar quando necessário: [ingestão](crates/librarian-ingest/README.md),
+[léxico e grafo](crates/librarian-ingest/SEARCH.md) e [contrato formal de dossiês](crates/librarian-graph-engine/WORKFLOW-V0.1.md).
+O restante deste README descreve os princípios e a API de fatos/dossiês.
 ## Motivação
 
 A inspiração vem do Bibliotecário de *Snow Crash*, de Neal Stephenson. A ideia que

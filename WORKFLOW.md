@@ -1,99 +1,74 @@
-# Librarian e Graph Engine: fluxo e regras
+# Workflow conjunto: Librarian e seu consumidor
 
-Escopo: implementação local da 0.1. O renderer ainda usa uma revisão Git anterior
-fixa; rejeição de campos vazios adicionada neste fechamento só chega ao consumidor
-quando ele atualizar a dependência. IDs são locais ao dossiê.
-
-```mermaid
-flowchart TD
-    A[Aplicação escolhe fonte e edição] --> B[Librarian: cadastrar texto, metadados, fatos e lacunas]
-    B --> C[Aplicação informa IDs, raio e pergunta opcional]
-    C --> D[Graph Engine: ler JSON e validar todos os IDs e fatos]
-    D --> E[Conferir execução declarada e chamar callback para cada fonte]
-    E --> F[Conferir todas as referências e linhas]
-    F --> G[Selecionar IDs existentes e únicos na ordem pedida]
-    G --> H[Limitar janelas e unir contextos da mesma fonte]
-    H --> I{Pergunta fornecida?}
-    I -->|Não| J[PreparedQuery somente com seleção; sem bundle]
-    I -->|Sim e não vazia| K[PreparedQuery com pergunta, seleção e limites]
-    K --> L{Destino novo e escrita possível?}
-    L -->|Sim| M[Gravar dossiê, pergunta e query]
-    M --> N[Gravar hashes e publicar origin.json por último]
-    N --> O[Bundle pronto para inspeção]
-    D & E & F & G -->|Falha| X[Retornar erro; não preparar bundle]
-    I -->|Pergunta vazia| X
-    L -->|Não| Y[Erro de escrita; pode haver diretório parcial]
-    M & N -->|Falha de I/O| Y
-    O -. Etapa futura .-> P[Rubrica prévia e nova conferência das fontes]
-    P -.-> Q[LLM explica; preservar resposta]
-    Q -.-> R[Avaliação semântica separada; não promover resposta a fato]
-```
-
-## Regras de cada passagem
-
-| Etapa | Regra implementada |
-| --- | --- |
-| Cadastro | `Source` e `Evidence` são contratos públicos; construir/desserializar não valida. Fatos vêm da aplicação. ID do dossiê e metadados são opcionais. |
-| Identidade | IDs de fonte e fato não podem estar vazios nem duplicados em seus respectivos conjuntos. Afirmação e `source_id` não vazios; linha maior que zero. IDs não são normalizados. |
-| Validação integral | Fontes e fatos fora da seleção também são conferidos. O primeiro erro interrompe a preparação. JSON deve corresponder aos tipos; campos extras não são uma garantia de validação. |
-| Referência | `source_id` deve existir e linha deve estar dentro do texto cadastrado, contando a partir de 1. Não verifica sustentação semântica. |
-| Callback | A aplicação define como conferir armazenamento. Um callback que retorna sucesso sem ler arquivos não comprova bytes. `prepare_query` chama o callback uma vez por fonte e reutiliza seu resultado na seleção. |
-| Seleção | Ao menos um ID, todos existentes e sem repetição; preserva ordem pedida. Não há busca semântica pela pergunta. |
-| Contexto | Raio zero é permitido; limites são saturados ao texto. Janelas sobrepostas/adjacentes se unem apenas na mesma fonte. Podem cortar funções ou frases. IDs `CTX` são locais à exportação. |
-| Forma da query | Uma ficha: `evidence.source.context`. Várias: `evidence.selections` e `evidence.contexts`. Preserva todas as lacunas declaradas do dossiê, sem filtrar relevância. |
-| Pergunta | Ausente permite seleção isolada; vazia é rejeitada; bundle exige pergunta. Instruções pedem citação, separação de observações/hipóteses e tratamento das fontes como dados. Não garantem obediência de um LLM. |
-| Exportação | Destino deve ser novo. Preserva dossiê/pergunta recebidos e query serializada; registra seleção, hashes, timestamp e limites. `origin.json` é publicado por último. Sem rollback, snapshot atômico ou nova conferência de fontes na escrita. |
-
-## Callback de arquivos e capturas
+Siga a [trilha única no renderer](../renderer/TESTME.md), também indicada no
+[TESTME local](TESTME.md). O Librarian não depende do renderer para extrair/buscar;
+o consumidor é necessário neste roteiro para Modelfile e transporte HTTP.
 
 ```mermaid
 flowchart TD
-    A[SourceChecks por operação] --> B{path e sha256?}
-    B -->|Ambos ausentes| C[Fonte inline: sem conferência de arquivo]
-    B -->|Só um presente| X[Erro]
-    B -->|Ambos presentes| D[Ler arquivo; conferir SHA-256, UTF-8 e todas as linhas]
-    D --> E{Há capture?}
+    subgraph R[Renderer: consumidor e condução da consulta]
+        A[Código Rust e configuração das fontes]
+        Q[Pergunta e vocabulário português-inglês]
+        G[Inspecionar termos, trechos e relações recuperados]
+        H[Escolher E1 e conferir contra snapshot]
+        P[Query, prompt e critérios prévios]
+        I[prepare_ollama e send_ollama]
+        J[Preservar request, retorno bruto, texto e estado]
+        K[Conferir hashes e avaliar a explicação]
+    end
+    subgraph L[Librarian: capacidade reutilizável, sem banco ou LLM]
+        B[Extrair fontes, símbolos, trechos e snapshots]
+        C[Conferir acervo e carregar catálogo em memória]
+        D[Derivar relações sintáticas com procedência]
+        T[Normalizar pergunta e expandir pelo léxico]
+        E[Ranquear símbolos candidatos]
+        F[Expandir vizinhança limitada do primeiro resultado]
+    end
+    subgraph O[Ollama: servidor e inferência local]
+        S[Iniciar servidor]
+        M[Obter Qwen e aplicar Modelfile ao renderer-analyst]
+        N[Receber POST api/generate e gerar resposta]
+    end
+    A --> B --> C --> D
+    Q --> T --> E
     C --> E
-    E -->|Não| OK[Conferência concluída]
-    E -->|Sim| F[Exigir test_run, sem execution legado, path e hash]
-    F --> G[Conferir hash do registro e run_id]
-    G --> H[Validar formato 2, saída e fontes da captura]
-    H --> I[Conferir vínculo da fonte com saida.bin]
-    I --> OK
-    D & F & G & H & I -->|Divergência| X
+    E --> F
+    D --> F
+    F --> G --> H --> P --> I
+    S --> M --> N
+    I --> N --> J --> K
 ```
 
-- Arquivos relativos são resolvidos pelo diretório atual. O exemplo `export`
-  exige path/hash, embora a biblioteca permita fontes inline.
-- Captura exige `schema_version=2`, run_id não vazio, argv com executável,
-  cwd absoluto, datas não vazias e ambiente não vazio. Datas/ambiente recebem
-  conferência básica, sem autenticação.
-- Resultado aceita `exited` com código não negativo, `signaled` com sinal positivo
-  e código nulo, ou `start_failed` com erro não vazio e código nulo. Campos
-  incompatíveis são rejeitados. Código diferente de zero não invalida uma captura
-  consistente e não significa teste aprovado.
-- Saída exige `saida.bin`, `stdout+stderr`, tamanho e SHA-256 correspondentes.
-  Hashes de captura têm 64 caracteres hexadecimais minúsculos.
-- Fontes capturadas exigem caminho consistente com cwd e hash anterior válido.
-  `equal`/`different` devem concordar com hashes anteriores/posteriores e arquivo
-  atual; `unavailable` exige erro posterior sem hash posterior e não confere o
-  arquivo atual. Indisponibilidade histórica não fica comprovada.
-- O vínculo de captura confere também caminho efetivo e hash da saída. O cache
-  por caminho/hash/run_id evita repetir a captura, mantendo o vínculo individual
-  de cada fonte. Use um novo `SourceChecks` em cada operação.
+## Como ler o fluxo
 
-## Caminhos opcionais e compatibilidade
+1. O consumidor fornece arquivos/configuração; Librarian preserva bytes e confere
+   o acervo. O grafo registra pertencimento, tipos escritos, chamadas observadas e
+   candidatos por nome, com intervalos/hashes de origem.
+2. A pergunta é normalizada/expandida por vocabulário explícito. O ranking encontra
+   símbolos; depois o grafo amplia a vizinhança do primeiro resultado. Não há
+   resolução de tipos/chamadas por compilador nem inferência de ligações semânticas.
+3. O usuário inspeciona termos, expansões, trechos, relações e cortes. `graph.json`
+   é uma exportação; `search` deriva seu grafo em memória dos snapshots, sem carregar
+   essa exportação como banco. Sem candidato não há evidência lexical para enviar.
+4. A trilha escolhe conscientemente o primeiro trecho completo (E1), confere seus
+   bytes e prepara query/prompt. **O grafo inspecionado não é enviado nesse envelope
+   compacto.** Outros trechos/relações exigem seleção explícita e orçamento de contexto.
+5. Só então inicia/configura Ollama, aplica o Modelfile ao nome `renderer-analyst`
+   e envia a consulta. Qwen é o modelo base, Ollama é o servidor, Modelfile é a
+   configuração. Editar o arquivo não aplica configuração sem `ollama create`.
+6. O consumidor preserva tentativa e avalia a resposta. `completed` é conclusão de
+   transporte. Não promove resposta, hipótese ou relação candidata a fato do acervo.
 
-| Recurso | Alcance |
-| --- | --- |
-| `execution` legado | Exige `kind=test_run`; compara comando, início, fim e código com campos únicos no cabeçalho até a primeira linha vazia. ID e semântica dos horários não são autenticados. |
-| Metadados exportados | Código Rust não recebe alegação `executed`. Conferência de captura substitui os campos legados de execução na seleção. Autoria, kind e git_commit continuam declarações. |
-| Parecer `validate_review` | Confere fato existente, afirmação original, referência e trecho exato. Não aprova veredito, justificativa ou afirmação avaliada. Não é etapa automática de `prepare_query`. |
-| Core legado `EvidenceBundle` | Uma fonte; valida identidade/caminho, fatos não vazios, referências, seleção e raio positivo. Difere do raio zero permitido no Graph Engine. `to_query` não chama validação automaticamente. |
-| Helpers de baixo nível | `query_json`, `bundle::write` e helpers de seleção não substituem validação integral. Use `prepare_query` + `write_bundle` como caminho recomendado. |
-| Métricas | `BIBLIOTECARIO_METRICS=1` habilita contagens instrumentadas; emissão depende do consumidor. São chamadas/bytes lógicos, não I/O físico, benchmark ou avaliação semântica. |
+## Fronteira atual
 
-O adapter do renderer acrescenta cadastro por edição Git e recálculo de amostras;
-isso não é uma capacidade automática do Graph Engine. Não há banco, extração de
-fatos, autenticação de execução ou biblioteca LLM neste fluxo. Uma referência
-válida não prova a afirmação; hashes não autenticam execução.
+O cliente HTTP pertence ao renderer e não reconfere fontes no envio; registra
+`evidence_rechecked=false`. Conferência manual anterior e hashes dentro da query
+não são a integração automatizada `dossier_origin`/`selection` do cliente.
+O envelope deste roteiro não é um bundle `PreparedQuery`. A ponte automática
+da busca ao dossiê/bundle e a biblioteca LLM independente continuam pendentes.
+
+A tentativa real `manual-001/ollama-01` teve HTTP 200 e hashes conferidos, com
+avaliação retrospectiva parcialmente correta. O roteiro atual acrescenta critérios
+prévios; essa condição não é atribuída retroativamente à tentativa preservada.
+A [referência formal de dossiês 0.1](crates/librarian-graph-engine/WORKFLOW-V0.1.md)
+preserva as regras de PreparedQuery como documentação técnica separada.
