@@ -68,6 +68,52 @@ O checker não identifica inferência disfarçada em FACT, não valida premissas
 planos semanticamente, nem decide completude/contradições/atomicidade das frases.
 Não deve ser usado como selo de verdade ou autorização para executar código.
 
+## Perfil opcional de localização
+
+`Context.require_location` é false quando ausente, mantendo a leitura dos
+contextos e respostas anteriores. Com true, a query exige o campo `location`
+(objeto ou null) no schema. O checker exige objeto em cada FACT; as outras
+categorias não podem declarar localização. Uma LACUNA sem localização continua
+possível quando a evidência é insuficiente; sua pertinência continua pendente.
+
+O consumidor pode fornecer `symbols` em cada evidência (lista vazia quando
+ausente). Exemplo do perfil usado na série 05:
+
+```json
+{"name":"ray_from_pixel","declaration_line":75,"name_column":8,"end_line":89}
+```
+
+`name_column` conta caracteres Unicode (valores escalares), com base 1, na linha
+da declaração do excerpt. O verificador confere o nome literal nessa posição,
+identidade única por nome/linha e limites dentro da evidência. **Esses metadados
+são fornecidos pelo consumidor**: isso não analisa a sintaxe nem prova que o
+intervalo é uma função ou que seu escopo está correto. O consumidor deve obtê-los
+de uma fonte conferida. Na série 05 houve inspeção manual do trecho preservado;
+a integração automática com símbolos do ingest ainda não foi feita.
+
+Cada FACT do perfil inclui, por exemplo:
+
+```json
+{"evidence_id":"E1","path":"src/camera.rs","symbol_name":"ray_from_pixel","declaration_line":75,"operation_start_line":86,"operation_end_line":86}
+```
+
+O checker resolve evidence_id/caminho/nome/declaração contra o contexto, confere
+se a operação está dentro do símbolo e exige citações cobrindo a declaração e
+todo o intervalo da operação. Uma citação pode cobrir ambos; cada quote continua
+sujeito à igualdade literal. Localizações fornecidas são conferidas mesmo quando
+o perfil não é obrigatório. A função `response_schema(policy)` mantém o schema
+básico; `query(context, question)` o estende quando o perfil está habilitado.
+
+Não há nome, caminho, sintaxe de linguagem ou linha esperada embutidos no checker.
+Os metadados não pré-selecionam a operação. Uma operação corretamente citada
+pode não responder à pergunta: `semantic_status=pending` e `accepted=false`
+continuam invariáveis. Tampouco se comparam automaticamente as frases livres
+aos campos estruturados. Este é um perfil aditivo experimental da versão 1.
+
+A [série 05](../../experiments/claims-camera-20260928-05/README.md) identificou
+nome e linhas corretos em três respostas, mas todas foram rejeitadas por falta
+da citação da declaração (`location_declaration_not_cited`).
+
 ## CLI e preservação
 
 Na raiz do Librarian, com destinos novos:

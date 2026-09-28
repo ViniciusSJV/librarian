@@ -1,0 +1,109 @@
+{
+    "limitation":  "Repeated identical configuration, no independent generalization evidence; metadata manually supplied, no syntax verification",
+    "schema_version":  1,
+    "case_accepted":  false,
+    "excerpt_and_question_unchanged":  true,
+    "attempts":  [
+                     {
+                         "issues":  [
+                                        {
+                                            "claim_id":  "C1",
+                                            "code":  "location_declaration_not_cited"
+                                        }
+                                    ],
+                         "reason":  "Missing declaration citation required by pre-registered protocol",
+                         "review_method":  "Assistant inspection of original JSON against E1 and protocol-before.md",
+                         "mechanical_status":  "rejected",
+                         "response_sha256":  "eb1b66e7d1dbe85958f39caa48feecf402eb1ae5126dba847bc6ca0ba747c3aa",
+                         "exact_operation_citation":  true,
+                         "unsupported_geometry_or_extra_categories_observed":  false,
+                         "declaration_citation_present":  false,
+                         "attempt":  1,
+                         "transport":  "completed",
+                         "requested_schema_verified":  true,
+                         "original_bytes_and_hashes_verified":  true,
+                         "decision":  "not_accepted",
+                         "symbol_and_lines_correct":  true
+                     },
+                     {
+                         "issues":  [
+                                        {
+                                            "claim_id":  "C1",
+                                            "code":  "location_declaration_not_cited"
+                                        }
+                                    ],
+                         "reason":  "Missing declaration citation required by pre-registered protocol",
+                         "review_method":  "Assistant inspection of original JSON against E1 and protocol-before.md",
+                         "mechanical_status":  "rejected",
+                         "response_sha256":  "eb1b66e7d1dbe85958f39caa48feecf402eb1ae5126dba847bc6ca0ba747c3aa",
+                         "exact_operation_citation":  true,
+                         "unsupported_geometry_or_extra_categories_observed":  false,
+                         "declaration_citation_present":  false,
+                         "attempt":  2,
+                         "transport":  "completed",
+                         "requested_schema_verified":  true,
+                         "original_bytes_and_hashes_verified":  true,
+                         "decision":  "not_accepted",
+                         "symbol_and_lines_correct":  true
+                     },
+                     {
+                         "issues":  [
+                                        {
+                                            "claim_id":  "C1",
+                                            "code":  "location_declaration_not_cited"
+                                        }
+                                    ],
+                         "reason":  "Missing declaration citation required by pre-registered protocol",
+                         "review_method":  "Assistant inspection of original JSON against E1 and protocol-before.md",
+                         "mechanical_status":  "rejected",
+                         "response_sha256":  "eb1b66e7d1dbe85958f39caa48feecf402eb1ae5126dba847bc6ca0ba747c3aa",
+                         "exact_operation_citation":  true,
+                         "unsupported_geometry_or_extra_categories_observed":  false,
+                         "declaration_citation_present":  false,
+                         "attempt":  3,
+                         "transport":  "completed",
+                         "requested_schema_verified":  true,
+                         "original_bytes_and_hashes_verified":  true,
+                         "decision":  "not_accepted",
+                         "symbol_and_lines_correct":  true
+                     }
+                 ],
+    "evaluated_utc":  "2026-09-28T05:18:49.4038746Z",
+    "stage_1_complete":  false,
+    "input_manifest_verified":  true,
+    "artifacts_sha256":  {
+                             "attempt-1/query.json":  "9f12c67bd45d6293cdc729214f4ab66bdb59ad43900e2a87d63e0c66a900e116",
+                             "attempt-2/result.json":  "84a36119d8f0e2c09c9db6c571bae7a57e6ddca1f5d15b36a93d0ac98cf2a81f",
+                             "attempt-1/started.json":  "9c6d7523fda2b27b421598e14190e85439d331291ef88111bbf2f3bd3b5c9b7b",
+                             "mechanical-3.json":  "01501e3804887a6da3fcac2ed7345b862abac6758f395818c6ab1731576812cd",
+                             "attempt-2/response.txt":  "eb1b66e7d1dbe85958f39caa48feecf402eb1ae5126dba847bc6ca0ba747c3aa",
+                             "attempt-2/prepared.json":  "71db667cc90ce370c2d8618eadb7f2fdef20538d4f4488e8d974e2cc44ddaeae",
+                             "attempt-3/response.txt":  "eb1b66e7d1dbe85958f39caa48feecf402eb1ae5126dba847bc6ca0ba747c3aa",
+                             "attempt-2/query.json":  "9f12c67bd45d6293cdc729214f4ab66bdb59ad43900e2a87d63e0c66a900e116",
+                             "attempt-3/started.json":  "77c145c5a58107fd57125fe7e16f1647f81e97cb0ca333ee9535c6948cade10c",
+                             "attempt-3/request.json":  "790b1e0c352bdb739e74a3e9ce4d07ec4b380f18103c6918721f6b6f8fe7312a",
+                             "attempt-1/response.bin":  "ca60a7612959b76c22fa3f03333540c787f5b0612f4c5bc93ecbba1d798838a0",
+                             "attempt-3/response.bin":  "9694fca320d5970f46d91794cdc5c86df5fbd04c4f2686310c4c244471b13049",
+                             "attempt-2/request.json":  "790b1e0c352bdb739e74a3e9ce4d07ec4b380f18103c6918721f6b6f8fe7312a",
+                             "attempt-1/prepared.json":  "872d4b68ba7b65b569105ca5dcbd24bdbe698ae392b27061cafca9f063c1ee1d",
+                             "attempt-3/result.json":  "b0b8d50e1bb4b2bb3374f1891e2b250e9421793e92e059a8cd14483579a0e545",
+                             "server-version.json":  "6b3415559eb45aa947e218e3dc3c0c064c83b0768aa1d7d3aa9b1699b8d3ae60",
+                             "question.txt":  "f10efa41619a414d186d19f81b76ef61c47c58bc3951dd7fef224d390e2c0258",
+                             "attempt-2/started.json":  "954dbdd8c4b5a8cfe30df93cf2565a7a150fecbc859af65088db94d7ebd7a661",
+                             "provenance.json":  "7de1868725c4e7f85c5efb8480364e43965ecf52034afa2f8109db9377543d64",
+                             "context.json":  "1e099130186618bae553c203ab0aaecac3450a7a4157cc7e117fd63915a15c93",
+                             "attempt-1/request.json":  "790b1e0c352bdb739e74a3e9ce4d07ec4b380f18103c6918721f6b6f8fe7312a",
+                             "mechanical-2.json":  "01501e3804887a6da3fcac2ed7345b862abac6758f395818c6ab1731576812cd",
+                             "attempt-1/result.json":  "9949a214d18d5faa21781a23015b982d98f8f26d060ae56217b2cc98c78d121b",
+                             "attempt-2/response.bin":  "b9e7aa454cdd7234a7188c85a9fd840ff7d2959410e194118ea49a02ed17134f",
+                             "attempt-1/response.txt":  "eb1b66e7d1dbe85958f39caa48feecf402eb1ae5126dba847bc6ca0ba747c3aa",
+                             "attempt-3/query.json":  "9f12c67bd45d6293cdc729214f4ab66bdb59ad43900e2a87d63e0c66a900e116",
+                             "README.md":  "77fb7a1b2e264254ddc941ef17e39cb13157f9bbd7e1921df0d82c44c94adc66",
+                             "mechanical-1.json":  "01501e3804887a6da3fcac2ed7345b862abac6758f395818c6ab1731576812cd",
+                             "attempt-3/prepared.json":  "76c8c47b9107b43422d80fab2156f1ad07167204ba5e1e93fb822643a8fa1400",
+                             "model-show.json":  "e3533b799a2cbd7eefd28ce40f1d7d9e35b4cf7b070f31be305949014858f4ec",
+                             "inputs-before.json":  "5d88d8522fd3fb12bbb5ba54a4ae39a8e740e45897a1d1ddd16bb333bf9c591c",
+                             "protocol-before.md":  "ef2aee8a45fc12e9bbd0fb949880663f8353842708e647fb4cfbb76cef1152c1",
+                             "query.json":  "9f12c67bd45d6293cdc729214f4ab66bdb59ad43900e2a87d63e0c66a900e116"
+                         }
+}

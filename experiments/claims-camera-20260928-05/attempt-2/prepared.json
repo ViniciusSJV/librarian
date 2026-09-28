@@ -1,0 +1,27 @@
+{
+  "diagnostic": null,
+  "dossier_origin": null,
+  "endpoint": "http://127.0.0.1:11434/api/generate",
+  "evidence_rechecked": false,
+  "explicit_options": {},
+  "files": {
+    "query": "query.json",
+    "request": "request.json",
+    "response": "response.bin",
+    "text": null
+  },
+  "format_version": 1,
+  "http_status": null,
+  "max_response_bytes": 1048576,
+  "query_bytes": 9656,
+  "query_sha256": "9f12c67bd45d6293cdc729214f4ab66bdb59ad43900e2a87d63e0c66a900e116",
+  "query_source_path": "experiments/claims-camera-20260928-05/query.json",
+  "request_bytes": 14237,
+  "request_id": "claims-camera-05-2",
+  "request_sha256": "790b1e0c352bdb739e74a3e9ce4d07ec4b380f18103c6918721f6b6f8fe7312a",
+  "requested_model": "renderer-analyst:latest",
+  "response_body_complete": false,
+  "selection": null,
+  "semantic_evaluation": "pending",
+  "timeout_ms": 300000
+}

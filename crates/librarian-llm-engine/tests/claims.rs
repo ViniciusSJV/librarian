@@ -83,6 +83,146 @@ fn cli_rejects_original_prose_preserves_input_and_refuses_overwrite() {
 fn context() -> Context {
     serde_json::from_value(json!({"schema_version":1,"policy":{"allow_inference":false,"allow_hypothesis":false},"evidence":[{"id":"E1","path":"sample.rs","start_line":5,"end_line":6,"excerpt":"let x = 1;\r\nuse_value(x);\r\n"}]})).unwrap()
 }
+
+fn located() -> (Context, Value) {
+    let c = serde_json::from_value(json!({
+        "schema_version":1,"require_location":true,
+        "policy":{"allow_inference":false,"allow_hypothesis":false},
+        "evidence":[{"id":"S","path":"other.lang","start_line":10,"end_line":14,
+            "excerpt":"function first() {\n  act();\n}\nfunction second() {\n}",
+            "symbols":[{"name":"first","declaration_line":10,"name_column":10,"end_line":12},
+                       {"name":"second","declaration_line":13,"name_column":10,"end_line":14}]}]
+    }))
+    .unwrap();
+    let r = json!({"schema_version":1,"claims":[{
+        "id":"C1","kind":"FACT","text":"first calls act.","premises":[],"verification_plan":null,
+        "location":{"evidence_id":"S","path":"other.lang","symbol_name":"first","declaration_line":10,"operation_start_line":11,"operation_end_line":11},
+        "citations":[{"evidence_id":"S","path":"other.lang","start_line":10,"end_line":11,"quote":"function first() {\n  act();"}]
+    }]});
+    (c, r)
+}
+
+#[test]
+fn location_is_generic_and_still_not_semantic_approval() {
+    let (c, r) = located();
+    let report = claims::check(&c, &r.to_string()).unwrap();
+    assert_eq!(report.mechanical_status, "passed");
+    assert!(!report.accepted);
+    assert_eq!(report.semantic_status, "pending");
+    let query: Value = serde_json::from_str(&claims::query(&c, "Where?").unwrap()).unwrap();
+    assert_eq!(query["require_location"], true);
+    assert!(
+        query["response_schema"]["properties"]["claims"]["items"]["required"]
+            .as_array()
+            .unwrap()
+            .contains(&json!("location"))
+    );
+}
+
+#[test]
+fn rejects_missing_or_fabricated_location_and_other_function_body() {
+    let (c, r) = located();
+    for (field, value, expected) in [
+        ("evidence_id", json!("unknown"), "location_unknown_evidence"),
+        ("path", json!("wrong"), "location_wrong_path"),
+        ("symbol_name", json!("fir"), "location_unknown_symbol"),
+        ("declaration_line", json!(13), "location_unknown_symbol"),
+        (
+            "operation_start_line",
+            json!(0),
+            "location_operation_out_of_range",
+        ),
+        (
+            "operation_end_line",
+            json!(usize::MAX),
+            "location_operation_out_of_range",
+        ),
+        (
+            "operation_end_line",
+            json!(13),
+            "location_operation_out_of_range",
+        ),
+    ] {
+        let mut bad = r.clone();
+        bad["claims"][0]["location"][field] = value;
+        assert!(codes(&c, &bad).contains(&expected.to_owned()), "{field}");
+    }
+    for missing in [true, false] {
+        let mut bad = r.clone();
+        if missing {
+            bad["claims"][0].as_object_mut().unwrap().remove("location");
+        } else {
+            bad["claims"][0]["location"] = Value::Null;
+        }
+        assert!(codes(&c, &bad).contains(&"missing_location".into()));
+    }
+}
+
+#[test]
+fn location_needs_both_citations_and_literal_quotes() {
+    let (c, mut r) = located();
+    r["claims"][0]["citations"][0] = json!({"evidence_id":"S","path":"other.lang","start_line":11,"end_line":11,"quote":"  act();"});
+    assert_eq!(codes(&c, &r), vec!["location_declaration_not_cited"]);
+    r["claims"][0]["citations"][0] = json!({"evidence_id":"S","path":"other.lang","start_line":10,"end_line":10,"quote":"function first() {"});
+    assert_eq!(codes(&c, &r), vec!["location_operation_not_cited"]);
+    r["claims"][0]["citations"][0]["end_line"] = json!(11);
+    assert_eq!(codes(&c, &r), vec!["quote_mismatch"]);
+}
+
+#[test]
+fn missing_symbols_allow_lacuna_without_fabricating_location() {
+    let (mut c, mut r) = located();
+    c.evidence[0].symbols.clear();
+    assert_eq!(codes(&c, &r), vec!["location_unknown_symbol"]);
+    r["claims"][0]["kind"] = json!("LACUNA");
+    assert_eq!(codes(&c, &r), vec!["location_requires_fact"]);
+    r["claims"][0]["location"] = Value::Null;
+    r["claims"][0]["citations"] = json!([]);
+    assert!(codes(&c, &r).is_empty()); // Pertinence remains a semantic decision.
+}
+
+#[test]
+fn symbol_metadata_is_checked_against_source_without_parsing_a_language() {
+    for (field, value) in [
+        ("name", json!("invented")),
+        ("name_column", json!(0)),
+        ("name_column", json!(usize::MAX)),
+        ("declaration_line", json!(9)),
+        ("end_line", json!(15)),
+        ("end_line", json!(9)),
+    ] {
+        let (c, _) = located();
+        let mut v = serde_json::to_value(c).unwrap();
+        v["evidence"][0]["symbols"][0][field] = value;
+        let bad: Context = serde_json::from_value(v).unwrap();
+        assert!(bad.validate().is_err(), "{field}");
+    }
+    let (mut c, _) = located();
+    c.evidence[0].excerpt = "é function first() {\n  act();\n}\nfunction second() {\n}".into();
+    c.evidence[0].symbols[0].name_column = 12;
+    assert!(c.validate().is_ok());
+    let mut v = serde_json::to_value(c).unwrap();
+    let duplicate = v["evidence"][0]["symbols"][0].clone();
+    v["evidence"][0]["symbols"]
+        .as_array_mut()
+        .unwrap()
+        .push(duplicate);
+    assert!(serde_json::from_value::<Context>(v)
+        .unwrap()
+        .validate()
+        .is_err());
+}
+
+#[test]
+fn old_camera_answer_is_now_incomplete_under_location_profile() {
+    let mut camera: Context =
+        serde_json::from_str(include_str!("fixtures/camera-context.json")).unwrap();
+    camera.require_location = true;
+    let original =
+        include_str!("../../../experiments/claims-camera-20260928-04/attempt-1/response.txt");
+    let report = claims::check(&camera, original).unwrap();
+    assert!(report.issues.iter().any(|i| i.code == "missing_location"));
+}
 fn response() -> Value {
     json!({"schema_version":1,"claims":[{"id":"C1","kind":"FACT","text":"The source assigns 1 to x.","citations":[{"evidence_id":"E1","path":"sample.rs","start_line":5,"end_line":5,"quote":"let x = 1;"}],"premises":[],"verification_plan":null}]})
 }

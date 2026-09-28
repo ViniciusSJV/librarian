@@ -1,0 +1,29 @@
+{
+  "claims": [
+    {
+      "citations": [
+        {
+          "end_line": 86,
+          "evidence_id": "E1",
+          "path": "src/camera.rs",
+          "quote": "        let direction = (pixel - origin).normalize();",
+          "start_line": 86
+        }
+      ],
+      "id": "C1",
+      "kind": "FACT",
+      "location": {
+        "declaration_line": 75,
+        "evidence_id": "E1",
+        "operation_end_line": 86,
+        "operation_start_line": 86,
+        "path": "src/camera.rs",
+        "symbol_name": "ray_from_pixel"
+      },
+      "premises": [],
+      "text": "A câmera calcula a direção dos raios na linha 86 do arquivo src/camera.rs dentro da função ray_from_pixel.",
+      "verification_plan": null
+    }
+  ],
+  "schema_version": 1
+}

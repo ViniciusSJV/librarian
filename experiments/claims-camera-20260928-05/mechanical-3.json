@@ -1,0 +1,17 @@
+{
+  "context_sha256": "1e099130186618bae553c203ab0aaecac3450a7a4157cc7e117fd63915a15c93",
+  "limits": "Mechanical checks only. Evidence is supplied by the caller. Semantic review remains pending; accepted is always false.",
+  "report": {
+    "accepted": false,
+    "issues": [
+      {
+        "claim_id": "C1",
+        "code": "location_declaration_not_cited"
+      }
+    ],
+    "mechanical_status": "rejected",
+    "schema_version": 1,
+    "semantic_status": "pending"
+  },
+  "response_sha256": "eb1b66e7d1dbe85958f39caa48feecf402eb1ae5126dba847bc6ca0ba747c3aa"
+}

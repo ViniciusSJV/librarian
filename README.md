@@ -7,6 +7,10 @@ preserva uma nova resposta e sua rejeição mecânica; a Etapa 1 segue aberta.
 As [séries com schema e mapa de linhas](experiments/claims-camera-20260928-04/README.md)
 acrescentam nove chamadas: seis passam mecanicamente, mas ainda omitem o nome
 da função exigido pela rubrica. Não representam aprovação semântica completa.
+A [série com localização estruturada](experiments/claims-camera-20260928-05/README.md)
+identifica nome e linhas corretos nas três respostas. O novo verificador rejeita
+as três pela ausência da citação da declaração. Os metadados de símbolo foram
+conferidos manualmente em E1; a integração automática com o ingest segue pendente.
 
 O Librarian organiza fontes e prepara evidências rastreáveis. A implementação
 atual extrai código Rust em snapshots/símbolos/trechos, confere hashes e oferece
