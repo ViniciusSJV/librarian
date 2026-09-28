@@ -2,7 +2,9 @@
 
 O Librarian organiza fontes e prepara evidências rastreáveis. A implementação
 atual extrai código Rust em snapshots/símbolos/trechos, confere hashes e oferece
-busca lexical com relações sintáticas em memória, sem banco ou LLM.
+busca lexical com relações sintáticas em memória, sem banco. O novo
+[LLM Engine](crates/librarian-llm-engine/README.md) prepara e preserva chamadas
+Ollama, com modelo explícito e avaliação semântica separada.
 
 ## Comece por uma única trilha
 
@@ -13,14 +15,15 @@ mesmo documento, não uma segunda sequência de comandos. Os links entre projeto
 pressupõem checkouts locais lado a lado.
 
 O roteiro fica no renderer porque ele fornece o projeto estudado, o vocabulário,
-o Modelfile e o cliente HTTP. O código de ingestão/busca pertence ao Librarian e
+o Modelfile e a política de seleção. Ingestão, busca e transporte pertencem ao Librarian e
 pode ser usado em outros projetos Rust. O [WORKFLOW](WORKFLOW.md) mostra os papéis
 dos dois projetos e do Ollama no mesmo fluxo.
 
 Uma tentativa real já teve transporte/hashes conferidos e explicação parcialmente
 correta; avaliação semântica continua separada. Busca → envelope manual → API foi
-exercitado; a ponte automática até PreparedQuery e a biblioteca LLM independente
-permanecem pendentes. A capacidade nova usa o checkout local e não está na release 0.1.0.
+exercitado; a ponte automática até PreparedQuery permanece pendente. A biblioteca
+LLM foi extraída, sem fechar o contrato semântico. As capacidades novas usam o
+checkout local e não estão na release 0.1.0.
 
 Referências técnicas, para consultar quando necessário: [ingestão](crates/librarian-ingest/README.md),
 [léxico e grafo](crates/librarian-ingest/SEARCH.md) e [contrato formal de dossiês](crates/librarian-graph-engine/WORKFLOW-V0.1.md).
@@ -68,9 +71,9 @@ Fontes → Librarian → Graph Engine → LLM Engine → avaliação
 - **`maintenance-example`**: exemplo com um manual de manutenção fictício,
   mostrando o fluxo de cadastro, conferência e exportação.
 
-O LLM Engine faz parte da arquitetura proposta, mas ainda não é implementado
-como biblioteca neste repositório. O fluxo disponível termina na preparação do
-material que uma aplicação pode enviar a um modelo.
+O `librarian-llm-engine` implementa o preparador e transporte Ollama como biblioteca
+e CLIs. Não seleciona fontes nem valida semanticamente a resposta. O fluxo formal
+de dossiês continua terminando em PreparedQuery; a aplicação coordena o envio.
 
 ## Como as informações são organizadas
 
