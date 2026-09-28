@@ -1,0 +1,21 @@
+{
+  "claims": [
+    {
+      "citations": [
+        {
+          "end_line": 86,
+          "evidence_id": "E1",
+          "path": "src/camera.rs",
+          "quote": "        let direction = (pixel - origin).normalize();",
+          "start_line": 86
+        }
+      ],
+      "id": "C1",
+      "kind": "FACT",
+      "premises": [],
+      "text": "A câmera calcula a direção dos raios na linha 86 do arquivo src/camera.rs.",
+      "verification_plan": null
+    }
+  ],
+  "schema_version": 1
+}

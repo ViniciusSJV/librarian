@@ -1,0 +1,2 @@
+# Protocol fixed before generation
+Three sequential attempts, same question, context, model and semantic criteria. New variable: deterministic line_map generated from the selected excerpt, plus explicit instruction to copy its line number and text. Keep response_schema/format and the exact checker. No response repair or retries. Naming ray_from_pixel with src/camera.rs identifies the location available in E1; the absent impl scope must not be invented. All attempts must pass; this is only the camera case.

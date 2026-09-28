@@ -1,0 +1,24 @@
+{
+    "request_id":  "CLAIMS_CAMERA_20260928_01",
+    "checks":  {
+                   "query.json":  true,
+                   "request.json":  true,
+                   "response.bin":  true,
+                   "response.txt":  true,
+                   "prompt_equals_query":  true,
+                   "response_equals_text":  true
+               },
+    "hashes":  {
+                   "context.json":  "985157c589c7c53ce0ccc2967536deee77818358540132c52404ffd19c07e69f",
+                   "criteria-before.md":  "a72f2d0e71162e199782b0d3a36990307610c4c3db8d8c5c0a2ead924d2235b2",
+                   "model-show.json":  "f16bf60d7ad055d81087ee298283874d3861644f9691736496d9fd3f0ac4bb2a",
+                   "question.txt":  "f10efa41619a414d186d19f81b76ef61c47c58bc3951dd7fef224d390e2c0258",
+                   "query.json":  "fde301f2a56650d006304d5c083bf468cfb2d429dbbdc67870243aa69cc15993",
+                   "mechanical-report.json":  "1c34974d3b73fa1d0f49bc87ec2dd5d01fab49dbc1b86973a67a24f9da99c0ff",
+                   "diagnostic-report.json":  "75d088d2406b6a2790c9afe7e115b6b3b742c3c433ab574916d86dfa17900e30",
+                   "diagnostic-without-fence.json":  "ff15501225dd2ac68efd2a7a77be25e521b49c62730920b222720483895b9d3c"
+               },
+    "http_elapsed_ms":  10323.2368,
+    "semantic_evaluation":  "rejected; see README.md",
+    "limits":  "No authentication or automatic entailment check. Diagnostic derivative is not the model response."
+}

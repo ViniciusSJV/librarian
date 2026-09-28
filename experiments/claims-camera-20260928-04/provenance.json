@@ -1,0 +1,9 @@
+{
+    "historical_query_path":  "../renderer/ai/consultas/policy-camera-20260927-02/query-ollama.json",
+    "historical_query_sha256":  "1b7b9eb3a74da6fb9a3246422d36d693a5c83a9e1ca123c14e37d18ea9c60fa7",
+    "source_sha256":  "81edd442069c820fe580346fe6de1f9e05b151a5270ef6b4f295351fd8c98744",
+    "chunk_id":  "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:81edd442069c820fe580346fe6de1f9e05b151a5270ef6b4f295351fd8c98744:method:2027:2643",
+    "chunk_sha256":  "80ef19bcf6b244667f8ec9c1faaedda97ef297fdf1dbe410c2610f598403a97b",
+    "selection":  "Only E1 from preserved camera query; historical evidence, not current tree",
+    "policy":  "FACT and LACUNA only; inference and hypothesis disabled"
+}

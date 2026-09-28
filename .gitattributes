@@ -1,0 +1,6 @@
+# Keep preserved model responses and evidence fixtures byte-identical across systems.
+crates/librarian-llm-engine/tests/fixtures/** -text
+experiments/claims-camera-20260928-01/** -text
+experiments/claims-camera-20260928-02/** -text
+experiments/claims-camera-20260928-03/** -text
+experiments/claims-camera-20260928-04/** -text

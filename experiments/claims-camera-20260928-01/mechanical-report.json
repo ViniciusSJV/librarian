@@ -1,0 +1,17 @@
+{
+  "context_sha256": "985157c589c7c53ce0ccc2967536deee77818358540132c52404ffd19c07e69f",
+  "limits": "Mechanical checks only. Evidence is supplied by the caller. Semantic review remains pending; accepted is always false.",
+  "report": {
+    "accepted": false,
+    "issues": [
+      {
+        "claim_id": null,
+        "code": "invalid_response_schema"
+      }
+    ],
+    "mechanical_status": "rejected",
+    "schema_version": 1,
+    "semantic_status": "pending"
+  },
+  "response_sha256": "625c2cdda292c51b30dedc0187e6ad7c9eff63279c5a8ea9c3674c764eeb47cd"
+}

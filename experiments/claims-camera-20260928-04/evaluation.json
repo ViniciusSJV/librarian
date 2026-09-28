@@ -1,0 +1,101 @@
+{
+    "evaluator":  "assistant; post-generation review",
+    "criteria_sha256":  "a72f2d0e71162e199782b0d3a36990307610c4c3db8d8c5c0a2ead924d2235b2",
+    "protocol_sha256":  "22a3f16dccbcf8981f0ab64f28fe03ac7e800d71c21997e375220c586353ba24",
+    "query_sha256":  "98f4e899fcf57baf9d5a9f86859cb66d7f576f1be757d685a173e627c34747f9",
+    "context_sha256":  "985157c589c7c53ce0ccc2967536deee77818358540132c52404ffd19c07e69f",
+    "model_show_sha256":  "f16bf60d7ad055d81087ee298283874d3861644f9691736496d9fd3f0ac4bb2a",
+    "attempts":  [
+                     {
+                         "request_id":  "CLAIMS_CAMERA_LOCATION_20260928_1",
+                         "text_sha256":  "261ebdef4ea069a96a6cd4e9692a283ebfa0ffd0a2fc118bcacb53a0db63b7ad",
+                         "checks":  {
+                                        "query.json":  true,
+                                        "request.json":  true,
+                                        "response.bin":  true,
+                                        "response.txt":  true,
+                                        "exact_prompt":  true,
+                                        "exact_response":  true,
+                                        "format_equals_schema":  true,
+                                        "checker_response_hash":  true,
+                                        "checker_context_hash":  true,
+                                        "same_text_within_series":  true
+                                    },
+                         "mechanical_status":  "passed",
+                         "semantic_decision":  "not_accepted",
+                         "supported_location":  true,
+                         "method_named":  false,
+                         "reason":  "Correct line and exact quote; function name required by prior rubric omitted.",
+                         "provider_reported":  {
+                                                   "model":  "renderer-analyst:latest",
+                                                   "done":  true,
+                                                   "done_reason":  "stop",
+                                                   "prompt_eval_count":  2399,
+                                                   "prompt_eval_cached_count":  1553,
+                                                   "eval_count":  149
+                                               },
+                         "http_elapsed_ms":  2954.0582999999997
+                     },
+                     {
+                         "request_id":  "CLAIMS_CAMERA_LOCATION_20260928_2",
+                         "text_sha256":  "261ebdef4ea069a96a6cd4e9692a283ebfa0ffd0a2fc118bcacb53a0db63b7ad",
+                         "checks":  {
+                                        "query.json":  true,
+                                        "request.json":  true,
+                                        "response.bin":  true,
+                                        "response.txt":  true,
+                                        "exact_prompt":  true,
+                                        "exact_response":  true,
+                                        "format_equals_schema":  true,
+                                        "checker_response_hash":  true,
+                                        "checker_context_hash":  true,
+                                        "same_text_within_series":  true
+                                    },
+                         "mechanical_status":  "passed",
+                         "semantic_decision":  "not_accepted",
+                         "supported_location":  true,
+                         "method_named":  false,
+                         "reason":  "Correct line and exact quote; function name required by prior rubric omitted.",
+                         "provider_reported":  {
+                                                   "model":  "renderer-analyst:latest",
+                                                   "done":  true,
+                                                   "done_reason":  "stop",
+                                                   "prompt_eval_count":  2399,
+                                                   "prompt_eval_cached_count":  2398,
+                                                   "eval_count":  149
+                                               },
+                         "http_elapsed_ms":  2628.0483
+                     },
+                     {
+                         "request_id":  "CLAIMS_CAMERA_LOCATION_20260928_3",
+                         "text_sha256":  "261ebdef4ea069a96a6cd4e9692a283ebfa0ffd0a2fc118bcacb53a0db63b7ad",
+                         "checks":  {
+                                        "query.json":  true,
+                                        "request.json":  true,
+                                        "response.bin":  true,
+                                        "response.txt":  true,
+                                        "exact_prompt":  true,
+                                        "exact_response":  true,
+                                        "format_equals_schema":  true,
+                                        "checker_response_hash":  true,
+                                        "checker_context_hash":  true,
+                                        "same_text_within_series":  true
+                                    },
+                         "mechanical_status":  "passed",
+                         "semantic_decision":  "not_accepted",
+                         "supported_location":  true,
+                         "method_named":  false,
+                         "reason":  "Correct line and exact quote; function name required by prior rubric omitted.",
+                         "provider_reported":  {
+                                                   "model":  "renderer-analyst:latest",
+                                                   "done":  true,
+                                                   "done_reason":  "stop",
+                                                   "prompt_eval_count":  2399,
+                                                   "prompt_eval_cached_count":  2398,
+                                                   "eval_count":  149
+                                               },
+                         "http_elapsed_ms":  2632.543
+                     }
+                 ],
+    "limits":  "Three sequential repetitions with the same seed/configuration and cache; not independent evidence of general reliability. No response repair; original checker reports remain semantic_status=pending."
+}

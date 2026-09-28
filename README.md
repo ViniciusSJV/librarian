@@ -1,5 +1,13 @@
 # Librarian
 
+O [contrato experimental de afirmações](crates/librarian-llm-engine/CLAIMS.md)
+verifica formato, permissões e citações, mantendo sustentação semântica separada.
+O [primeiro experimento da câmera](experiments/claims-camera-20260928-01/README.md)
+preserva uma nova resposta e sua rejeição mecânica; a Etapa 1 segue aberta.
+As [séries com schema e mapa de linhas](experiments/claims-camera-20260928-04/README.md)
+acrescentam nove chamadas: seis passam mecanicamente, mas ainda omitem o nome
+da função exigido pela rubrica. Não representam aprovação semântica completa.
+
 O Librarian organiza fontes e prepara evidências rastreáveis. A implementação
 atual extrai código Rust em snapshots/símbolos/trechos, confere hashes e oferece
 busca lexical com relações sintáticas em memória, sem banco. O novo

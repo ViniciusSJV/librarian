@@ -1,0 +1,23 @@
+```json
+{
+  "schema_version": 1,
+  "claims": [
+    {
+      "id": "C1",
+      "kind": "FACT",
+      "text": "A câmera calcula a direção dos raios na linha 86 do arquivo src/camera.rs.",
+      "citations": [
+        {
+          "evidence_id": "E1",
+          "path": "src/camera.rs",
+          "start_line": 86,
+          "end_line": 86,
+          "quote": "let direction = (pixel - origin).normalize();"
+        }
+      ],
+      "premises": [],
+      "verification_plan": null
+    }
+  ]
+}
+```

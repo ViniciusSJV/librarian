@@ -20,5 +20,14 @@ pub fn request(query: &str, model: &str) -> Result<Value, String> {
     {
         return Err("Consulta deve conter question, evidence e instructions válidos".into());
     }
-    Ok(json!({"model": model, "prompt": query, "stream": false}))
+    let mut body = json!({"model": model, "prompt": query, "stream": false});
+    if let Some(schema) = value.get("response_schema") {
+        if !schema.is_object() || schema["type"] != "object" {
+            return Err("response_schema deve ser um JSON Schema de objeto".into());
+        }
+        // Optional provider mapping; legacy queries keep their exact request shape.
+        // The local checker still validates the actual output, irrespective of format.
+        body["format"] = schema.clone();
+    }
+    Ok(body)
 }

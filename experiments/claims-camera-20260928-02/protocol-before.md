@@ -1,0 +1,2 @@
+# Protocol fixed before generation
+Three sequential attempts with the same query, context, model and server configuration. No retries or postprocessing. Keep all failures. New variable: response_schema in prompt mapped to Ollama format. Keep the exact citation checker and the previous semantic criteria. All three attempts must pass each criterion to accept this camera case, not the complete Stage 1.

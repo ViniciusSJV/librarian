@@ -1,0 +1,27 @@
+{
+  "diagnostic": null,
+  "dossier_origin": null,
+  "endpoint": "http://127.0.0.1:11434/api/generate",
+  "evidence_rechecked": false,
+  "explicit_options": {},
+  "files": {
+    "query": "query.json",
+    "request": "request.json",
+    "response": "response.bin",
+    "text": null
+  },
+  "format_version": 1,
+  "http_status": null,
+  "max_response_bytes": 1048576,
+  "query_bytes": 4999,
+  "query_sha256": "d4e499b7a3c06923e9b6184d12e454439c5fde44b97fa2ba8ef60e006462ece1",
+  "query_source_path": "C:\\Users\\beatl\\Documents\\Projetos\\librarian\\experiments\\claims-camera-20260928-02/query.json",
+  "request_bytes": 7798,
+  "request_id": "CLAIMS_CAMERA_SCHEMA_20260928_2",
+  "request_sha256": "f34daf05a6707f2c14885ae7ddb2f27a64797f5976f00852e2c51a8a87ca809d",
+  "requested_model": "renderer-analyst:latest",
+  "response_body_complete": false,
+  "selection": null,
+  "semantic_evaluation": "pending",
+  "timeout_ms": 300000
+}

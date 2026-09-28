@@ -1,0 +1,2 @@
+# Protocol fixed before generation
+Three sequential attempts, no repairs/retries. Same camera evidence, question, schema, exact citation checker, model and semantic criteria. New instruction: text must name the function as declared, and cite declaration plus operation. File/line alone is incomplete. The available name ray_from_pixel plus src/camera.rs identifies the method without inventing an absent impl scope (same interpretation recorded before experiment 03). Approve the camera case only if all three meet every criterion; Stage 1 still requires the other question types.

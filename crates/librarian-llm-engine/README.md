@@ -1,5 +1,9 @@
 # Librarian LLM Engine
 
+O [contrato experimental de afirmações](CLAIMS.md) acrescenta preparação de query
+e verificação mecânica de categorias/citações, sem alterar o transporte legado
+ou aprovar semanticamente as respostas. Use `claims prepare` e `claims check`.
+
 Preparação e transporte extraídos do renderer, sem mudança de política ou formato.
 Este crate não depende do renderer, do Graph Engine ou de um modelo específico.
 O adaptador implementado é Ollama HTTP `/api/generate`, não uma API universal de
