@@ -1,9 +1,10 @@
 //! Immutable file-backed source editions. Hashes check consistency, not authenticity.
 pub mod cli;
-mod extract;
+mod extractors;
 pub mod graph;
 pub mod search;
 
+use extractors::Registry;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::{
@@ -119,6 +120,7 @@ pub struct Diagnostic {
 /// Verified records and indexes. Constructed only by `Catalog::load`.
 pub struct Catalog {
     manifest: Manifest,
+    registry: &'static Registry,
     sources: BTreeMap<String, Source>,
     paths: BTreeMap<String, String>,
     symbols: BTreeMap<String, Symbol>,
@@ -130,16 +132,6 @@ pub struct Catalog {
 
 pub fn hash(bytes: &[u8]) -> String {
     format!("{:x}", Sha256::digest(bytes))
-}
-
-fn limits() -> Vec<String> {
-    ["Structural declarations only; no behavioral claims or executed-test evidence.",
-     "No macro expansion, cfg evaluation, cross-file name resolution or call graph.",
-     "File-local scopes; ordinary comments are preserved in snapshots, not attached to declarations.",
-     "Files read individually; no atomic repository snapshot or Git/author authentication.",
-     "Parse failures preserve bytes and diagnostics; completeness requires inspecting diagnostics.",
-     "Hashes establish consistency, not authenticity; manifest is not signed."]
-        .into_iter().map(str::to_owned).collect()
 }
 
 pub(crate) fn line_at(bytes: &[u8], offset: usize) -> usize {
@@ -188,7 +180,13 @@ fn config_check(config: &Config) -> Result<()> {
     Ok(())
 }
 
-fn walk(root: &Path, rel: &str, explicit: bool, found: &mut BTreeSet<String>) -> Result<()> {
+fn walk(
+    registry: &Registry,
+    root: &Path,
+    rel: &str,
+    explicit: bool,
+    found: &mut BTreeSet<String>,
+) -> Result<()> {
     let full = checked_path(root, rel)?;
     let meta = fs::metadata(&full)?;
     if meta.is_dir() {
@@ -203,10 +201,10 @@ fn walk(root: &Path, rel: &str, explicit: bool, found: &mut BTreeSet<String>) ->
         }
         children.sort();
         for child in children {
-            walk(root, &child, false, found)?;
+            walk(registry, root, &child, false, found)?;
         }
     } else if meta.is_file() {
-        if explicit || Path::new(rel).extension().is_some_and(|e| e == "rs") {
+        if explicit || registry.discovers(rel) {
             found.insert(rel.into());
         }
     } else {
@@ -215,11 +213,11 @@ fn walk(root: &Path, rel: &str, explicit: bool, found: &mut BTreeSet<String>) ->
     Ok(())
 }
 
-fn discover(root: &Path, config: &Config) -> Result<Vec<String>> {
+fn discover(registry: &Registry, root: &Path, config: &Config) -> Result<Vec<String>> {
     config_check(config)?;
     let mut paths = BTreeSet::new();
     for input in &config.inputs {
-        walk(root, input, true, &mut paths)?;
+        walk(registry, root, input, true, &mut paths)?;
     }
     if paths.is_empty() {
         return Err("No source files selected".into());
@@ -227,13 +225,9 @@ fn discover(root: &Path, config: &Config) -> Result<Vec<String>> {
     Ok(paths.into_iter().collect())
 }
 
-fn source(path: String, bytes: &[u8]) -> Source {
+fn source(registry: &Registry, path: String, bytes: &[u8]) -> Source {
     let digest = hash(bytes);
-    let language = if Path::new(&path).extension().is_some_and(|e| e == "rs") {
-        "rust"
-    } else {
-        "auxiliary"
-    };
+    let language = registry.language(&path);
     Source {
         id: format!("src:{}:{}", hash(path.as_bytes()), digest),
         sha256: digest,
@@ -272,8 +266,9 @@ fn write_new(path: &Path, bytes: &[u8]) -> Result<()> {
 /// Reads each source once, derives records from those bytes and writes a new edition.
 /// manifest.json is published last. I/O errors can leave an incomplete directory.
 pub fn generate(root: &Path, config: &Config, destination: &Path) -> Result<Manifest> {
+    let registry = Registry::current();
     let root = root.canonicalize()?;
-    let paths = discover(&root, config)?;
+    let paths = discover(registry, &root, config)?;
     let git = git_metadata(&root);
     let mut sources = Vec::new();
     let mut symbols = Vec::new();
@@ -282,12 +277,12 @@ pub fn generate(root: &Path, config: &Config, destination: &Path) -> Result<Mani
     let mut snapshots = BTreeMap::new();
     for path in paths {
         let bytes = fs::read(checked_path(&root, &path)?)?;
-        let source = source(path, &bytes);
-        if source.language == "rust" {
-            let (mut s, mut c, mut d) = extract::extract(&source, &bytes);
-            symbols.append(&mut s);
-            chunks.append(&mut c);
-            diagnostics.append(&mut d);
+        let source = source(registry, path, &bytes);
+        if let Some(extractor) = registry.extractor(&source.language) {
+            let mut found = extractor.extract(&source, &bytes);
+            symbols.append(&mut found.symbols);
+            chunks.append(&mut found.chunks);
+            diagnostics.append(&mut found.diagnostics);
         }
         snapshots.insert(source.sha256.clone(), bytes);
         sources.push(source);
@@ -300,7 +295,7 @@ pub fn generate(root: &Path, config: &Config, destination: &Path) -> Result<Mani
     ];
     let manifest = Manifest {
         schema_version: SCHEMA_VERSION,
-        extractor: EXTRACTOR.into(),
+        extractor: registry.identity.into(),
         config: config.clone(),
         git,
         files: RECORDS
@@ -311,7 +306,7 @@ pub fn generate(root: &Path, config: &Config, destination: &Path) -> Result<Mani
         source_count: sources.len(),
         symbol_count: symbols.len(),
         diagnostic_count: diagnostics.len(),
-        limits: limits(),
+        limits: registry.limits(),
     };
     // Destination must not be inside a recursively selected source directory.
     let parent = destination
@@ -352,12 +347,10 @@ impl Catalog {
         let manifest: Manifest =
             serde_json::from_slice(&fs::read(checked_path(&root, "manifest.json")?)?)?;
         config_check(&manifest.config)?;
-        if manifest.schema_version != SCHEMA_VERSION
-            || manifest.extractor != EXTRACTOR
-            || manifest.limits != limits()
-        {
-            return Err("Unsupported schema, extractor or limits".into());
-        }
+        // The edition's own profile verifies it; a newer extractor is never tried instead.
+        let registry = Registry::for_identity(&manifest.extractor)
+            .filter(|r| manifest.schema_version == SCHEMA_VERSION && manifest.limits == r.limits())
+            .ok_or("Unsupported schema, extractor or limits")?;
         if manifest
             .files
             .keys()
@@ -403,17 +396,17 @@ impl Catalog {
                 return Err("Invalid snapshot hash".into());
             }
             let bytes = fs::read(checked_path(&root, &format!("snapshots/{}", s.sha256))?)?;
-            if source(s.path.clone(), &bytes) != s {
+            if source(registry, s.path.clone(), &bytes) != s {
                 return Err(format!("Snapshot/source mismatch: {}", s.path).into());
             }
             if paths.insert(s.path.clone(), s.id.clone()).is_some() {
                 return Err("Duplicate source path".into());
             }
-            if s.language == "rust" {
-                let (mut sy, mut ch, mut di) = extract::extract(&s, &bytes);
-                expected_symbols.append(&mut sy);
-                expected_chunks.append(&mut ch);
-                expected_diagnostics.append(&mut di);
+            if let Some(extractor) = registry.extractor(&s.language) {
+                let mut found = extractor.extract(&s, &bytes);
+                expected_symbols.append(&mut found.symbols);
+                expected_chunks.append(&mut found.chunks);
+                expected_diagnostics.append(&mut found.diagnostics);
             }
             snapshots.insert(s.id.clone(), bytes);
             if source_map.insert(s.id.clone(), s).is_some() {
@@ -442,6 +435,7 @@ impl Catalog {
         }
         Ok(Self {
             manifest,
+            registry,
             sources: source_map,
             paths,
             symbols: symbol_map,
@@ -503,7 +497,8 @@ impl Catalog {
             }
         }
         // Discovery errors are returned, not silently treated as an unchanged project.
-        for path in discover(&root, &self.manifest.config)? {
+        // The edition's own discovery policy applies, so newer languages are not reported as added.
+        for path in discover(self.registry, &root, &self.manifest.config)? {
             if !self.paths.contains_key(&path) {
                 changes.push(Change {
                     path,
