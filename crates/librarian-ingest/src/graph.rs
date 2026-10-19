@@ -1,11 +1,7 @@
 //! Graph derived from verified snapshots. Syntax and name candidates are not type resolution.
-use crate::{hash, Catalog, Result};
+use crate::{extractors::Occurrence, hash, Catalog, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
-use syn::{
-    spanned::Spanned,
-    visit::{self, Visit},
-};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Node {
@@ -106,23 +102,13 @@ impl Graph {
                 });
             }
         }
-        for source in catalog.sources.values().filter(|s| s.language == "rust") {
-            let bytes = &catalog.snapshots[&source.id];
-            let Ok(text) = std::str::from_utf8(bytes) else {
+        for source in catalog.sources.values() {
+            let Some(extractor) = catalog.registry.extractor(&source.language) else {
                 continue;
             };
-            let Ok(tree) = syn::parse_file(text) else {
-                continue;
-            };
-            let offset = if text.starts_with('\u{feff}') { 3 } else { 0 }
-                + tree.shebang.as_ref().map_or(0, String::len);
-            Observer {
-                graph: &mut graph,
-                catalog,
-                source_id: &source.id,
-                offset,
+            for found in extractor.observe(&catalog.snapshots[&source.id]) {
+                graph.occurrence(catalog, &source.id, found, extractor.candidate_kinds());
             }
-            .visit_file(&tree);
         }
         graph.edges.sort_by(|a, b| {
             (&a.from, &a.kind, &a.to, a.evidence.start_byte).cmp(&(
@@ -251,40 +237,43 @@ fn evidence(catalog: &Catalog, source_id: &str, start: usize, end: usize) -> Evi
     }
 }
 
-struct Observer<'a> {
-    graph: &'a mut Graph,
-    catalog: &'a Catalog,
-    source_id: &'a str,
-    offset: usize,
-}
-impl Observer<'_> {
-    fn occurrence(&mut self, kind: &str, span: proc_macro2::Span, candidate: Option<&str>) {
-        let range = span.byte_range();
-        let start = range.start + self.offset;
-        let end = range.end + self.offset;
+impl Graph {
+    /// Attaches an extractor occurrence to its innermost declaration, with byte evidence.
+    fn occurrence(
+        &mut self,
+        catalog: &Catalog,
+        source_id: &str,
+        found: Occurrence,
+        candidate_kinds: &[&str],
+    ) {
+        let Occurrence {
+            kind,
+            start,
+            end,
+            candidate,
+        } = found;
         if start >= end {
             return;
         }
-        let owner = self
-            .catalog
+        let owner = catalog
             .symbols
             .values()
-            .filter(|s| s.source_id == self.source_id)
+            .filter(|s| s.source_id == source_id)
             .filter(|s| {
-                let c = &self.catalog.chunks[&s.chunk_id];
+                let c = &catalog.chunks[&s.chunk_id];
                 c.start_byte <= start && c.end_byte >= end
             })
             .min_by_key(|s| {
-                let c = &self.catalog.chunks[&s.chunk_id];
+                let c = &catalog.chunks[&s.chunk_id];
                 c.end_byte - c.start_byte
             });
         let Some(owner) = owner else { return };
-        let id = format!("{}:occurrence:{kind}:{start}:{end}", self.source_id);
-        let label = String::from_utf8_lossy(&self.catalog.snapshots[self.source_id][start..end])
-            .into_owned();
-        self.graph.node(id.clone(), kind, label);
-        let proof = evidence(self.catalog, self.source_id, start, end);
-        self.graph.edges.push(Edge {
+        let id = format!("{source_id}:occurrence:{kind}:{start}:{end}");
+        let label =
+            String::from_utf8_lossy(&catalog.snapshots[source_id][start..end]).into_owned();
+        self.node(id.clone(), kind, label);
+        let proof = evidence(catalog, source_id, start, end);
+        self.edges.push(Edge {
             from: owner.id.clone(),
             to: id.clone(),
             kind: kind.into(),
@@ -293,13 +282,12 @@ impl Observer<'_> {
         });
         // Name matches are navigational candidates, including ambiguities. Never a resolved call/type.
         if let Some(name) = candidate {
-            for symbol in self.catalog.symbols_named(name).into_iter().filter(|s| {
-                matches!(
-                    s.kind.as_str(),
-                    "struct" | "enum" | "trait" | "type" | "union"
-                )
-            }) {
-                self.graph.edges.push(Edge {
+            for symbol in catalog
+                .symbols_named(&name)
+                .into_iter()
+                .filter(|s| candidate_kinds.contains(&s.kind.as_str()))
+            {
+                self.edges.push(Edge {
                     from: id.clone(),
                     to: symbol.id.clone(),
                     kind: "name_candidate".into(),
@@ -308,31 +296,5 @@ impl Observer<'_> {
                 });
             }
         }
-    }
-}
-impl<'ast> Visit<'ast> for Observer<'_> {
-    fn visit_type_path(&mut self, value: &'ast syn::TypePath) {
-        let name = value.path.segments.last().map(|s| s.ident.to_string());
-        self.occurrence("type_reference", value.span(), name.as_deref());
-        visit::visit_type_path(self, value);
-    }
-    fn visit_return_type(&mut self, value: &'ast syn::ReturnType) {
-        if let syn::ReturnType::Type(_, ty) = value {
-            self.occurrence("declared_return", ty.span(), None);
-        }
-        visit::visit_return_type(self, value);
-    }
-    fn visit_expr_call(&mut self, value: &'ast syn::ExprCall) {
-        self.occurrence("call_observed", value.func.span(), None);
-        visit::visit_expr_call(self, value);
-    }
-    fn visit_expr_method_call(&mut self, value: &'ast syn::ExprMethodCall) {
-        // Keep receiver and arguments; no receiver type is inferred.
-        self.occurrence("method_call_observed", value.span(), None);
-        visit::visit_expr_method_call(self, value);
-    }
-    fn visit_local(&mut self, value: &'ast syn::Local) {
-        self.occurrence("local_binding", value.pat.span(), None);
-        visit::visit_local(self, value);
     }
 }

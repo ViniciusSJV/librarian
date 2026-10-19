@@ -1,3 +1,6 @@
+//! Rust adapter (syn). Only syntactic declarations and occurrences.
+//! No macro expansion, cfg evaluation or name resolution.
+use super::{Extraction, Extractor, Occurrence};
 use crate::{hash, Chunk, Diagnostic, Source, Symbol};
 use proc_macro2::Span;
 use syn::{
@@ -5,52 +8,72 @@ use syn::{
     visit::{self, Visit},
 };
 
-// Only syntactic declarations. No macro expansion, cfg evaluation or name resolution.
-pub(crate) fn extract(source: &Source, bytes: &[u8]) -> (Vec<Symbol>, Vec<Chunk>, Vec<Diagnostic>) {
-    let text = match std::str::from_utf8(bytes) {
-        Ok(text) => text,
-        Err(error) => {
-            return (
-                vec![],
-                vec![],
-                vec![Diagnostic {
-                    source_id: source.id.clone(),
-                    code: "invalid_utf8".into(),
-                    message: error.to_string(),
-                }],
-            )
+pub(crate) struct Rust;
+
+impl Extractor for Rust {
+    fn extract(&self, source: &Source, bytes: &[u8]) -> Extraction {
+        let failure = |code: &str, message: String| Extraction {
+            symbols: vec![],
+            chunks: vec![],
+            diagnostics: vec![Diagnostic {
+                source_id: source.id.clone(),
+                code: code.into(),
+                message,
+            }],
+        };
+        let text = match std::str::from_utf8(bytes) {
+            Ok(text) => text,
+            Err(error) => return failure("invalid_utf8", error.to_string()),
+        };
+        let (tree, offset) = match parse(text) {
+            Ok(parsed) => parsed,
+            Err(error) => return failure("rust_parse_error", error.to_string()),
+        };
+        let mut visitor = Declarations {
+            source,
+            bytes,
+            offset,
+            scope: vec![],
+            symbols: vec![],
+            chunks: vec![],
+        };
+        visitor.visit_file(&tree);
+        Extraction {
+            symbols: visitor.symbols,
+            chunks: visitor.chunks,
+            diagnostics: vec![],
         }
-    };
-    let tree = match syn::parse_file(text) {
-        Ok(tree) => tree,
-        Err(error) => {
-            return (
-                vec![],
-                vec![],
-                vec![Diagnostic {
-                    source_id: source.id.clone(),
-                    code: "rust_parse_error".into(),
-                    message: error.to_string(),
-                }],
-            )
-        }
-    };
-    // parse_file strips a UTF-8 BOM and shebang before parsing. Restore original byte offsets.
-    let offset = if text.starts_with('\u{feff}') { 3 } else { 0 }
-        + tree.shebang.as_ref().map_or(0, String::len);
-    let mut visitor = Extractor {
-        source,
-        bytes,
-        offset,
-        scope: vec![],
-        symbols: vec![],
-        chunks: vec![],
-    };
-    visitor.visit_file(&tree);
-    (visitor.symbols, visitor.chunks, vec![])
+    }
+
+    fn observe(&self, bytes: &[u8]) -> Vec<Occurrence> {
+        let Ok(text) = std::str::from_utf8(bytes) else {
+            return vec![];
+        };
+        let Ok((tree, offset)) = parse(text) else {
+            return vec![];
+        };
+        let mut observer = Occurrences {
+            offset,
+            found: vec![],
+        };
+        observer.visit_file(&tree);
+        observer.found
+    }
+
+    fn candidate_kinds(&self) -> &'static [&'static str] {
+        &["struct", "enum", "trait", "type", "union"]
+    }
 }
 
-struct Extractor<'a> {
+/// parse_file strips a UTF-8 BOM and shebang before parsing; the offset restores original bytes.
+fn parse(text: &str) -> syn::Result<(syn::File, usize)> {
+    let tree = syn::parse_file(text)?;
+    let offset = if text.starts_with('\u{feff}') { 3 } else { 0 }
+        + tree.shebang.as_ref().map_or(0, String::len);
+    Ok((tree, offset))
+}
+
+struct Declarations<'a> {
     source: &'a Source,
     bytes: &'a [u8],
     offset: usize,
@@ -59,7 +82,7 @@ struct Extractor<'a> {
     chunks: Vec<Chunk>,
 }
 
-impl Extractor<'_> {
+impl Declarations<'_> {
     fn add(&mut self, kind: &str, name: String, span: Span, attrs: &[syn::Attribute]) {
         let parsed_range = span.byte_range();
         let range = (parsed_range.start + self.offset)..(parsed_range.end + self.offset);
@@ -94,7 +117,7 @@ impl Extractor<'_> {
     }
 }
 
-impl<'ast> Visit<'ast> for Extractor<'_> {
+impl<'ast> Visit<'ast> for Declarations<'_> {
     fn visit_item(&mut self, item: &'ast syn::Item) {
         let declaration = match item {
             syn::Item::Fn(i) => Some(("function", i.sig.ident.to_string(), &i.attrs)),
@@ -142,5 +165,50 @@ impl<'ast> Visit<'ast> for Extractor<'_> {
         self.scope.push(name);
         visit::visit_trait_item_fn(self, item);
         self.scope.pop();
+    }
+}
+
+/// Written types, returns, calls and bindings. Calls are never linked to presumed targets.
+struct Occurrences {
+    offset: usize,
+    found: Vec<Occurrence>,
+}
+
+impl Occurrences {
+    fn push(&mut self, kind: &'static str, span: Span, candidate: Option<String>) {
+        let range = span.byte_range();
+        self.found.push(Occurrence {
+            kind,
+            start: range.start + self.offset,
+            end: range.end + self.offset,
+            candidate,
+        });
+    }
+}
+
+impl<'ast> Visit<'ast> for Occurrences {
+    fn visit_type_path(&mut self, value: &'ast syn::TypePath) {
+        let name = value.path.segments.last().map(|s| s.ident.to_string());
+        self.push("type_reference", value.span(), name);
+        visit::visit_type_path(self, value);
+    }
+    fn visit_return_type(&mut self, value: &'ast syn::ReturnType) {
+        if let syn::ReturnType::Type(_, ty) = value {
+            self.push("declared_return", ty.span(), None);
+        }
+        visit::visit_return_type(self, value);
+    }
+    fn visit_expr_call(&mut self, value: &'ast syn::ExprCall) {
+        self.push("call_observed", value.func.span(), None);
+        visit::visit_expr_call(self, value);
+    }
+    fn visit_expr_method_call(&mut self, value: &'ast syn::ExprMethodCall) {
+        // Keep receiver and arguments; no receiver type is inferred.
+        self.push("method_call_observed", value.span(), None);
+        visit::visit_expr_method_call(self, value);
+    }
+    fn visit_local(&mut self, value: &'ast syn::Local) {
+        self.push("local_binding", value.pat.span(), None);
+        visit::visit_local(self, value);
     }
 }

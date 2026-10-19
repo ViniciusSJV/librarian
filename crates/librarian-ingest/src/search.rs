@@ -121,6 +121,7 @@ impl<'a> SearchIndex<'a> {
         let documents = catalog
             .symbols
             .values()
+            // v1 ranking policy: Rust containers are navigation, not answers.
             .filter(|s| !matches!(s.kind.as_str(), "module" | "impl"))
             .map(|s| {
                 let source = &catalog.sources[&s.source_id];
@@ -193,6 +194,7 @@ impl<'a> SearchIndex<'a> {
                 continue;
             }
             let symbol = &self.catalog.symbols[&doc.id];
+            // v1 ranking policy: an observed #[test] attribute ranks lower; it is not executed evidence.
             let score = reasons.len() * 100 + reasons.iter().map(|r| r.weight).sum::<usize>()
                 - if symbol.is_test { 20 } else { 0 };
             ranked.push((score, symbol.is_test, doc.id.clone(), reasons));

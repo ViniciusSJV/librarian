@@ -370,6 +370,16 @@ Formatos e linguagens suportados; limites/capacidades de cada extractor; relaç�
 3. Criar fixtures e testes contratuais.
 4. Registrar capacidades, limites e versão.
 
-## Próximo passo autorizado
+## ETAPA 2 — resultado (19/10/2026)
 
-Implementar somente a ETAPA 2: proteger o formato v1 com fixtures históricas e encapsular Rust atrás do contrato de extractor, mantendo syn e comportamento atual. A 2A é commitada antes de qualquer alteração em `src/`; a 2B só é aceita se as fixtures e goldens da 2A passarem sem alteração.
+**2A.** Edition v1 congelada em `crates/librarian-ingest/tests/fixtures/v1`, gerada uma única vez pelo código anterior à refatoração e commitada antes de qualquer mudança em `src/`. Goldens de grafo e de três buscas, incluindo uma com símbolo `#[test]`. `tests/v1_regression.rs` cobre aceitação, reextração byte a byte, classificação/descoberta v1 (`.py` explícito como `auxiliary`, `.py` em diretório não descoberto), `nodes` como objeto e seis adulterações. Mutações manuais no grafo, na penalidade de teste e na taxonomia foram detectadas e revertidas.
+
+**2B.** `extract.rs` virou `extractors/rust.rs` (declarações e ocorrências, únicos usuários de `syn`). `extractors/mod.rs` define `Extractor`, `Extraction`, `Occurrence` e `Registry`. O perfil v1 congelado reúne identidade, extensões, extractors e limits. `generate` usa o perfil atual; `Catalog::load` usa o perfil da identidade gravada e recusa as desconhecidas; `compare_current` usa a descoberta da edition. `graph.rs` só monta o grafo a partir das ocorrências; os tipos candidatos vêm do extractor. `search.rs` apenas marca a política v1. A API pública não mudou.
+
+Verificação: fixtures e goldens da 2A sem alteração; `cargo test --workspace --locked --offline` com 72 aprovados e 1 ignorado; clippy do ingest sem avisos; `catalog_sources` do renderer com 3 aprovados e `prepare_ollama`/`send_ollama`/`explain_evidence` passando em `cargo check`. Isso descreve essas execuções, não prova ausência geral de defeitos.
+
+Ainda não feito, de propósito: filtro de candidatos por linguagem (sem efeito na v1, necessário na 3A), formato multilinguagem, `category`, política de exclusões e Tree-sitter.
+
+## Próximo passo proposto, aguardando validação
+
+ETAPA 3A — Python: perfil novo com identidade própria, formato multilinguagem e adapter mínimo (class, function, method), sem alterar a verificação da fixture v1.
