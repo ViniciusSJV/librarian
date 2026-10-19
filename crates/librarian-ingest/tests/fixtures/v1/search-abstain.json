@@ -1,0 +1,20 @@
+{
+  "version": "lexical-search-v1",
+  "catalog_sha256": "8620fd7fdc256fd0f11120e5fc2326da889641199dd78932d68a9a34fa5e6c35",
+  "lexicon_sha256": "06806c6ea09f30d0538ef66b96011f9f48c81edbcccb71c8f88548312672f25c",
+  "question": "quantum database",
+  "terms": [
+    "database",
+    "quantum"
+  ],
+  "status": "no_lexical_evidence",
+  "hits": [],
+  "graph": null,
+  "diagnostics": 2,
+  "limits": [
+    "Lexical candidates, not a semantic answer. Minimum coverage: 60% of query term groups; scores are not probabilities.",
+    "Name candidates are not resolved types/calls. No macros, cfg evaluation, compiler or runtime proof.",
+    "Graph expands only the first hit. Source nodes are leaves. Depth bounded to 0..3, 48 nodes, 96 edges.",
+    "Excerpts limited to 4000 UTF-8 bytes each and 16000 total. Truncation is explicit; hashes/lines refer to full chunks."
+  ]
+}

@@ -1,0 +1,4 @@
+{
+  "groups": [["raios", "ray"], ["direcao", "direction"]],
+  "stop_words": ["calcula"]
+}

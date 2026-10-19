@@ -1,0 +1,4 @@
+{
+  "project": "librarian-ingest-v1-fixture",
+  "inputs": ["src", "scripts/helper.py"]
+}

@@ -1,0 +1,12 @@
+[
+  {
+    "source_id": "src:8a8c9a235dffb2213e0ba5a000ee53741633d19f2054fd71d243882daeee1b0a:cdfb6929e7c395b73c03414e1e440cdd98a1dad4b6d9da55d069594ab6048847",
+    "code": "rust_parse_error",
+    "message": "cannot parse string into token stream"
+  },
+  {
+    "source_id": "src:7cc08208c8b8173871d640ce3df1a1c8309e515860928b545f1399216aac6a43:14ad098ea57f8a84fdaceeefdf8d02118128aa793190bd1fbc66e4d77dbe8fee",
+    "code": "invalid_utf8",
+    "message": "invalid utf-8 sequence of 1 bytes from index 18"
+  }
+]
