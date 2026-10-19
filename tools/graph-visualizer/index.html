@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Librarian Graph Visualizer</title>
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div id="app">
+    <aside class="sidebar">
+      <div class="eyebrow">LIBRARIAN</div>
+      <h1>Graph Visualizer</h1>
+      <p class="muted">Visualização 3D dos artefatos gerados pelo Librarian/PLAYME.</p>
+
+      <section class="card">
+        <label class="file-button">
+          Selecionar pasta PLAYME
+          <input id="folderInput" type="file" webkitdirectory multiple />
+        </label>
+        <p class="muted">Esperado: <code>graph.json</code> e <code>edition/*.jsonl</code>. Trace e search são opcionais.</p>
+      </section>
+
+      <section class="card">
+        <label for="searchInput">Encontrar nó</label>
+        <input id="searchInput" type="search" placeholder="Camera, World, ray_from_pixel..." disabled />
+        <div class="row">
+          <button id="fitButton" disabled>Centralizar</button>
+          <button id="resetButton" disabled>Limpar</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-title">Camadas</div>
+        <label><input type="checkbox" data-kind="source" checked /> Sources</label>
+        <label><input type="checkbox" data-kind="symbol" checked /> Symbols</label>
+        <label><input type="checkbox" data-kind="occurrence" checked /> Occurrences</label>
+        <label><input type="checkbox" data-kind="chunk" /> Chunks</label>
+      </section>
+
+      <section class="card">
+        <div class="section-title">Consulta</div>
+        <label><input id="traceToggle" type="checkbox" checked /> Destacar graph-trace</label>
+        <label><input id="e1Toggle" type="checkbox" checked /> Destacar E1</label>
+      </section>
+
+      <section class="card">
+        <div class="section-title">Selecionado</div>
+        <div id="selectedEmpty" class="muted">Clique em um nó.</div>
+        <div id="selectedContent" hidden>
+          <strong id="selectedLabel"></strong>
+          <dl id="selectedMeta"></dl>
+        </div>
+      </section>
+
+      <section class="card stats">
+        <div><span>Nós</span><strong id="nodeCount">0</strong></div>
+        <div><span>Arestas</span><strong id="edgeCount">0</strong></div>
+        <div><span>Trace</span><strong id="traceCount">0</strong></div>
+        <div><span>E1</span><strong id="e1Name">—</strong></div>
+      </section>
+    </aside>
+
+    <main class="viewport">
+      <canvas id="scene"></canvas>
+      <div id="status" class="status">Selecione uma pasta gerada pelo PLAYME.</div>
+      <div class="legend">
+        <span><i class="dot source"></i>Source</span>
+        <span><i class="dot symbol"></i>Symbol</span>
+        <span><i class="dot occurrence"></i>Occurrence</span>
+        <span><i class="dot chunk"></i>Chunk</span>
+        <span><i class="line trace"></i>Trace</span>
+        <span><i class="dot e1"></i>E1</span>
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
