@@ -1,0 +1,302 @@
+{
+  "version": "lexical-search-v1",
+  "catalog_sha256": "8620fd7fdc256fd0f11120e5fc2326da889641199dd78932d68a9a34fa5e6c35",
+  "lexicon_sha256": "88b3b29fb19fba14aaf5a128af28d58447dc6529293f6b10270b88008fac01be",
+  "question": "render hit",
+  "terms": [
+    "hit",
+    "render"
+  ],
+  "status": "candidates",
+  "hits": [
+    {
+      "symbol_id": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd:function:415:582",
+      "name": "render",
+      "path": "src/lib.rs",
+      "source_sha256": "93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd",
+      "start_line": 27,
+      "end_line": 31,
+      "chunk_id": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd:function:415:582",
+      "chunk_sha256": "a7f3c4183bcb21d1854bcf73b35d8a63cc257a10a7f122f119743570a337f4c5",
+      "score": 209,
+      "reasons": [
+        {
+          "term": "hit",
+          "expanded": [
+            "hit"
+          ],
+          "fields": [
+            "code"
+          ],
+          "weight": 1
+        },
+        {
+          "term": "render",
+          "expanded": [
+            "render"
+          ],
+          "fields": [
+            "name",
+            "scope",
+            "code"
+          ],
+          "weight": 8
+        }
+      ],
+      "excerpt": "pub fn render(camera: &camera::Camera, shape: &dyn Shape) -> Vec<Hit> {\n    let ray = camera.ray_from_pixel(0, 0);\n    let hit = shape.intersect(&ray);\n    vec![hit]\n}",
+      "excerpt_truncated": false
+    },
+    {
+      "symbol_id": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd:function:741:907",
+      "name": "tests::render_returns_one_hit",
+      "path": "src/lib.rs",
+      "source_sha256": "93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd",
+      "start_line": 47,
+      "end_line": 51,
+      "chunk_id": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd:function:741:907",
+      "chunk_sha256": "2b9940370c50a155e9ddbf973845a5ad7e2efab0185b33c7a3f0bcb8b5eeec8c",
+      "score": 196,
+      "reasons": [
+        {
+          "term": "hit",
+          "expanded": [
+            "hit"
+          ],
+          "fields": [
+            "name",
+            "scope",
+            "code"
+          ],
+          "weight": 8
+        },
+        {
+          "term": "render",
+          "expanded": [
+            "render"
+          ],
+          "fields": [
+            "name",
+            "scope",
+            "code"
+          ],
+          "weight": 8
+        }
+      ],
+      "excerpt": "#[test]\n    fn render_returns_one_hit() {\n        let camera = camera::Camera::new(4, 3);\n        assert_eq!(render(&camera, &shapes::Sphere::unit()).len(), 1);\n    }",
+      "excerpt_truncated": false
+    }
+  ],
+  "graph": {
+    "nodes": [
+      {
+        "id": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd",
+        "kind": "source",
+        "label": "src/lib.rs"
+      },
+      {
+        "id": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd:function:415:582",
+        "kind": "function",
+        "label": "render"
+      },
+      {
+        "id": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd:occurrence:declared_return:476:484",
+        "kind": "declared_return",
+        "label": "Vec<Hit>"
+      },
+      {
+        "id": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd:occurrence:local_binding:495:498",
+        "kind": "local_binding",
+        "label": "ray"
+      },
+      {
+        "id": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd:occurrence:local_binding:538:541",
+        "kind": "local_binding",
+        "label": "hit"
+      },
+      {
+        "id": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd:occurrence:method_call_observed:501:528",
+        "kind": "method_call_observed",
+        "label": "camera.ray_from_pixel(0, 0)"
+      },
+      {
+        "id": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd:occurrence:method_call_observed:544:565",
+        "kind": "method_call_observed",
+        "label": "shape.intersect(&ray)"
+      },
+      {
+        "id": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd:occurrence:type_reference:438:452",
+        "kind": "type_reference",
+        "label": "camera::Camera"
+      },
+      {
+        "id": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd:occurrence:type_reference:476:484",
+        "kind": "type_reference",
+        "label": "Vec<Hit>"
+      },
+      {
+        "id": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd:occurrence:type_reference:480:483",
+        "kind": "type_reference",
+        "label": "Hit"
+      }
+    ],
+    "edges": [
+      {
+        "from": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd",
+        "to": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd:function:415:582",
+        "kind": "declares",
+        "resolution": "structural",
+        "evidence": {
+          "source_id": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd",
+          "path": "src/lib.rs",
+          "source_sha256": "93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd",
+          "start_byte": 415,
+          "end_byte": 582,
+          "start_line": 27,
+          "end_line": 31,
+          "excerpt_sha256": "a7f3c4183bcb21d1854bcf73b35d8a63cc257a10a7f122f119743570a337f4c5"
+        }
+      },
+      {
+        "from": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd:function:415:582",
+        "to": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd:occurrence:declared_return:476:484",
+        "kind": "declared_return",
+        "resolution": "syntax_only",
+        "evidence": {
+          "source_id": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd",
+          "path": "src/lib.rs",
+          "source_sha256": "93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd",
+          "start_byte": 476,
+          "end_byte": 484,
+          "start_line": 27,
+          "end_line": 27,
+          "excerpt_sha256": "ee8d5b89d1ddfde11c29854bddd2865d9a38e64405ca45bd1ec25dd58ce2ef4d"
+        }
+      },
+      {
+        "from": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd:function:415:582",
+        "to": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd:occurrence:local_binding:495:498",
+        "kind": "local_binding",
+        "resolution": "syntax_only",
+        "evidence": {
+          "source_id": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd",
+          "path": "src/lib.rs",
+          "source_sha256": "93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd",
+          "start_byte": 495,
+          "end_byte": 498,
+          "start_line": 28,
+          "end_line": 28,
+          "excerpt_sha256": "c04bc270f965db4d7ab365b3b865b743e35e13e295c7b15fb795e2a01d24a639"
+        }
+      },
+      {
+        "from": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd:function:415:582",
+        "to": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd:occurrence:local_binding:538:541",
+        "kind": "local_binding",
+        "resolution": "syntax_only",
+        "evidence": {
+          "source_id": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd",
+          "path": "src/lib.rs",
+          "source_sha256": "93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd",
+          "start_byte": 538,
+          "end_byte": 541,
+          "start_line": 29,
+          "end_line": 29,
+          "excerpt_sha256": "63d04dee7c50f6fb120287649c32b5e32d4e8e4fc90a9083adc98f9baac63691"
+        }
+      },
+      {
+        "from": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd:function:415:582",
+        "to": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd:occurrence:method_call_observed:501:528",
+        "kind": "method_call_observed",
+        "resolution": "syntax_only",
+        "evidence": {
+          "source_id": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd",
+          "path": "src/lib.rs",
+          "source_sha256": "93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd",
+          "start_byte": 501,
+          "end_byte": 528,
+          "start_line": 28,
+          "end_line": 28,
+          "excerpt_sha256": "f680dacb57d8b861c06f78936f1b19c753ad8e06aafaf26bf2b06bd131f7f3f4"
+        }
+      },
+      {
+        "from": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd:function:415:582",
+        "to": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd:occurrence:method_call_observed:544:565",
+        "kind": "method_call_observed",
+        "resolution": "syntax_only",
+        "evidence": {
+          "source_id": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd",
+          "path": "src/lib.rs",
+          "source_sha256": "93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd",
+          "start_byte": 544,
+          "end_byte": 565,
+          "start_line": 29,
+          "end_line": 29,
+          "excerpt_sha256": "b7e2865fb6f9677d76d8912fe51fad99114b04fbf8f22287b0e12eea3ba3b97e"
+        }
+      },
+      {
+        "from": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd:function:415:582",
+        "to": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd:occurrence:type_reference:438:452",
+        "kind": "type_reference",
+        "resolution": "syntax_only",
+        "evidence": {
+          "source_id": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd",
+          "path": "src/lib.rs",
+          "source_sha256": "93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd",
+          "start_byte": 438,
+          "end_byte": 452,
+          "start_line": 27,
+          "end_line": 27,
+          "excerpt_sha256": "50c4de9aa2988313ff07674a795173478afc86611948954f5a6e2e9f6838b429"
+        }
+      },
+      {
+        "from": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd:function:415:582",
+        "to": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd:occurrence:type_reference:476:484",
+        "kind": "type_reference",
+        "resolution": "syntax_only",
+        "evidence": {
+          "source_id": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd",
+          "path": "src/lib.rs",
+          "source_sha256": "93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd",
+          "start_byte": 476,
+          "end_byte": 484,
+          "start_line": 27,
+          "end_line": 27,
+          "excerpt_sha256": "ee8d5b89d1ddfde11c29854bddd2865d9a38e64405ca45bd1ec25dd58ce2ef4d"
+        }
+      },
+      {
+        "from": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd:function:415:582",
+        "to": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd:occurrence:type_reference:480:483",
+        "kind": "type_reference",
+        "resolution": "syntax_only",
+        "evidence": {
+          "source_id": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd",
+          "path": "src/lib.rs",
+          "source_sha256": "93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd",
+          "start_byte": 480,
+          "end_byte": 483,
+          "start_line": 27,
+          "end_line": 27,
+          "excerpt_sha256": "8a043f55ef38458453a5d90a4a8528f6aeef45cbf281fdaf0413fb7cbf9f3058"
+        }
+      }
+    ],
+    "depth": 1,
+    "max_nodes": 48,
+    "max_edges": 96,
+    "truncated": false,
+    "label_bytes_limit": 256,
+    "labels_truncated": 0
+  },
+  "diagnostics": 2,
+  "limits": [
+    "Lexical candidates, not a semantic answer. Minimum coverage: 60% of query term groups; scores are not probabilities.",
+    "Name candidates are not resolved types/calls. No macros, cfg evaluation, compiler or runtime proof.",
+    "Graph expands only the first hit. Source nodes are leaves. Depth bounded to 0..3, 48 nodes, 96 edges.",
+    "Excerpts limited to 4000 UTF-8 bytes each and 16000 total. Truncation is explicit; hashes/lines refer to full chunks."
+  ]
+}

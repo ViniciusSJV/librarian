@@ -1,0 +1,663 @@
+{
+  "version": "lexical-search-v1",
+  "catalog_sha256": "8620fd7fdc256fd0f11120e5fc2326da889641199dd78932d68a9a34fa5e6c35",
+  "lexicon_sha256": "06806c6ea09f30d0538ef66b96011f9f48c81edbcccb71c8f88548312672f25c",
+  "question": "Onde a câmera calcula a direção dos raios?",
+  "terms": [
+    "camera",
+    "direcao",
+    "raios"
+  ],
+  "status": "candidates",
+  "hits": [
+    {
+      "symbol_id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:method:295:549",
+      "name": "impl Camera::ray_from_pixel",
+      "path": "src/camera.rs",
+      "source_sha256": "c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+      "start_line": 18,
+      "end_line": 23,
+      "chunk_id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:method:295:549",
+      "chunk_sha256": "62bd32d4b4b47e9e45a553d1a41003765137925a4bccf69ba54e2cc5337fb750",
+      "score": 312,
+      "reasons": [
+        {
+          "term": "camera",
+          "expanded": [
+            "camera"
+          ],
+          "fields": [
+            "scope",
+            "path"
+          ],
+          "weight": 3
+        },
+        {
+          "term": "direcao",
+          "expanded": [
+            "direcao",
+            "direction"
+          ],
+          "fields": [
+            "code"
+          ],
+          "weight": 1
+        },
+        {
+          "term": "raios",
+          "expanded": [
+            "raios",
+            "ray"
+          ],
+          "fields": [
+            "name",
+            "scope",
+            "code"
+          ],
+          "weight": 8
+        }
+      ],
+      "excerpt": "pub fn ray_from_pixel(&self, x: usize, y: usize) -> Ray {\n        let origin = Point(0.0, 0.0, 0.0);\n        let pixel = Point(x as f64, y as f64, -1.0);\n        let direction = normalize(subtract(pixel, &origin));\n        Ray { origin, direction }\n    }",
+      "excerpt_truncated": false
+    },
+    {
+      "symbol_id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:struct:46:113",
+      "name": "Ray",
+      "path": "src/camera.rs",
+      "source_sha256": "c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+      "start_line": 3,
+      "end_line": 6,
+      "chunk_id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:struct:46:113",
+      "chunk_sha256": "a0c8bc6c12739486d4d6aba62a4666529f0ee8ddc1593eaf30b80536034ed4b3",
+      "score": 310,
+      "reasons": [
+        {
+          "term": "camera",
+          "expanded": [
+            "camera"
+          ],
+          "fields": [
+            "path"
+          ],
+          "weight": 1
+        },
+        {
+          "term": "direcao",
+          "expanded": [
+            "direcao",
+            "direction"
+          ],
+          "fields": [
+            "code"
+          ],
+          "weight": 1
+        },
+        {
+          "term": "raios",
+          "expanded": [
+            "raios",
+            "ray"
+          ],
+          "fields": [
+            "name",
+            "scope",
+            "code"
+          ],
+          "weight": 8
+        }
+      ],
+      "excerpt": "pub struct Ray {\n    pub origin: Point,\n    pub direction: Point,\n}",
+      "excerpt_truncated": false
+    },
+    {
+      "symbol_id": "src:785a63813ad0b4fd4faba3eb5796421d97a02556f21739cb2e7f202d13dedd5a:d80c0cded7b9f0027ff73a6d5ae3a87d7a4a005c4609758db76c41989a73df69:struct:0:91",
+      "name": "Ray",
+      "path": "src/shapes/debug.rs",
+      "source_sha256": "d80c0cded7b9f0027ff73a6d5ae3a87d7a4a005c4609758db76c41989a73df69",
+      "start_line": 1,
+      "end_line": 2,
+      "chunk_id": "src:785a63813ad0b4fd4faba3eb5796421d97a02556f21739cb2e7f202d13dedd5a:d80c0cded7b9f0027ff73a6d5ae3a87d7a4a005c4609758db76c41989a73df69:struct:0:91",
+      "chunk_sha256": "5d6af9b49a21fab3a2aa89e027fa9d7a0772f3bb011f0d43b2c2ea7bf68545d7",
+      "score": 209,
+      "reasons": [
+        {
+          "term": "camera",
+          "expanded": [
+            "camera"
+          ],
+          "fields": [
+            "code"
+          ],
+          "weight": 1
+        },
+        {
+          "term": "raios",
+          "expanded": [
+            "raios",
+            "ray"
+          ],
+          "fields": [
+            "name",
+            "scope",
+            "code"
+          ],
+          "weight": 8
+        }
+      ],
+      "excerpt": "/// Homônimo intencional de camera::Ray; nomes iguais não resolvem tipos.\npub struct Ray;",
+      "excerpt_truncated": false
+    },
+    {
+      "symbol_id": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd:trait_method:314:360",
+      "name": "Shape::intersect",
+      "path": "src/lib.rs",
+      "source_sha256": "93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd",
+      "start_line": 21,
+      "end_line": 21,
+      "chunk_id": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:93232d6f6ced6c893936b8d2aa3ce4af1de96b883ba7d11c2ddc6c3f1cfc57bd:trait_method:314:360",
+      "chunk_sha256": "14b2a878368b21923a5d39af0d5339554a4f2d2637f34f4450db4231a82eae41",
+      "score": 202,
+      "reasons": [
+        {
+          "term": "camera",
+          "expanded": [
+            "camera"
+          ],
+          "fields": [
+            "code"
+          ],
+          "weight": 1
+        },
+        {
+          "term": "raios",
+          "expanded": [
+            "raios",
+            "ray"
+          ],
+          "fields": [
+            "code"
+          ],
+          "weight": 1
+        }
+      ],
+      "excerpt": "fn intersect(&self, ray: &camera::Ray) -> Hit;",
+      "excerpt_truncated": false
+    },
+    {
+      "symbol_id": "src:402378bd9af470cb27a8f2b2d03011539a223d9d053fba49c6fcf73462af5dcd:4258898129c1dc02a32749730d8b8e7b595d4794a49dbee8dae7621ad96d72f5:method:193:312",
+      "name": "impl Shape for Sphere::intersect",
+      "path": "src/shapes/sphere.rs",
+      "source_sha256": "4258898129c1dc02a32749730d8b8e7b595d4794a49dbee8dae7621ad96d72f5",
+      "start_line": 14,
+      "end_line": 17,
+      "chunk_id": "src:402378bd9af470cb27a8f2b2d03011539a223d9d053fba49c6fcf73462af5dcd:4258898129c1dc02a32749730d8b8e7b595d4794a49dbee8dae7621ad96d72f5:method:193:312",
+      "chunk_sha256": "7a9b17582e4163af3d7bf478846bd01c5a3962ead3ff2983d61921280bedbe3e",
+      "score": 202,
+      "reasons": [
+        {
+          "term": "direcao",
+          "expanded": [
+            "direcao",
+            "direction"
+          ],
+          "fields": [
+            "code"
+          ],
+          "weight": 1
+        },
+        {
+          "term": "raios",
+          "expanded": [
+            "raios",
+            "ray"
+          ],
+          "fields": [
+            "code"
+          ],
+          "weight": 1
+        }
+      ],
+      "excerpt": "fn intersect(&self, ray: &Ray) -> Hit {\n        let along = ray.direction.2 * self.radius;\n        Hit::At(along)\n    }",
+      "excerpt_truncated": false
+    }
+  ],
+  "graph": {
+    "nodes": [
+      {
+        "id": "src:785a63813ad0b4fd4faba3eb5796421d97a02556f21739cb2e7f202d13dedd5a:d80c0cded7b9f0027ff73a6d5ae3a87d7a4a005c4609758db76c41989a73df69:struct:0:91",
+        "kind": "struct",
+        "label": "Ray"
+      },
+      {
+        "id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+        "kind": "source",
+        "label": "src/camera.rs"
+      },
+      {
+        "id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:impl:183:551",
+        "kind": "impl",
+        "label": "impl Camera"
+      },
+      {
+        "id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:method:201:289",
+        "kind": "method",
+        "label": "impl Camera::new"
+      },
+      {
+        "id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:method:295:549",
+        "kind": "method",
+        "label": "impl Camera::ray_from_pixel"
+      },
+      {
+        "id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:occurrence:call_observed:374:379",
+        "kind": "call_observed",
+        "label": "Point"
+      },
+      {
+        "id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:occurrence:call_observed:416:421",
+        "kind": "call_observed",
+        "label": "Point"
+      },
+      {
+        "id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:occurrence:call_observed:473:482",
+        "kind": "call_observed",
+        "label": "normalize"
+      },
+      {
+        "id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:occurrence:call_observed:483:491",
+        "kind": "call_observed",
+        "label": "subtract"
+      },
+      {
+        "id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:occurrence:declared_return:347:350",
+        "kind": "declared_return",
+        "label": "Ray"
+      },
+      {
+        "id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:occurrence:local_binding:365:371",
+        "kind": "local_binding",
+        "label": "origin"
+      },
+      {
+        "id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:occurrence:local_binding:408:413",
+        "kind": "local_binding",
+        "label": "pixel"
+      },
+      {
+        "id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:occurrence:local_binding:461:470",
+        "kind": "local_binding",
+        "label": "direction"
+      },
+      {
+        "id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:occurrence:type_reference:188:194",
+        "kind": "type_reference",
+        "label": "Camera"
+      },
+      {
+        "id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:occurrence:type_reference:327:332",
+        "kind": "type_reference",
+        "label": "usize"
+      },
+      {
+        "id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:occurrence:type_reference:337:342",
+        "kind": "type_reference",
+        "label": "usize"
+      },
+      {
+        "id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:occurrence:type_reference:347:350",
+        "kind": "type_reference",
+        "label": "Ray"
+      },
+      {
+        "id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:occurrence:type_reference:427:430",
+        "kind": "type_reference",
+        "label": "f64"
+      },
+      {
+        "id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:occurrence:type_reference:437:440",
+        "kind": "type_reference",
+        "label": "f64"
+      },
+      {
+        "id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:struct:46:113",
+        "kind": "struct",
+        "label": "Ray"
+      }
+    ],
+    "edges": [
+      {
+        "from": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+        "to": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:impl:183:551",
+        "kind": "declares",
+        "resolution": "structural",
+        "evidence": {
+          "source_id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+          "path": "src/camera.rs",
+          "source_sha256": "c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+          "start_byte": 183,
+          "end_byte": 551,
+          "start_line": 13,
+          "end_line": 24,
+          "excerpt_sha256": "4a776ef68779545279cff8412a9bfb3fe875e131295548edd7ef110c1a72feb6"
+        }
+      },
+      {
+        "from": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+        "to": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:method:295:549",
+        "kind": "declares",
+        "resolution": "structural",
+        "evidence": {
+          "source_id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+          "path": "src/camera.rs",
+          "source_sha256": "c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+          "start_byte": 295,
+          "end_byte": 549,
+          "start_line": 18,
+          "end_line": 23,
+          "excerpt_sha256": "62bd32d4b4b47e9e45a553d1a41003765137925a4bccf69ba54e2cc5337fb750"
+        }
+      },
+      {
+        "from": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:impl:183:551",
+        "to": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:method:201:289",
+        "kind": "contains",
+        "resolution": "structural",
+        "evidence": {
+          "source_id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+          "path": "src/camera.rs",
+          "source_sha256": "c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+          "start_byte": 201,
+          "end_byte": 289,
+          "start_line": 14,
+          "end_line": 16,
+          "excerpt_sha256": "ab074a3e802466ab1fc42f1d5dfd4bc4945f7489d072c5efc9466e4059263879"
+        }
+      },
+      {
+        "from": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:impl:183:551",
+        "to": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:method:295:549",
+        "kind": "contains",
+        "resolution": "structural",
+        "evidence": {
+          "source_id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+          "path": "src/camera.rs",
+          "source_sha256": "c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+          "start_byte": 295,
+          "end_byte": 549,
+          "start_line": 18,
+          "end_line": 23,
+          "excerpt_sha256": "62bd32d4b4b47e9e45a553d1a41003765137925a4bccf69ba54e2cc5337fb750"
+        }
+      },
+      {
+        "from": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:impl:183:551",
+        "to": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:occurrence:type_reference:188:194",
+        "kind": "type_reference",
+        "resolution": "syntax_only",
+        "evidence": {
+          "source_id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+          "path": "src/camera.rs",
+          "source_sha256": "c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+          "start_byte": 188,
+          "end_byte": 194,
+          "start_line": 13,
+          "end_line": 13,
+          "excerpt_sha256": "03494b0d1f803522a3497d751eaaf6f987883cd4fe0b0e66baf67a662ae231b2"
+        }
+      },
+      {
+        "from": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:method:295:549",
+        "to": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:occurrence:call_observed:374:379",
+        "kind": "call_observed",
+        "resolution": "syntax_only",
+        "evidence": {
+          "source_id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+          "path": "src/camera.rs",
+          "source_sha256": "c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+          "start_byte": 374,
+          "end_byte": 379,
+          "start_line": 19,
+          "end_line": 19,
+          "excerpt_sha256": "2fc0c524431a923617b003031d19d1e02e729210afacbe3ee02337a43422634a"
+        }
+      },
+      {
+        "from": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:method:295:549",
+        "to": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:occurrence:call_observed:416:421",
+        "kind": "call_observed",
+        "resolution": "syntax_only",
+        "evidence": {
+          "source_id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+          "path": "src/camera.rs",
+          "source_sha256": "c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+          "start_byte": 416,
+          "end_byte": 421,
+          "start_line": 20,
+          "end_line": 20,
+          "excerpt_sha256": "2fc0c524431a923617b003031d19d1e02e729210afacbe3ee02337a43422634a"
+        }
+      },
+      {
+        "from": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:method:295:549",
+        "to": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:occurrence:call_observed:473:482",
+        "kind": "call_observed",
+        "resolution": "syntax_only",
+        "evidence": {
+          "source_id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+          "path": "src/camera.rs",
+          "source_sha256": "c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+          "start_byte": 473,
+          "end_byte": 482,
+          "start_line": 21,
+          "end_line": 21,
+          "excerpt_sha256": "768207cf3cf6d5aa36cd8942d06c7cf72a078060d1fede08ee9dc07bbae1d380"
+        }
+      },
+      {
+        "from": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:method:295:549",
+        "to": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:occurrence:call_observed:483:491",
+        "kind": "call_observed",
+        "resolution": "syntax_only",
+        "evidence": {
+          "source_id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+          "path": "src/camera.rs",
+          "source_sha256": "c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+          "start_byte": 483,
+          "end_byte": 491,
+          "start_line": 21,
+          "end_line": 21,
+          "excerpt_sha256": "1cc624bbe4bb93f327c03f307bea7c9b03dcc407c5dc20a53fb905525591eac5"
+        }
+      },
+      {
+        "from": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:method:295:549",
+        "to": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:occurrence:declared_return:347:350",
+        "kind": "declared_return",
+        "resolution": "syntax_only",
+        "evidence": {
+          "source_id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+          "path": "src/camera.rs",
+          "source_sha256": "c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+          "start_byte": 347,
+          "end_byte": 350,
+          "start_line": 18,
+          "end_line": 18,
+          "excerpt_sha256": "cc172a7c8269911b3ba1223fcdab399931b67ba12cd917fd0e5b3fb9c3707ad4"
+        }
+      },
+      {
+        "from": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:method:295:549",
+        "to": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:occurrence:local_binding:365:371",
+        "kind": "local_binding",
+        "resolution": "syntax_only",
+        "evidence": {
+          "source_id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+          "path": "src/camera.rs",
+          "source_sha256": "c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+          "start_byte": 365,
+          "end_byte": 371,
+          "start_line": 19,
+          "end_line": 19,
+          "excerpt_sha256": "181fdd46fc4a7246b9f4f1eba3129ba5d724011af5f10223b3589955d1df108a"
+        }
+      },
+      {
+        "from": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:method:295:549",
+        "to": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:occurrence:local_binding:408:413",
+        "kind": "local_binding",
+        "resolution": "syntax_only",
+        "evidence": {
+          "source_id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+          "path": "src/camera.rs",
+          "source_sha256": "c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+          "start_byte": 408,
+          "end_byte": 413,
+          "start_line": 20,
+          "end_line": 20,
+          "excerpt_sha256": "3f8d7379e2f0f7d0c845a06f7b67ef80cacce0c686254aced769c1698f3fe59a"
+        }
+      },
+      {
+        "from": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:method:295:549",
+        "to": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:occurrence:local_binding:461:470",
+        "kind": "local_binding",
+        "resolution": "syntax_only",
+        "evidence": {
+          "source_id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+          "path": "src/camera.rs",
+          "source_sha256": "c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+          "start_byte": 461,
+          "end_byte": 470,
+          "start_line": 21,
+          "end_line": 21,
+          "excerpt_sha256": "93c4abe27cf1696102534bb60b3795f41f60f52fa806cd5d0feadfc8bd2b8170"
+        }
+      },
+      {
+        "from": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:method:295:549",
+        "to": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:occurrence:type_reference:327:332",
+        "kind": "type_reference",
+        "resolution": "syntax_only",
+        "evidence": {
+          "source_id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+          "path": "src/camera.rs",
+          "source_sha256": "c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+          "start_byte": 327,
+          "end_byte": 332,
+          "start_line": 18,
+          "end_line": 18,
+          "excerpt_sha256": "f4176652dfce34ed72ecc9a5aa164dee1d7d1b6cb65c98dc300ea9c0f543e75e"
+        }
+      },
+      {
+        "from": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:method:295:549",
+        "to": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:occurrence:type_reference:337:342",
+        "kind": "type_reference",
+        "resolution": "syntax_only",
+        "evidence": {
+          "source_id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+          "path": "src/camera.rs",
+          "source_sha256": "c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+          "start_byte": 337,
+          "end_byte": 342,
+          "start_line": 18,
+          "end_line": 18,
+          "excerpt_sha256": "f4176652dfce34ed72ecc9a5aa164dee1d7d1b6cb65c98dc300ea9c0f543e75e"
+        }
+      },
+      {
+        "from": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:method:295:549",
+        "to": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:occurrence:type_reference:347:350",
+        "kind": "type_reference",
+        "resolution": "syntax_only",
+        "evidence": {
+          "source_id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+          "path": "src/camera.rs",
+          "source_sha256": "c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+          "start_byte": 347,
+          "end_byte": 350,
+          "start_line": 18,
+          "end_line": 18,
+          "excerpt_sha256": "cc172a7c8269911b3ba1223fcdab399931b67ba12cd917fd0e5b3fb9c3707ad4"
+        }
+      },
+      {
+        "from": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:method:295:549",
+        "to": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:occurrence:type_reference:427:430",
+        "kind": "type_reference",
+        "resolution": "syntax_only",
+        "evidence": {
+          "source_id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+          "path": "src/camera.rs",
+          "source_sha256": "c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+          "start_byte": 427,
+          "end_byte": 430,
+          "start_line": 20,
+          "end_line": 20,
+          "excerpt_sha256": "6a3e2f9684f5186de9658cac3ee8a9af4dac01e72341f0223460fbc1532c8697"
+        }
+      },
+      {
+        "from": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:method:295:549",
+        "to": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:occurrence:type_reference:437:440",
+        "kind": "type_reference",
+        "resolution": "syntax_only",
+        "evidence": {
+          "source_id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+          "path": "src/camera.rs",
+          "source_sha256": "c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+          "start_byte": 437,
+          "end_byte": 440,
+          "start_line": 20,
+          "end_line": 20,
+          "excerpt_sha256": "6a3e2f9684f5186de9658cac3ee8a9af4dac01e72341f0223460fbc1532c8697"
+        }
+      },
+      {
+        "from": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:occurrence:type_reference:347:350",
+        "to": "src:785a63813ad0b4fd4faba3eb5796421d97a02556f21739cb2e7f202d13dedd5a:d80c0cded7b9f0027ff73a6d5ae3a87d7a4a005c4609758db76c41989a73df69:struct:0:91",
+        "kind": "name_candidate",
+        "resolution": "name_candidate",
+        "evidence": {
+          "source_id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+          "path": "src/camera.rs",
+          "source_sha256": "c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+          "start_byte": 347,
+          "end_byte": 350,
+          "start_line": 18,
+          "end_line": 18,
+          "excerpt_sha256": "cc172a7c8269911b3ba1223fcdab399931b67ba12cd917fd0e5b3fb9c3707ad4"
+        }
+      },
+      {
+        "from": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:occurrence:type_reference:347:350",
+        "to": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882:struct:46:113",
+        "kind": "name_candidate",
+        "resolution": "name_candidate",
+        "evidence": {
+          "source_id": "src:e73f90ab0f0491e6368341bc6018aad7721ea34aff137e157619a6b75f5b4529:c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+          "path": "src/camera.rs",
+          "source_sha256": "c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882",
+          "start_byte": 347,
+          "end_byte": 350,
+          "start_line": 18,
+          "end_line": 18,
+          "excerpt_sha256": "cc172a7c8269911b3ba1223fcdab399931b67ba12cd917fd0e5b3fb9c3707ad4"
+        }
+      }
+    ],
+    "depth": 2,
+    "max_nodes": 48,
+    "max_edges": 96,
+    "truncated": false,
+    "label_bytes_limit": 256,
+    "labels_truncated": 0
+  },
+  "diagnostics": 2,
+  "limits": [
+    "Lexical candidates, not a semantic answer. Minimum coverage: 60% of query term groups; scores are not probabilities.",
+    "Name candidates are not resolved types/calls. No macros, cfg evaluation, compiler or runtime proof.",
+    "Graph expands only the first hit. Source nodes are leaves. Depth bounded to 0..3, 48 nodes, 96 edges.",
+    "Excerpts limited to 4000 UTF-8 bytes each and 16000 total. Truncation is explicit; hashes/lines refer to full chunks."
+  ]
+}

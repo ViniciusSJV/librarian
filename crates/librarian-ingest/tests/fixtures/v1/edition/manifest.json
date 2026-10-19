@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "extractor": "librarian-ingest/0.1.0;syn/3.0.5;rust-structural-v1",
+  "config": {
+    "project": "librarian-ingest-v1-fixture",
+    "inputs": [
+      "src",
+      "scripts/helper.py"
+    ]
+  },
+  "git": {
+    "head": null,
+    "dirty": null
+  },
+  "files": {
+    "chunks.jsonl": "b27893013989ac713593efeac302f076309ddc129b8d0754b6328bd8238c0705",
+    "diagnostics.json": "2b31be7f2551658ad875c27f836c08be4bd9d35112580a55af6ab860477bf482",
+    "sources.jsonl": "2f87d4668ea70c81e1f5e77d925aea0509aa43673ab461904beff69cde36261e",
+    "symbols.jsonl": "9a39389d02763c32debe2f09fc1e3e68c988276b548e6933372d359c9010dfb1"
+  },
+  "source_count": 9,
+  "symbol_count": 34,
+  "diagnostic_count": 2,
+  "limits": [
+    "Structural declarations only; no behavioral claims or executed-test evidence.",
+    "No macro expansion, cfg evaluation, cross-file name resolution or call graph.",
+    "File-local scopes; ordinary comments are preserved in snapshots, not attached to declarations.",
+    "Files read individually; no atomic repository snapshot or Git/author authentication.",
+    "Parse failures preserve bytes and diagnostics; completeness requires inspecting diagnostics.",
+    "Hashes establish consistency, not authenticity; manifest is not signed."
+  ]
+}
