@@ -65,6 +65,26 @@ pub struct Send<'a> {
     pub criteria_sha256: Option<&'a str>,
 }
 
+/// Provider options chosen on the page, before the query and its destination are known.
+pub struct Choice {
+    pub modelfile: Option<PathBuf>,
+    pub modelfile_name: Option<String>,
+    pub claude_model: Option<String>,
+}
+
+impl Choice {
+    pub fn request<'a>(&'a self, query: &'a Path, dir: &'a Path) -> Send<'a> {
+        Send {
+            query,
+            dir,
+            modelfile: self.modelfile.as_deref(),
+            modelfile_name: self.modelfile_name.as_deref(),
+            claude_model: self.claude_model.as_deref(),
+            criteria_sha256: None,
+        }
+    }
+}
+
 /// Runs one provider and writes `send.json`, the summary the page shows.
 pub fn send(provider: &str, request: Send) -> Result<Value> {
     fs::create_dir(request.dir)?;
@@ -115,6 +135,15 @@ fn send_ollama(request: &Send) -> Result<Value> {
     let id = format!("STUDIO_{}", now_ms());
     let state = client::attempt_linked(request.query, &attempt, &id, &config, None)?;
     let result: Value = serde_json::from_slice(&fs::read(attempt.join("result.json"))?)?;
+    let raw: Value = fs::read(attempt.join("response.bin"))
+        .ok()
+        .and_then(|b| serde_json::from_slice(&b).ok())
+        .unwrap_or(Value::Null);
+    let input = input_check(
+        fs::metadata(request.query)?.len(),
+        raw["prompt_eval_count"].as_u64(),
+        modelfile_parameter(&fs::read_to_string(&requested)?, "num_ctx"),
+    );
     Ok(json!({
         "state": state,
         "model": model,
@@ -124,7 +153,48 @@ fn send_ollama(request: &Send) -> Result<Value> {
         "diagnostic": result["diagnostic"],
         "query_sha256": result["query_sha256"],
         "response_sha256": result["response_sha256"],
+        "input": input,
     }))
+}
+
+/// Bytes per token above which Ollama most likely dropped part of the prompt. JSON with code
+/// runs at roughly 3–4.5 bytes per token; 6 leaves room for unusual text.
+const MAX_BYTES_PER_TOKEN: f64 = 6.0;
+/// Conservative bytes per token used to estimate a query's size before sending.
+pub const ESTIMATE_BYTES_PER_TOKEN: f64 = 3.5;
+
+/// Ollama silently cuts prompts longer than num_ctx; `completed` does not reveal it.
+/// A cached prompt prefix also lowers prompt_eval_count, so this is a suspicion, not a proof.
+fn input_check(query_bytes: u64, prompt_tokens: Option<u64>, num_ctx: Option<u64>) -> Value {
+    let estimated = (query_bytes as f64 / ESTIMATE_BYTES_PER_TOKEN).round() as u64;
+    let low_count = prompt_tokens.is_some_and(|t| t == 0 || query_bytes as f64 / t as f64 > MAX_BYTES_PER_TOKEN);
+    let over_context = num_ctx.is_some_and(|n| estimated > n);
+    let suspected = low_count || over_context;
+    json!({
+        "query_bytes": query_bytes,
+        "estimated_tokens": estimated,
+        "prompt_tokens": prompt_tokens,
+        "num_ctx": num_ctx,
+        "truncation_suspected": suspected,
+        "note": if suspected {
+            json!(format!(
+                "Entrada possivelmente truncada: o Ollama processou {} tokens de uma query estimada em ~{estimated}{}. A resposta pode não ter visto toda a evidência. (Um prefixo em cache também reduz a contagem.)",
+                prompt_tokens.map_or("?".into(), |t| t.to_string()),
+                num_ctx.map_or(String::new(), |n| format!(" (num_ctx {n})"))
+            ))
+        } else {
+            Value::Null
+        },
+    })
+}
+
+/// Value of `PARAMETER <name> <value>` in a Modelfile, when numeric.
+pub fn modelfile_parameter(modelfile: &str, name: &str) -> Option<u64> {
+    modelfile.lines().find_map(|line| {
+        let mut parts = line.split_whitespace();
+        let is_parameter = parts.next().is_some_and(|p| p.eq_ignore_ascii_case("PARAMETER"));
+        (is_parameter && parts.next() == Some(name)).then(|| parts.next()?.parse().ok()).flatten()
+    })
 }
 
 fn send_claude(request: &Send) -> Result<Value> {
@@ -294,6 +364,24 @@ mod tests {
         assert_eq!(modelfile_system(line).as_deref(), Some("Responda curto."));
         assert_eq!(modelfile_system("FROM qwen\n"), None);
         assert_eq!(modelfile_system("SYSTEM \"\"\"sem fim"), None);
+    }
+
+    #[test]
+    fn truncated_input_is_flagged_from_ollama_counts() {
+        use super::{input_check, modelfile_parameter};
+        // The real case: 19487-byte query, num_ctx 4096, Ollama evaluated only 2050 tokens.
+        let cut = input_check(19_487, Some(2_050), Some(4_096));
+        assert_eq!(cut["truncation_suspected"], true);
+        assert!(cut["note"].as_str().unwrap().contains("2050"));
+        // A renderer-sized query that fits is not flagged.
+        let fits = input_check(5_563, Some(1_600), Some(4_096));
+        assert_eq!(fits["truncation_suspected"], false);
+        assert!(fits["note"].is_null());
+        // Larger than the context even before sending.
+        assert_eq!(input_check(40_000, None, Some(4_096))["truncation_suspected"], true);
+        let modelfile = "FROM qwen\nPARAMETER temperature 0\nPARAMETER num_ctx 16384\n";
+        assert_eq!(modelfile_parameter(modelfile, "num_ctx"), Some(16_384));
+        assert_eq!(modelfile_parameter(modelfile, "num_predict"), None);
     }
 
     #[test]

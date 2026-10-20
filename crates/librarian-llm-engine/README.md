@@ -49,19 +49,21 @@ inclui um LF final; o request do transporte não inclui esse LF adicional.
 
 ## Estado atual
 
-O PLAYME do Librarian envia o `query.json` de um bundle produzido por
-`librarian_ingest prepare` e conferido por `verify-prepared` imediatamente antes
-do envio. O transporte preserva query, request, retorno bruto, texto e estado; os
-hashes são reconferidos pelo PLAYME.
+O [Librarian Studio](../../STUDIO.md) envia ao Ollama o `query.json` de um bundle
+produzido por `prepare` e conferido por `verify-prepared` imediatamente antes do
+envio, usando `attempt_linked` deste crate. O transporte preserva query, request,
+retorno bruto, texto e estado.
 
-- **Explicação ainda não aprovada.** A resposta atual da pergunta da câmera acerta a
-  expressão, mas cita "linha 11" (posição dentro do trecho) em vez da linha 86 do
-  arquivo, porque o contexto exportado não numera as linhas.
-- **O contrato de afirmações ainda não está na trilha do PLAYME.** As
+- **Explicação ainda não aprovada.** Com `prepare.numbered_lines`, cada linha do
+  contexto leva a linha original do arquivo. Numa execução, a resposta da câmera
+  passou a citar a linha 86 de `src/camera.rs`; antes citava "linha 11", a posição
+  dentro do trecho. Ela ainda não nomeia a função e copia o objeto
+  `{number, text}` como evidência. A avaliação semântica está pendente.
+- **O contrato de afirmações ainda não está na trilha do studio.** As
   [séries de experimentos](../../experiments/) continuam reprovadas pelo checker.
-- **O vínculo do bundle no registro do envio ainda não é usado pela CLI.**
-  `attempt_linked` existe, mas `send_ollama` passa `None`.
+- **O vínculo do bundle no registro do envio ainda não é usado.**
+  `attempt_linked` existe, mas `send_ollama` e o studio passam `None`.
 
-Esses três pontos são a próxima fase (limites do LLM Engine). Origem do crate,
+Esses pontos seguem na fase L (limites do LLM Engine). Origem do crate,
 validação da extração (27/09/2026) e experimentos anteriores estão no
 [HISTORICO](../../HISTORICO.md).

@@ -46,6 +46,23 @@ pub fn tokens(text: &str) -> Vec<String> {
     split.split_whitespace().map(str::to_owned).collect()
 }
 
+/// Code vocabulary: lexical tokens of declared names and how many symbols carry each,
+/// most frequent first. Deterministic; it proposes lexicon terms and never ranks hits.
+pub fn vocabulary(catalog: &Catalog) -> Vec<(String, usize)> {
+    let mut counts: BTreeMap<String, usize> = BTreeMap::new();
+    for symbol in catalog.symbols.values() {
+        let unique: BTreeSet<String> = tokens(&symbol.name).into_iter().collect();
+        for token in unique {
+            if token.chars().count() >= 3 && !token.chars().all(|c| c.is_numeric()) {
+                *counts.entry(token).or_default() += 1;
+            }
+        }
+    }
+    let mut ranked: Vec<_> = counts.into_iter().collect();
+    ranked.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0)));
+    ranked
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MatchReason {
     pub term: String,

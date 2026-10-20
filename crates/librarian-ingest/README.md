@@ -21,8 +21,18 @@ versionado do registry reúne a identidade gravada no manifest, as extensões
 descobertas, os extractors, os limites, a versão do grafo e os limites da busca.
 `generate` usa o perfil atual. A verificação usa o perfil da identidade gravada
 na edition e recusa as desconhecidas; editions antigas nunca são reinterpretadas.
-Hoje existe o perfil v1 (Rust com `syn`), congelado por fixtures e goldens em
-`tests/fixtures/v1`. `tests/agnostic.rs` impede nomes de linguagem em grafo, busca e `prepare`.
+Há dois perfis:
+
+| Perfil | Linguagens | Uso |
+| --- | --- | --- |
+| v1 (`librarian-ingest/0.1.0;syn/3.0.5;rust-structural-v1`) | Rust | Congelado por fixtures e goldens em `tests/fixtures/v1`; ainda lido e reproduzível com `generate_with_profile` |
+| v2 (`librarian-ingest/0.2.0;syn/3.0.5;rustpython-parser/0.4.0;rust-structural-v1;python-structural-v1`) | Rust e Python | Atual. O adaptador Rust é o mesmo do v1; a descoberta ignora `.git`, `.venv`, `venv`, `__pycache__`, `site-packages`, `node_modules`, `target` e caches |
+
+`tests/agnostic.rs` impede nomes de linguagem em grafo, busca e `prepare`.
+`tests/python.rs` cobre o G5: um projeto misto Rust + Python passa por edition, grafo,
+busca e `prepare` sem mudar esses módulos.
+`suggested_inputs(root)` lista as pastas e os arquivos do topo que o perfil atual
+percorreria. O studio usa isso para projetos sem `Cargo.toml`.
 
 ## Executar
 
@@ -77,6 +87,21 @@ por atributos entra no span; comentários comuns permanecem no snapshot. O flag
 Não há expansão de macros, avaliação de `cfg`, resolução entre arquivos, imports
 catalogados, grafo de chamadas ou inferência de comportamento. Ambas as alternativas
 de compilação condicional podem aparecer. Rust inválido não recebe extração parcial.
+
+O extrator Python usa `rustpython-parser` 0.4.0.
+- **Declarações:** classes (`class`), funções (`function`, inclusive aninhadas) e métodos
+  (`method`). O trecho começa no primeiro decorator. Os nomes qualificados usam ponto
+  (`Classe.metodo`).
+- **Ocorrências:** chamadas (`call_observed`, `method_call_observed`), anotações e bases
+  (`type_reference`, com candidato por nome, inclusive referências em string),
+  retornos declarados e atribuições (`local_binding`).
+- **Candidatos e navegação:** só classes recebem candidatos, e somente da mesma
+  linguagem. A classe é navegação: os métodos é que são as respostas da busca.
+- **Testes:** `is_test` observa nomes `test*`/`Test*` (convenção do pytest), não execução.
+- **Limites:** não há resolução de imports, despacho dinâmico nem avaliação de
+  decorators. Um arquivo que não faz parse vira diagnóstico, sem extração parcial. O
+  parser cobre a sintaxe até cerca do Python 3.12; sintaxe mais nova, como `except A, B:`
+  (3.14), vira diagnóstico.
 
 O catálogo **não é um dossiê de fatos** e não gera afirmações semânticas. `prepare`
 transforma resultados da busca em fichas **estruturais** (onde está cada declaração)

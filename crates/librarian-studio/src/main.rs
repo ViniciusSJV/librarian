@@ -1,7 +1,8 @@
-//! Librarian Studio: local server behind the Graph Viewer. Select a project, generate its
+//! Librarian Studio: local server for the page in web/index.html. Select a project, generate its
 //! verified graph, ask questions that light the graph, and send prepared queries to an LLM.
 //! Listens on 127.0.0.1 only; requests from other origins are refused.
 mod http;
+mod lexicon;
 mod llm;
 mod store;
 
@@ -42,7 +43,7 @@ fn main() {
     let root = root.canonicalize().expect("Raiz do Librarian não encontrada");
     let app = Arc::new(App {
         port,
-        viewer: root.join("tools/graph-viewer/index.html"),
+        viewer: root.join("crates/librarian-studio/web/index.html"),
         store: Store { dir: root.join(".studio"), modelfiles: root.join("modelfiles") },
     });
     let listener = TcpListener::bind(("127.0.0.1", port)).unwrap_or_else(|e| {
@@ -116,6 +117,28 @@ fn route(app: &App, req: &Request) -> Result<Response> {
             ok(store.ask(&field(&body, "key")?, &field(&body, "run")?, &question)?)
         }
         ("POST", "/api/send") => send(store, &req.json()?),
+        ("DELETE", "/api/turn") => {
+            let body = req.json()?;
+            ok(store.delete_turn(&field(&body, "key")?, &field(&body, "run")?, &field(&body, "turn")?)?)
+        }
+        ("POST", "/api/lexicon/suggest") => {
+            let body = req.json()?;
+            let provider = field(&body, "provider")?;
+            if provider != "manual" && !implemented(&provider) {
+                return Ok(Response::error(501, format!("Provedor sem envio implementado: {provider}")));
+            }
+            let choice = choice(store, &body)?;
+            ok(store.suggest_lexicon(&field(&body, "key")?, &field(&body, "run")?, &provider, choice)?)
+        }
+        ("POST", "/api/lexicon/check") => {
+            let body = req.json()?;
+            let (key, run, id) = (field(&body, "key")?, field(&body, "run")?, field(&body, "id")?);
+            ok(store.check_lexicon(&key, &run, &id, &field(&body, "text")?)?)
+        }
+        ("POST", "/api/project/export") => {
+            let body = req.json()?;
+            ok(store.export_profile(&field(&body, "key")?, body["dry_run"] != false)?)
+        }
         ("GET", "/api/modelfiles") => ok(store.modelfiles()?),
         ("PUT", "/api/modelfiles") => {
             let body = req.json()?;
@@ -133,33 +156,37 @@ fn send(store: &Store, body: &Value) -> Result<Response> {
     else {
         return Err("Informe key, run, turn e provider".into());
     };
-    let implemented = llm::providers()
-        .as_array()
-        .unwrap()
-        .iter()
-        .any(|p| p["id"] == provider && p["implemented"] == true && provider != "manual");
-    if !implemented {
+    if !implemented(provider) {
         return Ok(Response::error(501, format!("Provedor sem envio implementado: {provider}")));
     }
     let dir = store.turn_dir(key, run, turn)?;
     let prepared = dir.join("prepared");
     let catalog = librarian_ingest::Catalog::load(&store.edition(key, run)?)?;
     librarian_ingest::prepare::verify(&catalog, &prepared)?;
-    let modelfile = get("modelfile").map(|name| store.modelfile_path(name)).transpose()?;
+    let choice = choice(store, body)?;
     let question: Value = serde_json::from_slice(&std::fs::read(dir.join("question.json"))?)?;
     let sends = dir.join("sends");
     std::fs::create_dir_all(&sends)?;
     let next = std::fs::read_dir(&sends)?.count() + 1;
-    let summary = llm::send(
-        provider,
-        llm::Send {
-            query: &prepared.join("bundle/query.json"),
-            dir: &sends.join(format!("{next:02}-{provider}")),
-            modelfile: modelfile.as_deref(),
-            modelfile_name: get("modelfile"),
-            claude_model: get("claude_model"),
-            criteria_sha256: question["criteria_sha256"].as_str(),
-        },
-    )?;
-    Ok(Response::json(200, &summary))
+    let query = prepared.join("bundle/query.json");
+    let destination = sends.join(format!("{next:02}-{provider}"));
+    let mut request = choice.request(&query, &destination);
+    request.criteria_sha256 = question["criteria_sha256"].as_str();
+    Ok(Response::json(200, &llm::send(provider, request)?))
+}
+
+/// Providers that actually send; "manual" and the listed-but-pending ones do not.
+fn implemented(provider: &str) -> bool {
+    let providers = llm::providers();
+    let found = providers.as_array().unwrap().iter().any(|p| p["id"] == provider && p["implemented"] == true);
+    found && provider != "manual"
+}
+
+fn choice(store: &Store, body: &Value) -> Result<llm::Choice> {
+    let name = body["modelfile"].as_str().filter(|n| !n.is_empty());
+    Ok(llm::Choice {
+        modelfile: name.map(|n| store.modelfile_path(n)).transpose()?,
+        modelfile_name: name.map(str::to_owned),
+        claude_model: body["claude_model"].as_str().map(str::to_owned),
+    })
 }

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Librarian Graph Viewer</title>
+<title>Librarian Studio</title>
 <style>
   /* Categorical slots 1–3 of the reference palette: validated all-pairs in both modes. */
   :root {
@@ -67,6 +67,11 @@
     background: color-mix(in srgb, var(--surface-1) 88%, transparent); pointer-events: none; }
   #status { top: 12px; left: 12px; color: var(--text-secondary); max-width: calc(100% - 24px); }
   #tooltip { display: none; max-width: 420px; }
+  #labels { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+  .hit-label { position: absolute; transform: translate(10px, -50%); padding: 1px 7px; border: 1px solid var(--cat-symbol);
+    border-radius: 999px; background: color-mix(in srgb, var(--surface-1) 85%, transparent); color: var(--text-primary);
+    font-size: 11px; white-space: nowrap; }
+  .hit-label.fact { border-width: 2px; font-weight: 700; }
   #drop { position: absolute; inset: 0; display: none; place-items: center; font-size: 16px;
     background: color-mix(in srgb, var(--surface-0) 80%, transparent); border: 2px dashed var(--text-muted); }
   [hidden] { display: none !important; }
@@ -122,7 +127,7 @@
 <div id="app">
   <aside>
     <div class="row" style="justify-content: space-between">
-      <h1>Librarian Graph Viewer</h1>
+      <h1>Librarian Studio</h1>
       <button id="theme" title="Alternar tema">◐</button>
     </div>
     <p class="muted">Projeta as relações do grafo <code>syntax-graph-v2</code>. Proximidade visual não cria relação; toda aresta mostra a evidência que a autorizou.</p>
@@ -130,11 +135,12 @@
     <section class="card" id="projectCard" hidden>
       <h2>Projeto</h2>
       <div class="row" style="flex-wrap: nowrap">
-        <input id="projectPath" type="text" placeholder="C:\caminho\do\projeto (Rust)">
+        <input id="projectPath" type="text" placeholder="C:\caminho\do\projeto (Rust ou Python)">
         <button id="browse">Procurar…</button>
       </div>
       <div class="row" style="margin-top: 8px">
         <button id="openProject" class="primary">Abrir</button>
+        <button id="resetStudio" title="Fecha o projeto e limpa a tela (grafo, conversa e caminho). Não apaga nada em .studio: reabrindo a pasta, tudo volta.">Limpar</button>
         <span id="projectNote" class="muted"></span>
       </div>
       <div id="projectBody" hidden>
@@ -148,6 +154,18 @@
         <details>
           <summary>Léxico, busca e instruções</summary>
           <label class="field"><span>Léxico (JSON: <code>groups</code> de sinônimos e <code>stop_words</code>)</span><textarea id="lexicon" class="code" rows="8" spellcheck="false"></textarea></label>
+          <div class="field">
+            <div class="row"><button id="suggestLexicon">Sugerir léxico com o LLM</button><span id="suggestNote" class="muted"></span></div>
+            <span>Os termos vêm do código da edition; o LLM escolhido na Conversa só propõe as palavras em português (no Ollama, com o Modelfile <code>lexico</code>). Cada grupo é conferido, e nada entra no léxico sem você aplicar.</span>
+            <div id="manualLexicon" hidden>
+              <span>Com <strong>Nenhum</strong>: copie o pedido, envie a um LLM e cole a resposta.</span>
+              <pre id="lexiconQuery"></pre>
+              <div class="row"><button id="copyLexiconQuery">Copiar pedido</button></div>
+              <textarea id="lexiconAnswer" class="code" rows="5" placeholder="Cole aqui a resposta do LLM (JSON com groups)"></textarea>
+              <div class="row" style="margin-top: 6px"><button id="checkLexicon">Conferir resposta</button></div>
+            </div>
+            <div id="lexiconProposal" hidden></div>
+          </div>
           <div class="grid4">
             <label class="field" title="Quantos resultados a busca devolve (1–10)"><span>top</span><input id="top" type="number" min="1" max="10"></label>
             <label class="field" title="Profundidade da vizinhança acesa (0–3)"><span>depth</span><input id="depth" type="number" min="0" max="3"></label>
@@ -158,7 +176,11 @@
           <label class="row"><input id="acceptDiag" type="checkbox"> Aceitar edition com diagnósticos</label>
           <label class="field"><span>Instruções da query (uma por linha; vazio usa as padrão do Graph Engine)</span><textarea id="instructions" rows="6"></textarea></label>
           <label class="field"><span>Critérios prévios (gravados em cada pergunta antes de qualquer resposta)</span><textarea id="criteria" rows="6"></textarea></label>
-          <div class="row" style="margin-top: 8px"><button id="saveSettings">Salvar configurações</button><span id="settingsNote" class="muted"></span></div>
+          <div class="row" style="margin-top: 8px">
+            <button id="saveSettings">Salvar configurações</button>
+            <button id="exportProfile" title="Grava librarian.json e os arquivos que ele aponta na pasta do projeto">Salvar no projeto…</button>
+          </div>
+          <span id="settingsNote" class="muted"></span>
         </details>
       </div>
     </section>
@@ -211,6 +233,7 @@
   <main id="viewport">
     <canvas id="scene"></canvas>
     <div id="status" class="hud">Abra um graph-v2.json.</div>
+    <div id="labels"></div>
     <div id="tooltip" class="hud"></div>
     <div id="drop">Solte graph-v2.json (e opcionalmente search.json/request.json)</div>
   </main>
@@ -230,8 +253,7 @@
         <span id="modelfileSummary" class="muted mono"></span>
       </div>
       <div class="row" style="margin-top: 10px">
-        <button id="ask" disabled>Perguntar</button>
-        <button id="askSend" class="primary" disabled>Perguntar e enviar</button>
+        <button id="ask" class="primary" disabled>Perguntar</button>
       </div>
       <p id="llmNote" class="muted" style="margin-bottom: 0"></p>
     </div>
@@ -353,6 +375,7 @@ function ingest(graph) {
   });
   Object.assign(state, { graph, nodes, edges, index, out, inn, overlay: null,
     selectedNode: null, selectedEdge: null, matches: new Set() });
+  $('#labels').replaceChildren();
 }
 
 async function loadFiles(fileList) {
@@ -379,6 +402,25 @@ async function loadFiles(fileList) {
     console.error(error);
     status(`Erro: ${error.message}`);
   }
+}
+
+/// Removes the graph from the scene and resets every view of it to the empty page.
+function clearGraph() {
+  for (const mesh of Object.values(state.meshes)) { scene.remove(mesh); mesh.dispose(); }
+  for (const line of Object.values(state.lines)) { scene.remove(line); line.geometry.dispose(); line.material.dispose(); }
+  Object.assign(state, { graph: null, nodes: [], edges: [], index: new Map(), out: [], inn: [],
+    sim: null, simNodes: [], layoutTicks: 0, meshes: {}, slot: [], lines: {},
+    selectedNode: null, selectedEdge: null, matches: new Set(), overlay: null });
+  $('#labels').replaceChildren();
+  $('#overlayCard').hidden = true;
+  $('#provenance').replaceChildren();
+  document.querySelectorAll('[data-count]').forEach(c => { c.textContent = '0'; });
+  $('#query').value = '';
+  $('#results').replaceChildren();
+  for (const id of ['#query', '#fit', '#clear']) $(id).disabled = true;
+  $('#tooltip').style.display = 'none';
+  status('Abra um projeto ou um graph-v2.json.');
+  inspect();
 }
 
 function showGraph(graph) {
@@ -409,6 +451,7 @@ function attachSearch(search, request) {
   $('#overlayCard').hidden = false;
   if (search.catalog_sha256 !== state.graph.catalog_sha256) {
     state.overlay = null;
+    $('#labels').replaceChildren();
     $('#overlayQuestion').textContent = '';
     $('#overlayHits').replaceChildren();
     $('#overlayNote').className = 'error';
@@ -435,6 +478,11 @@ function attachSearch(search, request) {
       ' ', h.name, el('div', { className: 'muted mono', textContent: `${h.path}:${h.start_line}–${h.end_line} · score ${h.score}` }));
     if (h.node != null) li.onclick = () => selectNode(h.node, true);
     return li;
+  }));
+  $('#labels').replaceChildren(...hits.filter(h => h.node != null).map(h => {
+    const short = h.name.split(/::|\./).at(-1);
+    h.label = el('div', { className: `hit-label${h.fact ? ' fact' : ''}`, textContent: `${h.fact ? `E${h.rank}` : `#${h.rank}`} ${short}` });
+    return h.label;
   }));
   $('#overlayNote').className = 'muted';
   $('#overlayNote').textContent = [
@@ -516,7 +564,8 @@ function startLayout() {
 const dummy = new THREE.Object3D();
 function nodeScale(i) {
   if (state.selectedNode === i) return 1.9;
-  if (state.overlayOn && state.overlay?.nodes.has(i)) return 1.7;
+  if (state.overlayOn && state.overlay?.nodes.has(i)) return 3.4;
+  if (state.overlayOn && state.overlay?.neighbors.has(i)) return 1.9;
   if (state.matches.has(i)) return 1.5;
   return 1;
 }
@@ -573,11 +622,14 @@ const tmp = new THREE.Color();
 function repaint() {
   if (!state.graph) return;
   const focus = focusSets();
+  // A lit question dims everything else almost to the background, so what it reached stands out.
+  const lit = state.overlayOn && state.overlay && state.selectedNode == null && state.selectedEdge == null;
+  const [dimNode, dimEdge] = lit ? [.94, .95] : [.82, .75];
   for (const c of CATEGORIES) {
     const mesh = state.meshes[c];
     mesh.userData.list.forEach((i, k) => {
       tmp.copy(palette[c]);
-      if (focus && !focus.nodes.has(i)) tmp.lerp(palette.surface, .82);
+      if (focus && !focus.nodes.has(i)) tmp.lerp(palette.surface, dimNode);
       mesh.setColorAt(k, tmp);
     });
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
@@ -589,7 +641,7 @@ function repaint() {
       if (focus?.edges.has(k)) tmp.copy(palette.focus);
       else {
         tmp.copy(palette.edge);
-        if (focus) tmp.lerp(palette.surface, .75);
+        if (focus) tmp.lerp(palette.surface, dimEdge);
       }
       arr.set([tmp.r, tmp.g, tmp.b, tmp.r, tmp.g, tmp.b], j * 6);
     });
@@ -914,8 +966,7 @@ function refreshComposer() {
   const ready = Boolean(studio.run);
   $('#question').disabled = !ready;
   $('#ask').disabled = !ready;
-  $('#askSend').disabled = !ready;
-  $('#askSend').textContent = provider === 'manual' ? 'Perguntar e mostrar' : 'Perguntar e enviar';
+  $('#ask').textContent = provider === 'manual' ? 'Perguntar (sem enviar)' : `Perguntar e enviar · ${providerLabel(provider)}`;
   $('#claudeModelRow').hidden = provider !== 'claude-cli';
   $('#modelfileRow').hidden = !['ollama', 'claude-cli'].includes(provider);
   const noneOption = $('#modelfile').querySelector('option[value=""]');
@@ -943,17 +994,18 @@ function modelfileSummary(content, provider) {
   return provider === 'claude-cli' ? `${systemText} (FROM e PARAMETER não valem no Claude)` : [from, ...params, systemText].join(' · ');
 }
 
-async function ask(andSend) {
+async function ask() {
   const question = $('#question').value.trim();
   if (!question || !studio.run) return;
-  await busy([$('#ask'), $('#askSend')], $('#llmNote'), async () => {
+  await busy([$('#ask')], $('#llmNote'), async () => {
     say($('#chatNote'), 'Buscando pelo léxico e preparando a query…');
     const turn = await api('POST', '/api/ask', { key: studio.project.key, run: studio.run, question });
     studio.turns.push(turn);
     $('#question').value = '';
     activate(turn.id);
     $('#turns').scrollTop = $('#turns').scrollHeight;
-    if (andSend) await sendTurn(turn);
+    // One button: the LLM select decides. Nenhum only shows the query; any LLM also sends it.
+    await sendTurn(turn);
   });
 }
 
@@ -964,6 +1016,8 @@ async function sendTurn(turn) {
     renderTurns();
     return;
   }
+  // Ollama cuts prompts longer than num_ctx without failing; warn before that happens.
+  if (provider === 'ollama' && !confirmContext(turn.query, $('#modelfile').value)) return;
   turn.pending = providerLabel(provider);
   turn.sendError = null;
   renderTurns();
@@ -982,17 +1036,32 @@ async function sendTurn(turn) {
   }
 }
 
+// Same conservative estimate as the server (3.5 bytes per token for JSON with code).
+const estimateTokens = text => Math.round(new Blob([text]).size / 3.5);
+const numCtx = content => Number(content?.match(/^\s*PARAMETER\s+num_ctx\s+(\d+)/im)?.[1] ?? 0) || null;
+
+function confirmContext(query, modelfileName) {
+  const mf = studio.modelfiles.find(m => m.name === modelfileName);
+  const ctx = numCtx(mf?.content);
+  const tokens = estimateTokens(query);
+  if (ctx && tokens <= ctx * 0.75) return true;
+  const limit = ctx ? `o Modelfile ${modelfileName} tem num_ctx ${ctx}` : `o Modelfile ${modelfileName ?? ''} não define num_ctx (o padrão do Ollama é pequeno)`;
+  return confirm(`A query tem ~${tokens} tokens estimados e ${limit}. O Ollama corta a entrada que não cabe, sem erro, e a resposta não verá toda a evidência.\n\nReduza "hits" ou aumente num_ctx no Modelfile. Enviar mesmo assim?`);
+}
+
 function activate(id, fly = true) {
   studio.activeTurn = id;
   const turn = studio.turns.find(t => t.id === id);
   if (turn?.search) {
     attachSearch(turn.search, turn.request);
-    // Fly to what the lexicon reached: the first result and its lit neighborhood.
-    const first = state.overlay?.hits.find(h => h.node != null);
-    if (first && fly) {
-      const p = state.simNodes[first.node];
+    // Frame what the lexicon reached: the results and the lit neighborhood.
+    const lit = state.overlay ? [...state.overlay.nodes, ...state.overlay.neighbors] : [];
+    if (lit.length && fly) {
+      const box = new THREE.Box3();
+      for (const i of lit) box.expandByPoint(new THREE.Vector3(state.simNodes[i].x, state.simNodes[i].y, state.simNodes[i].z));
+      const sphere = box.getBoundingSphere(new THREE.Sphere());
       userMoved = true;
-      flyTo(new THREE.Vector3(p.x, p.y, p.z), 260);
+      flyTo(sphere.center, Math.max(160, sphere.radius * 2.6));
     }
   }
   renderTurns();
@@ -1032,7 +1101,7 @@ function renderTurn(t) {
       el('summary', { textContent: `Critérios prévios (gravados antes da resposta · sha256 ${t.criteria_sha256?.slice(0, 12)}…)` }),
       el('pre', { textContent: t.criteria })) : el('p', { className: 'muted', textContent: 'Sem critérios prévios gravados para esta pergunta.' }),
     t.query ? el('details', { open: Boolean(t.showQuery) },
-      el('summary', { textContent: `O que é enviado ao LLM (query.json, ${new Blob([t.query]).size} bytes)` }),
+      el('summary', { textContent: `O que é enviado ao LLM (query.json, ${new Blob([t.query]).size} bytes, ~${estimateTokens(t.query)} tokens)` }),
       el('p', { className: 'muted', textContent: 'No Ollama vai como prompt e o SYSTEM vem do Modelfile; no Claude vai por stdin e o SYSTEM vira o system prompt. Conferida contra a edition imediatamente antes de cada envio.' }),
       el('pre', { textContent: t.query })) : null,
     ...(t.sends ?? []).map(reply),
@@ -1043,7 +1112,25 @@ function renderTurn(t) {
         textContent: provider === 'manual' ? 'Mostrar o que seria enviado' : `Enviar · ${providerLabel(provider)}`,
         disabled: !t.query || Boolean(t.pending), onclick: () => sendTurn(t),
       }),
-      copyButton));
+      copyButton,
+      el('button', { textContent: 'Apagar', title: 'Apagar a pergunta, a query e as respostas', disabled: Boolean(t.pending),
+        style: 'margin-left: auto', onclick: () => deleteTurn(t) })));
+}
+
+async function deleteTurn(turn) {
+  const sends = turn.sends?.length ?? 0;
+  if (!confirm(`Apagar a pergunta "${turn.question}"${sends ? ` e ${sends} resposta(s)` : ''}? Os arquivos dela em .studio também são apagados.`)) return;
+  await busy([], $('#llmNote'), async () => {
+    studio.turns = await api('DELETE', '/api/turn', { key: studio.project.key, run: studio.run, turn: turn.id });
+    if (studio.activeTurn === turn.id) {
+      studio.activeTurn = null;
+      state.overlay = null;
+      $('#labels').replaceChildren();
+      $('#overlayCard').hidden = true;
+      repaint();
+    }
+    renderTurns();
+  });
 }
 
 function reply(s) {
@@ -1051,10 +1138,95 @@ function reply(s) {
     s.cost_usd != null ? `US$ ${Number(s.cost_usd).toFixed(4)}` : null, s.elapsed_ms != null ? `${(s.elapsed_ms / 1000).toFixed(1)} s` : null];
   return el('div', { className: 'bubble reply' },
     el('div', { className: 'muted', textContent: meta.filter(Boolean).join(' · ') }),
+    s.input?.truncation_suspected ? el('div', { className: 'error', style: 'margin-top: 6px', textContent: s.input.note }) : null,
     s.text ? el('div', { style: 'margin-top: 6px', textContent: s.text })
       : el('div', { className: 'error', style: 'margin-top: 6px', textContent: s.diagnostic ?? 'Sem texto na resposta.' }),
     el('div', { className: 'muted', style: 'margin-top: 6px; font-size: 11px', textContent: `${s.state === 'completed' ? 'completed descreve o transporte; ' : ''}avaliação semântica pendente. Guardado em ${s.directory}` }));
 }
+
+// ---- lexicon proposals and profile export
+function llmChoice() {
+  const provider = $('#provider').value;
+  return {
+    provider,
+    modelfile: $('#modelfileRow').hidden ? null : ($('#modelfile').value || null),
+    claude_model: provider === 'claude-cli' ? $('#claudeModel').value : null,
+  };
+}
+
+async function suggestLexicon() {
+  if (!studio.run) { say($('#suggestNote'), 'Gere o grafo antes: os termos vêm da edition.'); return; }
+  await busy([$('#suggestLexicon')], $('#suggestNote'), async () => {
+    await saveSettings();
+    const choice = llmChoice();
+    // The conversation Modelfile is tuned for explanations; vocabulary has its own when present.
+    if (choice.provider === 'ollama' && studio.modelfiles.some(m => m.name === 'lexico')) choice.modelfile = 'lexico';
+    say($('#suggestNote'), choice.provider === 'manual' ? 'Montando o pedido…'
+      : `Pedindo a ${providerLabel(choice.provider)}${choice.modelfile ? ` (Modelfile ${choice.modelfile})` : ''}…`);
+    $('#lexiconProposal').hidden = true;
+    const result = await api('POST', '/api/lexicon/suggest', { key: studio.project.key, run: studio.run, ...choice });
+    studio.lexiconRequest = result.id;
+    $('#manualLexicon').hidden = choice.provider !== 'manual';
+    $('#lexiconQuery').textContent = result.query;
+    const send = result.send;
+    const cut = send?.state === 'incomplete_response'
+      ? ' A resposta foi cortada pelo limite de tokens do Modelfile (num_predict); só os grupos completos são aproveitados.' : '';
+    say($('#suggestNote'), choice.provider === 'manual' ? `Pedido ${result.id} pronto.`
+      : `Resposta de ${providerLabel(choice.provider)}${send?.modelfile ? ` (Modelfile ${send.modelfile})` : ''}: ${send?.state ?? '?'}${send?.cost_usd != null ? ` · US$ ${Number(send.cost_usd).toFixed(4)}` : ''}.${cut}`);
+    if (result.proposal) showProposal(result.proposal);
+  });
+}
+
+async function checkLexicon() {
+  await busy([$('#checkLexicon')], $('#suggestNote'), async () => {
+    const result = await api('POST', '/api/lexicon/check', {
+      key: studio.project.key, run: studio.run, id: studio.lexiconRequest, text: $('#lexiconAnswer').value,
+    });
+    say($('#suggestNote'), 'Resposta conferida.');
+    showProposal(result.proposal);
+  });
+}
+
+function showProposal(p) {
+  const box = $('#lexiconProposal');
+  box.hidden = false;
+  if (p.error) { box.replaceChildren(el('p', { className: 'error', textContent: p.error })); return; }
+  const line = r => el('li', { style: 'cursor: default' },
+    el('span', { className: 'tag', textContent: r.status === 'accepted' ? 'aceito' : 'recusado' }), ' ',
+    ...r.words.map(w => el('span', { className: `chip ${r.code_terms.includes(w) ? 'hit' : ''}`, textContent: w, title: r.code_terms.includes(w) ? 'existe no código' : '' })),
+    r.notes.length ? el('div', { className: 'muted', textContent: r.notes.join(' · ') }) : null);
+  const apply = el('button', { className: 'primary', textContent: `Aplicar ${p.accepted} grupo(s) ao léxico`, disabled: !p.accepted });
+  apply.onclick = () => busy([apply], $('#suggestNote'), async () => {
+    $('#lexicon').value = JSON.stringify(p.lexicon, null, 2);
+    await saveSettings();
+    box.hidden = true;
+    say($('#suggestNote'), `${p.accepted} grupo(s) aplicados e salvos. Valem para as próximas perguntas.`);
+  });
+  box.replaceChildren(
+    el('p', { className: 'muted', textContent: `${p.accepted} aceito(s), ${p.rejected} recusado(s). Realçadas: palavras que existem no código.${p.truncated ? ' Resposta incompleta: aproveitados só os grupos que vieram inteiros.' : ''} A conferência é mecânica; julgue você se os sinônimos fazem sentido antes de aplicar.` }),
+    el('ul', { className: 'list', style: 'max-height: 320px' }, ...p.report.map(line)),
+    el('div', { className: 'row', style: 'margin-top: 6px' }, apply,
+      el('button', { textContent: 'Descartar', onclick: () => { box.hidden = true; } })));
+}
+
+async function exportProfile() {
+  await busy([$('#exportProfile')], $('#settingsNote'), async () => {
+    await saveSettings();
+    const plan = await api('POST', '/api/project/export', { key: studio.project.key, dry_run: true });
+    const lines = plan.files.map(f => `• ${f.path} — ${!f.exists ? 'novo' : f.changes ? 'sobrescreve' : 'sem mudança'}`);
+    if (!confirm(`Gravar o perfil na pasta do projeto?\n${plan.root}\n\n${lines.join('\n')}`)) return;
+    const done = await api('POST', '/api/project/export', { key: studio.project.key, dry_run: false });
+    say($('#settingsNote'), `Gravado no projeto: ${done.files.map(f => f.path).join(', ')}.`);
+  });
+}
+
+$('#suggestLexicon').addEventListener('click', suggestLexicon);
+$('#checkLexicon').addEventListener('click', checkLexicon);
+$('#copyLexiconQuery').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText($('#lexiconQuery').textContent); say($('#suggestNote'), 'Pedido copiado.'); }
+  catch { say($('#suggestNote'), 'Cópia bloqueada: selecione o texto do pedido.'); }
+});
+$('#exportProfile').addEventListener('click', exportProfile);
 
 // ---- Modelfiles
 function setModelfiles(list, selected) {
@@ -1086,15 +1258,28 @@ async function browse(path) {
     const data = await api('GET', `/api/browse?${query({ path: path ?? '' })}`);
     studio.browsing = data;
     $('#browsePath').className = 'mono';
-    $('#browsePath').textContent = data.path ? `${data.path}${data.cargo ? '  ·  projeto Cargo' : ''}` : 'Escolha uma unidade ou pasta inicial.';
+    $('#browsePath').textContent = data.path ? `${data.path}${data.marker ? `  ·  projeto ${data.marker}` : ''}` : 'Escolha uma unidade ou pasta inicial.';
     $('#browseUp').disabled = !data.parent;
     $('#browsePick').disabled = !data.path;
     $('#browseList').replaceChildren(...data.dirs.map(d => el('li', { onclick: () => browse(d.path) },
-      d.name, d.cargo ? el('span', { className: 'tag', textContent: 'Cargo', style: 'margin-left: 8px' }) : null)));
+      d.name, d.marker ? el('span', { className: 'tag', textContent: d.marker, style: 'margin-left: 8px' }) : null)));
   });
 }
 
 $('#openProject').addEventListener('click', openProject);
+// Clears the page only; projects, graphs, questions and answers stay in .studio.
+$('#resetStudio').addEventListener('click', () => {
+  Object.assign(studio, { project: null, run: null, turns: [], activeTurn: null, lexiconRequest: null });
+  saved.set('project', '');
+  $('#projectPath').value = '';
+  $('#projectBody').hidden = true;
+  $('#manualLexicon').hidden = true;
+  $('#lexiconProposal').hidden = true;
+  $('#question').value = '';
+  for (const id of ['#projectNote', '#runNote', '#settingsNote', '#suggestNote']) say($(id), '');
+  clearGraph();
+  renderTurns();
+});
 $('#projectPath').addEventListener('keydown', ev => { if (ev.key === 'Enter') openProject(); });
 $('#browse').addEventListener('click', () => { $('#browseDialog').showModal(); browse($('#projectPath').value.trim() || null); });
 $('#browseUp').addEventListener('click', () => browse(studio.browsing?.parent));
@@ -1105,9 +1290,8 @@ $('#runs').addEventListener('change', ev => { if (ev.target.value) busy([$('#gen
 $('#saveSettings').addEventListener('click', () => busy([$('#saveSettings')], $('#settingsNote'), async () => {
   await saveSettings(); say($('#settingsNote'), 'Salvo. Vale para as próximas perguntas.');
 }));
-$('#ask').addEventListener('click', () => ask(false));
-$('#askSend').addEventListener('click', () => ask(true));
-$('#question').addEventListener('keydown', ev => { if (ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey)) ask(ev.shiftKey); });
+$('#ask').addEventListener('click', ask);
+$('#question').addEventListener('keydown', ev => { if (ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey)) ask(); });
 $('#provider').addEventListener('change', ev => { saved.set('provider', ev.target.value); renderTurns(); });
 $('#claudeModel').addEventListener('change', ev => saved.set('claudeModel', ev.target.value));
 $('#modelfile').addEventListener('change', ev => { saved.set('modelfile', ev.target.value); refreshComposer(); });
@@ -1136,6 +1320,26 @@ initStudio();
 if (location.hash === '#debug') window.viewerDebug = { state, camera, controls, get flight() { return flight; } };
 
 // ---------------------------------------------------------------- loop
+// Result labels follow their nodes on screen; hidden behind the camera or when the overlay is off.
+const projected = new THREE.Vector3();
+function placeLabels() {
+  const shown = state.overlayOn && state.overlay;
+  $('#labels').style.display = shown ? '' : 'none';
+  if (!shown) return;
+  const w = viewport.clientWidth, h = viewport.clientHeight;
+  for (const hit of state.overlay.hits) {
+    if (!hit.label) continue;
+    const p = state.simNodes[hit.node];
+    projected.set(p.x, p.y, p.z).project(camera);
+    const visible = projected.z < 1 && Math.abs(projected.x) <= 1.05 && Math.abs(projected.y) <= 1.05;
+    hit.label.style.display = visible ? '' : 'none';
+    if (visible) {
+      hit.label.style.left = `${(projected.x + 1) / 2 * w}px`;
+      hit.label.style.top = `${(1 - projected.y) / 2 * h}px`;
+    }
+  }
+}
+
 const MAX_TICKS = 400, FRAME_BUDGET_MS = 12;
 renderer.setAnimationLoop(() => {
   if (state.sim && state.layoutTicks < MAX_TICKS && state.sim.alpha() > state.sim.alphaMin()) {
@@ -1160,6 +1364,7 @@ renderer.setAnimationLoop(() => {
     if (t >= 1) flight = null;
   }
   controls.update();
+  placeLabels();
   renderer.render(scene, camera);
 });
 </script>
