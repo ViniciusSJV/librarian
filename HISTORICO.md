@@ -23,6 +23,10 @@ não o comportamento atual.
 | [TESTME manual](https://github.com/ViniciusSJV/renderer/blob/a6e56ba19213d879f5de6e3e07f8a75ef84fe569/TESTME.md) | Roteiro PowerShell passo a passo, anterior ao PLAYME genérico |
 | [Ferramentas antigas](https://github.com/ViniciusSJV/renderer/tree/a6e56ba19213d879f5de6e3e07f8a75ef84fe569/src/bin) | `validate_evidence`, `explain_evidence`, `capture_execution` (Unix), `bench_evidence`, `catalog_sources` |
 
+Neste repositório, a extração do LLM Engine a partir do renderer (27/09/2026), com testes,
+conferência da query preservada por SHA-256 e limites, está registrada no
+[README do crate em `06600f1`](https://github.com/ViniciusSJV/librarian/blob/06600f1/crates/librarian-llm-engine/README.md#extração-e-continuidade).
+
 O caminho atual está no [WORKFLOW](WORKFLOW.md), e o roteiro de evolução no
 [plano](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md). A captura de execução será refeita no
 Librarian, de forma genérica e multiplataforma, quando a fase de performance começar.

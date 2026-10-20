@@ -1,11 +1,28 @@
-# Acervo estrutural de fontes — formato 1
+# librarian-ingest — acervo estrutural de fontes
 
-A [busca lexical e o grafo sintático](SEARCH.md) agora consultam as edições deste
-formato. São derivados dos snapshots, sem reescrever o acervo ou gerar fatos semânticos.
+`librarian-ingest` lê fontes locais e produz uma **edition** verificável em arquivos,
+sem banco nem LLM. Sobre a edition verificada, oferece o grafo sintático, a busca
+lexical e a ponte `prepare` até um `PreparedQuery`; veja [SEARCH](SEARCH.md).
+Nada disso gera afirmações semânticas.
 
-`librarian-ingest` lê fontes locais e produz uma edição verificável em arquivos,
-sem banco ou LLM. É uma capacidade nova de desenvolvimento, posterior à 0.1.0
-publicada do Librarian. Não modifica os contratos de fatos/dossiês existentes.
+| Comando | Resultado |
+| --- | --- |
+| `generate`, `verify`, `show` | Edition, conferência histórica ou contra o projeto atual, consulta de símbolo |
+| `graph` (formato `v1` ou `v2`), `verify-graph` | Grafo derivado dos snapshots; `v2` é o contrato neutro |
+| `search` | Ranking lexical e vizinhança do primeiro resultado |
+| `prepare`, `verify-prepared` | Fichas estruturais, dossiê e `PreparedQuery` conferidos, refeitos byte a byte |
+
+## Extractors e perfis
+
+A linguagem entra somente por `src/extractors/`. Cada extractor declara as
+declarações (`extract`), as ocorrências sintáticas (`observe`), os tipos alvo de
+candidatos por nome e os tipos de navegação que a busca não ranqueia. Um **perfil**
+versionado do registry reúne a identidade gravada no manifest, as extensões
+descobertas, os extractors, os limites, a versão do grafo e os limites da busca.
+`generate` usa o perfil atual. A verificação usa o perfil da identidade gravada
+na edition e recusa as desconhecidas; editions antigas nunca são reinterpretadas.
+Hoje existe o perfil v1 (Rust com `syn`), congelado por fixtures e goldens em
+`tests/fixtures/v1`. `tests/agnostic.rs` impede nomes de linguagem em grafo, busca e `prepare`.
 
 ## Executar
 
@@ -61,8 +78,9 @@ Não há expansão de macros, avaliação de `cfg`, resolução entre arquivos, 
 catalogados, grafo de chamadas ou inferência de comportamento. Ambas as alternativas
 de compilação condicional podem aparecer. Rust inválido não recebe extração parcial.
 
-O catálogo **não é um dossiê de fatos** e não gera afirmações semânticas. A ponte
-entre recuperação de trechos e `prepare_query` fica para a próxima etapa.
+O catálogo **não é um dossiê de fatos** e não gera afirmações semânticas. `prepare`
+transforma resultados da busca em fichas **estruturais** (onde está cada declaração)
+para o Graph Engine de dossiês; essas fichas não respondem à pergunta.
 
 ## Integridade, memória e limites
 
@@ -99,3 +117,6 @@ cargo test --workspace --locked
 
 Os testes cobrem spans Unicode/CRLF/BOM/shebang, macros/cfg, reprodutibilidade,
 destinos existentes, mudanças atuais, adulteração, diagnósticos e caminhos inválidos.
+Também cobrem a regressão da edition v1 congelada (`v1_regression.rs`), o contrato
+`syntax-graph-v2` (`graph_v2.rs`), a ponte `prepare` (`prepare.rs`) e a fronteira
+sem linguagem (`agnostic.rs`).

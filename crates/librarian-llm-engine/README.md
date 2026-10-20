@@ -4,8 +4,7 @@ O [contrato experimental de afirmações](CLAIMS.md) acrescenta preparação de 
 e verificação mecânica de categorias/citações, sem alterar o transporte legado
 ou aprovar semanticamente as respostas. Use `claims prepare` e `claims check`.
 
-Preparação e transporte extraídos do renderer, sem mudança de política ou formato.
-Este crate não depende do renderer, do Graph Engine ou de um modelo específico.
+Preparação e transporte Ollama do Librarian. Este crate não depende do renderer, do Graph Engine ou de um modelo específico.
 O adaptador implementado é Ollama HTTP `/api/generate`, não uma API universal de
 provedores. Modelo e endpoint são argumentos; Qwen/DeepSeek não são embutidos.
 
@@ -48,47 +47,21 @@ semântica fica separada. Falhas, limites, timeouts, ausência de retry e preser
 de diretórios parciais mantêm o comportamento anterior. A prévia da CLI preparadora
 inclui um LF final; o request do transporte não inclui esse LF adicional.
 
-## Extração e continuidade
+## Estado atual
 
-Extraído de `renderer/src/bin/ollama_common` e das CLIs prepare/send em 27/09/2026.
-Os 3 testes do preparador e 13 do transporte foram movidos, com um gravador ignorado.
-As CLIs antigas do renderer delegam a este crate. PLAYME/TESTME passam a usar os
-executáveis do Librarian. `explain_evidence` permanece coordenador do consumidor,
-mas importa este transporte. A ponte busca→PreparedQuery não foi implementada.
-Em 19/10/2026 o renderer passou a ser só fonte: wrappers e coordenador foram removidos
-(ver [HISTORICO](../../HISTORICO.md)); a ponte agora é `librarian_ingest prepare`.
+O PLAYME do Librarian envia o `query.json` de um bundle produzido por
+`librarian_ingest prepare` e conferido por `verify-prepared` imediatamente antes
+do envio. O transporte preserva query, request, retorno bruto, texto e estado; os
+hashes são reconferidos pelo PLAYME.
 
-Os testes HTTP usam servidor simulado, sem Ollama. A extração não faz nova geração
-real nem melhora a qualidade semântica por si só. Os artefatos históricos não foram
-reescritos. O crate é desenvolvimento local, ainda não uma release publicada.
+- **Explicação ainda não aprovada.** A resposta atual da pergunta da câmera acerta a
+  expressão, mas cita "linha 11" (posição dentro do trecho) em vez da linha 86 do
+  arquivo, porque o contexto exportado não numera as linhas.
+- **O contrato de afirmações ainda não está na trilha do PLAYME.** As
+  [séries de experimentos](../../experiments/) continuam reprovadas pelo checker.
+- **O vínculo do bundle no registro do envio ainda não é usado pela CLI.**
+  `attempt_linked` existe, mas `send_ollama` passa `None`.
 
-Para continuar o contrato epistemológico aqui, consulte o
-[experimento de política da câmera](https://github.com/ViniciusSJV/renderer/blob/a6e56ba19213d879f5de6e3e07f8a75ef84fe569/ai/experimentos/26-politica-llm-camera/README.md)
-e o [contrato atual](https://github.com/ViniciusSJV/renderer/blob/a6e56ba19213d879f5de6e3e07f8a75ef84fe569/ai/contratos/engines-v1.md).
-As duas respostas reais foram reprovadas: houve interpretação geométrica dentro de
-FACT e lacunas indevidas, mesmo sem títulos INFERENCE/HYPOTHESIS. Este é o próximo
-problema, não uma correção feita durante a extração. Nenhuma edição automática de
-código, mudança de modelo ou nova abstração de provedores foi acrescentada.
-
-## Validação da extração
-
-Em 27/09/2026, no Windows:
-
-- `cargo test --workspace --locked --offline` no Librarian passou; o novo crate
-  teve 16 testes aprovados e 1 gravador ignorado, usando HTTP simulado.
-- No renderer, os alvos lib, catalog_sources, validate_evidence, explain_evidence,
-  prepare_ollama e send_ollama passaram: 285 testes aprovados e 1 gravador ignorado.
-  O validador foi compilado antes da integração. A suíte Unix completa não foi executada.
-- A query preservada policy-camera-20260927-02 foi preparada pelo executável antigo
-  antes do rebuild e pelo novo executável do Librarian: arquivos idênticos por SHA-256
-  `6431cffd86d4944b581cea61d5e8d57894d1c508f11a45097ff367c0aecf51de`.
-- PLAYME com a pergunta da câmera e `-PrepareOnly` concluiu com código 0 usando
-  `librarian/target/debug/prepare_ollama.exe`. Logs locais em
-  `renderer/target/llm-extraction-prepare-check`; sem contato com Ollama.
-- PLAYME e 15 blocos PowerShell do TESTME passaram na análise sintática.
-  Formatação Rust do novo crate e `git diff --check` nos dois repositórios passaram.
-
-Cargo.lock do Librarian incorpora as dependências HTTP; o do renderer apenas
-substitui sua dependência direta de reqwest pelo novo crate. Core/Graph Engine
-do renderer continuam fixados na revisão Git anterior. A dependência LLM usa
-o checkout vizinho por path, assim como ingestão; publicação não foi realizada.
+Esses três pontos são a próxima fase (limites do LLM Engine). Origem do crate,
+validação da extração (27/09/2026) e experimentos anteriores estão no
+[HISTORICO](../../HISTORICO.md).

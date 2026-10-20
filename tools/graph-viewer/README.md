@@ -1,5 +1,7 @@
 # Graph Viewer
 
+![Graph Viewer com o grafo do renderer, a busca da câmera sobreposta e E1 em destaque](../../docs/img/graph-viewer.png)
+
 Visualizador 3D do contrato `syntax-graph-v2`, em um único `index.html`, sem build
 nem npm. Three.js e d3-force-3d vêm do jsDelivr em versões fixadas (`three@0.180.0`,
 `d3-force-3d@3.0.6`), então é preciso conexão na primeira abertura.

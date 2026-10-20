@@ -14,6 +14,7 @@ configurada por um perfil do consumidor. Fluxo, perfil e artefatos estão no
 4. `prepare`: fichas estruturais dos primeiros resultados, PreparedQuery conferido e critérios do perfil.
 5. Iniciar Ollama, obter o modelo base e aplicar o Modelfile do perfil.
 6. Enviar, preservar o retorno, reconferir hashes e avaliar separadamente.
+7. Abrir a pasta da execução no [Graph Viewer](tools/graph-viewer/README.md) (`graph-v2.json`, `prepared/search.json` e `prepared/request.json`).
 
 O roteiro manual antigo está no [HISTORICO](HISTORICO.md). Para API e uso independente, consulte [ingestão](crates/librarian-ingest/README.md),
 [busca/grafo](crates/librarian-ingest/SEARCH.md) e [LLM Engine](crates/librarian-llm-engine/README.md).

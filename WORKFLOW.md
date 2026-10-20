@@ -20,7 +20,7 @@ o seu perfil. Saída 0 indica transporte concluído ou preparação concluída, 
 
 ## Perfil do consumidor
 
-Caminhos relativos partem da pasta do perfil. Exemplo real: [renderer/playme.json](../renderer/playme.json).
+Caminhos relativos partem da pasta do perfil. Exemplo real: [renderer/playme.json](https://github.com/ViniciusSJV/renderer/blob/master/playme.json).
 
 | Campo | Pertence ao consumidor porque |
 | --- | --- |
