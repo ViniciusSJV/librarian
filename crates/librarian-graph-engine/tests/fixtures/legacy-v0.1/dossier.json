@@ -1,0 +1,38 @@
+{
+  "id": "LEGACY-KINDS",
+  "unknowns": ["Dados sinteticos para congelar a exportacao anterior ao G3."],
+  "sources": [
+    {
+      "id": "CODE",
+      "kind": "rust_source",
+      "executed": true,
+      "path": "src/sample.rs",
+      "lines": ["pub fn add(a: i32, b: i32) -> i32 {", "    a + b", "}", "", "#[test]", "fn adds() { assert_eq!(add(1, 2), 3); }"]
+    },
+    {
+      "id": "RUN",
+      "kind": "test_run",
+      "executed": true,
+      "execution": {"id": "RUN-1", "command": "cargo test adds", "started_at": "2026-10-19T10:00:00Z", "finished_at": "2026-10-19T10:00:02Z", "exit_code": 0},
+      "lines": ["Comando: cargo test adds", "Início UTC: 2026-10-19T10:00:00Z", "Fim UTC: 2026-10-19T10:00:02Z", "Código de término: 0", "", "test adds ... ok", "test result: ok. 1 passed"]
+    },
+    {
+      "id": "RUN-LEGACY",
+      "kind": "test_run",
+      "executed": false,
+      "lines": ["Relatorio sem registro de execucao", "test adds ... ok"]
+    },
+    {
+      "id": "NOTE",
+      "kind": "text",
+      "executed": false,
+      "lines": ["Anotacao livre", "Sem natureza declarada"]
+    }
+  ],
+  "facts": [
+    {"id": "F-CODE", "statement": "add soma a e b", "source_id": "CODE", "line": 2},
+    {"id": "F-RUN", "statement": "o teste adds passou", "source_id": "RUN", "line": 6},
+    {"id": "F-RUN-LEGACY", "statement": "relatorio cita adds", "source_id": "RUN-LEGACY", "line": 2},
+    {"id": "F-NOTE", "statement": "anotacao livre", "source_id": "NOTE", "line": 1}
+  ]
+}
