@@ -46,6 +46,20 @@ pub fn run(args: &[String]) -> Result<i32> {
             println!("Graph matches verified snapshots");
             Ok(if catalog.diagnostics().is_empty() { 0 } else { 2 })
         }
+        Some("prepare") if args.len() == 4 => {
+            let catalog = Catalog::load(Path::new(&args[1]))?;
+            let prepared = crate::prepare::write(&catalog, &fs::read(&args[2])?, Path::new(&args[3]))?;
+            // Reopen from disk; success describes a checked bundle, not just writes.
+            crate::prepare::verify(&catalog, Path::new(&args[3]))?;
+            println!("Prepared and verified: facts {:?} -> {}", prepared.query.selected_fact_ids(), args[3]);
+            Ok(if catalog.diagnostics().is_empty() { 0 } else { 2 })
+        }
+        Some("verify-prepared") if args.len() == 3 => {
+            let catalog = Catalog::load(Path::new(&args[1]))?;
+            crate::prepare::verify(&catalog, Path::new(&args[2]))?;
+            println!("Prepared bundle matches the verified edition");
+            Ok(if catalog.diagnostics().is_empty() { 0 } else { 2 })
+        }
         Some("generate") if args.len() == 4 => {
             let config: Config = serde_json::from_slice(&fs::read(&args[2])?)?;
             let manifest = generate(Path::new(&args[1]), &config, Path::new(&args[3]))?;
@@ -80,6 +94,6 @@ pub fn run(args: &[String]) -> Result<i32> {
             }
             Ok(0)
         }
-        _ => Err("Usage: generate <project-root> <config.json> <new-edition> | verify <edition> [current-project-root] | show <edition> <symbol-name> | search <edition> <question> [lexicon.json|-] [top] [depth] | graph <edition> <new-file.json> [v1|v2] | verify-graph <edition> <graph.json>".into()),
+        _ => Err("Usage: generate <project-root> <config.json> <new-edition> | verify <edition> [current-project-root] | show <edition> <symbol-name> | search <edition> <question> [lexicon.json|-] [top] [depth] | graph <edition> <new-file.json> [v1|v2] | verify-graph <edition> <graph.json> | prepare <edition> <request.json> <new-dir> | verify-prepared <edition> <dir>".into()),
     }
 }

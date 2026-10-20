@@ -31,6 +31,7 @@ Caminhos relativos partem da pasta do perfil. Exemplo real: [renderer/playme.jso
 | `criteria` | Critérios gravados em `criteria-before.md` antes da resposta |
 | `output_root`, `question_prompt` | Onde preservar as consultas; texto da pergunta interativa |
 | `search.top`, `search.depth` | Corte do ranking e profundidade da vizinhança |
+| `search.hits`, `prepare.radius` | Quantos primeiros resultados viram fichas (padrão 1) e linhas extras de contexto (padrão 0) |
 | `send.timeout_ms`, `send.max_response_bytes` | Limites do transporte |
 
 Instruções e critérios entram nos bytes do prompt. Marque-os `-text` no consumidor.
@@ -49,10 +50,12 @@ flowchart TD
         C2[verify: reextração contra snapshots]
         D[graph / verify-graph: relações sintáticas com evidência]
         T[search: normalização, léxico, ranking e vizinhança]
+        H[prepare: fichas estruturais E1..En, fontes conferidas contra snapshots]
+        P[PreparedQuery: dossiê, seleção e query com as instruções do perfil]
+        V[verify-prepared: refaz e compara byte a byte antes do envio]
     end
     subgraph PM[Librarian: tools/playme]
-        H[E1 = hits 0 completo, reconstruído do snapshot e conferido]
-        P[query compacta + criteria-before.md]
+        R[criteria-before.md antes da resposta]
         K[Reconfere hashes; evaluation.md pendente]
     end
     subgraph E[Librarian: LLM Engine]
@@ -67,8 +70,9 @@ flowchart TD
     Q --> T
     C2 --> T
     D --> T
-    T --> H --> P --> I
+    T --> H --> P --> V --> I
     P0 --> P
+    P0 --> R
     P0 --> M
     M --> N
     I --> J --> N
@@ -83,7 +87,7 @@ flowchart TD
 | Edition | `edition/` com `manifest.json`, `sources.jsonl`, `symbols.jsonl`, `chunks.jsonl`, `diagnostics.json` e `snapshots/` |
 | Grafo | `graph.json` (nós indexados por ID; arestas com evidência em bytes/linhas/hashes) |
 | Busca | `search.json`, `lexicon-trace.json`, `retrieved-excerpts.txt`, `graph-trace.json` |
-| Consulta | `query-ollama.json`, `prompt.txt`, `criteria-before.md`, `request-ollama.json` |
+| Consulta | `prepare-request.json`; `prepared/` com `request.json`, `search.json` e `bundle/` (`dossier.json`, `question.txt`, `query.json`, `origin.json`); `criteria-before.md`, `request-ollama.json` |
 | Modelo | `Modelfile.requested`, `model-parameters.txt`, `model-modelfile.txt`, `server-tags.json` |
 | Tentativa | `ollama-01/` com `query.json`, `request.json`, `response.bin`, `response.txt`, `result.json` |
 | Auditoria | `commands.jsonl`, `logs/`, `playme.log`, `run.json`, `evaluation.md` |
@@ -98,8 +102,10 @@ flowchart TD
    esse grafo em memória dos snapshots; `graph.json` é exportação, não banco.
 3. Sem candidato não há evidência para enviar; diagnósticos na edition também
    interrompem a trilha antes do envio.
-4. E1 é o primeiro trecho completo, reconstruído dos bytes preservados e comparado
-   com a busca. **O grafo e os demais resultados não entram no envelope compacto.**
+4. `prepare` (Rust) transforma os primeiros resultados em fichas estruturais
+   (onde está cada declaração, linhas a–b), confere as fontes contra os snapshots e
+   exporta um `PreparedQuery`. `verify-prepared` refaz tudo e compara byte a byte
+   imediatamente antes do envio. **O grafo e os demais resultados não entram na query.**
 5. Ollama recebe o Modelfile por `ollama create`; editar o arquivo não aplica nada.
 6. `completed` é conclusão de transporte. A avaliação semântica é separada e manual;
    nenhuma resposta, hipótese ou relação candidata vira fato do acervo.
@@ -107,8 +113,9 @@ flowchart TD
 ## Fronteira atual
 
 O cliente HTTP não reconfere fontes no envio (`evidence_rechecked=false`); a
-conferência ocorre antes, no PLAYME. O envelope não é um bundle `PreparedQuery`, e a
-ponte automática da busca ao dossiê/bundle continua pendente. O checker de afirmações
+conferência ocorre antes, por `verify-prepared`. A ponte busca → dossiê →
+`PreparedQuery` está em `librarian-ingest` ([SEARCH.md](crates/librarian-ingest/SEARCH.md)).
+O vínculo do bundle no registro do envio (`attempt_linked`) ainda não é usado pela CLI. O checker de afirmações
 ([CLAIMS.md](crates/librarian-llm-engine/CLAIMS.md)) ainda não faz parte desta trilha;
 seus experimentos ficam em `experiments/`.
 A [referência formal de dossiês 0.1](crates/librarian-graph-engine/WORKFLOW-V0.1.md)

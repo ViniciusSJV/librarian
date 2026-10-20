@@ -59,6 +59,9 @@ $OllamaBase = $RunProfile.ollama_base_url
 $QuestionPrompt = $RunProfile.question_prompt
 $SearchTop = [string]$RunProfile.search.top
 $SearchDepth = [string]$RunProfile.search.depth
+# Quantos primeiros resultados viram fichas (padrao 1 = E1) e linhas extras de contexto.
+$SelectHits = if ($null -ne $RunProfile.search.hits) { [string]$RunProfile.search.hits } else { '1' }
+$ContextRadius = if ($null -ne $RunProfile.prepare.radius) { [string]$RunProfile.prepare.radius } else { '0' }
 $SendTimeoutMs = [string]$RunProfile.send.timeout_ms
 $SendMaxBytes = [string]$RunProfile.send.max_response_bytes
 foreach ($Required in @('model', 'ollama_base_url', 'question_prompt')) {
@@ -66,7 +69,7 @@ foreach ($Required in @('model', 'ollama_base_url', 'question_prompt')) {
         throw "Perfil sem campo obrigatorio: $Required"
     }
 }
-foreach ($Number in @($SearchTop, $SearchDepth, $SendTimeoutMs, $SendMaxBytes)) {
+foreach ($Number in @($SearchTop, $SearchDepth, $SelectHits, $ContextRadius, $SendTimeoutMs, $SendMaxBytes)) {
     if ($Number -notmatch '^\d+$') {
         throw 'Perfil exige search.top, search.depth, send.timeout_ms e send.max_response_bytes inteiros.'
     }
@@ -374,116 +377,51 @@ function Search-LibrarianEvidence {
 }
 
 # =============================================================================
-# 4. PLAYME seleciona E1 e confere contra o snapshot
+# 4-5. Graph Engine (Rust): busca -> dossie estrutural -> PreparedQuery conferido
 # =============================================================================
 
-function Get-VerifiedE1 {
+function New-PreparedQuery {
     param(
         [string]$IngestExecutable,
         [string]$Edition,
-        [psobject]$SearchData
+        [string]$Lexicon,
+        [string]$UserQuestion
     )
 
-    Write-RunLog 'Etapa 6: primeiro resultado completo = E1; demais resultados/grafo ficam somente nos logs.'
+    Write-RunLog 'Etapas 6-7: dossie estrutural dos primeiros resultados, PreparedQuery e criterios previos.'
 
-    # Política atual do PLAYME: somente o primeiro resultado completo é enviado.
-    $Hit = $SearchData.hits[0]
-    if ($null -eq $Hit -or $Hit.excerpt_truncated) {
-        throw 'Primeiro resultado ausente ou cortado; nenhum envio.'
-    }
-    Write-RunLog $Hit.excerpt
-
-    # Revalida a edição imediatamente antes de reconstruir E1.
-    $null = Invoke-ExternalCommand $IngestExecutable @('verify', $Edition)
-
-    $Chunks = @(Get-Content -Encoding UTF8 (Join-Path $Edition 'chunks.jsonl') | ForEach-Object { $_ | ConvertFrom-Json })
-    $Sources = @(Get-Content -Encoding UTF8 (Join-Path $Edition 'sources.jsonl') | ForEach-Object { $_ | ConvertFrom-Json })
-
-    $MatchingChunks = @($Chunks | Where-Object { $_.id -ceq $Hit.chunk_id })
-    if ($MatchingChunks.Count -ne 1) {
-        throw 'Trecho nao identificado unicamente.'
-    }
-    $Chunk = $MatchingChunks[0]
-
-    $MatchingSources = @($Sources | Where-Object { $_.id -ceq $Chunk.source_id })
-    if ($MatchingSources.Count -ne 1) {
-        throw 'Fonte nao identificada unicamente.'
-    }
-    $Source = $MatchingSources[0]
-
-    # E1 é reconstruído diretamente dos bytes preservados, não confiando só no search.json.
-    $SnapshotPath = Join-Path (Join-Path $Edition 'snapshots') $Source.sha256
-    $Bytes = [IO.File]::ReadAllBytes($SnapshotPath)
-    $Excerpt = $Utf8.GetString($Bytes, $Chunk.start_byte, ($Chunk.end_byte - $Chunk.start_byte))
-
-    $Mismatch = (
-        $Hit.excerpt -cne $Excerpt -or
-        $Hit.path -cne $Source.path -or
-        $Hit.source_sha256 -cne $Source.sha256 -or
-        $Hit.chunk_sha256 -cne $Chunk.sha256 -or
-        $Hit.start_line -ne $Chunk.start_line -or
-        $Hit.end_line -ne $Chunk.end_line
-    )
-    if ($Mismatch) {
-        throw 'Busca difere do snapshot.'
-    }
-
-    return [pscustomobject]@{
-        Hit = $Hit
-        Chunk = $Chunk
-        Source = $Source
-        Excerpt = $Excerpt
-    }
-}
-
-# =============================================================================
-# 5. PLAYME monta a query compacta com a política do consumidor e os critérios prévios
-# =============================================================================
-
-function New-OllamaQuery {
-    param(
-        [string]$UserQuestion,
-        [string]$Edition,
-        [psobject]$Evidence
-    )
-
-    # Politica de explicacao pertence ao consumidor; o PLAYME apenas a transporta.
+    # Pedido autocontido: reaplicado sobre a mesma edition, reproduz todos os bytes.
     # PowerShell 5.1 emite o array JSON como um objeto; os parênteses o enumeram.
     $Instructions = @(([IO.File]::ReadAllText($InstructionsPath, $Utf8) | ConvertFrom-Json) | ForEach-Object { [string]$_ })
-    if ($Instructions.Count -eq 0) {
-        throw 'Instrucoes vazias no perfil.'
-    }
-
-    $Query = [ordered]@{
+    $Request = [ordered]@{
         question = $UserQuestion
-        evidence = [ordered]@{
-            selection = 'Primeiro resultado completo selecionado pelo PLAYME conforme TESTME; demais resultados e grafo nao enviados.'
-            search_sha256 = Get-Sha256 (Join-Path $RunDirectory 'search.json')
-            manifest_file_sha256 = Get-Sha256 (Join-Path $Edition 'manifest.json')
-            excerpt_id = 'E1'
-            symbol = $Evidence.Hit.name
-            chunk_id = $Evidence.Chunk.id
-            path = $Evidence.Source.path
-            start_line = $Evidence.Chunk.start_line
-            end_line = $Evidence.Chunk.end_line
-            source_sha256 = $Evidence.Source.sha256
-            chunk_sha256 = $Evidence.Chunk.sha256
-            excerpt = $Evidence.Excerpt
-            limits = 'Snapshot conferido na preparacao; codigo nao comprova execucao. Nao e bundle PreparedQuery.'
-        }
+        lexicon = ([IO.File]::ReadAllText($Lexicon, $Utf8) | ConvertFrom-Json)
+        top = [int]$SearchTop
+        depth = [int]$SearchDepth
+        hits = [int]$SelectHits
+        radius = [int]$ContextRadius
         instructions = $Instructions
     }
+    Save-Artifact 'prepare-request.json' ($Request | ConvertTo-Json -Depth 10)
 
-    $Json = $Query | ConvertTo-Json -Depth 8
-    Save-Artifact 'query-ollama.json' $Json
-    Save-Artifact 'prompt.txt' $Json
-    Show-Artifact 'prompt.txt'
+    # prepare: refaz a busca, monta fichas estruturais, confere fontes contra snapshots,
+    # exporta o bundle e o reconfere a partir do disco.
+    $Prepared = Join-Path $RunDirectory 'prepared'
+    $null = Invoke-ExternalCommand $IngestExecutable @(
+        'prepare', $Edition, (Join-Path $RunDirectory 'prepare-request.json'), $Prepared
+    )
+
+    Show-Artifact 'prepared\bundle\dossier.json'
+    Show-Artifact 'prepared\bundle\query.json'
 
     # Criterios do consumidor, preservados antes de qualquer resposta.
     Save-Artifact 'criteria-before.md' ([IO.File]::ReadAllText($CriteriaPath, $Utf8))
     Show-Artifact 'criteria-before.md'
 
-    return (Join-Path $RunDirectory 'query-ollama.json')
+    return [pscustomobject]@{
+        Directory = $Prepared
+        Query = Join-Path $Prepared 'bundle\query.json'
+    }
 }
 
 # =============================================================================
@@ -683,23 +621,18 @@ try {
         Lexicon = $Edition.Lexicon
         UserQuestion = $Question
     }
-    $SearchData = Search-LibrarianEvidence @SearchArgs
+    # Artefatos de inspecao (ranking, trechos, vizinhanca); a selecao e refeita pelo prepare.
+    $null = Search-LibrarianEvidence @SearchArgs
 
-    # 4) PLAYME escolhe hits[0] = E1 e o reconstrói do snapshot preservado.
-    $EvidenceArgs = @{
+    # 4-5) Graph Engine em Rust: dossie, PreparedQuery conferido e criterios previos.
+    $PreparedArgs = @{
         IngestExecutable = $Tools.Ingest
         Edition = $Edition.Edition
-        SearchData = $SearchData
-    }
-    $Evidence = Get-VerifiedE1 @EvidenceArgs
-
-    # 5) PLAYME cria a query compacta e os critérios definidos antes da resposta.
-    $QueryArgs = @{
+        Lexicon = $Edition.Lexicon
         UserQuestion = $Question
-        Edition = $Edition.Edition
-        Evidence = $Evidence
     }
-    $QueryPath = New-OllamaQuery @QueryArgs
+    $Prepared = New-PreparedQuery @PreparedArgs
+    $QueryPath = $Prepared.Query
 
     # 6) Em PrepareOnly não inicia servidor/modelo, mas ainda gera o request exato.
     if (-not $PrepareOnly) {
@@ -716,6 +649,8 @@ try {
     }
     else {
         # 8) send_ollama envia, preserva a tentativa e PLAYME reconfere os hashes.
+        # Reconfere o bundle contra a edition imediatamente antes do envio.
+        $null = Invoke-ExternalCommand $Tools.Ingest @('verify-prepared', $Edition.Edition, $Prepared.Directory)
         $Attempt = Send-OllamaAttempt $Tools.Send $QueryPath
         $RunStatus = $Attempt.State
         $ExitCode = $Attempt.ExitCode

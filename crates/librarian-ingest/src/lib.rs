@@ -2,6 +2,7 @@
 pub mod cli;
 mod extractors;
 pub mod graph;
+pub mod prepare;
 pub mod search;
 
 use extractors::Registry;

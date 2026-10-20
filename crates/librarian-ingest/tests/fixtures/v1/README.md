@@ -10,6 +10,7 @@ extractor (etapa 2B). Testada por [`v1_regression.rs`](../../v1_regression.rs).
 | `edition/` | `librarian_ingest generate` a partir de uma cópia fora do Git (`git.head`/`dirty` nulos) |
 | `graph.json` | `librarian_ingest graph` |
 | `graph-v2.json` | `librarian_ingest graph … v2`, acrescentado na etapa G2 sobre a mesma edition |
+| `prepare-request.json`, `prepare-camera/` | `librarian_ingest prepare` (etapa G4): `search.json`, `dossier.json` e `query.json` do bundle |
 | `search-camera.json`, `search-abstain.json` | `librarian_ingest search` com `lexicon.json` |
 | `search-test-penalty.json` | `librarian_ingest search` sem léxico, com símbolo `#[test]` no ranking |
 
