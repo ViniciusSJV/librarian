@@ -10,6 +10,7 @@ fn run(source_path: &Path, destination: &Path) -> Result<(), String> {
     let source = Source {
         id: "MANUAL_V1".into(),
         kind: Some("maintenance_manual".into()),
+        content: Some("document".into()),
         path: Some(source_path.to_string_lossy().into_owned()),
         sha256: Some(format!("{:x}", Sha256::digest(&bytes))),
         lines: text.lines().map(str::to_owned).collect(),

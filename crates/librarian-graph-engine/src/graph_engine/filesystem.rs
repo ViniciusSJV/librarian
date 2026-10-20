@@ -1,5 +1,5 @@
 //! File-backed evidence checks. Relative paths retain the CLI's current-directory semantics.
-use super::{capture, metrics, CaptureLink, Source};
+use super::{capture, metrics, nature, CaptureLink, Source};
 use sha2::{Digest, Sha256};
 use std::fs;
 
@@ -70,9 +70,9 @@ pub fn validate_capture_link_cached(
         return Ok(None);
     };
     metrics::add("capture_link", 0);
-    if source.kind.as_deref() != Some("test_run") || source.execution.is_some() {
+    if nature::of(source)? != nature::Nature::ExecutionRecord || source.execution.is_some() {
         return Err(format!(
-            "{}: capture exige test_run sem execution legado",
+            "{}: capture exige test_run (ou content execution_record) sem execution legado",
             source.id
         ));
     }

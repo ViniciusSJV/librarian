@@ -55,7 +55,7 @@ flowchart TD
     D --> E{Há capture?}
     C --> E
     E -->|Não| OK[Conferência concluída]
-    E -->|Sim| F[Exigir test_run, sem execution legado, path e hash]
+    E -->|Sim| F[Exigir test_run ou execution_record, sem execution legado, path e hash]
     F --> G[Conferir hash do registro e run_id]
     G --> H[Validar formato 2, saída e fontes da captura]
     H --> I[Conferir vínculo da fonte com saida.bin]
@@ -86,8 +86,9 @@ flowchart TD
 
 | Recurso | Alcance |
 | --- | --- |
-| `execution` legado | Exige `kind=test_run`; compara comando, início, fim e código com campos únicos no cabeçalho até a primeira linha vazia. ID e semântica dos horários não são autenticados. |
-| Metadados exportados | Código Rust não recebe alegação `executed`. Conferência de captura substitui os campos legados de execução na seleção. Autoria, kind e git_commit continuam declarações. |
+| Natureza `content` | Opcional e independente de linguagem: `code` omite `executed` e acrescenta `execution_scope`; `execution_record` admite `execution` e captura; `document` não muda a exportação. Valores desconhecidos ou contrários a um `kind` legado são recusados. Sem `content`, `rust_source` equivale a `code` e `test_run` a `execution_record` (aliases v0.1, isolados em `nature.rs`), com bytes de exportação congelados em `tests/fixtures/legacy-v0.1`. |
+| `execution` legado | Exige `kind=test_run` ou `content=execution_record`; compara comando, início, fim e código com campos únicos no cabeçalho até a primeira linha vazia. ID e semântica dos horários não são autenticados. |
+| Metadados exportados | Fontes de código (`content=code` ou `rust_source` legado) não recebem alegação `executed`. Conferência de captura substitui os campos legados de execução na seleção. Autoria, kind e git_commit continuam declarações. |
 | Parecer `validate_review` | Confere fato existente, afirmação original, referência e trecho exato. Não aprova veredito, justificativa ou afirmação avaliada. Não é etapa automática de `prepare_query`. |
 | Core legado `EvidenceBundle` | Uma fonte; valida identidade/caminho, fatos não vazios, referências, seleção e raio positivo. Difere do raio zero permitido no Graph Engine. `to_query` não chama validação automaticamente. |
 | Helpers de baixo nível | `query_json`, `bundle::write` e helpers de seleção não substituem validação integral. Use `prepare_query` + `write_bundle` como caminho recomendado. |
