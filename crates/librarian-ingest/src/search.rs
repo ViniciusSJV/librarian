@@ -121,8 +121,14 @@ impl<'a> SearchIndex<'a> {
         let documents = catalog
             .symbols
             .values()
-            // v1 ranking policy: Rust containers are navigation, not answers.
-            .filter(|s| !matches!(s.kind.as_str(), "module" | "impl"))
+            // Each extractor declares which container kinds are navigation, not answers.
+            .filter(|s| {
+                let language = &catalog.sources[&s.source_id].language;
+                !catalog
+                    .registry
+                    .extractor(language)
+                    .is_some_and(|e| e.navigation_kinds().contains(&s.kind.as_str()))
+            })
             .map(|s| {
                 let source = &catalog.sources[&s.source_id];
                 let text =
@@ -194,7 +200,7 @@ impl<'a> SearchIndex<'a> {
                 continue;
             }
             let symbol = &self.catalog.symbols[&doc.id];
-            // v1 ranking policy: an observed #[test] attribute ranks lower; it is not executed evidence.
+            // An observed test marker ranks lower; it is not evidence that a test ran.
             let score = reasons.len() * 100 + reasons.iter().map(|r| r.weight).sum::<usize>()
                 - if symbol.is_test { 20 } else { 0 };
             ranked.push((score, symbol.is_test, doc.id.clone(), reasons));
@@ -259,9 +265,6 @@ impl<'a> SearchIndex<'a> {
             terms: groups.values().map(|(term,_)| term.clone()).collect(),
             status: if hits.is_empty() { "no_lexical_evidence" } else { "candidates" }.into(), hits,
             graph: neighborhood, diagnostics: self.catalog.diagnostics.len(),
-            limits: vec!["Lexical candidates, not a semantic answer. Minimum coverage: 60% of query term groups; scores are not probabilities.".into(),
-                "Name candidates are not resolved types/calls. No macros, cfg evaluation, compiler or runtime proof.".into(),
-                "Graph expands only the first hit. Source nodes are leaves. Depth bounded to 0..3, 48 nodes, 96 edges.".into(),
-                "Excerpts limited to 4000 UTF-8 bytes each and 16000 total. Truncation is explicit; hashes/lines refer to full chunks.".into()] })
+            limits: self.catalog.registry.search_limits.iter().map(|l| l.to_string()).collect() })
     }
 }

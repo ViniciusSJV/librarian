@@ -26,6 +26,8 @@ pub(crate) trait Extractor: Sync {
     fn observe(&self, bytes: &[u8]) -> Vec<Occurrence>;
     /// Symbol kinds a written name may point to as a candidate.
     fn candidate_kinds(&self) -> &'static [&'static str];
+    /// Container kinds used for navigation; search does not rank them as answers.
+    fn navigation_kinds(&self) -> &'static [&'static str];
 }
 
 /// Discovery, classification, extractors and limits behind one recorded identity.
@@ -36,6 +38,10 @@ pub(crate) struct Registry {
     languages: &'static [(&'static str, &'static str)],
     extractors: &'static [(&'static str, &'static dyn Extractor)],
     limits: &'static [&'static str],
+    /// Version recorded in graphs built from editions of this profile.
+    pub graph_version: &'static str,
+    /// Limits reported with each search; they describe what this profile cannot observe.
+    pub search_limits: &'static [&'static str],
 }
 
 /// Frozen v1 profile. Changing any of it requires a new identity, not an edit.
@@ -50,6 +56,13 @@ static V1: Registry = Registry {
         "Files read individually; no atomic repository snapshot or Git/author authentication.",
         "Parse failures preserve bytes and diagnostics; completeness requires inspecting diagnostics.",
         "Hashes establish consistency, not authenticity; manifest is not signed.",
+    ],
+    graph_version: "rust-syntax-graph-v1",
+    search_limits: &[
+        "Lexical candidates, not a semantic answer. Minimum coverage: 60% of query term groups; scores are not probabilities.",
+        "Name candidates are not resolved types/calls. No macros, cfg evaluation, compiler or runtime proof.",
+        "Graph expands only the first hit. Source nodes are leaves. Depth bounded to 0..3, 48 nodes, 96 edges.",
+        "Excerpts limited to 4000 UTF-8 bytes each and 16000 total. Truncation is explicit; hashes/lines refer to full chunks.",
     ],
 };
 

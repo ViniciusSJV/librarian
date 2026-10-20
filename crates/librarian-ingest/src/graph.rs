@@ -55,7 +55,7 @@ pub struct Neighborhood {
 impl Graph {
     pub fn build(catalog: &Catalog) -> Self {
         let mut graph = Self {
-            version: "rust-syntax-graph-v1".into(),
+            version: catalog.registry.graph_version.into(),
             catalog_sha256: hash(
                 &serde_json::to_vec(catalog.manifest()).expect("serializable manifest"),
             ),
@@ -281,11 +281,14 @@ impl Graph {
             evidence: proof.clone(),
         });
         // Name matches are navigational candidates, including ambiguities. Never a resolved call/type.
+        // Equal names in other languages are not candidates: kinds are only comparable within one.
+        let language = &catalog.sources[source_id].language;
         if let Some(name) = candidate {
             for symbol in catalog
                 .symbols_named(&name)
                 .into_iter()
                 .filter(|s| candidate_kinds.contains(&s.kind.as_str()))
+                .filter(|s| catalog.sources[&s.source_id].language == *language)
             {
                 self.edges.push(Edge {
                     from: id.clone(),

@@ -63,6 +63,10 @@ impl Extractor for Rust {
     fn candidate_kinds(&self) -> &'static [&'static str] {
         &["struct", "enum", "trait", "type", "union"]
     }
+
+    fn navigation_kinds(&self) -> &'static [&'static str] {
+        &["module", "impl"]
+    }
 }
 
 /// parse_file strips a UTF-8 BOM and shebang before parsing; the offset restores original bytes.
