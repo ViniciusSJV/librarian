@@ -297,6 +297,11 @@ function New-LibrarianEdition([string]$IngestExecutable) {
     $null = Invoke-ExternalCommand $IngestExecutable @('graph', $Edition, $Graph)
     $null = Invoke-ExternalCommand $IngestExecutable @('verify-graph', $Edition, $Graph)
 
+    # Contrato neutro para o visualizador (tools/graph-viewer); mesma derivacao, conferida.
+    $GraphV2 = Join-Path $RunDirectory 'graph-v2.json'
+    $null = Invoke-ExternalCommand $IngestExecutable @('graph', $Edition, $GraphV2, 'v2')
+    $null = Invoke-ExternalCommand $IngestExecutable @('verify-graph', $Edition, $GraphV2)
+
     return [pscustomobject]@{
         Edition = $Edition
         Graph = $Graph
@@ -676,6 +681,7 @@ finally {
     }) | ConvertTo-Json)
 
     Write-RunLog "`nLogs e artefatos preservados: $RunDirectory"
+    Write-RunLog ("Visualizar: abra " + (Join-Path $LibrarianRoot 'tools\graph-viewer\index.html') + " e escolha esta pasta.")
     $RunLog.Dispose()
 }
 
