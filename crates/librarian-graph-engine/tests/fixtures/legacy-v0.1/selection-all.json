@@ -1,0 +1,184 @@
+{
+  "contexts": [
+    {
+      "end_line": 3,
+      "id": "CTX_1",
+      "lines": [
+        "pub fn add(a: i32, b: i32) -> i32 {",
+        "    a + b",
+        "}"
+      ],
+      "source_id": "CODE",
+      "start_line": 1
+    },
+    {
+      "end_line": 7,
+      "id": "CTX_2",
+      "lines": [
+        "",
+        "test adds ... ok",
+        "test result: ok. 1 passed"
+      ],
+      "source_id": "RUN",
+      "start_line": 5
+    },
+    {
+      "end_line": 2,
+      "id": "CTX_3",
+      "lines": [
+        "Relatorio sem registro de execucao",
+        "test adds ... ok"
+      ],
+      "source_id": "RUN-LEGACY",
+      "start_line": 1
+    },
+    {
+      "end_line": 2,
+      "id": "CTX_4",
+      "lines": [
+        "Anotacao livre",
+        "Sem natureza declarada"
+      ],
+      "source_id": "NOTE",
+      "start_line": 1
+    }
+  ],
+  "scope": "Fichas na ordem solicitada, cada uma com sua fonte e seus limites. source.context referencia um bloco em contexts e preserva os limites da janela individual. Blocos unem apenas janelas sobrepostas ou adjacentes da mesma fonte. IDs CTX são locais à exportação. A presença conjunta de código e relatório não comprova que a versão do código produziu o resultado registrado.",
+  "selections": [
+    {
+      "authorship": null,
+      "evidence_id": "LEGACY-KINDS",
+      "evidence_unknowns": [
+        "Dados sinteticos para congelar a exportacao anterior ao G3."
+      ],
+      "fact_id": "F-CODE",
+      "metadata_scope": "Os metadados exportados são declarações do dossiê, não verificações de origem ou execução. O campo legado executed é omitido para rust_source.",
+      "scope": "Uma ficha, sua linha de referência e linhas vizinhas conforme requested_radius. Janela textual que pode cortar funções; significado da afirmação não validado.",
+      "source": {
+        "context": {
+          "context_id": "CTX_1",
+          "end_line": 3,
+          "requested_radius": 1,
+          "start_line": 1
+        },
+        "excerpt": "    a + b",
+        "execution_scope": "Esta fonte descreve código. Ela não informa se, quando ou com qual resultado o código foi executado; isso requer um registro de execução separado.",
+        "git_commit": null,
+        "id": "CODE",
+        "kind": "rust_source",
+        "line": 2,
+        "path": "src/sample.rs",
+        "sha256": null
+      },
+      "statement": "add soma a e b",
+      "unknowns_scope": "Declarações do dossiê inteiro, preservadas sem seleção por relevância. Ausência ou lista vazia não demonstram ausência de lacunas."
+    },
+    {
+      "authorship": null,
+      "evidence_id": "LEGACY-KINDS",
+      "evidence_unknowns": [
+        "Dados sinteticos para congelar a exportacao anterior ao G3."
+      ],
+      "fact_id": "F-RUN",
+      "metadata_scope": "Os metadados exportados são declarações do dossiê, não verificações de origem ou execução. O campo legado executed é omitido para rust_source.",
+      "scope": "Uma ficha, sua linha de referência e linhas vizinhas conforme requested_radius. Janela textual que pode cortar funções; significado da afirmação não validado.",
+      "source": {
+        "context": {
+          "context_id": "CTX_2",
+          "end_line": 7,
+          "requested_radius": 1,
+          "start_line": 5
+        },
+        "excerpt": "test adds ... ok",
+        "execution": {
+          "command": "cargo test adds",
+          "exit_code": 0,
+          "finished_at": "2026-10-19T10:00:02Z",
+          "id": "RUN-1",
+          "started_at": "2026-10-19T10:00:00Z"
+        },
+        "execution_scope": "execution_validation descreve apenas a conferência da transcrição em source.lines, não a autenticação do relatório. O ID é atribuído ao catalogar e não é conferido no cabeçalho. O código de término é do comando registrado, não do validador atual; sua coerência com a saída dos testes não foi verificada. Não houve reexecução nem validação semântica de horários ou comando. Sem execution, nenhuma transcrição foi conferida.",
+        "execution_validation": {
+          "basis": "source.lines: cabeçalho anterior à primeira linha vazia; comparação textual exata.",
+          "compared_fields": [
+            "command",
+            "started_at",
+            "finished_at",
+            "exit_code"
+          ],
+          "status": "matches_report_header"
+        },
+        "git_commit": null,
+        "id": "RUN",
+        "kind": "test_run",
+        "line": 6,
+        "path": null,
+        "sha256": null
+      },
+      "statement": "o teste adds passou",
+      "unknowns_scope": "Declarações do dossiê inteiro, preservadas sem seleção por relevância. Ausência ou lista vazia não demonstram ausência de lacunas."
+    },
+    {
+      "authorship": null,
+      "evidence_id": "LEGACY-KINDS",
+      "evidence_unknowns": [
+        "Dados sinteticos para congelar a exportacao anterior ao G3."
+      ],
+      "fact_id": "F-RUN-LEGACY",
+      "metadata_scope": "Os metadados exportados são declarações do dossiê, não verificações de origem ou execução. O campo legado executed é omitido para rust_source.",
+      "scope": "Uma ficha, sua linha de referência e linhas vizinhas conforme requested_radius. Janela textual que pode cortar funções; significado da afirmação não validado.",
+      "source": {
+        "context": {
+          "context_id": "CTX_3",
+          "end_line": 2,
+          "requested_radius": 1,
+          "start_line": 1
+        },
+        "excerpt": "test adds ... ok",
+        "executed": false,
+        "execution": null,
+        "execution_scope": "execution_validation descreve apenas a conferência da transcrição em source.lines, não a autenticação do relatório. O ID é atribuído ao catalogar e não é conferido no cabeçalho. O código de término é do comando registrado, não do validador atual; sua coerência com a saída dos testes não foi verificada. Não houve reexecução nem validação semântica de horários ou comando. Sem execution, nenhuma transcrição foi conferida.",
+        "execution_validation": {
+          "compared_fields": [],
+          "status": "no_execution_record"
+        },
+        "git_commit": null,
+        "id": "RUN-LEGACY",
+        "kind": "test_run",
+        "line": 2,
+        "path": null,
+        "sha256": null
+      },
+      "statement": "relatorio cita adds",
+      "unknowns_scope": "Declarações do dossiê inteiro, preservadas sem seleção por relevância. Ausência ou lista vazia não demonstram ausência de lacunas."
+    },
+    {
+      "authorship": null,
+      "evidence_id": "LEGACY-KINDS",
+      "evidence_unknowns": [
+        "Dados sinteticos para congelar a exportacao anterior ao G3."
+      ],
+      "fact_id": "F-NOTE",
+      "metadata_scope": "Os metadados exportados são declarações do dossiê, não verificações de origem ou execução. O campo legado executed é omitido para rust_source.",
+      "scope": "Uma ficha, sua linha de referência e linhas vizinhas conforme requested_radius. Janela textual que pode cortar funções; significado da afirmação não validado.",
+      "source": {
+        "context": {
+          "context_id": "CTX_4",
+          "end_line": 2,
+          "requested_radius": 1,
+          "start_line": 1
+        },
+        "excerpt": "Anotacao livre",
+        "executed": false,
+        "git_commit": null,
+        "id": "NOTE",
+        "kind": "text",
+        "line": 1,
+        "path": null,
+        "sha256": null
+      },
+      "statement": "anotacao livre",
+      "unknowns_scope": "Declarações do dossiê inteiro, preservadas sem seleção por relevância. Ausência ou lista vazia não demonstram ausência de lacunas."
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "authorship": null,
+  "evidence_id": "LEGACY-KINDS",
+  "evidence_unknowns": [
+    "Dados sinteticos para congelar a exportacao anterior ao G3."
+  ],
+  "fact_id": "F-CODE",
+  "metadata_scope": "Os metadados exportados são declarações do dossiê, não verificações de origem ou execução. O campo legado executed é omitido para rust_source.",
+  "scope": "Uma ficha, sua linha de referência e linhas vizinhas conforme requested_radius. Janela textual que pode cortar funções; significado da afirmação não validado.",
+  "source": {
+    "context": {
+      "end_line": 3,
+      "lines": [
+        "pub fn add(a: i32, b: i32) -> i32 {",
+        "    a + b",
+        "}"
+      ],
+      "requested_radius": 1,
+      "start_line": 1
+    },
+    "excerpt": "    a + b",
+    "execution_scope": "Esta fonte descreve código. Ela não informa se, quando ou com qual resultado o código foi executado; isso requer um registro de execução separado.",
+    "git_commit": null,
+    "id": "CODE",
+    "kind": "rust_source",
+    "line": 2,
+    "path": "src/sample.rs",
+    "sha256": null
+  },
+  "statement": "add soma a e b",
+  "unknowns_scope": "Declarações do dossiê inteiro, preservadas sem seleção por relevância. Ausência ou lista vazia não demonstram ausência de lacunas."
+}
