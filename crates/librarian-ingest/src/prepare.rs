@@ -5,7 +5,7 @@ use crate::{
     search::{Lexicon, SearchIndex},
     Catalog, Result,
 };
-use librarian_graph_engine::{prepare_query_with, PreparedQuery};
+use librarian_graph_engine::{prepare_query_formatted, LineFormat, PreparedQuery};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::{fs, path::Path};
@@ -24,6 +24,9 @@ pub struct Request {
     /// Extra lines around each declaration in the exported context.
     #[serde(default)]
     pub radius: usize,
+    /// Context lines as {number, text} with original file lines; false keeps plain strings.
+    #[serde(default)]
+    pub numbered_lines: bool,
     /// Consumer explanation policy; None uses the Graph Engine defaults.
     #[serde(default)]
     pub instructions: Option<Vec<String>>,
@@ -121,12 +124,18 @@ pub fn prepare(catalog: &Catalog, request: &Request) -> Result<Prepared> {
     }))?;
     let fact_ids: Vec<String> = (1..=request.hits).map(|i| format!("E{i}")).collect();
     let fact_ids: Vec<&str> = fact_ids.iter().map(String::as_str).collect();
-    let query = prepare_query_with(
+    let format = if request.numbered_lines {
+        LineFormat::Numbered
+    } else {
+        LineFormat::Plain
+    };
+    let query = prepare_query_formatted(
         &dossier,
         Some(&request.question),
         &fact_ids,
         request.radius,
         request.instructions.as_deref(),
+        format,
         |source| check_source(catalog, source),
     )?;
     Ok(Prepared {
