@@ -27,7 +27,8 @@ servidor/Modelfile → API Ollama → avaliação. O [TESTME](TESTME.md) resume 
 O consumidor fornece somente o perfil: projeto estudado, vocabulário, Modelfile,
 instruções e critérios. Ingestão, busca, grafo, seleção conferida e transporte
 pertencem ao Librarian. O [WORKFLOW](WORKFLOW.md) descreve perfil, fluxo e artefatos;
-o renderer é o consumidor de referência (checkouts lado a lado). O [HISTORICO](HISTORICO.md)
+o renderer é o consumidor de referência (checkouts lado a lado). O [Graph Viewer](tools/graph-viewer/README.md)
+abre o `graph-v2.json` de qualquer execução num único HTML, sem build. O [HISTORICO](HISTORICO.md)
 aponta para as aulas, experimentos e ferramentas de quando o Librarian vivia no renderer.
 
 Uma tentativa real já teve transporte/hashes conferidos e explicação parcialmente

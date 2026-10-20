@@ -471,3 +471,24 @@ Pendências registradas:
 
 - vínculo do bundle no registro do envio (`attempt_linked` sem uso pela CLI);
 - ao atualizar o renderer para a revisão nova, acrescentar `content: None`/`end_line: None` nas construções literais de `Source`/`Fact`.
+
+## Renderer como fonte e viewer (19/10/2026)
+
+**Renderer.** Por decisão do usuário, o renderer passou a ser somente fonte.
+
+- Foram removidos o Bibliotecário antigo (`validate_evidence`, `explain_evidence`, `bench_evidence`, `catalog_sources`, wrappers Ollama, `capture_execution`, `core`, `adapters`, `extractors`), as aulas, os experimentos, os acervos antigos e os roteiros.
+- O renderer não depende mais de nenhum crate do Librarian; `scene.rs` ficou independente. 210 testes aprovados.
+- Ficam no renderer: o perfil `playme.json`, as fontes, o léxico, o Modelfile, as instruções e os critérios.
+- O histórico está linkado em `HISTORICO.md` (commit publicado `a6e56ba`).
+- A captura de execução será refeita, genérica e multiplataforma, na fase de performance.
+
+**Etapa 5A — viewer.** `tools/graph-viewer/index.html` substitui o protótipo Vite: um único HTML, sem build, com Three.js 0.180.0 e d3-force-3d 3.0.6 fixados no jsDelivr.
+
+- Lê somente `syntax-graph-v2` e recusa outras versões com instrução.
+- Desenha com `InstancedMesh` por categoria (formato e cor) e `LineSegments` por tipo de aresta (`name_candidate` tracejada).
+- Layout com orçamento de tempo por quadro e início próximo à estrutura.
+- Inspeção de nós e de arestas com a evidência que autorizou cada ligação; filtros por categoria e por tipo de aresta; busca; foco animado; tema claro/escuro.
+- Sobreposição de `search.json` e `request.json` associada apenas por ID e recusada se o catálogo divergir.
+- Paleta: slots 1–3 da referência, validados em todos os pares nos dois modos.
+
+Verificação: Edge headless pelo protocolo DevTools com o grafo real do renderer (5.824 nós, 6.797 arestas). Carregamento, sobreposição (E1 e vizinhança de 29 nós), inspeção de nó e de aresta, foco da câmera e console sem erros. O PLAYME passou a gravar e verificar `graph-v2.json`. Ainda não foi feita sessão manual num navegador com GPU; o layout no renderizador por software é lento.

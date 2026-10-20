@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Librarian Graph Viewer</title>
+<style>
+  /* Categorical slots 1–3 of the reference palette: validated all-pairs in both modes. */
+  :root {
+    color-scheme: light;
+    --surface-0: #f1f1ee; --surface-1: #fcfcfb; --surface-2: #ffffff; --border: #dcdbd5;
+    --text-primary: #0b0b0b; --text-secondary: #52514e; --text-muted: #7a7974;
+    --cat-source: #2a78d6; --cat-symbol: #eb6834; --cat-occurrence: #1baf7a;
+    --edge: #a3a29a; --focus: #0b0b0b; --danger: #b42318;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --surface-0: #121211; --surface-1: #1a1a19; --surface-2: #232321; --border: #34342f;
+      --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #8f8e86;
+      --cat-source: #3987e5; --cat-symbol: #d95926; --cat-occurrence: #199e70;
+      --edge: #64635c; --focus: #f0efec; --danger: #f97066;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --surface-0: #121211; --surface-1: #1a1a19; --surface-2: #232321; --border: #34342f;
+    --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #8f8e86;
+    --cat-source: #3987e5; --cat-symbol: #d95926; --cat-occurrence: #199e70;
+    --edge: #64635c; --focus: #f0efec; --danger: #f97066;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--surface-0); color: var(--text-primary);
+    font: 13px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  #app { display: grid; grid-template-columns: 360px 1fr; height: 100%; }
+  aside { overflow: auto; padding: 16px; border-right: 1px solid var(--border); background: var(--surface-1); }
+  main { position: relative; min-width: 0; min-height: 0; }
+  canvas { display: block; width: 100%; height: 100%; }
+  h1 { margin: 0; font-size: 17px; }
+  h2 { margin: 0 0 8px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-secondary); }
+  .card { margin-top: 12px; padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2); }
+  .muted { color: var(--text-muted); }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  button, .file { padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-1);
+    color: var(--text-primary); font: inherit; cursor: pointer; }
+  button:disabled { opacity: .45; cursor: default; }
+  .file input { display: none; }
+  input[type=search] { width: 100%; padding: 7px 9px; border: 1px solid var(--border); border-radius: 8px;
+    background: var(--surface-1); color: var(--text-primary); font: inherit; }
+  code, .mono { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 12px; word-break: break-all; }
+  dl { display: grid; grid-template-columns: 92px 1fr; gap: 4px 8px; margin: 8px 0 0; }
+  dt { color: var(--text-muted); } dd { margin: 0; word-break: break-word; }
+  .legend label { display: flex; align-items: center; gap: 8px; margin: 4px 0; cursor: pointer; }
+  .legend .count { margin-left: auto; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+  .swatch { width: 12px; height: 12px; flex: none; }
+  .swatch.source { background: var(--cat-source); clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+  .swatch.symbol { background: var(--cat-symbol); border-radius: 50%; }
+  .swatch.occurrence { background: var(--cat-occurrence); clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+  .swatch.line { height: 2px; background: var(--edge); }
+  .swatch.line.dashed { background: repeating-linear-gradient(90deg, var(--edge) 0 3px, transparent 3px 6px); }
+  .list { margin: 6px 0 0; padding: 0; list-style: none; max-height: 260px; overflow: auto; }
+  .list li { padding: 5px 6px; border-radius: 6px; cursor: pointer; }
+  .list li:hover { background: var(--surface-1); }
+  .tag { display: inline-block; padding: 0 6px; border: 1px solid var(--border); border-radius: 999px; font-size: 11px; color: var(--text-secondary); }
+  .error { color: var(--danger); }
+  .hud { position: absolute; padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px;
+    background: color-mix(in srgb, var(--surface-1) 88%, transparent); pointer-events: none; }
+  #status { top: 12px; left: 12px; color: var(--text-secondary); max-width: calc(100% - 24px); }
+  #tooltip { display: none; max-width: 420px; }
+  #drop { position: absolute; inset: 0; display: none; place-items: center; font-size: 16px;
+    background: color-mix(in srgb, var(--surface-0) 80%, transparent); border: 2px dashed var(--text-muted); }
+  @media (max-width: 800px) {
+    #app { grid-template-columns: 1fr; grid-template-rows: 60vh auto; }
+    main { order: -1; } aside { border-right: 0; border-top: 1px solid var(--border); }
+  }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/",
+  "d3-force-3d": "https://cdn.jsdelivr.net/npm/d3-force-3d@3.0.6/+esm"
+} }
+</script>
+</head>
+<body>
+<div id="app">
+  <aside>
+    <div class="row" style="justify-content: space-between">
+      <h1>Librarian Graph Viewer</h1>
+      <button id="theme" title="Alternar tema">◐</button>
+    </div>
+    <p class="muted">Projeta as relações do grafo <code>syntax-graph-v2</code>. Proximidade visual não cria relação; toda aresta mostra a evidência que a autorizou.</p>
+
+    <section class="card">
+      <h2>Abrir</h2>
+      <div class="row">
+        <label class="file">Pasta de execução<input id="folder" type="file" webkitdirectory multiple></label>
+        <label class="file">Arquivos<input id="files" type="file" accept=".json" multiple></label>
+      </div>
+      <p class="muted">Obrigatório: <code>graph-v2.json</code> (<code>librarian_ingest graph &lt;edition&gt; &lt;novo.json&gt; v2</code>). Opcional: <code>search.json</code> e <code>request.json</code> do <code>prepare</code>. Também aceita arrastar e soltar.</p>
+      <dl id="provenance"></dl>
+    </section>
+
+    <section class="card legend">
+      <h2>Nós</h2>
+      <label><input type="checkbox" data-category="source" checked><span class="swatch source"></span>Fonte (arquivo)<span class="count" data-count="source">0</span></label>
+      <label><input type="checkbox" data-category="symbol" checked><span class="swatch symbol"></span>Símbolo (declaração)<span class="count" data-count="symbol">0</span></label>
+      <label><input type="checkbox" data-category="occurrence" checked><span class="swatch occurrence"></span>Ocorrência (uso observado)<span class="count" data-count="occurrence">0</span></label>
+      <h2 style="margin-top: 12px">Arestas</h2>
+      <label><input type="checkbox" data-edge="declares" checked><span class="swatch line"></span>declares<span class="count" data-count="declares">0</span></label>
+      <label><input type="checkbox" data-edge="contains" checked><span class="swatch line"></span>contains<span class="count" data-count="contains">0</span></label>
+      <label><input type="checkbox" data-edge="observes" checked><span class="swatch line"></span>observes<span class="count" data-count="observes">0</span></label>
+      <label><input type="checkbox" data-edge="name_candidate" checked><span class="swatch line dashed"></span>name_candidate (não resolvido)<span class="count" data-count="name_candidate">0</span></label>
+    </section>
+
+    <section class="card">
+      <h2>Encontrar</h2>
+      <input id="query" type="search" placeholder="ray_from_pixel, Camera, src/world.rs…" disabled>
+      <ul id="results" class="list"></ul>
+      <div class="row" style="margin-top: 8px">
+        <button id="fit" disabled>Enquadrar (F)</button>
+        <button id="clear" disabled>Limpar (Esc)</button>
+      </div>
+    </section>
+
+    <section class="card" id="overlayCard" hidden>
+      <h2>Busca sobreposta</h2>
+      <label class="row"><input id="overlayToggle" type="checkbox" checked> Destacar resultados e vizinhança</label>
+      <p id="overlayQuestion"></p>
+      <ul id="overlayHits" class="list"></ul>
+      <p id="overlayNote" class="muted"></p>
+    </section>
+
+    <section class="card">
+      <h2>Inspeção</h2>
+      <div id="inspector" class="muted">Clique em um nó ou em uma aresta.</div>
+    </section>
+  </aside>
+  <main id="viewport">
+    <canvas id="scene"></canvas>
+    <div id="status" class="hud">Abra um graph-v2.json.</div>
+    <div id="tooltip" class="hud"></div>
+    <div id="drop">Solte graph-v2.json (e opcionalmente search.json/request.json)</div>
+  </main>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { forceSimulation, forceManyBody, forceLink, forceCenter } from 'd3-force-3d';
+
+const VERSION = 'syntax-graph-v2';
+const CATEGORIES = ['source', 'symbol', 'occurrence'];
+const EDGE_KINDS = ['declares', 'contains', 'observes', 'name_candidate'];
+const RESOLUTION = {
+  structural: 'Estrutura do arquivo: pertencimento ou aninhamento de intervalos.',
+  syntax_only: 'Observação sintática no código. Não resolve destino nem comprova execução.',
+  name_candidate: 'Candidato por nome igual. Não é resolução de tipo, import ou chamada.',
+};
+const LINK = { declares: [34, .5], contains: [18, .8], observes: [9, .9], name_candidate: [70, .04] };
+
+const $ = s => document.querySelector(s);
+const el = (tag, props = {}, ...children) => {
+  const node = Object.assign(document.createElement(tag), props);
+  node.append(...children.filter(c => c != null));
+  return node;
+};
+const status = text => { $('#status').textContent = text; };
+
+// ---------------------------------------------------------------- scene
+const canvas = $('#scene'), viewport = $('#viewport');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(50, 1, 1, 20000);
+camera.position.set(0, 0, 900);
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
+let userMoved = false;
+controls.addEventListener('start', () => { userMoved = true; });
+scene.add(new THREE.HemisphereLight(0xffffff, 0x666666, 2.2));
+const sun = new THREE.DirectionalLight(0xffffff, 1.2);
+sun.position.set(1, 2, 3);
+scene.add(sun);
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2(9, 9);
+const GEOMETRY = {
+  source: new THREE.OctahedronGeometry(7),
+  symbol: new THREE.SphereGeometry(3.6, 14, 10),
+  occurrence: new THREE.TetrahedronGeometry(2.6),
+};
+
+let palette;
+function readPalette() {
+  const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  palette = {
+    source: new THREE.Color(css('--cat-source')),
+    symbol: new THREE.Color(css('--cat-symbol')),
+    occurrence: new THREE.Color(css('--cat-occurrence')),
+    surface: new THREE.Color(css('--surface-0')),
+    edge: new THREE.Color(css('--edge')),
+    focus: new THREE.Color(css('--focus')),
+  };
+  scene.background = palette.surface;
+}
+readPalette();
+
+// ---------------------------------------------------------------- state
+const state = {
+  graph: null, nodes: [], edges: [], index: new Map(), out: [], inn: [],
+  sim: null, simNodes: [], layoutTicks: 0,
+  meshes: {}, slot: [], lines: {},
+  visibleCategory: new Set(CATEGORIES), visibleEdge: new Set(EDGE_KINDS),
+  selectedNode: null, selectedEdge: null, matches: new Set(),
+  overlay: null, overlayOn: true,
+};
+
+// ---------------------------------------------------------------- load
+function ingest(graph) {
+  if (graph?.version !== VERSION) {
+    throw new Error(`Esperado ${VERSION}, recebido ${graph?.version ?? 'sem versão'}. Gere com: librarian_ingest graph <edition> <novo.json> v2`);
+  }
+  if (!graph.nodes || Array.isArray(graph.nodes) || !Array.isArray(graph.edges)) {
+    throw new Error('Contrato inválido: nodes deve ser objeto indexado por ID e edges, lista.');
+  }
+  const nodes = Object.values(graph.nodes);
+  const index = new Map(nodes.map((n, i) => [n.id, i]));
+  for (const n of nodes) {
+    if (!CATEGORIES.includes(n.category)) throw new Error(`Categoria desconhecida em ${n.id}: ${n.category}`);
+  }
+  const out = nodes.map(() => []), inn = nodes.map(() => []);
+  const edges = graph.edges.map((e, k) => {
+    const s = index.get(e.from), t = index.get(e.to);
+    if (s == null || t == null) throw new Error(`Aresta ${e.id} aponta para nó ausente; nada foi desenhado.`);
+    if (!EDGE_KINDS.includes(e.kind)) throw new Error(`Tipo de aresta desconhecido: ${e.kind}`);
+    out[s].push(k);
+    inn[t].push(k);
+    return { ...e, s, t };
+  });
+  Object.assign(state, { graph, nodes, edges, index, out, inn, overlay: null,
+    selectedNode: null, selectedEdge: null, matches: new Set() });
+}
+
+async function loadFiles(fileList) {
+  const files = [...fileList];
+  const pick = (...names) => {
+    for (const name of names) {
+      const found = files.find(f => (f.webkitRelativePath || f.name).replaceAll('\\', '/').endsWith(name));
+      if (found) return found;
+    }
+    return null;
+  };
+  try {
+    const graphFile = pick('/graph-v2.json', 'graph-v2.json') ?? (files.length === 1 ? files[0] : null);
+    if (!graphFile) throw new Error('graph-v2.json não encontrado na seleção.');
+    status('Lendo grafo…');
+    ingest(JSON.parse(await graphFile.text()));
+    buildScene();
+    showProvenance();
+    startLayout();
+    const searchFile = pick('prepared/search.json', '/search.json', 'search.json');
+    const requestFile = pick('prepared/request.json', '/request.json', 'request.json');
+    if (searchFile && searchFile !== graphFile) {
+      attachSearch(JSON.parse(await searchFile.text()),
+        requestFile ? JSON.parse(await requestFile.text()) : null);
+    }
+    for (const id of ['#query', '#fit', '#clear']) $(id).disabled = false;
+    inspect();
+  } catch (error) {
+    console.error(error);
+    status(`Erro: ${error.message}`);
+  }
+}
+
+function showProvenance() {
+  const g = state.graph;
+  const rows = [['versão', g.version], ['derivado de', g.derived_from], ['perfil', g.profile],
+    ['catálogo', g.catalog_sha256?.slice(0, 16) + '…'], ['nós', state.nodes.length], ['arestas', state.edges.length]];
+  $('#provenance').replaceChildren(...rows.flatMap(([k, v]) => [el('dt', { textContent: k }), el('dd', { textContent: v ?? 'não informado', className: 'mono' })]));
+  for (const c of CATEGORIES) {
+    document.querySelector(`[data-count="${c}"]`).textContent = state.nodes.filter(n => n.category === c).length;
+  }
+  for (const k of EDGE_KINDS) {
+    document.querySelector(`[data-count="${k}"]`).textContent = state.edges.filter(e => e.kind === k).length;
+  }
+}
+
+// ---------------------------------------------------------------- overlay (exact IDs only)
+function attachSearch(search, request) {
+  $('#overlayCard').hidden = false;
+  if (search.catalog_sha256 !== state.graph.catalog_sha256) {
+    state.overlay = null;
+    $('#overlayQuestion').textContent = '';
+    $('#overlayHits').replaceChildren();
+    $('#overlayNote').className = 'error';
+    $('#overlayNote').textContent = 'search.json pertence a outro catálogo; destaque recusado.';
+    return;
+  }
+  const facts = request?.hits ?? null;
+  const hits = (search.hits ?? []).map((h, r) => ({ ...h, rank: r + 1, node: state.index.get(h.symbol_id), fact: facts != null && r < facts }));
+  const nodes = new Set(hits.filter(h => h.node != null).map(h => h.node));
+  const neighbors = new Set();
+  for (const n of search.graph?.nodes ?? []) {
+    const i = state.index.get(n.id);
+    if (i != null) neighbors.add(i);
+  }
+  const key = (from, to, ev) => `${from}|${to}|${ev?.start_byte}|${ev?.end_byte}`;
+  const wanted = new Set((search.graph?.edges ?? []).map(e => key(e.from, e.to, e.evidence)));
+  const edges = new Set();
+  state.edges.forEach((e, k) => { if (wanted.has(key(e.from, e.to, e.evidence))) edges.add(k); });
+  const missing = hits.filter(h => h.node == null).length;
+  state.overlay = { hits, nodes, neighbors, edges };
+  $('#overlayQuestion').textContent = search.question ?? '';
+  $('#overlayHits').replaceChildren(...hits.map(h => {
+    const li = el('li', {}, h.fact ? el('span', { className: 'tag', textContent: `E${h.rank}` }) : el('span', { className: 'tag', textContent: `#${h.rank}` }),
+      ' ', h.name, el('div', { className: 'muted mono', textContent: `${h.path}:${h.start_line}–${h.end_line} · score ${h.score}` }));
+    if (h.node != null) li.onclick = () => selectNode(h.node, true);
+    return li;
+  }));
+  $('#overlayNote').className = 'muted';
+  $('#overlayNote').textContent = [
+    facts === 1 ? 'E1: ficha estrutural enviada ao modelo (request.json).'
+      : facts != null ? `E1…E${facts}: fichas estruturais enviadas ao modelo (request.json).` : 'Sem request.json: não se sabe quais resultados viraram fichas.',
+    `Vizinhança: ${neighbors.size} nós e ${edges.size} arestas do primeiro resultado, associados por ID.`,
+    missing ? `${missing} resultado(s) sem nó correspondente no grafo.` : null,
+  ].filter(Boolean).join(' ');
+  repaint();
+}
+
+// ---------------------------------------------------------------- render objects
+function buildScene() {
+  for (const mesh of Object.values(state.meshes)) { scene.remove(mesh); mesh.dispose(); }
+  for (const line of Object.values(state.lines)) { scene.remove(line); line.geometry.dispose(); line.material.dispose(); }
+  state.meshes = {}; state.lines = {}; state.slot = new Array(state.nodes.length);
+  for (const c of CATEGORIES) {
+    const list = state.nodes.flatMap((n, i) => n.category === c ? [i] : []);
+    const mesh = new THREE.InstancedMesh(GEOMETRY[c], new THREE.MeshStandardMaterial({ roughness: .55, metalness: .05 }), Math.max(1, list.length));
+    mesh.count = list.length;
+    mesh.userData = { list };
+    list.forEach((i, k) => { state.slot[i] = [c, k]; mesh.setColorAt(k, palette[c]); });
+    scene.add(mesh);
+    state.meshes[c] = mesh;
+  }
+  for (const kind of EDGE_KINDS) {
+    const list = state.edges.flatMap((e, k) => e.kind === kind ? [k] : []);
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(list.length * 6), 3));
+    geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(list.length * 6), 3));
+    const material = kind === 'name_candidate'
+      ? new THREE.LineDashedMaterial({ vertexColors: true, dashSize: 4, gapSize: 4, transparent: true, opacity: .8 })
+      : new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: kind === 'observes' ? .55 : .8 });
+    const line = new THREE.LineSegments(geometry, material);
+    line.userData = { list };
+    scene.add(line);
+    state.lines[kind] = line;
+  }
+}
+
+function startLayout() {
+  // Seed each node near the node that reaches it, so the simulation starts close to structure.
+  const n = state.nodes.length;
+  const pos = new Array(n);
+  const sources = state.nodes.flatMap((node, i) => node.category === 'source' ? [i] : []);
+  const radius = 60 * Math.sqrt(Math.max(1, sources.length));
+  sources.forEach((i, k) => {
+    const y = 1 - 2 * (k + .5) / sources.length, r = Math.sqrt(1 - y * y), a = k * 2.399963;
+    pos[i] = [Math.cos(a) * r * radius, y * radius, Math.sin(a) * r * radius];
+  });
+  const queue = [...sources];
+  while (queue.length) {
+    const i = queue.shift();
+    for (const k of state.out[i]) {
+      const t = state.edges[k].t;
+      if (pos[t] || state.edges[k].kind === 'name_candidate') continue;
+      pos[t] = pos[i].map(v => v + (Math.random() - .5) * 30);
+      queue.push(t);
+    }
+  }
+  state.simNodes = state.nodes.map((_, i) => {
+    const [x, y, z] = pos[i] ?? [(Math.random() - .5) * radius, (Math.random() - .5) * radius, (Math.random() - .5) * radius];
+    return { index: i, x, y, z };
+  });
+  const links = state.edges.map(e => ({ source: e.s, target: e.t, kind: e.kind }));
+  state.sim = forceSimulation(state.simNodes, 3)
+    .force('link', forceLink(links).distance(l => LINK[l.kind][0]).strength(l => LINK[l.kind][1]))
+    .force('charge', forceManyBody().strength(-22).theta(.9).distanceMax(500))
+    .force('center', forceCenter())
+    .alphaDecay(.03)
+    .stop();
+  state.layoutTicks = 0;
+  userMoved = false;
+  updatePositions();
+  repaint();
+  fit();
+}
+
+const dummy = new THREE.Object3D();
+function nodeScale(i) {
+  if (state.selectedNode === i) return 1.9;
+  if (state.overlayOn && state.overlay?.nodes.has(i)) return 1.7;
+  if (state.matches.has(i)) return 1.5;
+  return 1;
+}
+
+function updatePositions() {
+  const p = state.simNodes;
+  for (const c of CATEGORIES) {
+    const mesh = state.meshes[c];
+    mesh.userData.list.forEach((i, k) => {
+      dummy.position.set(p[i].x, p[i].y, p[i].z);
+      dummy.scale.setScalar(state.visibleCategory.has(c) ? nodeScale(i) : 0);
+      dummy.updateMatrix();
+      mesh.setMatrixAt(k, dummy.matrix);
+    });
+    mesh.instanceMatrix.needsUpdate = true;
+    mesh.computeBoundingSphere();
+  }
+  for (const kind of EDGE_KINDS) {
+    const line = state.lines[kind];
+    const arr = line.geometry.attributes.position.array;
+    line.userData.list.forEach((k, j) => {
+      const e = state.edges[k];
+      const shown = state.visibleCategory.has(state.nodes[e.s].category) && state.visibleCategory.has(state.nodes[e.t].category);
+      const a = p[e.s], b = shown ? p[e.t] : p[e.s];
+      arr.set([a.x, a.y, a.z, b.x, b.y, b.z], j * 6);
+    });
+    line.geometry.attributes.position.needsUpdate = true;
+    line.geometry.computeBoundingSphere();
+    if (line.material.isLineDashedMaterial) line.computeLineDistances();
+    line.visible = state.visibleEdge.has(kind);
+  }
+}
+
+function focusSets() {
+  if (state.selectedNode != null) {
+    const nodes = new Set([state.selectedNode]), edges = new Set();
+    for (const k of [...state.out[state.selectedNode], ...state.inn[state.selectedNode]]) {
+      edges.add(k); nodes.add(state.edges[k].s); nodes.add(state.edges[k].t);
+    }
+    return { nodes, edges };
+  }
+  if (state.selectedEdge != null) {
+    const e = state.edges[state.selectedEdge];
+    return { nodes: new Set([e.s, e.t]), edges: new Set([state.selectedEdge]) };
+  }
+  if (state.overlayOn && state.overlay) {
+    return { nodes: new Set([...state.overlay.nodes, ...state.overlay.neighbors]), edges: state.overlay.edges };
+  }
+  if (state.matches.size) return { nodes: state.matches, edges: new Set() };
+  return null;
+}
+
+const tmp = new THREE.Color();
+function repaint() {
+  if (!state.graph) return;
+  const focus = focusSets();
+  for (const c of CATEGORIES) {
+    const mesh = state.meshes[c];
+    mesh.userData.list.forEach((i, k) => {
+      tmp.copy(palette[c]);
+      if (focus && !focus.nodes.has(i)) tmp.lerp(palette.surface, .82);
+      mesh.setColorAt(k, tmp);
+    });
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+  }
+  for (const kind of EDGE_KINDS) {
+    const line = state.lines[kind];
+    const arr = line.geometry.attributes.color.array;
+    line.userData.list.forEach((k, j) => {
+      if (focus?.edges.has(k)) tmp.copy(palette.focus);
+      else {
+        tmp.copy(palette.edge);
+        if (focus) tmp.lerp(palette.surface, .75);
+      }
+      arr.set([tmp.r, tmp.g, tmp.b, tmp.r, tmp.g, tmp.b], j * 6);
+    });
+    line.geometry.attributes.color.needsUpdate = true;
+  }
+  updatePositions();
+}
+
+// ---------------------------------------------------------------- camera
+let flight = null;
+function fit() {
+  if (!state.simNodes.length) return;
+  const box = new THREE.Box3();
+  for (const p of state.simNodes) {
+    if (state.visibleCategory.has(state.nodes[p.index].category)) box.expandByPoint(new THREE.Vector3(p.x, p.y, p.z));
+  }
+  if (box.isEmpty()) return;
+  const sphere = box.getBoundingSphere(new THREE.Sphere());
+  flyTo(sphere.center, Math.max(120, sphere.radius * 2.4));
+}
+function flyTo(target, distance) {
+  const dir = camera.position.clone().sub(controls.target).normalize();
+  flight = { from: controls.target.clone(), to: target.clone(), camFrom: camera.position.clone(),
+    camTo: target.clone().add(dir.multiplyScalar(distance)), start: performance.now() };
+}
+function focusNode(i) {
+  userMoved = true; // an explicit focus wins over the automatic framing of the layout
+  const p = state.simNodes[i];
+  flyTo(new THREE.Vector3(p.x, p.y, p.z), 160);
+}
+
+// ---------------------------------------------------------------- selection & inspector
+function selectNode(i, fly = false) {
+  state.selectedNode = i; state.selectedEdge = null;
+  repaint(); inspect();
+  if (fly) focusNode(i);
+}
+function selectEdge(k) {
+  state.selectedEdge = k; state.selectedNode = null;
+  repaint(); inspect();
+}
+function clearSelection() {
+  state.selectedNode = null; state.selectedEdge = null; state.matches = new Set();
+  $('#query').value = ''; $('#results').replaceChildren();
+  repaint(); inspect();
+}
+
+const nodeLink = i => {
+  const n = state.nodes[i];
+  return el('a', { href: '#', textContent: n.label.length > 80 ? n.label.slice(0, 80) + '…' : n.label, onclick: ev => { ev.preventDefault(); selectNode(i, true); } });
+};
+const rows = pairs => el('dl', {}, ...pairs.filter(([, v]) => v != null).flatMap(([k, v]) => [el('dt', { textContent: k }), el('dd', {}, v)]));
+
+function inspect() {
+  const box = $('#inspector');
+  box.className = '';
+  if (state.selectedNode != null) {
+    const i = state.selectedNode, n = state.nodes[i];
+    const relation = (k, outward) => {
+      const e = state.edges[k];
+      return el('li', { onclick: () => selectEdge(k) }, el('span', { className: 'tag', textContent: e.kind }), outward ? ' → ' : ' ← ',
+        state.nodes[outward ? e.t : e.s].label.slice(0, 70), el('div', { className: 'muted', textContent: `${e.resolution} · ${e.evidence.path}:${e.evidence.start_line}` }));
+    };
+    box.replaceChildren(
+      el('strong', { className: 'mono', textContent: n.label }),
+      rows([['categoria', n.category], ['kind', n.kind], ['linguagem', n.language], ['id', el('span', { className: 'mono', textContent: n.id })],
+        ['saídas', String(state.out[i].length)], ['entradas', String(state.inn[i].length)]]),
+      el('h2', { textContent: 'Relações (clique para ver a evidência)', style: 'margin-top: 12px' }),
+      el('ul', { className: 'list' }, ...state.out[i].map(k => relation(k, true)), ...state.inn[i].map(k => relation(k, false))),
+    );
+    return;
+  }
+  if (state.selectedEdge != null) {
+    const e = state.edges[state.selectedEdge], ev = e.evidence;
+    box.replaceChildren(
+      el('strong', { textContent: `${e.kind} · ${e.resolution}` }),
+      el('p', { className: 'muted', textContent: RESOLUTION[e.resolution] ?? 'Resolução não documentada.' }),
+      rows([['de', nodeLink(e.s)], ['para', nodeLink(e.t)], ['id', el('span', { className: 'mono', textContent: e.id })]]),
+      el('h2', { textContent: 'Qual evidência autorizou esta ligação?', style: 'margin-top: 12px' }),
+      rows([['arquivo', ev.path], ['linhas', `${ev.start_line}–${ev.end_line}`], ['bytes', `${ev.start_byte}–${ev.end_byte} (fim exclusivo)`],
+        ['fonte sha256', el('span', { className: 'mono', textContent: ev.source_sha256 })],
+        ['trecho sha256', el('span', { className: 'mono', textContent: ev.excerpt_sha256 })]]),
+    );
+    return;
+  }
+  box.className = 'muted';
+  box.textContent = state.graph ? 'Clique em um nó ou em uma aresta.' : 'Nenhum grafo aberto.';
+}
+
+// ---------------------------------------------------------------- picking
+function pick(withEdges) {
+  raycaster.setFromCamera(pointer, camera);
+  const meshes = CATEGORIES.filter(c => state.visibleCategory.has(c)).map(c => state.meshes[c]).filter(Boolean);
+  const hit = raycaster.intersectObjects(meshes, false)[0];
+  if (hit) return { node: hit.object.userData.list[hit.instanceId] };
+  if (!withEdges) return null;
+  raycaster.params.Line.threshold = Math.max(.6, camera.position.distanceTo(controls.target) / 400);
+  const lines = EDGE_KINDS.filter(k => state.visibleEdge.has(k)).map(k => state.lines[k]).filter(Boolean);
+  const edge = raycaster.intersectObjects(lines, false)[0];
+  return edge ? { edge: edge.object.userData.list[Math.floor(edge.index / 2)] } : null;
+}
+
+let hoverQueued = false, lastMove = null;
+canvas.addEventListener('pointermove', ev => {
+  const r = canvas.getBoundingClientRect();
+  pointer.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
+  lastMove = { x: ev.clientX - r.left, y: ev.clientY - r.top };
+  if (!hoverQueued && state.graph) {
+    hoverQueued = true;
+    requestAnimationFrame(() => { hoverQueued = false; hover(); });
+  }
+});
+canvas.addEventListener('pointerleave', () => { $('#tooltip').style.display = 'none'; });
+function hover() {
+  const found = pick(false), tip = $('#tooltip');
+  canvas.style.cursor = found ? 'pointer' : '';
+  if (!found) { tip.style.display = 'none'; return; }
+  const n = state.nodes[found.node];
+  tip.replaceChildren(el('strong', { textContent: n.label.slice(0, 120) }), el('div', { className: 'muted', textContent: `${n.category} · ${n.kind} · ${n.language}` }));
+  tip.style.display = 'block';
+  tip.style.left = `${Math.min(lastMove.x + 14, viewport.clientWidth - 300)}px`;
+  tip.style.top = `${lastMove.y + 14}px`;
+}
+let downAt = null;
+canvas.addEventListener('pointerdown', ev => { downAt = [ev.clientX, ev.clientY]; });
+canvas.addEventListener('click', ev => {
+  if (!state.graph || (downAt && Math.hypot(ev.clientX - downAt[0], ev.clientY - downAt[1]) > 4)) return;
+  const found = pick(true);
+  if (found?.node != null) selectNode(found.node);
+  else if (found?.edge != null) selectEdge(found.edge);
+});
+
+// ---------------------------------------------------------------- controls
+$('#folder').addEventListener('change', ev => loadFiles(ev.target.files));
+$('#files').addEventListener('change', ev => loadFiles(ev.target.files));
+$('#fit').addEventListener('click', fit);
+$('#clear').addEventListener('click', clearSelection);
+$('#overlayToggle').addEventListener('change', ev => { state.overlayOn = ev.target.checked; repaint(); });
+document.querySelectorAll('[data-category]').forEach(cb => cb.addEventListener('change', ev => {
+  ev.target.checked ? state.visibleCategory.add(ev.target.dataset.category) : state.visibleCategory.delete(ev.target.dataset.category);
+  if (state.graph) repaint();
+}));
+document.querySelectorAll('[data-edge]').forEach(cb => cb.addEventListener('change', ev => {
+  ev.target.checked ? state.visibleEdge.add(ev.target.dataset.edge) : state.visibleEdge.delete(ev.target.dataset.edge);
+  if (state.graph) updatePositions();
+}));
+$('#query').addEventListener('input', ev => {
+  const q = ev.target.value.trim().toLowerCase();
+  state.matches = new Set();
+  if (q.length >= 2) {
+    state.nodes.forEach((n, i) => { if (`${n.label} ${n.kind} ${n.id}`.toLowerCase().includes(q)) state.matches.add(i); });
+  }
+  const shown = [...state.matches].sort((a, b) => CATEGORIES.indexOf(state.nodes[a].category) - CATEGORIES.indexOf(state.nodes[b].category)).slice(0, 60);
+  $('#results').replaceChildren(...shown.map(i => el('li', { onclick: () => selectNode(i, true) },
+    el('span', { className: 'tag', textContent: state.nodes[i].category }), ' ', state.nodes[i].label.slice(0, 80))),
+    ...(state.matches.size > shown.length ? [el('li', { className: 'muted', textContent: `+${state.matches.size - shown.length} outros` })] : []));
+  repaint();
+});
+$('#theme').addEventListener('click', () => {
+  const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+  const current = document.documentElement.dataset.theme ?? (dark ? 'dark' : 'light');
+  document.documentElement.dataset.theme = current === 'dark' ? 'light' : 'dark';
+  readPalette(); repaint();
+});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { readPalette(); repaint(); });
+addEventListener('keydown', ev => {
+  if (ev.target instanceof HTMLInputElement) return;
+  if (ev.key === 'Escape') clearSelection();
+  if (ev.key === 'f' || ev.key === 'F') fit();
+});
+for (const type of ['dragenter', 'dragover']) viewport.addEventListener(type, ev => { ev.preventDefault(); $('#drop').style.display = 'grid'; });
+for (const type of ['dragleave', 'drop']) viewport.addEventListener(type, ev => { ev.preventDefault(); $('#drop').style.display = 'none'; });
+viewport.addEventListener('drop', ev => loadFiles(ev.dataTransfer.files));
+
+function resize() {
+  const w = viewport.clientWidth, h = viewport.clientHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / Math.max(1, h);
+  camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(viewport);
+
+// Inspection hook for automated checks: open the page with #debug.
+if (location.hash === '#debug') window.viewerDebug = { state, camera, controls, get flight() { return flight; } };
+
+// ---------------------------------------------------------------- loop
+const MAX_TICKS = 400, FRAME_BUDGET_MS = 12;
+renderer.setAnimationLoop(() => {
+  if (state.sim && state.layoutTicks < MAX_TICKS && state.sim.alpha() > state.sim.alphaMin()) {
+    // Time-budgeted ticks keep the page responsive on large graphs.
+    const start = performance.now();
+    do { state.sim.tick(); state.layoutTicks++; }
+    while (performance.now() - start < FRAME_BUDGET_MS && state.layoutTicks < MAX_TICKS);
+    updatePositions();
+    if (!userMoved && !flight && state.layoutTicks % 30 < 3) fit();
+    status(`Layout ${Math.round(100 * state.layoutTicks / MAX_TICKS)}% · ${state.nodes.length} nós · ${state.edges.length} arestas`);
+    if (state.layoutTicks >= MAX_TICKS || state.sim.alpha() <= state.sim.alphaMin()) {
+      status(`${state.nodes.length} nós · ${state.edges.length} arestas · arraste para girar, clique para inspecionar`);
+      if (!userMoved) fit();
+    }
+  }
+  if (flight) {
+    // Time-based, so slow frames do not stretch the movement.
+    const t = Math.min(1, (performance.now() - flight.start) / 600);
+    const s = t * t * (3 - 2 * t);
+    controls.target.lerpVectors(flight.from, flight.to, s);
+    camera.position.lerpVectors(flight.camFrom, flight.camTo, s);
+    if (t >= 1) flight = null;
+  }
+  controls.update();
+  renderer.render(scene, camera);
+});
+</script>
+</body>
+</html>

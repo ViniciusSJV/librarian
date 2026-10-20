@@ -85,7 +85,7 @@ flowchart TD
 | --- | --- |
 | Entrada | `sources-config.json`, `lexicon.json`, `question.txt` |
 | Edition | `edition/` com `manifest.json`, `sources.jsonl`, `symbols.jsonl`, `chunks.jsonl`, `diagnostics.json` e `snapshots/` |
-| Grafo | `graph.json` (nós indexados por ID; arestas com evidência em bytes/linhas/hashes) |
+| Grafo | `graph.json` (v1) e `graph-v2.json` (contrato neutro), ambos verificados; abra a pasta no [Graph Viewer](tools/graph-viewer/README.md) |
 | Busca | `search.json`, `lexicon-trace.json`, `retrieved-excerpts.txt`, `graph-trace.json` |
 | Consulta | `prepare-request.json`; `prepared/` com `request.json`, `search.json` e `bundle/` (`dossier.json`, `question.txt`, `query.json`, `origin.json`); `criteria-before.md`, `request-ollama.json` |
 | Modelo | `Modelfile.requested`, `model-parameters.txt`, `model-modelfile.txt`, `server-tags.json` |
