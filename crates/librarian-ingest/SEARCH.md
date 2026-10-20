@@ -82,6 +82,25 @@ do manifesto desserializado; esse hash não é necessariamente o hash dos bytes
 formatados de `manifest.json`. O hash do vocabulário na busca segue a mesma regra.
 `verify-graph` compara com uma nova derivação integral. Não autentica autoria.
 
+### Contrato neutro `syntax-graph-v2`
+
+`graph <edition> <novo.json> v2` exporta o mesmo grafo em formato neutro,
+derivado de qualquer edition verificada, inclusive v1; o padrão continua `v1`.
+`verify-graph` escolhe o contrato pelo campo `version` do arquivo.
+
+- Nó: `id`, `category` (`source`, `symbol` ou `occurrence`), `kind` (vocabulário
+  do extractor; `file` para fontes), `language` (classificação da edition) e `label`.
+  Chunks continuam registros de inspeção, não nós.
+- Aresta: `id`, `from`, `to`, `kind`, `resolution` e `evidence`. Os tipos de
+  relação são só `declares`, `contains`, `observes` e `name_candidate`; o tipo da
+  ocorrência fica no nó. `id` = `edge:` + SHA-256 da serialização de
+  `(from, to, kind, resolution, evidence)`.
+- Topo: `version`, `derived_from` (versão do grafo do perfil), `profile`
+  (identidade do extractor da edition), `catalog_sha256`, `nodes` e `edges`.
+
+É uma projeção: mesmos nós e uma aresta v2 para cada aresta v1, sem relações novas.
+Campos desconhecidos são recusados. Candidatos por nome só ligam a mesma linguagem.
+
 Grafos e buscas são derivados de snapshots históricos, mesmo que a árvore atual
 tenha mudado. A verificação atual é uma operação separada. Resposta JSON não é
 `PreparedQuery`: converter resultados em dossiê/bundle ainda é uma próxima etapa.
