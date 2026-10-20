@@ -125,7 +125,7 @@ fn route(app: &App, req: &Request) -> Result<Response> {
     }
 }
 
-/// Re-verifies the prepared bundle against the edition immediately before sending, as PLAYME does.
+/// Re-verifies the prepared bundle against the edition immediately before every send.
 fn send(store: &Store, body: &Value) -> Result<Response> {
     let get = |name: &str| body[name].as_str();
     let (Some(key), Some(run), Some(turn), Some(provider)) =
@@ -146,6 +146,7 @@ fn send(store: &Store, body: &Value) -> Result<Response> {
     let catalog = librarian_ingest::Catalog::load(&store.edition(key, run)?)?;
     librarian_ingest::prepare::verify(&catalog, &prepared)?;
     let modelfile = get("modelfile").map(|name| store.modelfile_path(name)).transpose()?;
+    let question: Value = serde_json::from_slice(&std::fs::read(dir.join("question.json"))?)?;
     let sends = dir.join("sends");
     std::fs::create_dir_all(&sends)?;
     let next = std::fs::read_dir(&sends)?.count() + 1;
@@ -157,6 +158,7 @@ fn send(store: &Store, body: &Value) -> Result<Response> {
             modelfile: modelfile.as_deref(),
             modelfile_name: get("modelfile"),
             claude_model: get("claude_model"),
+            criteria_sha256: question["criteria_sha256"].as_str(),
         },
     )?;
     Ok(Response::json(200, &summary))

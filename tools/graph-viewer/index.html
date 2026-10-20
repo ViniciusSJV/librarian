@@ -157,6 +157,7 @@
           <label class="row" style="margin-top: 8px"><input id="numbered" type="checkbox"> Linhas numeradas no contexto</label>
           <label class="row"><input id="acceptDiag" type="checkbox"> Aceitar edition com diagnósticos</label>
           <label class="field"><span>Instruções da query (uma por linha; vazio usa as padrão do Graph Engine)</span><textarea id="instructions" rows="6"></textarea></label>
+          <label class="field"><span>Critérios prévios (gravados em cada pergunta antes de qualquer resposta)</span><textarea id="criteria" rows="6"></textarea></label>
           <div class="row" style="margin-top: 8px"><button id="saveSettings">Salvar configurações</button><span id="settingsNote" class="muted"></span></div>
         </details>
       </div>
@@ -847,6 +848,7 @@ function renderProject() {
   $('#numbered').checked = settings.numbered_lines;
   $('#acceptDiag').checked = settings.accept_diagnostics;
   $('#instructions').value = (settings.instructions ?? []).join('\n');
+  $('#criteria').value = settings.criteria ?? '';
   $('#runs').replaceChildren(
     ...(runs.length ? [] : [el('option', { value: '', textContent: 'nenhum grafo gerado' })]),
     ...runs.map(r => el('option', { value: r.id, textContent: `${r.id} · ${r.nodes} nós · ${r.diagnostics} diag.` })));
@@ -864,6 +866,7 @@ function collectSettings() {
     inputs: $('#inputs').value.split(',').map(s => s.trim()).filter(Boolean),
     lexicon: { groups: lexicon.groups ?? [], stop_words: lexicon.stop_words ?? [] },
     instructions: instructions.length ? instructions : null,
+    criteria: $('#criteria').value.trim() ? $('#criteria').value : null,
     top: number('#top'), depth: number('#depth'), hits: number('#hits'), radius: number('#radius'),
     numbered_lines: $('#numbered').checked, accept_diagnostics: $('#acceptDiag').checked,
   };
@@ -1025,6 +1028,9 @@ function renderTurn(t) {
     hits.length ? el('ul', { className: 'list' }, ...hits.map(hitItem))
       : el('p', { className: 'muted', textContent: 'Nenhum resultado: o léxico não alcançou símbolos do projeto.' }),
     t.prepare_error ? el('p', { className: 'error', textContent: `Query não preparada: ${t.prepare_error}` }) : null,
+    t.criteria ? el('details', {},
+      el('summary', { textContent: `Critérios prévios (gravados antes da resposta · sha256 ${t.criteria_sha256?.slice(0, 12)}…)` }),
+      el('pre', { textContent: t.criteria })) : el('p', { className: 'muted', textContent: 'Sem critérios prévios gravados para esta pergunta.' }),
     t.query ? el('details', { open: Boolean(t.showQuery) },
       el('summary', { textContent: `O que é enviado ao LLM (query.json, ${new Blob([t.query]).size} bytes)` }),
       el('p', { className: 'muted', textContent: 'No Ollama vai como prompt e o SYSTEM vem do Modelfile; no Claude vai por stdin e o SYSTEM vira o system prompt. Conferida contra a edition imediatamente antes de cada envio.' }),
