@@ -397,6 +397,8 @@ dependencies = [
 name = "librarian-ingest"
 version = "0.1.0"
 dependencies = [
+ "librarian-core",
+ "librarian-graph-engine",
  "proc-macro2",
  "serde",
  "serde_json",

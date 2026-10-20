@@ -71,6 +71,9 @@ pub struct LibrarianFact {
     pub statement: String,
     pub source_id: String,
     pub line: usize,
+    /// Inclusive last line when the fact covers a range, such as a whole declaration.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub end_line: Option<usize>,
 }
 
 impl LibrarianFact {
@@ -81,7 +84,13 @@ impl LibrarianFact {
             statement: statement.to_owned(),
             source_id: source_id.to_owned(),
             line,
+            end_line: None,
         }
+    }
+
+    /// Last line covered by the fact; `line` itself when it is not a range.
+    pub fn last_line(&self) -> usize {
+        self.end_line.unwrap_or(self.line)
     }
 
     pub fn validate(&self) -> ValidationOutcome {
@@ -96,6 +105,9 @@ impl LibrarianFact {
         }
         if self.line == 0 {
             return ValidationOutcome::fail("fact.line must be greater than zero");
+        }
+        if self.last_line() < self.line {
+            return ValidationOutcome::fail("fact.end_line must not precede fact.line");
         }
         ValidationOutcome::ok()
     }
@@ -186,7 +198,7 @@ impl EvidenceBundle {
             }
             if fact.source_id != self.source.id
                 || fact.line == 0
-                || fact.line > self.source.lines.len()
+                || fact.last_line() > self.source.lines.len()
             {
                 return ValidationOutcome::fail(
                     "bundle fact must reference an existing source line",

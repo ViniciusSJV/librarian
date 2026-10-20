@@ -436,4 +436,38 @@ Verificação:
 - `tests/agnostic.rs` do engine sem nomes de linguagem nem `kind` legado fora de `nature.rs`;
 - workspace com 85 testes aprovados e 1 ignorado; exemplo `maintenance` executado de ponta a ponta com `content: "document"`.
 
-Compatibilidade: o renderer fixa core/engine em `a009af8` e não muda até atualizar a revisão. Ao atualizar, as cerca de 10 construções literais de `Source` em `renderer/src/bin/validate_evidence.rs` precisam de `content: None`; os dossiês do `renderer-v1` continuam válidos pelos aliases.
+Compatibilidade (G3 e G4): o renderer fixa core/engine em `a009af8` e não muda até atualizar a revisão. Ao atualizar, as cerca de 10 construções literais de `Source` em `renderer/src/bin/validate_evidence.rs` precisam de `content: None`; os dossiês do `renderer-v1` continuam válidos pelos aliases.
+
+### G4 — resultado (19/10/2026)
+
+A ponte busca → dossiê → `PreparedQuery` passou do PowerShell para Rust (`librarian-ingest::prepare`). Com ela, **o Graph Engine está fechado para Rust**: uma edition verificada entra e sai um bundle conferido. Python e outras linguagens ficam para o futuro (G5), entrando somente por extractors.
+
+Mudanças:
+
+- `librarian-core::LibrarianFact` ganhou `end_line` opcional (fichas de intervalo), omitido quando ausente.
+- O engine valida o intervalo, usa `last_line()` nas janelas e exporta `end_line` quando presente.
+- `prepare_query_with`/`query_json_with` aceitam as instruções do consumidor; `DEFAULT_INSTRUCTIONS` preserva as anteriores.
+- `prepare <edition> <request.json> <novo-dir>`:
+  - pedido autocontido;
+  - fichas estruturais `E<n>` ("kind `escopo` declarado em path, linhas a–b", autoria do perfil);
+  - fontes `content: code` conferidas contra os snapshots;
+  - grava `request.json`, `search.json` e `bundle/`.
+- `verify-prepared` refaz tudo e compara byte a byte. Edition com diagnósticos é recusada sem `accept_diagnostics`.
+- O PLAYME não reconstrói mais E1 nem monta o envelope: chama `prepare`, envia `bundle/query.json` e roda `verify-prepared` imediatamente antes do envio. O perfil ganhou `search.hits` (padrão 1) e `prepare.radius` (padrão 0).
+
+Verificação:
+
+- goldens legados v0.1 e v1 sem alteração;
+- `tests/prepare.rs` com golden (`prepare-camera/`), fichas como intervalos lastreados em snapshots, quatro adulterações recusadas, recusas de pedido e instruções padrão;
+- `prepare.rs` no teste de fronteira;
+- workspace com 90 testes aprovados e 1 ignorado;
+- PLAYME real: prepare, verify-prepared, 4 hashes e `completed`.
+
+**Achado da execução real.** A query nova traz o contexto como lista de linhas sem numeração. A resposta citou "linha 11" (posição na lista), quando o cálculo está na linha 86 de `src/camera.rs`. Também declarou como lacuna `origin`/`pixel`, que estão no contexto. Não repetiu "espaço do mundo". Uma execução não mede tendência.
+
+A mudança de formato da query interrompe a comparabilidade com as tentativas anteriores. A correção pertence à fase L: contexto com linhas numeradas (como o `line_map` do contrato de afirmações), definido antes de nova avaliação.
+
+Pendências registradas:
+
+- vínculo do bundle no registro do envio (`attempt_linked` sem uso pela CLI);
+- ao atualizar o renderer para a revisão nova, acrescentar `content: None`/`end_line: None` nas construções literais de `Source`/`Fact`.

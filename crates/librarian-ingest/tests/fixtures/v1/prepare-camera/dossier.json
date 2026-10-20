@@ -1,0 +1,74 @@
+{
+  "facts": [
+    {
+      "authorship": "librarian-ingest/0.1.0;syn/3.0.5;rust-structural-v1: registro estrutural da edition verificada",
+      "end_line": 23,
+      "id": "E1",
+      "line": 18,
+      "source_id": "S1",
+      "statement": "method `impl Camera::ray_from_pixel` declarado em src/camera.rs, linhas 18–23."
+    },
+    {
+      "authorship": "librarian-ingest/0.1.0;syn/3.0.5;rust-structural-v1: registro estrutural da edition verificada",
+      "end_line": 6,
+      "id": "E2",
+      "line": 3,
+      "source_id": "S1",
+      "statement": "struct `Ray` declarado em src/camera.rs, linhas 3–6."
+    }
+  ],
+  "id": "search:1a5f809c8bf9a090a097e64f6a74a75fdda7e2aae34da6e291bbae2e5e776399",
+  "sources": [
+    {
+      "content": "code",
+      "git_commit": null,
+      "id": "S1",
+      "kind": "rust",
+      "lines": [
+        "pub struct Point(pub f64, pub f64, pub f64);",
+        "",
+        "pub struct Ray {",
+        "    pub origin: Point,",
+        "    pub direction: Point,",
+        "}",
+        "",
+        "pub struct Camera {",
+        "    pub width: usize,",
+        "    pub height: usize,",
+        "}",
+        "",
+        "impl Camera {",
+        "    pub fn new(width: usize, height: usize) -> Self {",
+        "        Camera { width, height }",
+        "    }",
+        "",
+        "    pub fn ray_from_pixel(&self, x: usize, y: usize) -> Ray {",
+        "        let origin = Point(0.0, 0.0, 0.0);",
+        "        let pixel = Point(x as f64, y as f64, -1.0);",
+        "        let direction = normalize(subtract(pixel, &origin));",
+        "        Ray { origin, direction }",
+        "    }",
+        "}",
+        "",
+        "fn subtract(a: Point, b: &Point) -> Point {",
+        "    Point(a.0 - b.0, a.1 - b.1, a.2 - b.2)",
+        "}",
+        "",
+        "fn normalize(p: Point) -> Point {",
+        "    let len = (p.0 * p.0 + p.1 * p.1 + p.2 * p.2).sqrt();",
+        "    Point(p.0 / len, p.1 / len, p.2 / len)",
+        "}"
+      ],
+      "path": "src/camera.rs",
+      "sha256": "c6c1ff5629f0d43d0391629df8501b0bfe8c5b208a602560ab83fa9e72199882"
+    }
+  ],
+  "unknowns": [
+    "Lexical candidates, not a semantic answer. Minimum coverage: 60% of query term groups; scores are not probabilities.",
+    "Name candidates are not resolved types/calls. No macros, cfg evaluation, compiler or runtime proof.",
+    "Graph expands only the first hit. Source nodes are leaves. Depth bounded to 0..3, 48 nodes, 96 edges.",
+    "Excerpts limited to 4000 UTF-8 bytes each and 16000 total. Truncation is explicit; hashes/lines refer to full chunks.",
+    "Fichas descrevem onde estão declarações; não respondem à pergunta nem afirmam comportamento.",
+    "Edition com 2 diagnósticos: extração incompleta em algumas fontes."
+  ]
+}
