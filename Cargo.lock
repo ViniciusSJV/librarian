@@ -417,6 +417,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "librarian-studio"
+version = "0.1.0"
+dependencies = [
+ "librarian-ingest",
+ "librarian-llm-engine",
+ "reqwest",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "litemap"
 version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"

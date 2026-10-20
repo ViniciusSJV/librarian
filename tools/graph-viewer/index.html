@@ -69,9 +69,45 @@
   #tooltip { display: none; max-width: 420px; }
   #drop { position: absolute; inset: 0; display: none; place-items: center; font-size: 16px;
     background: color-mix(in srgb, var(--surface-0) 80%, transparent); border: 2px dashed var(--text-muted); }
+  [hidden] { display: none !important; }
+  button { white-space: nowrap; }
+  /* Studio mode: only when served by librarian_studio (project, questions and LLM chat). */
+  #turns .list { max-height: none; overflow: visible; }
+  #turns .list li { overflow-wrap: anywhere; }
+  body.studio #app { grid-template-columns: 340px 1fr 420px; }
+  #chat { display: none; min-height: 0; flex-direction: column; border-left: 1px solid var(--border); background: var(--surface-1); }
+  body.studio #chat { display: flex; }
+  #chatHeader { padding: 16px 16px 4px; }
+  #turns { flex: 1; min-height: 0; overflow: auto; padding: 0 16px 16px; }
+  #composer { padding: 12px 16px 16px; border-top: 1px solid var(--border); background: var(--surface-2); }
+  textarea, select, input[type=text], input[type=number] { width: 100%; padding: 7px 9px; border: 1px solid var(--border); border-radius: 8px;
+    background: var(--surface-1); color: var(--text-primary); font: inherit; }
+  textarea { resize: vertical; }
+  textarea.code, pre { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 12px; }
+  pre { margin: 6px 0 0; padding: 8px; max-height: 320px; overflow: auto; border: 1px solid var(--border); border-radius: 8px;
+    background: var(--surface-1); white-space: pre-wrap; word-break: break-word; }
+  summary { cursor: pointer; color: var(--text-secondary); margin-top: 8px; }
+  button.primary { background: var(--text-primary); border-color: var(--text-primary); color: var(--surface-1); }
+  .field { display: grid; gap: 4px; margin-top: 8px; }
+  .field > span { color: var(--text-secondary); font-size: 12px; }
+  .grid4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  .turn { margin-top: 14px; padding: 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2); }
+  .turn.active { border-color: var(--focus); }
+  .bubble { padding: 8px 10px; border-radius: 10px; white-space: pre-wrap; word-break: break-word; }
+  .bubble.user { border: 1px solid var(--border); background: var(--surface-1); font-weight: 600; cursor: pointer; }
+  .bubble.reply { margin-top: 8px; border: 1px solid var(--border); }
+  .chip { display: inline-block; margin: 2px 4px 2px 0; padding: 0 7px; border: 1px solid var(--border); border-radius: 999px; font-size: 11px; }
+  .chip.hit { border-color: var(--cat-symbol); }
+  .chip.miss { color: var(--text-muted); text-decoration: line-through; }
+  dialog { width: min(720px, calc(100vw - 32px)); max-height: calc(100vh - 32px); padding: 16px; border: 1px solid var(--border);
+    border-radius: 12px; background: var(--surface-1); color: var(--text-primary); }
+  dialog::backdrop { background: rgb(0 0 0 / .4); }
+  @media (max-width: 1200px) { body.studio #app { grid-template-columns: 300px 1fr 360px; } }
   @media (max-width: 800px) {
-    #app { grid-template-columns: 1fr; grid-template-rows: 60vh auto; }
+    #app, body.studio #app { grid-template-columns: 1fr; grid-template-rows: 60vh auto; }
+    body.studio #app { grid-template-rows: 60vh auto auto; height: auto; }
     main { order: -1; } aside { border-right: 0; border-top: 1px solid var(--border); }
+    #chat { border-left: 0; border-top: 1px solid var(--border); }
   }
 </style>
 <script type="importmap">
@@ -91,8 +127,43 @@
     </div>
     <p class="muted">Projeta as relações do grafo <code>syntax-graph-v2</code>. Proximidade visual não cria relação; toda aresta mostra a evidência que a autorizou.</p>
 
+    <section class="card" id="projectCard" hidden>
+      <h2>Projeto</h2>
+      <div class="row" style="flex-wrap: nowrap">
+        <input id="projectPath" type="text" placeholder="C:\caminho\do\projeto (Rust)">
+        <button id="browse">Procurar…</button>
+      </div>
+      <div class="row" style="margin-top: 8px">
+        <button id="openProject" class="primary">Abrir</button>
+        <span id="projectNote" class="muted"></span>
+      </div>
+      <div id="projectBody" hidden>
+        <dl id="projectInfo"></dl>
+        <label class="field"><span>Entradas (pastas ou arquivos relativos à raiz, separados por vírgula)</span><input id="inputs" type="text"></label>
+        <div class="row" style="margin-top: 8px; flex-wrap: nowrap">
+          <button id="generate" class="primary">Gerar grafo</button>
+          <select id="runs" title="Grafos já gerados"></select>
+        </div>
+        <p id="runNote" class="muted"></p>
+        <details>
+          <summary>Léxico, busca e instruções</summary>
+          <label class="field"><span>Léxico (JSON: <code>groups</code> de sinônimos e <code>stop_words</code>)</span><textarea id="lexicon" class="code" rows="8" spellcheck="false"></textarea></label>
+          <div class="grid4">
+            <label class="field" title="Quantos resultados a busca devolve (1–10)"><span>top</span><input id="top" type="number" min="1" max="10"></label>
+            <label class="field" title="Profundidade da vizinhança acesa (0–3)"><span>depth</span><input id="depth" type="number" min="0" max="3"></label>
+            <label class="field" title="Quantos primeiros resultados viram fichas E1…En"><span>hits</span><input id="hits" type="number" min="1" max="10"></label>
+            <label class="field" title="Linhas extras ao redor de cada declaração"><span>radius</span><input id="radius" type="number" min="0"></label>
+          </div>
+          <label class="row" style="margin-top: 8px"><input id="numbered" type="checkbox"> Linhas numeradas no contexto</label>
+          <label class="row"><input id="acceptDiag" type="checkbox"> Aceitar edition com diagnósticos</label>
+          <label class="field"><span>Instruções da query (uma por linha; vazio usa as padrão do Graph Engine)</span><textarea id="instructions" rows="6"></textarea></label>
+          <div class="row" style="margin-top: 8px"><button id="saveSettings">Salvar configurações</button><span id="settingsNote" class="muted"></span></div>
+        </details>
+      </div>
+    </section>
+
     <section class="card">
-      <h2>Abrir</h2>
+      <h2>Abrir arquivos</h2>
       <div class="row">
         <label class="file">Pasta de execução<input id="folder" type="file" webkitdirectory multiple></label>
         <label class="file">Arquivos<input id="files" type="file" accept=".json" multiple></label>
@@ -142,7 +213,49 @@
     <div id="tooltip" class="hud"></div>
     <div id="drop">Solte graph-v2.json (e opcionalmente search.json/request.json)</div>
   </main>
+  <aside id="chat">
+    <div id="chatHeader">
+      <h2>Conversa</h2>
+      <p id="chatNote" class="muted">Abra um projeto e gere o grafo para perguntar.</p>
+    </div>
+    <div id="turns"></div>
+    <div id="composer">
+      <textarea id="question" rows="3" placeholder="Pergunte sobre o projeto… (Ctrl+Enter)" disabled></textarea>
+      <label class="field"><span>LLM</span><select id="provider"></select></label>
+      <label class="field" id="claudeModelRow"><span>Modelo do Claude</span><select id="claudeModel"></select></label>
+      <div class="field" id="modelfileRow">
+        <span>Modelfile</span>
+        <div class="row" style="flex-wrap: nowrap"><select id="modelfile"></select><button id="editModelfile">Editar</button></div>
+        <span id="modelfileSummary" class="muted mono"></span>
+      </div>
+      <div class="row" style="margin-top: 10px">
+        <button id="ask" disabled>Perguntar</button>
+        <button id="askSend" class="primary" disabled>Perguntar e enviar</button>
+      </div>
+      <p id="llmNote" class="muted" style="margin-bottom: 0"></p>
+    </div>
+  </aside>
 </div>
+
+<dialog id="browseDialog">
+  <div class="row" style="justify-content: space-between"><h2 style="margin: 0">Escolher pasta do projeto</h2><button data-close>Fechar</button></div>
+  <p id="browsePath" class="mono"></p>
+  <div class="row">
+    <button id="browseUp">↑ Pasta acima</button>
+    <button id="browseRoots">Unidades</button>
+    <button id="browsePick" class="primary">Usar esta pasta</button>
+  </div>
+  <ul id="browseList" class="list" style="max-height: 55vh"></ul>
+</dialog>
+
+<dialog id="modelfileDialog">
+  <div class="row" style="justify-content: space-between"><h2 style="margin: 0">Modelfiles</h2><button data-close>Fechar</button></div>
+  <div class="row" style="margin-top: 10px; flex-wrap: nowrap"><select id="mfSelect"></select><button id="mfNew">Novo…</button></div>
+  <label class="field"><span>Nome (letras, números, - e _)</span><input id="mfName" type="text" spellcheck="false"></label>
+  <label class="field"><span>Conteúdo</span><textarea id="mfContent" class="code" rows="18" spellcheck="false"></textarea></label>
+  <p class="muted">No Ollama, o Modelfile vira o modelo <code id="mfModel"></code> com <code>ollama create</code> a cada envio, e a cópia usada fica guardada. No Claude, só o <code>SYSTEM</code> é usado.</p>
+  <div class="row"><button id="mfSave" class="primary">Salvar</button><span id="mfNote" class="muted"></span></div>
+</dialog>
 
 <script type="module">
 import * as THREE from 'three';
@@ -254,22 +367,27 @@ async function loadFiles(fileList) {
     const graphFile = pick('/graph-v2.json', 'graph-v2.json') ?? (files.length === 1 ? files[0] : null);
     if (!graphFile) throw new Error('graph-v2.json não encontrado na seleção.');
     status('Lendo grafo…');
-    ingest(JSON.parse(await graphFile.text()));
-    buildScene();
-    showProvenance();
-    startLayout();
+    showGraph(JSON.parse(await graphFile.text()));
     const searchFile = pick('prepared/search.json', '/search.json', 'search.json');
     const requestFile = pick('prepared/request.json', '/request.json', 'request.json');
     if (searchFile && searchFile !== graphFile) {
       attachSearch(JSON.parse(await searchFile.text()),
         requestFile ? JSON.parse(await requestFile.text()) : null);
     }
-    for (const id of ['#query', '#fit', '#clear']) $(id).disabled = false;
-    inspect();
   } catch (error) {
     console.error(error);
     status(`Erro: ${error.message}`);
   }
+}
+
+function showGraph(graph) {
+  ingest(graph);
+  $('#overlayCard').hidden = true;
+  buildScene();
+  showProvenance();
+  startLayout();
+  for (const id of ['#query', '#fit', '#clear']) $(id).disabled = false;
+  inspect();
 }
 
 function showProvenance() {
@@ -637,7 +755,7 @@ $('#theme').addEventListener('click', () => {
 });
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { readPalette(); repaint(); });
 addEventListener('keydown', ev => {
-  if (ev.target instanceof HTMLInputElement) return;
+  if (ev.target.closest?.('input, textarea, select, dialog')) return;
   if (ev.key === 'Escape') clearSelection();
   if (ev.key === 'f' || ev.key === 'F') fit();
 });
@@ -652,6 +770,361 @@ function resize() {
   camera.updateProjectionMatrix();
 }
 new ResizeObserver(resize).observe(viewport);
+
+// ---------------------------------------------------------------- studio (served by librarian_studio)
+// The page only displays; the server generates, verifies, searches, prepares and sends.
+const studio = { status: null, project: null, run: null, turns: [], modelfiles: [], activeTurn: null, browsing: null };
+const saved = {
+  get(key) { try { return localStorage.getItem(`librarian.${key}`); } catch { return null; } },
+  set(key, value) { try { localStorage.setItem(`librarian.${key}`, value); } catch { /* per-viewer convenience only */ } },
+};
+
+async function api(method, path, body) {
+  const response = await fetch(path, {
+    method, headers: body ? { 'Content-Type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined,
+  });
+  const text = await response.text();
+  let data;
+  try { data = JSON.parse(text); } catch { data = text; }
+  if (!response.ok) throw new Error(data?.error ?? `HTTP ${response.status}`);
+  return data;
+}
+const query = params => new URLSearchParams(params).toString();
+
+/// Runs an action with its buttons disabled and reports failures in `note`.
+async function busy(buttons, note, action) {
+  for (const b of buttons) b.disabled = true;
+  try { return await action(); }
+  catch (error) { console.error(error); if (note) { note.className = 'error'; note.textContent = error.message; } }
+  finally { for (const b of buttons) b.disabled = false; refreshComposer(); }
+}
+const say = (note, text) => { note.className = 'muted'; note.textContent = text; };
+
+async function initStudio() {
+  if (!location.protocol.startsWith('http')) return;
+  try { studio.status = await api('GET', '/api/status'); } catch { return; }
+  document.body.classList.add('studio');
+  document.title = 'Librarian Studio';
+  $('h1').textContent = 'Librarian Studio';
+  $('#projectCard').hidden = false;
+  const llm = studio.status.llm;
+  $('#provider').replaceChildren(...llm.providers.map(p => el('option', { value: p.id, textContent: p.label, disabled: !p.implemented })));
+  $('#claudeModel').replaceChildren(...llm.claude_cli.models.map(m => el('option', { value: m, textContent: m })));
+  const provider = saved.get('provider');
+  if (provider && llm.providers.some(p => p.id === provider && p.implemented)) $('#provider').value = provider;
+  $('#claudeModel').value = saved.get('claudeModel') ?? llm.claude_cli.models[0];
+  setModelfiles(studio.status.modelfiles, saved.get('modelfile'));
+  $('#projectPath').value = saved.get('project') ?? '';
+  refreshComposer();
+  resize();
+  if ($('#projectPath').value) openProject();
+}
+
+// ---- project
+async function openProject() {
+  const root = $('#projectPath').value.trim();
+  if (!root) return;
+  await busy([$('#openProject')], $('#projectNote'), async () => {
+    say($('#projectNote'), 'Abrindo…');
+    studio.project = await api('POST', '/api/project', { root });
+    saved.set('project', root);
+    say($('#projectNote'), '');
+    renderProject();
+    const runs = studio.project.runs;
+    if (runs.length) await loadRun(runs[0].id);
+    else { studio.run = null; studio.turns = []; renderTurns(); say($('#runNote'), 'Nenhum grafo gerado ainda para este projeto.'); }
+  });
+}
+
+function renderProject() {
+  const { settings, runs, key } = studio.project;
+  $('#projectBody').hidden = false;
+  $('#projectInfo').replaceChildren(...[['projeto', settings.name], ['pasta', settings.root], ['perfil', settings.imported_from ?? 'nenhum (padrões do studio)'], ['chave', key]]
+    .flatMap(([k, v]) => [el('dt', { textContent: k }), el('dd', { textContent: v, className: 'mono' })]));
+  $('#inputs').value = settings.inputs.join(', ');
+  $('#lexicon').value = JSON.stringify(settings.lexicon, null, 2);
+  for (const [id, field] of [['#top', 'top'], ['#depth', 'depth'], ['#hits', 'hits'], ['#radius', 'radius']]) $(id).value = settings[field];
+  $('#numbered').checked = settings.numbered_lines;
+  $('#acceptDiag').checked = settings.accept_diagnostics;
+  $('#instructions').value = (settings.instructions ?? []).join('\n');
+  $('#runs').replaceChildren(
+    ...(runs.length ? [] : [el('option', { value: '', textContent: 'nenhum grafo gerado' })]),
+    ...runs.map(r => el('option', { value: r.id, textContent: `${r.id} · ${r.nodes} nós · ${r.diagnostics} diag.` })));
+  if (studio.run) $('#runs').value = studio.run;
+}
+
+function collectSettings() {
+  const current = studio.project.settings;
+  let lexicon;
+  try { lexicon = JSON.parse($('#lexicon').value || '{}'); } catch (e) { throw new Error(`Léxico: JSON inválido (${e.message})`); }
+  const number = id => Number.parseInt($(id).value, 10);
+  const instructions = $('#instructions').value.split('\n').map(l => l.trim()).filter(Boolean);
+  return {
+    ...current,
+    inputs: $('#inputs').value.split(',').map(s => s.trim()).filter(Boolean),
+    lexicon: { groups: lexicon.groups ?? [], stop_words: lexicon.stop_words ?? [] },
+    instructions: instructions.length ? instructions : null,
+    top: number('#top'), depth: number('#depth'), hits: number('#hits'), radius: number('#radius'),
+    numbered_lines: $('#numbered').checked, accept_diagnostics: $('#acceptDiag').checked,
+  };
+}
+
+async function saveSettings() {
+  studio.project = await api('PUT', '/api/project', { key: studio.project.key, settings: collectSettings() });
+  renderProject();
+}
+
+async function generate() {
+  await busy([$('#generate'), $('#saveSettings')], $('#runNote'), async () => {
+    await saveSettings();
+    say($('#runNote'), 'Gerando a edition, recarregando do disco e conferindo o grafo v2…');
+    const run = await api('POST', '/api/generate', { key: studio.project.key });
+    studio.project = await api('GET', `/api/project?${query({ key: studio.project.key })}`);
+    studio.run = run.id;
+    renderProject();
+    await loadRun(run.id);
+  });
+}
+
+async function loadRun(id) {
+  studio.run = id;
+  $('#runs').value = id;
+  const run = studio.project.runs.find(r => r.id === id);
+  status('Carregando grafo…');
+  showGraph(await api('GET', `/api/graph?${query({ key: studio.project.key, run: id })}`));
+  if (run) {
+    say($('#runNote'), `${run.sources} fontes · ${run.symbols} símbolos · ${run.diagnostics} diagnósticos · git ${run.git?.head?.slice(0, 7) ?? 'sem git'}${run.git?.dirty ? ' (com alterações)' : ''} · ${run.verified}.`);
+  }
+  studio.turns = await api('GET', `/api/turns?${query({ key: studio.project.key, run: id })}`);
+  studio.activeTurn = null;
+  renderTurns();
+  const last = studio.turns.at(-1);
+  if (last) activate(last.id, false);
+}
+
+// ---- questions
+const providerLabel = id => studio.status?.llm.providers.find(p => p.id === id)?.label ?? id;
+
+function refreshComposer() {
+  if (!studio.status) return;
+  const provider = $('#provider').value;
+  const ready = Boolean(studio.run);
+  $('#question').disabled = !ready;
+  $('#ask').disabled = !ready;
+  $('#askSend').disabled = !ready;
+  $('#askSend').textContent = provider === 'manual' ? 'Perguntar e mostrar' : 'Perguntar e enviar';
+  $('#claudeModelRow').hidden = provider !== 'claude-cli';
+  $('#modelfileRow').hidden = !['ollama', 'claude-cli'].includes(provider);
+  const noneOption = $('#modelfile').querySelector('option[value=""]');
+  if (noneOption) noneOption.disabled = provider === 'ollama';
+  if (provider === 'ollama' && !$('#modelfile').value && studio.modelfiles.length) $('#modelfile').value = studio.modelfiles[0].name;
+  const mf = studio.modelfiles.find(m => m.name === $('#modelfile').value);
+  $('#modelfileSummary').textContent = mf ? modelfileSummary(mf.content, provider) : (provider === 'claude-cli' ? 'SYSTEM padrão do studio.' : '');
+  const llm = studio.status.llm;
+  $('#llmNote').textContent = {
+    manual: 'Nada é enviado: a query preparada aparece na conversa para copiar e enviar à mão.',
+    ollama: llm.ollama.running ? `Ollama em ${llm.ollama.endpoint}. O Modelfile vira o modelo ${mf ? 'librarian-' + mf.name : '…'} antes do envio.`
+      : `Ollama não respondeu em ${llm.ollama.endpoint} quando a página abriu${llm.ollama.executable ? '' : ' (executável não encontrado)'}.`,
+    'claude-cli': llm.claude_cli.executable ? `Claude Code CLI sem ferramentas nem sessão: ${llm.claude_cli.executable}. Cobra pela sua conta.`
+      : 'Claude Code CLI não encontrado: defina LIBRARIAN_CLAUDE com o caminho do claude.exe e reinicie o studio.',
+  }[provider] ?? '';
+  $('#chatNote').textContent = ready ? `Grafo ${studio.run}. Cada pergunta passa pelo léxico, acende o grafo e prepara uma query conferida.`
+    : 'Abra um projeto e gere o grafo para perguntar.';
+}
+
+function modelfileSummary(content, provider) {
+  const from = content.match(/^\s*FROM\s+(\S+)/im)?.[1] ?? 'sem FROM';
+  const params = [...content.matchAll(/^\s*PARAMETER\s+(\S+)\s+(.+)$/gim)].map(m => `${m[1]} ${m[2].trim()}`);
+  const system = content.match(/^\s*SYSTEM\s+"""([\s\S]*?)"""/im)?.[1] ?? content.match(/^\s*SYSTEM\s+(.+)$/im)?.[1];
+  const systemText = system ? `SYSTEM ${system.trim().split('\n').length} linha(s)` : 'sem SYSTEM';
+  return provider === 'claude-cli' ? `${systemText} (FROM e PARAMETER não valem no Claude)` : [from, ...params, systemText].join(' · ');
+}
+
+async function ask(andSend) {
+  const question = $('#question').value.trim();
+  if (!question || !studio.run) return;
+  await busy([$('#ask'), $('#askSend')], $('#llmNote'), async () => {
+    say($('#chatNote'), 'Buscando pelo léxico e preparando a query…');
+    const turn = await api('POST', '/api/ask', { key: studio.project.key, run: studio.run, question });
+    studio.turns.push(turn);
+    $('#question').value = '';
+    activate(turn.id);
+    $('#turns').scrollTop = $('#turns').scrollHeight;
+    if (andSend) await sendTurn(turn);
+  });
+}
+
+async function sendTurn(turn) {
+  const provider = $('#provider').value;
+  if (provider === 'manual') {
+    turn.showQuery = true;
+    renderTurns();
+    return;
+  }
+  turn.pending = providerLabel(provider);
+  turn.sendError = null;
+  renderTurns();
+  try {
+    const modelfile = $('#modelfileRow').hidden ? null : ($('#modelfile').value || null);
+    const result = await api('POST', '/api/send', {
+      key: studio.project.key, run: studio.run, turn: turn.id, provider, modelfile,
+      claude_model: provider === 'claude-cli' ? $('#claudeModel').value : null,
+    });
+    (turn.sends ??= []).push(result);
+  } catch (error) {
+    turn.sendError = error.message;
+  } finally {
+    turn.pending = null;
+    renderTurns();
+  }
+}
+
+function activate(id, fly = true) {
+  studio.activeTurn = id;
+  const turn = studio.turns.find(t => t.id === id);
+  if (turn?.search) {
+    attachSearch(turn.search, turn.request);
+    // Fly to what the lexicon reached: the first result and its lit neighborhood.
+    const first = state.overlay?.hits.find(h => h.node != null);
+    if (first && fly) {
+      const p = state.simNodes[first.node];
+      userMoved = true;
+      flyTo(new THREE.Vector3(p.x, p.y, p.z), 260);
+    }
+  }
+  renderTurns();
+}
+
+function renderTurns() {
+  $('#turns').replaceChildren(...studio.turns.map(renderTurn));
+  refreshComposer();
+}
+
+function renderTurn(t) {
+  const hits = t.search?.hits ?? [];
+  const touched = new Set(hits.flatMap(h => h.reasons.map(r => r.term)));
+  const facts = t.request?.hits ?? 0;
+  const provider = $('#provider').value;
+  const hitItem = (h, r) => el('li', {
+    onclick: () => { if (studio.activeTurn !== t.id) activate(t.id); const i = state.index.get(h.symbol_id); if (i != null) selectNode(i, true); },
+  }, el('span', { className: 'tag', textContent: r < facts ? `E${r + 1}` : `#${r + 1}` }), ' ', h.name,
+    el('div', { className: 'muted mono', textContent: `${h.path}:${h.start_line}–${h.end_line} · score ${h.score} · ${h.reasons.map(x => x.term).join(', ')}` }));
+  const copyButton = el('button', { textContent: 'Copiar query', disabled: !t.query });
+  copyButton.onclick = async () => {
+    try { await navigator.clipboard.writeText(t.query); copyButton.textContent = 'Copiada'; }
+    catch { copyButton.textContent = 'Cópia bloqueada: selecione o texto'; t.showQuery = true; renderTurns(); }
+  };
+  return el('div', { className: 'turn' + (studio.activeTurn === t.id ? ' active' : '') },
+    el('div', { className: 'bubble user', textContent: t.question, title: 'Acender esta pergunta no grafo', onclick: () => activate(t.id) }),
+    el('div', { style: 'margin-top: 6px' }, el('span', { className: 'muted', textContent: 'Léxico: ' }),
+      ...(t.search?.terms ?? []).map(term => el('span', {
+        className: `chip ${touched.has(term) ? 'hit' : 'miss'}`, textContent: term,
+        title: touched.has(term) ? 'Tocou ao menos um resultado' : 'Não tocou nenhum resultado',
+      })),
+      (t.search?.terms ?? []).length ? null : el('span', { className: 'muted', textContent: 'nenhum termo após as stop words' })),
+    hits.length ? el('ul', { className: 'list' }, ...hits.map(hitItem))
+      : el('p', { className: 'muted', textContent: 'Nenhum resultado: o léxico não alcançou símbolos do projeto.' }),
+    t.prepare_error ? el('p', { className: 'error', textContent: `Query não preparada: ${t.prepare_error}` }) : null,
+    t.query ? el('details', { open: Boolean(t.showQuery) },
+      el('summary', { textContent: `O que é enviado ao LLM (query.json, ${new Blob([t.query]).size} bytes)` }),
+      el('p', { className: 'muted', textContent: 'No Ollama vai como prompt e o SYSTEM vem do Modelfile; no Claude vai por stdin e o SYSTEM vira o system prompt. Conferida contra a edition imediatamente antes de cada envio.' }),
+      el('pre', { textContent: t.query })) : null,
+    ...(t.sends ?? []).map(reply),
+    t.pending ? el('div', { className: 'bubble reply muted', textContent: `Enviando para ${t.pending}…` }) : null,
+    t.sendError ? el('p', { className: 'error', textContent: t.sendError }) : null,
+    el('div', { className: 'row', style: 'margin-top: 8px' },
+      el('button', {
+        textContent: provider === 'manual' ? 'Mostrar o que seria enviado' : `Enviar · ${providerLabel(provider)}`,
+        disabled: !t.query || Boolean(t.pending), onclick: () => sendTurn(t),
+      }),
+      copyButton));
+}
+
+function reply(s) {
+  const meta = [providerLabel(s.provider), s.modelfile ? `Modelfile ${s.modelfile}` : null, s.model, s.state,
+    s.cost_usd != null ? `US$ ${Number(s.cost_usd).toFixed(4)}` : null, s.elapsed_ms != null ? `${(s.elapsed_ms / 1000).toFixed(1)} s` : null];
+  return el('div', { className: 'bubble reply' },
+    el('div', { className: 'muted', textContent: meta.filter(Boolean).join(' · ') }),
+    s.text ? el('div', { style: 'margin-top: 6px', textContent: s.text })
+      : el('div', { className: 'error', style: 'margin-top: 6px', textContent: s.diagnostic ?? 'Sem texto na resposta.' }),
+    el('div', { className: 'muted', style: 'margin-top: 6px; font-size: 11px', textContent: `${s.state === 'completed' ? 'completed descreve o transporte; ' : ''}avaliação semântica pendente. Guardado em ${s.directory}` }));
+}
+
+// ---- Modelfiles
+function setModelfiles(list, selected) {
+  studio.modelfiles = list;
+  const current = selected ?? $('#modelfile').value;
+  $('#modelfile').replaceChildren(el('option', { value: '', textContent: 'nenhum (Claude: SYSTEM padrão)' }),
+    ...list.map(m => el('option', { value: m.name, textContent: m.name })));
+  $('#modelfile').value = list.some(m => m.name === current) ? current : (list[0]?.name ?? '');
+  refreshComposer();
+}
+
+function openModelfiles(name) {
+  $('#mfSelect').replaceChildren(...studio.modelfiles.map(m => el('option', { value: m.name, textContent: m.name })));
+  showModelfile(name || studio.modelfiles[0]?.name);
+  say($('#mfNote'), '');
+  $('#modelfileDialog').showModal();
+}
+function showModelfile(name) {
+  const mf = studio.modelfiles.find(m => m.name === name);
+  $('#mfSelect').value = mf?.name ?? '';
+  $('#mfName').value = mf?.name ?? '';
+  $('#mfContent').value = mf?.content ?? '';
+  $('#mfModel').textContent = mf ? mf.model : 'librarian-<nome>';
+}
+
+// ---- folder picker
+async function browse(path) {
+  await busy([], $('#browsePath'), async () => {
+    const data = await api('GET', `/api/browse?${query({ path: path ?? '' })}`);
+    studio.browsing = data;
+    $('#browsePath').className = 'mono';
+    $('#browsePath').textContent = data.path ? `${data.path}${data.cargo ? '  ·  projeto Cargo' : ''}` : 'Escolha uma unidade ou pasta inicial.';
+    $('#browseUp').disabled = !data.parent;
+    $('#browsePick').disabled = !data.path;
+    $('#browseList').replaceChildren(...data.dirs.map(d => el('li', { onclick: () => browse(d.path) },
+      d.name, d.cargo ? el('span', { className: 'tag', textContent: 'Cargo', style: 'margin-left: 8px' }) : null)));
+  });
+}
+
+$('#openProject').addEventListener('click', openProject);
+$('#projectPath').addEventListener('keydown', ev => { if (ev.key === 'Enter') openProject(); });
+$('#browse').addEventListener('click', () => { $('#browseDialog').showModal(); browse($('#projectPath').value.trim() || null); });
+$('#browseUp').addEventListener('click', () => browse(studio.browsing?.parent));
+$('#browseRoots').addEventListener('click', () => browse(null));
+$('#browsePick').addEventListener('click', () => { $('#projectPath').value = studio.browsing.path; $('#browseDialog').close(); openProject(); });
+$('#generate').addEventListener('click', generate);
+$('#runs').addEventListener('change', ev => { if (ev.target.value) busy([$('#generate')], $('#runNote'), () => loadRun(ev.target.value)); });
+$('#saveSettings').addEventListener('click', () => busy([$('#saveSettings')], $('#settingsNote'), async () => {
+  await saveSettings(); say($('#settingsNote'), 'Salvo. Vale para as próximas perguntas.');
+}));
+$('#ask').addEventListener('click', () => ask(false));
+$('#askSend').addEventListener('click', () => ask(true));
+$('#question').addEventListener('keydown', ev => { if (ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey)) ask(ev.shiftKey); });
+$('#provider').addEventListener('change', ev => { saved.set('provider', ev.target.value); renderTurns(); });
+$('#claudeModel').addEventListener('change', ev => saved.set('claudeModel', ev.target.value));
+$('#modelfile').addEventListener('change', ev => { saved.set('modelfile', ev.target.value); refreshComposer(); });
+$('#editModelfile').addEventListener('click', () => openModelfiles($('#modelfile').value));
+$('#mfSelect').addEventListener('change', ev => showModelfile(ev.target.value));
+$('#mfNew').addEventListener('click', () => {
+  $('#mfSelect').value = '';
+  $('#mfName').value = '';
+  $('#mfContent').value = 'FROM qwen2.5-coder:14b\nPARAMETER temperature 0\nPARAMETER seed 42\nPARAMETER num_ctx 4096\n\nSYSTEM """\n\n"""\n';
+  $('#mfModel').textContent = 'librarian-<nome>';
+  $('#mfName').focus();
+});
+$('#mfSave').addEventListener('click', () => busy([$('#mfSave')], $('#mfNote'), async () => {
+  const name = $('#mfName').value.trim();
+  const list = await api('PUT', '/api/modelfiles', { name, content: $('#mfContent').value });
+  setModelfiles(list, name);
+  saved.set('modelfile', name);
+  $('#mfSelect').replaceChildren(...list.map(m => el('option', { value: m.name, textContent: m.name })));
+  showModelfile(name);
+  say($('#mfNote'), `Salvo em modelfiles/${name}.Modelfile.`);
+}));
+document.querySelectorAll('dialog [data-close]').forEach(b => b.addEventListener('click', () => b.closest('dialog').close()));
+initStudio();
 
 // Inspection hook for automated checks: open the page with #debug.
 if (location.hash === '#debug') window.viewerDebug = { state, camera, controls, get flight() { return flight; } };

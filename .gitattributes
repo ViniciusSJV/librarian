@@ -7,3 +7,4 @@ experiments/claims-camera-20260928-04/** -text
 experiments/claims-camera-20260928-05/** -text
 crates/librarian-ingest/tests/fixtures/** -text
 crates/librarian-graph-engine/tests/fixtures/** -text
+modelfiles/** -text
