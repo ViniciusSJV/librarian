@@ -2,6 +2,7 @@
 use crate::{Chunk, Diagnostic, Source, Symbol};
 use std::path::Path;
 
+mod python;
 mod rust;
 
 /// Records derived from one source's preserved bytes; nothing else is read.
@@ -42,6 +43,9 @@ pub(crate) struct Registry {
     pub graph_version: &'static str,
     /// Limits reported with each search; they describe what this profile cannot observe.
     pub search_limits: &'static [&'static str],
+    /// Directory names never traversed during discovery (environments, caches, VCS).
+    /// Explicit inputs are still selected.
+    pub skipped_dirs: &'static [&'static str],
 }
 
 /// Frozen v1 profile. Changing any of it requires a new identity, not an edit.
@@ -64,17 +68,46 @@ static V1: Registry = Registry {
         "Graph expands only the first hit. Source nodes are leaves. Depth bounded to 0..3, 48 nodes, 96 edges.",
         "Excerpts limited to 4000 UTF-8 bytes each and 16000 total. Truncation is explicit; hashes/lines refer to full chunks.",
     ],
+    skipped_dirs: &[],
+};
+
+/// Rust (unchanged adapter) and Python. Rust records match v1; the identity differs.
+static V2: Registry = Registry {
+    identity: crate::EXTRACTOR_V2,
+    languages: &[("rs", "rust"), ("py", "python")],
+    extractors: &[("rust", &rust::Rust), ("python", &python::Python)],
+    limits: &[
+        "Structural declarations only; no behavioral claims or executed-test evidence.",
+        "Rust: no macro expansion, cfg evaluation, cross-file name resolution or call graph.",
+        "Python: no import resolution, dynamic dispatch, decorator evaluation or runtime behavior; files that do not parse are diagnostics.",
+        "Test markers are observations (Rust #[test]; Python test*/Test* names), not evidence that tests ran.",
+        "File-local scopes; ordinary comments are preserved in snapshots, not attached to declarations.",
+        "Files read individually; no atomic repository snapshot or Git/author authentication.",
+        "Parse failures preserve bytes and diagnostics; completeness requires inspecting diagnostics.",
+        "Hashes establish consistency, not authenticity; manifest is not signed.",
+    ],
+    graph_version: "rust-python-syntax-graph-v1",
+    search_limits: &[
+        "Lexical candidates, not a semantic answer. Minimum coverage: 60% of query term groups; scores are not probabilities.",
+        "Name candidates are not resolved types/calls/imports. No macros, cfg or decorator evaluation, compiler or runtime proof.",
+        "Graph expands only the first hit. Source nodes are leaves. Depth bounded to 0..3, 48 nodes, 96 edges.",
+        "Excerpts limited to 4000 UTF-8 bytes each and 16000 total. Truncation is explicit; hashes/lines refer to full chunks.",
+    ],
+    skipped_dirs: &[
+        ".git", ".hg", ".svn", ".venv", "venv", ".tox", ".nox", "__pycache__", ".mypy_cache",
+        ".pytest_cache", ".ruff_cache", "site-packages", "node_modules", "target", ".studio",
+    ],
 };
 
 impl Registry {
     /// Profile used for new editions.
     pub fn current() -> &'static Self {
-        &V1
+        &V2
     }
 
     /// Profile that produced an edition; unknown identities are refused, never upgraded.
     pub fn for_identity(identity: &str) -> Option<&'static Self> {
-        [&V1].into_iter().find(|r| r.identity == identity)
+        [&V1, &V2].into_iter().find(|r| r.identity == identity)
     }
 
     /// Unlisted extensions are auxiliary: preserved and hashed, never extracted.

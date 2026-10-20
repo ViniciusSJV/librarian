@@ -17,7 +17,11 @@ use std::{
 
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 pub const SCHEMA_VERSION: u32 = 1;
+/// Frozen v1 profile (Rust only); still read and reproducible with `generate_with_profile`.
 pub const EXTRACTOR: &str = "librarian-ingest/0.1.0;syn/3.0.5;rust-structural-v1";
+/// Current profile: Rust (same adapter as v1) and Python.
+pub const EXTRACTOR_V2: &str =
+    "librarian-ingest/0.2.0;syn/3.0.5;rustpython-parser/0.4.0;rust-structural-v1;python-structural-v1";
 const RECORDS: [&str; 4] = [
     "sources.jsonl",
     "symbols.jsonl",
@@ -191,6 +195,10 @@ fn walk(
     let full = checked_path(root, rel)?;
     let meta = fs::metadata(&full)?;
     if meta.is_dir() {
+        let name = rel.rsplit('/').next().unwrap_or(rel);
+        if !explicit && registry.skipped_dirs.contains(&name) {
+            return Ok(());
+        }
         let mut children = Vec::new();
         for entry in fs::read_dir(full)? {
             let entry = entry?;
@@ -267,7 +275,49 @@ fn write_new(path: &Path, bytes: &[u8]) -> Result<()> {
 /// Reads each source once, derives records from those bytes and writes a new edition.
 /// manifest.json is published last. I/O errors can leave an incomplete directory.
 pub fn generate(root: &Path, config: &Config, destination: &Path) -> Result<Manifest> {
+    generate_with(Registry::current(), root, config, destination)
+}
+
+/// Top-level entries for a whole-folder edition: directories the current profile traverses
+/// and files it extracts. Hidden and skipped directories are left out.
+pub fn suggested_inputs(root: &Path) -> Result<Vec<String>> {
     let registry = Registry::current();
+    let mut inputs = Vec::new();
+    for entry in fs::read_dir(root)? {
+        let entry = entry?;
+        let Ok(name) = entry.file_name().into_string() else { continue };
+        let kind = entry.file_type()?;
+        let keep = if kind.is_dir() {
+            !name.starts_with('.') && !registry.skipped_dirs.contains(&name.as_str())
+        } else {
+            kind.is_file() && registry.discovers(&name)
+        };
+        if keep {
+            inputs.push(name);
+        }
+    }
+    inputs.sort();
+    Ok(inputs)
+}
+
+/// `generate` with an earlier recorded profile, e.g. to reproduce frozen v1 editions.
+pub fn generate_with_profile(
+    identity: &str,
+    root: &Path,
+    config: &Config,
+    destination: &Path,
+) -> Result<Manifest> {
+    let registry =
+        Registry::for_identity(identity).ok_or_else(|| format!("Unknown extractor profile: {identity}"))?;
+    generate_with(registry, root, config, destination)
+}
+
+fn generate_with(
+    registry: &'static Registry,
+    root: &Path,
+    config: &Config,
+    destination: &Path,
+) -> Result<Manifest> {
     let root = root.canonicalize()?;
     let paths = discover(registry, &root, config)?;
     let git = git_metadata(&root);

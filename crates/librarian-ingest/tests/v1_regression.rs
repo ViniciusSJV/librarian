@@ -1,7 +1,7 @@
 //! Frozen v1 edition generated once by `librarian-ingest/0.1.0;syn/3.0.5;rust-structural-v1`.
 //! These fixtures are never regenerated to make a test pass; a mismatch means behavior changed.
 use librarian_ingest::{
-    generate,
+    generate_with_profile,
     graph::Graph,
     hash,
     search::{Lexicon, SearchIndex},
@@ -114,7 +114,7 @@ fn regenerating_the_fixture_project_reproduces_every_record_and_snapshot() {
     let project = scratch.copy(&fixture().join("project"), "project");
     let config: Config = serde_json::from_slice(&read(fixture().join("config.json"))).unwrap();
     let edition = scratch.0.join("edition");
-    generate(&project, &config, &edition).unwrap();
+    generate_with_profile(EXTRACTOR, &project, &config, &edition).unwrap();
     for record in RECORDS {
         assert_eq!(
             read(edition.join(record)),

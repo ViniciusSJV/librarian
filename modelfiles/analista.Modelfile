@@ -2,7 +2,7 @@
 FROM qwen2.5-coder:14b
 PARAMETER temperature 0
 PARAMETER seed 42
-PARAMETER num_ctx 4096
+PARAMETER num_ctx 16384
 PARAMETER num_predict 1024
 
 SYSTEM """

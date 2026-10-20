@@ -109,7 +109,8 @@ O pedido é autocontido e recusa campos desconhecidos:
 
 ```json
 {"question": "...", "lexicon": {"groups": [], "stop_words": []}, "top": 5, "depth": 2,
- "hits": 1, "radius": 0, "instructions": ["..."], "accept_diagnostics": false}
+ "hits": 1, "radius": 0, "numbered_lines": false, "instructions": ["..."],
+ "accept_diagnostics": false}
 ```
 
 1. Refaz a busca na edition verificada; recusa edition com diagnósticos, salvo
@@ -120,15 +121,18 @@ O pedido é autocontido e recusa campos desconhecidos:
    à pergunta nem afirma comportamento.
 3. As fontes do dossiê são os snapshots (`content: code`, `kind` = linguagem),
    conferidos contra a edition por hash e linhas antes da exportação.
-4. `prepare_query_with` exporta seleção e query com as `instructions` do
-   consumidor (ou as padrão do Graph Engine).
+4. `prepare_query_formatted` exporta seleção e query com as `instructions` do
+   consumidor (ou as padrão do Graph Engine). Com `numbered_lines: true`, as linhas
+   do contexto saem como `{"number", "text"}`, em que `number` é a linha original
+   do arquivo, acompanhadas de uma nota `numbering`. Com `false` (padrão), o formato
+   anterior é preservado byte a byte.
 5. Grava `request.json` (bytes recebidos), `search.json` e `bundle/` (`dossier.json`,
    `question.txt`, `query.json`, `origin.json`). O ID do dossiê é `search:<sha256>`.
 
 `verify-prepared <edition> <dir>` refaz tudo a partir de `request.json` e recusa
 qualquer byte diferente em busca, dossiê, pergunta e query, além de conferir os
-hashes do `origin.json`. O PLAYME executa essa conferência imediatamente antes
-do envio. Não autentica autoria nem execução; `completed` continua sendo só transporte.
+hashes do `origin.json`. O [Librarian Studio](../../STUDIO.md) executa essa
+conferência imediatamente antes de cada envio. Não autentica autoria nem execução; `completed` continua sendo só transporte.
 
 Grafos e buscas são derivados de snapshots históricos, mesmo que a árvore atual
 tenha mudado. A verificação atual é uma operação separada. Resposta JSON não é

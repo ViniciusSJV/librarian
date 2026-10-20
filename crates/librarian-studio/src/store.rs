@@ -210,7 +210,12 @@ impl Store {
         )?;
         fs::create_dir_all(run_dir.join("turns"))?;
         let turns = run_dir.join("turns");
-        let next = fs::read_dir(&turns)?.count() + 1;
+        // After the highest existing number, so deleted questions never cause reused or suffixed IDs.
+        let next = fs::read_dir(&turns)?
+            .filter_map(|e| e.ok()?.file_name().to_str()?.parse::<usize>().ok())
+            .max()
+            .unwrap_or(0)
+            + 1;
         let (id, dir) = reserve(&turns, &format!("{next:02}"))?;
         // Criteria are fixed first, before the query exists and long before any answer.
         let criteria_sha256 = match settings.criteria.as_deref().filter(|c| !c.trim().is_empty()) {
@@ -245,6 +250,123 @@ impl Store {
             "criteria_sha256": criteria_sha256 });
         fs::write(dir.join("question.json"), serde_json::to_vec_pretty(&record)?)?;
         self.turn(key, run, &id)
+    }
+
+    fn settings(&self, key: &str) -> Result<Settings> {
+        Ok(serde_json::from_slice(&fs::read(self.project_dir(key)?.join("project.json"))?)?)
+    }
+
+    /// Asks an LLM for lexicon groups over the edition's code vocabulary and checks them.
+    /// `provider: manual` only writes and returns the request, for a pasted answer later.
+    pub fn suggest_lexicon(&self, key: &str, run: &str, provider: &str, send: crate::llm::Choice) -> Result<Value> {
+        let settings = self.settings(key)?;
+        let catalog = Catalog::load(&self.edition(key, run)?)?;
+        let (id, dir) = reserve(&self.project_dir(key)?.join("lexicon"), &stamp())?;
+        let request = crate::lexicon::request(&catalog, &settings.lexicon);
+        let mut bytes = serde_json::to_vec_pretty(&request)?;
+        bytes.push(b'\n');
+        fs::write(dir.join("query.json"), &bytes)?;
+        let query = String::from_utf8(bytes)?;
+        if provider == "manual" {
+            return Ok(json!({ "id": id, "query": query, "directory": display(&dir) }));
+        }
+        let summary = crate::llm::send(provider, send.request(&dir.join("query.json"), &dir.join("send")))?;
+        let checked = match summary["text"].as_str() {
+            Some(text) => self.check_text(&catalog, &settings, &dir, text),
+            None => json!({ "error": summary["diagnostic"].as_str().unwrap_or("O LLM não devolveu texto") }),
+        };
+        Ok(json!({ "id": id, "query": query, "send": summary, "proposal": checked, "directory": display(&dir) }))
+    }
+
+    /// Checks an answer pasted from a manual send of a previous `suggest_lexicon` request.
+    pub fn check_lexicon(&self, key: &str, run: &str, id: &str, text: &str) -> Result<Value> {
+        let settings = self.settings(key)?;
+        let catalog = Catalog::load(&self.edition(key, run)?)?;
+        let dir = self.project_dir(key)?.join("lexicon").join(safe_id(id)?);
+        if !dir.join("query.json").is_file() {
+            return Err(format!("Pedido de léxico desconhecido: {id}").into());
+        }
+        fs::write(dir.join("pasted-response.txt"), text)?;
+        Ok(json!({ "id": id, "proposal": self.check_text(&catalog, &settings, &dir, text), "directory": display(&dir) }))
+    }
+
+    fn check_text(&self, catalog: &Catalog, settings: &Settings, dir: &Path, text: &str) -> Value {
+        let checked = crate::lexicon::parse(text)
+            .and_then(|proposal| crate::lexicon::check(catalog, &settings.lexicon, &proposal))
+            .unwrap_or_else(|e| json!({ "error": e }));
+        let _ = fs::write(dir.join("proposal.json"), serde_json::to_vec_pretty(&checked).unwrap_or_default());
+        checked
+    }
+
+    /// Writes the current settings into the analyzed project as `librarian.json` and the files
+    /// it points to. Only on request; `dry_run` lists what would be written and what exists.
+    pub fn export_profile(&self, key: &str, dry_run: bool) -> Result<Value> {
+        let settings = self.settings(key)?;
+        let root = Path::new(&settings.root);
+        let existing: Value = fs::read(root.join(PROFILE))
+            .ok()
+            .and_then(|b| serde_json::from_slice(&b).ok())
+            .unwrap_or(Value::Null);
+        if existing["project_root"].as_str().is_some_and(|p| p != ".") {
+            return Err("O librarian.json existente usa project_root diferente de \".\"; edite-o à mão".into());
+        }
+        // Keep the paths an existing profile chose; new profiles use ai/librarian/.
+        let path = |field: &str, default: &str| -> Result<String> {
+            let p = existing[field].as_str().unwrap_or(default).replace('\\', "/");
+            if p.starts_with('/') || p.contains(':') || p.split('/').any(|s| s == ".." || s.is_empty()) {
+                return Err(format!("{field}: caminho fora do projeto: {p}").into());
+            }
+            Ok(p)
+        };
+        let mut profile = json!({
+            "project_root": ".",
+            "sources_config": path("sources_config", "ai/librarian/sources.json")?,
+            "lexicon": path("lexicon", "ai/librarian/lexicon.json")?,
+            "search": { "top": settings.top, "depth": settings.depth, "hits": settings.hits },
+            "prepare": { "radius": settings.radius, "numbered_lines": settings.numbered_lines,
+                "accept_diagnostics": settings.accept_diagnostics },
+        });
+        let mut files: Vec<(String, Vec<u8>)> = vec![];
+        let pretty = |v: &Value| -> Result<Vec<u8>> {
+            let mut b = serde_json::to_vec_pretty(v)?;
+            b.push(b'\n');
+            Ok(b)
+        };
+        files.push((profile["sources_config"].as_str().unwrap().into(),
+            pretty(&json!({ "project": settings.name, "inputs": settings.inputs }))?));
+        files.push((profile["lexicon"].as_str().unwrap().into(), pretty(&json!(settings.lexicon))?));
+        if let Some(instructions) = &settings.instructions {
+            profile["instructions"] = json!(path("instructions", "ai/librarian/instructions.json")?);
+            files.push((profile["instructions"].as_str().unwrap().into(), pretty(&json!(instructions))?));
+        }
+        if let Some(criteria) = &settings.criteria {
+            profile["criteria"] = json!(path("criteria", "ai/librarian/criteria-before.md")?);
+            files.push((profile["criteria"].as_str().unwrap().into(), criteria.as_bytes().to_vec()));
+        }
+        files.insert(0, (PROFILE.into(), pretty(&profile)?));
+        let listing: Vec<Value> = files
+            .iter()
+            .map(|(p, bytes)| {
+                let current = fs::read(root.join(p)).ok();
+                json!({ "path": p, "exists": current.is_some(), "changes": current.as_deref() != Some(bytes.as_slice()) })
+            })
+            .collect();
+        if !dry_run {
+            for (p, bytes) in &files {
+                let target = root.join(p);
+                if let Some(parent) = target.parent() {
+                    fs::create_dir_all(parent)?;
+                }
+                fs::write(target, bytes)?;
+            }
+        }
+        Ok(json!({ "root": settings.root, "files": listing, "written": !dry_run }))
+    }
+
+    /// Removes one question with everything sent for it; asked from the page, after confirmation.
+    pub fn delete_turn(&self, key: &str, run: &str, id: &str) -> Result<Value> {
+        fs::remove_dir_all(self.turn_dir(key, run, id)?)?;
+        self.turns(key, run)
     }
 
     pub fn modelfiles(&self) -> Result<Value> {
@@ -290,7 +412,7 @@ pub fn model_name(modelfile: &str) -> String {
 /// Folder picker data; browsers do not expose absolute paths, so the server lists them.
 pub fn browse(path: Option<&str>) -> Result<Value> {
     let entry = |path: &Path, name: String| {
-        json!({ "name": name, "path": display(path), "cargo": path.join("Cargo.toml").is_file() })
+        json!({ "name": name, "path": display(path), "marker": marker(path) })
     };
     let Some(path) = path.filter(|p| !p.trim().is_empty()) else {
         let mut dirs = vec![];
@@ -322,20 +444,37 @@ pub fn browse(path: Option<&str>) -> Result<Value> {
     Ok(json!({
         "path": display(&path),
         "parent": path.parent().map(display),
-        "cargo": path.join("Cargo.toml").is_file(),
+        "marker": marker(&path),
         "dirs": dirs.into_iter().take(1000).map(|(_, d)| d).collect::<Vec<_>>(),
     }))
 }
 
+/// What kind of project a folder looks like, from its manifest files; only a hint for the picker.
+fn marker(path: &Path) -> Option<&'static str> {
+    if path.join("Cargo.toml").is_file() {
+        Some("Cargo")
+    } else if ["pyproject.toml", "setup.py", "setup.cfg", "requirements.txt"].iter().any(|f| path.join(f).is_file()) {
+        Some("Python")
+    } else {
+        None
+    }
+}
+
 fn initial_settings(name: &str, root: &str) -> Result<Settings> {
-    let mut settings = Settings {
-        name: name.into(),
-        root: root.into(),
-        inputs: ["src", "tests", "benches", "examples", "Cargo.toml", "Cargo.lock"]
+    // A Cargo project keeps its usual layout; anything else (e.g. Python) uses the whole folder.
+    let inputs = if Path::new(root).join("Cargo.toml").is_file() {
+        ["src", "tests", "benches", "examples", "Cargo.toml", "Cargo.lock"]
             .iter()
             .filter(|p| Path::new(root).join(p).exists())
             .map(|p| p.to_string())
-            .collect(),
+            .collect()
+    } else {
+        librarian_ingest::suggested_inputs(Path::new(root))?
+    };
+    let mut settings = Settings {
+        name: name.into(),
+        root: root.into(),
+        inputs,
         lexicon: Lexicon::default(),
         instructions: None,
         top: 5,
@@ -371,6 +510,7 @@ fn initial_settings(name: &str, root: &str) -> Result<Settings> {
         settings.hits = number(&p["search"]["hits"], settings.hits);
         settings.radius = number(&p["prepare"]["radius"], settings.radius);
         settings.numbered_lines = p["prepare"]["numbered_lines"].as_bool().unwrap_or(false);
+        settings.accept_diagnostics = p["prepare"]["accept_diagnostics"].as_bool().unwrap_or(false);
         settings.root = display(&base.canonicalize()?);
         settings.imported_from = Some(display(&profile));
     }
@@ -513,6 +653,13 @@ mod tests {
         assert!(miss["prepare_error"].as_str().is_some());
         assert_eq!(store.turns(&key, run_id).unwrap().as_array().unwrap().len(), 2);
         assert!(store.turn_dir(&key, run_id, "../01").is_err());
+
+        // Deleting keeps the other questions, and the next one gets a fresh number.
+        let left = store.delete_turn(&key, run_id, "01").unwrap();
+        assert_eq!(left.as_array().unwrap().len(), 1);
+        assert_eq!(left[0]["id"], "02");
+        assert!(store.delete_turn(&key, run_id, "01").is_err());
+        assert_eq!(store.ask(&key, run_id, "direção dos raios").unwrap()["id"], "03");
     }
 
     #[test]
@@ -545,6 +692,59 @@ mod tests {
         assert_eq!(turn["criteria_sha256"], hash(b"- Cita E1, arquivo e linha.\n"));
         let query: Value = serde_json::from_str(turn["query"].as_str().unwrap()).unwrap();
         assert_eq!(query["instructions"], json!(["Cite E1."]));
+    }
+
+    #[test]
+    fn lexicon_proposals_are_checked_and_profiles_exported_on_request() {
+        let scratch = project();
+        let root = scratch.0.join("project");
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let key = store.open(&display(&root)).unwrap()["key"].as_str().unwrap().to_owned();
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+
+        // Manual: the request is written and returned; nothing is sent.
+        let manual = store.suggest_lexicon(&key, &run, "manual", crate::llm::Choice {
+            modelfile: None, modelfile_name: None, claude_model: None }).unwrap();
+        let query: Value = serde_json::from_str(manual["query"].as_str().unwrap()).unwrap();
+        let terms: Vec<_> = query["evidence"]["code_terms"].as_array().unwrap().iter().map(|t| t["term"].clone()).collect();
+        assert!(terms.contains(&json!("camera")) && terms.contains(&json!("pixel")));
+
+        let answer = "Aqui está:\n```json\n{\"groups\": [[\"raio\", \"raios\", \"ray\"], [\"banco\", \"dados\"], \
+            [\"duas palavras\", \"câmera\", \"camera\"], [\"ray\", \"feixe\"]]}\n```";
+        let checked = store.check_lexicon(&key, &run, manual["id"].as_str().unwrap(), answer).unwrap();
+        let proposal = &checked["proposal"];
+        assert_eq!((proposal["accepted"].as_u64(), proposal["rejected"].as_u64()), (Some(1), Some(3)));
+        let report = proposal["report"].as_array().unwrap();
+        assert_eq!(report[0]["words"], json!(["raio", "raios", "ray"]));
+        assert_eq!(report[1]["notes"], json!(["nenhuma palavra existe no código"]));
+        // Multi-word items are dropped, accents folded; the rest of the group survives.
+        assert_eq!(report[2]["words"], json!(["camera"]));
+        assert_eq!(report[2]["status"], "rejected");
+        assert!(report[3]["notes"][0].as_str().unwrap().contains("já está em outro grupo"));
+        assert_eq!(proposal["lexicon"]["groups"], json!([["raio", "raios", "ray"]]));
+        assert!(store.check_lexicon(&key, &run, "../x", answer).is_err());
+        assert!(store.check_lexicon(&key, &run, manual["id"].as_str().unwrap(), "sem json").unwrap()["proposal"]["error"].is_string());
+
+        // Export: a dry run lists the files; only the real run writes them into the project.
+        let plan = store.export_profile(&key, true).unwrap();
+        let paths: Vec<_> = plan["files"].as_array().unwrap().iter().map(|f| f["path"].as_str().unwrap().to_owned()).collect();
+        assert_eq!(paths, ["librarian.json", "ai/librarian/sources.json", "ai/librarian/lexicon.json"]);
+        assert!(!root.join(PROFILE).exists());
+        store.export_profile(&key, false).unwrap();
+        let written: Value = serde_json::from_slice(&fs::read(root.join(PROFILE)).unwrap()).unwrap();
+        assert_eq!(written["sources_config"], "ai/librarian/sources.json");
+        let sources: Value = serde_json::from_slice(&fs::read(root.join("ai/librarian/sources.json")).unwrap()).unwrap();
+        assert_eq!(sources["inputs"], json!(["src", "Cargo.toml"]));
+        // An existing profile keeps the paths it chose.
+        let mut moved = written.clone();
+        moved["lexicon"] = json!("ai/acervo/meu-lexico.json");
+        fs::write(root.join(PROFILE), serde_json::to_vec(&moved).unwrap()).unwrap();
+        let again = store.export_profile(&key, true).unwrap();
+        assert_eq!(again["files"][2]["path"], "ai/acervo/meu-lexico.json");
+        assert_eq!(again["files"][2]["exists"], false);
+        moved["lexicon"] = json!("../fora.json");
+        fs::write(root.join(PROFILE), serde_json::to_vec(&moved).unwrap()).unwrap();
+        assert!(store.export_profile(&key, true).is_err());
     }
 
     #[test]
