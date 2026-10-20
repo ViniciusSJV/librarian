@@ -147,6 +147,61 @@ fn refuses_incomplete_editions_missing_candidates_and_bad_requests() {
     assert!(serde_json::from_str::<Request>(&unknown).is_err());
 }
 
+fn numbered_request_bytes() -> Vec<u8> {
+    fs::read(fixture().join("prepare-request-numbered.json")).unwrap()
+}
+
+/// prepare-camera-numbered/ was generated once in L1; only query.json differs from prepare-camera/.
+#[test]
+fn numbered_bundle_matches_frozen_golden_and_snapshot_lines() {
+    let catalog = load();
+    let request: Request = serde_json::from_slice(&numbered_request_bytes()).unwrap();
+    assert!(request.numbered_lines);
+    let prepared = prepare::prepare(&catalog, &request).unwrap();
+    let plain = |name: &str| fs::read(fixture().join("prepare-camera").join(name)).unwrap();
+    assert_eq!(prepared.search, plain("search.json"));
+    assert_eq!(prepared.dossier.as_bytes(), plain("dossier.json"));
+    let query = format!("{}\n", prepared.query.query_json().unwrap());
+    let golden = fs::read(fixture().join("prepare-camera-numbered/query.json")).unwrap();
+    assert_eq!(query.as_bytes(), golden);
+
+    // Every number is the original file line of its text; dossier lines are the checked snapshot.
+    let query: Value = serde_json::from_str(&query).unwrap();
+    let dossier: Value = serde_json::from_str(&prepared.dossier).unwrap();
+    for context in query["evidence"]["contexts"].as_array().unwrap() {
+        let source = dossier["sources"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|s| s["id"] == context["source_id"])
+            .unwrap();
+        let lines = context["lines"].as_array().unwrap();
+        assert_eq!(lines[0]["number"], context["start_line"]);
+        assert_eq!(lines.last().unwrap()["number"], context["end_line"]);
+        for line in lines {
+            let number = line["number"].as_u64().unwrap() as usize;
+            assert_eq!(line["text"], source["lines"][number - 1]);
+        }
+    }
+    let operation = r#""number": 21,
+            "text": "        let direction = normalize(subtract(pixel, &origin));""#;
+    assert!(String::from_utf8(golden).unwrap().contains(operation));
+}
+
+#[test]
+fn numbered_bundle_refuses_shifted_line_numbers() {
+    let catalog = load();
+    let scratch = Scratch::new();
+    let dir = scratch.0.join("prepared");
+    prepare::write(&catalog, &numbered_request_bytes(), &dir).unwrap();
+    prepare::verify(&catalog, &dir).unwrap();
+    let path = dir.join("bundle/query.json");
+    let text = fs::read_to_string(&path).unwrap();
+    // The failure seen in G4: a position in the list instead of the file line.
+    fs::write(&path, text.replacen("\"number\": 21,", "\"number\": 11,", 1)).unwrap();
+    assert!(prepare::verify(&catalog, &dir).is_err());
+}
+
 #[test]
 fn defaults_keep_graph_engine_instructions() {
     let mut defaults = request();

@@ -62,6 +62,8 @@ $SearchDepth = [string]$RunProfile.search.depth
 # Quantos primeiros resultados viram fichas (padrao 1 = E1) e linhas extras de contexto.
 $SelectHits = if ($null -ne $RunProfile.search.hits) { [string]$RunProfile.search.hits } else { '1' }
 $ContextRadius = if ($null -ne $RunProfile.prepare.radius) { [string]$RunProfile.prepare.radius } else { '0' }
+# Linhas do contexto como {number, text} com a linha original do arquivo (padrao false).
+$NumberedLines = ($null -ne $RunProfile.prepare.numbered_lines) -and [bool]$RunProfile.prepare.numbered_lines
 $SendTimeoutMs = [string]$RunProfile.send.timeout_ms
 $SendMaxBytes = [string]$RunProfile.send.max_response_bytes
 foreach ($Required in @('model', 'ollama_base_url', 'question_prompt')) {
@@ -405,6 +407,7 @@ function New-PreparedQuery {
         depth = [int]$SearchDepth
         hits = [int]$SelectHits
         radius = [int]$ContextRadius
+        numbered_lines = $NumberedLines
         instructions = $Instructions
     }
     Save-Artifact 'prepare-request.json' ($Request | ConvertTo-Json -Depth 10)

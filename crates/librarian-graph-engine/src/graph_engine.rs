@@ -59,6 +59,35 @@ pub struct ContextRange {
     pub end: usize,
 }
 
+/// How context lines are exported. Plain keeps the original contract byte for byte;
+/// Numbered pairs each text with its original file line so no offset must be counted.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum LineFormat {
+    #[default]
+    Plain,
+    Numbered,
+}
+
+const NUMBERING_SCOPE: &str = "lines[].number é a linha original no arquivo da fonte (1 = primeira linha), não a posição na lista; lines[].text é a linha sem alteração.";
+
+/// Context lines `start..end` (0-based, exclusive) in the requested format.
+fn context_lines(
+    source: &Source,
+    start: usize,
+    end: usize,
+    format: LineFormat,
+) -> serde_json::Value {
+    let lines = &source.lines[start..end];
+    match format {
+        LineFormat::Plain => serde_json::json!(lines),
+        LineFormat::Numbered => lines
+            .iter()
+            .enumerate()
+            .map(|(offset, text)| serde_json::json!({"number": start + offset + 1, "text": text}))
+            .collect(),
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct PreparedQuery {
     evidence: Evidence,
@@ -293,6 +322,30 @@ pub fn prepare_query_with<F>(
     fact_ids: &[&str],
     radius: usize,
     instructions: Option<&[String]>,
+    check_source: F,
+) -> Result<PreparedQuery, String>
+where
+    F: FnMut(&Source) -> Result<Option<serde_json::Value>, String>,
+{
+    prepare_query_formatted(
+        dossier_json,
+        question,
+        fact_ids,
+        radius,
+        instructions,
+        LineFormat::Plain,
+        check_source,
+    )
+}
+
+/// `prepare_query_with` choosing how context lines are exported.
+pub fn prepare_query_formatted<F>(
+    dossier_json: &str,
+    question: Option<&str>,
+    fact_ids: &[&str],
+    radius: usize,
+    instructions: Option<&[String]>,
+    format: LineFormat,
     mut check_source: F,
 ) -> Result<PreparedQuery, String>
 where
@@ -306,12 +359,13 @@ where
     })?;
     let selected = select_facts(&evidence.facts, fact_ids)?;
     let selected_fact_ids = selected.iter().map(|fact| fact.id.clone()).collect();
-    let selection_json = selections_json_with_capture(
+    let selection_json = selections_json_formatted(
         &selected,
         &evidence.sources,
         radius,
         evidence.id.as_deref(),
         evidence.unknowns.as_deref(),
+        format,
         |source| Ok(checks[&source.id].clone()),
     )?;
     let query_json = question
@@ -423,6 +477,26 @@ pub fn selection_with_capture(
     evidence_unknowns: Option<&[String]>,
     capture_validation: Option<serde_json::Value>,
 ) -> Result<String, String> {
+    selection_formatted(
+        fact,
+        source,
+        radius,
+        evidence_id,
+        evidence_unknowns,
+        capture_validation,
+        LineFormat::Plain,
+    )
+}
+
+fn selection_formatted(
+    fact: &Fact,
+    source: &Source,
+    radius: usize,
+    evidence_id: Option<&str>,
+    evidence_unknowns: Option<&[String]>,
+    capture_validation: Option<serde_json::Value>,
+    format: LineFormat,
+) -> Result<String, String> {
     validate_reference(fact, source)?;
     validate_execution_record(source)?;
     let nature = nature::of(source)?;
@@ -450,11 +524,14 @@ pub fn selection_with_capture(
                 "requested_radius": radius,
                 "start_line": start + 1,
                 "end_line": end,
-                "lines": &source.lines[start..end]
+                "lines": context_lines(source, start, end, format)
             }
         },
         "scope": "Uma ficha, sua linha de referência e linhas vizinhas conforme requested_radius. Janela textual que pode cortar funções; significado da afirmação não validado."
     });
+    if format == LineFormat::Numbered {
+        selection["source"]["context"]["numbering"] = serde_json::json!(NUMBERING_SCOPE);
+    }
     if let Some(content) = &source.content {
         selection["source"]["content"] = serde_json::json!(content);
     }
@@ -502,6 +579,29 @@ pub fn selections_json_with_capture<F>(
     radius: usize,
     evidence_id: Option<&str>,
     evidence_unknowns: Option<&[String]>,
+    capture_validation: F,
+) -> Result<String, String>
+where
+    F: FnMut(&Source) -> Result<Option<serde_json::Value>, String>,
+{
+    selections_json_formatted(
+        facts,
+        sources,
+        radius,
+        evidence_id,
+        evidence_unknowns,
+        LineFormat::Plain,
+        capture_validation,
+    )
+}
+
+fn selections_json_formatted<F>(
+    facts: &[&Fact],
+    sources: &[Source],
+    radius: usize,
+    evidence_id: Option<&str>,
+    evidence_unknowns: Option<&[String]>,
+    format: LineFormat,
     mut capture_validation: F,
 ) -> Result<String, String>
 where
@@ -520,13 +620,14 @@ where
         let source = find_source(sources, &fact.source_id)
             .ok_or_else(|| format!("{}: fonte \"{}\" não encontrada.", fact.id, fact.source_id))?;
         let validation = capture_validation(source)?;
-        let json = selection_with_capture(
+        let json = selection_formatted(
             fact,
             source,
             radius,
             evidence_id,
             evidence_unknowns,
             validation,
+            format,
         )?;
         if facts.len() == 1 {
             return Ok(json);
@@ -546,17 +647,22 @@ where
             {
                 let context = selection["source"]["context"].as_object_mut().unwrap();
                 context.remove("lines");
+                context.remove("numbering");
                 context.insert("context_id".into(), serde_json::json!(context_id));
             }
         }
         let source = find_source(sources, &range.source_id).expect("Fonte já conferida");
-        contexts.push(serde_json::json!({
+        let mut block = serde_json::json!({
             "id": context_id,
             "source_id": range.source_id,
             "start_line": range.start + 1,
             "end_line": range.end,
-            "lines": &source.lines[range.start..range.end]
-        }));
+            "lines": context_lines(source, range.start, range.end, format)
+        });
+        if format == LineFormat::Numbered {
+            block["numbering"] = serde_json::json!(NUMBERING_SCOPE);
+        }
+        contexts.push(block);
     }
     serde_json::to_string_pretty(&serde_json::json!({
         "selections": selections,
@@ -585,6 +691,48 @@ mod tests {
         assert_eq!(prepared.selected_fact_ids, vec!["F1"]);
         assert!(prepared.selection_json.contains("second line"));
         assert!(prepared.query_json.unwrap().contains("Explain F1."));
+    }
+
+    #[test]
+    fn numbered_lines_carry_file_lines_and_change_nothing_else() {
+        let dossier = r#"{
+            "sources": [{"id": "S1", "kind": "text", "lines": ["a", "b", "c", "d", "e", "f"]}],
+            "facts": [
+                {"id": "F1", "statement": "c", "source_id": "S1", "line": 3},
+                {"id": "F2", "statement": "e", "source_id": "S1", "line": 5}
+            ]
+        }"#;
+        let selection = |ids: &[&str], format| -> serde_json::Value {
+            let prepared =
+                prepare_query_formatted(dossier, None, ids, 1, None, format, |_| Ok(None))
+                    .unwrap();
+            serde_json::from_str(prepared.selection_json()).unwrap()
+        };
+        let numbered = |lines: &serde_json::Value| -> Vec<(u64, String)> {
+            let lines = lines.as_array().unwrap().iter();
+            lines
+                .map(|l| (l["number"].as_u64().unwrap(), l["text"].as_str().unwrap().into()))
+                .collect()
+        };
+        let pairs = |start: u64, texts: &[&str]| -> Vec<(u64, String)> {
+            (start..).zip(texts.iter().map(|t| t.to_string())).collect()
+        };
+
+        // Single selection: lines inline, starting at the window's first file line.
+        let mut single = selection(&["F1"], LineFormat::Numbered);
+        let context = single["source"]["context"].as_object_mut().unwrap();
+        assert_eq!(numbered(&context["lines"]), pairs(2, &["b", "c", "d"]));
+        assert_eq!(context.remove("numbering").unwrap(), NUMBERING_SCOPE);
+        context.insert("lines".into(), serde_json::json!(["b", "c", "d"]));
+        assert_eq!(single, selection(&["F1"], LineFormat::Plain));
+
+        // Merged context block: numbering lives with the lines, not in the selections.
+        let mut multi = selection(&["F2", "F1"], LineFormat::Numbered);
+        let block = multi["contexts"][0].as_object_mut().unwrap();
+        assert_eq!(numbered(&block["lines"]), pairs(2, &["b", "c", "d", "e", "f"]));
+        assert_eq!(block.remove("numbering").unwrap(), NUMBERING_SCOPE);
+        block.insert("lines".into(), serde_json::json!(["b", "c", "d", "e", "f"]));
+        assert_eq!(multi, selection(&["F2", "F1"], LineFormat::Plain));
     }
 
     #[test]
