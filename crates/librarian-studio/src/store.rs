@@ -16,6 +16,10 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
+/// Optional profile in the project root: sources, lexicon, instructions, criteria, search.
+pub const PROFILE: &str = "librarian.json";
+const CRITERIA: &str = "criteria-before.md";
+
 /// Everything a question needs besides the question itself; edited from the page.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Settings {
@@ -31,6 +35,9 @@ pub struct Settings {
     pub radius: usize,
     pub numbered_lines: bool,
     pub accept_diagnostics: bool,
+    /// Prior criteria, written with each question before any answer exists.
+    #[serde(default)]
+    pub criteria: Option<String>,
     /// Profile the first settings were read from, if any; later edits stay in `.studio`.
     #[serde(default)]
     pub imported_from: Option<String>,
@@ -67,7 +74,7 @@ impl Store {
         Ok(self.run_dir(key, run)?.join("edition"))
     }
 
-    /// Opens (or creates) the project for a folder. A `playme.json` there seeds the settings.
+    /// Opens (or creates) the project for a folder. A `librarian.json` there seeds the settings.
     pub fn open(&self, root: &str) -> Result<Value> {
         let root = display(&Path::new(root.trim()).canonicalize()?);
         let name = Path::new(&root)
@@ -183,6 +190,8 @@ impl Store {
             "search": read_json(dir.join("search.json")),
             "request": read_json(dir.join("prepare-request.json")),
             "query": fs::read_to_string(dir.join("prepared/bundle/query.json")).ok(),
+            "criteria": fs::read_to_string(dir.join(CRITERIA)).ok(),
+            "criteria_sha256": question["criteria_sha256"],
             "prepare_error": question["prepare_error"],
             "sends": sends,
         }))
@@ -203,6 +212,14 @@ impl Store {
         let turns = run_dir.join("turns");
         let next = fs::read_dir(&turns)?.count() + 1;
         let (id, dir) = reserve(&turns, &format!("{next:02}"))?;
+        // Criteria are fixed first, before the query exists and long before any answer.
+        let criteria_sha256 = match settings.criteria.as_deref().filter(|c| !c.trim().is_empty()) {
+            Some(criteria) => {
+                fs::write(dir.join(CRITERIA), criteria)?;
+                Some(hash(criteria.as_bytes()))
+            }
+            None => None,
+        };
         let mut search = serde_json::to_vec_pretty(&report)?;
         search.push(b'\n');
         fs::write(dir.join("search.json"), &search)?;
@@ -224,7 +241,8 @@ impl Store {
             .and_then(|_| prepare::verify(&catalog, &prepared))
             .err()
             .map(|e| e.to_string());
-        let record = json!({ "question": question, "created": stamp(), "prepare_error": prepare_error });
+        let record = json!({ "question": question, "created": stamp(), "prepare_error": prepare_error,
+            "criteria_sha256": criteria_sha256 });
         fs::write(dir.join("question.json"), serde_json::to_vec_pretty(&record)?)?;
         self.turn(key, run, &id)
     }
@@ -326,9 +344,10 @@ fn initial_settings(name: &str, root: &str) -> Result<Settings> {
         radius: 0,
         numbered_lines: true,
         accept_diagnostics: false,
+        criteria: None,
         imported_from: None,
     };
-    let profile = Path::new(root).join("playme.json");
+    let profile = Path::new(root).join(PROFILE);
     if let Ok(bytes) = fs::read(&profile) {
         let p: Value = serde_json::from_slice(&bytes)?;
         let base = Path::new(root).join(p["project_root"].as_str().unwrap_or("."));
@@ -342,6 +361,9 @@ fn initial_settings(name: &str, root: &str) -> Result<Settings> {
         }
         if let Some(path) = file("instructions") {
             settings.instructions = Some(serde_json::from_slice(&fs::read(path)?)?);
+        }
+        if let Some(path) = file("criteria") {
+            settings.criteria = Some(fs::read_to_string(path)?);
         }
         let number = |v: &Value, default: usize| v.as_u64().map_or(default, |n| n as usize);
         settings.top = number(&p["search"]["top"], settings.top);
@@ -491,6 +513,38 @@ mod tests {
         assert!(miss["prepare_error"].as_str().is_some());
         assert_eq!(store.turns(&key, run_id).unwrap().as_array().unwrap().len(), 2);
         assert!(store.turn_dir(&key, run_id, "../01").is_err());
+    }
+
+    #[test]
+    fn profile_seeds_settings_and_criteria_are_fixed_with_each_question() {
+        let scratch = project();
+        let root = scratch.0.join("project");
+        fs::create_dir_all(root.join("ai")).unwrap();
+        fs::write(root.join("ai/sources.json"), r#"{"project": "demo", "inputs": ["src"]}"#).unwrap();
+        fs::write(root.join("ai/lexicon.json"), r#"{"groups": [["raios", "ray"], ["direcao", "direction"]]}"#).unwrap();
+        fs::write(root.join("ai/instructions.json"), r#"["Cite E1."]"#).unwrap();
+        fs::write(root.join("ai/criteria.md"), "- Cita E1, arquivo e linha.\n").unwrap();
+        fs::write(
+            root.join(PROFILE),
+            r#"{"project_root": ".", "sources_config": "ai/sources.json", "lexicon": "ai/lexicon.json",
+                "instructions": "ai/instructions.json", "criteria": "ai/criteria.md",
+                "search": {"top": 3, "depth": 1, "hits": 1}, "prepare": {"radius": 1, "numbered_lines": true}}"#,
+        )
+        .unwrap();
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let opened = store.open(&display(&root)).unwrap();
+        let settings: Settings = serde_json::from_value(opened["settings"].clone()).unwrap();
+        assert_eq!(settings.inputs, ["src"]);
+        assert_eq!((settings.top, settings.depth, settings.radius), (3, 1, 1));
+        assert_eq!(settings.instructions.as_deref(), Some(&["Cite E1.".to_string()][..]));
+        assert!(settings.imported_from.unwrap().ends_with(PROFILE));
+        let key = opened["key"].as_str().unwrap();
+        let run = store.generate(key).unwrap();
+        let turn = store.ask(key, run["id"].as_str().unwrap(), "direção dos raios").unwrap();
+        assert_eq!(turn["criteria"], "- Cita E1, arquivo e linha.\n");
+        assert_eq!(turn["criteria_sha256"], hash(b"- Cita E1, arquivo e linha.\n"));
+        let query: Value = serde_json::from_str(turn["query"].as_str().unwrap()).unwrap();
+        assert_eq!(query["instructions"], json!(["Cite E1."]));
     }
 
     #[test]

@@ -61,6 +61,8 @@ pub struct Send<'a> {
     pub modelfile: Option<&'a Path>,
     pub modelfile_name: Option<&'a str>,
     pub claude_model: Option<&'a str>,
+    /// Hash of the criteria fixed with the question, before this send.
+    pub criteria_sha256: Option<&'a str>,
 }
 
 /// Runs one provider and writes `send.json`, the summary the page shows.
@@ -77,6 +79,7 @@ pub fn send(provider: &str, request: Send) -> Result<Value> {
     summary["elapsed_ms"] = json!(now_ms() - started);
     summary["directory"] = json!(display(request.dir));
     summary["semantic_evaluation"] = json!("pending");
+    summary["criteria_sha256"] = json!(request.criteria_sha256);
     fs::write(request.dir.join("send.json"), serde_json::to_vec_pretty(&summary)?)?;
     Ok(summary)
 }
