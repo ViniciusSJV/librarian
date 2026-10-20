@@ -399,3 +399,22 @@ O registry v1 passou a declarar `graph_version` (`rust-syntax-graph-v1`) e `sear
 Verificação: fixture e goldens v1 sem alteração; suíte do workspace com 73 testes aprovados e 1 ignorado; clippy sem avisos; `catalog_sources` do renderer com 3 aprovados. `tests/agnostic.rs` passa no código novo e falha no anterior (`graph.rs mentions "rust"`).
 
 O teste de fronteira cobre só nomes e sintaxe conhecidos; ele não prova ausência de suposições implícitas de linguagem, por exemplo na forma das ocorrências.
+
+### G2 — resultado (19/10/2026)
+
+Decisão do usuário: opção A, ou seja, formato novo exportável a partir de qualquer edition verificada, inclusive v1. `graph::v2` (`syntax-graph-v2`) é uma projeção do grafo do perfil:
+
+- nós com `category` (source/symbol/occurrence), `kind` do extractor e `language`;
+- arestas com ID determinístico (`edge:` + SHA-256 de from/to/kind/resolution/evidence) e somente `declares`, `contains`, `observes` e `name_candidate`;
+- topo com `derived_from` e `profile`.
+
+A CLI `graph` aceita `v1|v2` (padrão v1) e `verify-graph` escolhe o contrato pela versão do arquivo. Chunks continuam fora dos nós.
+
+Verificação:
+
+- `tests/graph_v2.rs` cobre golden, projeção 1:1 sem relações novas, categorias e linguagens vindas do catálogo, IDs únicos e recomputáveis, recusa de candidato promovido a `structural` e recusa de campos desconhecidos;
+- `graph/v2.rs` entrou no teste de fronteira;
+- suíte com 78 testes aprovados e 1 ignorado; grafo e buscas v1 sem alteração;
+- no grafo real do renderer (8.045 nós, 9.153 arestas), geração em cerca de 1,8 s e verificação em cerca de 1,7 s (debug).
+
+O viewer ainda lê só o formato antigo; usar a v2 nele é a etapa 5A.

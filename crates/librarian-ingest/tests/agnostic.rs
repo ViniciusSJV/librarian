@@ -1,8 +1,9 @@
 //! Fence: the graph builder and search know records and occurrences, never a language.
 //! Language knowledge belongs to `src/extractors/` and its versioned registry profiles.
 
-const AGNOSTIC: [(&str, &str); 2] = [
+const AGNOSTIC: [(&str, &str); 3] = [
     ("graph.rs", include_str!("../src/graph.rs")),
+    ("graph/v2.rs", include_str!("../src/graph/v2.rs")),
     ("search.rs", include_str!("../src/search.rs")),
 ];
 
