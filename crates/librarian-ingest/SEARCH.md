@@ -32,10 +32,11 @@ Os grupos equivalentes não podem se sobrepor; cada entrada deve normalizar para
 um token. Flexões/plurais são explícitos, não inferidos por lematização geral.
 Sem vocabulário adicional, aplica apenas normalização e palavras de ligação.
 
-Exemplo com o primeiro consumidor, ainda a partir do Librarian:
+Exemplo com o primeiro consumidor, a partir do Librarian e com destino novo:
 
 ```sh
-cargo run --locked -p librarian-ingest --bin librarian_ingest -- search ../renderer/ai/acervo/renderer-auto-v1/edition "Onde a câmera calcula a direção dos raios?" ../renderer/ai/acervo/renderer-lexicon.json 5 2
+cargo run --locked -p librarian-ingest --bin librarian_ingest -- generate ../renderer ../renderer/ai/acervo/renderer-sources.json ./renderer-edition-new
+cargo run --locked -p librarian-ingest --bin librarian_ingest -- search ./renderer-edition-new "Onde a câmera calcula a direção dos raios?" ../renderer/ai/acervo/renderer-lexicon.json 5 2
 ```
 
 Esse comando deve recuperar `impl Camera::ray_from_pixel` primeiro. Os caminhos

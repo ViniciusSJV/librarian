@@ -55,14 +55,16 @@ Os 3 testes do preparador e 13 do transporte foram movidos, com um gravador igno
 As CLIs antigas do renderer delegam a este crate. PLAYME/TESTME passam a usar os
 executáveis do Librarian. `explain_evidence` permanece coordenador do consumidor,
 mas importa este transporte. A ponte busca→PreparedQuery não foi implementada.
+Em 19/10/2026 o renderer passou a ser só fonte: wrappers e coordenador foram removidos
+(ver [HISTORICO](../../HISTORICO.md)); a ponte agora é `librarian_ingest prepare`.
 
 Os testes HTTP usam servidor simulado, sem Ollama. A extração não faz nova geração
 real nem melhora a qualidade semântica por si só. Os artefatos históricos não foram
 reescritos. O crate é desenvolvimento local, ainda não uma release publicada.
 
 Para continuar o contrato epistemológico aqui, consulte o
-[experimento de política da câmera](../../../renderer/ai/experimentos/26-politica-llm-camera/README.md)
-e o [contrato atual](../../../renderer/ai/contratos/engines-v1.md).
+[experimento de política da câmera](https://github.com/ViniciusSJV/renderer/blob/a6e56ba19213d879f5de6e3e07f8a75ef84fe569/ai/experimentos/26-politica-llm-camera/README.md)
+e o [contrato atual](https://github.com/ViniciusSJV/renderer/blob/a6e56ba19213d879f5de6e3e07f8a75ef84fe569/ai/contratos/engines-v1.md).
 As duas respostas reais foram reprovadas: houve interpretação geométrica dentro de
 FACT e lacunas indevidas, mesmo sem títulos INFERENCE/HYPOTHESIS. Este é o próximo
 problema, não uma correção feita durante a extração. Nenhuma edição automática de
