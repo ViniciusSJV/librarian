@@ -11,13 +11,11 @@ configurada por um perfil do consumidor. Fluxo, perfil e artefatos estão no
 1. Compilar `librarian_ingest`, `prepare_ollama` e `send_ollama`.
 2. Gerar/verificar a edition e o grafo das fontes do perfil.
 3. Buscar com o léxico do perfil e preservar ranking, trechos e relações.
-4. Reconstruir E1 do snapshot; gravar query, prompt e critérios do perfil.
+4. `prepare`: fichas estruturais dos primeiros resultados, PreparedQuery conferido e critérios do perfil.
 5. Iniciar Ollama, obter o modelo base e aplicar o Modelfile do perfil.
 6. Enviar, preservar o retorno, reconferir hashes e avaliar separadamente.
 
-O [TESTME do renderer](../renderer/TESTME.md) continua como roteiro manual comentado
-dos mesmos passos para aquele consumidor; não é uma segunda trilha. Para API e uso
-independente, consulte [ingestão](crates/librarian-ingest/README.md),
+O roteiro manual antigo está no [HISTORICO](HISTORICO.md). Para API e uso independente, consulte [ingestão](crates/librarian-ingest/README.md),
 [busca/grafo](crates/librarian-ingest/SEARCH.md) e [LLM Engine](crates/librarian-llm-engine/README.md).
 
 O exemplo [maintenance](examples/maintenance/README.md) permanece disponível como
