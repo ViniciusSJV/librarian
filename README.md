@@ -35,7 +35,7 @@ perder a origem ao ser usada numa conversa.
 
 ```mermaid
 flowchart LR
-    P[Projeto consumidor<br/>perfil: fontes, léxico,<br/>Modelfile, instruções] --> I
+    P[Projeto analisado<br/>librarian.json: fontes, léxico,<br/>instruções, critérios] --> I
     subgraph GE[Graph Engine — testa sem explicar]
         I[ingest<br/>edition verificada] --> G[grafo sintático<br/>com evidência]
         I --> S[busca lexical]
@@ -43,10 +43,10 @@ flowchart LR
         S --> Q[prepare<br/>PreparedQuery conferido]
     end
     subgraph LE[LLM Engine — explica sem interpretar]
-        Q --> O[Ollama<br/>request e resposta preservados]
+        Q --> O[Ollama ou Claude CLI<br/>request e resposta preservados]
     end
     O --> A[avaliação<br/>separada]
-    G --> V[Graph Viewer]
+    G --> V[Librarian Studio<br/>grafo, perguntas e conversa]
 ```
 
 | Componente | Papel |
@@ -55,18 +55,23 @@ flowchart LR
 | [`librarian-graph-engine`](crates/librarian-graph-engine/WORKFLOW-V0.1.md) | Dossiês: conferência de fontes e fichas, seleção, contexto por linhas e bundle com registro de origem |
 | [`librarian-core`](crates/librarian-core/src/lib.rs) | Contratos de fontes, fichas (inclusive de intervalo) e dossiês |
 | [`librarian-llm-engine`](crates/librarian-llm-engine/README.md) | Preparação e transporte Ollama preservados; [contrato de afirmações](crates/librarian-llm-engine/CLAIMS.md) com checker mecânico |
-| [`tools/playme`](tools/playme/README.md) | Trilha completa a partir do perfil de um consumidor |
-| [`tools/graph-viewer`](tools/graph-viewer/README.md) | Visualizador 3D do grafo num único HTML |
+| [`librarian-studio`](crates/librarian-studio/README.md) | Servidor local e página web: projeto, grafo 3D, perguntas e envio a LLMs ([como usar](STUDIO.md)) |
+| [`modelfiles`](modelfiles/README.md) | Biblioteca de Modelfiles, fora dos crates, editável no studio |
 
 ## Começar
 
-Requisitos: Rust/Cargo; Windows PowerShell 5.1 para o PLAYME; [Ollama](https://ollama.com) para enviar consultas.
+Requisitos: Rust/Cargo (o Librarian é escrito em Rust e analisa projetos Rust e Python); para enviar consultas, [Ollama](https://ollama.com) e/ou o
+Claude Code.
+
+**Pela página:** dê duplo clique em `STUDIO.cmd` e abra <http://127.0.0.1:8765/>. Escolha
+a pasta de um projeto Rust ou Python, gere o grafo, pergunte e envie ao LLM. Como iniciar e como
+funciona: [STUDIO.md](STUDIO.md).
 
 ```sh
 cargo test --workspace --locked
 ```
 
-**Edition, grafo e busca** de qualquer projeto Rust (destinos novos):
+**Edition, grafo e busca** de qualquer projeto Rust ou Python (destinos novos):
 
 ```sh
 cargo run --locked -p librarian-ingest --bin librarian_ingest -- generate ../meu-projeto sources-config.json ./edition-nova
@@ -74,60 +79,62 @@ cargo run --locked -p librarian-ingest --bin librarian_ingest -- graph ./edition
 cargo run --locked -p librarian-ingest --bin librarian_ingest -- search ./edition-nova "onde a câmera calcula a direção" - 5 2
 ```
 
-**Trilha completa** com um consumidor. O [renderer](https://github.com/ViniciusSJV/renderer)
-é o de referência, com o checkout ao lado:
-
-```powershell
-..\renderer\PLAYME.cmd -Question 'Onde a câmera calcula a direção dos raios?'
-```
-
-O PLAYME gera e verifica a edition e o grafo, busca e prepara um `PreparedQuery`
-conferido contra os snapshots. Depois reconfere o bundle, envia ao Ollama, preserva
-tudo com hashes e deixa a avaliação pendente. Fluxo, perfil e artefatos estão no [WORKFLOW](WORKFLOW.md).
+A trilha completa pela CLI (prepare, verify-prepared e envio) está no [WORKFLOW](WORKFLOW.md).
 
 ### Usar em outro projeto
 
-O projeto não depende do Librarian. Ele só fornece um perfil `playme.json` com
-fontes, léxico, Modelfile, modelo, instruções e critérios. O formato está no
-[WORKFLOW](WORKFLOW.md#perfil-do-consumidor). Hoje o extractor é de Rust; outras
-linguagens entram somente por novos extractors, sem mudar grafo, busca ou dossiês.
+O projeto não depende do Librarian. Basta abrir a pasta no studio; opcionalmente, ela
+traz um perfil `librarian.json` com fontes, léxico, instruções e critérios. O formato está
+no [STUDIO.md](STUDIO.md#perfil-do-projeto-librarianjson), e o
+[renderer](https://github.com/ViniciusSJV/renderer) é o exemplo de referência. Hoje há
+extractors de Rust e Python; outras linguagens entram somente por novos extractors, sem mudar
+grafo, busca ou dossiês.
 
-## Graph Viewer
+## Librarian Studio
 
 <p align="center">
-  <img src="docs/img/graph-viewer.png" alt="Graph Viewer mostrando o grafo do renderer com o resultado E1 em destaque" width="100%">
+  <img src="docs/img/studio.png" alt="Librarian Studio com o grafo do renderer aceso por uma pergunta e a conversa ao lado" width="100%">
 </p>
 
-Abra [`tools/graph-viewer/index.html`](tools/graph-viewer/README.md) no navegador e
-escolha uma execução do PLAYME. Fontes, símbolos e ocorrências aparecem com formas
-e cores próprias. Clicar numa aresta mostra **a evidência que autorizou a ligação**:
-arquivo, linhas, bytes e hashes. Os resultados da busca e a ficha E1 são destacados
-somente por ID.
+Dê duplo clique em `STUDIO.cmd` e abra <http://127.0.0.1:8765/>. O fluxo é:
+
+1. escolher a pasta de um projeto Rust ou Python e gerar o grafo;
+2. perguntar e ver os termos que o léxico tocou acenderem no grafo;
+3. enviar a query conferida ao Ollama, com o Modelfile escolhido, ou ao Claude Code
+   CLI, ou só mostrar o que seria enviado.
+
+No grafo, fontes, símbolos e ocorrências aparecem com formas e cores próprias. Clicar
+numa aresta mostra **a evidência que autorizou a ligação**: arquivo, linhas, bytes e
+hashes. Os destaques usam somente IDs. As respostas ficam na conversa, com o transporte
+registrado e a avaliação pendente. Os detalhes estão no [STUDIO.md](STUDIO.md).
 
 ## Estado atual
 
-- **Graph Engine fechado para Rust.**
+- **Graph Engine para Rust e Python.**
   - Edition v1 congelada com goldens.
   - Grafo e busca sem conhecimento de linguagem, com testes de fronteira.
   - Contrato neutro `syntax-graph-v2`.
   - Dossiês decididos pela natureza declarada da fonte (`content`).
   - Ponte busca → `PreparedQuery` em Rust, com `verify-prepared` byte a byte.
+  - Python entrou só por extractor e pelo perfil v2 (G5), testado com o TheAlgorithms/Python (1.608 arquivos).
 - **LLM Engine:** o transporte funciona e preserva tudo. A explicação **ainda não está
-  aprovada**. A resposta atual da câmera acerta a expressão, mas cita "linha 11"
-  (posição no trecho) em vez da linha 86 do arquivo. As séries de afirmações seguem
-  reprovadas pelo checker. Veja os [experimentos](experiments/).
+  aprovada**. Com o contexto numerado (fase L, passo 1), a resposta da câmera cita a
+  linha 86 do arquivo, onde antes citava "linha 11", a posição no trecho. Foi uma
+  execução só; ela não mede tendência e não houve avaliação semântica. As séries de
+  afirmações seguem reprovadas pelo checker. Veja os [experimentos](experiments/).
 - **Ainda não existem:** promoção de afirmação aprovada a fato, captura de performance
-  e outras linguagens.
+  e outras linguagens além de Rust e Python.
 
 ## Roteiro
 
-1. **Limites do LLM Engine:** contexto com linhas numeradas, PLAYME usando afirmações
-   e checker, vínculo do bundle no registro do envio e portões até a promoção a fato.
+1. **Limites do LLM Engine:** contexto com linhas numeradas (feito), studio usando
+   afirmações e checker, vínculo do bundle no registro do envio e portões até a
+   promoção a fato.
 2. **Performance com evidência:** captura multiplataforma de benchmark antes e depois,
    para que "ficou mais rápido" seja medido, não afirmado.
 3. **Alteração de código assistida:** o modelo propõe um patch citando evidências;
    testes e benchmark decidem.
-4. **Outras linguagens** (Python, Java, TypeScript/Angular), apenas por extractors.
+4. **Outras linguagens** (Java, TypeScript/Angular), apenas por extractors, como o Python.
 
 O diagnóstico e as etapas concluídas estão no [plano](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md).
 
@@ -135,7 +142,8 @@ O diagnóstico e as etapas concluídas estão no [plano](PLANO-MULTILINGUAGEM-E-
 
 | Documento | Conteúdo |
 | --- | --- |
-| [WORKFLOW](WORKFLOW.md) | Perfil do consumidor, fluxo e artefatos de uma execução |
+| [STUDIO](STUDIO.md) | Como iniciar a página, como ela funciona, perfil e dados |
+| [WORKFLOW](WORKFLOW.md) | A mesma trilha pela CLI e a fronteira atual |
 | [TESTME](TESTME.md) | Passos da trilha em resumo |
 | [SEARCH](crates/librarian-ingest/SEARCH.md) | Busca, grafo, contrato v2 e `prepare` |
 | [CLAIMS](crates/librarian-llm-engine/CLAIMS.md) | Contrato experimental de afirmações |

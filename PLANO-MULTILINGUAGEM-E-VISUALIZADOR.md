@@ -492,3 +492,89 @@ Pendências registradas:
 - Paleta: slots 1–3 da referência, validados em todos os pares nos dois modos.
 
 Verificação: Edge headless pelo protocolo DevTools com o grafo real do renderer (5.824 nós, 6.797 arestas). Carregamento, sobreposição (E1 e vizinhança de 29 nós), inspeção de nó e de aresta, foco da câmera e console sem erros. O PLAYME passou a gravar e verificar `graph-v2.json`. Ainda não foi feita sessão manual num navegador com GPU; o layout no renderizador por software é lento.
+
+## Fase L — limites do LLM Engine
+
+Ordem combinada: L1 linhas numeradas → L2 studio com `claims::query` e checker → L3 vínculo do bundle no envio → L4 portões até a promoção de afirmação aprovada a Fact.
+
+### L1 — resultado (20/10/2026)
+
+Decisão do usuário: opção A, ou seja, numeração como opt-in da trilha `prepare`. Os exports anteriores não mudam.
+
+Mudanças:
+
+- O Graph Engine ganhou `LineFormat` (`Plain` padrão, `Numbered`) e `prepare_query_formatted`. As funções públicas anteriores delegam com `Plain`.
+- Em `Numbered`, cada linha de contexto, na seleção única ou nos blocos `contexts[]`, vira `{"number", "text"}`. `number` é a linha original do arquivo. Ao lado das linhas vai uma nota `numbering` com essa definição. Seleções que apontam para um bloco não repetem a nota.
+- O pedido do `prepare` ganhou `numbered_lines` (padrão `false`). Pedidos e bundles gravados antes continuam verificáveis.
+- O PLAYME lê `prepare.numbered_lines` do perfil. O renderer passou a usar `true`.
+- As instruções do consumidor não mudaram, para que a única variável fosse o formato.
+
+Verificação:
+
+- goldens legados v0.1 e v1 e `prepare-camera/` sem alteração;
+- novo golden `prepare-camera-numbered/` gerado uma vez a partir de `prepare-request-numbered.json`, com busca e dossiê idênticos ao golden simples;
+- testes: cada `number` corresponde à linha da fonte conferida; o primeiro e o último número coincidem com `start_line`/`end_line`; trocar 21 por 11 no `query.json` é recusado por `verify-prepared`; no engine, `Numbered` difere de `Plain` só nas linhas e na nota;
+- workspace com 93 testes aprovados e 1 ignorado. O clippy acusa os mesmos avisos e o mesmo erro (`send_ollama.rs`) de antes da mudança;
+- PLAYME real com `renderer-analyst:latest` e a pergunta do G4: prepare, verify-prepared, 4 hashes e `completed`.
+
+**Execução real.** A resposta citou "linha 86 do arquivo `src/camera.rs`" e a expressão `(pixel - origin).normalize()`, ambas corretas, e não declarou lacunas. Problemas restantes:
+
+- não nomeou a função (`ray_from_pixel`);
+- copiou o objeto `{number, text}` como bloco de evidência em vez de citar o trecho.
+
+Uma execução não mede tendência, e a avaliação semântica contra `criteria-before.md` não foi feita. O formato novo interrompe a comparabilidade com as tentativas anteriores à L1.
+
+## Librarian Studio substitui o PLAYME (20/10/2026)
+
+Antes da L2, por decisão do usuário, o Graph Viewer virou produto: o [Librarian Studio](STUDIO.md) (`crates/librarian-studio`, `STUDIO.md`).
+
+- Servidor local em Rust sobre `std`, só em `127.0.0.1`, que recusa `Host` e `Origin` de fora. Ele serve o mesmo `index.html` em modo studio.
+- Na página: projeto por pasta, geração e conferência do grafo v2, perguntas que acendem no grafo o que o léxico tocou e query preparada e conferida.
+- Envio a Ollama (Modelfile) ou Claude Code CLI, ou só a exibição da query. Claude API e DeepSeek aparecem listados, sem envio.
+- `verify-prepared` roda antes de cada envio.
+
+Decisões do usuário:
+
+- Claude pela CLI;
+- Modelfiles na biblioteca `modelfiles/`, fora dos crates. O Modelfile do renderer virou `analista.Modelfile`;
+- dados em `.studio/`, fora do Git e fora do projeto analisado;
+- PLAYME removido (`tools/playme` e os atalhos do renderer);
+- perfil renomeado para `librarian.json`, e `ai/playme/` para `ai/librarian/`;
+- critérios prévios gravados pelo studio em cada pergunta, antes da query, com hash no registro da pergunta e de cada envio.
+
+Verificação:
+
+- 7 testes do studio, entre eles um de ponta a ponta sem rede (abrir, gerar, perguntar, conferir o bundle, pergunta sem alcance) e um de importação do perfil com critérios. Workspace com 100 aprovados e 1 ignorado;
+- pela API, com o renderer real: Ollama com `analista` e Claude CLI com Haiku (US$ 0,0016). Ambos `completed` e com a linha 86 citada;
+- Edge headless pelo protocolo DevTools: abrir, gerar, perguntar no modo manual, critérios, Modelfile, seletor de pastas e envio ao Ollama pela página, sem erros no console;
+- modo `file://` intacto.
+
+A L2 passa a ser feita no studio.
+
+Em seguida, também por decisão do usuário, `tools/graph-viewer` foi removido: a página passou para `crates/librarian-studio/web/index.html`, ainda abrível com duplo clique como visualizador avulso. O conteúdo do README dela foi para o `STUDIO.md`.
+
+## G5 — Python (20/10/2026)
+
+Decisões do usuário: `rustpython-parser` 0.4.0 (Rust puro), perfil v2 para todas as editions novas e teste com o [TheAlgorithms/Python](https://github.com/TheAlgorithms/Python).
+
+Mudanças (só em `extractors/`, no registry e em testes, mais a geração com perfil explícito):
+
+- `extractors/python.rs`:
+  - um visitor que coleta declarações (class, function, method) e ocorrências (`call_observed`, `method_call_observed`, `type_reference`, `declared_return`, `local_binding`);
+  - completa os métodos que o visitor gerado deixa vazios (argumentos, keywords, `with`, `match`, comprehensions);
+  - o trecho começa no primeiro decorator e preserva o BOM;
+  - a classe é navegação e é o único alvo de candidato.
+- Registry v2 (`EXTRACTOR_V2`): Rust (mesmo adaptador) e Python, `graph_version` `rust-python-syntax-graph-v1` e `skipped_dirs` para venvs, caches e VCS. O v1 continua congelado e `generate_with_profile` o reproduz.
+- `suggested_inputs`: pastas e arquivos do topo para projetos sem `Cargo.toml`. O studio usa isso e marca as pastas `Cargo`/`Python`.
+
+Verificação:
+
+- `tests/python.rs` (projeto misto): decorators, BOM, escopos, linhas, diagnóstico de arquivo quebrado, pastas ignoradas, candidatos só da mesma linguagem, grafo v1/v2 conferido, busca (o método vence a classe) e `prepare` com `kind: python` e linhas numeradas. Golden v1 sem alteração; workspace com 103 aprovados e 1 ignorado. `graph.rs`, `search.rs` e `prepare.rs` não mudaram, e `tests/agnostic.rs` continua passando.
+- TheAlgorithms/Python (`6e03a48`, 1.608 arquivos):
+  - 5.105 símbolos, 59.013 nós e 75.381 arestas; geração em 13 s (release);
+  - 20 diagnósticos, todos de sintaxe nova demais para o parser: `except A, B:` (3.14) e `{**x for …}`;
+  - "where does dijkstra compute the shortest distance?" toca os quatro termos, e os resultados são `johnson`, `Graph.minimum_distance`, `Graph.dijkstra` e dois `dijkstra`;
+  - o `prepare` recusa sem `accept_diagnostics`, como previsto. Sem léxico, a pergunta em português não alcança nada.
+- Página (Edge headless): grafo de 107 MB carregado em cerca de 1,5 s e layout estabilizado em cerca de 62 s, com os rótulos curtos dos resultados e sem erros no console.
+
+Limites: sem resolução de imports, despacho dinâmico ou avaliação de decorators; arquivos com sintaxe acima de cerca do 3.12 viram diagnóstico.
