@@ -89,7 +89,7 @@ pub struct Symbol {
     pub id: String,
     pub source_id: String,
     pub name: String,
-    /// File-local syntactic scope, not a resolved Rust path.
+    /// File-local syntactic scope, not a resolved path.
     pub qualified_name: String,
     pub kind: String,
     pub is_test: bool,
