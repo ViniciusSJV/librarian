@@ -418,3 +418,22 @@ Verificação:
 - no grafo real do renderer (8.045 nós, 9.153 arestas), geração em cerca de 1,8 s e verificação em cerca de 1,7 s (debug).
 
 O viewer ainda lê só o formato antigo; usar a v2 nele é a etapa 5A.
+
+### G3 — resultado (19/10/2026)
+
+Antes da mudança, as exportações de dossiês v0.1 foram congeladas em `crates/librarian-graph-engine/tests/fixtures/legacy-v0.1` (commit 3f17e4a): `rust_source`, `test_run` com e sem `execution`, texto comum e conferência de captura.
+
+Mudanças:
+
+- `librarian-core::Source` ganhou `content` opcional (`code`, `execution_record`, `document`), omitido na serialização quando ausente.
+- O engine decide por `nature::of(source)`. `rust_source` e `test_run` viraram aliases legados isolados em `graph_engine/nature.rs`.
+- `content` desconhecido ou contrário ao `kind` legado é recusado.
+- Fontes sem `content` mantêm exatamente o texto anterior de `metadata_scope`; fontes com `content` usam texto neutro e exportam o campo.
+
+Verificação:
+
+- goldens legados sem alteração; `tests/content.rs` com código em várias linguagens, registros de execução, documentos e recusas;
+- `tests/agnostic.rs` do engine sem nomes de linguagem nem `kind` legado fora de `nature.rs`;
+- workspace com 85 testes aprovados e 1 ignorado; exemplo `maintenance` executado de ponta a ponta com `content: "document"`.
+
+Compatibilidade: o renderer fixa core/engine em `a009af8` e não muda até atualizar a revisão. Ao atualizar, as cerca de 10 construções literais de `Source` em `renderer/src/bin/validate_evidence.rs` precisam de `content: None`; os dossiês do `renderer-v1` continuam válidos pelos aliases.

@@ -9,6 +9,10 @@ pub mod capture;
 pub mod filesystem;
 #[path = "graph_engine/metrics.rs"]
 pub mod metrics;
+#[path = "graph_engine/nature.rs"]
+pub mod nature;
+
+use nature::Nature;
 
 pub use librarian_core::LibrarianFact as Fact;
 pub type Source = librarian_core::Source<ExecutionRecord, CaptureLink>;
@@ -226,6 +230,7 @@ where
     validate_source_ids(&evidence.sources)?;
     validate_fact_ids(&evidence.facts)?;
     for source in &evidence.sources {
+        nature::of(source)?;
         validate_execution_record(source)?;
         check_source(source)?;
     }
@@ -326,8 +331,11 @@ pub fn validate_execution_record(source: &Source) -> Result<(), String> {
     let Some(record) = &source.execution else {
         return Ok(());
     };
-    if source.kind.as_deref() != Some("test_run") {
-        return Err(format!("{}: execution exige kind test_run.", source.id));
+    if nature::of(source)? != Nature::ExecutionRecord {
+        return Err(format!(
+            "{}: execution exige kind test_run ou content execution_record.",
+            source.id
+        ));
     }
     let exit_code = record.exit_code.to_string();
     for (field, prefix, expected) in [
@@ -373,6 +381,7 @@ pub fn selection_with_capture(
 ) -> Result<String, String> {
     validate_reference(fact, source)?;
     validate_execution_record(source)?;
+    let nature = nature::of(source)?;
     let index = fact.line - 1;
     let start = index.saturating_sub(radius);
     let end = fact.line.saturating_add(radius).min(source.lines.len());
@@ -383,7 +392,7 @@ pub fn selection_with_capture(
         "fact_id": fact.id,
         "statement": fact.statement,
         "authorship": fact.authorship,
-        "metadata_scope": "Os metadados exportados são declarações do dossiê, não verificações de origem ou execução. O campo legado executed é omitido para rust_source.",
+        "metadata_scope": nature::metadata_scope(source),
         "source": {
             "id": source.id,
             "kind": source.kind,
@@ -402,7 +411,10 @@ pub fn selection_with_capture(
         },
         "scope": "Uma ficha, sua linha de referência e linhas vizinhas conforme requested_radius. Janela textual que pode cortar funções; significado da afirmação não validado."
     });
-    if source.kind.as_deref() == Some("test_run") {
+    if let Some(content) = &source.content {
+        selection["source"]["content"] = serde_json::json!(content);
+    }
+    if nature == Nature::ExecutionRecord {
         selection["source"]["execution"] =
             serde_json::to_value(&source.execution).map_err(|error| error.to_string())?;
         if source.execution.is_some() {
@@ -418,7 +430,7 @@ pub fn selection_with_capture(
         };
         selection["source"]["execution_scope"] = serde_json::json!("execution_validation descreve apenas a conferência da transcrição em source.lines, não a autenticação do relatório. O ID é atribuído ao catalogar e não é conferido no cabeçalho. O código de término é do comando registrado, não do validador atual; sua coerência com a saída dos testes não foi verificada. Não houve reexecução nem validação semântica de horários ou comando. Sem execution, nenhuma transcrição foi conferida.");
     }
-    if source.kind.as_deref() == Some("rust_source") {
+    if nature == Nature::Code {
         selection["source"]
             .as_object_mut()
             .unwrap()

@@ -239,6 +239,10 @@ pub struct Source<Execution = (), Capture = ()> {
     pub executed: Option<bool>,
     pub git_commit: Option<String>,
     pub kind: Option<String>,
+    /// Declared nature of the content (`code`, `execution_record`, `document`), independent
+    /// of language. Absent in v0.1 dossiers, where legacy `kind` values keep their meaning.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub content: Option<String>,
     pub path: Option<String>,
     pub sha256: Option<String>,
     pub id: String,
