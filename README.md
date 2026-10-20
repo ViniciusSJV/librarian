@@ -20,16 +20,14 @@ Ollama, com modelo explícito e avaliação semântica separada.
 
 ## Comece por uma única trilha
 
-Siga o **[TESTME do renderer](../renderer/TESTME.md)**: criar acervo → pergunta →
-léxico → ranking → grafo → inspecionar seleção → prompt → servidor/Modelfile →
-API Ollama → avaliação. O [TESTME local](TESTME.md) é apenas uma entrada para o
-mesmo documento, não uma segunda sequência de comandos. Os links entre projetos
-pressupõem checkouts locais lado a lado.
+Execute o **[PLAYME](tools/playme/README.md)** com o perfil de um consumidor:
+criar acervo → pergunta → léxico → ranking → grafo → E1 conferido → prompt →
+servidor/Modelfile → API Ollama → avaliação. O [TESTME](TESTME.md) resume os passos.
 
-O roteiro fica no renderer porque ele fornece o projeto estudado, o vocabulário,
-o Modelfile e a política de seleção. Ingestão, busca e transporte pertencem ao Librarian e
-pode ser usado em outros projetos Rust. O [WORKFLOW](WORKFLOW.md) mostra os papéis
-dos dois projetos e do Ollama no mesmo fluxo.
+O consumidor fornece somente o perfil: projeto estudado, vocabulário, Modelfile,
+instruções e critérios. Ingestão, busca, grafo, seleção conferida e transporte
+pertencem ao Librarian. O [WORKFLOW](WORKFLOW.md) descreve perfil, fluxo e artefatos;
+o renderer é o consumidor de referência (checkouts lado a lado).
 
 Uma tentativa real já teve transporte/hashes conferidos e explicação parcialmente
 correta; avaliação semântica continua separada. Busca → envelope manual → API foi

@@ -1,25 +1,25 @@
 # TESTME — entrada para a trilha única
 
-**O passo a passo completo está no [TESTME do renderer](../renderer/TESTME.md).**
-Mantenha os checkouts `librarian` e `renderer` lado a lado. O link é local e exige
-o consumidor; não aponta para um arquivo deste repositório quando visto isoladamente.
+**A trilha executável é o [PLAYME](tools/playme/README.md) deste repositório**,
+configurada por um perfil do consumidor. Fluxo, perfil e artefatos estão no
+[WORKFLOW](WORKFLOW.md). O renderer é o consumidor de referência:
 
-A trilha chama o binário `librarian_ingest` diretamente, explica cada passagem e
-termina no Ollama. Ela fica no renderer porque o cliente HTTP e o Modelfile ainda
-pertencem ao consumidor. Não há uma segunda sequência de comandos neste arquivo.
+```powershell
+..\renderer\PLAYME.cmd -Question 'Onde a câmera calcula a direção dos raios?'
+```
 
-1. Preparar ferramentas e criar a pasta da consulta.
-2. Gerar/verificar o acervo e o grafo com Librarian.
-3. Criar a pergunta, passar pelo léxico e examinar ranking/trechos/relações.
-4. Escolher evidências e preparar query/prompt e critérios.
-5. Iniciar Ollama, obter Qwen e aplicar/conferir o Modelfile.
-6. Enviar pela API, preservar o retorno e avaliar separadamente.
+1. Compilar `librarian_ingest`, `prepare_ollama` e `send_ollama`.
+2. Gerar/verificar a edition e o grafo das fontes do perfil.
+3. Buscar com o léxico do perfil e preservar ranking, trechos e relações.
+4. Reconstruir E1 do snapshot; gravar query, prompt e critérios do perfil.
+5. Iniciar Ollama, obter o modelo base e aplicar o Modelfile do perfil.
+6. Enviar, preservar o retorno, reconferir hashes e avaliar separadamente.
 
-O Librarian implementa somente ingestão, conferência, busca e grafo nesta trilha;
-é reutilizável em outros projetos Rust. Para sua API e uso independente, consulte
-[ingestão](crates/librarian-ingest/README.md), [busca/grafo](crates/librarian-ingest/SEARCH.md)
-e [WORKFLOW](WORKFLOW.md). São referências técnicas, não etapas extras da trilha.
+O [TESTME do renderer](../renderer/TESTME.md) continua como roteiro manual comentado
+dos mesmos passos para aquele consumidor; não é uma segunda trilha. Para API e uso
+independente, consulte [ingestão](crates/librarian-ingest/README.md),
+[busca/grafo](crates/librarian-ingest/SEARCH.md) e [LLM Engine](crates/librarian-llm-engine/README.md).
 
 O exemplo [maintenance](examples/maintenance/README.md) permanece disponível como
 referência de cadastro manual de fatos da versão 0.1. Não é pré-requisito para
-extrair código, fazer perguntas ou usar o consumidor renderer.
+extrair código, fazer perguntas ou usar um consumidor.
