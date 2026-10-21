@@ -161,6 +161,9 @@ fn send(store: &Store, body: &Value) -> Result<Response> {
     }
     let dir = store.turn_dir(key, run, turn)?;
     let prepared = dir.join("prepared");
+    if !prepared.join("bundle/query.json").is_file() {
+        return Err("Esta pergunta não tem query preparada (o prepare recusou); nada foi enviado".into());
+    }
     let catalog = librarian_ingest::Catalog::load(&store.edition(key, run)?)?;
     librarian_ingest::prepare::verify(&catalog, &prepared)?;
     let choice = choice(store, body)?;

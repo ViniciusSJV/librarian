@@ -998,6 +998,8 @@ async function ask() {
   const question = $('#question').value.trim();
   if (!question || !studio.run) return;
   await busy([$('#ask')], $('#llmNote'), async () => {
+    // The question uses the saved settings; save what is on screen so nothing is forgotten.
+    await saveSettings();
     say($('#chatNote'), 'Buscando pelo léxico e preparando a query…');
     const turn = await api('POST', '/api/ask', { key: studio.project.key, run: studio.run, question });
     studio.turns.push(turn);
@@ -1005,12 +1007,17 @@ async function ask() {
     activate(turn.id);
     $('#turns').scrollTop = $('#turns').scrollHeight;
     // One button: the LLM select decides. Nenhum only shows the query; any LLM also sends it.
-    await sendTurn(turn);
+    if (turn.query) await sendTurn(turn);
   });
 }
 
 async function sendTurn(turn) {
   const provider = $('#provider').value;
+  if (!turn.query) {
+    turn.sendError = 'Esta pergunta não tem query preparada, então nada foi enviado. Veja o motivo acima, ajuste as configurações e pergunte de novo.';
+    renderTurns();
+    return;
+  }
   if (provider === 'manual') {
     turn.showQuery = true;
     renderTurns();
@@ -1096,7 +1103,9 @@ function renderTurn(t) {
       (t.search?.terms ?? []).length ? null : el('span', { className: 'muted', textContent: 'nenhum termo após as stop words' })),
     hits.length ? el('ul', { className: 'list' }, ...hits.map(hitItem))
       : el('p', { className: 'muted', textContent: 'Nenhum resultado: o léxico não alcançou símbolos do projeto.' }),
-    t.prepare_error ? el('p', { className: 'error', textContent: `Query não preparada: ${t.prepare_error}` }) : null,
+    t.prepare_error ? el('p', { className: 'error', textContent: t.prepare_error.includes('accept_diagnostics')
+      ? 'Query não preparada: a edition tem diagnósticos (arquivos que o parser não leu). Para perguntar mesmo assim, marque "Aceitar edition com diagnósticos" em Léxico, busca e instruções e pergunte de novo.'
+      : `Query não preparada: ${t.prepare_error}` }) : null,
     t.criteria ? el('details', {},
       el('summary', { textContent: `Critérios prévios (gravados antes da resposta · sha256 ${t.criteria_sha256?.slice(0, 12)}…)` }),
       el('pre', { textContent: t.criteria })) : el('p', { className: 'muted', textContent: 'Sem critérios prévios gravados para esta pergunta.' }),
