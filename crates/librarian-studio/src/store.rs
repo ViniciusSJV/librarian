@@ -1,11 +1,11 @@
 //! Projects, runs and questions under `.studio/`. Nothing is written inside analyzed projects.
 //! Layout: projects/<key>/project.json, runs/<run>/{edition, graph-v2.json, run.json},
 //! runs/<run>/turns/<NN>/{question.json, search.json, prepare-request.json, prepared/, claims/, sends/}.
-use librarian_llm_engine::claims::{compare::compare, Claim, Policy};
+use librarian_llm_engine::claims::{self, compare::compare, Claim, Policy};
 use librarian_ingest::{
     graph::v2,
     hash,
-    prepare::{self, Request},
+    prepare::{self, Request, ReviewedFact, Target},
     search::{Lexicon, SearchIndex},
     Catalog, Config, Result,
 };
@@ -231,6 +231,7 @@ impl Store {
             "query": fs::read_to_string(query).ok(),
             "criteria": fs::read_to_string(dir.join(CRITERIA)).ok(),
             "criteria_sha256": question["criteria_sha256"],
+            "chain": question["chain"],
             "prepare_error": question["prepare_error"],
             "comparison": compare_sends(&sends),
             "sends": sends,
@@ -239,15 +240,82 @@ impl Store {
 
     /// Search lights the graph even when prepare refuses; the refusal is kept with the question.
     pub fn ask(&self, key: &str, run: &str, question: &str) -> Result<Value> {
-        let project = self.project_dir(key)?;
-        let settings: Settings = serde_json::from_slice(&fs::read(project.join("project.json"))?)?;
-        let run_dir = self.run_dir(key, run)?;
-        let catalog = Catalog::load(&run_dir.join("edition"))?;
+        let settings = self.settings(key)?;
+        let catalog = Catalog::load(&self.edition(key, run)?)?;
         let report = SearchIndex::new(&catalog, settings.lexicon.clone())?.search(
             question,
             settings.top,
             settings.depth,
         )?;
+        let mut search = serde_json::to_vec_pretty(&report)?;
+        search.push(b'\n');
+        let request = request(&settings, question, None, vec![]);
+        self.new_turn(key, run, &settings, &catalog, question, Some(search), request, Value::Null)
+    }
+
+    /// Chain step: a new question whose evidence is the declarations located by the answers to
+    /// `from` that pass the mechanical check again now, plus the current reviewed facts about
+    /// them. The earlier answers' text is not carried; they are linked by hash.
+    pub fn continue_turn(&self, key: &str, run: &str, from: &str, question: &str) -> Result<Value> {
+        let settings = self.settings(key)?;
+        let catalog = Catalog::load(&self.edition(key, run)?)?;
+        let verified = self.verify_for_send(key, run, from)?;
+        let context = verified.context.ok_or("Só perguntas em claims continuam em cadeia")?;
+        let mut targets: Vec<Target> = vec![];
+        let mut answers = vec![];
+        let mut sends: Vec<PathBuf> = fs::read_dir(self.turn_dir(key, run, from)?.join("sends"))
+            .map(|d| d.filter_map(|e| e.ok().map(|e| e.path())).collect())
+            .unwrap_or_default();
+        sends.sort();
+        for send in sends {
+            let Some(text) = ["response.txt", "attempt/response.txt"].iter().find_map(|f| fs::read_to_string(send.join(f)).ok()) else {
+                continue;
+            };
+            let body = claims::extract_fenced(&text).unwrap_or(&text);
+            if claims::check(&context, body)?.mechanical_status != "passed" {
+                continue;
+            }
+            let response: claims::Response = serde_json::from_str(body)?;
+            let mut used = vec![];
+            for claim in response.claims.iter().filter(|c| matches!(c.kind, claims::Kind::Fact)) {
+                let Some(location) = &claim.location else { continue };
+                let target = Target { path: location.path.clone(), symbol_name: location.symbol_name.clone(),
+                    declaration_line: location.declaration_line };
+                if !targets.contains(&target) {
+                    targets.push(target);
+                }
+                used.push(claim.id.clone());
+            }
+            if !used.is_empty() {
+                answers.push(json!({ "send": send.file_name().map(|n| n.to_string_lossy().into_owned()),
+                    "response_sha256": hash(text.as_bytes()), "claims": used }));
+            }
+        }
+        if targets.is_empty() {
+            return Err(format!("Nenhuma resposta da pergunta {from} passa na conferência mecânica com location; nada para continuar").into());
+        }
+        let facts = self.facts(key, run)?;
+        let reviewed: Vec<ReviewedFact> = facts["facts"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter(|f| f["status"] == "current")
+            .filter(|f| targets.iter().any(|t| f["path"] == t.path && f["symbol_name"] == t.symbol_name && f["declaration_line"] == t.declaration_line))
+            .map(|f| serde_json::from_value(json!({ "id": f["id"], "statement": f["statement"], "authorship": f["authorship"],
+                "path": f["path"], "line": f["line"], "end_line": f["end_line"], "citations": f["citations"] })))
+            .collect::<std::result::Result<_, _>>()?;
+        let chain = json!({ "from_turn": from, "from_query_sha256": verified.link["query_sha256"], "answers": answers,
+            "targets": targets, "reviewed_facts": reviewed.iter().map(|f| &f.id).collect::<Vec<_>>() });
+        let request = request(&settings, question, Some(targets), reviewed);
+        self.new_turn(key, run, &settings, &catalog, question, None, request, chain)
+    }
+
+    /// Fixes the criteria, prepares and verifies the bundle and, in claims, its claims files.
+    /// A refusal is kept with the question. Without `search`, the prepared report is recorded.
+    #[allow(clippy::too_many_arguments)]
+    fn new_turn(&self, key: &str, run: &str, settings: &Settings, catalog: &Catalog, question: &str,
+        search: Option<Vec<u8>>, request: Request, chain: Value) -> Result<Value> {
+        let run_dir = self.run_dir(key, run)?;
         fs::create_dir_all(run_dir.join("turns"))?;
         let turns = run_dir.join("turns");
         // After the highest number ever used, kept beside the turns: deleting every question must
@@ -269,38 +337,33 @@ impl Store {
             }
             None => None,
         };
-        let mut search = serde_json::to_vec_pretty(&report)?;
-        search.push(b'\n');
-        fs::write(dir.join("search.json"), &search)?;
-        let request = Request {
-            question: question.into(),
-            lexicon: settings.lexicon.clone(),
-            top: settings.top,
-            depth: settings.depth,
-            hits: settings.hits,
-            radius: settings.radius,
-            numbered_lines: settings.numbered_lines,
-            instructions: settings.instructions.clone(),
-            accept_diagnostics: settings.accept_diagnostics,
-        };
+        if let Some(search) = &search {
+            fs::write(dir.join("search.json"), search)?;
+        }
         let request_bytes = serde_json::to_vec_pretty(&request)?;
         fs::write(dir.join("prepare-request.json"), &request_bytes)?;
         let prepared = dir.join("prepared");
-        let prepare_error = prepare::write(&catalog, &request_bytes, &prepared)
-            .and_then(|_| prepare::verify(&catalog, &prepared))
+        let prepare_error = prepare::write(catalog, &request_bytes, &prepared)
+            .and_then(|_| prepare::verify(catalog, &prepared))
             .err()
             .map(|e| e.to_string());
+        if search.is_none() && prepare_error.is_none() {
+            fs::copy(prepared.join("search.json"), dir.join("search.json"))?;
+        }
         let format = settings.answer_format;
         let claims_error = match (format, &prepare_error) {
             (AnswerFormat::Claims, None) => {
                 let policy = Policy { allow_inference: settings.allow_inference, allow_hypothesis: settings.allow_hypothesis };
                 let instructions = settings.instructions.clone().unwrap_or_default();
-                crate::claims::write(&catalog, &dir, policy, instructions).err().map(|e| e.to_string())
+                crate::claims::write(catalog, &dir, policy, instructions).err().map(|e| e.to_string())
             }
             _ => None,
         };
-        let record = json!({ "question": question, "created": stamp(), "prepare_error": prepare_error,
+        let mut record = json!({ "question": question, "created": stamp(), "prepare_error": prepare_error,
             "criteria_sha256": criteria_sha256, "answer_format": format, "claims_error": claims_error });
+        if !chain.is_null() {
+            record["chain"] = chain;
+        }
         fs::write(dir.join("question.json"), serde_json::to_vec_pretty(&record)?)?;
         self.turn(key, run, &id)
     }
@@ -537,6 +600,23 @@ fn compare_sends(sends: &[Value]) -> Value {
         })
         .collect();
     json!({ "sends": columns, "rows": compare(&answers) })
+}
+
+/// The prepare request of a question with the project's settings; a chain step adds targets.
+fn request(settings: &Settings, question: &str, targets: Option<Vec<Target>>, reviewed_facts: Vec<ReviewedFact>) -> Request {
+    Request {
+        question: question.into(),
+        lexicon: settings.lexicon.clone(),
+        top: settings.top,
+        depth: settings.depth,
+        hits: settings.hits,
+        radius: settings.radius,
+        numbered_lines: settings.numbered_lines,
+        instructions: settings.instructions.clone(),
+        accept_diagnostics: settings.accept_diagnostics,
+        targets,
+        reviewed_facts,
+    }
 }
 
 /// The next numbered send directory of a turn (not created), e.g. sends/03-ollama.
@@ -1032,6 +1112,65 @@ mod tests {
         assert_eq!(statuses, ["revoked", "stale"]);
         assert!(rechecked["facts"][1]["status_reason"].as_str().unwrap().contains("src/lib.rs:4–5"));
         assert_eq!(store.facts(&key, &run).unwrap()["facts"][1]["status"], "current");
+    }
+
+    #[test]
+    fn chain_steps_carry_checked_locations_and_current_reviewed_facts_never_the_text() {
+        let scratch = project();
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let opened = store.open(&display(&scratch.0.join("project"))).unwrap();
+        let key = opened["key"].as_str().unwrap().to_owned();
+        let mut settings: Settings = serde_json::from_value(opened["settings"].clone()).unwrap();
+        settings.lexicon.groups = vec![vec!["raios".into(), "ray".into()], vec!["direcao".into(), "direction".into()]];
+        store.save_settings(&key, &settings).unwrap();
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        store.ask(&key, &run, "Onde a câmera calcula a direção dos raios?").unwrap();
+        // Nothing passed yet: there is nothing to continue from.
+        assert!(store.continue_turn(&key, &run, "01", "E agora?").err().unwrap().to_string().contains("nada para continuar"));
+        let answer = json!({"schema_version": 1, "claims": [{
+            "id": "C1", "kind": "FACT", "text": "`ray_from_pixel` calcula `direction` na linha 5 de src/lib.rs.",
+            "citations": [{"evidence_id": "E1", "path": "src/lib.rs", "start_line": 4, "end_line": 5,
+                "quote": "    pub fn ray_from_pixel(&self, x: f64) -> f64 {\n        let direction = x * 2.0;"}],
+            "premises": [], "verification_plan": null,
+            "location": {"evidence_id": "E1", "path": "src/lib.rs", "symbol_name": "ray_from_pixel",
+                "declaration_line": 4, "operation_start_line": 5, "operation_end_line": 5}}]});
+        let mut wrong = answer.clone();
+        wrong["claims"][0]["citations"][0]["quote"] = json!("let direction = x * 2.0;");
+        record_answer(&store, &key, &run, "01", "manual", &wrong.to_string()).unwrap();
+        record_answer(&store, &key, &run, "01", "manual", &answer.to_string()).unwrap();
+        store.review(&key, &run, "01", "02-manual", "C1", true, "A linha 5 calcula direction.").unwrap();
+
+        let step = store.continue_turn(&key, &run, "01", "Como evitar a multiplicação em ray_from_pixel?").unwrap();
+        assert_eq!((step["id"].as_str(), &step["prepare_error"], &step["claims_error"]), (Some("02"), &Value::Null, &Value::Null));
+        let chain = &step["chain"];
+        assert_eq!(chain["from_turn"], "01");
+        // Only the answer that passes the check again is used, linked by hash, without its text.
+        assert_eq!(chain["answers"], json!([{"send": "02-manual", "claims": ["C1"],
+            "response_sha256": hash(answer.to_string().as_bytes())}]));
+        assert_eq!(chain["targets"], json!([{"path": "src/lib.rs", "symbol_name": "ray_from_pixel", "declaration_line": 4}]));
+        assert_eq!(chain["reviewed_facts"], json!(["F1"]));
+        assert!(step["search"]["hits"][0]["name"].as_str().unwrap().contains("ray_from_pixel"));
+        // The approved text travels only as the reviewed fact F1.
+        let query: Value = serde_json::from_str(step["query"].as_str().unwrap()).unwrap();
+        let reviewed = &query["evidence"]["reviewed_facts"][0];
+        assert_eq!((reviewed["id"].as_str(), reviewed["start_line"].as_u64()), (Some("F1"), Some(5)));
+        assert_eq!(reviewed["authorship"], crate::facts::AUTHORSHIP);
+        assert!(query["instructions"].as_array().unwrap().iter().any(|i| i.as_str().unwrap().starts_with("evidence.reviewed_facts")));
+        // The step is a question like any other: it verifies before a send and links its query.
+        let verified = store.verify_for_send(&key, &run, "02").unwrap();
+        assert_eq!(verified.link["query_file"], "claims/query.json");
+        assert!(verified.link["dossier_origin"].as_str().unwrap().starts_with("edition:"));
+
+        // A revoked fact is no longer carried, and with it the text; the location still is.
+        store.review(&key, &run, "01", "02-manual", "C1", false, "Revisto.").unwrap();
+        let again = store.continue_turn(&key, &run, "01", "De novo?").unwrap();
+        assert_eq!((again["chain"]["reviewed_facts"].clone(), again["prepare_error"].clone()), (json!([]), Value::Null));
+        assert!(!again["query"].as_str().unwrap().contains("calcula `direction` na linha 5"), "unreviewed claim text leaked");
+        // Prose questions have no mechanical check to continue from.
+        settings.answer_format = AnswerFormat::Prose;
+        store.save_settings(&key, &settings).unwrap();
+        store.ask(&key, &run, "direção dos raios").unwrap();
+        assert!(store.continue_turn(&key, &run, "04", "E?").err().unwrap().to_string().contains("claims"));
     }
 
     #[test]

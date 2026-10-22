@@ -2,7 +2,7 @@
 //! Facts here are structural records (where a declaration is), never answers to the question.
 use crate::{
     hash,
-    search::{Lexicon, SearchIndex},
+    search::{chain_report, Lexicon, SearchIndex},
     Catalog, Result,
 };
 use librarian_graph_engine::{prepare_query_formatted, LineFormat, PreparedQuery};
@@ -33,6 +33,44 @@ pub struct Request {
     /// Editions with diagnostics are incomplete; they are refused unless explicitly accepted.
     #[serde(default)]
     pub accept_diagnostics: bool,
+    /// Chain step: declarations named by checked answers to an earlier question replace the
+    /// lexical search; `top`, `hits` and `lexicon` are then unused.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub targets: Option<Vec<Target>>,
+    /// Facts a person reviewed about the targets (chain step only). Each quote must still be
+    /// the edition's text at the same lines, and each fact must lie inside a target.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub reviewed_facts: Vec<ReviewedFact>,
+}
+
+/// A declaration as a checked claim locates it.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Target {
+    pub path: String,
+    pub symbol_name: String,
+    pub declaration_line: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ReviewedFact {
+    pub id: String,
+    pub statement: String,
+    pub authorship: String,
+    pub path: String,
+    pub line: usize,
+    pub end_line: usize,
+    pub citations: Vec<Quote>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Quote {
+    pub path: String,
+    pub start_line: usize,
+    pub end_line: usize,
+    pub quote: String,
 }
 
 pub struct Prepared {
@@ -42,32 +80,47 @@ pub struct Prepared {
 }
 
 pub fn prepare(catalog: &Catalog, request: &Request) -> Result<Prepared> {
-    if request.hits == 0 || request.hits > request.top {
-        return Err("hits must be between 1 and top".into());
-    }
     if !catalog.diagnostics.is_empty() && !request.accept_diagnostics {
         return Err("Edition has diagnostics; set accept_diagnostics to use it".into());
     }
-    let report = SearchIndex::new(catalog, request.lexicon.clone())?.search(
-        &request.question,
-        request.top,
-        request.depth,
-    )?;
-    if report.hits.len() < request.hits {
-        return Err(format!(
-            "Search returned {} candidates; {} requested",
-            report.hits.len(),
-            request.hits
-        )
-        .into());
-    }
+    let (report, chosen) = match &request.targets {
+        Some(targets) => {
+            let ids = targets.iter().map(|t| resolve(catalog, t)).collect::<Result<Vec<_>>>()?;
+            if ids.is_empty() || (1..ids.len()).any(|i| ids[..i].contains(&ids[i])) {
+                return Err("A chain step needs distinct targets".into());
+            }
+            (chain_report(catalog, &request.question, &ids, request.depth)?, ids.len())
+        }
+        None => {
+            if request.hits == 0 || request.hits > request.top {
+                return Err("hits must be between 1 and top".into());
+            }
+            if !request.reviewed_facts.is_empty() {
+                return Err("Reviewed facts are carried only by a chain step".into());
+            }
+            let report = SearchIndex::new(catalog, request.lexicon.clone())?.search(
+                &request.question,
+                request.top,
+                request.depth,
+            )?;
+            if report.hits.len() < request.hits {
+                return Err(format!(
+                    "Search returned {} candidates; {} requested",
+                    report.hits.len(),
+                    request.hits
+                )
+                .into());
+            }
+            (report, request.hits)
+        }
+    };
     let mut search = serde_json::to_vec_pretty(&report)?;
     search.push(b'\n');
 
     let profile = &catalog.manifest.extractor;
     let mut sources: Vec<(String, &crate::Source)> = vec![];
     let mut facts = vec![];
-    for (index, hit) in report.hits.iter().take(request.hits).enumerate() {
+    for (index, hit) in report.hits.iter().take(chosen).enumerate() {
         let symbol = &catalog.symbols[&hit.symbol_id];
         let source = &catalog.sources[&symbol.source_id];
         let source_key = match sources.iter().find(|(_, s)| s.id == source.id) {
@@ -91,6 +144,31 @@ pub fn prepare(catalog: &Catalog, request: &Request) -> Result<Prepared> {
             "end_line": chunk.end_line,
         }));
     }
+    for fact in &request.reviewed_facts {
+        let inside = report.hits.iter().take(chosen).any(|h| {
+            h.path == fact.path && h.start_line <= fact.line && fact.end_line <= h.end_line
+        });
+        if !fact.id.starts_with('F') || fact.statement.trim().is_empty() || fact.end_line < fact.line || !inside {
+            return Err(format!("{}: reviewed fact outside the chain targets or malformed", fact.id).into());
+        }
+        for quote in &fact.citations {
+            check_quote(catalog, &quote.path, quote.start_line, quote.end_line, &quote.quote)
+                .map_err(|e| format!("{}: {e}", fact.id))?;
+        }
+        let key = sources
+            .iter()
+            .find(|(_, s)| s.path == fact.path)
+            .map(|(k, _)| k.clone())
+            .ok_or("Reviewed fact source missing")?;
+        facts.push(json!({
+            "id": fact.id,
+            "statement": fact.statement,
+            "authorship": fact.authorship,
+            "source_id": key,
+            "line": fact.line,
+            "end_line": fact.end_line,
+        }));
+    }
     let sources: Vec<Value> = sources
         .iter()
         .map(|(key, source)| {
@@ -110,6 +188,12 @@ pub fn prepare(catalog: &Catalog, request: &Request) -> Result<Prepared> {
         "Fichas descrevem onde estão declarações; não respondem à pergunta nem afirmam comportamento."
             .into(),
     );
+    if !request.reviewed_facts.is_empty() {
+        unknowns.push(
+            "Fichas F são afirmações de uma pergunta anterior revisadas por uma pessoa, com os trechos conferidos contra esta edition; não são registros estruturais."
+                .into(),
+        );
+    }
     if !catalog.diagnostics.is_empty() {
         unknowns.push(format!(
             "Edition com {} diagnósticos: extração incompleta em algumas fontes.",
@@ -117,12 +201,13 @@ pub fn prepare(catalog: &Catalog, request: &Request) -> Result<Prepared> {
         ));
     }
     let dossier = serde_json::to_string_pretty(&json!({
-        "id": format!("search:{}", hash(&search)),
+        "id": format!("{}:{}", if request.targets.is_some() { "chain" } else { "search" }, hash(&search)),
         "unknowns": unknowns,
         "sources": sources,
         "facts": facts,
     }))?;
-    let fact_ids: Vec<String> = (1..=request.hits).map(|i| format!("E{i}")).collect();
+    let mut fact_ids: Vec<String> = (1..=chosen).map(|i| format!("E{i}")).collect();
+    fact_ids.extend(request.reviewed_facts.iter().map(|f| f.id.clone()));
     let fact_ids: Vec<&str> = fact_ids.iter().map(String::as_str).collect();
     let format = if request.numbered_lines {
         LineFormat::Numbered
@@ -143,6 +228,41 @@ pub fn prepare(catalog: &Catalog, request: &Request) -> Result<Prepared> {
         dossier,
         query,
     })
+}
+
+/// The declaration a target names: same file, same name, its chunk covering the declaration
+/// line. Nested symbols resolve to the innermost; none is an error, never a guess.
+fn resolve(catalog: &Catalog, target: &Target) -> Result<String> {
+    let source = catalog
+        .source_by_path(&target.path)
+        .ok_or_else(|| format!("{}: not in the edition", target.path))?;
+    let found = catalog
+        .symbols
+        .values()
+        .filter(|s| s.source_id == source.id && s.name == target.symbol_name)
+        .map(|s| (s, &catalog.chunks[&s.chunk_id]))
+        .filter(|(_, c)| c.start_line <= target.declaration_line && target.declaration_line <= c.end_line)
+        .min_by_key(|(s, c)| (c.end_line - c.start_line, s.id.clone()));
+    match found {
+        Some((symbol, _)) => Ok(symbol.id.clone()),
+        None => Err(format!(
+            "{}: no `{}` declared at line {}",
+            target.path, target.symbol_name, target.declaration_line
+        )
+        .into()),
+    }
+}
+
+/// The quote is still the text of lines `start`–`end` of `path` in this edition, joined by LF.
+/// Nothing is searched elsewhere: a shifted line is a mismatch.
+pub fn check_quote(catalog: &Catalog, path: &str, start: usize, end: usize, quote: &str) -> std::result::Result<(), String> {
+    let source = catalog.source_by_path(path).ok_or_else(|| format!("{path} não está nesta edition"))?;
+    let lines = snapshot_lines(catalog, &source.id);
+    let current = (start >= 1 && end >= start && end <= lines.len()).then(|| lines[start - 1..end].join("\n"));
+    if current.as_deref() != Some(quote) {
+        return Err(format!("{path}:{start}–{end} mudou desde a revisão"));
+    }
+    Ok(())
 }
 
 /// Lines exactly as the dossier sees them; the snapshot was already verified by the catalog.

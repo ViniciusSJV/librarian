@@ -3,7 +3,7 @@
 //! points at real lines in the requested shape; its meaning stays pending.
 //! Layout inside a turn: claims/{context.json, query.json}; each send gets a check.json.
 use librarian_ingest::{hash, Catalog, Result};
-use librarian_llm_engine::claims::{self, Context, Evidence, Policy, Symbol};
+use librarian_llm_engine::claims::{self, Context, Evidence, Policy, ReviewedFact, Symbol};
 use serde_json::{json, Value};
 use std::{fs, path::Path};
 
@@ -66,6 +66,20 @@ pub fn context(catalog: &Catalog, query: &Value, policy: Policy, project_instruc
             limits.push(unknown);
         }
     }
+    // Chain steps carry reviewed facts as F facts (prepare allows that prefix only for them).
+    let mut reviewed_facts = vec![];
+    for selection in selections.iter().filter(|s| s["fact_id"].as_str().is_some_and(|id| id.starts_with('F'))) {
+        let source = &selection["source"];
+        let line = source["line"].as_u64().ok_or("Ficha F sem linha")? as usize;
+        reviewed_facts.push(ReviewedFact {
+            id: text(&selection["fact_id"])?,
+            statement: text(&selection["statement"])?,
+            authorship: text(&selection["authorship"])?,
+            path: text(&source["path"])?,
+            start_line: line,
+            end_line: source["end_line"].as_u64().map_or(line, |e| e as usize),
+        });
+    }
     let context = Context {
         schema_version: 1,
         require_location: items.iter().any(|e| !e.symbols.is_empty()),
@@ -75,6 +89,7 @@ pub fn context(catalog: &Catalog, query: &Value, policy: Policy, project_instruc
         project_instructions,
         strict_text: true,
         precise_location: true,
+        reviewed_facts,
     };
     context.validate()?;
     Ok(context)

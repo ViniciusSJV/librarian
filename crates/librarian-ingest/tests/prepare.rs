@@ -213,3 +213,58 @@ fn defaults_keep_graph_engine_instructions() {
         serde_json::json!(librarian_graph_engine::DEFAULT_INSTRUCTIONS)
     );
 }
+
+/// A chain step: the target replaces the search, and a reviewed fact rides along as F1.
+fn chain_request() -> Value {
+    serde_json::json!({
+        "question": "Como reduzir alocações em ray_from_pixel?",
+        "top": 5, "depth": 1, "hits": 1, "radius": 0, "numbered_lines": true, "accept_diagnostics": true,
+        "targets": [{"path": "src/camera.rs", "symbol_name": "ray_from_pixel", "declaration_line": 18}],
+        "reviewed_facts": [{"id": "F1", "statement": "ray_from_pixel calcula direction na linha 21.",
+            "authorship": "revisão humana no Librarian Studio", "path": "src/camera.rs", "line": 21, "end_line": 21,
+            "citations": [{"path": "src/camera.rs", "start_line": 21, "end_line": 21,
+                "quote": "        let direction = normalize(subtract(pixel, &origin));"}]}]
+    })
+}
+
+#[test]
+fn chain_steps_take_targets_instead_of_search_and_recheck_reviewed_facts() {
+    let catalog = load();
+    let bytes = serde_json::to_vec_pretty(&chain_request()).unwrap();
+    let prepared = prepare::prepare(&catalog, &serde_json::from_slice(&bytes).unwrap()).unwrap();
+    let search: Value = serde_json::from_slice(&prepared.search).unwrap();
+    assert_eq!((search["version"].as_str(), search["status"].as_str()), (Some("chain-step-v1"), Some("chain")));
+    assert_eq!(search["hits"][0]["name"], "impl Camera::ray_from_pixel");
+    assert_eq!(search["terms"], serde_json::json!([]));
+    let dossier: Value = serde_json::from_str(&prepared.dossier).unwrap();
+    assert!(dossier["id"].as_str().unwrap().starts_with("chain:"));
+    let ids: Vec<&str> = dossier["facts"].as_array().unwrap().iter().map(|f| f["id"].as_str().unwrap()).collect();
+    assert_eq!(ids, ["E1", "F1"]);
+    assert_eq!(dossier["facts"][1]["authorship"], "revisão humana no Librarian Studio");
+    assert_eq!(prepared.query.selected_fact_ids(), ["E1", "F1"]);
+    // The F1 window lies inside E1's, so the export keeps one context block.
+    let query: Value = serde_json::from_str(prepared.query.query_json().unwrap()).unwrap();
+    assert_eq!(query["evidence"]["contexts"].as_array().unwrap().len(), 1);
+
+    let scratch = Scratch::new();
+    let dir = scratch.0.join("prepared");
+    prepare::write(&catalog, &bytes, &dir).unwrap();
+    prepare::verify(&catalog, &dir).unwrap();
+
+    let refused = |edit: &dyn Fn(&mut Value)| {
+        let mut request = chain_request();
+        edit(&mut request);
+        prepare::prepare(&catalog, &serde_json::from_value(request).unwrap()).err().unwrap().to_string()
+    };
+    // A quote that is no longer the edition's text, a fact outside the target, a missing
+    // declaration, repeated targets, and reviewed facts without a chain are all refused.
+    assert!(refused(&|r| r["reviewed_facts"][0]["citations"][0]["quote"] = "let direction = 1;".into()).contains("mudou"));
+    assert!(refused(&|r| { r["reviewed_facts"][0]["line"] = 15.into(); r["reviewed_facts"][0]["end_line"] = 15.into(); }).contains("outside"));
+    assert!(refused(&|r| r["targets"][0]["declaration_line"] = 5.into()).contains("no `ray_from_pixel`"));
+    assert!(refused(&|r| { let t = r["targets"][0].clone(); r["targets"].as_array_mut().unwrap().push(t); }).contains("distinct"));
+    assert!(refused(&|r| { r.as_object_mut().unwrap().remove("targets"); }).contains("only by a chain"));
+    // A source edited after the question makes the recorded chain step fail verification.
+    let edited = std::fs::read_to_string(dir.join("request.json")).unwrap().replace("pixel, &origin", "pixel, origin");
+    fs::write(dir.join("request.json"), edited).unwrap();
+    assert!(prepare::verify(&catalog, &dir).is_err());
+}
