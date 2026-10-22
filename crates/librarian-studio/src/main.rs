@@ -118,11 +118,6 @@ fn route(app: &App, req: &Request) -> Result<Response> {
             ok(store.ask(&field(&body, "key")?, &field(&body, "run")?, &question)?)
         }
         ("POST", "/api/send") => send(store, &req.json()?),
-        ("POST", "/api/check") => {
-            let body = req.json()?;
-            let (key, run, turn) = (field(&body, "key")?, field(&body, "run")?, field(&body, "turn")?);
-            ok(store.paste_answer(&key, &run, &turn, &field(&body, "text")?)?)
-        }
         ("DELETE", "/api/turn") => {
             let body = req.json()?;
             ok(store.delete_turn(&field(&body, "key")?, &field(&body, "run")?, &field(&body, "turn")?)?)
