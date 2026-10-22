@@ -204,6 +204,32 @@ aparece na resposta e no `check.json`.
 linhas reais da edition no formato pedido. O sentido continua pendente (`semantic_status:
 pending`, `accepted: false`) e é avaliado por você, com os critérios gravados antes.
 
+### Revisar e promover a fato (L4)
+
+Cada FACT de uma resposta em claims tem **Aprovar como fato** e **Recusar**. Ao aprovar,
+você escreve na nota por que o item é verdadeiro. O studio só promove o item se ele
+passar por quatro portões, refeitos no momento da aprovação:
+
+1. **Mecânico:** a resposta preservada (`response.txt`) é a mesma que foi conferida e
+   passa de novo na conferência, contra o contexto conferido agora.
+2. **Vínculo:** o envio tem o vínculo da L3, a pergunta ainda confere contra a edition, a
+   query dela é a que foi enviada e a cópia preservada no envio tem o hash do vínculo.
+3. **Revisão humana:** a sua decisão, com a nota, por item.
+4. **Registro:** o fato entra no **Acervo de fatos** do projeto com enunciado, arquivo,
+   linhas, trechos citados, autoria "revisão humana no Librarian Studio" e origem
+   (edition, execução, pergunta, envio, item, hashes do item e da resposta, vínculo).
+
+Só FACT é promovido; LACUNA, INFERENCE e HYPOTHESIS nunca viram fato. Uma resposta
+recusada na mecânica ou um envio sem vínculo mostram o motivo no lugar do botão. Um item
+já promovido mostra **Aprovado como fato F<n>** e **Revogar**: revogar registra a recusa
+e marca o fato como revogado, sem apagá-lo. Aprovar de novo cria outro número.
+
+O **Acervo de fatos** (no bloco do projeto) lista os fatos e os reconfere contra a
+edition da execução escolhida: **vigente** quando cada trecho citado continua igual, no
+mesmo arquivo e nas mesmas linhas; **desatualizado** quando não (o fato não é apagado nem
+procurado em outra linha); **revogado** quando você recusou depois. Vigente confere o
+texto, não o sentido. Os fatos ainda não entram nas perguntas; isso fica para a cadeia.
+
 ### Comparar respostas
 
 Quando uma pergunta em claims tem duas ou mais respostas (por exemplo, a mesma pergunta
@@ -355,6 +381,7 @@ projeto analisado.
 ```text
 .studio/projects/<projeto>-<hash>/
   project.json                     configurações editadas na página
+  facts.jsonl                      acervo de fatos: promoções e revogações, só acrescentadas
   runs/<AAAAMMDD-HHMMSS>/
     edition/  graph-v2.json  run.json
     last-turn.txt                  maior número de pergunta já usado (não é reutilizado)
@@ -366,7 +393,8 @@ projeto analisado.
       prepared/                    request.json, search.json, bundle/ (dossier, question, query, origin)
       claims/                      context.json e query.json (só no formato claims)
       sends/<NN>-<provedor>/       query, request, resposta bruta e texto, Modelfile usado,
-                                   send.json (com o vínculo) e, em claims, check.json
+                                   send.json (com o vínculo) e, em claims, check.json e
+                                   reviews.jsonl (as suas decisões por item)
 ```
 
 Para começar do zero, apague a pasta do projeto em `.studio/projects/`.
