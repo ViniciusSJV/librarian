@@ -24,6 +24,8 @@ pub struct Location {
     pub operation_end_line: usize,
 }
 
+pub(super) const PRECISE_INSTRUCTION: &str = "Com precise_location=true, operation_start_line e operation_end_line apontam as linhas do corpo onde a operação acontece, depois da declaração. Uma operação que começa na linha da declaração, ou que cobre todo o corpo até a última linha (a função inteira), é recusada, exceto quando a função ou o seu corpo têm uma linha só. Aponte só as linhas da operação perguntada.";
+
 pub(super) fn validate_symbols(e: &Evidence) -> Result<(), String> {
     let mut identities = HashSet::new();
     for s in &e.symbols {
@@ -112,6 +114,18 @@ pub(super) fn check(context: &Context, claim: &Claim) -> Vec<&'static str> {
         || l.operation_end_line < l.operation_start_line
     {
         issues.push("location_operation_out_of_range");
+    }
+    // "The operation is the whole function" locates nothing: it repeats what search found.
+    // Starting at the declaration, or covering every body line after it, both say that.
+    // A one-line symbol has nothing but its declaration; a one-line body has nothing narrower.
+    let body_lines = s.end_line - s.declaration_line;
+    let whole_body = l.operation_start_line <= s.declaration_line + 1 && l.operation_end_line >= s.end_line;
+    if context.precise_location {
+        if body_lines > 0 && l.operation_start_line == s.declaration_line {
+            issues.push("location_operation_includes_declaration");
+        } else if body_lines > 1 && whole_body {
+            issues.push("location_operation_is_whole_body");
+        }
     }
     // Exact quote validation is performed by the main checker; coverage alone cannot pass it.
     let covered = |start, end| {
