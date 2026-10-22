@@ -677,6 +677,20 @@ Verificação: testes do vínculo em prosa e em claims, da query e dos critério
 
 Limites: o vínculo é registro do studio, sem assinatura. Ele não é snapshot atômico, porque a edition pode mudar depois do envio, e não diz nada do sentido da resposta. A CLI `send_ollama` continua sem vínculo. Envios anteriores não têm `link`.
 
+### DeepSeek local no Ollama — primeiro teste (22/10/2026)
+
+Modelo escolhido pelo usuário: `deepseek-coder-v2:16b` (DeepSeek Coder V2 Lite, MoE, cerca de 8,9 GB), numa RTX 5070 de 12 GB. Ele usa o `verificavel-deepseek.Modelfile`, cópia do `verificavel` com outro `FROM` e o mesmo SYSTEM e parâmetros, para que só o modelo mude. Teste numa cópia do `.studio` (renderer), formato claims, uma execução de cada:
+
+| Pergunta | DeepSeek Coder V2 16B | qwen 14B | haiku |
+| --- | --- | --- | --- |
+| Esfera: interseção com o raio | recusado: função inteira 32–50 (`location_operation_includes_declaration`) e `quote_mismatch` (diz 32–50 e copia a partir da 33), 28,8 s | recusado: função inteira 32–50 (`location_operation_is_whole_body`) | aprovado: 33–36 e 38 |
+| Câmera: direção dos raios | recusado: `location_declaration_not_cited` e `quote_mismatch` (diz 86–89 e copia 86–88), 7,0 s | recusado: `location_declaration_not_cited`, 15,7 s | aprovado: linha 86 com a declaração 75 citada, US$ 0,0031 |
+
+- A comparação (L2b) da câmera junta os três em `ray_from_pixel` (declaração 75): qwen e haiku iguais na linha 86, o DeepSeek parcial (86–89).
+- O DeepSeek acertou o lugar nas duas perguntas, mas não seguiu duas regras do SYSTEM: citar a declaração em cada item e fazer a faixa citada bater com o trecho copiado. O erro de faixa é novo: o qwen não errou a contagem de linhas nessas perguntas.
+- Foi mais rápido que o qwen na câmera (7,0 s contra 15,7 s). A entrada não foi truncada (4.156 tokens de cerca de 3.855 estimados, `num_ctx` 16384).
+- Uma execução de cada não mede tendência. Até aqui, nenhum modelo local passou na mecânica do formato claims.
+
 ### Roteiro seguinte (aprovado em 22/10/2026)
 
 O objetivo é encadear tarefas entre Modelfiles e provedores, por exemplo o `analista` (Ollama) aponta as funções, o `performance` (DeepSeek local no Ollama) propõe a mudança e o `impacto` (Claude) relata o impacto. Uma etapa passa para a seguinte só o que foi conferido, nunca o texto livre.
