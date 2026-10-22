@@ -23,7 +23,7 @@ pub const CLAUDE_MODELS: [&str; 3] = ["sonnet", "opus", "haiku"];
 /// Providers shown on the page; `implemented: false` entries are listed but refused.
 pub fn providers() -> Value {
     json!([
-        { "id": "manual", "label": "Nenhum: mostrar o que seria enviado", "implemented": true },
+        { "id": "manual", "label": "Nenhum (só preparar para copiar)", "implemented": true },
         { "id": "ollama", "label": "Ollama (Modelfile)", "implemented": true },
         { "id": "claude-cli", "label": "Claude (Claude Code CLI)", "implemented": true },
         { "id": "claude-api", "label": "Claude (API) — em breve", "implemented": false },
