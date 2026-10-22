@@ -19,9 +19,12 @@ pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 pub const SCHEMA_VERSION: u32 = 1;
 /// Frozen v1 profile (Rust only); still read and reproducible with `generate_with_profile`.
 pub const EXTRACTOR: &str = "librarian-ingest/0.1.0;syn/3.0.5;rust-structural-v1";
-/// Current profile: Rust (same adapter as v1) and Python.
+/// Rust (same adapter as v1) and Python; still read and reproducible with `generate_with_profile`.
 pub const EXTRACTOR_V2: &str =
     "librarian-ingest/0.2.0;syn/3.0.5;rustpython-parser/0.4.0;rust-structural-v1;python-structural-v1";
+/// Current profile (G6): fields as symbols, attribute accesses, and calls and bases as name candidates.
+pub const EXTRACTOR_V3: &str =
+    "librarian-ingest/0.3.0;syn/3.0.5;rustpython-parser/0.4.0;rust-structural-v2;python-structural-v2";
 const RECORDS: [&str; 4] = [
     "sources.jsonl",
     "symbols.jsonl",

@@ -8,7 +8,14 @@ use syn::{
     visit::{self, Visit},
 };
 
-pub(crate) struct Rust;
+/// `g6` adds named struct fields, field accesses and call candidates (profile v3).
+/// Without it, records and occurrences are exactly those of the frozen v1 adapter.
+pub(crate) struct Rust {
+    g6: bool,
+}
+
+pub(crate) static RUST: Rust = Rust { g6: false };
+pub(crate) static RUST_V3: Rust = Rust { g6: true };
 
 impl Extractor for Rust {
     fn extract(&self, source: &Source, bytes: &[u8]) -> Extraction {
@@ -30,6 +37,7 @@ impl Extractor for Rust {
             Err(error) => return failure("rust_parse_error", error.to_string()),
         };
         let mut visitor = Declarations {
+            g6: self.g6,
             source,
             bytes,
             offset,
@@ -53,6 +61,7 @@ impl Extractor for Rust {
             return vec![];
         };
         let mut observer = Occurrences {
+            g6: self.g6,
             offset,
             found: vec![],
         };
@@ -62,6 +71,14 @@ impl Extractor for Rust {
 
     fn candidate_kinds(&self) -> &'static [&'static str] {
         &["struct", "enum", "trait", "type", "union"]
+    }
+
+    fn candidate_kinds_for(&self, occurrence: &str) -> &'static [&'static str] {
+        match (self.g6, occurrence) {
+            (true, "call_observed" | "method_call_observed") => &["function", "method", "trait_method"],
+            (true, "attribute_access") => &["field"],
+            _ => self.candidate_kinds(),
+        }
     }
 
     fn navigation_kinds(&self) -> &'static [&'static str] {
@@ -78,6 +95,7 @@ fn parse(text: &str) -> syn::Result<(syn::File, usize)> {
 }
 
 struct Declarations<'a> {
+    g6: bool,
     source: &'a Source,
     bytes: &'a [u8],
     offset: usize,
@@ -148,6 +166,14 @@ impl<'ast> Visit<'ast> for Declarations<'_> {
         if let Some((kind, name, attrs)) = declaration {
             self.add(kind, name.clone(), item.span(), attrs);
             self.scope.push(name);
+            // Named fields are declarations of their struct; tuple fields have no name to match.
+            if let (true, syn::Item::Struct(s)) = (self.g6, item) {
+                for field in &s.fields {
+                    if let Some(ident) = &field.ident {
+                        self.add("field", ident.to_string(), field.span(), &field.attrs);
+                    }
+                }
+            }
             visit::visit_item(self, item);
             self.scope.pop();
         } else {
@@ -174,6 +200,7 @@ impl<'ast> Visit<'ast> for Declarations<'_> {
 
 /// Written types, returns, calls and bindings. Calls are never linked to presumed targets.
 struct Occurrences {
+    g6: bool,
     offset: usize,
     found: Vec<Occurrence>,
 }
@@ -203,13 +230,25 @@ impl<'ast> Visit<'ast> for Occurrences {
         visit::visit_return_type(self, value);
     }
     fn visit_expr_call(&mut self, value: &'ast syn::ExprCall) {
-        self.push("call_observed", value.func.span(), None);
+        // The last path segment is the written name (`Ray::new` -> `new`); never a resolved callee.
+        let name = match (self.g6, value.func.as_ref()) {
+            (true, syn::Expr::Path(p)) => p.path.segments.last().map(|s| s.ident.to_string()),
+            _ => None,
+        };
+        self.push("call_observed", value.func.span(), name);
         visit::visit_expr_call(self, value);
     }
     fn visit_expr_method_call(&mut self, value: &'ast syn::ExprMethodCall) {
         // Keep receiver and arguments; no receiver type is inferred.
-        self.push("method_call_observed", value.span(), None);
+        let name = self.g6.then(|| value.method.to_string());
+        self.push("method_call_observed", value.span(), name);
         visit::visit_expr_method_call(self, value);
+    }
+    fn visit_expr_field(&mut self, value: &'ast syn::ExprField) {
+        if let (true, syn::Member::Named(ident)) = (self.g6, &value.member) {
+            self.push("attribute_access", value.span(), Some(ident.to_string()));
+        }
+        visit::visit_expr_field(self, value);
     }
     fn visit_local(&mut self, value: &'ast syn::Local) {
         self.push("local_binding", value.pat.span(), None);

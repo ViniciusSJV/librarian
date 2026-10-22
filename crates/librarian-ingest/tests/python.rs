@@ -1,7 +1,7 @@
 //! G5: Python enters only through its extractor and the v2 registry profile.
 //! A mixed Rust + Python project goes through edition, graph, search and prepare unchanged.
 use librarian_ingest::{
-    generate,
+    generate_with_profile,
     graph::{v2, Graph},
     prepare::{self, Request},
     search::{Lexicon, SearchIndex},
@@ -61,7 +61,8 @@ impl Project {
         let config = Config { project: "mixed".into(), inputs: vec!["src".into(), "pkg".into()] };
         let edition = self.0.join("edition");
         let _ = fs::remove_dir_all(&edition);
-        generate(&self.0, &config, &edition).unwrap();
+        // G5 is the v2 profile; the current profile (v3, G6) is covered by tests/g6.rs.
+        generate_with_profile(EXTRACTOR_V2, &self.0, &config, &edition).unwrap();
         Catalog::load(&edition).unwrap()
     }
 }

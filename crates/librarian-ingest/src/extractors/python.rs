@@ -5,7 +5,14 @@ use crate::{hash, Chunk, Diagnostic, Source, Symbol};
 use rustpython_ast::{self as ast, text_size::TextRange, Ranged, Visitor};
 use rustpython_parser::Parse;
 
-pub(crate) struct Python;
+/// `g6` adds fields, attribute accesses, and calls and bases as candidates (profile v3).
+/// Without it, records and occurrences are exactly those of the v2 adapter.
+pub(crate) struct Python {
+    g6: bool,
+}
+
+pub(crate) static PYTHON: Python = Python { g6: false };
+pub(crate) static PYTHON_V3: Python = Python { g6: true };
 
 impl Extractor for Python {
     fn extract(&self, source: &Source, bytes: &[u8]) -> Extraction {
@@ -26,7 +33,7 @@ impl Extractor for Python {
             Ok(parsed) => parsed,
             Err(error) => return failure("python_parse_error", error.to_string()),
         };
-        let mut walker = Walker::new(Some(source), bytes, offset);
+        let mut walker = Walker::new(self.g6, Some(source), bytes, offset);
         for stmt in suite {
             walker.visit_stmt(stmt);
         }
@@ -44,7 +51,7 @@ impl Extractor for Python {
         let Ok((suite, offset)) = parse(text) else {
             return vec![];
         };
-        let mut walker = Walker::new(None, bytes, offset);
+        let mut walker = Walker::new(self.g6, None, bytes, offset);
         for stmt in suite {
             walker.visit_stmt(stmt);
         }
@@ -53,6 +60,17 @@ impl Extractor for Python {
 
     fn candidate_kinds(&self) -> &'static [&'static str] {
         &["class"]
+    }
+
+    fn candidate_kinds_for(&self, occurrence: &str) -> &'static [&'static str] {
+        match (self.g6, occurrence) {
+            // Calling a class constructs it, so classes are candidates of plain calls too.
+            (true, "call_observed") => &["function", "method", "class"],
+            (true, "method_call_observed") => &["method", "function"],
+            (true, "attribute_access") => &["field"],
+            (true, "base_class") => &["class"],
+            _ => self.candidate_kinds(),
+        }
     }
 
     /// A class spans all its methods, like a Rust impl; its methods are the answers.
@@ -69,6 +87,7 @@ fn parse(text: &str) -> Result<(ast::Suite, usize), rustpython_parser::ParseErro
 
 /// One pass collects declarations (when a source is given) and occurrences.
 struct Walker<'a> {
+    g6: bool,
     source: Option<&'a Source>,
     bytes: &'a [u8],
     offset: usize,
@@ -77,11 +96,13 @@ struct Walker<'a> {
     symbols: Vec<Symbol>,
     chunks: Vec<Chunk>,
     found: Vec<Occurrence>,
+    /// Fields already declared, by qualified name: a field is declared once per class.
+    fields: std::collections::BTreeSet<String>,
 }
 
 impl<'a> Walker<'a> {
-    fn new(source: Option<&'a Source>, bytes: &'a [u8], offset: usize) -> Self {
-        Self { source, bytes, offset, scope: vec![], symbols: vec![], chunks: vec![], found: vec![] }
+    fn new(g6: bool, source: Option<&'a Source>, bytes: &'a [u8], offset: usize) -> Self {
+        Self { g6, source, bytes, offset, scope: vec![], symbols: vec![], chunks: vec![], found: vec![], fields: Default::default() }
     }
 
     fn span(&self, range: TextRange) -> (usize, usize) {
@@ -90,6 +111,11 @@ impl<'a> Walker<'a> {
 
     /// The parsed range starts at `def`/`class`; decorators belong to the declaration too.
     fn declare(&mut self, kind: &str, name: &str, range: TextRange, decorators: &[ast::Expr]) {
+        let scope: Vec<String> = self.scope.iter().map(|(n, _)| n.clone()).collect();
+        self.declare_in(&scope, kind, name, range, decorators);
+    }
+
+    fn declare_in(&mut self, scope: &[String], kind: &str, name: &str, range: TextRange, decorators: &[ast::Expr]) {
         let Some(source) = self.source else { return };
         let (mut start, end) = self.span(range);
         if let Some(first) = decorators.first() {
@@ -97,7 +123,7 @@ impl<'a> Walker<'a> {
             start = self.bytes[..at].iter().rposition(|&b| b == b'@').unwrap_or(start).min(start);
         }
         let id = format!("{}:{}:{}:{}", source.id, kind, start, end);
-        let mut qualified: Vec<&str> = self.scope.iter().map(|(n, _)| n.as_str()).collect();
+        let mut qualified: Vec<&str> = scope.iter().map(String::as_str).collect();
         qualified.push(name);
         // A naming convention observed (pytest), not evidence that a test ran.
         let is_test = name.starts_with("test") || name.starts_with("Test")
@@ -129,6 +155,31 @@ impl<'a> Walker<'a> {
             self.push("declared_return", returns.range(), None);
             self.annotation(returns);
         }
+    }
+
+    /// G6 fields: names assigned in a class body, and `self.<name>` assigned in its `__init__`.
+    /// Returns whether the target declares a field, so it is not observed as an access of itself.
+    fn field(&mut self, target: &ast::Expr, statement: TextRange) -> bool {
+        if !self.g6 {
+            return false;
+        }
+        let depth = self.scope.len();
+        let in_class_body = self.scope.last().is_some_and(|(_, class)| *class);
+        let in_init = depth >= 2 && self.scope[depth - 1].0 == "__init__" && !self.scope[depth - 1].1 && self.scope[depth - 2].1;
+        let name = match target {
+            ast::Expr::Name(n) if in_class_body => n.id.to_string(),
+            ast::Expr::Attribute(a) if in_init && matches!(a.value.as_ref(), ast::Expr::Name(n) if n.id.as_str() == "self") => {
+                a.attr.to_string()
+            }
+            _ => return false,
+        };
+        let class: Vec<String> = self.scope[..if in_init { depth - 1 } else { depth }].iter().map(|(n, _)| n.clone()).collect();
+        // A later assignment of the same field is a write to it, not a second declaration.
+        if self.fields.insert(format!("{}.{}", class.join("."), name)) {
+            self.declare_in(&class, "field", &name, statement, &[]);
+            return true;
+        }
+        false
     }
 
     fn push(&mut self, kind: &'static str, range: TextRange, candidate: Option<String>) {
@@ -192,8 +243,13 @@ impl Visitor for Walker<'_> {
 
     fn visit_stmt_class_def(&mut self, node: ast::StmtClassDef) {
         self.declare("class", &node.name, node.range, &node.decorator_list);
+        // G6: bases are their own occurrence kind, so inheritance is told apart from annotations.
         for base in &node.bases {
-            self.annotation(base);
+            match (self.g6, base) {
+                (true, ast::Expr::Name(n)) => self.push("base_class", n.range, Some(n.id.to_string())),
+                (true, ast::Expr::Attribute(a)) => self.push("base_class", a.range, Some(a.attr.to_string())),
+                _ => self.annotation(base),
+            }
         }
         self.scope.push((node.name.to_string(), true));
         self.generic_visit_stmt_class_def(node);
@@ -202,13 +258,41 @@ impl Visitor for Walker<'_> {
 
     fn visit_stmt_assign(&mut self, node: ast::StmtAssign) {
         node.targets.iter().for_each(|t| self.binding(t));
-        self.generic_visit_stmt_assign(node);
+        if !self.g6 {
+            return self.generic_visit_stmt_assign(node);
+        }
+        // A target that declares a field is not also an access to that field. With several
+        // targets (`x = y = 0`) each field spans its own name, so their records stay distinct.
+        let several = node.targets.len() > 1;
+        for target in node.targets {
+            let range = if several { target.range() } else { node.range };
+            if !self.field(&target, range) {
+                self.visit_expr(target);
+            }
+        }
+        self.visit_expr(*node.value);
     }
 
     fn visit_stmt_ann_assign(&mut self, node: ast::StmtAnnAssign) {
         self.binding(&node.target);
         self.annotation(&node.annotation);
-        self.generic_visit_stmt_ann_assign(node);
+        if !self.g6 {
+            return self.generic_visit_stmt_ann_assign(node);
+        }
+        // The annotation is already a type reference; only target and value are visited.
+        if !self.field(&node.target, node.range) {
+            self.visit_expr(*node.target);
+        }
+        if let Some(value) = node.value {
+            self.visit_expr(*value);
+        }
+    }
+
+    fn visit_expr_attribute(&mut self, node: ast::ExprAttribute) {
+        if self.g6 {
+            self.push("attribute_access", node.range, Some(node.attr.to_string()));
+        }
+        self.generic_visit_expr_attribute(node);
     }
 
     fn visit_stmt_for(&mut self, node: ast::StmtFor) {
@@ -218,11 +302,31 @@ impl Visitor for Walker<'_> {
 
     fn visit_expr_call(&mut self, node: ast::ExprCall) {
         // Keep receiver and arguments; no receiver type or target is inferred.
-        match node.func.as_ref() {
-            ast::Expr::Attribute(_) => self.push("method_call_observed", node.range, None),
-            func => self.push("call_observed", func.range(), None),
+        if !self.g6 {
+            match node.func.as_ref() {
+                ast::Expr::Attribute(_) => self.push("method_call_observed", node.range, None),
+                func => self.push("call_observed", func.range(), None),
+            }
+            return self.generic_visit_expr_call(node);
         }
-        self.generic_visit_expr_call(node);
+        // G6: the written callee name is a candidate. A called attribute is a call, not also an
+        // attribute access, so only its receiver is visited.
+        match *node.func {
+            ast::Expr::Attribute(a) => {
+                self.push("method_call_observed", node.range, Some(a.attr.to_string()));
+                self.visit_expr(*a.value);
+            }
+            func => {
+                let name = match &func {
+                    ast::Expr::Name(n) => Some(n.id.to_string()),
+                    _ => None,
+                };
+                self.push("call_observed", func.range(), name);
+                self.visit_expr(func);
+            }
+        }
+        node.args.into_iter().for_each(|a| self.visit_expr(a));
+        node.keywords.into_iter().for_each(|k| self.visit_keyword(k));
     }
 
     // The generated visitor leaves these empty; without them nested calls and defs are missed.

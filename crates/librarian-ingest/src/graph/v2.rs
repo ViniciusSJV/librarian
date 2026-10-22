@@ -18,6 +18,10 @@ pub struct Node {
     /// Language of the source the node belongs to, as classified by the edition profile.
     pub language: String,
     pub label: String,
+    /// Occurrence whose written name matched more declarations than the profile links:
+    /// how many. Absent in graphs of profiles before G6 and when candidates were drawn.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ambiguous_candidates: Option<usize>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -76,6 +80,7 @@ impl Graph {
                     kind,
                     language,
                     label: n.label.clone(),
+                    ambiguous_candidates: n.ambiguous_candidates,
                 };
                 (id.clone(), node)
             })
