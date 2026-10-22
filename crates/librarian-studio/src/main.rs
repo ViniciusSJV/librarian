@@ -25,8 +25,11 @@ struct App {
     viewer: PathBuf,
     store: Store,
     /// Last graph parsed for "Onde é usado?", by (project, run): large graphs take seconds to parse.
-    graph: Mutex<Option<((String, String), Arc<v2::Graph>)>>,
+    graph: Mutex<Option<CachedGraph>>,
 }
+
+/// (project key, run id) and that run's parsed graph-v2.
+type CachedGraph = ((String, String), Arc<v2::Graph>);
 
 fn main() {
     let mut port = 8765u16;
