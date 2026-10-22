@@ -104,6 +104,10 @@
   .chip { display: inline-block; margin: 2px 4px 2px 0; padding: 0 7px; border: 1px solid var(--border); border-radius: 999px; font-size: 11px; }
   .chip.hit { border-color: var(--cat-symbol); }
   .chip.miss { color: var(--text-muted); text-decoration: line-through; }
+  .verdict { font-weight: 600; }
+  .verdict.passed { color: var(--cat-symbol); }
+  .claims { margin: 6px 0 0; padding-left: 18px; }
+  .claims li { margin-bottom: 6px; }
   dialog { width: min(720px, calc(100vw - 32px)); max-height: calc(100vh - 32px); padding: 16px; border: 1px solid var(--border);
     border-radius: 12px; background: var(--surface-1); color: var(--text-primary); }
   dialog::backdrop { background: rgb(0 0 0 / .4); }
@@ -174,7 +178,10 @@
           </div>
           <label class="row" style="margin-top: 8px"><input id="numbered" type="checkbox"> Linhas numeradas no contexto</label>
           <label class="row"><input id="acceptDiag" type="checkbox"> Aceitar edition com diagnósticos</label>
-          <label class="field"><span>Instruções da query (uma por linha; vazio usa as padrão do Graph Engine)</span><textarea id="instructions" rows="6"></textarea></label>
+          <label class="field" title="Fixado em cada pergunta no momento em que ela é feita"><span>Formato da resposta</span><select id="answerFormat"><option value="claims">Claims: JSON conferido contra a edition</option><option value="prose">Prosa: query do Graph Engine, conferência à mão</option></select></label>
+          <label class="row"><input id="allowInference" type="checkbox"> Claims: permitir INFERENCE (exige premissas)</label>
+          <label class="row"><input id="allowHypothesis" type="checkbox"> Claims: permitir HYPOTHESIS (exige plano de verificação)</label>
+          <label class="field"><span>Instruções da query (uma por linha; vazio usa as padrão do Graph Engine; em claims vão à parte, como <code>project_instructions</code>)</span><textarea id="instructions" rows="6"></textarea></label>
           <label class="field"><span>Critérios prévios (gravados em cada pergunta antes de qualquer resposta)</span><textarea id="criteria" rows="6"></textarea></label>
           <div class="row" style="margin-top: 8px">
             <button id="saveSettings">Salvar configurações</button>
@@ -899,6 +906,9 @@ function renderProject() {
   for (const [id, field] of [['#top', 'top'], ['#depth', 'depth'], ['#hits', 'hits'], ['#radius', 'radius']]) $(id).value = settings[field];
   $('#numbered').checked = settings.numbered_lines;
   $('#acceptDiag').checked = settings.accept_diagnostics;
+  $('#answerFormat').value = settings.answer_format ?? 'prose';
+  $('#allowInference').checked = settings.allow_inference ?? false;
+  $('#allowHypothesis').checked = settings.allow_hypothesis ?? false;
   $('#instructions').value = (settings.instructions ?? []).join('\n');
   $('#criteria').value = settings.criteria ?? '';
   $('#runs').replaceChildren(
@@ -921,6 +931,8 @@ function collectSettings() {
     criteria: $('#criteria').value.trim() ? $('#criteria').value : null,
     top: number('#top'), depth: number('#depth'), hits: number('#hits'), radius: number('#radius'),
     numbered_lines: $('#numbered').checked, accept_diagnostics: $('#acceptDiag').checked,
+    answer_format: $('#answerFormat').value,
+    allow_inference: $('#allowInference').checked, allow_hypothesis: $('#allowHypothesis').checked,
   };
 }
 
@@ -1106,14 +1118,17 @@ function renderTurn(t) {
     t.prepare_error ? el('p', { className: 'error', textContent: t.prepare_error.includes('accept_diagnostics')
       ? 'Query não preparada: a edition tem diagnósticos (arquivos que o parser não leu). Para perguntar mesmo assim, marque "Aceitar edition com diagnósticos" em Léxico, busca e instruções e pergunte de novo.'
       : `Query não preparada: ${t.prepare_error}` }) : null,
+    t.claims_error ? el('p', { className: 'error', textContent: `Query de claims não montada: ${t.claims_error}` }) : null,
     t.criteria ? el('details', {},
       el('summary', { textContent: `Critérios prévios (gravados antes da resposta · sha256 ${t.criteria_sha256?.slice(0, 12)}…)` }),
       el('pre', { textContent: t.criteria })) : el('p', { className: 'muted', textContent: 'Sem critérios prévios gravados para esta pergunta.' }),
     t.query ? el('details', { open: Boolean(t.showQuery) },
-      el('summary', { textContent: `O que é enviado ao LLM (query.json, ${new Blob([t.query]).size} bytes, ~${estimateTokens(t.query)} tokens)` }),
+      el('summary', { textContent: `O que é enviado ao LLM (${t.answer_format === 'claims' ? 'claims/query.json' : 'query.json'}, ${new Blob([t.query]).size} bytes, ~${estimateTokens(t.query)} tokens)` }),
       el('p', { className: 'muted', textContent: 'No Ollama vai como prompt e o SYSTEM vem do Modelfile; no Claude vai por stdin e o SYSTEM vira o system prompt. Conferida contra a edition imediatamente antes de cada envio.' }),
+      t.answer_format === 'claims' ? el('p', { className: 'muted', textContent: 'Formato claims: a evidência são as janelas do bundle conferido, com os símbolos da edition. Cada resposta passa pela conferência mecânica.' }) : null,
       el('pre', { textContent: t.query })) : null,
     ...(t.sends ?? []).map(reply),
+    t.answer_format === 'claims' && t.query ? pasteBox(t) : null,
     t.pending ? el('div', { className: 'bubble reply muted', textContent: `Enviando para ${t.pending}…` }) : null,
     t.sendError ? el('p', { className: 'error', textContent: t.sendError }) : null,
     el('div', { className: 'row', style: 'margin-top: 8px' },
@@ -1143,14 +1158,58 @@ async function deleteTurn(turn) {
 }
 
 function reply(s) {
-  const meta = [providerLabel(s.provider), s.modelfile ? `Modelfile ${s.modelfile}` : null, s.model, s.state,
+  const meta = [s.state === 'pasted' ? 'Resposta colada à mão' : providerLabel(s.provider), s.modelfile ? `Modelfile ${s.modelfile}` : null, s.model, s.state,
     s.cost_usd != null ? `US$ ${Number(s.cost_usd).toFixed(4)}` : null, s.elapsed_ms != null ? `${(s.elapsed_ms / 1000).toFixed(1)} s` : null];
   return el('div', { className: 'bubble reply' },
     el('div', { className: 'muted', textContent: meta.filter(Boolean).join(' · ') }),
     s.input?.truncation_suspected ? el('div', { className: 'error', style: 'margin-top: 6px', textContent: s.input.note }) : null,
-    s.text ? el('div', { style: 'margin-top: 6px', textContent: s.text })
+    s.check ? checkView(s.check) : null,
+    s.text ? (s.check?.claims ? el('details', {}, el('summary', { textContent: 'Resposta bruta' }), el('pre', { textContent: s.text }))
+      : el('div', { style: 'margin-top: 6px', textContent: s.text }))
       : el('div', { className: 'error', style: 'margin-top: 6px', textContent: s.diagnostic ?? 'Sem texto na resposta.' }),
     el('div', { className: 'muted', style: 'margin-top: 6px; font-size: 11px', textContent: `${s.state === 'completed' ? 'completed descreve o transporte; ' : ''}avaliação semântica pendente. Guardado em ${s.directory}` }));
+}
+
+// Mechanical verdict and the claims as the checker parsed them; meaning is still for review.
+function checkView(c) {
+  const passed = c.report.mechanical_status === 'passed';
+  const issues = c.report.issues.map(i => `${i.claim_id ?? 'resposta'}: ${i.code}`);
+  const lines = x => `${x.path}:${x.start_line}${x.end_line !== x.start_line ? `–${x.end_line}` : ''}`;
+  const claim = k => el('li', {},
+    el('span', { className: 'tag', textContent: k.kind }), ' ', k.text,
+    k.location ? el('div', { className: 'muted mono', textContent: `${k.location.symbol_name} (declaração ${k.location.declaration_line}) · operação ${k.location.path}:${k.location.operation_start_line}–${k.location.operation_end_line}` }) : null,
+    k.citations.length ? el('div', { className: 'muted mono', textContent: `cita ${k.citations.map(x => `${x.evidence_id} ${lines(x)}`).join(', ')}` }) : null,
+    k.premises.length ? el('div', { className: 'muted', textContent: `premissas: ${k.premises.join(' · ')}` }) : null,
+    k.verification_plan ? el('div', { className: 'muted', textContent: `como verificar: ${k.verification_plan}` }) : null);
+  return el('div', { style: 'margin-top: 6px' },
+    el('div', {},
+      el('span', { className: `verdict ${passed ? 'passed' : 'error'}`, textContent: passed ? 'Mecânica: aprovada' : 'Mecânica: recusada' }),
+      el('span', { className: 'muted', textContent: ` · semântica: ${c.report.semantic_status === 'pending' ? 'pendente' : c.report.semantic_status}${c.extracted_from_fence ? ' · JSON extraído de uma cerca de Markdown' : ''}` })),
+    issues.length ? el('ul', { className: 'claims error' }, ...issues.map(i => el('li', { className: 'mono', textContent: i }))) : null,
+    c.claims ? el('ol', { className: 'claims' }, ...c.claims.map(claim)) : null,
+    el('div', { className: 'muted', style: 'font-size: 11px', textContent: c.limits }));
+}
+
+function pasteBox(t) {
+  const area = el('textarea', { className: 'code', rows: 4, value: t.pasteText ?? '',
+    placeholder: 'Cole aqui a resposta de um envio manual (o JSON de claims)' });
+  area.oninput = () => { t.pasteText = area.value; };
+  const button = el('button', { textContent: 'Conferir resposta' });
+  button.onclick = async () => {
+    if (!area.value.trim()) return;
+    t.sendError = null;
+    try {
+      const result = await api('POST', '/api/check', { key: studio.project.key, run: studio.run, turn: t.id, text: area.value });
+      (t.sends ??= []).push(result);
+      t.pasteText = '';
+    } catch (error) {
+      t.sendError = error.message;
+    }
+    renderTurns();
+  };
+  return el('details', { open: $('#provider').value === 'manual' || Boolean(t.pasteText) },
+    el('summary', { textContent: 'Colar uma resposta para conferir' }), area,
+    el('div', { className: 'row', style: 'margin-top: 6px' }, button));
 }
 
 // ---- lexicon proposals and profile export
