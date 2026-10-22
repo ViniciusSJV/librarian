@@ -74,6 +74,7 @@ pub fn context(catalog: &Catalog, query: &Value, policy: Policy, project_instruc
         limits,
         project_instructions,
         strict_text: true,
+        precise_location: true,
     };
     context.validate()?;
     Ok(context)
@@ -133,13 +134,22 @@ fn pretty(value: &impl serde::Serialize) -> Result<Vec<u8>> {
     Ok(bytes)
 }
 
-/// `strict_text` comes from the recorded context, so questions asked before it keep their bytes.
-fn derive(catalog: &Catalog, turn: &Path, policy: Policy, project_instructions: Vec<String>, strict_text: bool) -> Result<(Vec<u8>, Vec<u8>)> {
+/// Opt-in rules of the claims contract. New questions get all of them; a recorded question
+/// keeps the ones it was asked with, so its bytes still verify.
+struct Rules {
+    strict_text: bool,
+    precise_location: bool,
+}
+
+const CURRENT: Rules = Rules { strict_text: true, precise_location: true };
+
+fn derive(catalog: &Catalog, turn: &Path, policy: Policy, project_instructions: Vec<String>, rules: Rules) -> Result<(Vec<u8>, Vec<u8>)> {
     let bundle = turn.join("prepared/bundle");
     let query: Value = serde_json::from_slice(&fs::read(bundle.join("query.json"))?)?;
     let question = fs::read_to_string(bundle.join("question.txt"))?;
     let mut context = context(catalog, &query, policy, project_instructions)?;
-    context.strict_text = strict_text;
+    context.strict_text = rules.strict_text;
+    context.precise_location = rules.precise_location;
     let mut claims_query = claims::query(&context, &question)?.into_bytes();
     claims_query.push(b'\n');
     Ok((pretty(&context)?, claims_query))
@@ -147,7 +157,7 @@ fn derive(catalog: &Catalog, turn: &Path, policy: Policy, project_instructions: 
 
 /// Writes claims/context.json and claims/query.json from a bundle already prepared and verified.
 pub fn write(catalog: &Catalog, turn: &Path, policy: Policy, project_instructions: Vec<String>) -> Result<()> {
-    let (context, query) = derive(catalog, turn, policy, project_instructions, true)?;
+    let (context, query) = derive(catalog, turn, policy, project_instructions, CURRENT)?;
     let dir = turn.join(DIR);
     fs::create_dir(&dir)?;
     fs::write(dir.join("context.json"), context)?;
@@ -161,7 +171,7 @@ pub fn verify(catalog: &Catalog, turn: &Path) -> Result<Context> {
     let dir = turn.join(DIR);
     let recorded: Context = serde_json::from_slice(&fs::read(dir.join("context.json"))?)?;
     let policy = Policy { allow_inference: recorded.policy.allow_inference, allow_hypothesis: recorded.policy.allow_hypothesis };
-    let (context, query) = derive(catalog, turn, policy, recorded.project_instructions.clone(), recorded.strict_text)?;
+    let (context, query) = derive(catalog, turn, policy, recorded.project_instructions.clone(), Rules { strict_text: recorded.strict_text, precise_location: recorded.precise_location })?;
     if fs::read(dir.join("context.json"))? != context || fs::read(dir.join("query.json"))? != query {
         return Err("Contexto ou query de claims difere do bundle conferido; nada foi enviado".into());
     }

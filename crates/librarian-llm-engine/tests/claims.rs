@@ -435,3 +435,48 @@ fn strict_text_rejects_lines_and_code_the_claim_does_not_cite() {
     assert!(q["instructions"].as_array().unwrap().last().unwrap().as_str().unwrap().starts_with("Com strict_text=true"));
     assert!(serde_json::from_str::<Value>(&claims::query(&context(), "Where?").unwrap()).unwrap().get("strict_text").is_none());
 }
+
+#[test]
+fn precise_location_refuses_the_whole_function_as_the_operation() {
+    // The sphere case: the answer named the function and called all of it the operation.
+    let (mut c, mut r) = located();
+    r["claims"][0]["location"]["operation_start_line"] = json!(10);
+    r["claims"][0]["location"]["operation_end_line"] = json!(12);
+    r["claims"][0]["citations"] = json!([{"evidence_id":"S","path":"other.lang","start_line":10,"end_line":12,
+        "quote":"function first() {\n  act();\n}"}]);
+    assert!(codes(&c, &r).is_empty(), "without the rule the whole function passes");
+    c.precise_location = true;
+    assert_eq!(codes(&c, &r), ["location_operation_includes_declaration"]);
+    // Dropping only the declaration line is still the whole function (the real qwen retry).
+    r["claims"][0]["location"]["operation_start_line"] = json!(11);
+    assert_eq!(codes(&c, &r), ["location_operation_is_whole_body"]);
+    // Pointing at the body passes.
+    let (mut c, r) = located();
+    c.precise_location = true;
+    assert!(codes(&c, &r).is_empty());
+    // A one-line symbol has no body apart from its declaration line.
+    let one_line: Context = serde_json::from_value(json!({
+        "schema_version":1,"require_location":true,"precise_location":true,
+        "policy":{"allow_inference":false,"allow_hypothesis":false},
+        "evidence":[{"id":"S","path":"o.lang","start_line":1,"end_line":1,"excerpt":"function f() { return 1; }",
+            "symbols":[{"name":"f","declaration_line":1,"name_column":10,"end_line":1}]}]})).unwrap();
+    let answer = json!({"schema_version":1,"claims":[{"id":"C1","kind":"FACT","text":"f returns 1.","premises":[],"verification_plan":null,
+        "location":{"evidence_id":"S","path":"o.lang","symbol_name":"f","declaration_line":1,"operation_start_line":1,"operation_end_line":1},
+        "citations":[{"evidence_id":"S","path":"o.lang","start_line":1,"end_line":1,"quote":"function f() { return 1; }"}]}]});
+    assert!(codes(&one_line, &answer).is_empty());
+    // A one-line body (Python `def f():` then `return 1`) is the only possible operation.
+    let short: Context = serde_json::from_value(json!({
+        "schema_version":1,"require_location":true,"precise_location":true,
+        "policy":{"allow_inference":false,"allow_hypothesis":false},
+        "evidence":[{"id":"S","path":"f.py","start_line":1,"end_line":2,"excerpt":"def f():\n    return 1",
+            "symbols":[{"name":"f","declaration_line":1,"name_column":5,"end_line":2}]}]})).unwrap();
+    let answer = json!({"schema_version":1,"claims":[{"id":"C1","kind":"FACT","text":"f returns 1.","premises":[],"verification_plan":null,
+        "location":{"evidence_id":"S","path":"f.py","symbol_name":"f","declaration_line":1,"operation_start_line":2,"operation_end_line":2},
+        "citations":[{"evidence_id":"S","path":"f.py","start_line":1,"end_line":2,"quote":"def f():\n    return 1"}]}]});
+    assert!(codes(&short, &answer).is_empty());
+    // The query announces the rule only when it applies.
+    let q: Value = serde_json::from_str(&claims::query(&one_line, "Where?").unwrap()).unwrap();
+    assert_eq!(q["precise_location"], true);
+    assert!(q["instructions"].as_array().unwrap().iter().any(|i| i.as_str().unwrap().starts_with("Com precise_location=true")));
+    assert!(serde_json::from_str::<Value>(&claims::query(&located().0, "Where?").unwrap()).unwrap().get("precise_location").is_none());
+}

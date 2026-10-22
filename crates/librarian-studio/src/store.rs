@@ -845,6 +845,13 @@ mod tests {
         assert_eq!(matches(&rows[0]), ["equal", "equal", "equal", "equal", "absent"]);
         assert_eq!(matches(&rows[1]), ["absent", "absent", "absent", "absent", "equal"]);
 
+        // precise_location: the whole function, from its declaration line, is not an operation.
+        let mut whole = answer.clone();
+        whole["claims"][0]["location"]["operation_start_line"] = json!(4);
+        let issues = &record_answer(&store, &key, &run, "01", "manual", &whole.to_string()).unwrap()["check"]["report"]["issues"];
+        assert_eq!(issues, &json!([{"claim_id": "C1", "code": "location_operation_includes_declaration"}]));
+        assert_eq!(query["precise_location"], true);
+
         // Prose questions keep the Graph Engine query and are not checked.
         settings.answer_format = AnswerFormat::Prose;
         store.save_settings(&key, &settings).unwrap();

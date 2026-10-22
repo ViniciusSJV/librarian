@@ -42,6 +42,10 @@ pub struct Context {
     /// Line numbers and backticked code in `text` must be covered by the claim's citations.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub strict_text: bool,
+    /// A location's operation must not start at the declaration line (the whole symbol),
+    /// except for one-line symbols.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub precise_location: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -167,6 +171,10 @@ pub fn query(context: &Context, question: &str) -> Result<String, String> {
         query["instructions"].as_array_mut().unwrap().push(serde_json::json!(
             "evidence.limits descreve limites da evidência; não os trate como fatos sobre o código nem os contradiga."
         ));
+    }
+    if context.precise_location {
+        query["precise_location"] = serde_json::json!(true);
+        query["instructions"].as_array_mut().unwrap().push(serde_json::json!(location::PRECISE_INSTRUCTION));
     }
     if context.strict_text {
         query["strict_text"] = serde_json::json!(true);
