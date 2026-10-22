@@ -125,6 +125,24 @@
   .compare td.equal { color: var(--cat-occurrence); }
   .compare td.partial { color: var(--text-primary); }
   .compare td.absent { color: var(--text-muted); }
+  #pathView { position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column; background: var(--surface-0); }
+  #pathView[hidden] { display: none; }
+  #pathBar { display: flex; gap: 10px; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--border); background: var(--surface-1); }
+  #pathNote { margin: 6px 14px; }
+  #pathCanvas { flex: 1; overflow: auto; padding: 8px 14px 14px; }
+  #pathCanvas svg { display: block; }
+  #pathCanvas text { fill: var(--text-primary); font: 12px system-ui, -apple-system, "Segoe UI", sans-serif; }
+  #pathCanvas .group rect { fill: var(--surface-1); stroke: var(--border); }
+  #pathCanvas .group text { fill: var(--text-secondary); font-size: 11px; }
+  #pathCanvas .node rect { fill: var(--surface-2); stroke: var(--edge); cursor: pointer; }
+  #pathCanvas .node.seed rect { stroke: var(--cat-symbol); stroke-width: 2; }
+  #pathCanvas .node.selected rect { stroke: var(--text-primary); stroke-width: 2; }
+  #pathCanvas .edge { fill: none; stroke: var(--text-secondary); stroke-width: 1.4; cursor: pointer; }
+  #pathCanvas .edge.ambiguous { stroke-dasharray: 5 4; }
+  #pathCanvas .edge:hover { stroke: var(--text-primary); stroke-width: 2.4; }
+  #pathCanvas marker path { fill: var(--text-secondary); }
+  #pathDetail { position: absolute; right: 14px; bottom: 14px; max-width: 460px; max-height: 45%; overflow: auto; padding: 10px 12px;
+    border: 1px solid var(--border); border-radius: 8px; background: var(--surface-2); box-shadow: 0 6px 24px rgb(0 0 0 / .18); }
   dialog { width: min(720px, calc(100vw - 32px)); max-height: calc(100vh - 32px); padding: 16px; border: 1px solid var(--border);
     border-radius: 12px; background: var(--surface-1); color: var(--text-primary); }
   dialog::backdrop { background: rgb(0 0 0 / .4); }
@@ -261,6 +279,20 @@
     <div id="labels"></div>
     <div id="tooltip" class="hud"></div>
     <div id="drop">Solte graph-v2.json (e opcionalmente search.json/request.json)</div>
+    <div id="pathView" hidden>
+      <div id="pathBar">
+        <strong id="pathTitle" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0"></strong>
+        <button type="button" class="help" aria-label="O que é isto?" data-help="Quem usa este ponto, em camadas da esquerda para a direita. O bibliotecário procura em todo o acervo onde o nome dele aparece escrito (uma leitura, uma escrita, uma chamada), anota quem escreveu e repete a busca a partir dessas fichas. As caixas são as classes ou arquivos. Linha cheia: o nome escrito só combina com este ponto. Linha tracejada: combina também com outros pontos de mesmo nome (homônimos), então pode não ser este. É um mapa de candidatos pelo nome, não uma prova de que o código chama isto.">?</button>
+        <label class="check" style="margin: 0 0 0 auto"><input id="pathNoTests" type="checkbox" checked><span>esconder testes<button type="button" class="help" aria-label="O que é isto?" data-help="Testes costumam usar quase tudo e enchem o caminho. Ligado, esconde funções de teste (nome começando por test, módulos tests_ do Rust) e arquivos em pastas tests, e o que só era alcançado por elas. É uma convenção de nomes, não uma prova de que aquilo é teste.">?</button></span></label>
+        <label class="check" style="margin: 0"><input id="pathSolid" type="checkbox"><span>só usos sem homônimos<button type="button" class="help" aria-label="O que é isto?" data-help="Esconde as linhas tracejadas: usos cujo nome escrito combina também com outras declarações de mesmo nome. Sobra só o que, pelo nome, só pode apontar para este ponto. Ainda é um candidato pelo nome, não uma prova.">?</button></span></label>
+        <label class="row" style="flex-wrap: nowrap">profundidade
+          <select id="pathDepth"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></label>
+        <button id="pathClose">Voltar ao mapa</button>
+      </div>
+      <p id="pathNote" class="muted"></p>
+      <div id="pathCanvas"></div>
+      <div id="pathDetail" hidden></div>
+    </div>
   </main>
   <aside id="chat">
     <div id="chatHeader">
@@ -730,10 +762,18 @@ function inspect() {
       return el('li', { onclick: () => selectEdge(k) }, el('span', { className: 'tag', textContent: e.kind }), outward ? ' → ' : ' ← ',
         state.nodes[outward ? e.t : e.s].label.slice(0, 70), el('div', { className: 'muted', textContent: `${e.resolution} · ${e.evidence.path}:${e.evidence.start_line}` }));
     };
+    // "Onde é usado?" needs the studio: the traversal runs on the server over the run's graph.
+    const usedBy = n.category === 'symbol' && studio.project && studio.run
+      ? el('div', { className: 'row', style: 'margin-top: 8px' },
+        el('button', { textContent: 'Onde é usado?', onclick: () => openPath(n.id) }),
+        helpButton('Abre a vista Caminho a partir deste ponto: quem lê, escreve ou chama este nome, e quem usa esses, em camadas. Como um bibliotecário seguindo as remissões de ficha em ficha.'))
+      : null;
     box.replaceChildren(
       el('strong', { className: 'mono', textContent: n.label }),
+      usedBy,
       rows([['categoria', n.category], ['kind', n.kind], ['linguagem', n.language], ['id', el('span', { className: 'mono', textContent: n.id })],
-        ['saídas', String(state.out[i].length)], ['entradas', String(state.inn[i].length)]]),
+        ['saídas', String(state.out[i].length)], ['entradas', String(state.inn[i].length)],
+        ['homônimos', n.ambiguous_candidates ? `${n.ambiguous_candidates} declarações com este nome; nenhuma ligação desenhada (mais de 8)` : null]]),
       el('h2', { textContent: 'Relações (clique para ver a evidência)', style: 'margin-top: 12px' }),
       el('ul', { className: 'list' }, ...state.out[i].map(k => relation(k, true)), ...state.inn[i].map(k => relation(k, false))),
     );
@@ -1302,6 +1342,176 @@ function compareView(c) {
           title: `${marks[x.match][1]}${x.claim_ids.length ? ` (${x.claim_ids.join(', ')})` : ''}` })))))),
     el('p', { className: 'muted', textContent: `Todas iguais em ${all} de ${c.rows.length} conteúdo(s). Concordância é sinal, não prova.` }));
 }
+
+// ---- G6c: "Onde é usado?" Who uses a symbol, in layers, laid out by ELK (layered algorithm).
+let elkLoading = null;
+const loadElk = () => elkLoading ??= new Promise((resolve, reject) => {
+  const script = document.createElement('script');
+  script.src = 'https://cdn.jsdelivr.net/npm/elkjs@0.9.3/lib/elk.bundled.js';
+  script.onload = () => resolve(new window.ELK());
+  script.onerror = () => { elkLoading = null; reject(new Error('Não foi possível carregar o ELK, que desenha a vista Caminho. Confira a conexão e tente de novo.')); };
+  document.head.append(script);
+});
+let pathSeed = null;
+
+async function openPath(id) {
+  pathSeed = id;
+  $('#pathView').hidden = false;
+  await drawPath();
+}
+
+async function drawPath() {
+  const note = $('#pathNote'), canvas = $('#pathCanvas');
+  $('#pathDetail').hidden = true;
+  const seed = state.nodes[state.index.get(pathSeed)];
+  $('#pathTitle').textContent = `Onde é usado: ${seed?.label ?? pathSeed}`;
+  note.textContent = 'Procurando quem usa…';
+  canvas.replaceChildren();
+  try {
+    const params = query({ key: studio.project.key, run: studio.run, node: pathSeed, depth: $('#pathDepth').value });
+    const [full, elk] = await Promise.all([api('GET', `/api/used-by?${params}`), loadElk()]);
+    const data = filterPath(full);
+    if (!data.links.length && full.links.length) {
+      note.textContent = `Os ${full.links.length} usos encontrados foram escondidos pelos filtros acima.`;
+      return;
+    }
+    if (!data.links.length) {
+      const old = !String(state.graph?.derived_from ?? '').endsWith('-v2');
+      note.textContent = old ? 'Este grafo foi gerado antes de os usos serem registrados (G6). Gere o grafo de novo para ver quem usa.'
+        : 'Nenhum uso encontrado: o nome deste ponto não aparece escrito em outro lugar do acervo, ou só aparece com mais de 8 homônimos.';
+      return;
+    }
+    const { graph, groups, edges } = pathGraph(data);
+    renderPath(data, await elk.layout(graph), groups, edges);
+  } catch (error) {
+    note.textContent = error.message;
+  }
+}
+
+const shortName = label => label.split(/::|\./).pop() || label;
+
+// Naming convention only (pytest names, Rust tests_ modules, tests/ folders), not proof.
+const isTest = n => /(^|[.:])(test|tests_)/i.test(n.label) || /(^|\/)tests?\//.test(n.path) || /(^|\/)(test_[^/]*|[^/]*_test)\.py$/.test(n.path);
+
+// Filters drop links, then every node no longer reachable from the seed.
+function filterPath(data) {
+  const noTests = $('#pathNoTests').checked, solid = $('#pathSolid').checked;
+  const byId = new Map(data.nodes.map(n => [n.id, n]));
+  const links = data.links.filter(l => (!solid || l.candidates === 1)
+    && (!noTests || (!isTest(byId.get(l.from)) && !isTest(byId.get(l.to)))));
+  const reached = new Set([data.seed]);
+  for (let grew = true; grew;) {
+    grew = false;
+    for (const l of links) if (reached.has(l.to) && !reached.has(l.from)) { reached.add(l.from); grew = true; }
+  }
+  return { ...data, nodes: data.nodes.filter(n => reached.has(n.id)), links: links.filter(l => reached.has(l.from) && reached.has(l.to)),
+    hidden: data.nodes.length - reached.size };
+}
+
+// Boxes are the enclosing class/impl, or the file; each edge merges the links of one pair.
+function pathGraph(data) {
+  const groups = new Map(), nodeInfo = new Map();
+  for (const n of data.nodes) {
+    const key = `${n.path}|${n.container ?? ''}`;
+    if (!groups.has(key)) groups.set(key, { id: `g${groups.size}`, title: n.container ?? n.path, path: n.path, children: [] });
+    const text = shortName(n.label);
+    nodeInfo.set(n.id, { ...n, text });
+    groups.get(key).children.push({ id: n.id, width: Math.max(80, text.length * 7.4 + 24), height: 30 });
+  }
+  const edges = new Map();
+  for (const link of data.links) {
+    // A symbol using its own name (recursion, or a homonym of itself) adds no step to the path.
+    if (link.to === link.from) continue;
+    const id = `${link.to}→${link.from}`;
+    if (!edges.has(id)) edges.set(id, { id: `e${edges.size}`, used: link.to, user: link.from, links: [] });
+    edges.get(id).links.push(link);
+  }
+  const graph = {
+    id: 'root',
+    layoutOptions: { 'elk.algorithm': 'layered', 'elk.direction': 'RIGHT', 'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
+      'elk.layered.spacing.nodeNodeBetweenLayers': '80', 'elk.spacing.nodeNode': '16', 'elk.edgeRouting': 'SPLINES',
+      'elk.layered.mergeEdges': 'true', 'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX',
+      // Edges inside one box would otherwise come back relative to that box.
+      'elk.json.edgeCoords': 'ROOT' },
+    children: [...groups.values()].map(g => ({ id: g.id, width: Math.max(120, g.title.length * 6.6 + 24),
+      layoutOptions: { 'elk.padding': '[top=26,left=10,bottom=10,right=10]' }, children: g.children })),
+    edges: [...edges.values()].map(e => ({ id: e.id, sources: [e.used], targets: [e.user] })),
+  };
+  return { graph, groups: { byId: new Map([...groups.values()].map(g => [g.id, g])), nodes: nodeInfo }, edges: new Map([...edges.values()].map(e => [e.id, e])) };
+}
+
+function renderPath(data, layout, groups, edges) {
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = (tag, attrs = {}, ...children) => {
+    const node = document.createElementNS(ns, tag);
+    for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
+    node.append(...children.filter(c => c != null));
+    return node;
+  };
+  const title = text => svg('title', {}, text);
+  const root = svg('svg', { width: layout.width + 20, height: layout.height + 20, viewBox: `-10 -10 ${layout.width + 20} ${layout.height + 20}` },
+    svg('defs', {}, svg('marker', { id: 'arrow', viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto' },
+      svg('path', { d: 'M0,0 L10,5 L0,10 z' }))));
+  for (const g of layout.children) {
+    const info = groups.byId.get(g.id);
+    root.append(svg('g', { class: 'group' }, svg('rect', { x: g.x, y: g.y, width: g.width, height: g.height, rx: 8 }),
+      svg('text', { x: g.x + 10, y: g.y + 17 }, info.title), title(info.path)));
+    for (const n of g.children) {
+      const info2 = groups.nodes.get(n.id);
+      const node = svg('g', { class: `node${info2.layer === 0 ? ' seed' : ''}`, 'data-id': n.id },
+        svg('rect', { x: g.x + n.x, y: g.y + n.y, width: n.width, height: n.height, rx: 6 }),
+        svg('text', { x: g.x + n.x + 12, y: g.y + n.y + 19 }, info2.text),
+        title(`${info2.label}\n${info2.kind} · ${info2.path}:${info2.line}\nclique: inspecionar · duplo clique: ver quem usa este`));
+      node.addEventListener('click', () => {
+        root.querySelectorAll('.node.selected').forEach(x => x.classList.remove('selected'));
+        node.classList.add('selected');
+        const i = state.index.get(n.id);
+        if (i != null) selectNode(i);
+      });
+      node.addEventListener('dblclick', () => openPath(n.id));
+      root.append(node);
+    }
+  }
+  // ELK reports each edge relative to its container (`container`): the root, or a box when both
+  // ends are inside it.
+  const boxAt = new Map(layout.children.map(g => [g.id, g]));
+  for (const e of layout.edges) {
+    const info = edges.get(e.id);
+    const box = boxAt.get(e.container);
+    const [dx, dy] = box ? [box.x, box.y] : [0, 0];
+    const points = (e.sections ?? []).flatMap(s => [s.startPoint, ...(s.bendPoints ?? []), s.endPoint]).map(p => ({ x: p.x + dx, y: p.y + dy }));
+    if (!points.length) continue;
+    const ambiguous = info.links.some(l => l.candidates > 1);
+    const path = svg('polyline', { class: `edge${ambiguous ? ' ambiguous' : ''}`, points: points.map(p => `${p.x},${p.y}`).join(' '), 'marker-end': 'url(#arrow)' },
+      title(info.links.map(l => `${l.text.slice(0, 80)} · ${l.evidence.path}:${l.evidence.start_line}`).join('\n')));
+    path.addEventListener('click', () => showUse(info, groups.nodes));
+    root.append(path);
+  }
+  $('#pathCanvas').replaceChildren(root);
+  const ambiguous = data.links.filter(l => l.candidates > 1).length;
+  $('#pathNote').textContent = `${data.nodes.length} pontos e ${data.links.length} usos até a profundidade ${data.depth}.`
+    + (ambiguous ? ` ${ambiguous} usos são tracejados: o nome escrito também combina com homônimos.` : '')
+    + (data.hidden ? ` ${data.hidden} pontos escondidos pelos filtros.` : '')
+    + (data.truncated ? ` Parou no teto de ${data.max_nodes} pontos; reduza a profundidade para ver tudo.` : '')
+    + ' Clique numa linha para ver onde o nome está escrito.';
+}
+
+function showUse(info, nodes) {
+  const box = $('#pathDetail');
+  const kinds = { attribute_access: 'lê ou escreve', call_observed: 'chama', method_call_observed: 'chama', base_class: 'herda de', type_reference: 'cita o tipo' };
+  box.replaceChildren(
+    el('div', { className: 'row', style: 'justify-content: space-between' },
+      el('strong', { textContent: `${shortName(nodes.get(info.user).label)} → ${shortName(nodes.get(info.used).label)}` }),
+      el('button', { textContent: 'Fechar', onclick: () => { box.hidden = true; } })),
+    el('ul', { className: 'claims' }, ...info.links.map(l => el('li', {},
+      `${kinds[l.occurrence_kind] ?? l.occurrence_kind}: `, el('code', { textContent: l.text.slice(0, 160) }),
+      el('div', { className: 'muted mono', textContent: `${l.evidence.path}:${l.evidence.start_line}` }),
+      l.candidates > 1 ? el('div', { className: 'muted', textContent: `O nome escrito combina com ${l.candidates} declarações; esta é uma delas.` }) : null))));
+  box.hidden = false;
+}
+
+$('#pathClose').onclick = () => { $('#pathView').hidden = true; };
+for (const id of ['#pathDepth', '#pathNoTests', '#pathSolid']) $(id).onchange = () => { if (pathSeed) drawPath(); };
 
 // ---- help: each "?" explains a part of the page in plain words, on hover or click.
 const helpTip = el('div', { id: 'helpTip', role: 'tooltip', hidden: true });
