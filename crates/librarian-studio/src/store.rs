@@ -52,6 +52,9 @@ pub struct Settings {
     pub allow_inference: bool,
     #[serde(default)]
     pub allow_hypothesis: bool,
+    /// A HYPOTHESIS may carry a unified diff, checked against the evidence (performance step).
+    #[serde(default)]
+    pub allow_patch: bool,
 }
 
 /// `prose` sends the Graph Engine query; `claims` sends a claims query and checks each answer.
@@ -355,7 +358,7 @@ impl Store {
             (AnswerFormat::Claims, None) => {
                 let policy = Policy { allow_inference: settings.allow_inference, allow_hypothesis: settings.allow_hypothesis };
                 let instructions = settings.instructions.clone().unwrap_or_default();
-                crate::claims::write(catalog, &dir, policy, instructions).err().map(|e| e.to_string())
+                crate::claims::write(catalog, &dir, policy, instructions, settings.allow_patch).err().map(|e| e.to_string())
             }
             _ => None,
         };
@@ -498,7 +501,7 @@ impl Store {
             "prepare": { "radius": settings.radius, "numbered_lines": settings.numbered_lines,
                 "accept_diagnostics": settings.accept_diagnostics },
             "answer": { "format": settings.answer_format, "allow_inference": settings.allow_inference,
-                "allow_hypothesis": settings.allow_hypothesis },
+                "allow_hypothesis": settings.allow_hypothesis, "allow_patch": settings.allow_patch },
         });
         let mut files: Vec<(String, Vec<u8>)> = vec![];
         let pretty = |v: &Value| -> Result<Vec<u8>> {
@@ -711,6 +714,7 @@ fn initial_settings(name: &str, root: &str) -> Result<Settings> {
         answer_format: AnswerFormat::Claims,
         allow_inference: false,
         allow_hypothesis: false,
+        allow_patch: false,
     };
     let profile = Path::new(root).join(PROFILE);
     if let Ok(bytes) = fs::read(&profile) {
@@ -742,6 +746,7 @@ fn initial_settings(name: &str, root: &str) -> Result<Settings> {
         }
         settings.allow_inference = p["answer"]["allow_inference"].as_bool().unwrap_or(false);
         settings.allow_hypothesis = p["answer"]["allow_hypothesis"].as_bool().unwrap_or(false);
+        settings.allow_patch = p["answer"]["allow_patch"].as_bool().unwrap_or(false);
         settings.root = display(&base.canonicalize()?);
         settings.imported_from = Some(display(&profile));
     }
@@ -1171,6 +1176,37 @@ mod tests {
         store.save_settings(&key, &settings).unwrap();
         store.ask(&key, &run, "direção dos raios").unwrap();
         assert!(store.continue_turn(&key, &run, "04", "E?").err().unwrap().to_string().contains("claims"));
+    }
+
+    #[test]
+    fn allow_patch_is_fixed_with_the_question_and_checks_a_proposed_diff() {
+        let scratch = project();
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let opened = store.open(&display(&scratch.0.join("project"))).unwrap();
+        let key = opened["key"].as_str().unwrap().to_owned();
+        let mut settings: Settings = serde_json::from_value(opened["settings"].clone()).unwrap();
+        settings.lexicon.groups = vec![vec!["raios".into(), "ray".into()], vec!["direcao".into(), "direction".into()]];
+        (settings.allow_hypothesis, settings.allow_patch) = (true, true);
+        store.save_settings(&key, &settings).unwrap();
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        let turn = store.ask(&key, &run, "Onde a câmera calcula a direção dos raios?").unwrap();
+        let query: Value = serde_json::from_str(turn["query"].as_str().unwrap()).unwrap();
+        assert_eq!(query["allow_patch"], true);
+        let answer = json!({"schema_version": 1, "claims": [{
+            "id": "H1", "kind": "HYPOTHESIS", "text": "Devolver a expressão direto dispensa a variável direction.",
+            "citations": [{"evidence_id": "E1", "path": "src/lib.rs", "start_line": 5, "end_line": 6,
+                "quote": "        let direction = x * 2.0;\n        direction"}],
+            "premises": [], "verification_plan": "Medir ray_from_pixel antes e depois com um benchmark.",
+            "patch": "--- a/src/lib.rs\n+++ b/src/lib.rs\n@@ -5,2 +5,1 @@\n-        let direction = x * 2.0;\n-        direction\n+        x * 2.0\n"}]});
+        let check = &record_answer(&store, &key, &run, "01", "manual", &answer.to_string()).unwrap()["check"];
+        assert_eq!(check["report"]["mechanical_status"], "passed");
+        assert!(check["claims"][0]["patch"].as_str().unwrap().contains("+        x * 2.0"));
+        // The choice is recorded with the question: editing it afterwards is refused.
+        let context = store.turn_dir(&key, &run, "01").unwrap().join("claims/context.json");
+        let original = fs::read_to_string(&context).unwrap();
+        assert!(original.contains("\"allow_patch\": true"));
+        fs::write(&context, original.replace("\"allow_patch\": true", "\"allow_patch\": false")).unwrap();
+        assert!(store.verify_for_send(&key, &run, "01").is_err());
     }
 
     #[test]

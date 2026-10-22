@@ -221,6 +221,7 @@
           <label class="field" title="Fixado em cada pergunta no momento em que ela é feita"><span>Formato da resposta<button type="button" class="help" aria-label="O que é isto?" data-help="Claims: quem responde entrega itens curtos, cada um com a página e o trecho copiado do livro, e o bibliotecário confere tudo na estante. Prosa: quem responde escreve um texto livre, como uma resenha, e a conferência fica toda com você. A escolha fica anotada em cada consulta.">?</button></span><select id="answerFormat"><option value="claims">Claims: JSON conferido contra a edition</option><option value="prose">Prosa: query do Graph Engine, conferência à mão</option></select></label>
           <label class="check"><input id="allowInference" type="checkbox"><span>Claims: permitir INFERENCE (exige premissas)<button type="button" class="help" aria-label="O que é isto?" data-help="Inferência é tirar uma conclusão juntando o que está escrito (se o livro diz A e B, então C). Desligado, quem responde só pode repetir o que está nas páginas. Ligado, pode concluir, mas precisa mostrar de quais páginas partiu. Quem julga a conclusão é você.">?</button></span></label>
           <label class="check"><input id="allowHypothesis" type="checkbox"><span>Claims: permitir HYPOTHESIS (exige plano de verificação)<button type="button" class="help" aria-label="O que é isto?" data-help="Hipótese é uma suspeita que ainda não foi provada, como achar que um capítulo é lento de ler. Desligado, quem responde não pode levantar suspeitas. Ligado, pode, mas cada suspeita vem com um plano de como testá-la. Útil para performance e impacto.">?</button></span></label>
+          <label class="check"><input id="allowPatch" type="checkbox"><span>Claims: permitir patch numa HYPOTHESIS (performance)<button type="button" class="help" aria-label="O que é isto?" data-help="Deixa quem responde propor uma mudança no código como um diff, sempre dentro de uma hipótese com plano de medição. O bibliotecário confere linha por linha que o diff parte do texto real das páginas entregues e que cada linha removida foi citada. Ele não aplica, não compila e não roda nada: um diff que encaixa não prova que o programa ficou mais rápido. Nada é escrito no seu projeto.">?</button></span></label>
           <label class="field"><span>Instruções da query<button type="button" class="help" aria-label="O que é isto?" data-help="Um bilhete seu para quem vai responder, como seja breve ou cite o arquivo. No formato claims o bilhete complementa as regras da casa e nunca as afrouxa.">?</button> (uma por linha; vazio usa as padrão do Graph Engine; em claims vão à parte, como <code>project_instructions</code>)</span><textarea id="instructions" rows="6"></textarea></label>
           <label class="field"><span>Critérios prévios (gravados em cada pergunta antes de qualquer resposta)<button type="button" class="help" aria-label="O que é isto?" data-help="O seu gabarito, escrito antes da prova. O bibliotecário guarda esse texto com cada consulta, antes de existir resposta, para que ninguém ajuste a nota depois de ver o resultado.">?</button></span><textarea id="criteria" rows="6"></textarea></label>
           <div class="row" style="margin-top: 8px">
@@ -971,6 +972,7 @@ function renderProject() {
   $('#answerFormat').value = settings.answer_format ?? 'prose';
   $('#allowInference').checked = settings.allow_inference ?? false;
   $('#allowHypothesis').checked = settings.allow_hypothesis ?? false;
+  $('#allowPatch').checked = settings.allow_patch ?? false;
   $('#instructions').value = (settings.instructions ?? []).join('\n');
   $('#criteria').value = settings.criteria ?? '';
   $('#runs').replaceChildren(
@@ -994,7 +996,7 @@ function collectSettings() {
     top: number('#top'), depth: number('#depth'), hits: number('#hits'), radius: number('#radius'),
     numbered_lines: $('#numbered').checked, accept_diagnostics: $('#acceptDiag').checked,
     answer_format: $('#answerFormat').value,
-    allow_inference: $('#allowInference').checked, allow_hypothesis: $('#allowHypothesis').checked,
+    allow_inference: $('#allowInference').checked, allow_hypothesis: $('#allowHypothesis').checked, allow_patch: $('#allowPatch').checked,
   };
 }
 
@@ -1290,6 +1292,20 @@ const ISSUES = {
     'Só uma inferência pode listar premissas. Este item é de outro tipo e veio com premissas.'],
   unexpected_verification_plan: ['plano de teste num item que não é suspeita',
     'Só uma hipótese leva plano de verificação. Este item é de outro tipo e veio com um plano.'],
+  patch_not_allowed: ['propôs um patch, e isso estava desligado',
+    'O item trouxe uma mudança no código, mas a opção de permitir patch está desligada nesta pergunta.'],
+  patch_requires_hypothesis: ['patch fora de uma hipótese',
+    'Uma mudança proposta é sempre uma suspeita a medir: só uma HYPOTHESIS, com plano de verificação, pode trazer patch.'],
+  patch_malformed: ['o patch não é um diff legível',
+    'O bibliotecário esperava um diff unificado (--- a/arquivo, +++ b/arquivo, blocos @@ com as contagens certas). O que veio não tem essa forma, ou as contagens não batem.'],
+  patch_unknown_path: ['patch num arquivo que não foi entregue',
+    'O diff mexe num livro que não estava na pasta entregue ao leitor.'],
+  patch_outside_evidence: ['patch fora das páginas entregues',
+    'O diff mexe em linhas do arquivo que ficam fora do trecho entregue. O leitor não viu essas linhas.'],
+  patch_does_not_apply: ['o patch não encaixa no texto real',
+    'Uma linha que o diff diz existir (contexto ou removida) não é igual à linha do livro naquele número. Do jeito que está, ele não se aplica.'],
+  patch_changes_uncited_lines: ['patch remove linhas que o item não citou',
+    'Toda linha que o diff remove precisa estar citada no próprio item, para que a proposta mostre o que está mudando.'],
   missing_citation: ['afirmou sem citar nenhuma página',
     'Um fato precisa mostrar a página do livro de onde saiu. Este item afirmou algo sem citar nada.'],
   unknown_evidence: ['citou uma pasta que não foi entregue',
@@ -1341,6 +1357,7 @@ function checkView(c, s, t) {
     k.citations.length ? el('div', { className: 'muted mono', textContent: `cita ${k.citations.map(x => `${x.evidence_id} ${lines(x)}`).join(', ')}` }) : null,
     k.premises.length ? el('div', { className: 'muted', textContent: `premissas: ${k.premises.join(' · ')}` }) : null,
     k.verification_plan ? el('div', { className: 'muted', textContent: `como verificar: ${k.verification_plan}` }) : null,
+    k.patch ? el('details', {}, el('summary', { textContent: 'Patch proposto (conferido contra as linhas entregues; não aplicado)' }), el('pre', { textContent: k.patch })) : null,
     s && t ? reviewView(k, passed, s, t) : null);
   return el('div', { style: 'margin-top: 6px' },
     el('div', {},

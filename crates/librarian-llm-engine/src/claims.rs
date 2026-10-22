@@ -2,6 +2,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 mod location;
+mod patch;
 mod text;
 pub mod compare;
 pub use location::{Location, Symbol};
@@ -50,6 +51,9 @@ pub struct Context {
     /// knowledge, never citable: claims still cite the evidence lines.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub reviewed_facts: Vec<ReviewedFact>,
+    /// A HYPOTHESIS may carry a unified diff over the evidence, checked line by line.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub allow_patch: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -94,6 +98,9 @@ pub struct Claim {
     pub verification_plan: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub location: Option<Location>,
+    /// Unified diff of the change a HYPOTHESIS proposes (`allow_patch`); checked, never applied.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub patch: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -200,6 +207,11 @@ pub fn query(context: &Context, question: &str) -> Result<String, String> {
     if context.strict_text {
         query["strict_text"] = serde_json::json!(true);
         query["instructions"].as_array_mut().unwrap().push(serde_json::json!(text::INSTRUCTION));
+    }
+    if context.allow_patch {
+        query["allow_patch"] = serde_json::json!(true);
+        query["response_schema"]["properties"]["claims"]["items"]["properties"]["patch"] = serde_json::json!({"type": ["string", "null"]});
+        query["instructions"].as_array_mut().unwrap().push(serde_json::json!(patch::INSTRUCTION));
     }
     if !context.reviewed_facts.is_empty() {
         query["evidence"]["reviewed_facts"] = serde_json::json!(context.reviewed_facts);
@@ -338,6 +350,9 @@ pub fn check(context: &Context, response: &str) -> Result<Report, String> {
             fail("missing_citation");
         }
         for code in location::check(context, claim) {
+            fail(code);
+        }
+        for code in patch::check(context, claim) {
             fail(code);
         }
         if context.strict_text {
