@@ -178,7 +178,7 @@ fn graph(app: &App, key: &str, run: &str) -> Result<Arc<v2::Graph>> {
     Ok(graph)
 }
 
-/// Re-verifies the prepared bundle against the edition immediately before every send.
+/// Re-verifies the question immediately before every send; the send records the link (L3).
 fn send(store: &Store, body: &Value) -> Result<Response> {
     let get = |name: &str| body[name].as_str();
     let (Some(key), Some(run), Some(turn), Some(provider)) =
@@ -189,29 +189,14 @@ fn send(store: &Store, body: &Value) -> Result<Response> {
     if !implemented(provider) {
         return Ok(Response::error(501, format!("Provedor sem envio implementado: {provider}")));
     }
-    let dir = store.turn_dir(key, run, turn)?;
-    let prepared = dir.join("prepared");
-    if !prepared.join("bundle/query.json").is_file() {
-        return Err("Esta pergunta não tem query preparada (o prepare recusou); nada foi enviado".into());
-    }
-    let catalog = librarian_ingest::Catalog::load(&store.edition(key, run)?)?;
-    librarian_ingest::prepare::verify(&catalog, &prepared)?;
-    let question: Value = serde_json::from_slice(&std::fs::read(dir.join("question.json"))?)?;
-    // A claims question sends its own query, re-derived from the bundle just verified.
-    let context = match question["answer_format"] == "claims" {
-        true => Some(claims::verify(&catalog, &dir)?),
-        false => None,
-    };
-    let query = match context {
-        Some(_) => dir.join(claims::DIR).join("query.json"),
-        None => prepared.join("bundle/query.json"),
-    };
+    let verified = store.verify_for_send(key, run, turn)?;
     let choice = choice(store, body)?;
-    let destination = store::next_send(&dir, provider)?;
-    let mut request = choice.request(&query, &destination);
-    request.criteria_sha256 = question["criteria_sha256"].as_str();
+    let destination = store::next_send(&store.turn_dir(key, run, turn)?, provider)?;
+    let mut request = choice.request(&verified.query, &destination);
+    request.criteria_sha256 = verified.criteria_sha256.as_deref();
+    request.link = Some(&verified.link);
     let mut summary = llm::send(provider, request)?;
-    if let (Some(context), Some(text)) = (&context, summary["text"].as_str()) {
+    if let (Some(context), Some(text)) = (&verified.context, summary["text"].as_str()) {
         summary["check"] = claims::check(context, &destination, text)?;
         std::fs::write(destination.join("send.json"), serde_json::to_vec_pretty(&summary)?)?;
     }

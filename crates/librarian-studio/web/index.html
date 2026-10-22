@@ -1230,7 +1230,9 @@ function reply(s) {
     s.text ? (s.check?.claims ? el('details', {}, el('summary', { textContent: 'Resposta bruta' }), el('pre', { textContent: s.text }))
       : el('div', { style: 'margin-top: 6px', textContent: s.text }))
       : el('div', { className: 'error', style: 'margin-top: 6px', textContent: s.diagnostic ?? 'Sem texto na resposta.' }),
-    el('div', { className: 'muted', style: 'margin-top: 6px; font-size: 11px', textContent: `${s.state === 'completed' ? 'completed descreve o transporte; ' : ''}avaliação semântica pendente. Guardado em ${s.directory}` }));
+    el('div', { className: 'muted', style: 'margin-top: 6px; font-size: 11px', textContent: `${s.state === 'completed' ? 'completed descreve o transporte; ' : ''}avaliação semântica pendente. Guardado em ${s.directory}` }),
+    s.link ? el('div', { className: 'muted', style: 'font-size: 11px', title: s.link.checks.join(' · '),
+      textContent: `Vínculo: enviou a ${s.link.query_file} (sha256 ${s.link.query_sha256.slice(0, 12)}…) conferida contra a edition antes do envio.` }) : null);
 }
 
 // Each checker code in plain words: [short label, librarian explanation].

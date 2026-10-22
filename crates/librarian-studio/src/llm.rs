@@ -63,6 +63,8 @@ pub struct Send<'a> {
     pub claude_model: Option<&'a str>,
     /// Hash of the criteria fixed with the question, before this send.
     pub criteria_sha256: Option<&'a str>,
+    /// Link to the bundle verified before this send; its `query_sha256` must match the query.
+    pub link: Option<&'a Value>,
 }
 
 /// Provider options chosen on the page, before the query and its destination are known.
@@ -81,6 +83,7 @@ impl Choice {
             modelfile_name: self.modelfile_name.as_deref(),
             claude_model: self.claude_model.as_deref(),
             criteria_sha256: None,
+            link: None,
         }
     }
 }
@@ -100,6 +103,7 @@ pub fn send(provider: &str, request: Send) -> Result<Value> {
     summary["directory"] = json!(display(request.dir));
     summary["semantic_evaluation"] = json!("pending");
     summary["criteria_sha256"] = json!(request.criteria_sha256);
+    summary["link"] = json!(request.link);
     fs::write(request.dir.join("send.json"), serde_json::to_vec_pretty(&summary)?)?;
     Ok(summary)
 }
@@ -133,7 +137,8 @@ fn send_ollama(request: &Send) -> Result<Value> {
     };
     let attempt = request.dir.join("attempt");
     let id = format!("STUDIO_{}", now_ms());
-    let state = client::attempt_linked(request.query, &attempt, &id, &config, None)?;
+    // With a link, the transport refuses (input_rejected) a query whose hash changed since the check.
+    let state = client::attempt_linked(request.query, &attempt, &id, &config, request.link)?;
     let result: Value = serde_json::from_slice(&fs::read(attempt.join("result.json"))?)?;
     let raw: Value = fs::read(attempt.join("response.bin"))
         .ok()
@@ -205,6 +210,17 @@ fn send_claude(request: &Send) -> Result<Value> {
     }
     let query = fs::read(request.query)?;
     client::save(request.dir, "query.json", &query)?;
+    // The same refusal as the Ollama transport: these bytes are the ones handed to the CLI.
+    if !link_matches(request.link, &query) {
+        return Ok(json!({
+            "state": "input_rejected",
+            "model": model,
+            "modelfile": request.modelfile_name,
+            "text": null,
+            "diagnostic": LINK_MISMATCH,
+            "query_sha256": client::hash(&query),
+        }));
+    }
     // A Modelfile lends only its SYSTEM to Claude; FROM and PARAMETER are Ollama settings.
     let system = match request.modelfile {
         Some(path) => {
@@ -288,6 +304,13 @@ fn send_claude(request: &Send) -> Result<Value> {
         "query_sha256": client::hash(&query),
         "response_sha256": client::hash(&raw),
     }))
+}
+
+const LINK_MISMATCH: &str = "Consulta mudou após conferência; nenhum envio realizado";
+
+/// No link, or a link whose query hash is the hash of these bytes.
+fn link_matches(link: Option<&Value>, query: &[u8]) -> bool {
+    link.is_none_or(|l| l["query_sha256"].as_str() == Some(client::hash(query).as_str()))
 }
 
 /// The SYSTEM instruction of a Modelfile: `SYSTEM """…"""` or a single-line `SYSTEM text`.
@@ -382,6 +405,43 @@ mod tests {
         let modelfile = "FROM qwen\nPARAMETER temperature 0\nPARAMETER num_ctx 16384\n";
         assert_eq!(modelfile_parameter(modelfile, "num_ctx"), Some(16_384));
         assert_eq!(modelfile_parameter(modelfile, "num_predict"), None);
+    }
+
+    #[test]
+    fn a_link_accepts_only_the_query_it_was_built_for() {
+        use super::{client, link_matches};
+        use serde_json::json;
+        let link = json!({ "query_sha256": client::hash(b"{\"question\":\"q\"}\n") });
+        assert!(link_matches(Some(&link), b"{\"question\":\"q\"}\n"));
+        assert!(!link_matches(Some(&link), b"{\"question\":\"outra\"}\n"));
+        assert!(!link_matches(Some(&json!({})), b"{}"));
+        assert!(link_matches(None, b"{}"));
+    }
+
+    #[test]
+    fn the_ollama_transport_refuses_a_changed_query_and_records_the_link() {
+        use super::client::{self, Config};
+        use serde_json::{json, Value};
+        let dir = std::env::temp_dir().join(format!("librarian-studio-link-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let query = dir.join("query.json");
+        std::fs::write(&query, "{\"question\":\"q\",\"evidence\":{},\"instructions\":[\"Cite E1.\"]}\n").unwrap();
+        // Port 9 is closed: a send that gets past the link fails in the transport and reaches no model.
+        let config = Config { endpoint: "http://127.0.0.1:9/api/generate".into(), model: "m".into(), timeout_ms: 500, max_bytes: 1_024 };
+        let read = |attempt: &str| -> Value { serde_json::from_slice(&std::fs::read(dir.join(attempt).join("result.json")).unwrap()).unwrap() };
+        let changed = json!({ "query_sha256": client::hash(b"outra query"), "dossier_origin": "edition:x", "selection": {} });
+        assert_eq!(client::attempt_linked(&query, &dir.join("a"), "T", &config, Some(&changed)).unwrap(), "input_rejected");
+        assert_eq!(read("a")["sent"], false);
+        let link = json!({ "query_sha256": client::hash(&std::fs::read(&query).unwrap()), "dossier_origin": "edition:x",
+            "selection": {"fact_ids": ["E1"]} });
+        // Windows lets a connection to a closed port time out instead of refusing it.
+        let state = client::attempt_linked(&query, &dir.join("b"), "T", &config, Some(&link)).unwrap();
+        assert!(["transport_failed", "timed_out"].contains(&state.as_str()), "{state}");
+        let result = read("b");
+        assert_eq!((&result["evidence_rechecked"], &result["integration"]), (&json!(true), &link));
+        assert_eq!(result["selection"], json!({"fact_ids": ["E1"]}));
+        let _ = std::fs::remove_dir_all(&dir);
     }
 
     #[test]
