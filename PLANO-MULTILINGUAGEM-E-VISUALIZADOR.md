@@ -664,6 +664,19 @@ No teste do usuário com a pergunta "Onde a esfera calcula a interseção com o 
 - Limite: uma faixa quase inteira passa; o tamanho certo da operação é questão de sentido.
 - Workspace com 118 aprovados e 1 ignorado.
 
+### L3 — vínculo do bundle no envio (22/10/2026)
+
+Antes, o studio conferia o bundle e os arquivos de claims, e o provedor relia a `query.json` sem comparar com o que foi conferido. O `send.json` também não dizia qual bundle tinha sido conferido.
+
+- `Store::verify_for_send` reúne a conferência que estava no `main.rs` (`prepare::verify` e, em claims, `claims::verify`) e acrescenta os critérios: um `criteria-before.md` com hash diferente do gravado na pergunta recusa o envio.
+- O vínculo (`studio_send_link`, versão 1) registra o arquivo e o hash da query enviada, `dossier_origin` (`edition:<hash>`), a seleção de fichas, os hashes de `origin.json`, do dossiê e da query do bundle, o hash do `context.json` (claims), os critérios, as conferências feitas e o instante.
+- O Ollama recebe o vínculo pelo `attempt_linked` (`evidence_rechecked: true`, `integration` no `result.json`). O Claude CLI faz a mesma comparação de hash. Query alterada entre a conferência e o envio vira `input_rejected`, e nada é enviado.
+- O vínculo fica no `send.json`, e a resposta na página mostra o arquivo e o hash enviados.
+
+Verificação: testes do vínculo em prosa e em claims, da query e dos critérios alterados, da comparação de hash e do transporte Ollama sem rede (hash errado vira `input_rejected`; com o hash certo, o vínculo é gravado no `result.json`). Workspace com 124 aprovados e 1 ignorado. Execução real numa cópia do `.studio` (renderer, "Onde a esfera calcula a interseção com o raio?", haiku com `verificavel`): o hash da `query.json` enviada é igual ao do vínculo, e a resposta foi aprovada na mecânica (US$ 0,0036). Na mesma pergunta, qwen 14B com `verificavel` pelo Ollama: a query da tentativa, o `query_sha256` do `result.json` e o do vínculo são iguais; `evidence_rechecked: true` e `integration` igual ao vínculo do `send.json`. A resposta foi recusada por `location_operation_is_whole_body` (32–50), como no teste anterior do usuário. A recusa por hash no transporte só foi exercida nos testes, porque exige alterar a query entre a conferência e o envio.
+
+Limites: o vínculo é registro do studio, sem assinatura. Ele não é snapshot atômico, porque a edition pode mudar depois do envio, e não diz nada do sentido da resposta. A CLI `send_ollama` continua sem vínculo. Envios anteriores não têm `link`.
+
 ### Roteiro seguinte (aprovado em 22/10/2026)
 
 O objetivo é encadear tarefas entre Modelfiles e provedores, por exemplo o `analista` (Ollama) aponta as funções, o `performance` (DeepSeek local no Ollama) propõe a mudança e o `impacto` (Claude) relata o impacto. Uma etapa passa para a seguinte só o que foi conferido, nunca o texto livre.

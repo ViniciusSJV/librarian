@@ -134,9 +134,9 @@ registrado e a avaliação pendente. Os detalhes estão no [STUDIO.md](STUDIO.md
 ## Roteiro
 
 1. **Limites do LLM Engine:** contexto com linhas numeradas, studio usando afirmações e
-   checker, e comparação de respostas de modelos diferentes por conteúdo (feitos). Faltam
-   a cadeia entre Modelfiles (só o que foi conferido passa adiante), o vínculo do bundle
-   no registro do envio e os portões até a promoção a fato.
+   checker, comparação de respostas de modelos diferentes por conteúdo e vínculo do
+   bundle conferido em cada envio (feitos). Faltam a cadeia entre Modelfiles (só o que
+   foi conferido passa adiante) e os portões até a promoção a fato.
 2. **Impacto (G6):** campos e chamadas como candidatos no grafo e "Onde é usado?" no
    studio (feitos). Falta o relatório de impacto ("o que pode quebrar se este campo
    mudar?") com Modelfile próprio, em que o modelo só aponta riscos como hipótese, com

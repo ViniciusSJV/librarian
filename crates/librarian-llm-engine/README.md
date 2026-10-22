@@ -61,8 +61,10 @@ retorno bruto, texto e estado.
   `{number, text}` como evidência. A avaliação semântica está pendente.
 - **O contrato de afirmações ainda não está na trilha do studio.** As
   [séries de experimentos](../../experiments/) continuam reprovadas pelo checker.
-- **O vínculo do bundle no registro do envio ainda não é usado.**
-  `attempt_linked` existe, mas `send_ollama` e o studio passam `None`.
+- **Vínculo do bundle no envio (L3):** o studio passa a `attempt_linked` o vínculo
+  com o bundle conferido, e o transporte recusa a query cujo hash mudou
+  (`input_rejected`) e grava o vínculo em `result.json` (`integration`). A CLI
+  `send_ollama` continua passando `None`.
 
 Esses pontos seguem na fase L (limites do LLM Engine). Origem do crate,
 validação da extração (27/09/2026) e experimentos anteriores estão no

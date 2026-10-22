@@ -122,6 +122,15 @@ Cada pergunta tem o botão **Enviar**, que usa o LLM escolhido no momento. Serve
 reenviar a mesma query a outro LLM ou com outro Modelfile. A query é conferida de novo
 contra a edition imediatamente antes de cada envio.
 
+Cada envio grava o **vínculo** com o que foi conferido (`link` no `send.json`): o hash da
+query enviada, a origem (`edition:<hash>`), as fichas selecionadas, os hashes do
+`origin.json`, do dossiê e, em claims, do `context.json`, além do hash dos critérios.
+Critérios editados depois da pergunta recusam o envio. O Ollama e o Claude CLI comparam
+os bytes que vão enviar com o hash do vínculo e, se a query mudou entre a conferência e
+o envio, nada é enviado (`input_rejected`). A resposta mostra "Vínculo: enviou a … (sha256
+…) conferida contra a edition antes do envio". O vínculo é registro do studio, não
+assinatura. Envios feitos antes dele não têm `link`.
+
 | Opção | O que faz |
 | --- | --- |
 | Nenhum (só preparar para copiar) | Não envia. Abre a `query.json` exata; **Copiar query** leva para a área de transferência. |
@@ -357,7 +366,7 @@ projeto analisado.
       prepared/                    request.json, search.json, bundle/ (dossier, question, query, origin)
       claims/                      context.json e query.json (só no formato claims)
       sends/<NN>-<provedor>/       query, request, resposta bruta e texto, Modelfile usado,
-                                   send.json e, em claims, check.json
+                                   send.json (com o vínculo) e, em claims, check.json
 ```
 
 Para começar do zero, apague a pasta do projeto em `.studio/projects/`.
