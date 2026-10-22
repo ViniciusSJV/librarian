@@ -88,8 +88,9 @@ da declaração do excerpt. O verificador confere o nome literal nessa posição
 identidade única por nome/linha e limites dentro da evidência. **Esses metadados
 são fornecidos pelo consumidor**: isso não analisa a sintaxe nem prova que o
 intervalo é uma função ou que seu escopo está correto. O consumidor deve obtê-los
-de uma fonte conferida. Na série 05 houve inspeção manual do trecho preservado;
-a integração automática com símbolos do ingest ainda não foi feita.
+de uma fonte conferida. Na série 05 houve inspeção manual do trecho preservado.
+Desde a L2, o [Librarian Studio](../../STUDIO.md) deriva os símbolos da edition
+conferida (veja "Formato da resposta" no guia).
 
 Cada FACT do perfil inclui, por exemplo:
 
@@ -107,12 +108,70 @@ básico; `query(context, question)` o estende quando o perfil está habilitado.
 Não há nome, caminho, sintaxe de linguagem ou linha esperada embutidos no checker.
 Os metadados não pré-selecionam a operação. Uma operação corretamente citada
 pode não responder à pergunta: `semantic_status=pending` e `accepted=false`
-continuam invariáveis. Tampouco se comparam automaticamente as frases livres
-aos campos estruturados. Este é um perfil aditivo experimental da versão 1.
+continuam invariáveis. Fora do perfil `strict_text` (abaixo), as frases livres
+não são comparadas aos campos estruturados. Este é um perfil aditivo experimental
+da versão 1.
 
 A [série 05](../../experiments/claims-camera-20260928-05/README.md) identificou
 nome e linhas corretos em três respostas, mas todas foram rejeitadas por falta
 da citação da declaração (`location_declaration_not_cited`).
+
+## Campos opcionais do contexto (L2)
+
+Todos são aditivos: ausentes, a query sai idêntica byte a byte à anterior, e os
+contextos antigos continuam sendo lidos.
+
+| Campo | Efeito na query | Efeito no checker |
+| --- | --- | --- |
+| `limits` | `evidence.limits` e uma instrução: são limites da evidência, não fatos sobre o código | nenhum |
+| `project_instructions` | campo `project_instructions` e uma instrução: complementam as fixas e, em conflito, valem as fixas e o `response_schema` | nenhum |
+| `strict_text` | `strict_text: true` e uma instrução descrevendo a regra | as duas regras abaixo |
+
+As instruções novas entram depois das fixas, que mantêm a ordem.
+
+### Perfil `strict_text`
+
+O `text` de cada claim só pode afirmar o que as citações do próprio claim mostram:
+
+- **`text_cites_uncited_line`**: um número de linha escrito no texto não está dentro
+  de nenhuma citação do claim. São reconhecidos "linha 86", "linhas 84–86 e 88",
+  "linhas 84 a 86", "lines 3 and 4" e `arquivo.rs:86`. Horas (`10:30`) e versões
+  (`1.2:3`) não contam.
+- **`text_quotes_uncited_code`**: um trecho entre crases não aparece nas linhas
+  citadas. A comparação usa as linhas da fonte, não o `quote` da resposta, e
+  ignora diferenças de espaços. `...` ou `…` dentro do trecho pulam qualquer texto,
+  na ordem. O path e o id da evidência citada são aceitos entre crases.
+
+Exemplo real ([fixture](tests/fixtures/camera-studio-sonnet.txt)): o Sonnet citou as
+linhas 75 e 84–86, mas escreveu "o raio é construído na linha 88 com
+`Ray::new(origin, direction)`". As duas regras recusam a resposta; citar a linha 88
+basta para passar.
+
+Limites: uma paráfrase sem número e sem crase ("o raio é construído depois") passa
+sem ser vista. A regra também não confere se há uma só afirmação por claim. Ela
+reduz o que o texto pode afirmar sem prova; não confere o sentido.
+
+### Cercas de Markdown
+
+`claims::check` continua recusando uma resposta cercada. `claims::extract_fenced`
+devolve o corpo de uma resposta que é exatamente uma cerca (` ```json ` ou sem
+rótulo), sem nada fora dela. Quem usar a extração precisa registrar que extraiu;
+o studio grava `extracted_from_fence` no `check.json`.
+
+## Comparação por conteúdo (L2b)
+
+`claims::compare::compare` recebe as respostas de uma mesma pergunta (uma lista de
+claims por resposta, ou `None` para uma resposta sem claims legíveis) e devolve uma
+linha por conteúdo distinto, com uma célula por resposta: `equal`, `partial` ou
+`absent`, e os ids dos claims por trás de cada célula.
+
+O conteúdo de um claim é o tipo mais, com `location`, a evidência, a função, a linha
+da declaração e as linhas da operação; sem `location`, as linhas citadas, sem ordem
+nem repetição. O `text` não entra. É parcial a mesma função (ou as mesmas citações)
+com linhas que se sobrepõem, ou o mesmo lugar com outro tipo.
+
+A função não confere nada: quem chama decide quais respostas entram, e o studio
+inclui as recusadas, marcadas. Concordância é sinal, não prova.
 
 ## CLI e preservação
 
