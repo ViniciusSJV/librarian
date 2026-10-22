@@ -1,6 +1,7 @@
 //! Projects, runs and questions under `.studio/`. Nothing is written inside analyzed projects.
 //! Layout: projects/<key>/project.json, runs/<run>/{edition, graph-v2.json, run.json},
-//! runs/<run>/turns/<NN>/{question.json, search.json, prepare-request.json, prepared/, sends/}.
+//! runs/<run>/turns/<NN>/{question.json, search.json, prepare-request.json, prepared/, claims/, sends/}.
+use librarian_llm_engine::claims::Policy;
 use librarian_ingest::{
     graph::v2,
     hash,
@@ -41,6 +42,23 @@ pub struct Settings {
     /// Profile the first settings were read from, if any; later edits stay in `.studio`.
     #[serde(default)]
     pub imported_from: Option<String>,
+    /// Fixed with each question. Projects saved before this field keep `prose`.
+    #[serde(default)]
+    pub answer_format: AnswerFormat,
+    /// Claims policy; INFERENCE and HYPOTHESIS are refused by the checker unless allowed here.
+    #[serde(default)]
+    pub allow_inference: bool,
+    #[serde(default)]
+    pub allow_hypothesis: bool,
+}
+
+/// `prose` sends the Graph Engine query; `claims` sends a claims query and checks each answer.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum AnswerFormat {
+    #[default]
+    Prose,
+    Claims,
 }
 
 pub struct Store {
@@ -183,13 +201,18 @@ impl Store {
             sends.extend(paths.into_iter().filter_map(|p| read_json(p.join("send.json"))));
         }
         let question = read_json(dir.join("question.json")).unwrap_or(Value::Null);
+        let claims = question["answer_format"] == "claims";
+        // `query` is what a send delivers: the claims query in claims mode.
+        let query = if claims { dir.join(crate::claims::DIR).join("query.json") } else { dir.join("prepared/bundle/query.json") };
         Ok(json!({
             "id": id,
             "question": question["question"],
             "created": question["created"],
+            "answer_format": if claims { "claims" } else { "prose" },
+            "claims_error": question["claims_error"],
             "search": read_json(dir.join("search.json")),
             "request": read_json(dir.join("prepare-request.json")),
-            "query": fs::read_to_string(dir.join("prepared/bundle/query.json")).ok(),
+            "query": fs::read_to_string(query).ok(),
             "criteria": fs::read_to_string(dir.join(CRITERIA)).ok(),
             "criteria_sha256": question["criteria_sha256"],
             "prepare_error": question["prepare_error"],
@@ -246,10 +269,49 @@ impl Store {
             .and_then(|_| prepare::verify(&catalog, &prepared))
             .err()
             .map(|e| e.to_string());
+        let format = settings.answer_format;
+        let claims_error = match (format, &prepare_error) {
+            (AnswerFormat::Claims, None) => {
+                let policy = Policy { allow_inference: settings.allow_inference, allow_hypothesis: settings.allow_hypothesis };
+                let instructions = settings.instructions.clone().unwrap_or_default();
+                crate::claims::write(&catalog, &dir, policy, instructions).err().map(|e| e.to_string())
+            }
+            _ => None,
+        };
         let record = json!({ "question": question, "created": stamp(), "prepare_error": prepare_error,
-            "criteria_sha256": criteria_sha256 });
+            "criteria_sha256": criteria_sha256, "answer_format": format, "claims_error": claims_error });
         fs::write(dir.join("question.json"), serde_json::to_vec_pretty(&record)?)?;
         self.turn(key, run, &id)
+    }
+
+    /// Checks an answer pasted from a manual send of a claims question; it is kept as a send.
+    pub fn paste_answer(&self, key: &str, run: &str, turn: &str, text: &str) -> Result<Value> {
+        let dir = self.turn_dir(key, run, turn)?;
+        let question: Value = serde_json::from_slice(&fs::read(dir.join("question.json"))?)?;
+        if question["answer_format"] != "claims" {
+            return Err("Esta pergunta está em prosa; só respostas em claims são conferidas".into());
+        }
+        let catalog = Catalog::load(&self.edition(key, run)?)?;
+        prepare::verify(&catalog, &dir.join("prepared"))?;
+        let context = crate::claims::verify(&catalog, &dir)?;
+        let send = next_send(&dir, "manual")?;
+        fs::create_dir(&send)?;
+        fs::write(send.join("response.txt"), text)?;
+        let query = fs::read(dir.join(crate::claims::DIR).join("query.json"))?;
+        let mut summary = json!({
+            "state": "pasted",
+            "provider": "manual",
+            "created": stamp(),
+            "directory": display(&send),
+            "text": text,
+            "query_sha256": hash(&query),
+            "response_sha256": hash(text.as_bytes()),
+            "semantic_evaluation": "pending",
+            "criteria_sha256": question["criteria_sha256"],
+        });
+        summary["check"] = crate::claims::check(&context, &send, text)?;
+        fs::write(send.join("send.json"), serde_json::to_vec_pretty(&summary)?)?;
+        Ok(summary)
     }
 
     fn settings(&self, key: &str) -> Result<Settings> {
@@ -325,6 +387,8 @@ impl Store {
             "search": { "top": settings.top, "depth": settings.depth, "hits": settings.hits },
             "prepare": { "radius": settings.radius, "numbered_lines": settings.numbered_lines,
                 "accept_diagnostics": settings.accept_diagnostics },
+            "answer": { "format": settings.answer_format, "allow_inference": settings.allow_inference,
+                "allow_hypothesis": settings.allow_hypothesis },
         });
         let mut files: Vec<(String, Vec<u8>)> = vec![];
         let pretty = |v: &Value| -> Result<Vec<u8>> {
@@ -403,6 +467,14 @@ impl Store {
         fs::write(self.modelfiles.join(format!("{name}.Modelfile")), content)?;
         self.modelfiles()
     }
+}
+
+/// The next numbered send directory of a turn (not created), e.g. sends/03-ollama.
+pub fn next_send(turn: &Path, provider: &str) -> Result<PathBuf> {
+    let sends = turn.join("sends");
+    fs::create_dir_all(&sends)?;
+    let next = fs::read_dir(&sends)?.count() + 1;
+    Ok(sends.join(format!("{next:02}-{provider}")))
 }
 
 pub fn model_name(modelfile: &str) -> String {
@@ -485,6 +557,10 @@ fn initial_settings(name: &str, root: &str) -> Result<Settings> {
         accept_diagnostics: false,
         criteria: None,
         imported_from: None,
+        // New projects ask for checkable claims; `prose` is one setting away.
+        answer_format: AnswerFormat::Claims,
+        allow_inference: false,
+        allow_hypothesis: false,
     };
     let profile = Path::new(root).join(PROFILE);
     if let Ok(bytes) = fs::read(&profile) {
@@ -511,6 +587,11 @@ fn initial_settings(name: &str, root: &str) -> Result<Settings> {
         settings.radius = number(&p["prepare"]["radius"], settings.radius);
         settings.numbered_lines = p["prepare"]["numbered_lines"].as_bool().unwrap_or(false);
         settings.accept_diagnostics = p["prepare"]["accept_diagnostics"].as_bool().unwrap_or(false);
+        if let Some(format) = p["answer"].get("format") {
+            settings.answer_format = serde_json::from_value(format.clone())?;
+        }
+        settings.allow_inference = p["answer"]["allow_inference"].as_bool().unwrap_or(false);
+        settings.allow_hypothesis = p["answer"]["allow_hypothesis"].as_bool().unwrap_or(false);
         settings.root = display(&base.canonicalize()?);
         settings.imported_from = Some(display(&profile));
     }
@@ -621,6 +702,9 @@ mod tests {
         assert_eq!(store.open(&display(&scratch.0.join("project"))).unwrap()["key"], key);
         let mut settings: Settings = serde_json::from_value(opened["settings"].clone()).unwrap();
         assert_eq!(settings.inputs, ["src", "Cargo.toml"]);
+        // New projects ask for claims; this test follows the prose query.
+        assert_eq!(settings.answer_format, AnswerFormat::Claims);
+        settings.answer_format = AnswerFormat::Prose;
         settings.lexicon.groups = vec![
             vec!["raios".into(), "ray".into()],
             vec!["direcao".into(), "direction".into()],
@@ -663,6 +747,68 @@ mod tests {
     }
 
     #[test]
+    fn claims_questions_derive_a_checked_context_and_pasted_answers_are_checked() {
+        let scratch = project();
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let opened = store.open(&display(&scratch.0.join("project"))).unwrap();
+        let key = opened["key"].as_str().unwrap().to_owned();
+        let mut settings: Settings = serde_json::from_value(opened["settings"].clone()).unwrap();
+        settings.lexicon.groups = vec![vec!["raios".into(), "ray".into()], vec!["direcao".into(), "direction".into()]];
+        store.save_settings(&key, &settings).unwrap();
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+
+        let turn = store.ask(&key, &run, "Onde a câmera calcula a direção dos raios?").unwrap();
+        assert_eq!((turn["answer_format"].as_str(), &turn["claims_error"]), (Some("claims"), &Value::Null));
+        // The query sent is the claims query; its evidence is the bundle window, with the symbol.
+        let query: Value = serde_json::from_str(turn["query"].as_str().unwrap()).unwrap();
+        let item = &query["evidence"]["items"][0];
+        assert_eq!((item["id"].as_str(), item["start_line"].as_u64(), item["end_line"].as_u64()), (Some("E1"), Some(4), Some(7)));
+        assert_eq!(item["symbols"], json!([{"name": "ray_from_pixel", "declaration_line": 4, "name_column": 12, "end_line": 7}]));
+        assert_eq!(query["require_location"], true);
+        assert!(query["evidence"]["limits"][0].as_str().unwrap().starts_with("Lexical candidates"));
+
+        let answer = json!({"schema_version": 1, "claims": [{
+            "id": "C1", "kind": "FACT", "text": "`ray_from_pixel` calcula `direction` na linha 5 de src/lib.rs.",
+            "citations": [{"evidence_id": "E1", "path": "src/lib.rs", "start_line": 4, "end_line": 5,
+                "quote": "    pub fn ray_from_pixel(&self, x: f64) -> f64 {\n        let direction = x * 2.0;"}],
+            "premises": [], "verification_plan": null,
+            "location": {"evidence_id": "E1", "path": "src/lib.rs", "symbol_name": "ray_from_pixel",
+                "declaration_line": 4, "operation_start_line": 5, "operation_end_line": 5}}]});
+        let fenced = format!("```json\n{answer}\n```");
+        let passed = store.paste_answer(&key, &run, "01", &fenced).unwrap();
+        assert_eq!(passed["check"]["report"]["mechanical_status"], "passed");
+        assert_eq!(passed["check"]["report"]["accepted"], false);
+        assert_eq!(passed["check"]["extracted_from_fence"], true);
+        assert_eq!(passed["check"]["claims"][0]["location"]["symbol_name"], "ray_from_pixel");
+
+        let mut wrong = answer.clone();
+        wrong["claims"][0]["citations"][0]["quote"] = json!("let direction = x * 2.0;");
+        let rejected = store.paste_answer(&key, &run, "01", &wrong.to_string()).unwrap();
+        assert_eq!(rejected["check"]["report"]["mechanical_status"], "rejected");
+        assert_eq!(rejected["check"]["report"]["issues"][0]["code"], "quote_mismatch");
+        let sends = &store.turn(&key, &run, "01").unwrap()["sends"];
+        assert_eq!(sends.as_array().unwrap().len(), 2);
+        assert!(sends[1]["directory"].as_str().unwrap().ends_with("02-manual"));
+        assert!(store.turn_dir(&key, &run, "01").unwrap().join("sends/01-manual/check.json").is_file());
+
+        // A context edited after the question no longer matches the bundle and is refused.
+        let context = store.turn_dir(&key, &run, "01").unwrap().join("claims/context.json");
+        let original = fs::read_to_string(&context).unwrap();
+        fs::write(&context, original.replace("\"allow_hypothesis\": false", "\"allow_hypothesis\": true")).unwrap();
+        assert!(store.paste_answer(&key, &run, "01", &answer.to_string()).is_err());
+        fs::write(&context, &original).unwrap();
+        assert!(store.paste_answer(&key, &run, "01", &answer.to_string()).is_ok());
+
+        // Prose questions keep the Graph Engine query and are not checked.
+        settings.answer_format = AnswerFormat::Prose;
+        store.save_settings(&key, &settings).unwrap();
+        let prose = store.ask(&key, &run, "direção dos raios").unwrap();
+        assert_eq!(prose["answer_format"], "prose");
+        assert!(serde_json::from_str::<Value>(prose["query"].as_str().unwrap()).unwrap()["evidence"]["source"].is_object());
+        assert!(store.paste_answer(&key, &run, "02", &answer.to_string()).is_err());
+    }
+
+    #[test]
     fn profile_seeds_settings_and_criteria_are_fixed_with_each_question() {
         let scratch = project();
         let root = scratch.0.join("project");
@@ -675,7 +821,8 @@ mod tests {
             root.join(PROFILE),
             r#"{"project_root": ".", "sources_config": "ai/sources.json", "lexicon": "ai/lexicon.json",
                 "instructions": "ai/instructions.json", "criteria": "ai/criteria.md",
-                "search": {"top": 3, "depth": 1, "hits": 1}, "prepare": {"radius": 1, "numbered_lines": true}}"#,
+                "search": {"top": 3, "depth": 1, "hits": 1}, "prepare": {"radius": 1, "numbered_lines": true},
+                "answer": {"format": "prose", "allow_hypothesis": true}}"#,
         )
         .unwrap();
         let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
@@ -684,6 +831,10 @@ mod tests {
         assert_eq!(settings.inputs, ["src"]);
         assert_eq!((settings.top, settings.depth, settings.radius), (3, 1, 1));
         assert_eq!(settings.instructions.as_deref(), Some(&["Cite E1.".to_string()][..]));
+        assert_eq!(
+            (settings.answer_format, settings.allow_inference, settings.allow_hypothesis),
+            (AnswerFormat::Prose, false, true)
+        );
         assert!(settings.imported_from.unwrap().ends_with(PROFILE));
         let key = opened["key"].as_str().unwrap();
         let run = store.generate(key).unwrap();

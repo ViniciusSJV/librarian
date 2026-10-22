@@ -1,6 +1,7 @@
 //! Librarian Studio: local server for the page in web/index.html. Select a project, generate its
 //! verified graph, ask questions that light the graph, and send prepared queries to an LLM.
 //! Listens on 127.0.0.1 only; requests from other origins are refused.
+mod claims;
 mod http;
 mod lexicon;
 mod llm;
@@ -117,6 +118,11 @@ fn route(app: &App, req: &Request) -> Result<Response> {
             ok(store.ask(&field(&body, "key")?, &field(&body, "run")?, &question)?)
         }
         ("POST", "/api/send") => send(store, &req.json()?),
+        ("POST", "/api/check") => {
+            let body = req.json()?;
+            let (key, run, turn) = (field(&body, "key")?, field(&body, "run")?, field(&body, "turn")?);
+            ok(store.paste_answer(&key, &run, &turn, &field(&body, "text")?)?)
+        }
         ("DELETE", "/api/turn") => {
             let body = req.json()?;
             ok(store.delete_turn(&field(&body, "key")?, &field(&body, "run")?, &field(&body, "turn")?)?)
@@ -166,16 +172,26 @@ fn send(store: &Store, body: &Value) -> Result<Response> {
     }
     let catalog = librarian_ingest::Catalog::load(&store.edition(key, run)?)?;
     librarian_ingest::prepare::verify(&catalog, &prepared)?;
-    let choice = choice(store, body)?;
     let question: Value = serde_json::from_slice(&std::fs::read(dir.join("question.json"))?)?;
-    let sends = dir.join("sends");
-    std::fs::create_dir_all(&sends)?;
-    let next = std::fs::read_dir(&sends)?.count() + 1;
-    let query = prepared.join("bundle/query.json");
-    let destination = sends.join(format!("{next:02}-{provider}"));
+    // A claims question sends its own query, re-derived from the bundle just verified.
+    let context = match question["answer_format"] == "claims" {
+        true => Some(claims::verify(&catalog, &dir)?),
+        false => None,
+    };
+    let query = match context {
+        Some(_) => dir.join(claims::DIR).join("query.json"),
+        None => prepared.join("bundle/query.json"),
+    };
+    let choice = choice(store, body)?;
+    let destination = store::next_send(&dir, provider)?;
     let mut request = choice.request(&query, &destination);
     request.criteria_sha256 = question["criteria_sha256"].as_str();
-    Ok(Response::json(200, &llm::send(provider, request)?))
+    let mut summary = llm::send(provider, request)?;
+    if let (Some(context), Some(text)) = (&context, summary["text"].as_str()) {
+        summary["check"] = claims::check(context, &destination, text)?;
+        std::fs::write(destination.join("send.json"), serde_json::to_vec_pretty(&summary)?)?;
+    }
+    Ok(Response::json(200, &summary))
 }
 
 /// Providers that actually send; "manual" and the listed-but-pending ones do not.

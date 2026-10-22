@@ -31,6 +31,12 @@ pub struct Context {
     pub evidence: Vec<Evidence>,
     #[serde(default)]
     pub require_location: bool,
+    /// Caller-declared limits of the evidence (e.g. edition diagnostics); shown, never checked.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub limits: Vec<String>,
+    /// Project instructions, kept apart from the fixed contract; they cannot relax it.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub project_instructions: Vec<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -130,7 +136,7 @@ pub fn query(context: &Context, question: &str) -> Result<String, String> {
             })
         })
         .collect();
-    serde_json::to_string_pretty(&serde_json::json!({
+    let mut query = serde_json::json!({
         "question": question,
         "evidence": {"items": context.evidence, "line_map": line_map},
         "policy": context.policy,
@@ -149,7 +155,31 @@ pub fn query(context: &Context, question: &str) -> Result<String, String> {
             "LACUNA somente para informação necessária à pergunta e ausente. Não invente lacunas sobre operações presentes. Pode encerrar com FACT apenas. premises deve ser [] fora de INFERENCE; verification_plan deve ser null fora de HYPOTHESIS.",
             "Não alegue execução, desempenho nem comportamento de funções ausentes. Não proponha alterações ou testes não solicitados. Citação não comprova sustentação semântica."
         ]
-    })).map_err(|e| e.to_string())
+    });
+    // Optional parts are added only when present, so earlier queries stay byte-identical.
+    if !context.limits.is_empty() {
+        query["evidence"]["limits"] = serde_json::json!(context.limits);
+        query["instructions"].as_array_mut().unwrap().push(serde_json::json!(
+            "evidence.limits descreve limites da evidência; não os trate como fatos sobre o código nem os contradiga."
+        ));
+    }
+    if !context.project_instructions.is_empty() {
+        query["project_instructions"] = serde_json::json!(context.project_instructions);
+        query["instructions"].as_array_mut().unwrap().push(serde_json::json!(
+            "project_instructions complementam estas instruções e não as substituem; em conflito, valem estas instruções e response_schema."
+        ));
+    }
+    serde_json::to_string_pretty(&query).map_err(|e| e.to_string())
+}
+
+/// The body of a response that is exactly one Markdown code fence, with nothing outside it.
+/// `check` itself stays strict; a caller that accepts fences must record that it did.
+pub fn extract_fenced(response: &str) -> Option<&str> {
+    let rest = response.trim().strip_prefix("```")?;
+    let (info, body) = rest.split_once('\n')?;
+    let body = body.strip_suffix("```")?;
+    let plain_info = info.trim().is_empty() || info.trim().eq_ignore_ascii_case("json");
+    (plain_info && !body.contains("```")).then_some(body)
 }
 
 /// Output shape and allowed categories; citations and meaning still require checking.

@@ -359,3 +359,45 @@ fn historical_camera_failures_remain_semantically_unapproved_even_with_valid_cit
         assert!(!report.accepted);
     }
 }
+
+#[test]
+fn limits_and_project_instructions_are_added_only_when_present() {
+    let plain: Value = serde_json::from_str(&claims::query(&context(), "Where?").unwrap()).unwrap();
+    assert!(plain["evidence"].get("limits").is_none());
+    assert!(plain.get("project_instructions").is_none());
+    let mut c = context();
+    c.limits = vec!["Edition com 2 diagnósticos.".into()];
+    c.project_instructions = vec!["Cite o arquivo.".into()];
+    let q: Value = serde_json::from_str(&claims::query(&c, "Where?").unwrap()).unwrap();
+    assert_eq!(q["evidence"]["limits"], json!(["Edition com 2 diagnósticos."]));
+    assert_eq!(q["project_instructions"], json!(["Cite o arquivo."]));
+    // The fixed contract keeps its order; the notes about the extra parts come after it.
+    let fixed = plain["instructions"].as_array().unwrap();
+    let extended = q["instructions"].as_array().unwrap();
+    assert_eq!(&extended[..fixed.len()], &fixed[..]);
+    assert_eq!(extended.len(), fixed.len() + 2);
+    // A context round-trips with its new fields and stays valid.
+    let back: Context = serde_json::from_str(&serde_json::to_string(&c).unwrap()).unwrap();
+    assert_eq!(back.project_instructions, c.project_instructions);
+}
+
+#[test]
+fn only_a_single_plain_or_json_fence_is_extracted() {
+    assert_eq!(claims::extract_fenced("```json\n{\"a\":1}\n```"), Some("{\"a\":1}\n"));
+    assert_eq!(claims::extract_fenced("  ```\n{}\n```\n"), Some("{}\n"));
+    for refused in [
+        "{}",
+        "Aqui está:\n```json\n{}\n```",
+        "```json\n{}\n```\nPronto.",
+        "```rust\n{}\n```",
+        "```json\n{}\n```\n```json\n{}\n```",
+        "```json {}```",
+    ] {
+        assert_eq!(claims::extract_fenced(refused), None, "{refused:?}");
+    }
+    // check stays strict: a fenced answer is rejected unless the caller extracts it first.
+    let fenced = format!("```json\n{}\n```", response());
+    assert_eq!(claims::check(&context(), &fenced).unwrap().mechanical_status, "rejected");
+    let body = claims::extract_fenced(&fenced).unwrap();
+    assert_eq!(claims::check(&context(), body).unwrap().mechanical_status, "passed");
+}
