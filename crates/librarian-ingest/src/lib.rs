@@ -515,6 +515,10 @@ impl Catalog {
     pub fn source_by_path(&self, path: &str) -> Option<&Source> {
         self.sources.get(self.paths.get(path)?)
     }
+    /// The verified bytes of a source as preserved in the edition.
+    pub fn snapshot(&self, source_id: &str) -> Option<&[u8]> {
+        self.snapshots.get(source_id).map(Vec::as_slice)
+    }
     pub fn symbols_named(&self, name: &str) -> Vec<&Symbol> {
         self.names
             .get(name)

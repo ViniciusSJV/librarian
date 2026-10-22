@@ -190,6 +190,10 @@
           <select id="runs" title="Grafos já gerados"></select><button type="button" class="help" aria-label="O que é isto?" data-help="O bibliotecário cataloga o acervo: cada arquivo, função e uso ganha uma ficha e um lugar no mapa. Esse catálogo é conferido e congelado, e toda resposta é checada contra ele. Se o código mudar, catalogue de novo. O seletor ao lado guarda os catálogos anteriores.">?</button>
         </div>
         <p id="runNote" class="muted"></p>
+        <details id="factsBox">
+          <summary>Acervo de fatos <span id="factsCount" class="muted"></span><button type="button" class="help" aria-label="O que é isto?" data-help="O fichário do bibliotecário com o que você já aprovou. Um item só entra aqui se passou em quatro portões: a conferência mecânica (refeita na hora), o vínculo com a pasta conferida, a sua aprovação com uma nota e o registro de origem. A cada catálogo novo, ele volta à estante e confere se as páginas citadas continuam iguais: vigente quando batem, desatualizado quando o texto mudou. Ele confere o texto, não o sentido. Por enquanto o fichário não entra nas perguntas.">?</button></summary>
+          <div id="factsList"></div>
+        </details>
         <details>
           <summary>Léxico, busca e instruções<button type="button" class="help" aria-label="O que é isto?" data-help="As regras do balcão: como o bibliotecário procura nas estantes e o que ele exige de quem responde. Vale para as próximas consultas; as já feitas guardam as regras da época.">?</button></summary>
           <label class="field"><span>Léxico (JSON: <code>groups</code> de sinônimos e <code>stop_words</code>)<button type="button" class="help" aria-label="O que é isto?" data-help="O dicionário de sinônimos do bibliotecário. Você pergunta por raios, mas na estante o livro se chama ray: o léxico faz essa ponte. Sem ele, uma pergunta em português não encontra nomes em inglês. stop_words são palavras que ele ignora, como de e o.">?</button></span><textarea id="lexicon" class="code" rows="8" spellcheck="false"></textarea></label>
@@ -950,7 +954,7 @@ async function openProject() {
     renderProject();
     const runs = studio.project.runs;
     if (runs.length) await loadRun(runs[0].id);
-    else { studio.run = null; studio.turns = []; renderTurns(); say($('#runNote'), 'Nenhum grafo gerado ainda para este projeto.'); }
+    else { studio.run = null; studio.turns = []; renderTurns(); loadFacts(); say($('#runNote'), 'Nenhum grafo gerado ainda para este projeto.'); }
   });
 }
 
@@ -1023,6 +1027,7 @@ async function loadRun(id) {
   studio.turns = await api('GET', `/api/turns?${query({ key: studio.project.key, run: id })}`);
   studio.activeTurn = null;
   renderTurns();
+  await loadFacts();
   const last = studio.turns.at(-1);
   if (last) activate(last.id, false);
 }
@@ -1190,7 +1195,7 @@ function renderTurn(t) {
       el('p', { className: 'muted', textContent: 'No Ollama vai como prompt e o SYSTEM vem do Modelfile; no Claude vai por stdin e o SYSTEM vira o system prompt. Conferida contra a edition imediatamente antes de cada envio.' }),
       t.answer_format === 'claims' ? el('p', { className: 'muted', textContent: 'Formato claims: a evidência são as janelas do bundle conferido, com os símbolos da edition. Cada resposta passa pela conferência mecânica.' }) : null,
       el('pre', { textContent: t.query })) : null,
-    ...(t.sends ?? []).map(reply),
+    ...(t.sends ?? []).map(s => reply(s, t)),
     t.comparison ? compareView(t.comparison) : null,
     t.pending ? el('div', { className: 'bubble reply muted', textContent: `Enviando para ${t.pending}…` }) : null,
     t.sendError ? el('p', { className: 'error', textContent: t.sendError }) : null,
@@ -1220,13 +1225,13 @@ async function deleteTurn(turn) {
   });
 }
 
-function reply(s) {
+function reply(s, t) {
   const meta = [s.state === 'pasted' ? 'Resposta colada à mão' : providerLabel(s.provider), s.modelfile ? `Modelfile ${s.modelfile}` : null, s.model, s.state,
     s.cost_usd != null ? `US$ ${Number(s.cost_usd).toFixed(4)}` : null, s.elapsed_ms != null ? `${(s.elapsed_ms / 1000).toFixed(1)} s` : null];
   return el('div', { className: 'bubble reply' },
     el('div', { className: 'muted', textContent: meta.filter(Boolean).join(' · ') }),
     s.input?.truncation_suspected ? el('div', { className: 'error', style: 'margin-top: 6px', textContent: s.input.note }) : null,
-    s.check ? checkView(s.check) : null,
+    s.check ? checkView(s.check, s, t) : null,
     s.text ? (s.check?.claims ? el('details', {}, el('summary', { textContent: 'Resposta bruta' }), el('pre', { textContent: s.text }))
       : el('div', { style: 'margin-top: 6px', textContent: s.text }))
       : el('div', { className: 'error', style: 'margin-top: 6px', textContent: s.diagnostic ?? 'Sem texto na resposta.' }),
@@ -1292,7 +1297,7 @@ const ISSUES = {
 };
 
 // Mechanical verdict and the claims as the checker parsed them; meaning is still for review.
-function checkView(c) {
+function checkView(c, s, t) {
   const passed = c.report.mechanical_status === 'passed';
   const issue = i => {
     const [label, help] = ISSUES[i.code] ?? ['problema sem descrição', 'O bibliotecário recusou por um motivo ainda sem explicação nesta página.'];
@@ -1305,7 +1310,8 @@ function checkView(c) {
     k.location ? el('div', { className: 'muted mono', textContent: `${k.location.symbol_name} (declaração ${k.location.declaration_line}) · operação ${k.location.path}:${k.location.operation_start_line}–${k.location.operation_end_line}` }) : null,
     k.citations.length ? el('div', { className: 'muted mono', textContent: `cita ${k.citations.map(x => `${x.evidence_id} ${lines(x)}`).join(', ')}` }) : null,
     k.premises.length ? el('div', { className: 'muted', textContent: `premissas: ${k.premises.join(' · ')}` }) : null,
-    k.verification_plan ? el('div', { className: 'muted', textContent: `como verificar: ${k.verification_plan}` }) : null);
+    k.verification_plan ? el('div', { className: 'muted', textContent: `como verificar: ${k.verification_plan}` }) : null,
+    s && t ? reviewView(k, passed, s, t) : null);
   return el('div', { style: 'margin-top: 6px' },
     el('div', {},
       el('span', { className: `verdict ${passed ? 'passed' : 'error'}`, textContent: passed ? 'Mecânica: aprovada' : 'Mecânica: recusada' }),
@@ -1314,6 +1320,61 @@ function checkView(c) {
     c.report.issues.length ? el('ul', { className: 'claims error' }, ...c.report.issues.map(issue)) : null,
     c.claims ? el('ol', { className: 'claims' }, ...c.claims.map(claim)) : null,
     el('div', { className: 'muted', style: 'font-size: 11px', textContent: c.limits }));
+}
+
+// L4: your decision on one item. Approval promotes a FACT to the collection after the server
+// rechecks the gates; rejection records the decision and revokes an earlier promotion.
+function reviewView(k, passed, s, t) {
+  const r = s.reviews?.[k.id];
+  const promotable = k.kind === 'FACT' && passed && s.link;
+  const decide = async (approved, button) => {
+    const note = prompt(approved
+      ? `Aprovar ${k.id} como fato. Por que ele é verdadeiro? (a nota fica registrada com o fato)`
+      : `${r?.decision === 'approved' ? `Revogar o fato ${r.fact_id}` : `Recusar ${k.id}`}. Por quê?`);
+    if (note === null) return;
+    await busy([button], $('#llmNote'), async () => {
+      await api('POST', '/api/review', { key: studio.project.key, run: studio.run, turn: t.id, send: s.id, claim: k.id,
+        decision: approved ? 'approved' : 'rejected', note });
+      const fresh = (await api('GET', `/api/turns?${query({ key: studio.project.key, run: studio.run })}`)).find(x => x.id === t.id);
+      if (fresh) Object.assign(t, { sends: fresh.sends, comparison: fresh.comparison });
+      renderTurns();
+      await loadFacts();
+    });
+  };
+  const button = (label, approved, title) => {
+    const b = el('button', { textContent: label, title });
+    b.onclick = () => decide(approved, b);
+    return b;
+  };
+  const status = r ? el('span', { className: r.decision === 'approved' ? 'verdict passed' : 'muted',
+    textContent: r.decision === 'approved' ? `Aprovado como fato ${r.fact_id}` : `Recusado${r.revoked ? ` (revogou ${r.revoked})` : ''}` }) : null;
+  const buttons = [
+    promotable && r?.decision !== 'approved' ? button('Aprovar como fato', true, 'O servidor refaz a conferência mecânica e o vínculo antes de promover') : null,
+    r?.decision === 'approved' ? button('Revogar', false, 'Registra a recusa e marca o fato como revogado') : !r ? button('Recusar', false, 'Registra que este item não está certo') : null,
+  ].filter(Boolean);
+  if (!status && !buttons.length) return null;
+  return el('div', { className: 'row', style: 'margin-top: 4px; gap: 6px' }, status,
+    r?.note ? el('span', { className: 'muted', textContent: `· ${r.note} · ${r.reviewed}` }) : null, ...buttons,
+    !promotable && !r && k.kind === 'FACT' ? el('span', { className: 'muted', textContent: passed ? '· envio sem vínculo: não pode virar fato' : '· recusado na mecânica: não pode virar fato' }) : null);
+}
+
+async function loadFacts() {
+  if (!studio.project || !studio.run) { $('#factsList').replaceChildren(); $('#factsCount').textContent = ''; return; }
+  const data = await api('GET', `/api/facts?${query({ key: studio.project.key, run: studio.run })}`);
+  const labels = { current: ['vigente', 'verdict passed'], stale: ['desatualizado', 'error'], revoked: ['revogado', 'muted'] };
+  const active = data.facts.filter(f => f.status !== 'revoked').length;
+  $('#factsCount').textContent = `(${active})`;
+  $('#factsList').replaceChildren(
+    data.facts.length ? el('ol', { className: 'claims' }, ...data.facts.map(f => {
+      const [label, cls] = labels[f.status];
+      return el('li', {},
+        el('span', { className: 'tag', textContent: f.id }), ' ', el('span', { className: cls, textContent: label }), ' ', f.statement,
+        el('div', { className: 'muted mono', textContent: `${f.symbol_name} (declaração ${f.declaration_line}) · ${f.path}:${f.line}${f.end_line !== f.line ? `–${f.end_line}` : ''}` }),
+        f.status_reason ? el('div', { className: f.status === 'stale' ? 'error' : 'muted', textContent: f.status_reason }) : null,
+        el('div', { className: 'muted', textContent: `Nota: ${f.note}` }),
+        el('div', { className: 'muted', style: 'font-size: 11px', textContent: `Aprovado em ${f.reviewed} · execução ${f.run}, pergunta ${f.turn}, envio ${f.send}, item ${f.claim_id}` }));
+    })) : el('p', { className: 'muted', textContent: 'Nenhum fato aprovado ainda. Aprove um FACT de uma resposta que passou na conferência mecânica.' }),
+    el('p', { className: 'muted', style: 'font-size: 11px', textContent: data.limits }));
 }
 
 const helpButton = text => {
