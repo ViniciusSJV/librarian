@@ -181,7 +181,10 @@ Depois do envio, a resposta passa pela **conferência mecânica**:
   linha escrito no texto está numa citação do claim, e todo trecho entre crases aparece
   nas linhas citadas. Uma resposta que diz "na linha 88 faz `Ray::new(...)`" sem citar
   a linha 88 é recusada. As perguntas feitas antes desta regra continuam conferidas sem
-  ela.
+  ela;
+- a operação aponta um trecho da função, não a função inteira (`precise_location`):
+  começar na linha da declaração, ou cobrir todo o corpo, é recusado, exceto em funções
+  ou corpos de uma linha. Também vale só para as perguntas novas.
 
 A resposta mostra **Mecânica: aprovada** ou **recusada**, com os problemas por claim (cada um com uma frase simples e um **?** que explica), e a
 lista de claims com location e citações. A resposta bruta fica em **Resposta bruta**. Se
@@ -219,6 +222,39 @@ que acerta a linha 86 sem citar a declaração). A comparação é recalculada d
 `check.json` já gravados.
 
 **Concordância é sinal, não prova.** Modelos diferentes podem errar juntos.
+
+### Onde é usado? (vista Caminho)
+
+Clique num símbolo do mapa (ou num resultado de **Encontrar**) e, na **Inspeção**, em
+**Onde é usado?**. A vista **Caminho** cobre o mapa e mostra, da esquerda para a direita:
+o ponto escolhido, quem lê, escreve ou chama o nome dele, quem usa esses, e assim por
+diante, até a **profundidade** escolhida (padrão 2).
+
+- **Caixas** são a classe (ou impl) de cada função, ou o arquivo quando não há classe.
+- **Linha cheia:** o nome escrito só combina com aquele ponto. **Tracejada:** combina
+  também com homônimos, então pode ser outro.
+- **Clique numa linha** para ver o texto escrito e o arquivo e linha. **Clique num ponto**
+  para inspecioná-lo; **duplo clique** recomeça a vista a partir dele.
+- **Esconder testes** (ligado) tira funções e arquivos de teste pela convenção de nomes;
+  **só usos sem homônimos** tira as linhas tracejadas.
+- Há um teto de 120 pontos; acima dele, a vista avisa.
+
+Exige um grafo gerado com o perfil v3 (desde a G6). É um mapa de candidatos pelo nome
+escrito, não um grafo de chamadas resolvido.
+
+**Quando não aparece nada, ou aparece menos do que existe:**
+
+- o grafo é anterior à G6: gere de novo;
+- o nome tem mais de 8 homônimos (`new`, `get`, `__init__`): nenhuma ligação é desenhada,
+  e a inspeção da ocorrência mostra a contagem;
+- os filtros esconderam os usos (a vista avisa quantos);
+- o uso está escrito numa forma que ainda não é registrada: em Rust, dentro de macros
+  (`assert_eq!`, `println!`), em literais (`Vehicle { placa: x }`) e padrões, e usos de
+  constantes e variantes de enum; em Python, argumentos nomeados (`User(email=...)`) e
+  `getattr`;
+- o nome não aparece escrito em outro lugar, ou só em outra linguagem.
+
+**Ausência na vista não prova que ninguém usa.**
 
 ### 5. Modelfiles
 

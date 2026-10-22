@@ -117,6 +117,8 @@ registrado e a avaliação pendente. Os detalhes estão no [STUDIO.md](STUDIO.md
   - Dossiês decididos pela natureza declarada da fonte (`content`).
   - Ponte busca → `PreparedQuery` em Rust, com `verify-prepared` byte a byte.
   - Python entrou só por extractor e pelo perfil v2 (G5), testado com o TheAlgorithms/Python (1.608 arquivos).
+  - Perfil v3 (G6): campos são símbolos, e acessos, chamadas e heranças viram candidatos
+    pelo nome. O studio mostra **Onde é usado?** na vista Caminho, em camadas.
 - **LLM Engine:** o transporte funciona e preserva tudo. A explicação **ainda não está
   aprovada**. Com o contexto numerado (fase L, passo 1), a resposta da câmera cita a
   linha 86 do arquivo, onde antes citava "linha 11", a posição no trecho. Foi uma
@@ -135,9 +137,10 @@ registrado e a avaliação pendente. Os detalhes estão no [STUDIO.md](STUDIO.md
    checker, e comparação de respostas de modelos diferentes por conteúdo (feitos). Faltam
    a cadeia entre Modelfiles (só o que foi conferido passa adiante), o vínculo do bundle
    no registro do envio e os portões até a promoção a fato.
-2. **Impacto (G6):** campos e chamadas como candidatos no grafo, modo "Onde é usado?" no
-   studio e relatório de impacto ("o que pode quebrar se este campo mudar?") com
-   Modelfile próprio. O modelo só aponta riscos como hipótese, com plano de verificação.
+2. **Impacto (G6):** campos e chamadas como candidatos no grafo e "Onde é usado?" no
+   studio (feitos). Falta o relatório de impacto ("o que pode quebrar se este campo
+   mudar?") com Modelfile próprio, em que o modelo só aponta riscos como hipótese, com
+   plano de verificação.
 3. **Performance com evidência:** captura multiplataforma de benchmark antes e depois,
    para que "ficou mais rápido" seja medido, não afirmado; Modelfile próprio de performance.
 4. **Alteração de código assistida:** o modelo propõe um patch citando evidências e o
