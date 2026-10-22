@@ -1,7 +1,7 @@
 //! Projects, runs and questions under `.studio/`. Nothing is written inside analyzed projects.
 //! Layout: projects/<key>/project.json, runs/<run>/{edition, graph-v2.json, run.json},
 //! runs/<run>/turns/<NN>/{question.json, search.json, prepare-request.json, prepared/, claims/, sends/}.
-use librarian_llm_engine::claims::Policy;
+use librarian_llm_engine::claims::{compare::compare, Claim, Policy};
 use librarian_ingest::{
     graph::v2,
     hash,
@@ -218,6 +218,7 @@ impl Store {
             "criteria": fs::read_to_string(dir.join(CRITERIA)).ok(),
             "criteria_sha256": question["criteria_sha256"],
             "prepare_error": question["prepare_error"],
+            "comparison": compare_sends(&sends),
             "sends": sends,
         }))
     }
@@ -443,6 +444,29 @@ impl Store {
         fs::write(self.modelfiles.join(format!("{name}.Modelfile")), content)?;
         self.modelfiles()
     }
+}
+
+/// Checked answers of one question side by side, by content (L2b). All of them count, rejected
+/// ones included and marked: a rejected answer may still point at the right place.
+/// Recomputed from the stored checks; nothing new is written.
+fn compare_sends(sends: &[Value]) -> Value {
+    let checked: Vec<&Value> = sends.iter().filter(|s| s["check"].is_object()).collect();
+    if checked.len() < 2 {
+        return Value::Null;
+    }
+    let parsed: Vec<Option<Vec<Claim>>> =
+        checked.iter().map(|s| serde_json::from_value(s["check"]["claims"].clone()).ok()).collect();
+    let answers: Vec<Option<&[Claim]>> = parsed.iter().map(|p| p.as_deref()).collect();
+    let columns: Vec<Value> = checked
+        .iter()
+        .zip(&parsed)
+        .map(|(s, claims)| {
+            json!({ "directory": s["directory"], "provider": s["provider"], "model": s["model"],
+                "modelfile": s["modelfile"], "readable": claims.is_some(),
+                "passed": s["check"]["report"]["mechanical_status"] == "passed" })
+        })
+        .collect();
+    json!({ "sends": columns, "rows": compare(&answers) })
 }
 
 /// The next numbered send directory of a turn (not created), e.g. sends/03-ollama.
@@ -802,6 +826,24 @@ mod tests {
         assert!(record_answer(&store, &key, &run, "01", "manual", &answer.to_string()).is_err());
         fs::write(&context, &original).unwrap();
         assert!(record_answer(&store, &key, &run, "01", "manual", &answer.to_string()).is_ok());
+
+        // L2b: the four answers differ in wording and in mechanical result, not in content.
+        let comparison = &store.turn(&key, &run, "01").unwrap()["comparison"];
+        let passed: Vec<_> = comparison["sends"].as_array().unwrap().iter().map(|s| s["passed"].as_bool().unwrap()).collect();
+        assert_eq!(passed, [true, false, false, true]);
+        assert_eq!(comparison["rows"].as_array().unwrap().len(), 1);
+        assert_eq!(comparison["rows"][0]["content"]["symbol"], json!(["E1", "ray_from_pixel", 4]));
+        assert!(comparison["rows"][0]["cells"].as_array().unwrap().iter().all(|c| c["match"] == "equal"));
+        // A different operation line is another content: equal where it was said, partial nowhere else.
+        let mut elsewhere = answer.clone();
+        elsewhere["claims"][0]["location"]["operation_start_line"] = json!(6);
+        elsewhere["claims"][0]["location"]["operation_end_line"] = json!(6);
+        record_answer(&store, &key, &run, "01", "ollama", &elsewhere.to_string()).unwrap();
+        let rows = store.turn(&key, &run, "01").unwrap()["comparison"]["rows"].clone();
+        assert_eq!(rows.as_array().unwrap().len(), 2);
+        let matches = |row: &Value| row["cells"].as_array().unwrap().iter().map(|c| c["match"].as_str().unwrap().to_owned()).collect::<Vec<_>>();
+        assert_eq!(matches(&rows[0]), ["equal", "equal", "equal", "equal", "absent"]);
+        assert_eq!(matches(&rows[1]), ["absent", "absent", "absent", "absent", "equal"]);
 
         // Prose questions keep the Graph Engine query and are not checked.
         settings.answer_format = AnswerFormat::Prose;
