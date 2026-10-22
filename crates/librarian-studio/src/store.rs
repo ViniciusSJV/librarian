@@ -68,6 +68,15 @@ pub struct Store {
     pub modelfiles: PathBuf,
 }
 
+/// What a send delivers once its question was re-verified (`Store::verify_for_send`).
+pub struct Verified {
+    pub query: PathBuf,
+    pub context: Option<librarian_llm_engine::claims::Context>,
+    pub criteria_sha256: Option<String>,
+    /// Recorded with the send (`send.json`, and the Ollama attempt's `result.json`).
+    pub link: Value,
+}
+
 impl Store {
     fn project_dir(&self, key: &str) -> Result<PathBuf> {
         let dir = self.dir.join("projects").join(safe_id(key)?);
@@ -289,6 +298,62 @@ impl Store {
             "criteria_sha256": criteria_sha256, "answer_format": format, "claims_error": claims_error });
         fs::write(dir.join("question.json"), serde_json::to_vec_pretty(&record)?)?;
         self.turn(key, run, &id)
+    }
+
+    /// Re-verifies a question immediately before a send and links the send to what was verified:
+    /// the bundle against the edition, the claims files against the bundle, the criteria against
+    /// the hash fixed with the question. The link is metadata written after those checks, not a
+    /// signature; the provider refuses a query whose bytes no longer have `query_sha256`.
+    pub fn verify_for_send(&self, key: &str, run: &str, turn: &str) -> Result<Verified> {
+        let dir = self.turn_dir(key, run, turn)?;
+        let prepared = dir.join("prepared");
+        if !prepared.join("bundle/query.json").is_file() {
+            return Err("Esta pergunta não tem query preparada (o prepare recusou); nada foi enviado".into());
+        }
+        let catalog = Catalog::load(&self.edition(key, run)?)?;
+        prepare::verify(&catalog, &prepared)?;
+        let question: Value = serde_json::from_slice(&fs::read(dir.join("question.json"))?)?;
+        let criteria_sha256 = question["criteria_sha256"].as_str().map(str::to_owned);
+        if let Some(expected) = &criteria_sha256 {
+            if hash(&fs::read(dir.join(CRITERIA))?) != *expected {
+                return Err("Critérios prévios diferem dos gravados com a pergunta; nada foi enviado".into());
+            }
+        }
+        // A claims question sends its own query, re-derived from the bundle just verified.
+        let context = match question["answer_format"] == "claims" {
+            true => Some(crate::claims::verify(&catalog, &dir)?),
+            false => None,
+        };
+        let query_file = match context {
+            Some(_) => format!("{}/query.json", crate::claims::DIR),
+            None => "prepared/bundle/query.json".to_owned(),
+        };
+        let query = dir.join(&query_file);
+        let origin_bytes = fs::read(prepared.join("bundle/origin.json"))?;
+        let origin: Value = serde_json::from_slice(&origin_bytes)?;
+        let claims = match context {
+            Some(_) => json!({ "context_sha256": hash(&fs::read(dir.join(crate::claims::DIR).join("context.json"))?) }),
+            None => Value::Null,
+        };
+        let mut checks = vec!["prepare::verify"];
+        checks.extend(context.is_some().then_some("claims::verify"));
+        checks.extend(criteria_sha256.is_some().then_some("criteria_sha256"));
+        let link = json!({
+            "format_version": 1,
+            "kind": "studio_send_link",
+            "turn": turn,
+            "query_file": query_file,
+            "query_sha256": hash(&fs::read(&query)?),
+            "dossier_origin": origin["dossier"]["source_path"],
+            "selection": origin["selection"],
+            "bundle": { "origin_sha256": hash(&origin_bytes), "dossier_sha256": origin["dossier"]["sha256"],
+                "query_sha256": origin["query"]["sha256"] },
+            "claims": claims,
+            "criteria_sha256": criteria_sha256,
+            "checks": checks,
+            "verified_unix_ms": now_ms(),
+        });
+        Ok(Verified { query, context, criteria_sha256, link })
     }
 
     fn settings(&self, key: &str) -> Result<Settings> {
@@ -683,12 +748,12 @@ mod tests {
         if question["answer_format"] != "claims" {
             return Err("Pergunta em prosa".into());
         }
-        let catalog = Catalog::load(&store.edition(key, run)?)?;
-        prepare::verify(&catalog, &dir.join("prepared"))?;
-        let context = crate::claims::verify(&catalog, &dir)?;
+        let verified = store.verify_for_send(key, run, turn)?;
+        let context = verified.context.ok_or("Pergunta em claims sem contexto")?;
         let send = next_send(&dir, provider)?;
         fs::create_dir(&send)?;
-        let mut summary = json!({ "state": "completed", "provider": provider, "text": text, "directory": display(&send) });
+        let mut summary = json!({ "state": "completed", "provider": provider, "text": text, "directory": display(&send),
+            "link": verified.link });
         summary["check"] = crate::claims::check(&context, &send, text)?;
         fs::write(send.join("send.json"), serde_json::to_vec_pretty(&summary)?)?;
         Ok(summary)
@@ -745,9 +810,25 @@ mod tests {
         let query: Value = serde_json::from_str(turn["query"].as_str().unwrap()).unwrap();
         let lines = &query["evidence"]["source"]["context"]["lines"];
         assert_eq!(lines[0]["number"], 4);
-        // The bundle written for the page verifies against the edition, as before a send.
-        let catalog = Catalog::load(&store.edition(&key, run_id).unwrap()).unwrap();
-        prepare::verify(&catalog, &store.turn_dir(&key, run_id, "01").unwrap().join("prepared")).unwrap();
+        // The bundle written for the page verifies against the edition, as before a send, and the
+        // send is linked to the exact query and bundle verified (L3).
+        let dir = store.turn_dir(&key, run_id, "01").unwrap();
+        let verified = store.verify_for_send(&key, run_id, "01").unwrap();
+        let link = &verified.link;
+        assert!(verified.context.is_none());
+        assert_eq!(verified.query, dir.join("prepared/bundle/query.json"));
+        assert_eq!(link["query_file"], "prepared/bundle/query.json");
+        assert_eq!(link["query_sha256"], hash(&fs::read(&verified.query).unwrap()));
+        assert_eq!(link["bundle"]["query_sha256"], link["query_sha256"]);
+        let origin: Value = serde_json::from_slice(&fs::read(dir.join("prepared/bundle/origin.json")).unwrap()).unwrap();
+        assert_eq!(link["selection"], origin["selection"]);
+        assert!(link["dossier_origin"].as_str().unwrap().starts_with("edition:"));
+        assert_eq!((&link["claims"], &link["checks"]), (&Value::Null, &json!(["prepare::verify"])));
+        // A query edited after the question is refused before any send.
+        let original = fs::read(&verified.query).unwrap();
+        fs::write(&verified.query, b"{}\n").unwrap();
+        assert!(store.verify_for_send(&key, run_id, "01").is_err());
+        fs::write(&verified.query, &original).unwrap();
 
         // A question the lexicon cannot reach still records the search, with prepare's refusal.
         let miss = store.ask(&key, run_id, "banco de dados quântico").unwrap();
@@ -818,6 +899,13 @@ mod tests {
         assert_eq!(sends.as_array().unwrap().len(), 3);
         assert!(sends[1]["directory"].as_str().unwrap().ends_with("02-manual"));
         assert!(store.turn_dir(&key, &run, "01").unwrap().join("sends/01-manual/check.json").is_file());
+        // In claims mode the link names the claims query and the context it was derived with.
+        let link = &sends[0]["link"];
+        assert_eq!(link["query_file"], "claims/query.json");
+        assert_eq!(link["query_sha256"], hash(turn["query"].as_str().unwrap().as_bytes()));
+        assert_ne!(link["query_sha256"], link["bundle"]["query_sha256"]);
+        assert_eq!(link["checks"], json!(["prepare::verify", "claims::verify"]));
+        assert!(link["claims"]["context_sha256"].is_string());
 
         // A context edited after the question no longer matches the bundle and is refused.
         let context = store.turn_dir(&key, &run, "01").unwrap().join("claims/context.json");
@@ -896,6 +984,14 @@ mod tests {
         assert_eq!(turn["criteria_sha256"], hash(b"- Cita E1, arquivo e linha.\n"));
         let query: Value = serde_json::from_str(turn["query"].as_str().unwrap()).unwrap();
         assert_eq!(query["instructions"], json!(["Cite E1."]));
+        // The link carries the criteria hash; criteria edited after the question block the send.
+        let run = run["id"].as_str().unwrap();
+        let link = store.verify_for_send(key, run, "01").unwrap().link;
+        assert_eq!(link["criteria_sha256"], turn["criteria_sha256"]);
+        assert_eq!(link["checks"], json!(["prepare::verify", "criteria_sha256"]));
+        let criteria = store.turn_dir(key, run, "01").unwrap().join(CRITERIA);
+        fs::write(&criteria, "- Qualquer resposta serve.\n").unwrap();
+        assert!(store.verify_for_send(key, run, "01").err().unwrap().to_string().contains("Critérios"));
     }
 
     #[test]
