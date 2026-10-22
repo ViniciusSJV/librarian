@@ -79,8 +79,9 @@ pub fn context(catalog: &Catalog, query: &Value, policy: Policy, project_instruc
     Ok(context)
 }
 
-/// Declaration line: the first chunk line naming the symbol as a whole identifier. A heuristic
-/// over text (a Python chunk starts at its first decorator), not a parser.
+/// Declaration line: the first code line of the chunk naming the symbol as a whole identifier.
+/// Chunks start at their attributes, doc comments or decorators, so those lines are skipped.
+/// Still a heuristic over text, not a parser.
 fn symbols(catalog: &Catalog, path: &str, start: usize, lines: &[String]) -> Vec<Symbol> {
     let Some(source) = catalog.source_by_path(path) else { return vec![] };
     let end = start + lines.len() - 1;
@@ -91,6 +92,7 @@ fn symbols(catalog: &Catalog, path: &str, start: usize, lines: &[String]) -> Vec
             continue;
         }
         let declaration = (chunk.start_line..=chunk.end_line)
+            .filter(|n| !annotation(&lines[n - start]))
             .find_map(|n| Some((n, identifier_column(&lines[n - start], &symbol.name)?)));
         let Some((line, column)) = declaration else { continue };
         if !found.iter().any(|s| s.name == symbol.name && s.declaration_line == line) {
@@ -99,6 +101,13 @@ fn symbols(catalog: &Catalog, path: &str, start: usize, lines: &[String]) -> Vec
     }
     found.sort_by(|a, b| (a.declaration_line, &a.name).cmp(&(b.declaration_line, &b.name)));
     found
+}
+
+/// Lines that annotate a declaration instead of declaring: `#[attr]`, `///` and other comments,
+/// Python `@decorator` and `# comment`.
+fn annotation(line: &str) -> bool {
+    let line = line.trim_start();
+    ["#", "//", "/*", "*", "@"].iter().any(|p| line.starts_with(p))
 }
 
 /// One-based Unicode scalar column of `name` as a whole identifier in `line`.
@@ -179,7 +188,18 @@ pub fn check(context: &Context, send: &Path, answer: &str) -> Result<Value> {
 
 #[cfg(test)]
 mod tests {
-    use super::identifier_column;
+    use super::{annotation, identifier_column};
+
+    #[test]
+    fn attributes_comments_and_decorators_are_not_declarations() {
+        for line in ["    #[inline]", "/// ray_from_pixel builds a ray", "  // ray_from_pixel", " * ray_from_pixel",
+            "@lru_cache  # dijkstra", "# dijkstra helper", "/* dijkstra */"] {
+            assert!(annotation(line), "{line}");
+        }
+        for line in ["    pub fn ray_from_pixel(&self) {", "def dijkstra(graph):", "class Graph:", "async def run():"] {
+            assert!(!annotation(line), "{line}");
+        }
+    }
 
     #[test]
     fn identifier_column_counts_unicode_scalars_and_whole_words() {

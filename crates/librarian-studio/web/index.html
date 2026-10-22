@@ -1065,6 +1065,11 @@ async function sendTurn(turn) {
       claude_model: provider === 'claude-cli' ? $('#claudeModel').value : null,
     });
     (turn.sends ??= []).push(result);
+    // The comparison is computed by the server from every stored send; fetch it again.
+    try {
+      const fresh = (await api('GET', `/api/turns?${query({ key: studio.project.key, run: studio.run })}`)).find(t => t.id === turn.id);
+      if (fresh) Object.assign(turn, { sends: fresh.sends, comparison: fresh.comparison });
+    } catch { /* the send itself succeeded; a reload shows the comparison */ }
   } catch (error) {
     turn.sendError = error.message;
   } finally {
