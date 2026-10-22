@@ -78,14 +78,14 @@ pub struct Verified {
 }
 
 impl Store {
-    fn project_dir(&self, key: &str) -> Result<PathBuf> {
+    pub(crate) fn project_dir(&self, key: &str) -> Result<PathBuf> {
         let dir = self.dir.join("projects").join(safe_id(key)?);
         if !dir.join("project.json").is_file() {
             return Err(format!("Projeto desconhecido: {key}").into());
         }
         Ok(dir)
     }
-    fn run_dir(&self, key: &str, run: &str) -> Result<PathBuf> {
+    pub(crate) fn run_dir(&self, key: &str, run: &str) -> Result<PathBuf> {
         let dir = self.project_dir(key)?.join("runs").join(safe_id(run)?);
         if !dir.join("run.json").is_file() {
             return Err(format!("Execução desconhecida: {run}").into());
@@ -209,7 +209,12 @@ impl Store {
         if let Ok(entries) = fs::read_dir(dir.join("sends")) {
             let mut paths: Vec<PathBuf> = entries.filter_map(|e| e.ok().map(|e| e.path())).collect();
             paths.sort();
-            sends.extend(paths.into_iter().filter_map(|p| read_json(p.join("send.json"))));
+            sends.extend(paths.into_iter().filter_map(|p| {
+                let mut send = read_json(p.join("send.json"))?;
+                send["id"] = json!(p.file_name()?.to_string_lossy());
+                send["reviews"] = Store::reviews(&p);
+                Some(send)
+            }));
         }
         let question = read_json(dir.join("question.json")).unwrap_or(Value::Null);
         let claims = question["answer_format"] == "claims";
@@ -752,6 +757,9 @@ mod tests {
         let context = verified.context.ok_or("Pergunta em claims sem contexto")?;
         let send = next_send(&dir, provider)?;
         fs::create_dir(&send)?;
+        // Preserved as the Claude CLI send does: the query delivered and the answer received.
+        fs::copy(&verified.query, send.join("query.json"))?;
+        fs::write(send.join("response.txt"), text)?;
         let mut summary = json!({ "state": "completed", "provider": provider, "text": text, "directory": display(&send),
             "link": verified.link });
         summary["check"] = crate::claims::check(&context, &send, text)?;
@@ -947,6 +955,83 @@ mod tests {
         assert_eq!(prose["answer_format"], "prose");
         assert!(serde_json::from_str::<Value>(prose["query"].as_str().unwrap()).unwrap()["evidence"]["source"].is_object());
         assert!(record_answer(&store, &key, &run, "02", "manual", &answer.to_string()).is_err());
+    }
+
+    #[test]
+    fn approved_facts_pass_every_gate_and_are_rechecked_against_later_editions() {
+        let scratch = project();
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let opened = store.open(&display(&scratch.0.join("project"))).unwrap();
+        let key = opened["key"].as_str().unwrap().to_owned();
+        let mut settings: Settings = serde_json::from_value(opened["settings"].clone()).unwrap();
+        settings.lexicon.groups = vec![vec!["raios".into(), "ray".into()], vec!["direcao".into(), "direction".into()]];
+        store.save_settings(&key, &settings).unwrap();
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        store.ask(&key, &run, "Onde a câmera calcula a direção dos raios?").unwrap();
+        let answer = json!({"schema_version": 1, "claims": [{
+            "id": "C1", "kind": "FACT", "text": "`ray_from_pixel` calcula `direction` na linha 5 de src/lib.rs.",
+            "citations": [{"evidence_id": "E1", "path": "src/lib.rs", "start_line": 4, "end_line": 5,
+                "quote": "    pub fn ray_from_pixel(&self, x: f64) -> f64 {\n        let direction = x * 2.0;"}],
+            "premises": [], "verification_plan": null,
+            "location": {"evidence_id": "E1", "path": "src/lib.rs", "symbol_name": "ray_from_pixel",
+                "declaration_line": 4, "operation_start_line": 5, "operation_end_line": 5}}]});
+        let mut wrong = answer.clone();
+        wrong["claims"][0]["citations"][0]["quote"] = json!("let direction = x * 2.0;");
+        record_answer(&store, &key, &run, "01", "manual", &answer.to_string()).unwrap();
+        record_answer(&store, &key, &run, "01", "manual", &wrong.to_string()).unwrap();
+        let review = |send: &str, approved: bool, note: &str| store.review(&key, &run, "01", send, "C1", approved, note);
+        let refusal = |result: Result<Value>| result.err().unwrap().to_string();
+
+        // Gate 1 runs the check again; a person cannot approve an answer the checker refused.
+        assert!(refusal(review("02-manual", true, "Parece certo.")).starts_with("Portão 1"));
+        assert!(refusal(review("01-manual", true, "  ")).contains("nota"));
+        assert!(refusal(store.review(&key, &run, "01", "01-manual", "C9", true, "x")).contains("C9"));
+
+        let promoted = review("01-manual", true, "A linha 5 calcula direction a partir de x.").unwrap();
+        assert_eq!(promoted["fact_id"], "F1");
+        assert!(refusal(review("01-manual", true, "De novo.")).contains("já foi promovido como F1"));
+        let facts = store.facts(&key, &run).unwrap();
+        let fact = &facts["facts"][0];
+        assert_eq!((fact["id"].as_str(), fact["status"].as_str()), (Some("F1"), Some("current")));
+        assert_eq!((fact["path"].as_str(), fact["line"].as_u64(), fact["end_line"].as_u64()), (Some("src/lib.rs"), Some(5), Some(5)));
+        assert_eq!(fact["authorship"], crate::facts::AUTHORSHIP);
+        assert_eq!(fact["edition"], facts["edition"]);
+        assert_eq!(fact["link"]["query_file"], "claims/query.json");
+        let turn = store.turn(&key, &run, "01").unwrap();
+        assert_eq!(turn["sends"][0]["id"], "01-manual");
+        assert_eq!(turn["sends"][0]["reviews"]["C1"]["decision"], "approved");
+
+        // Gate 2: a send without the link, or whose preserved query was edited, is not promoted.
+        let third = record_answer(&store, &key, &run, "01", "manual", &answer.to_string()).unwrap();
+        let third = Path::new(third["directory"].as_str().unwrap()).to_path_buf();
+        let summary = third.join("send.json");
+        let original = fs::read(&summary).unwrap();
+        let mut unlinked: Value = serde_json::from_slice(&original).unwrap();
+        unlinked["link"] = Value::Null;
+        fs::write(&summary, serde_json::to_vec(&unlinked).unwrap()).unwrap();
+        assert!(refusal(review("03-manual", true, "Igual ao F1.")).contains("sem vínculo"));
+        fs::write(&summary, &original).unwrap();
+        fs::write(third.join("query.json"), b"{}\n").unwrap();
+        assert!(refusal(review("03-manual", true, "Igual ao F1.")).contains("query preservada"));
+        // An answer edited after its check is refused before any gate.
+        fs::write(third.join("response.txt"), wrong.to_string()).unwrap();
+        assert!(refusal(review("03-manual", false, "x")).contains("difere da que foi conferida"));
+
+        // Rejecting revokes the promotion; approving again makes a new fact, never reuses F1.
+        assert_eq!(review("01-manual", false, "A direção não é só x * 2.").unwrap()["revoked"], "F1");
+        assert_eq!(store.facts(&key, &run).unwrap()["facts"][0]["status"], "revoked");
+        assert_eq!(review("01-manual", true, "Revisto: a linha 5 é a operação.").unwrap()["fact_id"], "F2");
+
+        // A later edition rechecks by text at the same lines: an edited line makes the fact stale.
+        let source = scratch.0.join("project/src/lib.rs");
+        fs::write(&source, fs::read_to_string(&source).unwrap().replace("x * 2.0", "x * 3.0")).unwrap();
+        let later = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        let rechecked = store.facts(&key, &later).unwrap();
+        assert_ne!(rechecked["edition"], facts["edition"]);
+        let statuses: Vec<_> = rechecked["facts"].as_array().unwrap().iter().map(|f| f["status"].as_str().unwrap().to_owned()).collect();
+        assert_eq!(statuses, ["revoked", "stale"]);
+        assert!(rechecked["facts"][1]["status_reason"].as_str().unwrap().contains("src/lib.rs:4–5"));
+        assert_eq!(store.facts(&key, &run).unwrap()["facts"][1]["status"], "current");
     }
 
     #[test]

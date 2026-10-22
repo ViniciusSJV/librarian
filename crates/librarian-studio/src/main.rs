@@ -2,6 +2,7 @@
 //! verified graph, ask questions that light the graph, and send prepared queries to an LLM.
 //! Listens on 127.0.0.1 only; requests from other origins are refused.
 mod claims;
+mod facts;
 mod http;
 mod lexicon;
 mod llm;
@@ -130,6 +131,18 @@ fn route(app: &App, req: &Request) -> Result<Response> {
             ok(store.ask(&field(&body, "key")?, &field(&body, "run")?, &question)?)
         }
         ("POST", "/api/send") => send(store, &req.json()?),
+        ("POST", "/api/review") => {
+            let body = req.json()?;
+            let approved = match body["decision"].as_str() {
+                Some("approved") => true,
+                Some("rejected") => false,
+                _ => return Err("decision deve ser approved ou rejected".into()),
+            };
+            let (key, run, turn) = (field(&body, "key")?, field(&body, "run")?, field(&body, "turn")?);
+            let note = body["note"].as_str().unwrap_or_default();
+            ok(store.review(&key, &run, &turn, &field(&body, "send")?, &field(&body, "claim")?, approved, note)?)
+        }
+        ("GET", "/api/facts") => ok(store.facts(param("key")?, param("run")?)?),
         ("DELETE", "/api/turn") => {
             let body = req.json()?;
             ok(store.delete_turn(&field(&body, "key")?, &field(&body, "run")?, &field(&body, "turn")?)?)
