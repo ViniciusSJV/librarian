@@ -20,6 +20,7 @@ Variáveis: `LIBRARIAN_ROOT` (raiz do Librarian; padrão, a do workspace) e
 | `src/store.rs` | Projetos, execuções e perguntas em `.studio/`; importa `librarian.json`; grava critérios antes da query; reconfere bundle, claims e critérios antes de cada envio e monta o vínculo; Modelfiles; navegação de pastas |
 | `web/index.html` | A página: grafo 3D (Three.js 0.180.0 e d3-force-3d 3.0.6 fixados no jsDelivr), projeto e conversa |
 | `src/lexicon.rs` | Pedido de léxico, leitura da resposta e conferência mecânica de cada grupo |
+| `src/facts.rs` | L4: portões, revisão por item (`reviews.jsonl`), acervo de fatos (`facts.jsonl`) e reconferência por texto contra uma edition |
 | `src/llm.rs` | Provedores: Ollama (`ollama create` + `attempt_linked` do LLM Engine, com o vínculo), Claude Code CLI (mesma conferência do hash da query) e os ainda não implementados |
 
 O studio usa os crates do workspace (`librarian-ingest`, `librarian-llm-engine`) e não
@@ -38,6 +39,8 @@ adiciona dependências: o `reqwest` é o mesmo do LLM Engine.
 | `GET /api/graph?key=&run=` · `GET /api/turns?key=&run=` | Grafo e perguntas de uma execução |
 | `POST /api/ask {key, run, question}` | Critérios, busca, `prepare` e `verify` |
 | `POST /api/send {key, run, turn, provider, modelfile?, claude_model?}` | `verify-prepared` e envio; `501` para provedores não implementados |
+| `POST /api/review {key, run, turn, send, claim, decision, note}` | Aprova (`approved`, com nota, passando pelos portões) ou recusa (`rejected`, revoga a promoção anterior) um item |
+| `GET /api/facts?key=&run=` | Acervo de fatos reconferido contra a edition da execução (vigente, desatualizado, revogado) |
 | `DELETE /api/turn {key, run, turn}` | Apaga a pergunta e tudo o que foi enviado para ela |
 | `POST /api/lexicon/suggest {key, run, provider, modelfile?, claude_model?}` | Vocabulário da edition, pedido ao LLM (ou só o pedido, em `manual`) e conferência dos grupos |
 | `POST /api/lexicon/check {key, run, id, text}` | Confere uma resposta colada para um pedido anterior |

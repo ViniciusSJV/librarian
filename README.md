@@ -128,15 +128,18 @@ registrado e a avaliação pendente. Os detalhes estão no [STUDIO.md](STUDIO.md
   Na pergunta da câmera, o Claude Haiku passou e o qwen 14B foi recusado por não citar a
   declaração da função, com o mesmo conteúdo. Uma execução de cada, sem avaliação
   semântica.
-- **Ainda não existem:** promoção de afirmação aprovada a fato, captura de performance
-  e outras linguagens além de Rust e Python.
+- **Fatos revisados (L4):** um FACT conferido vira fato do acervo do projeto só com a
+  sua aprovação e depois de passar de novo pela conferência mecânica e pelo vínculo. Os
+  fatos são reconferidos por texto a cada execução e ainda não entram nas perguntas.
+- **Ainda não existem:** captura de performance e outras linguagens além de Rust e
+  Python.
 
 ## Roteiro
 
 1. **Limites do LLM Engine:** contexto com linhas numeradas, studio usando afirmações e
-   checker, comparação de respostas de modelos diferentes por conteúdo e vínculo do
-   bundle conferido em cada envio (feitos). Faltam a cadeia entre Modelfiles (só o que
-   foi conferido passa adiante) e os portões até a promoção a fato.
+   checker, comparação de respostas de modelos diferentes por conteúdo, vínculo do
+   bundle conferido em cada envio e portões até o acervo de fatos revisados (feitos).
+   Falta a cadeia entre Modelfiles (só o que foi conferido passa adiante).
 2. **Impacto (G6):** campos e chamadas como candidatos no grafo e "Onde é usado?" no
    studio (feitos). Falta o relatório de impacto ("o que pode quebrar se este campo
    mudar?") com Modelfile próprio, em que o modelo só aponta riscos como hipótese, com
@@ -168,4 +171,5 @@ O diagnóstico e as etapas concluídas estão no [plano](PLANO-MULTILINGUAGEM-E-
 - Uma referência válida não comprova a verdade da afirmação.
 - Hashes conferem bytes; não autenticam autoria nem execução.
 - Não há resolução de tipos ou chamadas por compilador, banco de grafos nem embeddings.
-- Respostas de LLM não são promovidas automaticamente a fatos.
+- Respostas de LLM não são promovidas automaticamente a fatos: a promoção exige a
+  aprovação de uma pessoa, item por item.

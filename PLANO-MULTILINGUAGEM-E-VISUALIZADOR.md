@@ -691,6 +691,26 @@ Modelo escolhido pelo usuário: `deepseek-coder-v2:16b` (DeepSeek Coder V2 Lite,
 - Foi mais rápido que o qwen na câmera (7,0 s contra 15,7 s). A entrada não foi truncada (4.156 tokens de cerca de 3.855 estimados, `num_ctx` 16384).
 - Uma execução de cada não mede tendência. Até aqui, nenhum modelo local passou na mecânica do formato claims.
 
+### L4 — portões até o acervo de fatos revisados (22/10/2026)
+
+Decisões do usuário: os fatos formam um **acervo consultável** (ainda não entram nas queries; a forma fica para a cadeia); **só FACT** é promovido; a validade entre editions é **reconferida por texto**; a revisão é **por item**.
+
+Portões, refeitos no momento da aprovação, sem confiar nos registros gravados:
+
+1. **Mecânico:** o `response.txt` preservado tem o hash registrado no `check.json` e passa de novo em `claims::check` contra o contexto conferido agora.
+2. **Vínculo:** o `send.json` tem o vínculo da L3, `verify_for_send` passa (bundle, claims e critérios), a query da pergunta tem o hash do vínculo, e a query preservada no envio também.
+3. **Revisão humana:** aprovação com nota obrigatória, por item. Recusa não passa pelos portões; ela registra a decisão e revoga a promoção anterior.
+4. **Registro:** `facts.jsonl` no projeto, só acrescentado. A promoção `F<n>` leva enunciado, `path`, símbolo, declaração, `line`/`end_line` da operação, citações com os trechos, autoria "revisão humana no Librarian Studio", edition, execução, pergunta, envio, item, `claim_sha256`, `response_sha256`, vínculo, nota e portões. A revogação é outro evento, e o número nunca é reutilizado.
+
+- `src/facts.rs` no studio; `POST /api/review` e `GET /api/facts`; `reviews.jsonl` em cada envio (a última decisão por item aparece na conversa).
+- Reconferência: cada citação é comparada com as mesmas linhas do mesmo arquivo na edition escolhida. Ela não procura o trecho em outra linha. Os estados são vigente, desatualizado (com o motivo) e revogado.
+- `librarian-ingest::Catalog::snapshot` (só leitura) para a reconferência.
+- Página: **Aprovar como fato**, **Recusar** e **Revogar** em cada item, com o motivo quando o item não pode virar fato, e o painel **Acervo de fatos** no bloco do projeto.
+
+Verificação: teste do studio com resposta recusada barrada no portão 1, nota vazia, item desconhecido, promoção dupla, envio sem vínculo, query preservada alterada, resposta alterada depois da conferência, revogação e nova promoção (F2), e reconferência numa execução nova com a linha editada (desatualizado) e na antiga (vigente). Workspace com 125 aprovados e 1 ignorado. Execução real numa cópia do `.studio` (renderer): o envio do qwen foi barrado no portão 1; o `claim-2` do haiku ("discriminante na linha 38"), aprovado num teste do Claude com nota que o identifica, virou F1, vigente na execução da pergunta e na anterior (outra edition, `sphere.rs` igual). A página no Edge headless mostrou o acervo, os botões por item e nenhum erro no console.
+
+Limites: a revisão não tem autenticação (quem usa a página é quem aprova). Vigente quer dizer só que os trechos continuam iguais nas mesmas linhas, não que o sentido foi revisto. Apagar uma pergunta não apaga os fatos promovidos dela, que guardam os trechos e as hashes mas perdem os arquivos de origem. Os fatos ainda não são evidência: nenhuma query os lê.
+
 ### Roteiro seguinte (aprovado em 22/10/2026)
 
 O objetivo é encadear tarefas entre Modelfiles e provedores, por exemplo o `analista` (Ollama) aponta as funções, o `performance` (DeepSeek local no Ollama) propõe a mudança e o `impacto` (Claude) relata o impacto. Uma etapa passa para a seguinte só o que foi conferido, nunca o texto livre.
@@ -705,7 +725,7 @@ Conteúdo de um claim = `kind` + `location` + linhas citadas; o `text` é forma.
    **A decidir antes de implementar:** se faz sentido levar a resposta de uma pergunta para o contexto de outra, e em que forma. As opções vão de passar só as locations conferidas (a evidência sai de novo da edition) a passar também os claims aprovados como "resposta anterior, não evidência". Nunca o texto livre como evidência.
 3. **Patch:** a etapa de performance devolve um diff unificado, conferido contra o snapshot. Nada é escrito no projeto; ganho de desempenho só como HYPOTHESIS com `verification_plan`, e vira Fact só com registro de execução.
 4. Modelfiles `performance` (DeepSeek local) e `impacto`. O `verificavel` (formato claims) já existe.
-5. **L4:** portões até Fact.
+5. **L4:** portões até o acervo de fatos revisados. Feita.
 
 ## G6 — Impacto (planejado em 21/10/2026)
 
