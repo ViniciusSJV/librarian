@@ -2,6 +2,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 mod location;
+mod text;
 pub use location::{Location, Symbol};
 
 #[derive(Debug, Default, Serialize, Deserialize)]
@@ -37,6 +38,9 @@ pub struct Context {
     /// Project instructions, kept apart from the fixed contract; they cannot relax it.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub project_instructions: Vec<String>,
+    /// Line numbers and backticked code in `text` must be covered by the claim's citations.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub strict_text: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -162,6 +166,10 @@ pub fn query(context: &Context, question: &str) -> Result<String, String> {
         query["instructions"].as_array_mut().unwrap().push(serde_json::json!(
             "evidence.limits descreve limites da evidência; não os trate como fatos sobre o código nem os contradiga."
         ));
+    }
+    if context.strict_text {
+        query["strict_text"] = serde_json::json!(true);
+        query["instructions"].as_array_mut().unwrap().push(serde_json::json!(text::INSTRUCTION));
     }
     if !context.project_instructions.is_empty() {
         query["project_instructions"] = serde_json::json!(context.project_instructions);
@@ -295,6 +303,11 @@ pub fn check(context: &Context, response: &str) -> Result<Report, String> {
         }
         for code in location::check(context, claim) {
             fail(code);
+        }
+        if context.strict_text {
+            for code in text::check(context, claim) {
+                fail(code);
+            }
         }
         for c in &claim.citations {
             let Some(e) = context.evidence.iter().find(|e| e.id == c.evidence_id) else {

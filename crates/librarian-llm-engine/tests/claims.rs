@@ -401,3 +401,37 @@ fn only_a_single_plain_or_json_fence_is_extracted() {
     let body = claims::extract_fenced(&fenced).unwrap();
     assert_eq!(claims::check(&context(), body).unwrap().mechanical_status, "passed");
 }
+
+#[test]
+fn strict_text_rejects_lines_and_code_the_claim_does_not_cite() {
+    // A real Sonnet answer: line 88 and `Ray::new(origin, direction)` are stated, never cited.
+    let strict: Context = serde_json::from_str(include_str!("fixtures/camera-studio-context.json")).unwrap();
+    let sonnet = include_str!("fixtures/camera-studio-sonnet.txt");
+    let report = claims::check(&strict, sonnet).unwrap();
+    let issues: Vec<_> = report.issues.iter().map(|i| i.code.as_str()).collect();
+    assert_eq!(issues, ["text_cites_uncited_line", "text_quotes_uncited_code"]);
+    // Without strict_text the same answer passes, as it did in the studio.
+    let mut lenient: Context = serde_json::from_str(include_str!("fixtures/camera-studio-context.json")).unwrap();
+    lenient.strict_text = false;
+    assert_eq!(claims::check(&lenient, sonnet).unwrap().mechanical_status, "passed");
+
+    // Citing line 88 fixes both: the line is covered and the call appears in the cited lines.
+    let mut fixed: Value = serde_json::from_str(sonnet).unwrap();
+    fixed["claims"][0]["citations"].as_array_mut().unwrap().push(json!({
+        "evidence_id": "E1", "path": "src/camera.rs", "start_line": 88, "end_line": 88,
+        "quote": "        Ray::new(origin, direction)"}));
+    assert_eq!(claims::check(&strict, &fixed.to_string()).unwrap().mechanical_status, "passed");
+
+    // The cited source decides, not the model's quote: a wrong quote cannot vouch for the text.
+    let mut r = response();
+    r["claims"][0]["text"] = json!("A linha 5 faz `let x = 2;`.");
+    r["claims"][0]["citations"][0]["quote"] = json!("let x = 2;");
+    let mut c = context();
+    c.strict_text = true;
+    assert_eq!(codes(&c, &r), ["text_quotes_uncited_code", "quote_mismatch"]);
+    // The query announces the rule only when it applies.
+    let q: Value = serde_json::from_str(&claims::query(&c, "Where?").unwrap()).unwrap();
+    assert_eq!(q["strict_text"], true);
+    assert!(q["instructions"].as_array().unwrap().last().unwrap().as_str().unwrap().starts_with("Com strict_text=true"));
+    assert!(serde_json::from_str::<Value>(&claims::query(&context(), "Where?").unwrap()).unwrap().get("strict_text").is_none());
+}
