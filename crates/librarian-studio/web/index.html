@@ -171,7 +171,7 @@
             <div class="row"><button id="suggestLexicon">Sugerir léxico com o LLM</button><span id="suggestNote" class="muted"></span></div>
             <span>Os termos vêm do código da edition; o LLM escolhido na Conversa só propõe as palavras em português (no Ollama, com o Modelfile <code>lexico</code>). Cada grupo é conferido, e nada entra no léxico sem você aplicar.</span>
             <div id="manualLexicon" hidden>
-              <span>Com <strong>Nenhum</strong>: copie o pedido, envie a um LLM e cole a resposta.</span>
+              <span>Com <strong>Nenhum</strong> (o Studio não chama ninguém): copie o pedido, leve a outro chat e cole a resposta aqui.</span>
               <pre id="lexiconQuery"></pre>
               <div class="row"><button id="copyLexiconQuery">Copiar pedido</button></div>
               <textarea id="lexiconAnswer" class="code" rows="5" placeholder="Cole aqui a resposta do LLM (JSON com groups)"></textarea>
@@ -262,7 +262,7 @@
     <div id="turns"></div>
     <div id="composer">
       <textarea id="question" rows="3" placeholder="Pergunte sobre o projeto… (Ctrl+Enter)" disabled></textarea>
-      <label class="field"><span>LLM<button type="button" class="help" aria-label="O que é isto?" data-help="Quem vai ler a pasta e responder. Nenhum: o bibliotecário só prepara a pasta, para você levar a quem quiser. Ollama: um leitor que trabalha na sua máquina, sem custo. Claude: um leitor de fora, pela sua conta, com o custo mostrado em cada resposta.">?</button></span><select id="provider"></select></label>
+      <label class="field"><span>LLM<button type="button" class="help" aria-label="O que é isto?" data-help="Quem vai ler a pasta e responder. Nenhum: o Studio não chama ninguém; o bibliotecário só prepara a pasta, para você copiar e levar a outro chat (ChatGPT, outro Claude). Depois, cole a resposta na pergunta para conferir. Ollama: um leitor que trabalha na sua máquina, sem custo. Claude: um leitor de fora, pela sua conta, com o custo mostrado em cada resposta.">?</button></span><select id="provider"></select></label>
       <label class="field" id="claudeModelRow"><span>Modelo do Claude</span><select id="claudeModel"></select></label>
       <div class="field" id="modelfileRow">
         <span>Modelfile<button type="button" class="help" aria-label="O que é isto?" data-help="O crachá do especialista: qual leitor chamar e as orientações fixas que ele recebe. Tenha um para cada tarefa (analista, léxico, performance). No Claude, só as orientações valem.">?</button></span>
@@ -1180,10 +1180,66 @@ function reply(s) {
     el('div', { className: 'muted', style: 'margin-top: 6px; font-size: 11px', textContent: `${s.state === 'completed' ? 'completed descreve o transporte; ' : ''}avaliação semântica pendente. Guardado em ${s.directory}` }));
 }
 
+// Each checker code in plain words: [short label, librarian explanation].
+const ISSUES = {
+  invalid_response_schema: ['a resposta não veio no formato pedido',
+    'O bibliotecário pediu um formulário preenchido (o JSON de claims) e recebeu outra coisa: texto solto, campos a mais ou faltando. Sem o formulário, ele não tem como conferir nada.'],
+  invalid_version_or_empty_claims: ['formulário vazio ou de versão errada',
+    'O formulário veio sem nenhum item ou com a versão errada. Não há o que conferir.'],
+  invalid_or_duplicate_claim: ['item sem identificação, sem texto ou repetido',
+    'Cada item precisa de um número próprio e de um texto. Este veio sem um deles ou repetiu o número de outro item.'],
+  inference_not_allowed: ['tirou uma conclusão, e isso estava proibido',
+    'O item é uma inferência (uma conclusão a partir dos fatos), mas a opção de permitir inferência está desligada. Só fatos copiados do código eram aceitos.'],
+  missing_premises: ['conclusão sem dizer de onde partiu',
+    'Uma inferência precisa listar os fatos de onde partiu (as premissas). Este item concluiu sem mostrar o caminho.'],
+  hypothesis_not_allowed: ['levantou uma suspeita, e isso estava proibido',
+    'O item é uma hipótese (uma suspeita não provada), mas a opção de permitir hipótese está desligada.'],
+  missing_verification_plan: ['suspeita sem plano de como testá-la',
+    'Toda hipótese precisa dizer como seria testada. Este item levantou a suspeita e não disse como conferir.'],
+  unexpected_premises: ['premissas num item que não é conclusão',
+    'Só uma inferência pode listar premissas. Este item é de outro tipo e veio com premissas.'],
+  unexpected_verification_plan: ['plano de teste num item que não é suspeita',
+    'Só uma hipótese leva plano de verificação. Este item é de outro tipo e veio com um plano.'],
+  missing_citation: ['afirmou sem citar nenhuma página',
+    'Um fato precisa mostrar a página do livro de onde saiu. Este item afirmou algo sem citar nada.'],
+  unknown_evidence: ['citou uma pasta que não foi entregue',
+    'O item cita uma evidência (E1, CTX_1…) que não estava na pasta entregue ao leitor. Ele citou algo que não recebeu.'],
+  wrong_path: ['citou o arquivo errado',
+    'O nome do arquivo na citação não é o da evidência citada. É como citar a página certa do livro errado.'],
+  citation_out_of_range: ['citou linhas fora do trecho entregue',
+    'As linhas citadas não estão dentro do trecho que o leitor recebeu. Ele citou páginas que não tinha em mãos.'],
+  quote_mismatch: ['o trecho copiado não é igual ao código',
+    'O bibliotecário abriu o livro nas linhas citadas e o texto não bate com o que foi copiado: faltou espaço, mudou uma palavra ou juntou linhas. A cópia precisa ser idêntica.'],
+  missing_location: ['não disse em qual função está',
+    'Nesta pergunta cada fato precisa dizer a função onde a coisa acontece (o capítulo do livro). Este item não indicou.'],
+  location_requires_fact: ['indicou função num item que não é fato',
+    'Só fatos indicam a função onde algo acontece. Este item é de outro tipo e veio com essa indicação.'],
+  location_unknown_evidence: ['a função aponta para uma pasta que não foi entregue',
+    'A localização cita uma evidência que não estava na pasta entregue ao leitor.'],
+  location_wrong_path: ['a função aponta para o arquivo errado',
+    'O arquivo indicado na localização não é o da evidência citada.'],
+  location_unknown_symbol: ['indicou uma função que não existe ali',
+    'O nome da função ou a linha onde ela começa não batem com nenhuma função do trecho entregue. É como citar um capítulo que não está no livro.'],
+  location_operation_out_of_range: ['a linha da operação está fora da função',
+    'As linhas onde a coisa acontece ficam fora da função indicada. É como dizer que algo está no capítulo 3 apontando uma página do capítulo 5.'],
+  location_declaration_not_cited: ['não citou a linha onde a função começa',
+    'O leitor disse em qual função a coisa acontece, mas não copiou a linha onde essa função começa (a declaração, como pub fn ray_from_pixel). É como dizer que algo está no capítulo 3 sem mostrar o título do capítulo: o conteúdo pode estar certo, mas falta a prova de que aquela página pertence àquele capítulo.'],
+  location_operation_not_cited: ['não citou a linha onde a coisa acontece',
+    'O leitor apontou as linhas da operação, mas não as copiou nas citações. Apontar não basta: o trecho precisa estar citado.'],
+  text_cites_uncited_line: ['o texto fala de uma linha que não citou',
+    'O texto menciona uma linha (por exemplo, na linha 88) que não está em nenhuma citação do item. O bibliotecário só aceita o que foi mostrado: para falar da linha 88, é preciso citá-la.'],
+  text_quotes_uncited_code: ['o texto mostra código que não está nas linhas citadas',
+    'Um trecho de código entre crases no texto não aparece nas linhas citadas. Pode até existir em outro lugar do arquivo, mas não foi mostrado como prova.'],
+};
+
 // Mechanical verdict and the claims as the checker parsed them; meaning is still for review.
 function checkView(c) {
   const passed = c.report.mechanical_status === 'passed';
-  const issues = c.report.issues.map(i => `${i.claim_id ?? 'resposta'}: ${i.code}`);
+  const issue = i => {
+    const [label, help] = ISSUES[i.code] ?? ['problema sem descrição', 'O bibliotecário recusou por um motivo ainda sem explicação nesta página.'];
+    return el('li', {}, el('strong', { textContent: `${i.claim_id ?? 'Resposta'}: ` }), label, helpButton(help),
+      el('div', { className: 'mono muted', textContent: i.code }));
+  };
   const lines = x => `${x.path}:${x.start_line}${x.end_line !== x.start_line ? `–${x.end_line}` : ''}`;
   const claim = k => el('li', {},
     el('span', { className: 'tag', textContent: k.kind }), ' ', k.text,
@@ -1196,7 +1252,7 @@ function checkView(c) {
       el('span', { className: `verdict ${passed ? 'passed' : 'error'}`, textContent: passed ? 'Mecânica: aprovada' : 'Mecânica: recusada' }),
       helpButton('Aprovada: o bibliotecário foi à estante e confirmou que as páginas citadas existem, que o trecho copiado é idêntico ao livro e que o texto não fala de páginas que não citou. Isso não quer dizer que a resposta está certa: o sentido quem julga é você. Recusada lista o que não bateu.'),
       el('span', { className: 'muted', textContent: ` · semântica: ${c.report.semantic_status === 'pending' ? 'pendente' : c.report.semantic_status}${c.extracted_from_fence ? ' · JSON extraído de uma cerca de Markdown' : ''}` })),
-    issues.length ? el('ul', { className: 'claims error' }, ...issues.map(i => el('li', { className: 'mono', textContent: i }))) : null,
+    c.report.issues.length ? el('ul', { className: 'claims error' }, ...c.report.issues.map(issue)) : null,
     c.claims ? el('ol', { className: 'claims' }, ...c.claims.map(claim)) : null,
     el('div', { className: 'muted', style: 'font-size: 11px', textContent: c.limits }));
 }
@@ -1253,7 +1309,7 @@ function pasteBox(t) {
     renderTurns();
   };
   return el('details', { open: $('#provider').value === 'manual' || Boolean(t.pasteText) },
-    el('summary', {}, 'Colar uma resposta para conferir', helpButton('Se você levou a pasta a outro leitor (com Nenhum, por exemplo), cole aqui a resposta que ele deu. O bibliotecário confere do mesmo jeito que confere as dos leitores dele e arquiva junto com a consulta.')), area,
+    el('summary', {}, 'Trouxe uma resposta de fora do Studio? Cole aqui para conferir', helpButton('Só para respostas que vieram de fora do Studio. Exemplo: você clicou em Copiar query, colou num chat qualquer (ChatGPT, outro Claude, um colega) e recebeu a resposta lá. Cole essa resposta aqui: o bibliotecário confere as páginas citadas, como faz com as do Ollama e do Claude, e arquiva junto com a pergunta. Se você enviou pelo próprio Studio, não precisa colar nada: a conferência já aparece na resposta.')), area,
     el('div', { className: 'row', style: 'margin-top: 6px' }, button));
 }
 
