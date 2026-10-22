@@ -20,6 +20,8 @@ use std::{
 /// Optional profile in the project root: sources, lexicon, instructions, criteria, search.
 pub const PROFILE: &str = "librarian.json";
 const CRITERIA: &str = "criteria-before.md";
+/// Highest question number handed out in a run, so numbers are never reused.
+const LAST_TURN: &str = "last-turn.txt";
 
 /// Everything a question needs besides the question itself; edited from the page.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -233,13 +235,17 @@ impl Store {
         )?;
         fs::create_dir_all(run_dir.join("turns"))?;
         let turns = run_dir.join("turns");
-        // After the highest existing number, so deleted questions never cause reused or suffixed IDs.
-        let next = fs::read_dir(&turns)?
+        // After the highest number ever used, kept beside the turns: deleting every question must
+        // not hand out 01 again, and a lost record still never goes below the existing folders.
+        let last = run_dir.join(LAST_TURN);
+        let used = fs::read_to_string(&last).ok().and_then(|s| s.trim().parse::<usize>().ok()).unwrap_or(0);
+        let existing = fs::read_dir(&turns)?
             .filter_map(|e| e.ok()?.file_name().to_str()?.parse::<usize>().ok())
             .max()
-            .unwrap_or(0)
-            + 1;
+            .unwrap_or(0);
+        let next = used.max(existing) + 1;
         let (id, dir) = reserve(&turns, &format!("{next:02}"))?;
+        fs::write(&last, format!("{next}\n"))?;
         // Criteria are fixed first, before the query exists and long before any answer.
         let criteria_sha256 = match settings.criteria.as_deref().filter(|c| !c.trim().is_empty()) {
             Some(criteria) => {
@@ -744,6 +750,10 @@ mod tests {
         assert_eq!(left[0]["id"], "02");
         assert!(store.delete_turn(&key, run_id, "01").is_err());
         assert_eq!(store.ask(&key, run_id, "direção dos raios").unwrap()["id"], "03");
+        // Even with every question deleted, numbers already used are not handed out again.
+        store.delete_turn(&key, run_id, "02").unwrap();
+        assert_eq!(store.delete_turn(&key, run_id, "03").unwrap(), json!([]));
+        assert_eq!(store.ask(&key, run_id, "direção dos raios").unwrap()["id"], "04");
     }
 
     #[test]
@@ -765,6 +775,7 @@ mod tests {
         assert_eq!((item["id"].as_str(), item["start_line"].as_u64(), item["end_line"].as_u64()), (Some("E1"), Some(4), Some(7)));
         assert_eq!(item["symbols"], json!([{"name": "ray_from_pixel", "declaration_line": 4, "name_column": 12, "end_line": 7}]));
         assert_eq!(query["require_location"], true);
+        assert_eq!(query["strict_text"], true);
         assert!(query["evidence"]["limits"][0].as_str().unwrap().starts_with("Lexical candidates"));
 
         let answer = json!({"schema_version": 1, "claims": [{
@@ -786,8 +797,13 @@ mod tests {
         let rejected = store.paste_answer(&key, &run, "01", &wrong.to_string()).unwrap();
         assert_eq!(rejected["check"]["report"]["mechanical_status"], "rejected");
         assert_eq!(rejected["check"]["report"]["issues"][0]["code"], "quote_mismatch");
+        // strict_text: the text may only state lines and code its own citations show.
+        let mut beyond = answer.clone();
+        beyond["claims"][0]["text"] = json!("`ray_from_pixel` devolve `direction` na linha 6.");
+        let issues = &store.paste_answer(&key, &run, "01", &beyond.to_string()).unwrap()["check"]["report"]["issues"];
+        assert_eq!(issues, &json!([{"claim_id": "C1", "code": "text_cites_uncited_line"}]));
         let sends = &store.turn(&key, &run, "01").unwrap()["sends"];
-        assert_eq!(sends.as_array().unwrap().len(), 2);
+        assert_eq!(sends.as_array().unwrap().len(), 3);
         assert!(sends[1]["directory"].as_str().unwrap().ends_with("02-manual"));
         assert!(store.turn_dir(&key, &run, "01").unwrap().join("sends/01-manual/check.json").is_file());
 
