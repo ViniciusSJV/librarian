@@ -130,7 +130,10 @@ registrado e a avaliação pendente. Os detalhes estão no [STUDIO.md](STUDIO.md
   semântica.
 - **Fatos revisados (L4):** um FACT conferido vira fato do acervo do projeto só com a
   sua aprovação e depois de passar de novo pela conferência mecânica e pelo vínculo. Os
-  fatos são reconferidos por texto a cada execução e ainda não entram nas perguntas.
+  fatos são reconferidos por texto a cada execução.
+- **Cadeia:** uma pergunta pode continuar outra. Passam adiante só as declarações
+  apontadas pelas respostas aprovadas na mecânica, com as linhas tiradas de novo da
+  edition, e os fatos vigentes do acervo sobre elas. O texto das respostas não passa.
 - **Ainda não existem:** captura de performance e outras linguagens além de Rust e
   Python.
 
@@ -138,8 +141,8 @@ registrado e a avaliação pendente. Os detalhes estão no [STUDIO.md](STUDIO.md
 
 1. **Limites do LLM Engine:** contexto com linhas numeradas, studio usando afirmações e
    checker, comparação de respostas de modelos diferentes por conteúdo, vínculo do
-   bundle conferido em cada envio e portões até o acervo de fatos revisados (feitos).
-   Falta a cadeia entre Modelfiles (só o que foi conferido passa adiante).
+   bundle conferido em cada envio, portões até o acervo de fatos revisados e cadeia entre
+   perguntas (feitos). Faltam os Modelfiles por tarefa (`performance`, `impacto`).
 2. **Impacto (G6):** campos e chamadas como candidatos no grafo e "Onde é usado?" no
    studio (feitos). Falta o relatório de impacto ("o que pode quebrar se este campo
    mudar?") com Modelfile próprio, em que o modelo só aponta riscos como hipótese, com

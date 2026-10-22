@@ -39,6 +39,7 @@ adiciona dependências: o `reqwest` é o mesmo do LLM Engine.
 | `GET /api/graph?key=&run=` · `GET /api/turns?key=&run=` | Grafo e perguntas de uma execução |
 | `POST /api/ask {key, run, question}` | Critérios, busca, `prepare` e `verify` |
 | `POST /api/send {key, run, turn, provider, modelfile?, claude_model?}` | `verify-prepared` e envio; `501` para provedores não implementados |
+| `POST /api/continue {key, run, turn, question}` | Cadeia: nova pergunta com as declarações das respostas que passam de novo na mecânica e os fatos vigentes sobre elas |
 | `POST /api/review {key, run, turn, send, claim, decision, note}` | Aprova (`approved`, com nota, passando pelos portões) ou recusa (`rejected`, revoga a promoção anterior) um item |
 | `GET /api/facts?key=&run=` | Acervo de fatos reconferido contra a edition da execução (vigente, desatualizado, revogado) |
 | `DELETE /api/turn {key, run, turn}` | Apaga a pergunta e tudo o que foi enviado para ela |
