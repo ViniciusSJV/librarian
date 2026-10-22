@@ -114,9 +114,17 @@
   .chip.hit { border-color: var(--cat-symbol); }
   .chip.miss { color: var(--text-muted); text-decoration: line-through; }
   .verdict { font-weight: 600; }
-  .verdict.passed { color: var(--cat-symbol); }
+  .verdict.passed { color: var(--cat-occurrence); }
   .claims { margin: 6px 0 0; padding-left: 18px; }
   .claims li { margin-bottom: 6px; }
+  .compare { margin-top: 8px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; }
+  .compare table { width: 100%; margin-top: 6px; border-collapse: collapse; font-size: 12px; }
+  .compare th, .compare td { padding: 4px; border-bottom: 1px solid var(--border); text-align: center; }
+  .compare th:first-child, .compare td:first-child { text-align: left; word-break: break-word; }
+  .compare td.cell { font-size: 15px; font-weight: 700; width: 26px; cursor: default; }
+  .compare td.equal { color: var(--cat-occurrence); }
+  .compare td.partial { color: var(--text-primary); }
+  .compare td.absent { color: var(--text-muted); }
   dialog { width: min(720px, calc(100vw - 32px)); max-height: calc(100vh - 32px); padding: 16px; border: 1px solid var(--border);
     border-radius: 12px; background: var(--surface-1); color: var(--text-primary); }
   dialog::backdrop { background: rgb(0 0 0 / .4); }
@@ -1138,6 +1146,7 @@ function renderTurn(t) {
       t.answer_format === 'claims' ? el('p', { className: 'muted', textContent: 'Formato claims: a evidência são as janelas do bundle conferido, com os símbolos da edition. Cada resposta passa pela conferência mecânica.' }) : null,
       el('pre', { textContent: t.query })) : null,
     ...(t.sends ?? []).map(reply),
+    t.comparison ? compareView(t.comparison) : null,
     t.pending ? el('div', { className: 'bubble reply muted', textContent: `Enviando para ${t.pending}…` }) : null,
     t.sendError ? el('p', { className: 'error', textContent: t.sendError }) : null,
     el('div', { className: 'row', style: 'margin-top: 8px' },
@@ -1261,6 +1270,29 @@ const helpButton = text => {
   button.dataset.help = text;
   return button;
 };
+
+// L2b: the answers of one question side by side, by content (kind, function, lines), not wording.
+function compareView(c) {
+  const label = s => s.provider === 'claude-cli' ? `Claude ${s.model ?? ''}`
+    : s.provider === 'ollama' ? `Ollama ${s.modelfile ?? ''}` : s.provider === 'manual' ? 'Resposta colada' : providerLabel(s.provider);
+  const where = ([evidence, start, end]) => `${evidence} ${start === end ? `linha ${start}` : `linhas ${start}–${end}`}`;
+  const describe = content => [content.kind, content.symbol ? content.symbol[1] : null, content.lines.map(where).join(', ')]
+    .filter(Boolean).join(' · ');
+  const marks = { equal: ['=', 'disse exatamente isso'], partial: ['≈', 'disse algo parecido'], absent: ['·', 'não disse'] };
+  const all = c.rows.filter(r => r.cells.every(x => x.match === 'equal')).length;
+  return el('details', { className: 'compare', open: true },
+    el('summary', {}, `Comparar respostas (${c.sends.length})`, helpButton('Todos os leitores receberam a mesma pasta. O bibliotecário não compara a redação: compara qual capítulo (a função) e quais páginas (as linhas) cada um apontou, e de que tipo é cada item. = disse exatamente isso. ≈ apontou o mesmo capítulo com páginas que se cruzam, ou as mesmas páginas como outro tipo de item. · não disse. Concordar não prova que está certo: leitores podem errar juntos. As respostas recusadas entram marcadas, porque podem ter apontado o lugar certo com a forma errada.')),
+    el('ol', { className: 'claims' }, ...c.sends.map(s => el('li', {}, label(s), ' ',
+      el('span', { className: s.passed ? 'verdict passed' : 'verdict error', textContent: s.passed ? 'aprovada' : 'recusada' }),
+      s.readable ? null : el('span', { className: 'muted', textContent: ' · sem itens legíveis' })))),
+    el('table', {},
+      el('thead', {}, el('tr', {}, el('th', { textContent: 'Conteúdo' }), ...c.sends.map((_, i) => el('th', { textContent: String(i + 1) })))),
+      el('tbody', {}, ...c.rows.map(r => el('tr', {},
+        el('td', { className: 'mono', textContent: describe(r.content) }),
+        ...r.cells.map(x => el('td', { className: `cell ${x.match}`, textContent: marks[x.match][0],
+          title: `${marks[x.match][1]}${x.claim_ids.length ? ` (${x.claim_ids.join(', ')})` : ''}` })))))),
+    el('p', { className: 'muted', textContent: `Todas iguais em ${all} de ${c.rows.length} conteúdo(s). Concordância é sinal, não prova.` }));
+}
 
 // ---- help: each "?" explains a part of the page in plain words, on hover or click.
 const helpTip = el('div', { id: 'helpTip', role: 'tooltip', hidden: true });

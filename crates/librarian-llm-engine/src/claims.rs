@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 mod location;
 mod text;
+pub mod compare;
 pub use location::{Location, Symbol};
 
 #[derive(Debug, Default, Serialize, Deserialize)]
