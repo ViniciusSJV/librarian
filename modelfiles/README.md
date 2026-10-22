@@ -9,6 +9,7 @@ escolha de quem pergunta, não do núcleo. Cada arquivo `<nome>.Modelfile` apare
 | `analista.Modelfile` | Explica somente as evidências selecionadas (FACT, LACUNA; inferência e hipótese só quando pedidas). |
 | `lexico.Modelfile` | Propõe grupos de sinônimos para o léxico (**Sugerir léxico** no studio); contexto maior, saída só em JSON. |
 | `verificavel.Modelfile` | Responde no formato **claims**: só o JSON pedido, com cada item carregando a própria prova (declaração e operação citadas em cada item). O `analista` foi escrito para prosa. |
+| `verificavel-deepseek.Modelfile` | O `verificavel` com `deepseek-coder-v2:16b` no lugar do qwen, com o mesmo SYSTEM e parâmetros, para comparar modelos. Exige `ollama pull deepseek-coder-v2:16b`. |
 
 - **Ollama:** o studio cria o modelo `librarian-<nome>` com `ollama create` a cada envio e
   guarda a cópia usada na pasta do envio.
