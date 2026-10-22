@@ -249,28 +249,7 @@ impl<'a> SearchIndex<'a> {
             }) {
                 continue;
             }
-            let source = &self.catalog.sources[&symbol.source_id];
-            let bytes = self.catalog.excerpt(&symbol.chunk_id).unwrap();
-            let text = std::str::from_utf8(bytes)?;
-            let mut end = text.len().min(4000).min(budget);
-            while !text.is_char_boundary(end) {
-                end -= 1;
-            }
-            budget -= end;
-            hits.push(Hit {
-                symbol_id: id,
-                name: symbol.qualified_name.clone(),
-                path: source.path.clone(),
-                source_sha256: source.sha256.clone(),
-                start_line: chunk.start_line,
-                end_line: chunk.end_line,
-                chunk_id: chunk.id.clone(),
-                chunk_sha256: chunk.sha256.clone(),
-                score,
-                reasons,
-                excerpt: text[..end].into(),
-                excerpt_truncated: end < text.len(),
-            });
+            hits.push(hit(self.catalog, id, score, reasons, &mut budget)?);
         }
         let graph = Graph::build(self.catalog);
         let neighborhood = hits
@@ -284,4 +263,46 @@ impl<'a> SearchIndex<'a> {
             graph: neighborhood, diagnostics: self.catalog.diagnostics.len(),
             limits: self.catalog.registry.search_limits.iter().map(|l| l.to_string()).collect() })
     }
+}
+
+/// One symbol as a hit, its excerpt cut to 4000 bytes and to what is left of `budget`.
+fn hit(catalog: &Catalog, id: String, score: usize, reasons: Vec<MatchReason>, budget: &mut usize) -> Result<Hit> {
+    let symbol = &catalog.symbols[&id];
+    let chunk = &catalog.chunks[&symbol.chunk_id];
+    let source = &catalog.sources[&symbol.source_id];
+    let text = std::str::from_utf8(catalog.excerpt(&symbol.chunk_id).ok_or("Chunk without excerpt")?)?;
+    let mut end = text.len().min(4000).min(*budget);
+    while !text.is_char_boundary(end) {
+        end -= 1;
+    }
+    *budget -= end;
+    Ok(Hit {
+        name: symbol.qualified_name.clone(),
+        path: source.path.clone(),
+        source_sha256: source.sha256.clone(),
+        start_line: chunk.start_line,
+        end_line: chunk.end_line,
+        chunk_id: chunk.id.clone(),
+        chunk_sha256: chunk.sha256.clone(),
+        symbol_id: id,
+        score,
+        reasons,
+        excerpt: text[..end].into(),
+        excerpt_truncated: end < text.len(),
+    })
+}
+
+/// Report of a chain step: the given declarations, in order, as hits without score or reasons.
+/// Nothing is searched; the neighborhood is the first hit's, as in a search, for the page.
+pub fn chain_report(catalog: &Catalog, question: &str, symbol_ids: &[String], depth: usize) -> Result<SearchReport> {
+    let mut budget = 16000usize;
+    let hits = symbol_ids.iter().map(|id| hit(catalog, id.clone(), 0, vec![], &mut budget)).collect::<Result<Vec<_>>>()?;
+    let graph = Graph::build(catalog);
+    let neighborhood = hits.first().map(|h| graph.neighborhood(&h.symbol_id, depth, 48, 96)).transpose()?;
+    let mut limits = vec!["Chain step: declarations named by mechanically checked answers to an earlier question; nothing was searched.".to_owned()];
+    // The lexical-coverage limit does not apply: no term was matched.
+    limits.extend(catalog.registry.search_limits.iter().filter(|l| !l.starts_with("Lexical")).map(|l| l.to_string()));
+    Ok(SearchReport { version: "chain-step-v1".into(), catalog_sha256: graph.catalog_sha256,
+        lexicon_sha256: String::new(), question: question.into(), terms: vec![], status: "chain".into(), hits,
+        graph: neighborhood, diagnostics: catalog.diagnostics.len(), limits })
 }

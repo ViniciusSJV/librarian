@@ -131,6 +131,11 @@ fn route(app: &App, req: &Request) -> Result<Response> {
             ok(store.ask(&field(&body, "key")?, &field(&body, "run")?, &question)?)
         }
         ("POST", "/api/send") => send(store, &req.json()?),
+        ("POST", "/api/continue") => {
+            let body = req.json()?;
+            let (key, run, from) = (field(&body, "key")?, field(&body, "run")?, field(&body, "turn")?);
+            ok(store.continue_turn(&key, &run, &from, &field(&body, "question")?)?)
+        }
         ("POST", "/api/review") => {
             let body = req.json()?;
             let approved = match body["decision"].as_str() {

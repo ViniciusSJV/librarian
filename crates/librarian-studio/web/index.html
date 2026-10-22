@@ -1086,6 +1086,30 @@ async function ask() {
   });
 }
 
+// Chain step: a new question over the declarations the checked answers located, with the
+// reviewed facts about them. Sent like a question, with the LLM and Modelfile chosen now.
+async function continueTurn(from, button) {
+  const question = prompt(`Próxima pergunta, a partir das respostas conferidas da pergunta ${from.id}. Escolha antes o LLM e o Modelfile da próxima etapa (por exemplo, performance).`);
+  if (!question?.trim()) return;
+  await busy([button], $('#llmNote'), async () => {
+    await saveSettings();
+    const turn = await api('POST', '/api/continue', { key: studio.project.key, run: studio.run, turn: from.id, question: question.trim() });
+    studio.turns.push(turn);
+    activate(turn.id);
+    $('#turns').scrollTop = $('#turns').scrollHeight;
+    if (turn.query) await sendTurn(turn);
+  });
+}
+
+function chainView(c) {
+  const where = c.targets.map(t => `${t.symbol_name} (${t.path}:${t.declaration_line})`).join(', ');
+  const answers = c.answers.map(a => `${a.send} (${a.claims.join(', ')})`).join(', ');
+  return el('div', { className: 'muted', style: 'margin-top: 6px' },
+    el('span', { className: 'tag', textContent: `cadeia ← ${c.from_turn}` }),
+    ` Evidência: ${where}. Fatos revisados: ${c.reviewed_facts.length ? c.reviewed_facts.join(', ') : 'nenhum'}. Respostas usadas (só por hash, sem o texto): ${answers}.`,
+    helpButton('Esta pergunta continua outra. O bibliotecário não passou adiante o que o leitor anterior escreveu: pegou só os capítulos que as respostas aprovadas na conferência apontaram e tirou as páginas de novo da estante. Junto, vão as fichas do acervo que você já aprovou sobre esses capítulos. As respostas anteriores ficam ligadas pela impressão digital (hash), para saber de onde veio.'));
+}
+
 async function sendTurn(turn) {
   const provider = $('#provider').value;
   if (!turn.query) {
@@ -1175,6 +1199,7 @@ function renderTurn(t) {
   };
   return el('div', { className: 'turn' + (studio.activeTurn === t.id ? ' active' : '') },
     el('div', { className: 'bubble user', textContent: t.question, title: 'Acender esta pergunta no grafo', onclick: () => activate(t.id) }),
+    t.chain ? chainView(t.chain) : null,
     el('div', { style: 'margin-top: 6px' }, el('span', { className: 'muted', textContent: 'Léxico: ' }),
       ...(t.search?.terms ?? []).map(term => el('span', {
         className: `chip ${touched.has(term) ? 'hit' : 'miss'}`, textContent: term,
@@ -1205,6 +1230,11 @@ function renderTurn(t) {
         disabled: !t.query || Boolean(t.pending), onclick: () => sendTurn(t),
       }),
       copyButton,
+      (t.sends ?? []).some(s => s.check?.report.mechanical_status === 'passed') ? (() => {
+        const b = el('button', { textContent: 'Continuar em cadeia', title: 'Nova pergunta sobre as funções que as respostas aprovadas na mecânica apontaram, com os fatos revisados', disabled: Boolean(t.pending) });
+        b.onclick = () => continueTurn(t, b);
+        return b;
+      })() : null,
       el('button', { textContent: 'Apagar', title: 'Apagar a pergunta, a query e as respostas', disabled: Boolean(t.pending),
         style: 'margin-left: auto', onclick: () => deleteTurn(t) })));
 }

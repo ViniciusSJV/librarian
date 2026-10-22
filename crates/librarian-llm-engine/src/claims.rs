@@ -46,6 +46,21 @@ pub struct Context {
     /// except for one-line symbols.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub precise_location: bool,
+    /// Facts a person reviewed about this evidence, carried by a chain step. Shown as prior
+    /// knowledge, never citable: claims still cite the evidence lines.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub reviewed_facts: Vec<ReviewedFact>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ReviewedFact {
+    pub id: String,
+    pub statement: String,
+    pub authorship: String,
+    pub path: String,
+    pub start_line: usize,
+    pub end_line: usize,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -122,6 +137,12 @@ impl Context {
             }
             location::validate_symbols(e)?;
         }
+        let mut fact_ids = HashSet::new();
+        for f in &self.reviewed_facts {
+            if f.id.trim().is_empty() || f.statement.trim().is_empty() || !fact_ids.insert(&f.id) || f.start_line == 0 || f.end_line < f.start_line {
+                return Err("Invalid or duplicate reviewed fact".into());
+            }
+        }
         Ok(())
     }
 }
@@ -180,6 +201,10 @@ pub fn query(context: &Context, question: &str) -> Result<String, String> {
         query["strict_text"] = serde_json::json!(true);
         query["instructions"].as_array_mut().unwrap().push(serde_json::json!(text::INSTRUCTION));
     }
+    if !context.reviewed_facts.is_empty() {
+        query["evidence"]["reviewed_facts"] = serde_json::json!(context.reviewed_facts);
+        query["instructions"].as_array_mut().unwrap().push(serde_json::json!(REVIEWED_INSTRUCTION));
+    }
     if !context.project_instructions.is_empty() {
         query["project_instructions"] = serde_json::json!(context.project_instructions);
         query["instructions"].as_array_mut().unwrap().push(serde_json::json!(
@@ -188,6 +213,8 @@ pub fn query(context: &Context, question: &str) -> Result<String, String> {
     }
     serde_json::to_string_pretty(&query).map_err(|e| e.to_string())
 }
+
+const REVIEWED_INSTRUCTION: &str = "evidence.reviewed_facts são afirmações de uma pergunta anterior, revisadas e aprovadas por uma pessoa, sobre estas mesmas linhas. Elas podem orientar a resposta, mas não são citáveis: toda afirmação continua citando as linhas de evidence.items. Não as contradiga sem citar as linhas que mostram o contrário.";
 
 /// The body of a response that is exactly one Markdown code fence, with nothing outside it.
 /// `check` itself stays strict; a caller that accepts fences must record that it did.

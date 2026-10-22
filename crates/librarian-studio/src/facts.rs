@@ -6,7 +6,7 @@
 //! Layout: sends/<NN>/reviews.jsonl (each decision), projects/<key>/facts.jsonl (promotions and
 //! revocations).
 use crate::store::{safe_id, stamp, Store};
-use librarian_ingest::{hash, Catalog, Result};
+use librarian_ingest::{hash, prepare, Catalog, Result};
 use librarian_llm_engine::claims::{self, Claim, Kind};
 use serde_json::{json, Value};
 use std::{
@@ -170,15 +170,9 @@ fn response_path(send_dir: &Path) -> Result<std::path::PathBuf> {
 /// or searched for: a line that shifted makes the fact stale.
 fn recheck(catalog: &Catalog, citations: &Value) -> std::result::Result<(), String> {
     for citation in citations.as_array().into_iter().flatten() {
-        let path = citation["path"].as_str().unwrap_or_default();
-        let source = catalog.source_by_path(path).ok_or_else(|| format!("{path} não está nesta edition"))?;
-        let bytes = catalog.snapshot(&source.id).ok_or_else(|| format!("{path} sem snapshot"))?;
-        let lines: Vec<&str> = std::str::from_utf8(bytes).map_err(|_| format!("{path} não é UTF-8"))?.lines().collect();
-        let (start, end) = (citation["start_line"].as_u64().unwrap_or(0) as usize, citation["end_line"].as_u64().unwrap_or(0) as usize);
-        let current = (start >= 1 && end >= start && end <= lines.len()).then(|| lines[start - 1..end].join("\n"));
-        if current.as_deref() != citation["quote"].as_str() {
-            return Err(format!("{path}:{start}–{end} mudou desde a revisão"));
-        }
+        let line = |name: &str| citation[name].as_u64().unwrap_or(0) as usize;
+        prepare::check_quote(catalog, citation["path"].as_str().unwrap_or_default(), line("start_line"), line("end_line"),
+            citation["quote"].as_str().unwrap_or_default())?;
     }
     Ok(())
 }
