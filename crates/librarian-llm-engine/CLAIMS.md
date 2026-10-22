@@ -151,6 +151,23 @@ Limites: uma paráfrase sem número e sem crase ("o raio é construído depois")
 sem ser vista. A regra também não confere se há uma só afirmação por claim. Ela
 reduz o que o texto pode afirmar sem prova; não confere o sentido.
 
+### Perfil `precise_location`
+
+Com `precise_location: true`, a localização precisa apontar a operação, não a função:
+
+- **`location_operation_includes_declaration`**: a operação começa na linha da declaração;
+- **`location_operation_is_whole_body`**: a operação cobre todo o corpo, da linha seguinte
+  à declaração até a última linha do símbolo.
+
+Exceções: um símbolo de uma linha só (a operação só pode ser a declaração) e um corpo de
+uma linha só (a operação só pode ser o corpo). Origem: na pergunta da esfera, o qwen
+apontou `local_intersect` inteira (32–50) e passou; com a primeira regra, respondeu
+33–50, que a segunda recusa.
+
+Limite: uma faixa quase inteira (por exemplo 34–49) passa. Quanto da função é "a
+operação" é questão de sentido; a comparação entre respostas mostra a diferença como
+parcial.
+
 ### Cercas de Markdown
 
 `claims::check` continua recusando uma resposta cercada. `claims::extract_fenced`

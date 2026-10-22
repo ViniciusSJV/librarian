@@ -655,6 +655,15 @@ Execução real (cópia do `.studio`, pergunta da câmera, uma de cada):
 
 Uma execução não mede tendência. Para modelos locais, o próximo teste é o DeepSeek no Ollama.
 
+### `precise_location` (22/10/2026)
+
+No teste do usuário com a pergunta "Onde a esfera calcula a interseção com o raio?", o qwen (`verificavel`) passou na mecânica apontando `local_intersect` inteira (32–50) como a operação: válido pelas regras, mas sem localizar nada. Decisão do usuário: recusar.
+
+- `precise_location`, opt-in no contexto e ligado pelo studio nas perguntas novas: `location_operation_includes_declaration` (a operação começa na declaração) e `location_operation_is_whole_body` (cobre todo o corpo). Exceções para função ou corpo de uma linha.
+- Execução real na cópia do `.studio`: com só a primeira regra, o qwen respondeu 33–50 e passou; com as duas, foi recusado por `location_operation_is_whole_body`.
+- Limite: uma faixa quase inteira passa; o tamanho certo da operação é questão de sentido.
+- Workspace com 118 aprovados e 1 ignorado.
+
 ### Roteiro seguinte (aprovado em 22/10/2026)
 
 O objetivo é encadear tarefas entre Modelfiles e provedores, por exemplo o `analista` (Ollama) aponta as funções, o `performance` (DeepSeek local no Ollama) propõe a mudança e o `impacto` (Claude) relata o impacto. Uma etapa passa para a seguinte só o que foi conferido, nunca o texto livre.
@@ -700,6 +709,36 @@ Modelfiles por tarefa (biblioteca `modelfiles/`, fora dos crates):
 - `performance`: proposta de otimização com benchmark de antes e depois (fase de performance), possivelmente com DeepSeek, via Ollama ou API.
 
 Ordem sugerida: L2 antes da G6d, porque o formato de afirmações com `verification_plan` e o checker são o que torna o relatório verificável. A G6a–c pode avançar em paralelo.
+
+### G6a–c — resultado (22/10/2026)
+
+Decisões do usuário: o Graph Engine fecha antes de seguir no LLM (cadeia e impacto dependem de "quem usa quem"); atributos do `__init__` viram campos; teto de 8 homônimos; bases de classe registradas como escritas. Testes no renderer e no [full-stack-fastapi-template](https://github.com/fastapi/full-stack-fastapi-template) (`b1125d8`), uma API em Python com models, crud e rotas.
+
+Mudanças:
+
+- **Perfil v3** (`rust-structural-v2`, `python-structural-v2`), o novo atual; v1 e v2 continuam lidos e reproduzíveis. Os extractors ganharam um modo G6 ligado só no v3.
+- **G6a:** símbolos `field`. Rust: campos nomeados de struct. Python: atribuições no corpo da classe (com ou sem anotação) e `self.<nome>` no `__init__`, declarado uma vez por classe; com vários alvos (`x = y = 0`) cada campo usa o trecho do próprio nome.
+- **G6b:** ocorrências `attribute_access` (`a.b`) e `base_class`; chamadas, acessos e bases com candidato pelo nome escrito. Uma chamada de atributo é chamada, não também acesso. Acima de 8 candidatos, nenhuma aresta e `ambiguous_candidates` no nó (campo opcional do contrato v2).
+- **G6c:** `v2::Graph::used_by` e `GET /api/used-by` (grafo do run em cache no studio). Na página, **Onde é usado?** na inspeção abre a **vista Caminho**: camadas da esquerda para a direita (ELK, algoritmo layered), caixas por classe ou arquivo, tracejado para homônimos, clique na linha mostra onde o nome está escrito, duplo clique reinicia a partir do ponto. Filtros: esconder testes (convenção de nomes) e só usos sem homônimos.
+
+Verificação:
+
+- `tests/g6.rs`: campos nas duas linguagens e o v2 sem eles; candidatos de acesso, chamada e base só na mesma linguagem; teto com contagem e contagem forjada recusada; `used_by` em camadas (`placa` ← `validate`/`Defaults.default` ← `save`/`patch`), homônimos contados, limites e recusas. Os testes do G5 passaram a gerar com o perfil v2. Workspace com 122 aprovados e 1 ignorado; `tests/agnostic.rs` continua passando.
+- Projetos reais (release):
+  - renderer: 7.152 nós, 13.636 arestas, 126 campos, 914 ocorrências ambíguas; `ray_from_pixel` ← `render` ← os `main` dos capítulos;
+  - FastAPI: 2.414 nós, 3.331 arestas, 71 campos, 881 ligações candidatas; `get_user_by_email` ← `create_user`, `update_user_me`, `register_user`, `update_user` (as quatro rotas) e o login; 1 diagnóstico de sintaxe nova;
+  - TheAlgorithms: 68.334 nós e 93.574 arestas (antes 59.013 e 75.381), 131 MB (antes 107), geração e grafo em cerca de 6 s; `min_dist` ← `dijkstra` (linha 95). O primeiro teste revelou o ID duplicado de `x = y = 0`, corrigido.
+- Vista Caminho no Edge headless com o FastAPI, a partir de `UserBase.email`: com testes escondidos, 13 pontos e 33 usos em profundidade 2, sem erros no console. Duas correções durante o teste: coordenadas das ligações dentro de uma caixa (o ELK as devolve relativas à caixa) e ligações de um ponto para ele mesmo.
+
+Limites: nada é resolvido, só o nome escrito; `crud.create_user` liga também à rota `create_user`, que tem o mesmo nome. Receptores e tipos não são inferidos, e a herança registrada não é usada para escolher: `User.email` combina com os cinco campos `email` pelo nome, entre eles o de `UserBase`, e não por `User` herdar de `UserBase`. O filtro de testes é convenção de nomes. Falta a G6d (relatório de impacto), que vai junto com a cadeia, no LLM.
+
+Formas de uso que o perfil v3 **não registra**, e que fazem a vista mostrar menos do que existe (pergunta do usuário em 22/10/2026, ao ver projetos em que "Onde é usado?" não mostrava nada):
+
+- Rust: usos dentro de macros (`assert_eq!`, `println!`, `vec!`), porque o parser não abre o corpo da macro; campo preenchido em literal (`Vehicle { placa: x }`) ou desestruturado em padrão; constantes, `static` e variantes de enum, que não viram candidatos.
+- Python: argumentos nomeados (`User(email=...)`, comum em SQLModel e Pydantic), `getattr` e nomes em texto.
+- Nos dois: nomes com mais de 8 homônimos (no renderer, 914 ocorrências, como `new`).
+
+Ausência na vista não prova que ninguém usa. Registrar literais de struct, padrões e argumentos nomeados é extensão possível do v3 em um perfil seguinte.
 
 ## G7 — Infraestrutura como código (planejado em 21/10/2026)
 

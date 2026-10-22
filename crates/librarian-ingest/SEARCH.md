@@ -72,6 +72,14 @@ Saída 0 indica candidatos sem diagnósticos; 2, nenhum candidato ou diagnóstic
 registra o padrão de uma variável local. `call_observed` e `method_call_observed`
 registram expressões, sem resolver destino/receptor ou comprovar execução.
 
+No perfil v3 (G6, o atual), campos também são símbolos (`field`: struct nomeada em Rust;
+corpo da classe e `self.<nome>` no `__init__` em Python), e há duas ocorrências novas:
+`attribute_access` (`a.b`, leitura ou escrita) e `base_class` (base escrita numa classe
+Python). Acessos, chamadas e bases ganham `name_candidate` para campos, funções/métodos e
+classes de mesmo nome. Acima de 8 declarações candidatas, nenhuma ligação é desenhada e o
+nó da ocorrência guarda `ambiguous_candidates` com a contagem. Os perfis v1 e v2 continuam
+lidos e reproduzíveis sem nada disso.
+
 Referências a tipos ganham ligações `name_candidate` para declarações homônimas,
 inclusive múltiplas e entre arquivos. Elas são candidatas lexicais, não resolução
 de imports, aliases, escopos ou genéricos. Não são grafo de chamadas resolvidas.
@@ -91,6 +99,7 @@ derivado de qualquer edition verificada, inclusive v1; o padrão continua `v1`.
 
 - Nó: `id`, `category` (`source`, `symbol` ou `occurrence`), `kind` (vocabulário
   do extractor; `file` para fontes), `language` (classificação da edition) e `label`.
+  Opcional: `ambiguous_candidates` (perfil v3), ausente quando não se aplica.
   Chunks continuam registros de inspeção, não nós.
 - Aresta: `id`, `from`, `to`, `kind`, `resolution` e `evidence`. Os tipos de
   relação são só `declares`, `contains`, `observes` e `name_candidate`; o tipo da
@@ -101,6 +110,20 @@ derivado de qualquer edition verificada, inclusive v1; o padrão continua `v1`.
 
 É uma projeção: mesmos nós e uma aresta v2 para cada aresta v1, sem relações novas.
 Campos desconhecidos são recusados. Candidatos por nome só ligam a mesma linguagem.
+
+### Onde é usado (`used_by`)
+
+`v2::Graph::used_by(seed, depth, max_nodes)` parte de um símbolo e volta pelos nomes
+escritos: cada `name_candidate` que chega nele leva à ocorrência e, pelo `observes`, ao
+símbolo que a escreveu; repete por camadas até `depth` (1–6), com teto de nós (1–300) e
+`truncated` explícito. Cada uso traz o texto escrito, a evidência, o ID da aresta e
+`candidates`, o número de declarações que aquele nome combina (acima de 1, é um entre
+homônimos). Não resolve nada: é o mapa dos candidatos pelo nome.
+
+Não registrados no v3, e portanto ausentes de `used_by`: corpos de macro, literais de
+struct e padrões em Rust; constantes, `static` e variantes de enum como alvo; argumentos
+nomeados e `getattr` em Python; nomes acima do teto de homônimos. Ausência não prova
+que não há uso.
 
 ## Da busca ao PreparedQuery
 
