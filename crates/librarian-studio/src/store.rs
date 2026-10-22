@@ -290,36 +290,6 @@ impl Store {
         self.turn(key, run, &id)
     }
 
-    /// Checks an answer pasted from a manual send of a claims question; it is kept as a send.
-    pub fn paste_answer(&self, key: &str, run: &str, turn: &str, text: &str) -> Result<Value> {
-        let dir = self.turn_dir(key, run, turn)?;
-        let question: Value = serde_json::from_slice(&fs::read(dir.join("question.json"))?)?;
-        if question["answer_format"] != "claims" {
-            return Err("Esta pergunta está em prosa; só respostas em claims são conferidas".into());
-        }
-        let catalog = Catalog::load(&self.edition(key, run)?)?;
-        prepare::verify(&catalog, &dir.join("prepared"))?;
-        let context = crate::claims::verify(&catalog, &dir)?;
-        let send = next_send(&dir, "manual")?;
-        fs::create_dir(&send)?;
-        fs::write(send.join("response.txt"), text)?;
-        let query = fs::read(dir.join(crate::claims::DIR).join("query.json"))?;
-        let mut summary = json!({
-            "state": "pasted",
-            "provider": "manual",
-            "created": stamp(),
-            "directory": display(&send),
-            "text": text,
-            "query_sha256": hash(&query),
-            "response_sha256": hash(text.as_bytes()),
-            "semantic_evaluation": "pending",
-            "criteria_sha256": question["criteria_sha256"],
-        });
-        summary["check"] = crate::claims::check(&context, &send, text)?;
-        fs::write(send.join("send.json"), serde_json::to_vec_pretty(&summary)?)?;
-        Ok(summary)
-    }
-
     fn settings(&self, key: &str) -> Result<Settings> {
         Ok(serde_json::from_slice(&fs::read(self.project_dir(key)?.join("project.json"))?)?)
     }
@@ -682,6 +652,24 @@ mod tests {
         }
     }
 
+    /// Records an answer as a send would, without a provider: the same checks and files.
+    fn record_answer(store: &Store, key: &str, run: &str, turn: &str, provider: &str, text: &str) -> Result<Value> {
+        let dir = store.turn_dir(key, run, turn)?;
+        let question: Value = serde_json::from_slice(&fs::read(dir.join("question.json"))?)?;
+        if question["answer_format"] != "claims" {
+            return Err("Pergunta em prosa".into());
+        }
+        let catalog = Catalog::load(&store.edition(key, run)?)?;
+        prepare::verify(&catalog, &dir.join("prepared"))?;
+        let context = crate::claims::verify(&catalog, &dir)?;
+        let send = next_send(&dir, provider)?;
+        fs::create_dir(&send)?;
+        let mut summary = json!({ "state": "completed", "provider": provider, "text": text, "directory": display(&send) });
+        summary["check"] = crate::claims::check(&context, &send, text)?;
+        fs::write(send.join("send.json"), serde_json::to_vec_pretty(&summary)?)?;
+        Ok(summary)
+    }
+
     static NEXT: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
 
     fn project() -> Scratch {
@@ -786,7 +774,7 @@ mod tests {
             "location": {"evidence_id": "E1", "path": "src/lib.rs", "symbol_name": "ray_from_pixel",
                 "declaration_line": 4, "operation_start_line": 5, "operation_end_line": 5}}]});
         let fenced = format!("```json\n{answer}\n```");
-        let passed = store.paste_answer(&key, &run, "01", &fenced).unwrap();
+        let passed = record_answer(&store, &key, &run, "01", "manual", &fenced).unwrap();
         assert_eq!(passed["check"]["report"]["mechanical_status"], "passed");
         assert_eq!(passed["check"]["report"]["accepted"], false);
         assert_eq!(passed["check"]["extracted_from_fence"], true);
@@ -794,13 +782,13 @@ mod tests {
 
         let mut wrong = answer.clone();
         wrong["claims"][0]["citations"][0]["quote"] = json!("let direction = x * 2.0;");
-        let rejected = store.paste_answer(&key, &run, "01", &wrong.to_string()).unwrap();
+        let rejected = record_answer(&store, &key, &run, "01", "manual", &wrong.to_string()).unwrap();
         assert_eq!(rejected["check"]["report"]["mechanical_status"], "rejected");
         assert_eq!(rejected["check"]["report"]["issues"][0]["code"], "quote_mismatch");
         // strict_text: the text may only state lines and code its own citations show.
         let mut beyond = answer.clone();
         beyond["claims"][0]["text"] = json!("`ray_from_pixel` devolve `direction` na linha 6.");
-        let issues = &store.paste_answer(&key, &run, "01", &beyond.to_string()).unwrap()["check"]["report"]["issues"];
+        let issues = &record_answer(&store, &key, &run, "01", "manual", &beyond.to_string()).unwrap()["check"]["report"]["issues"];
         assert_eq!(issues, &json!([{"claim_id": "C1", "code": "text_cites_uncited_line"}]));
         let sends = &store.turn(&key, &run, "01").unwrap()["sends"];
         assert_eq!(sends.as_array().unwrap().len(), 3);
@@ -811,9 +799,9 @@ mod tests {
         let context = store.turn_dir(&key, &run, "01").unwrap().join("claims/context.json");
         let original = fs::read_to_string(&context).unwrap();
         fs::write(&context, original.replace("\"allow_hypothesis\": false", "\"allow_hypothesis\": true")).unwrap();
-        assert!(store.paste_answer(&key, &run, "01", &answer.to_string()).is_err());
+        assert!(record_answer(&store, &key, &run, "01", "manual", &answer.to_string()).is_err());
         fs::write(&context, &original).unwrap();
-        assert!(store.paste_answer(&key, &run, "01", &answer.to_string()).is_ok());
+        assert!(record_answer(&store, &key, &run, "01", "manual", &answer.to_string()).is_ok());
 
         // Prose questions keep the Graph Engine query and are not checked.
         settings.answer_format = AnswerFormat::Prose;
@@ -821,7 +809,7 @@ mod tests {
         let prose = store.ask(&key, &run, "direção dos raios").unwrap();
         assert_eq!(prose["answer_format"], "prose");
         assert!(serde_json::from_str::<Value>(prose["query"].as_str().unwrap()).unwrap()["evidence"]["source"].is_object());
-        assert!(store.paste_answer(&key, &run, "02", &answer.to_string()).is_err());
+        assert!(record_answer(&store, &key, &run, "02", "manual", &answer.to_string()).is_err());
     }
 
     #[test]

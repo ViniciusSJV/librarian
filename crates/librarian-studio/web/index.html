@@ -1138,7 +1138,6 @@ function renderTurn(t) {
       t.answer_format === 'claims' ? el('p', { className: 'muted', textContent: 'Formato claims: a evidência são as janelas do bundle conferido, com os símbolos da edition. Cada resposta passa pela conferência mecânica.' }) : null,
       el('pre', { textContent: t.query })) : null,
     ...(t.sends ?? []).map(reply),
-    t.answer_format === 'claims' && t.query ? pasteBox(t) : null,
     t.pending ? el('div', { className: 'bubble reply muted', textContent: `Enviando para ${t.pending}…` }) : null,
     t.sendError ? el('p', { className: 'error', textContent: t.sendError }) : null,
     el('div', { className: 'row', style: 'margin-top: 8px' },
@@ -1290,28 +1289,6 @@ document.addEventListener('click', e => {
 document.addEventListener('mouseover', e => { const b = e.target.closest?.('.help'); if (b && !helpPinned) showHelp(b); });
 document.addEventListener('mouseout', e => { if (e.target.closest?.('.help') && !helpPinned) helpTip.hidden = true; });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !helpTip.hidden) hideHelp(); });
-
-function pasteBox(t) {
-  const area = el('textarea', { className: 'code', rows: 4, value: t.pasteText ?? '',
-    placeholder: 'Cole aqui a resposta de um envio manual (o JSON de claims)' });
-  area.oninput = () => { t.pasteText = area.value; };
-  const button = el('button', { textContent: 'Conferir resposta' });
-  button.onclick = async () => {
-    if (!area.value.trim()) return;
-    t.sendError = null;
-    try {
-      const result = await api('POST', '/api/check', { key: studio.project.key, run: studio.run, turn: t.id, text: area.value });
-      (t.sends ??= []).push(result);
-      t.pasteText = '';
-    } catch (error) {
-      t.sendError = error.message;
-    }
-    renderTurns();
-  };
-  return el('details', { open: $('#provider').value === 'manual' || Boolean(t.pasteText) },
-    el('summary', {}, 'Trouxe uma resposta de fora do Studio? Cole aqui para conferir', helpButton('Só para respostas que vieram de fora do Studio. Exemplo: você clicou em Copiar query, colou num chat qualquer (ChatGPT, outro Claude, um colega) e recebeu a resposta lá. Cole essa resposta aqui: o bibliotecário confere as páginas citadas, como faz com as do Ollama e do Claude, e arquiva junto com a pergunta. Se você enviou pelo próprio Studio, não precisa colar nada: a conferência já aparece na resposta.')), area,
-    el('div', { className: 'row', style: 'margin-top: 6px' }, button));
-}
 
 // ---- lexicon proposals and profile export
 function llmChoice() {
