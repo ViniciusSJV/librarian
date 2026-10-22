@@ -108,6 +108,8 @@ envia.
    quase apaga e a câmera enquadra o conjunto. Clicar num resultado foca o nó.
 4. O `prepare` monta a query (fichas estruturais, fontes conferidas contra os snapshots,
    linhas numeradas, instruções do projeto) e a confere em seguida.
+5. No formato **claims** (veja abaixo), o studio deriva desse bundle conferido a query de
+   claims, que é a enviada.
 
 Se o léxico não alcançar nada ou a edition tiver diagnósticos, a busca continua visível
 e a recusa do `prepare` aparece na pergunta. Clicar numa pergunta antiga a acende de novo.
@@ -122,7 +124,7 @@ contra a edition imediatamente antes de cada envio.
 
 | Opção | O que faz |
 | --- | --- |
-| Nenhum: mostrar o que seria enviado | Não envia. Abre a `query.json` exata; **Copiar query** leva para a área de transferência. |
+| Nenhum (só preparar para copiar) | Não envia. Abre a `query.json` exata; **Copiar query** leva para a área de transferência. |
 | Ollama (Modelfile) | Copia o Modelfile para a pasta do envio, roda `ollama create librarian-<nome>` e envia ao Ollama em `127.0.0.1:11434`. |
 | Claude (Claude Code CLI) | `claude -p` com a sua sessão do Claude Code, sem ferramentas, sem MCP e sem sessão salva. Modelo `sonnet`, `opus` ou `haiku`. O `SYSTEM` do Modelfile escolhido vira o system prompt. Cobra pela sua conta, e o custo aparece na resposta. |
 | Claude (API), DeepSeek | Listados como "em breve"; ainda não enviam. |
@@ -134,6 +136,89 @@ por você, com os critérios gravados antes.
 O executável do Claude é procurado em `LIBRARIAN_CLAUDE`, depois no `PATH`, depois na
 extensão mais recente do VS Code. Se o Ollama não responder, inicie o aplicativo e tente
 de novo.
+
+### Formato da resposta: claims ou prosa
+
+Em **Léxico, busca e instruções**, o campo **Formato da resposta** vale por projeto e fica
+gravado em cada pergunta no momento em que ela é feita. Trocar depois não muda as
+perguntas antigas. Projetos novos começam em **claims**; os abertos antes desta opção
+continuam em **prosa**.
+
+| Formato | O que vai ao LLM | O que volta |
+| --- | --- | --- |
+| Prosa | A query do Graph Engine (`prepared/bundle/query.json`) | Texto livre; a conferência é feita à mão |
+| Claims | A query do [checker de afirmações](crates/librarian-llm-engine/CLAIMS.md) (`claims/query.json`) | Um JSON de claims (FACT, LACUNA e, se permitidas, INFERENCE e HYPOTHESIS), conferido automaticamente |
+
+Como a query de claims é montada:
+
+- **Evidência:** as janelas de contexto do bundle conferido, com o mesmo texto que a prosa
+  mostraria. Uma ficha só vira a evidência `E1`; várias viram os blocos `CTX_1`, `CTX_2`…
+- **Símbolos:** as declarações da edition cujo trecho cabe na janela. A linha da
+  declaração é a primeira linha de código do trecho em que o nome aparece como
+  identificador inteiro; atributos (`#[...]`), comentários e decorators (`@...`) são
+  pulados.
+  Com símbolos, cada FACT precisa de `location` (símbolo, linha da declaração, linhas da
+  operação) e de citar a declaração e a operação.
+- **Limites:** os `unknowns` do dossiê vão em `evidence.limits`.
+- **Instruções:** as fixas do checker valem sempre. As do projeto vão à parte, em
+  `project_instructions`, e não podem relaxar as fixas.
+- **Política:** **permitir INFERENCE** e **permitir HYPOTHESIS** vêm desligadas. Com elas
+  desligadas, o checker recusa essas categorias mesmo que a pergunta as peça.
+
+Antes de cada envio, `claims/context.json` e `claims/query.json` são derivados de novo do
+bundle e comparados byte a byte; qualquer diferença recusa o envio.
+
+Depois do envio, a resposta passa pela **conferência mecânica**:
+
+- JSON no schema, um claim por afirmação, ids únicos;
+- cada citação aponta para uma evidência existente, com path certo, linhas dentro da
+  janela e quote igual às linhas da fonte;
+- `location` aponta para um símbolo da evidência, com a operação dentro dele, e a
+  declaração e a operação estão citadas;
+- INFERENCE tem premissas, HYPOTHESIS tem plano de verificação e as outras categorias não
+  têm nenhum dos dois;
+- o texto só afirma o que as citações do claim mostram (`strict_text`): todo número de
+  linha escrito no texto está numa citação do claim, e todo trecho entre crases aparece
+  nas linhas citadas. Uma resposta que diz "na linha 88 faz `Ray::new(...)`" sem citar
+  a linha 88 é recusada. As perguntas feitas antes desta regra continuam conferidas sem
+  ela.
+
+A resposta mostra **Mecânica: aprovada** ou **recusada**, com os problemas por claim (cada um com uma frase simples e um **?** que explica), e a
+lista de claims com location e citações. A resposta bruta fica em **Resposta bruta**. Se
+o JSON vier dentro de uma única cerca de Markdown (` ```json `), ele é extraído e isso
+aparece na resposta e no `check.json`.
+
+**Aprovada na mecânica não quer dizer correta.** Quer dizer só que a resposta aponta para
+linhas reais da edition no formato pedido. O sentido continua pendente (`semantic_status:
+pending`, `accepted: false`) e é avaliado por você, com os critérios gravados antes.
+
+### Comparar respostas
+
+Quando uma pergunta em claims tem duas ou mais respostas (por exemplo, a mesma pergunta
+enviada ao Ollama e ao Claude), aparece o bloco **Comparar respostas**, atualizado a cada
+envio. Para isso, pergunte uma vez e use o botão **Enviar** da própria pergunta para cada
+LLM; perguntar de novo cria outra pergunta, que não entra na comparação. O bloco não
+compara a redação, compara o **conteúdo** de cada item:
+
+- o tipo (FACT, LACUNA…);
+- com `location`: a função e as linhas da operação;
+- sem `location`: as linhas citadas.
+
+Cada linha da tabela é um conteúdo encontrado em alguma resposta, e cada coluna é uma
+resposta:
+
+| Marca | Significado |
+| --- | --- |
+| `=` | a resposta diz exatamente isso |
+| `≈` | parcial: a mesma função com linhas que se cruzam, ou as mesmas linhas com outro tipo |
+| `·` | a resposta não diz isso |
+
+Não há tolerância: uma linha a mais já é parcial. As respostas recusadas na mecânica
+entram marcadas, porque podem apontar o lugar certo com a forma errada (o caso do qwen,
+que acerta a linha 86 sem citar a declaração). A comparação é recalculada dos
+`check.json` já gravados.
+
+**Concordância é sinal, não prova.** Modelos diferentes podem errar juntos.
 
 ### 5. Modelfiles
 
@@ -156,7 +241,8 @@ studio lê o arquivo ao abrir a pasta pela primeira vez. Exemplo real:
   "instructions": "ai/librarian/instructions.json",
   "criteria": "ai/librarian/criteria-before.md",
   "search": { "top": 5, "depth": 2, "hits": 1 },
-  "prepare": { "radius": 0, "numbered_lines": true }
+  "prepare": { "radius": 0, "numbered_lines": true },
+  "answer": { "format": "claims", "allow_inference": false, "allow_hypothesis": false }
 }
 ```
 
@@ -169,6 +255,8 @@ studio lê o arquivo ao abrir a pasta pela primeira vez. Exemplo real:
 | `search.top`, `search.depth` | Corte do ranking (1–10) e profundidade da vizinhança acesa (0–3) |
 | `search.hits` | Quantos primeiros resultados viram fichas E1…En (padrão 1) |
 | `prepare.radius`, `prepare.numbered_lines` | Linhas extras de contexto e linhas com o número original do arquivo |
+| `answer.format` | `claims` ou `prose`; sem o campo, um projeto novo começa em `claims` |
+| `answer.allow_inference`, `answer.allow_hypothesis` | Política do formato claims (padrão `false`) |
 
 Instruções e critérios entram nos bytes da query e dos hashes. Marque-os `-text` no
 `.gitattributes` do projeto.
@@ -224,13 +312,16 @@ projeto analisado.
   project.json                     configurações editadas na página
   runs/<AAAAMMDD-HHMMSS>/
     edition/  graph-v2.json  run.json
+    last-turn.txt                  maior número de pergunta já usado (não é reutilizado)
     turns/<NN>/
-      question.json                pergunta, data, hash dos critérios, recusa do prepare
+      question.json                pergunta, data, formato, hash dos critérios, recusas
       criteria-before.md           critérios gravados antes da resposta
       search.json                  o que o léxico tocou e a vizinhança
       prepare-request.json         pedido autocontido do prepare
       prepared/                    request.json, search.json, bundle/ (dossier, question, query, origin)
-      sends/<NN>-<provedor>/       query, request, resposta bruta e texto, Modelfile usado, send.json
+      claims/                      context.json e query.json (só no formato claims)
+      sends/<NN>-<provedor>/       query, request, resposta bruta e texto, Modelfile usado,
+                                   send.json e, em claims, check.json
 ```
 
 Para começar do zero, apague a pasta do projeto em `.studio/projects/`.
@@ -248,7 +339,15 @@ Para começar do zero, apague a pasta do projeto em `.studio/projects/`.
 - **Contexto do Ollama:** o Ollama corta, sem erro, a entrada que passa do `num_ctx` do Modelfile, e o envio ainda termina como `completed`. O studio estima o tamanho da query em tokens (bytes ÷ 3,5, mostrado em "O que é enviado ao LLM") e pede confirmação antes de enviar uma query maior que 3/4 do `num_ctx`. Depois do envio, compara o que o Ollama processou (`prompt_eval_count`) com o tamanho da query e marca a resposta em vermelho como "Entrada possivelmente truncada". Um prefixo em cache também reduz a contagem, por isso é uma suspeita, não uma prova. O `analista` usa `num_ctx` 16384; com `hits` maior, reduza `hits` ou aumente o contexto.
 - Um envio dura até 300 s e bloqueia só a própria requisição.
 - O status do Ollama é lido quando a página abre; recarregue a página depois de iniciá-lo.
-- A avaliação semântica é manual; o checker de afirmações ([CLAIMS](crates/librarian-llm-engine/CLAIMS.md)) ainda não faz parte desta trilha (fase L, passo 2).
+- A conferência do formato claims é só mecânica. A avaliação semântica continua manual, e
+  nada é promovido a Fact pelo studio (fase L, passo 4). O `strict_text` não vê uma
+  paráfrase sem número de linha nem crase, e não confere se há uma só afirmação por
+  claim.
+- A linha da declaração de um símbolo ainda é achada no texto, não pelo parser. Linhas
+  de atributo, comentário e decorator são puladas; um nome repetido numa linha de código
+  antes da declaração (raro) ainda seria tomado por ela.
+- Para o formato claims, use o Modelfile `verificavel`; o `analista` foi escrito para
+  prosa. Com o qwen 14B, nenhum dos dois fez o modelo citar a declaração em cada item.
 - Aberta com duplo clique (`file://`), a página só visualiza um `graph-v2.json` escolhido
   em **Abrir arquivos**, sem projeto nem conversa. Para inspeção automatizada, `#debug`
   expõe `window.viewerDebug`.

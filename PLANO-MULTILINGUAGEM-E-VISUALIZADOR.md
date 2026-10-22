@@ -578,3 +578,142 @@ Verificação:
 - Página (Edge headless): grafo de 107 MB carregado em cerca de 1,5 s e layout estabilizado em cerca de 62 s, com os rótulos curtos dos resultados e sem erros no console.
 
 Limites: sem resolução de imports, despacho dinâmico ou avaliação de decorators; arquivos com sintaxe acima de cerca do 3.12 viram diagnóstico.
+
+## L2 — resultado (22/10/2026)
+
+Decisões do usuário:
+
+- **A:** formato `claims` opt-in por projeto, com a prosa mantida. Projetos novos começam em `claims`; os existentes ficam em `prose`.
+- **B:** as instruções fixas do checker valem sempre; as do projeto vão à parte, em `project_instructions`.
+- **C:** `claims::check` continua estrito. O studio aceita uma única cerca de Markdown e registra `extracted_from_fence`.
+- **D:** `allow_inference` e `allow_hypothesis` configuráveis, desligadas por padrão.
+
+Mudanças:
+
+- `claims::Context` ganhou `limits` e `project_instructions`, opcionais. Sem eles, a query é idêntica byte a byte à anterior.
+- `claims::extract_fenced`: devolve o corpo de uma resposta que é exatamente uma cerca `json` ou sem rótulo, com nada fora dela.
+- `crates/librarian-studio/src/claims.rs`: o contexto de claims é derivado do bundle já conferido (janelas de contexto, `unknowns` como `limits`) e dos símbolos da edition cujo chunk cabe na janela. A linha da declaração é a primeira linha do chunk com o nome como identificador inteiro.
+- Na pergunta, `claims/context.json` e `claims/query.json`. Antes de cada envio, os dois são re-derivados com a política e as instruções gravadas e comparados byte a byte, depois do `verify-prepared`.
+- Em cada envio, `check.json` com o relatório, os claims lidos e o limite.
+- Página: formato e política nas configurações, selo mecânico, issues e claims na resposta.
+- Uma resposta colada de fora do Studio (`POST /api/check`) também era conferida. **Removida em 22/10/2026 por decisão do usuário**, que não via uso para ela; a conferência continua nos testes por um auxiliar que grava o envio como o studio grava.
+
+Verificação:
+
+- testes: extração de cerca (aceitas e recusadas, `check` estrito), `limits` e `project_instructions` só quando presentes, a ordem das instruções fixas preservada; no studio, uma pergunta em claims com símbolo e coluna, resposta cercada aprovada, quote errado recusado, contexto adulterado recusado e pergunta em prosa sem conferência. Workspace com 111 aprovados e 1 ignorado; nenhum aviso novo do clippy;
+- renderer real (`428220e`), pergunta "Onde a câmera calcula a direção dos raios?", em `claims`:
+  - Ollama com `analista` (qwen2.5-coder 14B): `ray_from_pixel`, linha 86 e quote corretos, mas **recusado** por `location_declaration_not_cited` (não citou a linha 75);
+  - Claude Haiku: **aprovado**, com dois claims que citam a declaração e a operação. Custou US$ 0,0029;
+  - uma execução de cada; a avaliação semântica não foi feita.
+- Página: checagem de sintaxe do script e uso pelo usuário (Ollama e Claude Sonnet), com o selo, os issues e os claims exibidos.
+
+Limites: a linha da declaração é achada no texto; o SYSTEM do `analista` foi escrito para prosa; a avaliação semântica continua manual.
+
+### L2 — `strict_text` (22/10/2026)
+
+No teste do usuário pela página, o Claude Sonnet passou na mecânica citando as linhas 75 e 84–86, mas o texto também dizia "o raio é construído na linha 88 com `Ray::new(origin, direction)`". O checker só conferia `citations` e ignorava o que o `text` afirmava. Decisão do usuário: fechar isso antes da L2b.
+
+Mudanças:
+
+- `claims/text.rs`, ligado pelo campo opcional `strict_text` do contexto: números de linha no texto precisam estar nas citações do claim (`text_cites_uncited_line`), e trechos entre crases precisam aparecer nas linhas citadas da fonte (`text_quotes_uncited_code`), com `...` como salto. Com o campo ausente, query e checagem não mudam.
+- O studio liga `strict_text` nas perguntas novas. As anteriores são re-derivadas com o valor gravado e continuam verificáveis.
+- Correção: o número de uma pergunta apagada não volta a ser usado (`last-turn.txt` no run). Antes, apagar todas as perguntas fazia a próxima receber `01`.
+
+Verificação:
+
+- testes do parser de linhas (português, inglês, `arquivo.rs:86`; horas e versões ignoradas) e da comparação com `...`; a resposta real do Sonnet como fixture, recusada pelas duas regras e aprovada quando cita a linha 88; um quote errado não serve de prova para o texto. Workspace com 114 aprovados e 1 ignorado;
+- numa cópia do `.studio` do usuário: a pergunta antiga continua passando como antes; numa pergunta nova, a mesma resposta do Sonnet, colada pelo recurso depois removido, é recusada pelas duas regras; o qwen (`analista`) continua recusado só por não citar a declaração; o Haiku passa, com dois claims que citam o que afirmam (US$ 0,0030).
+
+Limite: uma paráfrase sem número nem crase passa sem ser vista; o checker também não confere se há uma só afirmação por claim.
+
+### L2b — comparação por conteúdo (22/10/2026)
+
+Decisões do usuário: todas as respostas entram, com as recusadas marcadas; igual, parcial e divergente sem tolerância; só respostas da mesma pergunta, que receberam a mesma query.
+
+Mudanças:
+
+- `claims::compare`: conteúdo = tipo + `location` (evidência, função, declaração, linhas da operação) ou, sem ela, as linhas citadas. Cada conteúdo distinto vira uma linha, com `equal`, `partial` ou `absent` por resposta.
+- Studio: `turn()` devolve `comparison`, recalculada dos `check.json`; nada novo é gravado. A página mostra o bloco **Comparar respostas** com `=`, `≈` e `·`.
+
+Verificação:
+
+- testes do comparador (qwen e Haiku iguais na linha 86, Haiku sozinho em 84–85, uma INFERENCE em 85–86 parcial nas duas, resposta ilegível ausente; sem `location`, a ordem das citações e o texto não importam) e do studio (quatro respostas com redação e resultado mecânico diferentes e o mesmo conteúdo; uma quinta com outra linha vira outro conteúdo). Workspace com 116 aprovados e 1 ignorado;
+- na cópia do `.studio` do usuário, pergunta 03 (Sonnet colado, qwen e Haiku): os três iguais em `ray_from_pixel` linha 86; só o Haiku em 84–85.
+
+### Ajustes depois do teste do usuário (22/10/2026)
+
+- **Comparação depois do envio:** a página só acrescentava a resposta nova e não buscava a comparação, que é calculada pelo servidor; ela só aparecia ao recarregar. Agora a pergunta é buscada de novo após cada envio.
+- **Linha da declaração:** linhas de atributo (`#[...]`), comentário (`//`, `///`, `#`) e decorator (`@`) são puladas. Continua sendo heurística de texto.
+- **`verificavel.Modelfile`:** SYSTEM curto para o formato claims, com a regra de que cada item carrega a própria prova (o `analista` foi escrito para prosa).
+- Decisão do usuário: manter a regra de que a declaração é citada **em cada item**, para que um item passado adiante na cadeia leve a prova junto.
+
+Execução real (cópia do `.studio`, pergunta da câmera, uma de cada):
+
+- Sonnet com `verificavel`: **aprovado**, com dois itens que citam a linha 75. Antes, com o `analista`, o segundo item não citava. US$ 0,031.
+- qwen 14B com `verificavel`: **recusado** por quatro regras, pior que com o `analista` (uma regra). O SYSTEM não corrige o formato do qwen 14B.
+- Comparação: os dois iguais em `ray_from_pixel` 84–86; o qwen parcial na linha 86.
+
+Uma execução não mede tendência. Para modelos locais, o próximo teste é o DeepSeek no Ollama.
+
+### Roteiro seguinte (aprovado em 22/10/2026)
+
+O objetivo é encadear tarefas entre Modelfiles e provedores, por exemplo o `analista` (Ollama) aponta as funções, o `performance` (DeepSeek local no Ollama) propõe a mudança e o `impacto` (Claude) relata o impacto. Uma etapa passa para a seguinte só o que foi conferido, nunca o texto livre.
+
+Conteúdo de um claim = `kind` + `location` + linhas citadas; o `text` é forma. Modelos diferentes podem divergir na forma, e a comparação olha só o conteúdo. Convergência é sinal, não prova.
+
+1. **L2b:** comparação de envios da mesma pergunta por conteúdo (igual, parcial, divergente). Feita.
+2. **Cadeia:** as locations aprovadas viram um novo `prepare` (a evidência sai da edition), com a resposta anterior rotulada como "não evidência" e ligada por hash.
+
+   Como o usuário quer usar (22/10/2026): fazer várias perguntas em sequência, cada uma com o seu Modelfile, e usar a resposta de uma no contexto da seguinte. Por exemplo, pergunta ao `analista` quais funções melhorar; com essa resposta, troca para o `performance` para propor a mudança; depois para o `impacto`, com o Claude, para o relatório; e assim por diante.
+
+   **A decidir antes de implementar:** se faz sentido levar a resposta de uma pergunta para o contexto de outra, e em que forma. As opções vão de passar só as locations conferidas (a evidência sai de novo da edition) a passar também os claims aprovados como "resposta anterior, não evidência". Nunca o texto livre como evidência.
+3. **Patch:** a etapa de performance devolve um diff unificado, conferido contra o snapshot. Nada é escrito no projeto; ganho de desempenho só como HYPOTHESIS com `verification_plan`, e vira Fact só com registro de execução.
+4. Modelfiles `performance` (DeepSeek local) e `impacto`. O `verificavel` (formato claims) já existe.
+5. **L4:** portões até Fact.
+
+## G6 — Impacto (planejado em 21/10/2026)
+
+Origem: no teste do TheAlgorithms, "Onde o dijkstra calcula a menor distância?" não acendeu a ligação entre `dijkstra` e `min_dist`, embora `dijkstra` chame `min_dist` na linha 95. E o caso de uso do usuário: "se `placa` em `Vehicle` passar a aceitar regex, o que quebra? Por exemplo, uma validação na borda que exige números."
+
+Diagnóstico do grafo atual:
+
+- A vizinhança da busca parte só do primeiro resultado e para no nó do arquivo (fontes são folhas).
+- Chamadas viram ocorrências `call_observed` sem aresta para a função chamada. Isso é intencional: sintaxe não resolve destino.
+- Candidatos por nome existem só para tipos (`candidate_kinds`: struct/enum/trait… em Rust; class em Python).
+- Campos e atributos de classe não são símbolos, e acessos como `vehicle.placa` não são registrados.
+- Seguir o valor de um campo até uma validação (`isdigit()`, regex) é fluxo de dados. Isso vai além da sintaxe e exige analisador de tipos ou execução de testes.
+
+Etapas (Graph Engine, sem interpretar):
+
+| Passo | Mudança | Critério de saída |
+| --- | --- | --- |
+| G6a | Campos como símbolos (`field`): atributos de classe e dataclass em Python, campos de struct em Rust | Fixtures das duas linguagens; perfil novo (v3); v1/v2 intactos |
+| G6b | Acessos (`attribute_access`) e chamadas com candidato por nome para campos e funções da mesma linguagem; arestas `name_candidate`, nunca resolução | Homônimos aparecem como vários candidatos, sem escolher um; `tests/agnostic.rs` continua passando |
+| G6c | "Onde é usado?" no studio: a partir de um nó escolhido, travessia reversa com depth configurável e teto explícito, atravessando arquivos quando pedido | O caminho `min_dist` ← `dijkstra` acende; cada aresta mostra a evidência |
+| G6d | Relatório de impacto: a cadeia acesa vira dossiê ("o que pode quebrar se X mudar?") | Riscos só como HYPOTHESIS com `verification_plan` (por exemplo, quais testes rodar); depende do contrato da L2 |
+
+Modelfiles por tarefa (biblioteca `modelfiles/`, fora dos crates):
+
+- `analista`: explica a evidência (existente).
+- `lexico`: propõe vocabulário (existente).
+- `impacto`: relatório de impacto. Lista os pontos alcançados, separa uso direto de candidato por nome e escreve riscos como hipótese com plano de verificação. Ele nunca afirma que algo quebra sem teste.
+- `performance`: proposta de otimização com benchmark de antes e depois (fase de performance), possivelmente com DeepSeek, via Ollama ou API.
+
+Ordem sugerida: L2 antes da G6d, porque o formato de afirmações com `verification_plan` e o checker são o que torna o relatório verificável. A G6a–c pode avançar em paralelo.
+
+## G7 — Infraestrutura como código (planejado em 21/10/2026)
+
+Pedido do usuário: um extrator de IaC. Ele entra como qualquer linguagem, com extractor, perfil novo e fixtures, sem mudar grafo, busca, dossiês ou studio.
+
+Primeiro alvo provável: Terraform/OpenTofu (HCL), com parser em Rust puro e posições no texto (por exemplo, `hcl-edit`). A ferramenta ainda será confirmada com o usuário.
+
+| Grafo | HCL |
+| --- | --- |
+| Símbolos | `resource`, `data`, `module`, `variable`, `output`, `locals`, `provider` (nome qualificado pelo endereço, por exemplo `aws_s3_bucket.logs`) |
+| Ocorrências | Referências escritas: `aws_s3_bucket.logs.id`, `var.region`, `module.vpc.subnet_ids`, `local.tags` |
+| Candidatos | Referência → símbolo com o mesmo endereço, ainda `name_candidate`: módulos, workspaces e `count`/`for_each` podem mudar o que se resolve |
+| Limites | Sem avaliar expressões, `count`/`for_each` ou o estado real da nuvem; o código descreve a infraestrutura, não prova o que existe |
+
+Outros formatos possíveis: CloudFormation (`!Ref`/`!GetAtt`) e Kubernetes, em YAML/JSON com parser que preserve posições, e Ansible, com referências mais implícitas (Jinja). Pulumi e CDK dependem dos extratores de TypeScript ou Python.
+
+Relação com a G6: as referências por endereço tornam o relatório de impacto ("o que depende do bucket `logs`?") mais preciso que em linguagens de propósito geral. O Modelfile `impacto` serve aos dois casos.

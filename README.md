@@ -122,19 +122,27 @@ registrado e a avaliação pendente. Os detalhes estão no [STUDIO.md](STUDIO.md
   linha 86 do arquivo, onde antes citava "linha 11", a posição no trecho. Foi uma
   execução só; ela não mede tendência e não houve avaliação semântica. As séries de
   afirmações seguem reprovadas pelo checker. Veja os [experimentos](experiments/).
+  No studio, o formato **claims** (fase L, passo 2) confere cada resposta mecanicamente.
+  Na pergunta da câmera, o Claude Haiku passou e o qwen 14B foi recusado por não citar a
+  declaração da função, com o mesmo conteúdo. Uma execução de cada, sem avaliação
+  semântica.
 - **Ainda não existem:** promoção de afirmação aprovada a fato, captura de performance
   e outras linguagens além de Rust e Python.
 
 ## Roteiro
 
-1. **Limites do LLM Engine:** contexto com linhas numeradas (feito), studio usando
-   afirmações e checker, vínculo do bundle no registro do envio e portões até a
-   promoção a fato.
-2. **Performance com evidência:** captura multiplataforma de benchmark antes e depois,
-   para que "ficou mais rápido" seja medido, não afirmado.
-3. **Alteração de código assistida:** o modelo propõe um patch citando evidências;
-   testes e benchmark decidem.
-4. **Outras linguagens** (Java, TypeScript/Angular), apenas por extractors, como o Python.
+1. **Limites do LLM Engine:** contexto com linhas numeradas, studio usando afirmações e
+   checker, e comparação de respostas de modelos diferentes por conteúdo (feitos). Faltam
+   a cadeia entre Modelfiles (só o que foi conferido passa adiante), o vínculo do bundle
+   no registro do envio e os portões até a promoção a fato.
+2. **Impacto (G6):** campos e chamadas como candidatos no grafo, modo "Onde é usado?" no
+   studio e relatório de impacto ("o que pode quebrar se este campo mudar?") com
+   Modelfile próprio. O modelo só aponta riscos como hipótese, com plano de verificação.
+3. **Performance com evidência:** captura multiplataforma de benchmark antes e depois,
+   para que "ficou mais rápido" seja medido, não afirmado; Modelfile próprio de performance.
+4. **Alteração de código assistida:** o modelo propõe um patch citando evidências e o
+   relatório de impacto; testes e benchmark decidem.
+5. **Outras linguagens e IaC** (Java, TypeScript/Angular e infraestrutura como código, como Terraform), apenas por extractors, como o Python. No IaC, as referências por endereço (`aws_s3_bucket.logs.id`, `var.region`) tornam o relatório de impacto ainda mais útil.
 
 O diagnóstico e as etapas concluídas estão no [plano](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md).
 
