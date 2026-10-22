@@ -10,6 +10,10 @@ pub struct Node {
     pub id: String,
     pub kind: String,
     pub label: String,
+    /// Occurrence whose written name matched more declarations than the profile links (G6):
+    /// how many there were. No candidate edge is drawn for it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ambiguous_candidates: Option<usize>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -109,7 +113,8 @@ impl Graph {
                 continue;
             };
             for found in extractor.observe(&catalog.snapshots[&source.id]) {
-                graph.occurrence(catalog, &source.id, found, extractor.candidate_kinds());
+                let kinds = extractor.candidate_kinds_for(found.kind);
+                graph.occurrence(catalog, &source.id, found, kinds, catalog.registry.max_candidates);
             }
         }
         graph.edges.sort_by(|a, b| {
@@ -131,6 +136,7 @@ impl Graph {
                 id,
                 kind: kind.into(),
                 label,
+                ambiguous_candidates: None,
             },
         );
     }
@@ -247,6 +253,7 @@ impl Graph {
         source_id: &str,
         found: Occurrence,
         candidate_kinds: &[&str],
+        max_candidates: Option<usize>,
     ) {
         let Occurrence {
             kind,
@@ -286,12 +293,18 @@ impl Graph {
         // Equal names in other languages are not candidates: kinds are only comparable within one.
         let language = &catalog.sources[source_id].language;
         if let Some(name) = candidate {
-            for symbol in catalog
+            let matches: Vec<_> = catalog
                 .symbols_named(&name)
                 .into_iter()
                 .filter(|s| candidate_kinds.contains(&s.kind.as_str()))
                 .filter(|s| catalog.sources[&s.source_id].language == *language)
-            {
+                .collect();
+            // Too many homonyms is noise, not navigation: the count is kept, no edge is drawn.
+            if max_candidates.is_some_and(|max| matches.len() > max) {
+                self.nodes.get_mut(&id).expect("node just added").ambiguous_candidates = Some(matches.len());
+                return;
+            }
+            for symbol in matches {
                 self.edges.push(Edge {
                     from: id.clone(),
                     to: symbol.id.clone(),
