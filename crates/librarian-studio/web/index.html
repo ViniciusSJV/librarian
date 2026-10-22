@@ -95,6 +95,15 @@
   button.primary { background: var(--text-primary); border-color: var(--text-primary); color: var(--surface-1); }
   .field { display: grid; gap: 4px; margin-top: 8px; }
   .field > span { color: var(--text-secondary); font-size: 12px; }
+  .check { display: flex; gap: 8px; align-items: flex-start; margin-top: 8px; cursor: pointer; }
+  .check input { flex: none; margin: 2px 0 0; }
+  .help { display: inline-grid; place-items: center; width: 17px; height: 17px; margin-left: 6px; padding: 0;
+    border-radius: 50%; font-size: 11px; font-weight: 700; line-height: 1; letter-spacing: 0; text-transform: none;
+    vertical-align: text-bottom; color: var(--text-secondary); cursor: help; }
+  .help:hover, .help:focus-visible { color: var(--text-primary); border-color: var(--text-secondary); }
+  #helpTip { position: fixed; z-index: 1000; max-width: 300px; padding: 9px 11px; border: 1px solid var(--border); border-radius: 8px;
+    background: var(--surface-2); color: var(--text-primary); font-size: 12.5px; line-height: 1.45;
+    box-shadow: 0 6px 24px rgb(0 0 0 / .18); pointer-events: none; white-space: normal; }
   .grid4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
   .turn { margin-top: 14px; padding: 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2); }
   .turn.active { border-color: var(--focus); }
@@ -137,7 +146,7 @@
     <p class="muted">Projeta as relações do grafo <code>syntax-graph-v2</code>. Proximidade visual não cria relação; toda aresta mostra a evidência que a autorizou.</p>
 
     <section class="card" id="projectCard" hidden>
-      <h2>Projeto</h2>
+      <h2>Projeto<button type="button" class="help" aria-label="O que é isto?" data-help="Pense no seu código como uma biblioteca. Aqui você escolhe qual biblioteca o bibliotecário vai atender. Ele trabalha numa sala dele (a pasta .studio) e nunca risca nem muda os livros do seu projeto. Reabrir a mesma pasta traz de volta as consultas já feitas.">?</button></h2>
       <div class="row" style="flex-wrap: nowrap">
         <input id="projectPath" type="text" placeholder="C:\caminho\do\projeto (Rust ou Python)">
         <button id="browse">Procurar…</button>
@@ -149,15 +158,15 @@
       </div>
       <div id="projectBody" hidden>
         <dl id="projectInfo"></dl>
-        <label class="field"><span>Entradas (pastas ou arquivos relativos à raiz, separados por vírgula)</span><input id="inputs" type="text"></label>
+        <label class="field"><span>Entradas (pastas ou arquivos relativos à raiz, separados por vírgula)<button type="button" class="help" aria-label="O que é isto?" data-help="Quais estantes entram no acervo, por exemplo src e tests. O que ficar de fora não existe para o bibliotecário: não aparece no mapa e não pode ser citado em nenhuma resposta.">?</button></span><input id="inputs" type="text"></label>
         <div class="row" style="margin-top: 8px; flex-wrap: nowrap">
           <button id="generate" class="primary">Gerar grafo</button>
-          <select id="runs" title="Grafos já gerados"></select>
+          <select id="runs" title="Grafos já gerados"></select><button type="button" class="help" aria-label="O que é isto?" data-help="O bibliotecário cataloga o acervo: cada arquivo, função e uso ganha uma ficha e um lugar no mapa. Esse catálogo é conferido e congelado, e toda resposta é checada contra ele. Se o código mudar, catalogue de novo. O seletor ao lado guarda os catálogos anteriores.">?</button>
         </div>
         <p id="runNote" class="muted"></p>
         <details>
-          <summary>Léxico, busca e instruções</summary>
-          <label class="field"><span>Léxico (JSON: <code>groups</code> de sinônimos e <code>stop_words</code>)</span><textarea id="lexicon" class="code" rows="8" spellcheck="false"></textarea></label>
+          <summary>Léxico, busca e instruções<button type="button" class="help" aria-label="O que é isto?" data-help="As regras do balcão: como o bibliotecário procura nas estantes e o que ele exige de quem responde. Vale para as próximas consultas; as já feitas guardam as regras da época.">?</button></summary>
+          <label class="field"><span>Léxico (JSON: <code>groups</code> de sinônimos e <code>stop_words</code>)<button type="button" class="help" aria-label="O que é isto?" data-help="O dicionário de sinônimos do bibliotecário. Você pergunta por raios, mas na estante o livro se chama ray: o léxico faz essa ponte. Sem ele, uma pergunta em português não encontra nomes em inglês. stop_words são palavras que ele ignora, como de e o.">?</button></span><textarea id="lexicon" class="code" rows="8" spellcheck="false"></textarea></label>
           <div class="field">
             <div class="row"><button id="suggestLexicon">Sugerir léxico com o LLM</button><span id="suggestNote" class="muted"></span></div>
             <span>Os termos vêm do código da edition; o LLM escolhido na Conversa só propõe as palavras em português (no Ollama, com o Modelfile <code>lexico</code>). Cada grupo é conferido, e nada entra no léxico sem você aplicar.</span>
@@ -170,22 +179,23 @@
             </div>
             <div id="lexiconProposal" hidden></div>
           </div>
+          <div class="field"><span>Ajustes da busca<button type="button" class="help" aria-label="O que é isto?" data-help="top: quantos livros o bibliotecário separa na busca. depth: quanto das estantes vizinhas ele ilumina no mapa. hits: quantos desses livros vão para a mesa de quem responde (mais livros, mais leitura). radius: quantas linhas além da página exata ele copia junto.">?</button></span></div>
           <div class="grid4">
             <label class="field" title="Quantos resultados a busca devolve (1–10)"><span>top</span><input id="top" type="number" min="1" max="10"></label>
             <label class="field" title="Profundidade da vizinhança acesa (0–3)"><span>depth</span><input id="depth" type="number" min="0" max="3"></label>
             <label class="field" title="Quantos primeiros resultados viram fichas E1…En"><span>hits</span><input id="hits" type="number" min="1" max="10"></label>
             <label class="field" title="Linhas extras ao redor de cada declaração"><span>radius</span><input id="radius" type="number" min="0"></label>
           </div>
-          <label class="row" style="margin-top: 8px"><input id="numbered" type="checkbox"> Linhas numeradas no contexto</label>
-          <label class="row"><input id="acceptDiag" type="checkbox"> Aceitar edition com diagnósticos</label>
-          <label class="field" title="Fixado em cada pergunta no momento em que ela é feita"><span>Formato da resposta</span><select id="answerFormat"><option value="claims">Claims: JSON conferido contra a edition</option><option value="prose">Prosa: query do Graph Engine, conferência à mão</option></select></label>
-          <label class="row"><input id="allowInference" type="checkbox"> Claims: permitir INFERENCE (exige premissas)</label>
-          <label class="row"><input id="allowHypothesis" type="checkbox"> Claims: permitir HYPOTHESIS (exige plano de verificação)</label>
-          <label class="field"><span>Instruções da query (uma por linha; vazio usa as padrão do Graph Engine; em claims vão à parte, como <code>project_instructions</code>)</span><textarea id="instructions" rows="6"></textarea></label>
-          <label class="field"><span>Critérios prévios (gravados em cada pergunta antes de qualquer resposta)</span><textarea id="criteria" rows="6"></textarea></label>
+          <label class="check"><input id="numbered" type="checkbox"><span>Linhas numeradas no contexto<button type="button" class="help" aria-label="O que é isto?" data-help="Entrega os trechos com as páginas numeradas, como num livro. Quem responde não precisa contar linhas e erra menos ao dizer onde algo está. Recomendado deixar ligado.">?</button></span></label>
+          <label class="check"><input id="acceptDiag" type="checkbox"><span>Aceitar edition com diagnósticos<button type="button" class="help" aria-label="O que é isto?" data-help="Alguns livros chegaram danificados e não puderam ser catalogados (por exemplo, sintaxe nova demais). Com o catálogo incompleto, o bibliotecário prefere não atender. Ligue para atender mesmo assim, sabendo que pode faltar livro na estante.">?</button></span></label>
+          <label class="field" title="Fixado em cada pergunta no momento em que ela é feita"><span>Formato da resposta<button type="button" class="help" aria-label="O que é isto?" data-help="Claims: quem responde entrega itens curtos, cada um com a página e o trecho copiado do livro, e o bibliotecário confere tudo na estante. Prosa: quem responde escreve um texto livre, como uma resenha, e a conferência fica toda com você. A escolha fica anotada em cada consulta.">?</button></span><select id="answerFormat"><option value="claims">Claims: JSON conferido contra a edition</option><option value="prose">Prosa: query do Graph Engine, conferência à mão</option></select></label>
+          <label class="check"><input id="allowInference" type="checkbox"><span>Claims: permitir INFERENCE (exige premissas)<button type="button" class="help" aria-label="O que é isto?" data-help="Inferência é tirar uma conclusão juntando o que está escrito (se o livro diz A e B, então C). Desligado, quem responde só pode repetir o que está nas páginas. Ligado, pode concluir, mas precisa mostrar de quais páginas partiu. Quem julga a conclusão é você.">?</button></span></label>
+          <label class="check"><input id="allowHypothesis" type="checkbox"><span>Claims: permitir HYPOTHESIS (exige plano de verificação)<button type="button" class="help" aria-label="O que é isto?" data-help="Hipótese é uma suspeita que ainda não foi provada, como achar que um capítulo é lento de ler. Desligado, quem responde não pode levantar suspeitas. Ligado, pode, mas cada suspeita vem com um plano de como testá-la. Útil para performance e impacto.">?</button></span></label>
+          <label class="field"><span>Instruções da query<button type="button" class="help" aria-label="O que é isto?" data-help="Um bilhete seu para quem vai responder, como seja breve ou cite o arquivo. No formato claims o bilhete complementa as regras da casa e nunca as afrouxa.">?</button> (uma por linha; vazio usa as padrão do Graph Engine; em claims vão à parte, como <code>project_instructions</code>)</span><textarea id="instructions" rows="6"></textarea></label>
+          <label class="field"><span>Critérios prévios (gravados em cada pergunta antes de qualquer resposta)<button type="button" class="help" aria-label="O que é isto?" data-help="O seu gabarito, escrito antes da prova. O bibliotecário guarda esse texto com cada consulta, antes de existir resposta, para que ninguém ajuste a nota depois de ver o resultado.">?</button></span><textarea id="criteria" rows="6"></textarea></label>
           <div class="row" style="margin-top: 8px">
             <button id="saveSettings">Salvar configurações</button>
-            <button id="exportProfile" title="Grava librarian.json e os arquivos que ele aponta na pasta do projeto">Salvar no projeto…</button>
+            <button id="exportProfile" title="Grava librarian.json e os arquivos que ele aponta na pasta do projeto">Salvar no projeto…</button><button type="button" class="help" aria-label="O que é isto?" data-help="Salvar configurações guarda as regras só na sala do bibliotecário. Salvar no projeto deixa uma cópia delas (librarian.json) dentro da própria biblioteca, para reusar em outra máquina ou compartilhar. Antes de gravar, ele mostra o que vai escrever.">?</button>
           </div>
           <span id="settingsNote" class="muted"></span>
         </details>
@@ -193,7 +203,7 @@
     </section>
 
     <section class="card">
-      <h2>Abrir arquivos</h2>
+      <h2>Abrir arquivos<button type="button" class="help" aria-label="O que é isto?" data-help="Para só folhear um catálogo já feito, sem abrir a biblioteca nem atender ninguém: escolha o graph-v2.json de uma execução.">?</button></h2>
       <div class="row">
         <label class="file">Pasta de execução<input id="folder" type="file" webkitdirectory multiple></label>
         <label class="file">Arquivos<input id="files" type="file" accept=".json" multiple></label>
@@ -203,7 +213,7 @@
     </section>
 
     <section class="card legend">
-      <h2>Nós</h2>
+      <h2>Nós<button type="button" class="help" aria-label="O que é isto?" data-help="A legenda do mapa da biblioteca. Fonte é um livro (arquivo), símbolo é um capítulo com nome (função ou tipo), ocorrência é uma página onde algo é mencionado. Desmarque para esconder um tipo. As linhas são remissões entre fichas; as tracejadas são palpites pelo nome, não remissões confirmadas.">?</button></h2>
       <label><input type="checkbox" data-category="source" checked><span class="swatch source"></span>Fonte (arquivo)<span class="count" data-count="source">0</span></label>
       <label><input type="checkbox" data-category="symbol" checked><span class="swatch symbol"></span>Símbolo (declaração)<span class="count" data-count="symbol">0</span></label>
       <label><input type="checkbox" data-category="occurrence" checked><span class="swatch occurrence"></span>Ocorrência (uso observado)<span class="count" data-count="occurrence">0</span></label>
@@ -215,7 +225,7 @@
     </section>
 
     <section class="card">
-      <h2>Encontrar</h2>
+      <h2>Encontrar<button type="button" class="help" aria-label="O que é isto?" data-help="Como consultar o catálogo pelo título: digite o nome de uma função, tipo ou arquivo e o mapa vai até ele. Ninguém é chamado para responder e nada muda.">?</button></h2>
       <input id="query" type="search" placeholder="ray_from_pixel, Camera, src/world.rs…" disabled>
       <ul id="results" class="list"></ul>
       <div class="row" style="margin-top: 8px">
@@ -225,15 +235,15 @@
     </section>
 
     <section class="card" id="overlayCard" hidden>
-      <h2>Busca sobreposta</h2>
-      <label class="row"><input id="overlayToggle" type="checkbox" checked> Destacar resultados e vizinhança</label>
+      <h2>Busca sobreposta<button type="button" class="help" aria-label="O que é isto?" data-help="As estantes que a consulta ativa acendeu: os livros encontrados ficam grandes e com nome, os vizinhos ficam visíveis e o resto da biblioteca fica na penumbra.">?</button></h2>
+      <label class="check"><input id="overlayToggle" type="checkbox" checked><span>Destacar resultados e vizinhança</span></label>
       <p id="overlayQuestion"></p>
       <ul id="overlayHits" class="list"></ul>
       <p id="overlayNote" class="muted"></p>
     </section>
 
     <section class="card">
-      <h2>Inspeção</h2>
+      <h2>Inspeção<button type="button" class="help" aria-label="O que é isto?" data-help="A ficha catalográfica do que você clicou: o que é, em que livro e página está e por que existe a remissão.">?</button></h2>
       <div id="inspector" class="muted">Clique em um nó ou em uma aresta.</div>
     </section>
   </aside>
@@ -246,16 +256,16 @@
   </main>
   <aside id="chat">
     <div id="chatHeader">
-      <h2>Conversa</h2>
+      <h2>Conversa<button type="button" class="help" aria-label="O que é isto?" data-help="O balcão de atendimento. O bibliotecário procura nas estantes, acende o mapa e monta uma pasta com as páginas conferidas. Quem responde só lê essa pasta. Tudo fica arquivado: a pergunta, a pasta entregue e as respostas.">?</button></h2>
       <p id="chatNote" class="muted">Abra um projeto e gere o grafo para perguntar.</p>
     </div>
     <div id="turns"></div>
     <div id="composer">
       <textarea id="question" rows="3" placeholder="Pergunte sobre o projeto… (Ctrl+Enter)" disabled></textarea>
-      <label class="field"><span>LLM</span><select id="provider"></select></label>
+      <label class="field"><span>LLM<button type="button" class="help" aria-label="O que é isto?" data-help="Quem vai ler a pasta e responder. Nenhum: o bibliotecário só prepara a pasta, para você levar a quem quiser. Ollama: um leitor que trabalha na sua máquina, sem custo. Claude: um leitor de fora, pela sua conta, com o custo mostrado em cada resposta.">?</button></span><select id="provider"></select></label>
       <label class="field" id="claudeModelRow"><span>Modelo do Claude</span><select id="claudeModel"></select></label>
       <div class="field" id="modelfileRow">
-        <span>Modelfile</span>
+        <span>Modelfile<button type="button" class="help" aria-label="O que é isto?" data-help="O crachá do especialista: qual leitor chamar e as orientações fixas que ele recebe. Tenha um para cada tarefa (analista, léxico, performance). No Claude, só as orientações valem.">?</button></span>
         <div class="row" style="flex-wrap: nowrap"><select id="modelfile"></select><button id="editModelfile">Editar</button></div>
         <span id="modelfileSummary" class="muted mono"></span>
       </div>
@@ -1184,11 +1194,46 @@ function checkView(c) {
   return el('div', { style: 'margin-top: 6px' },
     el('div', {},
       el('span', { className: `verdict ${passed ? 'passed' : 'error'}`, textContent: passed ? 'Mecânica: aprovada' : 'Mecânica: recusada' }),
+      helpButton('Aprovada: o bibliotecário foi à estante e confirmou que as páginas citadas existem, que o trecho copiado é idêntico ao livro e que o texto não fala de páginas que não citou. Isso não quer dizer que a resposta está certa: o sentido quem julga é você. Recusada lista o que não bateu.'),
       el('span', { className: 'muted', textContent: ` · semântica: ${c.report.semantic_status === 'pending' ? 'pendente' : c.report.semantic_status}${c.extracted_from_fence ? ' · JSON extraído de uma cerca de Markdown' : ''}` })),
     issues.length ? el('ul', { className: 'claims error' }, ...issues.map(i => el('li', { className: 'mono', textContent: i }))) : null,
     c.claims ? el('ol', { className: 'claims' }, ...c.claims.map(claim)) : null,
     el('div', { className: 'muted', style: 'font-size: 11px', textContent: c.limits }));
 }
+
+const helpButton = text => {
+  const button = el('button', { type: 'button', className: 'help', textContent: '?', ariaLabel: 'O que é isto?' });
+  button.dataset.help = text;
+  return button;
+};
+
+// ---- help: each "?" explains a part of the page in plain words, on hover or click.
+const helpTip = el('div', { id: 'helpTip', role: 'tooltip', hidden: true });
+document.body.append(helpTip);
+let helpPinned = null;
+function showHelp(button) {
+  helpTip.textContent = button.dataset.help;
+  helpTip.hidden = false;
+  const r = button.getBoundingClientRect();
+  const left = Math.min(Math.max(8, r.left + r.width / 2 - helpTip.offsetWidth / 2), innerWidth - helpTip.offsetWidth - 8);
+  const below = r.bottom + 6 + helpTip.offsetHeight <= innerHeight;
+  helpTip.style.left = `${left}px`;
+  helpTip.style.top = `${below ? r.bottom + 6 : r.top - helpTip.offsetHeight - 6}px`;
+}
+const hideHelp = () => { helpTip.hidden = true; helpPinned = null; };
+// Capture phase: a "?" inside a label or summary must not toggle it.
+document.addEventListener('click', e => {
+  const button = e.target.closest?.('.help');
+  if (!button) { if (helpPinned) hideHelp(); return; }
+  e.preventDefault();
+  e.stopPropagation();
+  if (helpPinned === button) { hideHelp(); return; }
+  helpPinned = button;
+  showHelp(button);
+}, true);
+document.addEventListener('mouseover', e => { const b = e.target.closest?.('.help'); if (b && !helpPinned) showHelp(b); });
+document.addEventListener('mouseout', e => { if (e.target.closest?.('.help') && !helpPinned) helpTip.hidden = true; });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !helpTip.hidden) hideHelp(); });
 
 function pasteBox(t) {
   const area = el('textarea', { className: 'code', rows: 4, value: t.pasteText ?? '',
@@ -1208,7 +1253,7 @@ function pasteBox(t) {
     renderTurns();
   };
   return el('details', { open: $('#provider').value === 'manual' || Boolean(t.pasteText) },
-    el('summary', { textContent: 'Colar uma resposta para conferir' }), area,
+    el('summary', {}, 'Colar uma resposta para conferir', helpButton('Se você levou a pasta a outro leitor (com Nenhum, por exemplo), cole aqui a resposta que ele deu. O bibliotecário confere do mesmo jeito que confere as dos leitores dele e arquiva junto com a consulta.')), area,
     el('div', { className: 'row', style: 'margin-top: 6px' }, button));
 }
 
