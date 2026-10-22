@@ -90,6 +90,7 @@ pub fn context(catalog: &Catalog, query: &Value, policy: Policy, project_instruc
         strict_text: true,
         precise_location: true,
         reviewed_facts,
+        allow_patch: false,
     };
     context.validate()?;
     Ok(context)
@@ -154,9 +155,10 @@ fn pretty(value: &impl serde::Serialize) -> Result<Vec<u8>> {
 struct Rules {
     strict_text: bool,
     precise_location: bool,
+    /// Chosen per project, like the policy, and recorded with each question.
+    allow_patch: bool,
 }
 
-const CURRENT: Rules = Rules { strict_text: true, precise_location: true };
 
 fn derive(catalog: &Catalog, turn: &Path, policy: Policy, project_instructions: Vec<String>, rules: Rules) -> Result<(Vec<u8>, Vec<u8>)> {
     let bundle = turn.join("prepared/bundle");
@@ -165,14 +167,16 @@ fn derive(catalog: &Catalog, turn: &Path, policy: Policy, project_instructions: 
     let mut context = context(catalog, &query, policy, project_instructions)?;
     context.strict_text = rules.strict_text;
     context.precise_location = rules.precise_location;
+    context.allow_patch = rules.allow_patch;
     let mut claims_query = claims::query(&context, &question)?.into_bytes();
     claims_query.push(b'\n');
     Ok((pretty(&context)?, claims_query))
 }
 
 /// Writes claims/context.json and claims/query.json from a bundle already prepared and verified.
-pub fn write(catalog: &Catalog, turn: &Path, policy: Policy, project_instructions: Vec<String>) -> Result<()> {
-    let (context, query) = derive(catalog, turn, policy, project_instructions, CURRENT)?;
+pub fn write(catalog: &Catalog, turn: &Path, policy: Policy, project_instructions: Vec<String>, allow_patch: bool) -> Result<()> {
+    let rules = Rules { strict_text: true, precise_location: true, allow_patch };
+    let (context, query) = derive(catalog, turn, policy, project_instructions, rules)?;
     let dir = turn.join(DIR);
     fs::create_dir(&dir)?;
     fs::write(dir.join("context.json"), context)?;
@@ -186,7 +190,7 @@ pub fn verify(catalog: &Catalog, turn: &Path) -> Result<Context> {
     let dir = turn.join(DIR);
     let recorded: Context = serde_json::from_slice(&fs::read(dir.join("context.json"))?)?;
     let policy = Policy { allow_inference: recorded.policy.allow_inference, allow_hypothesis: recorded.policy.allow_hypothesis };
-    let (context, query) = derive(catalog, turn, policy, recorded.project_instructions.clone(), Rules { strict_text: recorded.strict_text, precise_location: recorded.precise_location })?;
+    let (context, query) = derive(catalog, turn, policy, recorded.project_instructions.clone(), Rules { strict_text: recorded.strict_text, precise_location: recorded.precise_location, allow_patch: recorded.allow_patch })?;
     if fs::read(dir.join("context.json"))? != context || fs::read(dir.join("query.json"))? != query {
         return Err("Contexto ou query de claims difere do bundle conferido; nada foi enviado".into());
     }

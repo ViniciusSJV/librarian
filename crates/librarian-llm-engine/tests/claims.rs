@@ -480,3 +480,60 @@ fn precise_location_refuses_the_whole_function_as_the_operation() {
     assert!(q["instructions"].as_array().unwrap().iter().any(|i| i.as_str().unwrap().starts_with("Com precise_location=true")));
     assert!(serde_json::from_str::<Value>(&claims::query(&located().0, "Where?").unwrap()).unwrap().get("precise_location").is_none());
 }
+
+fn patching() -> (Context, Value) {
+    let c: Context = serde_json::from_value(json!({
+        "schema_version": 1, "allow_patch": true,
+        "policy": {"allow_inference": false, "allow_hypothesis": true},
+        "evidence": [{"id": "E1", "path": "src/a.rs", "start_line": 10, "end_line": 13,
+            "excerpt": "fn total(xs: &[u64]) -> u64 {\n    let v: Vec<u64> = xs.to_vec();\n    v.iter().sum()\n}"}]
+    }))
+    .unwrap();
+    let r = json!({"schema_version": 1, "claims": [{
+        "id": "H1", "kind": "HYPOTHESIS", "text": "Somar direto em xs evita a cópia de to_vec.",
+        "citations": [{"evidence_id": "E1", "path": "src/a.rs", "start_line": 11, "end_line": 12,
+            "quote": "    let v: Vec<u64> = xs.to_vec();\n    v.iter().sum()"}],
+        "premises": [], "verification_plan": "cargo bench --bench total, antes e depois",
+        "patch": "--- a/src/a.rs\n+++ b/src/a.rs\n@@ -10,4 +10,3 @@\n fn total(xs: &[u64]) -> u64 {\n-    let v: Vec<u64> = xs.to_vec();\n-    v.iter().sum()\n+    xs.iter().sum()\n }\n"}]});
+    (c, r)
+}
+
+#[test]
+fn a_patch_is_checked_line_by_line_against_the_evidence_and_never_approved() {
+    let (c, r) = patching();
+    let report = claims::check(&c, &r.to_string()).unwrap();
+    assert_eq!((report.mechanical_status, report.accepted, report.semantic_status), ("passed", false, "pending"));
+    let edit = |f: &dyn Fn(&mut Value)| {
+        let mut v = r.clone();
+        f(&mut v);
+        codes(&c, &v)
+    };
+    let patch = |v: &mut Value, from: &str, to: &str| {
+        let p = v["claims"][0]["patch"].as_str().unwrap().replace(from, to);
+        v["claims"][0]["patch"] = json!(p);
+    };
+    // An old line that is not the evidence text, a hunk beyond the evidence, another file,
+    // counts that disagree with the header and text that is not a diff.
+    assert_eq!(edit(&|v| patch(v, "-    v.iter().sum()", "-    v.iter().sum::<u64>()")), ["patch_does_not_apply"]);
+    assert_eq!(edit(&|v| patch(v, "@@ -10,4 +10,3 @@", "@@ -11,4 +11,3 @@")), ["patch_outside_evidence"]);
+    assert_eq!(edit(&|v| patch(v, "src/a.rs", "src/b.rs")), ["patch_unknown_path"]);
+    assert_eq!(edit(&|v| patch(v, "@@ -10,4 +10,3 @@", "@@ -10,5 +10,3 @@")), ["patch_malformed"]);
+    assert_eq!(edit(&|v| v["claims"][0]["patch"] = json!("troque to_vec por iter")), ["patch_malformed"]);
+    // Removed lines must be cited by the same claim.
+    assert_eq!(edit(&|v| {
+        v["claims"][0]["citations"][0]["end_line"] = json!(11);
+        v["claims"][0]["citations"][0]["quote"] = json!("    let v: Vec<u64> = xs.to_vec();");
+    }), ["patch_changes_uncited_lines"]);
+    // Only a HYPOTHESIS proposes a change, and only when the context allows it.
+    assert_eq!(edit(&|v| { v["claims"][0]["kind"] = json!("FACT"); v["claims"][0]["verification_plan"] = Value::Null; }), ["patch_requires_hypothesis"]);
+    let mut closed = patching().0;
+    closed.allow_patch = false;
+    assert_eq!(codes(&closed, &r), ["patch_not_allowed"]);
+    // The query announces the field only when allowed; otherwise it stays as before.
+    let open: Value = serde_json::from_str(&claims::query(&c, "Como evitar a cópia?").unwrap()).unwrap();
+    assert_eq!(open["allow_patch"], true);
+    assert_eq!(open["response_schema"]["properties"]["claims"]["items"]["properties"]["patch"]["type"], json!(["string", "null"]));
+    let plain: Value = serde_json::from_str(&claims::query(&closed, "Como evitar a cópia?").unwrap()).unwrap();
+    assert!(plain.get("allow_patch").is_none());
+    assert!(plain["response_schema"]["properties"]["claims"]["items"]["properties"].get("patch").is_none());
+}
