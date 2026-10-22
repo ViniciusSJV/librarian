@@ -49,8 +49,10 @@ Saída 2 indica diagnósticos na edition, não falha. O modelo do Ollama é cria
 ## Fronteira atual
 
 O cliente HTTP não reconfere fontes no envio (`evidence_rechecked=false`); a conferência
-ocorre antes, por `verify-prepared`. O vínculo do bundle no registro do envio
-(`attempt_linked`) ainda não é usado. O checker de afirmações
+ocorre antes, por `verify-prepared`. No studio, cada envio grava o vínculo com o bundle
+conferido, e o transporte recusa uma query cujo hash mudou depois da conferência
+(`attempt_linked` no Ollama, a mesma conferência no Claude CLI). A CLI `send_ollama`
+continua sem vínculo. O checker de afirmações
 ([CLAIMS.md](crates/librarian-llm-engine/CLAIMS.md)) ainda não faz parte da trilha; seus
 experimentos ficam em `experiments/`. A
 [referência formal de dossiês 0.1](crates/librarian-graph-engine/WORKFLOW-V0.1.md)
