@@ -126,6 +126,7 @@ contextos antigos continuam sendo lidos.
 | `limits` | `evidence.limits` e uma instrução: são limites da evidência, não fatos sobre o código | nenhum |
 | `project_instructions` | campo `project_instructions` e uma instrução: complementam as fixas e, em conflito, valem as fixas e o `response_schema` | nenhum |
 | `strict_text` | `strict_text: true` e uma instrução descrevendo a regra | as duas regras abaixo |
+| `reviewed_facts` | `evidence.reviewed_facts` (id, enunciado, autoria, path e linhas) e uma instrução: são afirmações revisadas por uma pessoa numa pergunta anterior, orientam mas não são citáveis | só a validação de identidade (id único, enunciado, linhas); não são `evidence_id` válidos nas citações |
 
 As instruções novas entram depois das fixas, que mantêm a ordem.
 

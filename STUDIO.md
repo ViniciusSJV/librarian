@@ -228,7 +228,30 @@ O **Acervo de fatos** (no bloco do projeto) lista os fatos e os reconfere contra
 edition da execução escolhida: **vigente** quando cada trecho citado continua igual, no
 mesmo arquivo e nas mesmas linhas; **desatualizado** quando não (o fato não é apagado nem
 procurado em outra linha); **revogado** quando você recusou depois. Vigente confere o
-texto, não o sentido. Os fatos ainda não entram nas perguntas; isso fica para a cadeia.
+texto, não o sentido. Os fatos entram nas perguntas só pela cadeia (abaixo).
+
+### Continuar em cadeia
+
+Uma pergunta em claims com ao menos uma resposta aprovada na mecânica ganha o botão
+**Continuar em cadeia**. Escolha antes o LLM e o Modelfile da próxima etapa (por exemplo,
+`analista` para achar a função e outro Modelfile para a etapa seguinte), clique e escreva a
+próxima pergunta. O studio cria uma pergunta nova e a envia como as outras:
+
+- **Evidência:** as declarações (`location`) dos FACT das respostas que passam **de novo**
+  na conferência mecânica, contra a pergunta conferida agora. Não há busca: o `prepare`
+  acha cada declaração na edition pelo arquivo, nome e linha, e tira as linhas de novo da
+  estante. Declaração que não existe mais recusa a pergunta.
+- **Fatos revisados:** os fatos **vigentes** do acervo sobre essas declarações entram
+  como fichas F (autoria "revisão humana no Librarian Studio"), com os trechos conferidos
+  contra a edition. No formato claims, eles aparecem em `evidence.reviewed_facts`, com a
+  instrução de que orientam a resposta, mas não são citáveis.
+- **O que não passa:** o texto das respostas anteriores. Elas ficam ligadas por hash
+  (`chain` no `question.json`: pergunta de origem, envios, itens usados, hash da resposta,
+  declarações e fatos).
+
+A pergunta nova mostra a faixa **cadeia ← NN** com a evidência, os fatos e as respostas
+usadas, e pode ser continuada de novo. No teste real, o DeepSeek copiou um fato revisado
+como resposta, com a função inteira como operação, e a conferência mecânica recusou.
 
 ### Comparar respostas
 

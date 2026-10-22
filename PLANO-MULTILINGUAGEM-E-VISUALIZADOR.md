@@ -704,12 +704,24 @@ Portões, refeitos no momento da aprovação, sem confiar nos registros gravados
 
 - `src/facts.rs` no studio; `POST /api/review` e `GET /api/facts`; `reviews.jsonl` em cada envio (a última decisão por item aparece na conversa).
 - Reconferência: cada citação é comparada com as mesmas linhas do mesmo arquivo na edition escolhida. Ela não procura o trecho em outra linha. Os estados são vigente, desatualizado (com o motivo) e revogado.
-- `librarian-ingest::Catalog::snapshot` (só leitura) para a reconferência.
+- `librarian-ingest::Catalog::snapshot` (só leitura) para a reconferência; na cadeia, substituído por `prepare::check_quote`, a mesma regra usada pelo `prepare`.
 - Página: **Aprovar como fato**, **Recusar** e **Revogar** em cada item, com o motivo quando o item não pode virar fato, e o painel **Acervo de fatos** no bloco do projeto.
 
 Verificação: teste do studio com resposta recusada barrada no portão 1, nota vazia, item desconhecido, promoção dupla, envio sem vínculo, query preservada alterada, resposta alterada depois da conferência, revogação e nova promoção (F2), e reconferência numa execução nova com a linha editada (desatualizado) e na antiga (vigente). Workspace com 125 aprovados e 1 ignorado. Execução real numa cópia do `.studio` (renderer): o envio do qwen foi barrado no portão 1; o `claim-2` do haiku ("discriminante na linha 38"), aprovado num teste do Claude com nota que o identifica, virou F1, vigente na execução da pergunta e na anterior (outra edition, `sphere.rs` igual). A página no Edge headless mostrou o acervo, os botões por item e nenhum erro no console.
 
 Limites: a revisão não tem autenticação (quem usa a página é quem aprova). Vigente quer dizer só que os trechos continuam iguais nas mesmas linhas, não que o sentido foi revisto. Apagar uma pergunta não apaga os fatos promovidos dela, que guardam os trechos e as hashes mas perdem os arquivos de origem. Os fatos ainda não são evidência: nenhuma query os lê.
+
+### Cadeia — resultado (22/10/2026)
+
+Decisão do usuário: uma etapa passa à seguinte **as locations conferidas e os fatos vigentes do acervo** sobre elas. O texto dos claims anteriores não passa.
+
+- **`prepare`, modo cadeia:** o pedido traz `targets` (arquivo, nome e linha da declaração) no lugar da busca, e `reviewed_facts`. Cada target é achado na edition (o símbolo mais interno cujo chunk cobre a linha), e não achar é recusa, nunca palpite. Os fatos revisados viram fichas F, que precisam estar dentro de um target e ter os trechos iguais na edition (`check_quote`). O `search.json` vira um relatório `chain-step-v1` (os targets como hits, sem pontuação, com a vizinhança do primeiro para a página). O dossiê é `chain:<hash>`. Pedido, bundle e `verify` continuam autocontidos e reproduzíveis.
+- **Contrato de claims:** campo opcional `reviewed_facts` no contexto, mostrado em `evidence.reviewed_facts` com a instrução de que orienta, mas não é citável. Ausente, a query sai idêntica.
+- **Studio:** `continue_turn` (`POST /api/continue`) usa só as respostas que passam **de novo** em `claims::check` contra a pergunta conferida agora, junta as locations dos FACT sem repetir e leva os fatos com estado vigente. O `question.json` guarda `chain` (pergunta de origem, hash da query dela, envios com os itens usados e o hash da resposta, targets e fatos). A criação de pergunta (`new_turn`) é a mesma do `ask`. Na página: **Continuar em cadeia** e a faixa **cadeia ← NN**.
+
+Verificação: teste do `prepare` (target no lugar da busca, F1 no mesmo bloco de contexto, `verify`, recusas de trecho mudado, fato fora do target, declaração inexistente, targets repetidos, fatos sem cadeia e pedido adulterado) e do studio (nada a continuar sem resposta aprovada, só a resposta aprovada usada e ligada por hash, F1 em `evidence.reviewed_facts`, pergunta nova conferida e vinculada antes do envio, fato revogado não levado e o texto junto, prosa recusada). Workspace com 127 aprovados e 1 ignorado. Execução real numa cópia do `.studio` (renderer): a pergunta da esfera continuou com "Onde local_intersect usa o discriminante para decidir se há interseção?", com a evidência `local_intersect` (32–50) e o F1. O haiku (`verificavel`) passou e respondeu as linhas 40–41 (condição) e 43–44 (raízes), US$ 0,0039. O DeepSeek copiou o F1 como resposta, com o id "F1", o mesmo texto e a função inteira como operação, e foi recusado na mecânica. A página no Edge headless mostrou a faixa da cadeia e os botões, sem erros no console.
+
+Limites: a cadeia passa declarações inteiras, e não só as linhas da operação; o recorte fino fica para quem responde. Um fato revisado é mostrado ao modelo, que pode repeti-lo (aconteceu com o DeepSeek), e só a conferência mecânica e a revisão seguram isso. Os Modelfiles por tarefa (`performance`, `impacto`) ainda não existem.
 
 ### Roteiro seguinte (aprovado em 22/10/2026)
 
@@ -722,7 +734,7 @@ Conteúdo de um claim = `kind` + `location` + linhas citadas; o `text` é forma.
 
    Como o usuário quer usar (22/10/2026): fazer várias perguntas em sequência, cada uma com o seu Modelfile, e usar a resposta de uma no contexto da seguinte. Por exemplo, pergunta ao `analista` quais funções melhorar; com essa resposta, troca para o `performance` para propor a mudança; depois para o `impacto`, com o Claude, para o relatório; e assim por diante.
 
-   **A decidir antes de implementar:** se faz sentido levar a resposta de uma pergunta para o contexto de outra, e em que forma. As opções vão de passar só as locations conferidas (a evidência sai de novo da edition) a passar também os claims aprovados como "resposta anterior, não evidência". Nunca o texto livre como evidência.
+   Decisão do usuário (22/10/2026): passam as locations conferidas e os fatos vigentes do acervo; o texto dos claims anteriores não passa. Feita (veja "Cadeia — resultado").
 3. **Patch:** a etapa de performance devolve um diff unificado, conferido contra o snapshot. Nada é escrito no projeto; ganho de desempenho só como HYPOTHESIS com `verification_plan`, e vira Fact só com registro de execução.
 4. Modelfiles `performance` (DeepSeek local) e `impacto`. O `verificavel` (formato claims) já existe.
 5. **L4:** portões até o acervo de fatos revisados. Feita.
