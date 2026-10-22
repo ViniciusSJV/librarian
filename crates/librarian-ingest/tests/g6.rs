@@ -183,3 +183,47 @@ fn too_many_homonyms_record_a_count_instead_of_edges() {
     assert!(forged.verify(&catalog).is_err());
 }
 
+
+#[test]
+fn used_by_follows_written_names_back_in_layers() {
+    let project = Project::new();
+    let edition = project.edition("v3");
+    generate(&project.0, &project.config(), &edition).unwrap();
+    let catalog = Catalog::load(&edition).unwrap();
+    let graph = v2::Graph::build(&catalog);
+    let placa = symbol_id(&catalog, "VehicleBase.placa", "field");
+    let used = graph.used_by(&placa, 3, 50).unwrap();
+    let at = |layer: usize| {
+        let mut labels: Vec<_> = used.nodes.iter().filter(|n| n.layer == layer).map(|n| n.label.clone()).collect();
+        labels.sort();
+        labels
+    };
+    // placa <- validate (reads it) and Defaults.default (writes it) <- save and patch (call validate).
+    assert_eq!(at(0), ["VehicleBase.placa"]);
+    assert_eq!(at(1), ["Defaults.default", "validate"]);
+    assert_eq!(at(2), ["patch", "save"]);
+    assert!(!used.truncated);
+    let read = used.links.iter().find(|l| l.text == "vehicle.placa" && used.nodes.iter().any(|n| n.id == l.from && n.label == "validate")).unwrap();
+    // `vehicle.placa` also matches VehicleUpdate.placa: the link says it is one of two homonyms.
+    assert_eq!((read.occurrence_kind.as_str(), read.candidates, read.evidence.path.as_str(), read.evidence.start_line), ("attribute_access", 2, "pkg/rules.py", 2));
+    let default = used.nodes.iter().find(|n| n.label == "Defaults.default").unwrap();
+    assert_eq!((default.container.as_deref(), default.path.as_str(), default.line), (Some("Defaults"), "pkg/rules.py", 6));
+    // Every link is a candidate edge of the graph, with its own evidence.
+    for link in &used.links {
+        let edge = graph.edges.iter().find(|e| e.id == link.candidate_edge).unwrap();
+        assert_eq!((edge.kind.as_str(), &edge.from, &edge.to, &edge.evidence), ("name_candidate", &link.occurrence, &link.to, &link.evidence));
+    }
+
+    // Limits are explicit: a node cap truncates; occurrences and bad limits are refused.
+    let capped = graph.used_by(&placa, 3, 2).unwrap();
+    assert_eq!(capped.nodes.len(), 2);
+    assert!(capped.truncated);
+    assert!(capped.links.iter().all(|l| capped.nodes.iter().any(|n| n.id == l.from)));
+    let occurrence = graph.nodes.values().find(|n| n.category == "occurrence").unwrap().id.clone();
+    assert!(graph.used_by(&occurrence, 2, 10).is_err());
+    assert!(graph.used_by(&placa, 0, 10).is_err());
+    assert!(graph.used_by(&placa, 7, 10).is_err());
+    // Inheritance shows up the same way: class Base <- VehicleBase (written as its base).
+    let base = graph.used_by(&symbol_id(&catalog, "Base", "class"), 1, 10).unwrap();
+    assert_eq!(base.links.iter().map(|l| (l.occurrence_kind.as_str(), l.text.as_str())).collect::<Vec<_>>(), [("base_class", "Base")]);
+}

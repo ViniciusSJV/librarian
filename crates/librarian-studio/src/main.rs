@@ -8,11 +8,12 @@ mod llm;
 mod store;
 
 use http::{Request, Response};
+use librarian_ingest::graph::v2;
 use serde_json::{json, Value};
 use std::{
     net::TcpListener,
     path::{Path, PathBuf},
-    sync::Arc,
+    sync::{Arc, Mutex},
     thread,
 };
 use store::{Settings, Store};
@@ -23,6 +24,8 @@ struct App {
     port: u16,
     viewer: PathBuf,
     store: Store,
+    /// Last graph parsed for "Onde é usado?", by (project, run): large graphs take seconds to parse.
+    graph: Mutex<Option<((String, String), Arc<v2::Graph>)>>,
 }
 
 fn main() {
@@ -46,6 +49,7 @@ fn main() {
         port,
         viewer: root.join("crates/librarian-studio/web/index.html"),
         store: Store { dir: root.join(".studio"), modelfiles: root.join("modelfiles") },
+        graph: Mutex::new(None),
     });
     let listener = TcpListener::bind(("127.0.0.1", port)).unwrap_or_else(|e| {
         eprintln!("Não foi possível escutar em 127.0.0.1:{port}: {e}");
@@ -106,6 +110,11 @@ fn route(app: &App, req: &Request) -> Result<Response> {
             ok(store.save_settings(&field(&body, "key")?, &settings)?)
         }
         ("POST", "/api/generate") => ok(store.generate(&field(&req.json()?, "key")?)?),
+        ("GET", "/api/used-by") => {
+            let depth = param("depth")?.parse()?;
+            let graph = graph(app, param("key")?, param("run")?)?;
+            ok(serde_json::to_value(graph.used_by(param("node")?, depth, USED_BY_NODES)?)?)
+        }
         ("GET", "/api/graph") => Ok(Response {
             status: 200,
             content_type: "application/json; charset=utf-8",
@@ -147,6 +156,23 @@ fn route(app: &App, req: &Request) -> Result<Response> {
         }
         _ => Ok(Response::error(404, format!("Rota desconhecida: {} {}", req.method, req.path))),
     }
+}
+
+/// Node cap of the "Onde é usado?" view; past it the answer says it was truncated.
+const USED_BY_NODES: usize = 120;
+
+/// The run's graph-v2, parsed once and kept while the same run is asked about.
+fn graph(app: &App, key: &str, run: &str) -> Result<Arc<v2::Graph>> {
+    let id = (key.to_owned(), run.to_owned());
+    let mut cached = app.graph.lock().map_err(|_| "cache do grafo indisponível")?;
+    if let Some((cached_id, graph)) = cached.as_ref() {
+        if *cached_id == id {
+            return Ok(Arc::clone(graph));
+        }
+    }
+    let graph: Arc<v2::Graph> = Arc::new(serde_json::from_slice(&app.store.graph(key, run)?)?);
+    *cached = Some((id, Arc::clone(&graph)));
+    Ok(graph)
 }
 
 /// Re-verifies the prepared bundle against the edition immediately before every send.
