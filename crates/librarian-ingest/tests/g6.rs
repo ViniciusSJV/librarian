@@ -1,7 +1,7 @@
 //! G6 (profile v3): fields are symbols; attribute accesses, calls and base classes link to
 //! same-named declarations as candidates, never resolved. Names with too many homonyms get none.
 use librarian_ingest::{
-    generate, generate_with_profile,
+    generate_with_profile,
     graph::{v2, Graph},
     Catalog, Config, EXTRACTOR_V2, EXTRACTOR_V3,
 };
@@ -90,7 +90,7 @@ fn candidates(graph: &Graph, kind: &str, label: &str) -> Vec<String> {
 fn fields_are_symbols_in_both_languages() {
     let project = Project::new();
     let edition = project.edition("v3");
-    generate(&project.0, &project.config(), &edition).unwrap();
+    generate_with_profile(EXTRACTOR_V3, &project.0, &project.config(), &edition).unwrap();
     let catalog = Catalog::load(&edition).unwrap();
     assert_eq!(catalog.manifest().extractor, EXTRACTOR_V3);
     let fields: Vec<_> = {
@@ -124,7 +124,7 @@ fn fields_are_symbols_in_both_languages() {
 fn accesses_calls_and_bases_are_candidates_never_resolutions() {
     let project = Project::new();
     let edition = project.edition("v3");
-    generate(&project.0, &project.config(), &edition).unwrap();
+    generate_with_profile(EXTRACTOR_V3, &project.0, &project.config(), &edition).unwrap();
     let catalog = Catalog::load(&edition).unwrap();
     let graph = Graph::build(&catalog);
     assert_eq!(graph.version, "rust-python-syntax-graph-v2");
@@ -162,7 +162,7 @@ fn accesses_calls_and_bases_are_candidates_never_resolutions() {
 fn too_many_homonyms_record_a_count_instead_of_edges() {
     let project = Project::new();
     let edition = project.edition("v3");
-    generate(&project.0, &project.config(), &edition).unwrap();
+    generate_with_profile(EXTRACTOR_V3, &project.0, &project.config(), &edition).unwrap();
     let catalog = Catalog::load(&edition).unwrap();
     let graph = Graph::build(&catalog);
     let call = graph.nodes.values().find(|n| n.kind == "method_call_observed" && n.label == "x.get()").unwrap();
@@ -188,7 +188,7 @@ fn too_many_homonyms_record_a_count_instead_of_edges() {
 fn used_by_follows_written_names_back_in_layers() {
     let project = Project::new();
     let edition = project.edition("v3");
-    generate(&project.0, &project.config(), &edition).unwrap();
+    generate_with_profile(EXTRACTOR_V3, &project.0, &project.config(), &edition).unwrap();
     let catalog = Catalog::load(&edition).unwrap();
     let graph = v2::Graph::build(&catalog);
     let placa = symbol_id(&catalog, "VehicleBase.placa", "field");

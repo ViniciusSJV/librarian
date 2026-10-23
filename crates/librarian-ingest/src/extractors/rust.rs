@@ -1,6 +1,6 @@
 //! Rust adapter (syn). Only syntactic declarations and occurrences.
 //! No macro expansion, cfg evaluation or name resolution.
-use super::{Extraction, Extractor, Occurrence};
+use super::{Extraction, Extractor, Occurrence, OwnerSyntax};
 use crate::{hash, Chunk, Diagnostic, Source, Symbol};
 use proc_macro2::Span;
 use syn::{
@@ -9,13 +9,16 @@ use syn::{
 };
 
 /// `g6` adds named struct fields, field accesses and call candidates (profile v3).
-/// Without it, records and occurrences are exactly those of the frozen v1 adapter.
+/// `g6d` adds struct literals, field writes and the type written in an impl (profile v4).
+/// Without them, records and occurrences are exactly those of the frozen v1 adapter.
 pub(crate) struct Rust {
     g6: bool,
+    g6d: bool,
 }
 
-pub(crate) static RUST: Rust = Rust { g6: false };
-pub(crate) static RUST_V3: Rust = Rust { g6: true };
+pub(crate) static RUST: Rust = Rust { g6: false, g6d: false };
+pub(crate) static RUST_V3: Rust = Rust { g6: true, g6d: false };
+pub(crate) static RUST_V4: Rust = Rust { g6: true, g6d: true };
 
 impl Extractor for Rust {
     fn extract(&self, source: &Source, bytes: &[u8]) -> Extraction {
@@ -62,8 +65,10 @@ impl Extractor for Rust {
         };
         let mut observer = Occurrences {
             g6: self.g6,
+            g6d: self.g6d,
             offset,
             found: vec![],
+            impl_type: None,
         };
         observer.visit_file(&tree);
         observer.found
@@ -76,7 +81,8 @@ impl Extractor for Rust {
     fn candidate_kinds_for(&self, occurrence: &str) -> &'static [&'static str] {
         match (self.g6, occurrence) {
             (true, "call_observed" | "method_call_observed") => &["function", "method", "trait_method"],
-            (true, "attribute_access") => &["field"],
+            (true, "attribute_access" | "field_assign" | "field_init") => &["field"],
+            (true, "impl_self_type" | "struct_literal") => &["struct", "enum", "union", "type"],
             _ => self.candidate_kinds(),
         }
     }
@@ -84,7 +90,23 @@ impl Extractor for Rust {
     fn navigation_kinds(&self) -> &'static [&'static str] {
         &["module", "impl"]
     }
+
+    fn owner_syntax(&self) -> Option<&'static OwnerSyntax> {
+        self.g6d.then_some(&OWNER)
+    }
 }
+
+/// A method's owner is the type its impl names; fields are written by assignment or literal.
+static OWNER: OwnerSyntax = OwnerSyntax {
+    method_kinds: &["method"],
+    owner_containers: &[],
+    naming_container: Some(("impl", "impl_self_type")),
+    owner_kinds: &["struct", "enum", "union"],
+    receiver: "self",
+    read: "attribute_access",
+    write: Some("field_assign"),
+    literal: Some(("struct_literal", "field_init", "Self")),
+};
 
 /// parse_file strips a UTF-8 BOM and shebang before parsing; the offset restores original bytes.
 fn parse(text: &str) -> syn::Result<(syn::File, usize)> {
@@ -201,11 +223,25 @@ impl<'ast> Visit<'ast> for Declarations<'_> {
 /// Written types, returns, calls and bindings. Calls are never linked to presumed targets.
 struct Occurrences {
     g6: bool,
+    g6d: bool,
     offset: usize,
     found: Vec<Occurrence>,
+    /// Span of the type written in the impl being visited: it is `impl_self_type`, not also a
+    /// type reference.
+    impl_type: Option<std::ops::Range<usize>>,
 }
 
 impl Occurrences {
+    /// G6d: `x.field = ...` (or `+=` and the like) writes the field: a `field_assign`, not also an
+    /// access, and only the receiver is visited. False when the target is not a named field.
+    fn write(&mut self, target: &syn::Expr) -> bool {
+        let syn::Expr::Field(field) = target else { return false };
+        let syn::Member::Named(ident) = &field.member else { return false };
+        self.push("field_assign", field.span(), Some(ident.to_string()));
+        self.visit_expr(&field.base);
+        true
+    }
+
     fn push(&mut self, kind: &'static str, span: Span, candidate: Option<String>) {
         let range = span.byte_range();
         self.found.push(Occurrence {
@@ -219,9 +255,54 @@ impl Occurrences {
 
 impl<'ast> Visit<'ast> for Occurrences {
     fn visit_type_path(&mut self, value: &'ast syn::TypePath) {
-        let name = value.path.segments.last().map(|s| s.ident.to_string());
-        self.push("type_reference", value.span(), name);
+        if self.impl_type.as_ref() == Some(&value.span().byte_range()) {
+            self.impl_type = None;
+        } else {
+            let name = value.path.segments.last().map(|s| s.ident.to_string());
+            self.push("type_reference", value.span(), name);
+        }
         visit::visit_type_path(self, value);
+    }
+    fn visit_item_impl(&mut self, value: &'ast syn::ItemImpl) {
+        // G6d: the type an impl is for, by its written name (`impl<T> Shape for Sphere<T>` ->
+        // `Sphere`). Trait and generic arguments stay type references.
+        if let (true, syn::Type::Path(path)) = (self.g6d, value.self_ty.as_ref()) {
+            if let Some(last) = path.path.segments.last() {
+                self.push("impl_self_type", last.ident.span(), Some(last.ident.to_string()));
+                self.impl_type = Some(path.span().byte_range());
+            }
+        }
+        visit::visit_item_impl(self, value);
+        self.impl_type = None;
+    }
+    fn visit_expr_struct(&mut self, value: &'ast syn::ExprStruct) {
+        // G6d: `Camera { transform, .. }` constructs the written type, and each named field it
+        // fills is a `field_init` inside it. `Self` matches no declaration.
+        if self.g6d {
+            let name = value.path.segments.last().map(|s| s.ident.to_string());
+            self.push("struct_literal", value.span(), name);
+            for field in &value.fields {
+                if let syn::Member::Named(ident) = &field.member {
+                    self.push("field_init", ident.span(), Some(ident.to_string()));
+                }
+            }
+        }
+        visit::visit_expr_struct(self, value);
+    }
+    fn visit_expr_assign(&mut self, value: &'ast syn::ExprAssign) {
+        if !self.g6d || !self.write(&value.left) {
+            return visit::visit_expr_assign(self, value);
+        }
+        self.visit_expr(&value.right);
+    }
+    fn visit_expr_binary(&mut self, value: &'ast syn::ExprBinary) {
+        use syn::BinOp::*;
+        let compound = matches!(value.op, AddAssign(_) | SubAssign(_) | MulAssign(_) | DivAssign(_) | RemAssign(_)
+            | BitXorAssign(_) | BitAndAssign(_) | BitOrAssign(_) | ShlAssign(_) | ShrAssign(_));
+        if !self.g6d || !compound || !self.write(&value.left) {
+            return visit::visit_expr_binary(self, value);
+        }
+        self.visit_expr(&value.right);
     }
     fn visit_return_type(&mut self, value: &'ast syn::ReturnType) {
         if let syn::ReturnType::Type(_, ty) = value {

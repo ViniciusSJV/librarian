@@ -99,6 +99,9 @@ pub struct SearchReport {
     pub graph: Option<Neighborhood>,
     pub diagnostics: usize,
     pub limits: Vec<String>,
+    /// Chain step with owner context (G6d): the declarations added after the targets and why.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub owner_context: Option<crate::owner::OwnerContext>,
 }
 
 struct Document {
@@ -261,7 +264,7 @@ impl<'a> SearchIndex<'a> {
             terms: groups.values().map(|(term,_)| term.clone()).collect(),
             status: if hits.is_empty() { "no_lexical_evidence" } else { "candidates" }.into(), hits,
             graph: neighborhood, diagnostics: self.catalog.diagnostics.len(),
-            limits: self.catalog.registry.search_limits.iter().map(|l| l.to_string()).collect() })
+            limits: self.catalog.registry.search_limits.iter().map(|l| l.to_string()).collect(), owner_context: None })
     }
 }
 
@@ -294,15 +297,19 @@ fn hit(catalog: &Catalog, id: String, score: usize, reasons: Vec<MatchReason>, b
 
 /// Report of a chain step: the given declarations, in order, as hits without score or reasons.
 /// Nothing is searched; the neighborhood is the first hit's, as in a search, for the page.
-pub fn chain_report(catalog: &Catalog, question: &str, symbol_ids: &[String], depth: usize) -> Result<SearchReport> {
+/// With an owner context, its added declarations follow the targets in `symbol_ids`.
+pub fn chain_report(catalog: &Catalog, graph: &Graph, question: &str, symbol_ids: &[String], depth: usize,
+    owner_context: Option<crate::owner::OwnerContext>) -> Result<SearchReport> {
     let mut budget = 16000usize;
     let hits = symbol_ids.iter().map(|id| hit(catalog, id.clone(), 0, vec![], &mut budget)).collect::<Result<Vec<_>>>()?;
-    let graph = Graph::build(catalog);
     let neighborhood = hits.first().map(|h| graph.neighborhood(&h.symbol_id, depth, 48, 96)).transpose()?;
     let mut limits = vec!["Chain step: declarations named by mechanically checked answers to an earlier question; nothing was searched.".to_owned()];
+    if owner_context.is_some() {
+        limits.push(format!("Owner context: a method target brings the type its container is or names and the declarations that write the fields it reads, by written names; writes through other receivers are counted, not added; at most {} additions.", crate::owner::MAX_ADDED));
+    }
     // The lexical-coverage limit does not apply: no term was matched.
     limits.extend(catalog.registry.search_limits.iter().filter(|l| !l.starts_with("Lexical")).map(|l| l.to_string()));
-    Ok(SearchReport { version: "chain-step-v1".into(), catalog_sha256: graph.catalog_sha256,
+    Ok(SearchReport { version: "chain-step-v1".into(), catalog_sha256: graph.catalog_sha256.clone(),
         lexicon_sha256: String::new(), question: question.into(), terms: vec![], status: "chain".into(), hits,
-        graph: neighborhood, diagnostics: catalog.diagnostics.len(), limits })
+        graph: neighborhood, diagnostics: catalog.diagnostics.len(), limits, owner_context })
 }

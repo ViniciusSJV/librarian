@@ -1,6 +1,6 @@
 //! Python adapter (rustpython-parser). Only syntactic declarations and occurrences.
 //! No import resolution, dynamic dispatch, decorator evaluation or runtime behavior.
-use super::{Extraction, Extractor, Occurrence};
+use super::{Extraction, Extractor, Occurrence, OwnerSyntax};
 use crate::{hash, Chunk, Diagnostic, Source, Symbol};
 use rustpython_ast::{self as ast, text_size::TextRange, Ranged, Visitor};
 use rustpython_parser::Parse;
@@ -77,7 +77,24 @@ impl Extractor for Python {
     fn navigation_kinds(&self) -> &'static [&'static str] {
         &["class"]
     }
+
+    fn owner_syntax(&self) -> Option<&'static OwnerSyntax> {
+        self.g6.then_some(&OWNER)
+    }
 }
+
+/// A method's owner is the class that contains it. The class spans its methods, so the writes
+/// inside it are already in its declaration; writes are not a separate occurrence kind.
+static OWNER: OwnerSyntax = OwnerSyntax {
+    method_kinds: &["method"],
+    owner_containers: &["class"],
+    naming_container: None,
+    owner_kinds: &[],
+    receiver: "self",
+    read: "attribute_access",
+    write: None,
+    literal: None,
+};
 
 /// The parser does not skip a UTF-8 BOM; the offset restores original bytes.
 fn parse(text: &str) -> Result<(ast::Suite, usize), rustpython_parser::ParseError> {

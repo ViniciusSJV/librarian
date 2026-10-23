@@ -21,6 +21,10 @@ Cada mudança proposta é uma HYPOTHESIS:
   --- a/<path> e +++ b/<path>, blocos @@ -início,quantidade +início,quantidade @@,
   linhas de contexto e removidas copiadas exatamente, com a indentação;
 - cada linha removida pelo patch está citada no próprio item;
+- numa pergunta em cadeia, as evidências podem trazer o tipo dono do método e os métodos
+  que escrevem os campos que ele lê (fichas com "Contexto do dono"). Uma mudança que guarda
+  um valor num campo novo usa um bloco @@ por declaração: o campo na struct, quem preenche
+  ou escreve o campo e o método que passa a usá-lo, todos dentro das evidências;
 - location=null (location é só de FACT), e todo nome entre crases no text aparece nas
   linhas citadas pelo próprio item.
 
