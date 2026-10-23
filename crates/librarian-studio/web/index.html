@@ -1103,13 +1103,30 @@ async function continueTurn(from, button) {
   });
 }
 
-function chainView(c) {
+function chainView(c, owner) {
   const where = c.targets.map(t => `${t.symbol_name} (${t.path}:${t.declaration_line})`).join(', ');
   const answers = c.answers.map(a => `${a.send} (${a.claims.join(', ')})`).join(', ');
   return el('div', { className: 'muted', style: 'margin-top: 6px' },
     el('span', { className: 'tag', textContent: `cadeia ← ${c.from_turn}` }),
     ` Evidência: ${where}. Fatos revisados: ${c.reviewed_facts.length ? c.reviewed_facts.join(', ') : 'nenhum'}. Respostas usadas (só por hash, sem o texto): ${answers}.`,
-    helpButton('Esta pergunta continua outra. O bibliotecário não passou adiante o que o leitor anterior escreveu: pegou só os capítulos que as respostas aprovadas na conferência apontaram e tirou as páginas de novo da estante. Junto, vão as fichas do acervo que você já aprovou sobre esses capítulos. As respostas anteriores ficam ligadas pela impressão digital (hash), para saber de onde veio.'));
+    helpButton('Esta pergunta continua outra. O bibliotecário não passou adiante o que o leitor anterior escreveu: pegou só os capítulos que as respostas aprovadas na conferência apontaram e tirou as páginas de novo da estante. Junto, vão as fichas do acervo que você já aprovou sobre esses capítulos. As respostas anteriores ficam ligadas pela impressão digital (hash), para saber de onde veio.'),
+    owner ? ownerView(owner) : null);
+}
+
+// G6d: what the owner context added after the targets, and the writes it only counted.
+function ownerView(o) {
+  const why = { owner_type: 'tipo dono', field_writer: 'escreve campos lidos' };
+  const how = { container: 'contém o método', container_name: 'nome escrito no bloco do método',
+    receiver_in_owner: 'pelo próprio receptor', owner_literal: 'literal do tipo' };
+  const added = o.added.map(a => `${a.name} (${why[a.reason] || a.reason}, ${how[a.resolution] || a.resolution}${a.fields.length ? ': ' + a.fields.join(', ') : ''})`);
+  const skipped = o.not_followed.map(n => `${n.text} (${n.path}:${n.line})`);
+  return el('div', { style: 'margin-top: 4px' },
+    el('span', { className: 'tag', textContent: 'contexto do dono' }),
+    ` Acrescentado: ${added.length ? added.join('; ') : 'nada'}.`
+      + (o.truncated ? ' Parou no teto de declarações.' : '')
+      + (o.not_followed_total ? ` Não seguidas (outro receptor, tipo desconhecido): ${o.not_followed_total}${skipped.length ? ', por exemplo ' + skipped.slice(0, 5).join(', ') : ''}.` : '')
+      + (o.notes.length ? ' ' + o.notes.join(' ') : ''),
+    helpButton('Quando a pergunta continua a partir de um método, o bibliotecário traz junto a ficha do tipo dono (a struct ou a classe) e os métodos que escrevem os campos que esse método lê. Assim quem responde vê onde uma mudança teria de acontecer, por exemplo guardar um valor num campo novo. Tudo vem do nome escrito no código, sem compilador. Escritas feitas por outra variável (por exemplo camera.transform = ...) não entram, porque não dá para saber o tipo dela; só são contadas.'));
 }
 
 async function sendTurn(turn) {
@@ -1201,7 +1218,7 @@ function renderTurn(t) {
   };
   return el('div', { className: 'turn' + (studio.activeTurn === t.id ? ' active' : '') },
     el('div', { className: 'bubble user', textContent: t.question, title: 'Acender esta pergunta no grafo', onclick: () => activate(t.id) }),
-    t.chain ? chainView(t.chain) : null,
+    t.chain ? chainView(t.chain, t.search?.owner_context) : null,
     el('div', { style: 'margin-top: 6px' }, el('span', { className: 'muted', textContent: 'Léxico: ' }),
       ...(t.search?.terms ?? []).map(term => el('span', {
         className: `chip ${touched.has(term) ? 'hit' : 'miss'}`, textContent: term,
@@ -1608,7 +1625,7 @@ function renderPath(data, layout, groups, edges) {
 
 function showUse(info, nodes) {
   const box = $('#pathDetail');
-  const kinds = { attribute_access: 'lê ou escreve', call_observed: 'chama', method_call_observed: 'chama', base_class: 'herda de', type_reference: 'cita o tipo' };
+  const kinds = { attribute_access: 'lê ou escreve', field_assign: 'escreve', field_init: 'preenche', struct_literal: 'constrói', impl_self_type: 'implementa', call_observed: 'chama', method_call_observed: 'chama', base_class: 'herda de', type_reference: 'cita o tipo' };
   box.replaceChildren(
     el('div', { className: 'row', style: 'justify-content: space-between' },
       el('strong', { textContent: `${shortName(nodes.get(info.user).label)} → ${shortName(nodes.get(info.used).label)}` }),

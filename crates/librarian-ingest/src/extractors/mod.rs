@@ -33,6 +33,43 @@ pub(crate) trait Extractor: Sync {
     }
     /// Container kinds used for navigation; search does not rank them as answers.
     fn navigation_kinds(&self) -> &'static [&'static str];
+    /// How a method's owner type and the writes of its fields are written (G6d). None when the
+    /// adapter does not record them.
+    fn owner_syntax(&self) -> Option<&'static OwnerSyntax> {
+        None
+    }
+}
+
+/// G6d: the written forms an owner context follows in one language. Only names and occurrence
+/// kinds; the graph-side rule (`owner.rs`) never names a language.
+pub struct OwnerSyntax {
+    /// Symbol kinds whose owner is looked for.
+    pub method_kinds: &'static [&'static str],
+    /// A container of these kinds is the owner itself.
+    pub owner_containers: &'static [&'static str],
+    /// A container of this kind names its owner with an occurrence of this kind.
+    pub naming_container: Option<(&'static str, &'static str)>,
+    /// Symbol kinds a naming container may name.
+    pub owner_kinds: &'static [&'static str],
+    /// The receiver of the method's own fields (`self.<field>`).
+    pub receiver: &'static str,
+    /// Occurrence kind of a field read through a receiver.
+    pub read: &'static str,
+    /// Occurrence kind of a field write through a receiver (`x.<field> = ...`).
+    pub write: Option<&'static str>,
+    /// Literal of a type and the fields it fills, and the written name that means the
+    /// container's own type (`Self`).
+    pub literal: Option<(&'static str, &'static str, &'static str)>,
+}
+
+impl Registry {
+    /// Owner syntax of a language in this profile; None when the profile records no owner context.
+    pub fn owner_syntax(&self, language: &str) -> Option<&'static OwnerSyntax> {
+        if !self.owner_context {
+            return None;
+        }
+        self.extractor(language)?.owner_syntax()
+    }
 }
 
 /// Discovery, classification, extractors and limits behind one recorded identity.
@@ -53,6 +90,9 @@ pub(crate) struct Registry {
     /// Above this many symbols with the written name, no candidate edge is drawn and the
     /// occurrence records the count instead. None keeps every candidate (profiles before G6).
     pub max_candidates: Option<usize>,
+    /// Whether editions record what a chain step needs to bring a method's owner context
+    /// (impl self types and field writes; G6d).
+    pub owner_context: bool,
 }
 
 /// Frozen v1 profile. Changing any of it requires a new identity, not an edit.
@@ -77,6 +117,7 @@ static V1: Registry = Registry {
     ],
     skipped_dirs: &[],
     max_candidates: None,
+    owner_context: false,
 };
 
 /// Rust (unchanged adapter) and Python. Rust records match v1; the identity differs.
@@ -106,6 +147,7 @@ static V2: Registry = Registry {
         ".pytest_cache", ".ruff_cache", "site-packages", "node_modules", "target", ".studio",
     ],
     max_candidates: None,
+    owner_context: false,
 };
 
 /// G6: the v2 languages plus fields, attribute accesses, and calls and bases as name candidates.
@@ -139,17 +181,54 @@ static V3: Registry = Registry {
         ".pytest_cache", ".ruff_cache", "site-packages", "node_modules", "target", ".studio",
     ],
     max_candidates: Some(8),
+    owner_context: false,
+};
+
+/// G6d: v3 plus, in Rust, struct literals (`struct_literal`, `field_init`), field writes
+/// (`field_assign`) and the type written in an impl (`impl_self_type`). Enough for a chain step
+/// to bring a method's owner type and the declarations that write the fields it reads.
+static V4: Registry = Registry {
+    identity: crate::EXTRACTOR_V4,
+    languages: &[("rs", "rust"), ("py", "python")],
+    extractors: &[("rust", &rust::RUST_V4), ("python", &python::PYTHON_V3)],
+    limits: &[
+        "Structural declarations only; no behavioral claims or executed-test evidence.",
+        "Rust: no macro expansion, cfg evaluation, cross-file name resolution or call graph.",
+        "Python: no import resolution, dynamic dispatch, decorator evaluation or runtime behavior; files that do not parse are diagnostics.",
+        "Fields: Rust named struct fields; Python class-body assignments and self.<name> assignments in __init__.",
+        "Calls, attribute accesses and base classes link to same-named declarations as candidates; receivers and types are not resolved.",
+        "Rust: struct literals, the fields they fill, field writes (x.f = ..., x.f += ...) and the type written in an impl are candidates by name; patterns are not observed.",
+        "A name with more than 8 same-language declarations of a candidate kind gets no candidate edges; the occurrence records the count.",
+        "Test markers are observations (Rust #[test]; Python test*/Test* names), not evidence that tests ran.",
+        "File-local scopes; ordinary comments are preserved in snapshots, not attached to declarations.",
+        "Files read individually; no atomic repository snapshot or Git/author authentication.",
+        "Parse failures preserve bytes and diagnostics; completeness requires inspecting diagnostics.",
+        "Hashes establish consistency, not authenticity; manifest is not signed.",
+    ],
+    graph_version: "rust-python-syntax-graph-v3",
+    search_limits: &[
+        "Lexical candidates, not a semantic answer. Minimum coverage: 60% of query term groups; scores are not probabilities.",
+        "Name candidates are not resolved types/calls/fields/imports. No macros, cfg or decorator evaluation, compiler or runtime proof.",
+        "Graph expands only the first hit. Source nodes are leaves. Depth bounded to 0..3, 48 nodes, 96 edges.",
+        "Excerpts limited to 4000 UTF-8 bytes each and 16000 total. Truncation is explicit; hashes/lines refer to full chunks.",
+    ],
+    skipped_dirs: &[
+        ".git", ".hg", ".svn", ".venv", "venv", ".tox", ".nox", "__pycache__", ".mypy_cache",
+        ".pytest_cache", ".ruff_cache", "site-packages", "node_modules", "target", ".studio",
+    ],
+    max_candidates: Some(8),
+    owner_context: true,
 };
 
 impl Registry {
     /// Profile used for new editions.
     pub fn current() -> &'static Self {
-        &V3
+        &V4
     }
 
     /// Profile that produced an edition; unknown identities are refused, never upgraded.
     pub fn for_identity(identity: &str) -> Option<&'static Self> {
-        [&V1, &V2, &V3].into_iter().find(|r| r.identity == identity)
+        [&V1, &V2, &V3, &V4].into_iter().find(|r| r.identity == identity)
     }
 
     /// Unlisted extensions are auxiliary: preserved and hashed, never extracted.

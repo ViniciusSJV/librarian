@@ -252,7 +252,7 @@ impl Store {
         )?;
         let mut search = serde_json::to_vec_pretty(&report)?;
         search.push(b'\n');
-        let request = request(&settings, question, None, vec![]);
+        let request = request(&settings, question, None, vec![], false);
         self.new_turn(key, run, &settings, &catalog, question, Some(search), request, Value::Null)
     }
 
@@ -307,9 +307,13 @@ impl Store {
             .map(|f| serde_json::from_value(json!({ "id": f["id"], "statement": f["statement"], "authorship": f["authorship"],
                 "path": f["path"], "line": f["line"], "end_line": f["end_line"], "citations": f["citations"] })))
             .collect::<std::result::Result<_, _>>()?;
+        // G6d: on editions that record impl types and field writes, a method target also brings
+        // its owner type and the declarations that write the fields it reads.
+        let owner_context = catalog.owner_context();
         let chain = json!({ "from_turn": from, "from_query_sha256": verified.link["query_sha256"], "answers": answers,
-            "targets": targets, "reviewed_facts": reviewed.iter().map(|f| &f.id).collect::<Vec<_>>() });
-        let request = request(&settings, question, Some(targets), reviewed);
+            "targets": targets, "reviewed_facts": reviewed.iter().map(|f| &f.id).collect::<Vec<_>>(),
+            "owner_context": owner_context });
+        let request = request(&settings, question, Some(targets), reviewed, owner_context);
         self.new_turn(key, run, &settings, &catalog, question, None, request, chain)
     }
 
@@ -606,7 +610,8 @@ fn compare_sends(sends: &[Value]) -> Value {
 }
 
 /// The prepare request of a question with the project's settings; a chain step adds targets.
-fn request(settings: &Settings, question: &str, targets: Option<Vec<Target>>, reviewed_facts: Vec<ReviewedFact>) -> Request {
+fn request(settings: &Settings, question: &str, targets: Option<Vec<Target>>, reviewed_facts: Vec<ReviewedFact>,
+    owner_context: bool) -> Request {
     Request {
         question: question.into(),
         lexicon: settings.lexicon.clone(),
@@ -619,6 +624,7 @@ fn request(settings: &Settings, question: &str, targets: Option<Vec<Target>>, re
         accept_diagnostics: settings.accept_diagnostics,
         targets,
         reviewed_facts,
+        owner_context,
     }
 }
 
@@ -1155,6 +1161,10 @@ mod tests {
         assert_eq!(chain["targets"], json!([{"path": "src/lib.rs", "symbol_name": "ray_from_pixel", "declaration_line": 4}]));
         assert_eq!(chain["reviewed_facts"], json!(["F1"]));
         assert!(step["search"]["hits"][0]["name"].as_str().unwrap().contains("ray_from_pixel"));
+        // G6d: the edition is v4, so the method also brings its owner type (a unit struct here).
+        assert_eq!(chain["owner_context"], true);
+        assert_eq!(step["search"]["hits"][1]["name"], "Camera");
+        assert_eq!(step["search"]["owner_context"]["added"][0]["reason"], "owner_type");
         // The approved text travels only as the reviewed fact F1.
         let query: Value = serde_json::from_str(step["query"].as_str().unwrap()).unwrap();
         let reviewed = &query["evidence"]["reviewed_facts"][0];

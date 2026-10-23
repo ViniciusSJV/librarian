@@ -1,7 +1,9 @@
 //! Bridge from a verified edition and its lexical search to a validated query bundle.
 //! Facts here are structural records (where a declaration is), never answers to the question.
 use crate::{
+    graph::Graph,
     hash,
+    owner::{owner_context, Added},
     search::{chain_report, Lexicon, SearchIndex},
     Catalog, Result,
 };
@@ -41,6 +43,10 @@ pub struct Request {
     /// the edition's text at the same lines, and each fact must lie inside a target.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub reviewed_facts: Vec<ReviewedFact>,
+    /// Chain step (G6d): each method target also brings its owner type and the declarations
+    /// that write the fields it reads. Needs an edition of profile v4.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub owner_context: bool,
 }
 
 /// A declaration as a checked claim locates it.
@@ -85,18 +91,26 @@ pub fn prepare(catalog: &Catalog, request: &Request) -> Result<Prepared> {
     }
     let (report, chosen) = match &request.targets {
         Some(targets) => {
-            let ids = targets.iter().map(|t| resolve(catalog, t)).collect::<Result<Vec<_>>>()?;
+            let mut ids = targets.iter().map(|t| resolve(catalog, t)).collect::<Result<Vec<_>>>()?;
             if ids.is_empty() || (1..ids.len()).any(|i| ids[..i].contains(&ids[i])) {
                 return Err("A chain step needs distinct targets".into());
             }
-            (chain_report(catalog, &request.question, &ids, request.depth)?, ids.len())
+            let graph = Graph::build(catalog);
+            let context = if request.owner_context {
+                let context = owner_context(catalog, &graph, &ids)?;
+                ids.extend(context.added.iter().map(|a| a.symbol_id.clone()));
+                Some(context)
+            } else {
+                None
+            };
+            (chain_report(catalog, &graph, &request.question, &ids, request.depth, context)?, ids.len())
         }
         None => {
             if request.hits == 0 || request.hits > request.top {
                 return Err("hits must be between 1 and top".into());
             }
-            if !request.reviewed_facts.is_empty() {
-                return Err("Reviewed facts are carried only by a chain step".into());
+            if !request.reviewed_facts.is_empty() || request.owner_context {
+                return Err("Reviewed facts and owner context are carried only by a chain step".into());
             }
             let report = SearchIndex::new(catalog, request.lexicon.clone())?.search(
                 &request.question,
@@ -132,12 +146,18 @@ pub fn prepare(catalog: &Catalog, request: &Request) -> Result<Prepared> {
             }
         };
         let chunk = &catalog.chunks[&symbol.chunk_id];
+        let mut statement = format!(
+            "{} `{}` declarado em {}, linhas {}–{}.",
+            symbol.kind, symbol.qualified_name, source.path, chunk.start_line, chunk.end_line
+        );
+        let added = report.owner_context.iter().flat_map(|c| &c.added).find(|a| a.symbol_id == hit.symbol_id);
+        if let Some(added) = added {
+            statement.push(' ');
+            statement.push_str(&owner_statement(added));
+        }
         facts.push(json!({
             "id": format!("E{}", index + 1),
-            "statement": format!(
-                "{} `{}` declarado em {}, linhas {}–{}.",
-                symbol.kind, symbol.qualified_name, source.path, chunk.start_line, chunk.end_line
-            ),
+            "statement": statement,
             "authorship": format!("{profile}: registro estrutural da edition verificada"),
             "source_id": source_key,
             "line": chunk.start_line,
@@ -188,6 +208,22 @@ pub fn prepare(catalog: &Catalog, request: &Request) -> Result<Prepared> {
         "Fichas descrevem onde estão declarações; não respondem à pergunta nem afirmam comportamento."
             .into(),
     );
+    if let Some(context) = &report.owner_context {
+        unknowns.push(
+            "Contexto do dono: o tipo é a declaração que contém o método ou o tipo cujo nome ela escreve, e quem escreve os campos vem de atribuições pelo próprio receptor (por exemplo `self.campo = …`) e de literais do tipo; nada foi resolvido pelo compilador."
+                .into(),
+        );
+        if context.not_followed_total > 0 {
+            unknowns.push(format!(
+                "{} escritas de campos lidos por outro receptor (por exemplo `x.campo = …`) não foram seguidas: o tipo do receptor não é conhecido. Estão listadas no search.json.",
+                context.not_followed_total
+            ));
+        }
+        if context.truncated {
+            unknowns.push(format!("Contexto do dono truncado em {} declarações.", crate::owner::MAX_ADDED));
+        }
+        unknowns.extend(context.notes.iter().cloned());
+    }
     if !request.reviewed_facts.is_empty() {
         unknowns.push(
             "Fichas F são afirmações de uma pergunta anterior revisadas por uma pessoa, com os trechos conferidos contra esta edition; não são registros estruturais."
@@ -228,6 +264,32 @@ pub fn prepare(catalog: &Catalog, request: &Request) -> Result<Prepared> {
         dossier,
         query,
     })
+}
+
+/// Why an owner-context declaration is in the step, with the lines where the link is written.
+fn owner_statement(added: &Added) -> String {
+    let fields = added.fields.iter().map(|f| format!("`{f}`")).collect::<Vec<_>>().join(", ");
+    let lines = added.evidence.iter().map(|e| e.start_line.to_string()).collect::<Vec<_>>().join(", ");
+    let lines = format!("{} {lines}", if added.evidence.len() == 1 { "linha" } else { "linhas" });
+    let read = if fields.is_empty() { "nenhum".to_owned() } else { fields.clone() };
+    match (added.reason.as_str(), added.resolution.as_str()) {
+        ("owner_type", "container") => format!(
+            "Contexto do dono: declaração que contém `{}`; campos que ele lê: {read}.",
+            added.for_target
+        ),
+        ("owner_type", _) => format!(
+            "Contexto do dono: tipo com o nome escrito no bloco que contém `{}` ({lines}); campos que ele lê: {read}.",
+            added.for_target
+        ),
+        (_, "owner_literal") => format!(
+            "Contexto do dono: preenche {fields} num literal do tipo ({lines}); `{}` lê esses campos.",
+            added.for_target
+        ),
+        _ => format!(
+            "Contexto do dono: escreve {fields} pelo próprio receptor ({lines}); `{}` lê esses campos.",
+            added.for_target
+        ),
+    }
 }
 
 /// The declaration a target names: same file, same name, its chunk covering the declaration
