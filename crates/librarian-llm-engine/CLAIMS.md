@@ -126,6 +126,7 @@ contextos antigos continuam sendo lidos.
 | `limits` | `evidence.limits` e uma instrução: são limites da evidência, não fatos sobre o código | nenhum |
 | `project_instructions` | campo `project_instructions` e uma instrução: complementam as fixas e, em conflito, valem as fixas e o `response_schema` | nenhum |
 | `strict_text` | `strict_text: true` e uma instrução descrevendo a regra | as duas regras abaixo |
+| `allow_patch` | `allow_patch: true`, o campo `patch` no schema e uma instrução | as regras do perfil `allow_patch` (abaixo) |
 | `reviewed_facts` | `evidence.reviewed_facts` (id, enunciado, autoria, path e linhas) e uma instrução: são afirmações revisadas por uma pessoa numa pergunta anterior, orientam mas não são citáveis | só a validação de identidade (id único, enunciado, linhas); não são `evidence_id` válidos nas citações |
 
 As instruções novas entram depois das fixas, que mantêm a ordem.
@@ -168,6 +169,30 @@ apontou `local_intersect` inteira (32–50) e passou; com a primeira regra, resp
 Limite: uma faixa quase inteira (por exemplo 34–49) passa. Quanto da função é "a
 operação" é questão de sentido; a comparação entre respostas mostra a diferença como
 parcial.
+
+### Perfil `allow_patch`
+
+Com `allow_patch: true` no contexto, uma HYPOTHESIS pode trazer `patch`: um diff unificado
+da mudança que propõe. A query ganha `allow_patch: true`, o campo `patch` (string ou null)
+no `response_schema` e uma instrução. O checker lê o diff só contra a evidência:
+
+- **`patch_not_allowed`**: patch com `allow_patch` desligado;
+- **`patch_requires_hypothesis`**: patch num item que não é HYPOTHESIS;
+- **`patch_malformed`**: não é um diff unificado (cabeçalhos `---`/`+++` do mesmo
+  arquivo, blocos `@@ -a,b +c,d @@`), as contagens não batem com as linhas ou o bloco
+  não muda nada;
+- **`patch_unknown_path`** e **`patch_outside_evidence`**: o diff mexe num arquivo que
+  não está na evidência ou em linhas fora dela;
+- **`patch_does_not_apply`**: uma linha de contexto ou removida não é igual à linha da
+  evidência naquele número;
+- **`patch_changes_uncited_lines`**: uma linha removida não está citada no próprio item
+  (numa inserção pura, ao menos uma linha de contexto precisa estar citada).
+
+Linhas `\ No newline at end of file` são ignoradas, e uma linha vazia dentro do bloco
+conta como contexto vazio. O checker não aplica, não compila e não executa nada: um diff
+que encaixa não prova que o programa ficou correto nem mais rápido. O ganho continua
+hipótese, com `verification_plan`. Ausente, a query sai idêntica e o campo `patch` não
+existe no schema.
 
 ### Cercas de Markdown
 

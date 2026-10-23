@@ -723,6 +723,26 @@ Verificação: teste do `prepare` (target no lugar da busca, F1 no mesmo bloco d
 
 Limites: a cadeia passa declarações inteiras, e não só as linhas da operação; o recorte fino fica para quem responde. Um fato revisado é mostrado ao modelo, que pode repeti-lo (aconteceu com o DeepSeek), e só a conferência mecânica e a revisão seguram isso. Os Modelfiles por tarefa (`performance`, `impacto`) ainda não existem.
 
+### Performance — patch conferido (22/10/2026)
+
+Decisões do usuário: performance antes do impacto; a mudança vem como **claims + patch conferido**; no impacto, a evidência virá do "Onde é usado?".
+
+- **Contrato de claims, perfil `allow_patch`:** campo opcional `patch` (diff unificado) numa HYPOTHESIS. O checker (`claims/patch.rs`) lê os blocos e confere: contagens do cabeçalho, arquivo e linhas dentro da evidência, linhas de contexto e removidas iguais às da evidência nos mesmos números e cada linha removida citada no item. Códigos: `patch_not_allowed`, `patch_requires_hypothesis`, `patch_malformed`, `patch_unknown_path`, `patch_outside_evidence`, `patch_does_not_apply`, `patch_changes_uncited_lines`. Nada é aplicado, compilado ou executado. Desligado, a query e o schema ficam como antes.
+- **Studio:** opção **permitir patch numa HYPOTHESIS**, gravada no `context.json` de cada pergunta (alterar depois recusa o envio) e exportada no perfil. O patch aparece em **Patch proposto**, com explicações para as recusas novas.
+- **`performance.Modelfile`:** `deepseek-coder-v2:16b`. FACT para o que o código faz hoje; cada mudança é HYPOTHESIS com `patch` mínimo, plano de medição antes e depois e conferência de que o resultado não muda; sem `location` na hipótese.
+
+Verificação: teste do engine (diff válido aprovado e nunca aceito; uma recusa para cada código; query com e sem a opção), leitor de diff (cabeçalhos, contagens, marcadores) e teste do studio (opção gravada na pergunta, resposta com patch aprovada na mecânica, contexto alterado recusado). Workspace com 130 aprovados e 1 ignorado.
+
+Execução real (cópia do `.studio`, renderer, cadeia a partir da pergunta da câmera: "Como reduzir o custo de ray_from_pixel em cada pixel?", evidência `ray_from_pixel`, uma execução de cada):
+
+| Modelo (`performance`) | Mecânica | Conteúdo |
+| --- | --- | --- |
+| DeepSeek Coder V2 16B | recusado (função inteira como operação) | um FACT genérico, sem hipótese nem patch |
+| haiku | aprovado, US$ 0,0036 | `self.transform.inverse()` recalculada a cada chamada (linha 82) e usada nas linhas 84–85; LACUNA: a definição de `transform` e os chamadores não estão na evidência |
+| Sonnet | recusado (`location` na HYPOTHESIS; crase sem citação), US$ 0,043 | mesma conclusão; hipótese de calcular a inversa uma vez, **sem patch** porque guardá-la exige um campo de `Camera` fora da evidência |
+
+Achado: nenhum modelo produziu patch, e os dois Claude explicaram por quê. A melhoria real (guardar a inversa em `Camera`) mexe na struct e no construtor, e a cadeia passou só a função. O checker de patch está coberto por testes, mas ainda não foi exercido por uma resposta real. Próximo passo possível: a cadeia levar também a declaração do tipo dono do método (ou os campos que ele lê), o que cabe no G6d junto com o "Onde é usado?". O SYSTEM do `performance` ganhou depois a regra de `location=null` na hipótese.
+
 ### Roteiro seguinte (aprovado em 22/10/2026)
 
 O objetivo é encadear tarefas entre Modelfiles e provedores, por exemplo o `analista` (Ollama) aponta as funções, o `performance` (DeepSeek local no Ollama) propõe a mudança e o `impacto` (Claude) relata o impacto. Uma etapa passa para a seguinte só o que foi conferido, nunca o texto livre.
@@ -736,7 +756,7 @@ Conteúdo de um claim = `kind` + `location` + linhas citadas; o `text` é forma.
 
    Decisão do usuário (22/10/2026): passam as locations conferidas e os fatos vigentes do acervo; o texto dos claims anteriores não passa. Feita (veja "Cadeia — resultado").
 3. **Patch:** a etapa de performance devolve um diff unificado, conferido contra o snapshot. Nada é escrito no projeto; ganho de desempenho só como HYPOTHESIS com `verification_plan`, e vira Fact só com registro de execução.
-4. Modelfiles `performance` (DeepSeek local) e `impacto`. O `verificavel` (formato claims) já existe.
+4. Modelfiles `performance` (DeepSeek local) e `impacto`. O `verificavel` (formato claims) já existe. `performance` e patch conferido feitos (veja "Performance — patch conferido"); falta o `impacto`.
 5. **L4:** portões até o acervo de fatos revisados. Feita.
 
 ## G6 — Impacto (planejado em 21/10/2026)
