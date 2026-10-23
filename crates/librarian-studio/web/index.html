@@ -1153,17 +1153,51 @@ async function sendTurn(turn) {
       claude_model: provider === 'claude-cli' ? $('#claudeModel').value : null,
     });
     (turn.sends ??= []).push(result);
-    // The comparison is computed by the server from every stored send; fetch it again.
-    try {
-      const fresh = (await api('GET', `/api/turns?${query({ key: studio.project.key, run: studio.run })}`)).find(t => t.id === turn.id);
-      if (fresh) Object.assign(turn, { sends: fresh.sends, comparison: fresh.comparison });
-    } catch { /* the send itself succeeded; a reload shows the comparison */ }
+    await refreshSends(turn);
   } catch (error) {
     turn.sendError = error.message;
   } finally {
     turn.pending = null;
     renderTurns();
   }
+}
+
+// The comparison is computed by the server from every stored send; fetch it again.
+async function refreshSends(turn) {
+  try {
+    const fresh = (await api('GET', `/api/turns?${query({ key: studio.project.key, run: studio.run })}`)).find(t => t.id === turn.id);
+    if (fresh) Object.assign(turn, { sends: fresh.sends, comparison: fresh.comparison });
+  } catch { /* the answer itself was recorded; a reload shows the comparison */ }
+}
+
+// An answer pasted by hand (provider Nenhum): verified, linked and checked like a send.
+async function pasteAnswer(turn, box, button) {
+  turn.pasteError = null;
+  await busy([button], null, async () => {
+    try {
+      const result = await api('POST', '/api/paste', { key: studio.project.key, run: studio.run, turn: turn.id, text: box.value });
+      (turn.sends ??= []).push(result);
+      turn.pasteDraft = '';
+      await refreshSends(turn);
+    } catch (error) {
+      turn.pasteError = error.message;
+    }
+  });
+  renderTurns();
+}
+
+function pasteView(t) {
+  const box = el('textarea', { className: 'code', rows: 6, spellcheck: false, value: t.pasteDraft ?? '',
+    placeholder: 'Cole aqui a resposta em claims (o JSON, com ou sem cerca ```json)' });
+  box.oninput = () => { t.pasteDraft = box.value; };
+  const button = el('button', { textContent: 'Conferir resposta colada', disabled: Boolean(t.pending) });
+  button.onclick = () => pasteAnswer(t, box, button);
+  return el('div', { style: 'margin-top: 8px' },
+    el('div', { className: 'muted' }, 'Resposta colada (provedor Nenhum)',
+      helpButton('Para quando a resposta vem de fora do studio: você copiou a query, levou a outro lugar e trouxe o JSON de volta. O studio confere a pergunta contra a edition, liga a resposta à query pelo hash e faz a mesma conferência mecânica de um envio. A resposta aparece como "Resposta colada": o studio não sabe quem a escreveu.')),
+    box,
+    t.pasteError ? el('p', { className: 'error', textContent: t.pasteError }) : null,
+    el('div', { className: 'row', style: 'margin-top: 6px' }, button));
 }
 
 // Same conservative estimate as the server (3.5 bytes per token for JSON with code).
@@ -1243,6 +1277,7 @@ function renderTurn(t) {
     t.comparison ? compareView(t.comparison) : null,
     t.pending ? el('div', { className: 'bubble reply muted', textContent: `Enviando para ${t.pending}…` }) : null,
     t.sendError ? el('p', { className: 'error', textContent: t.sendError }) : null,
+    provider === 'manual' && t.answer_format === 'claims' && t.query ? pasteView(t) : null,
     el('div', { className: 'row', style: 'margin-top: 8px' },
       el('button', {
         textContent: provider === 'manual' ? 'Mostrar o que seria enviado' : `Enviar · ${providerLabel(provider)}`,
