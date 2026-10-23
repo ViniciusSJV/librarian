@@ -1230,7 +1230,13 @@ mod tests {
             "edits": [{"path": "src/lib.rs", "op": "replace", "start_line": 5, "end_line": 6, "new_lines": ["        x * 2.0"]}]}]});
         let check = &record_answer(&store, &key, &run, "01", "manual", &answer.to_string()).unwrap()["check"];
         assert_eq!(check["report"]["mechanical_status"], "passed");
-        assert_eq!(check["diffs"]["H1"], "--- a/src/lib.rs\n+++ b/src/lib.rs\n@@ -5,2 +5,1 @@\n-        let direction = x * 2.0;\n-        direction\n+        x * 2.0\n");
+        assert_eq!(check["diffs"]["H1"], "--- a/src/lib.rs\n+++ b/src/lib.rs\n@@ -4,4 +4,3 @@\n     pub fn ray_from_pixel(&self, x: f64) -> f64 {\n-        let direction = x * 2.0;\n-        direction\n+        x * 2.0\n     }\n");
+        // The exported file is one `git apply` accepts against the project, when git is here.
+        let send = store.turn_dir(&key, &run, "01").unwrap().join("sends");
+        let file = fs::read_dir(&send).unwrap().filter_map(|e| e.ok()).map(|e| e.path().join("patch-H1.diff")).find(|p| p.exists()).unwrap();
+        if let Ok(out) = std::process::Command::new("git").arg("apply").arg("--check").arg(&file).current_dir(scratch.0.join("project")).output() {
+            assert!(out.status.success(), "git apply --check: {}", String::from_utf8_lossy(&out.stderr));
+        }
         // The choice is recorded with the question: editing it afterwards is refused.
         let context = store.turn_dir(&key, &run, "01").unwrap().join("claims/context.json");
         let original = fs::read_to_string(&context).unwrap();

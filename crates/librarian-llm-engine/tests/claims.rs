@@ -568,7 +568,9 @@ fn edits_are_checked_against_the_evidence_and_derive_a_diff() {
     // The diff follows file order, shifting new line numbers by the edits above.
     let response: claims::Response = serde_json::from_value(r.clone()).unwrap();
     let diff = claims::edits_diff(&c, &response.claims[0]).unwrap();
-    assert_eq!(diff, "--- a/src/a.rs\n+++ b/src/a.rs\n@@ -2,1 +2,2 @@\n     pub m: f64,\n+    pub inv: f64,\n@@ -11,1 +12,1 @@\n-        1.0 / self.m\n+        self.inv\n");
+    // Hunks carry up to three context lines on both sides, within the evidence block, as
+    // `git apply` expects.
+    assert_eq!(diff, "--- a/src/a.rs\n+++ b/src/a.rs\n@@ -1,3 +1,4 @@\n pub struct Cam {\n     pub m: f64,\n+    pub inv: f64,\n }\n@@ -10,3 +11,3 @@\n     fn ray(&self) -> f64 {\n-        1.0 / self.m\n+        self.inv\n     }\n");
     // The derived diff is one the patch checker accepts against the same evidence.
     let mut as_patch = r.clone();
     as_patch["claims"][0].as_object_mut().unwrap().remove("edits");
@@ -591,7 +593,19 @@ fn edits_are_checked_against_the_evidence_and_derive_a_diff() {
     assert_eq!(edit(&|v| { e(v, 0, "start_line", json!(5)); e(v, 0, "end_line", json!(5)); }), ["edits_outside_evidence"]);
     assert_eq!(edit(&|v| e(v, 1, "path", json!("src/b.rs"))), ["edits_unknown_path"]);
     // Replaced lines must be cited; a replacement must change something; edits do not overlap.
-    assert_eq!(edit(&|v| { e(v, 0, "start_line", json!(10)); }), ["edits_change_uncited_lines"]);
+    assert_eq!(edit(&|v| { e(v, 0, "start_line", json!(10)); }), ["edits_change_uncited_lines", "edits_unbalanced"]);
+    // Replacing the line that closes a block with a field, a slip a local model made: the brace
+    // goes missing and the edit is refused even when the line is cited.
+    assert_eq!(edit(&|v| {
+        e(v, 0, "start_line", json!(12)); e(v, 0, "end_line", json!(12)); e(v, 0, "new_lines", json!(["        inv: 1.0,"]));
+        v["claims"][0]["citations"][0] = json!({"evidence_id": "E2", "path": "src/a.rs", "start_line": 12, "end_line": 12, "quote": "    }"});
+    }), ["edits_unbalanced"]);
+    // insert_before puts the lines above the anchor, which stays.
+    let mut before = r.clone();
+    before["claims"][0]["edits"][1] = json!({"path": "src/a.rs", "op": "insert_before", "start_line": 3, "end_line": 3, "new_lines": ["    pub inv: f64,"]});
+    let response: claims::Response = serde_json::from_value(before).unwrap();
+    // Before the closing brace is the same place as after the last field: the same diff.
+    assert_eq!(claims::edits_diff(&c, &response.claims[0]).unwrap(), diff);
     assert_eq!(edit(&|v| e(v, 0, "new_lines", json!(["        1.0 / self.m"]))), ["edits_no_change"]);
     assert_eq!(edit(&|v| { e(v, 1, "start_line", json!(11)); e(v, 1, "end_line", json!(11)); }), ["edits_overlap"]);
     // Only a HYPOTHESIS proposes edits, and only when the context allows them.
@@ -602,8 +616,33 @@ fn edits_are_checked_against_the_evidence_and_derive_a_diff() {
     // The query announces edits, and that they count as the explicit request for a hypothesis.
     let open: Value = serde_json::from_str(&claims::query(&c, "Como evitar a divisão?").unwrap()).unwrap();
     assert_eq!(open["allow_edits"], true);
-    assert_eq!(open["response_schema"]["properties"]["claims"]["items"]["properties"]["edits"]["items"]["properties"]["op"]["enum"], json!(["replace", "insert_after"]));
+    assert_eq!(open["response_schema"]["properties"]["claims"]["items"]["properties"]["edits"]["items"]["properties"]["op"]["enum"], json!(["replace", "rewrite", "insert_before", "insert_after"]));
     assert!(open["instructions"].as_array().unwrap().iter().any(|i| i.as_str().unwrap().contains("vale como o pedido explícito de hipótese")));
     let plain: Value = serde_json::from_str(&claims::query(&closed, "Como evitar a divisão?").unwrap()).unwrap();
     assert!(plain.get("allow_edits").is_none());
+}
+
+#[test]
+fn a_rewrite_restates_a_declaration_and_shows_only_what_changed() {
+    let (c, mut r) = editing();
+    // The whole method restated, with one line changed; only its first line is cited.
+    r["claims"][0]["citations"] = json!([{"evidence_id": "E2", "path": "src/a.rs", "start_line": 10, "end_line": 10, "quote": "    fn ray(&self) -> f64 {"}]);
+    r["claims"][0]["edits"] = json!([{"path": "src/a.rs", "op": "rewrite", "start_line": 10, "end_line": 12,
+        "new_lines": ["    fn ray(&self) -> f64 {", "        self.inv", "    }"]}]);
+    assert_eq!(codes(&c, &r), Vec::<String>::new());
+    let response: claims::Response = serde_json::from_value(r.clone()).unwrap();
+    assert_eq!(claims::edits_diff(&c, &response.claims[0]).unwrap(),
+        "--- a/src/a.rs\n+++ b/src/a.rs\n@@ -10,3 +10,3 @@\n     fn ray(&self) -> f64 {\n-        1.0 / self.m\n+        self.inv\n     }\n");
+    // The claim still cites something, as any hypothesis, but not each rewritten line.
+    let mut elsewhere = r.clone();
+    elsewhere["claims"][0]["citations"] = json!([{"evidence_id": "E2", "path": "src/a.rs", "start_line": 11, "end_line": 11, "quote": "        1.0 / self.m"}]);
+    assert_eq!(codes(&c, &elsewhere), Vec::<String>::new());
+    // A rewrite that drops the closing brace is refused.
+    let mut open = r.clone();
+    open["claims"][0]["edits"][0]["new_lines"] = json!(["    fn ray(&self) -> f64 {", "        self.inv"]);
+    assert_eq!(codes(&c, &open), ["edits_unbalanced"]);
+    // A rewrite that changes nothing proposes nothing.
+    let mut same = r.clone();
+    same["claims"][0]["edits"][0]["new_lines"] = json!(["    fn ray(&self) -> f64 {", "        1.0 / self.m", "    }"]);
+    assert_eq!(codes(&c, &same), ["edits_no_change"]);
 }
