@@ -194,6 +194,12 @@ Depois do envio, a resposta passa pela **conferência mecânica**:
 - a operação aponta um trecho da função, não a função inteira (`precise_location`):
   começar na linha da declaração, ou cobrir todo o corpo, é recusado, exceto em funções
   ou corpos de uma linha. Também vale só para as perguntas novas.
+- com **Claims: permitir patch numa HYPOTHESIS** (opção do projeto, gravada com cada
+  pergunta, junto com **permitir HYPOTHESIS**), uma hipótese pode trazer um diff
+  unificado da mudança proposta. O diff precisa partir do texto real das linhas entregues,
+  ficar dentro delas e citar cada linha que remove. Ele aparece em **Patch proposto** e
+  nunca é aplicado: nada é escrito no projeto, e encaixar não prova que ficou mais rápido.
+  É a etapa de performance da cadeia, com o Modelfile `performance`.
 
 A resposta mostra **Mecânica: aprovada** ou **recusada**, com os problemas por claim (cada um com uma frase simples e um **?** que explica), e a
 lista de claims com location e citações. A resposta bruta fica em **Resposta bruta**. Se

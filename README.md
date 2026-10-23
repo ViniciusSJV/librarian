@@ -142,7 +142,8 @@ registrado e a avaliação pendente. Os detalhes estão no [STUDIO.md](STUDIO.md
 1. **Limites do LLM Engine:** contexto com linhas numeradas, studio usando afirmações e
    checker, comparação de respostas de modelos diferentes por conteúdo, vínculo do
    bundle conferido em cada envio, portões até o acervo de fatos revisados e cadeia entre
-   perguntas (feitos). Faltam os Modelfiles por tarefa (`performance`, `impacto`).
+   perguntas, patch conferido e Modelfile `performance` (feitos). Faltam o Modelfile
+   `impacto` com a evidência do "Onde é usado?" (G6d) e a captura de benchmark.
 2. **Impacto (G6):** campos e chamadas como candidatos no grafo e "Onde é usado?" no
    studio (feitos). Falta o relatório de impacto ("o que pode quebrar se este campo
    mudar?") com Modelfile próprio, em que o modelo só aponta riscos como hipótese, com
