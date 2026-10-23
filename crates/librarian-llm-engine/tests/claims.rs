@@ -537,3 +537,73 @@ fn a_patch_is_checked_line_by_line_against_the_evidence_and_never_approved() {
     assert!(plain.get("allow_patch").is_none());
     assert!(plain["response_schema"]["properties"]["claims"]["items"]["properties"].get("patch").is_none());
 }
+
+/// A field cached in a struct: one insertion in the struct, one replacement in the method.
+fn editing() -> (Context, Value) {
+    let c: Context = serde_json::from_value(json!({
+        "schema_version": 1, "allow_edits": true,
+        "policy": {"allow_inference": false, "allow_hypothesis": true},
+        "evidence": [
+            {"id": "E1", "path": "src/a.rs", "start_line": 1, "end_line": 3,
+                "excerpt": "pub struct Cam {\n    pub m: f64,\n}"},
+            {"id": "E2", "path": "src/a.rs", "start_line": 10, "end_line": 12,
+                "excerpt": "    fn ray(&self) -> f64 {\n        1.0 / self.m\n    }"}]
+    }))
+    .unwrap();
+    let r = json!({"schema_version": 1, "claims": [{
+        "id": "H1", "kind": "HYPOTHESIS", "text": "Guardar o inverso num campo evita a divisão a cada chamada.",
+        "citations": [{"evidence_id": "E2", "path": "src/a.rs", "start_line": 11, "end_line": 11, "quote": "        1.0 / self.m"}],
+        "premises": [], "verification_plan": "Medir ray antes e depois e comparar os resultados.",
+        "edits": [
+            {"path": "src/a.rs", "op": "replace", "start_line": 11, "end_line": 11, "new_lines": ["        self.inv"]},
+            {"path": "src/a.rs", "op": "insert_after", "start_line": 2, "end_line": 2, "new_lines": ["    pub inv: f64,"]}]}]});
+    (c, r)
+}
+
+#[test]
+fn edits_are_checked_against_the_evidence_and_derive_a_diff() {
+    let (c, r) = editing();
+    let report = claims::check(&c, &r.to_string()).unwrap();
+    assert_eq!((report.mechanical_status, report.accepted), ("passed", false));
+    // The diff follows file order, shifting new line numbers by the edits above.
+    let response: claims::Response = serde_json::from_value(r.clone()).unwrap();
+    let diff = claims::edits_diff(&c, &response.claims[0]).unwrap();
+    assert_eq!(diff, "--- a/src/a.rs\n+++ b/src/a.rs\n@@ -2,1 +2,2 @@\n     pub m: f64,\n+    pub inv: f64,\n@@ -11,1 +12,1 @@\n-        1.0 / self.m\n+        self.inv\n");
+    // The derived diff is one the patch checker accepts against the same evidence.
+    let mut as_patch = r.clone();
+    as_patch["claims"][0].as_object_mut().unwrap().remove("edits");
+    as_patch["claims"][0]["patch"] = json!(diff);
+    as_patch["claims"][0]["citations"].as_array_mut().unwrap().push(json!(
+        {"evidence_id": "E1", "path": "src/a.rs", "start_line": 2, "end_line": 2, "quote": "    pub m: f64,"}));
+    let mut patching = editing().0;
+    patching.allow_patch = true;
+    assert_eq!(codes(&patching, &as_patch), Vec::<String>::new());
+
+    let edit = |f: &dyn Fn(&mut Value)| {
+        let mut v = r.clone();
+        f(&mut v);
+        codes(&c, &v)
+    };
+    let e = |v: &mut Value, i: usize, field: &str, value: Value| v["claims"][0]["edits"][i][field] = value;
+    assert_eq!(edit(&|v| e(v, 0, "op", json!("swap"))), ["edits_malformed"]);
+    assert_eq!(edit(&|v| e(v, 1, "end_line", json!(3))), ["edits_malformed"]);
+    assert_eq!(edit(&|v| e(v, 0, "new_lines", json!(["a\nb"]))), ["edits_malformed"]);
+    assert_eq!(edit(&|v| { e(v, 0, "start_line", json!(5)); e(v, 0, "end_line", json!(5)); }), ["edits_outside_evidence"]);
+    assert_eq!(edit(&|v| e(v, 1, "path", json!("src/b.rs"))), ["edits_unknown_path"]);
+    // Replaced lines must be cited; a replacement must change something; edits do not overlap.
+    assert_eq!(edit(&|v| { e(v, 0, "start_line", json!(10)); }), ["edits_change_uncited_lines"]);
+    assert_eq!(edit(&|v| e(v, 0, "new_lines", json!(["        1.0 / self.m"]))), ["edits_no_change"]);
+    assert_eq!(edit(&|v| { e(v, 1, "start_line", json!(11)); e(v, 1, "end_line", json!(11)); }), ["edits_overlap"]);
+    // Only a HYPOTHESIS proposes edits, and only when the context allows them.
+    assert_eq!(edit(&|v| { v["claims"][0]["kind"] = json!("FACT"); v["claims"][0]["verification_plan"] = Value::Null; }), ["edits_require_hypothesis"]);
+    let mut closed = editing().0;
+    closed.allow_edits = false;
+    assert_eq!(codes(&closed, &r), ["edits_not_allowed"]);
+    // The query announces edits, and that they count as the explicit request for a hypothesis.
+    let open: Value = serde_json::from_str(&claims::query(&c, "Como evitar a divisão?").unwrap()).unwrap();
+    assert_eq!(open["allow_edits"], true);
+    assert_eq!(open["response_schema"]["properties"]["claims"]["items"]["properties"]["edits"]["items"]["properties"]["op"]["enum"], json!(["replace", "insert_after"]));
+    assert!(open["instructions"].as_array().unwrap().iter().any(|i| i.as_str().unwrap().contains("vale como o pedido explícito de hipótese")));
+    let plain: Value = serde_json::from_str(&claims::query(&closed, "Como evitar a divisão?").unwrap()).unwrap();
+    assert!(plain.get("allow_edits").is_none());
+}

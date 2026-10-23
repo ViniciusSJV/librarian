@@ -91,6 +91,7 @@ pub fn context(catalog: &Catalog, query: &Value, policy: Policy, project_instruc
         precise_location: true,
         reviewed_facts,
         allow_patch: false,
+        allow_edits: false,
     };
     context.validate()?;
     Ok(context)
@@ -155,8 +156,11 @@ fn pretty(value: &impl serde::Serialize) -> Result<Vec<u8>> {
 struct Rules {
     strict_text: bool,
     precise_location: bool,
-    /// Chosen per project, like the policy, and recorded with each question.
+    /// Recorded questions only: the unified diff of the first patch questions.
     allow_patch: bool,
+    /// Chosen per project ("permitir patch"), like the policy, and recorded with each question:
+    /// new questions get line edits, which small models get right more often than a diff.
+    allow_edits: bool,
 }
 
 
@@ -168,14 +172,15 @@ fn derive(catalog: &Catalog, turn: &Path, policy: Policy, project_instructions: 
     context.strict_text = rules.strict_text;
     context.precise_location = rules.precise_location;
     context.allow_patch = rules.allow_patch;
+    context.allow_edits = rules.allow_edits;
     let mut claims_query = claims::query(&context, &question)?.into_bytes();
     claims_query.push(b'\n');
     Ok((pretty(&context)?, claims_query))
 }
 
 /// Writes claims/context.json and claims/query.json from a bundle already prepared and verified.
-pub fn write(catalog: &Catalog, turn: &Path, policy: Policy, project_instructions: Vec<String>, allow_patch: bool) -> Result<()> {
-    let rules = Rules { strict_text: true, precise_location: true, allow_patch };
+pub fn write(catalog: &Catalog, turn: &Path, policy: Policy, project_instructions: Vec<String>, allow_changes: bool) -> Result<()> {
+    let rules = Rules { strict_text: true, precise_location: true, allow_patch: false, allow_edits: allow_changes };
     let (context, query) = derive(catalog, turn, policy, project_instructions, rules)?;
     let dir = turn.join(DIR);
     fs::create_dir(&dir)?;
@@ -190,7 +195,7 @@ pub fn verify(catalog: &Catalog, turn: &Path) -> Result<Context> {
     let dir = turn.join(DIR);
     let recorded: Context = serde_json::from_slice(&fs::read(dir.join("context.json"))?)?;
     let policy = Policy { allow_inference: recorded.policy.allow_inference, allow_hypothesis: recorded.policy.allow_hypothesis };
-    let (context, query) = derive(catalog, turn, policy, recorded.project_instructions.clone(), Rules { strict_text: recorded.strict_text, precise_location: recorded.precise_location, allow_patch: recorded.allow_patch })?;
+    let (context, query) = derive(catalog, turn, policy, recorded.project_instructions.clone(), Rules { strict_text: recorded.strict_text, precise_location: recorded.precise_location, allow_patch: recorded.allow_patch, allow_edits: recorded.allow_edits })?;
     if fs::read(dir.join("context.json"))? != context || fs::read(dir.join("query.json"))? != query {
         return Err("Contexto ou query de claims difere do bundle conferido; nada foi enviado".into());
     }
@@ -204,13 +209,27 @@ pub fn check(context: &Context, send: &Path, answer: &str) -> Result<Value> {
     let body = fenced.unwrap_or(answer);
     let report = claims::check(context, body)?;
     let parsed: Option<claims::Response> = serde_json::from_str(body).ok();
-    let value = json!({
+    // The diff each claim's edits describe, derived from the evidence when the edits pass.
+    let diffs: serde_json::Map<String, Value> = parsed
+        .iter()
+        .flat_map(|r| &r.claims)
+        .filter_map(|c| claims::edits_diff(context, c).map(|d| (c.id.clone(), json!(d))))
+        .collect();
+    let mut value = json!({
         "response_sha256": hash(answer.as_bytes()),
         "extracted_from_fence": fenced.is_some(),
         "report": report,
         "claims": parsed.map(|r| r.claims),
         "limits": LIMITS,
     });
+    // Each derived diff also as a file the person can `git apply`; nothing touches the project.
+    for (id, diff) in &diffs {
+        let safe: String = id.chars().map(|c| if c.is_ascii_alphanumeric() || c == '-' || c == '_' { c } else { '_' }).collect();
+        fs::write(send.join(format!("patch-{safe}.diff")), diff.as_str().unwrap_or_default())?;
+    }
+    if !diffs.is_empty() {
+        value["diffs"] = Value::Object(diffs);
+    }
     fs::write(send.join("check.json"), pretty(&value)?)?;
     Ok(value)
 }
