@@ -20,6 +20,21 @@ Cada item (claim) é conferido sozinho, como se os outros itens não existissem:
 - toda linha mencionada no text precisa estar citada no item, e todo código entre crases
   no text precisa aparecer nas linhas citadas.
 
+Exemplo (outro código, só para a forma). Evidência E1, src/a.rs, linhas 20–23:
+  20 "    pub fn area(&self) -> f64 {"
+  21 "        let r2 = self.r * self.r;"
+  22 "        r2 * 3.14"
+  23 "    }"
+Pergunta: onde a área é calculada? Resposta:
+{"schema_version":1,"claims":[{"id":"C1","kind":"FACT",
+ "text":"area calcula a área na linha 22 de src/a.rs, multiplicando r2.",
+ "citations":[{"evidence_id":"E1","path":"src/a.rs","start_line":20,"end_line":20,"quote":"    pub fn area(&self) -> f64 {"},
+              {"evidence_id":"E1","path":"src/a.rs","start_line":22,"end_line":22,"quote":"        r2 * 3.14"}],
+ "premises":[],"verification_plan":null,
+ "location":{"evidence_id":"E1","path":"src/a.rs","symbol_name":"area","declaration_line":20,"operation_start_line":22,"operation_end_line":22}}]}
+Repare: uma citação só da declaração e outra só da operação; cada quote é o text da linha,
+com os espaços do começo; a operação é a linha exata, não a função inteira.
+
 INFERENCE e HYPOTHESIS só quando permitidas e pedidas. LACUNA só para informação necessária
 que falta. Antes de responder, confira cada item contra estas regras.
 """

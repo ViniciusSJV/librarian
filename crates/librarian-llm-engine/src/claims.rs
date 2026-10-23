@@ -1,10 +1,12 @@
 //! Mechanical checks only: a valid citation does not establish entailment.
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
+mod edits;
 mod location;
 mod patch;
 mod text;
 pub mod compare;
+pub use edits::{diff as edits_diff, Edit};
 pub use location::{Location, Symbol};
 
 #[derive(Debug, Default, Serialize, Deserialize)]
@@ -54,6 +56,9 @@ pub struct Context {
     /// A HYPOTHESIS may carry a unified diff over the evidence, checked line by line.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub allow_patch: bool,
+    /// A HYPOTHESIS may carry line edits over the evidence; the diff is derived from them.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub allow_edits: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -101,6 +106,9 @@ pub struct Claim {
     /// Unified diff of the change a HYPOTHESIS proposes (`allow_patch`); checked, never applied.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub patch: Option<String>,
+    /// Line edits of the change a HYPOTHESIS proposes (`allow_edits`); checked, never applied.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub edits: Option<Vec<Edit>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -212,6 +220,11 @@ pub fn query(context: &Context, question: &str) -> Result<String, String> {
         query["allow_patch"] = serde_json::json!(true);
         query["response_schema"]["properties"]["claims"]["items"]["properties"]["patch"] = serde_json::json!({"type": ["string", "null"]});
         query["instructions"].as_array_mut().unwrap().push(serde_json::json!(patch::INSTRUCTION));
+    }
+    if context.allow_edits {
+        query["allow_edits"] = serde_json::json!(true);
+        query["response_schema"]["properties"]["claims"]["items"]["properties"]["edits"] = edits::schema();
+        query["instructions"].as_array_mut().unwrap().push(serde_json::json!(edits::INSTRUCTION));
     }
     if !context.reviewed_facts.is_empty() {
         query["evidence"]["reviewed_facts"] = serde_json::json!(context.reviewed_facts);
@@ -353,6 +366,9 @@ pub fn check(context: &Context, response: &str) -> Result<Report, String> {
             fail(code);
         }
         for code in patch::check(context, claim) {
+            fail(code);
+        }
+        for code in edits::check(context, claim) {
             fail(code);
         }
         if context.strict_text {

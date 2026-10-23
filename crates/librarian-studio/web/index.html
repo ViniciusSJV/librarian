@@ -931,7 +931,8 @@ async function initStudio() {
   $('h1').textContent = 'Librarian Studio';
   $('#projectCard').hidden = false;
   const llm = studio.status.llm;
-  $('#provider').replaceChildren(...llm.providers.map(p => el('option', { value: p.id, textContent: p.label, disabled: !p.implemented })));
+  // Providers without sending yet stay off the list: they only confused the choice.
+  $('#provider').replaceChildren(...llm.providers.filter(p => p.implemented).map(p => el('option', { value: p.id, textContent: p.label })));
   $('#claudeModel').replaceChildren(...llm.claude_cli.models.map(m => el('option', { value: m, textContent: m })));
   const provider = saved.get('provider');
   if (provider && llm.providers.some(p => p.id === provider && p.implemented)) $('#provider').value = provider;
@@ -1035,7 +1036,8 @@ async function loadRun(id) {
 }
 
 // ---- questions
-const providerLabel = id => studio.status?.llm.providers.find(p => p.id === id)?.label ?? id;
+// Buttons name the provider short; the list keeps the longer explanation.
+const providerLabel = id => ({ ollama: 'Ollama', 'claude-cli': 'Claude CLI', manual: 'Nenhum' })[id] ?? studio.status?.llm.providers.find(p => p.id === id)?.label ?? id;
 
 function refreshComposer() {
   if (!studio.status) return;
@@ -1358,6 +1360,22 @@ const ISSUES = {
     'Uma linha que o diff diz existir (contexto ou removida) não é igual à linha do livro naquele número. Do jeito que está, ele não se aplica.'],
   patch_changes_uncited_lines: ['patch remove linhas que o item não citou',
     'Toda linha que o diff remove precisa estar citada no próprio item, para que a proposta mostre o que está mudando.'],
+  edits_not_allowed: ['propôs edições, e isso estava desligado',
+    'O item trouxe uma mudança no código, mas a opção de permitir patch está desligada nesta pergunta.'],
+  edits_require_hypothesis: ['edições fora de uma hipótese',
+    'Uma mudança proposta é sempre uma suspeita a medir: só uma HYPOTHESIS, com plano de verificação, pode trazer edições.'],
+  edits_malformed: ['edição sem a forma pedida',
+    'Cada edição precisa de path, op (replace ou insert_after), start_line, end_line e new_lines. Em insert_after, end_line é igual a start_line; new_lines são linhas inteiras, uma por item.'],
+  edits_unknown_path: ['edição num arquivo que não foi entregue',
+    'A edição mexe num livro que não estava na pasta entregue ao leitor.'],
+  edits_outside_evidence: ['edição fora das páginas entregues',
+    'A edição aponta linhas fora dos trechos entregues, ou atravessa dois trechos. O leitor não viu essas linhas.'],
+  edits_change_uncited_lines: ['troca linhas que o item não citou',
+    'Toda linha trocada por replace precisa estar citada no próprio item, com o texto igual ao do livro.'],
+  edits_no_change: ['edição que não muda nada',
+    'O replace devolve as mesmas linhas, ou o insert_after não insere nada.'],
+  edits_overlap: ['edições sobrepostas',
+    'Duas edições mexem nas mesmas linhas. Cada linha só pode ser trocada uma vez; junte as duas numa edição.'],
   missing_citation: ['afirmou sem citar nenhuma página',
     'Um fato precisa mostrar a página do livro de onde saiu. Este item afirmou algo sem citar nada.'],
   unknown_evidence: ['citou uma pasta que não foi entregue',
@@ -1394,6 +1412,21 @@ const ISSUES = {
     'Um trecho de código entre crases no texto não aparece nas linhas citadas. Pode até existir em outro lugar do arquivo, mas não foi mostrado como prova.'],
 };
 
+// Proposed line edits: the derived diff when they pass, otherwise the edits as written.
+function editsView(k, diff, s) {
+  const opName = { replace: 'troca', insert_after: 'insere depois de' };
+  const written = k.edits.map(e => `${opName[e.op] ?? e.op} ${e.path}:${e.start_line}${e.end_line !== e.start_line ? `–${e.end_line}` : ''}\n${e.new_lines.map(l => `  + ${l}`).join('\n') || '  (apaga)'}`).join('\n\n');
+  if (!diff) {
+    return el('details', {}, el('summary', { textContent: `Edições propostas (${k.edits.length}; não passaram na conferência)` }), el('pre', { textContent: written }));
+  }
+  const file = s?.directory ? `${s.directory}\\patch-${k.id.replace(/[^A-Za-z0-9_-]/g, '_')}.diff` : null;
+  return el('details', { open: true },
+    el('summary', { textContent: `Mudança proposta: ${k.edits.length} edição(ões), conferidas contra as linhas entregues (não aplicada)` }),
+    el('pre', { textContent: diff }),
+    file ? el('div', { className: 'muted mono', textContent: `Para aplicar no projeto: git apply "${file}"` }) : null,
+    helpButton('O modelo disse quais linhas trocar e o que inserir; o bibliotecário conferiu que essas linhas existem, estão citadas e não se sobrepõem, e montou o diff. Encaixar não prova que compila nem que ficou mais rápido: aplique numa branch, rode os testes e meça antes e depois.'));
+}
+
 // Mechanical verdict and the claims as the checker parsed them; meaning is still for review.
 function checkView(c, s, t) {
   const passed = c.report.mechanical_status === 'passed';
@@ -1410,6 +1443,7 @@ function checkView(c, s, t) {
     k.premises.length ? el('div', { className: 'muted', textContent: `premissas: ${k.premises.join(' · ')}` }) : null,
     k.verification_plan ? el('div', { className: 'muted', textContent: `como verificar: ${k.verification_plan}` }) : null,
     k.patch ? el('details', {}, el('summary', { textContent: 'Patch proposto (conferido contra as linhas entregues; não aplicado)' }), el('pre', { textContent: k.patch })) : null,
+    k.edits ? editsView(k, c.diffs?.[k.id], s) : null,
     s && t ? reviewView(k, passed, s, t) : null);
   return el('div', { style: 'margin-top: 6px' },
     el('div', {},

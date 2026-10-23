@@ -1208,7 +1208,7 @@ mod tests {
     }
 
     #[test]
-    fn allow_patch_is_fixed_with_the_question_and_checks_a_proposed_diff() {
+    fn allow_patch_is_fixed_with_the_question_and_checks_proposed_edits() {
         let scratch = project();
         let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
         let opened = store.open(&display(&scratch.0.join("project"))).unwrap();
@@ -1220,21 +1220,22 @@ mod tests {
         let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
         let turn = store.ask(&key, &run, "Onde a câmera calcula a direção dos raios?").unwrap();
         let query: Value = serde_json::from_str(turn["query"].as_str().unwrap()).unwrap();
-        assert_eq!(query["allow_patch"], true);
+        // New questions ask for line edits; the diff is derived by the checker.
+        assert_eq!((&query["allow_edits"], query.get("allow_patch")), (&json!(true), None));
         let answer = json!({"schema_version": 1, "claims": [{
             "id": "H1", "kind": "HYPOTHESIS", "text": "Devolver a expressão direto dispensa a variável direction.",
             "citations": [{"evidence_id": "E1", "path": "src/lib.rs", "start_line": 5, "end_line": 6,
                 "quote": "        let direction = x * 2.0;\n        direction"}],
-            "premises": [], "verification_plan": "Medir ray_from_pixel antes e depois com um benchmark.",
-            "patch": "--- a/src/lib.rs\n+++ b/src/lib.rs\n@@ -5,2 +5,1 @@\n-        let direction = x * 2.0;\n-        direction\n+        x * 2.0\n"}]});
+            "premises": [], "verification_plan": "Medir ray_from_pixel antes e depois com um benchmark.", "location": null,
+            "edits": [{"path": "src/lib.rs", "op": "replace", "start_line": 5, "end_line": 6, "new_lines": ["        x * 2.0"]}]}]});
         let check = &record_answer(&store, &key, &run, "01", "manual", &answer.to_string()).unwrap()["check"];
         assert_eq!(check["report"]["mechanical_status"], "passed");
-        assert!(check["claims"][0]["patch"].as_str().unwrap().contains("+        x * 2.0"));
+        assert_eq!(check["diffs"]["H1"], "--- a/src/lib.rs\n+++ b/src/lib.rs\n@@ -5,2 +5,1 @@\n-        let direction = x * 2.0;\n-        direction\n+        x * 2.0\n");
         // The choice is recorded with the question: editing it afterwards is refused.
         let context = store.turn_dir(&key, &run, "01").unwrap().join("claims/context.json");
         let original = fs::read_to_string(&context).unwrap();
-        assert!(original.contains("\"allow_patch\": true"));
-        fs::write(&context, original.replace("\"allow_patch\": true", "\"allow_patch\": false")).unwrap();
+        assert!(original.contains("\"allow_edits\": true"));
+        fs::write(&context, original.replace("\"allow_edits\": true", "\"allow_edits\": false")).unwrap();
         assert!(store.verify_for_send(&key, &run, "01").is_err());
     }
 
