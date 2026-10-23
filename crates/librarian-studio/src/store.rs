@@ -375,6 +375,38 @@ impl Store {
         self.turn(key, run, &id)
     }
 
+    /// An answer pasted by the person (provider `manual`), for a claims question: verified and
+    /// linked like a send, then checked. The query copied to the send is the one verified now;
+    /// who wrote the answer is not known, only that it was pasted.
+    pub fn paste_answer(&self, key: &str, run: &str, turn: &str, text: &str) -> Result<Value> {
+        self.record_answer(key, run, turn, "manual", text)
+    }
+
+    /// Records an answer as a send would, with the same checks and files. Tests also use it to
+    /// stand in for a provider.
+    fn record_answer(&self, key: &str, run: &str, turn: &str, provider: &str, text: &str) -> Result<Value> {
+        if text.trim().is_empty() {
+            return Err("Cole a resposta antes de conferir".into());
+        }
+        let dir = self.turn_dir(key, run, turn)?;
+        let question: Value = serde_json::from_slice(&fs::read(dir.join("question.json"))?)?;
+        if question["answer_format"] != "claims" {
+            return Err("Só perguntas em claims recebem resposta colada".into());
+        }
+        let verified = self.verify_for_send(key, run, turn)?;
+        let context = verified.context.ok_or("Pergunta em claims sem contexto")?;
+        let send = next_send(&dir, provider)?;
+        fs::create_dir(&send)?;
+        // Preserved as the Claude CLI send does: the query delivered and the answer received.
+        fs::copy(&verified.query, send.join("query.json"))?;
+        fs::write(send.join("response.txt"), text)?;
+        let mut summary = json!({ "state": "completed", "provider": provider, "text": text, "directory": display(&send),
+            "link": verified.link, "pasted": provider == "manual" });
+        summary["check"] = crate::claims::check(&context, &send, text)?;
+        fs::write(send.join("send.json"), serde_json::to_vec_pretty(&summary)?)?;
+        Ok(summary)
+    }
+
     /// Re-verifies a question immediately before a send and links the send to what was verified:
     /// the bundle against the edition, the claims files against the bundle, the criteria against
     /// the hash fixed with the question. The link is metadata written after those checks, not a
@@ -837,25 +869,8 @@ mod tests {
         }
     }
 
-    /// Records an answer as a send would, without a provider: the same checks and files.
     fn record_answer(store: &Store, key: &str, run: &str, turn: &str, provider: &str, text: &str) -> Result<Value> {
-        let dir = store.turn_dir(key, run, turn)?;
-        let question: Value = serde_json::from_slice(&fs::read(dir.join("question.json"))?)?;
-        if question["answer_format"] != "claims" {
-            return Err("Pergunta em prosa".into());
-        }
-        let verified = store.verify_for_send(key, run, turn)?;
-        let context = verified.context.ok_or("Pergunta em claims sem contexto")?;
-        let send = next_send(&dir, provider)?;
-        fs::create_dir(&send)?;
-        // Preserved as the Claude CLI send does: the query delivered and the answer received.
-        fs::copy(&verified.query, send.join("query.json"))?;
-        fs::write(send.join("response.txt"), text)?;
-        let mut summary = json!({ "state": "completed", "provider": provider, "text": text, "directory": display(&send),
-            "link": verified.link });
-        summary["check"] = crate::claims::check(&context, &send, text)?;
-        fs::write(send.join("send.json"), serde_json::to_vec_pretty(&summary)?)?;
-        Ok(summary)
+        store.record_answer(key, run, turn, provider, text)
     }
 
     static NEXT: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
@@ -978,7 +993,11 @@ mod tests {
             "location": {"evidence_id": "E1", "path": "src/lib.rs", "symbol_name": "ray_from_pixel",
                 "declaration_line": 4, "operation_start_line": 5, "operation_end_line": 5}}]});
         let fenced = format!("```json\n{answer}\n```");
-        let passed = record_answer(&store, &key, &run, "01", "manual", &fenced).unwrap();
+        // An empty paste records nothing; a pasted answer is linked and checked like a send.
+        assert!(store.paste_answer(&key, &run, "01", "  \n").is_err());
+        let passed = store.paste_answer(&key, &run, "01", &fenced).unwrap();
+        assert_eq!((passed["provider"].as_str(), &passed["pasted"]), (Some("manual"), &json!(true)));
+        assert!(passed["link"]["query_sha256"].is_string());
         assert_eq!(passed["check"]["report"]["mechanical_status"], "passed");
         assert_eq!(passed["check"]["report"]["accepted"], false);
         assert_eq!(passed["check"]["extracted_from_fence"], true);

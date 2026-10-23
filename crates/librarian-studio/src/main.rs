@@ -131,6 +131,11 @@ fn route(app: &App, req: &Request) -> Result<Response> {
             ok(store.ask(&field(&body, "key")?, &field(&body, "run")?, &question)?)
         }
         ("POST", "/api/send") => send(store, &req.json()?),
+        ("POST", "/api/paste") => {
+            let body = req.json()?;
+            let (key, run, turn) = (field(&body, "key")?, field(&body, "run")?, field(&body, "turn")?);
+            ok(store.paste_answer(&key, &run, &turn, &field(&body, "text")?)?)
+        }
         ("POST", "/api/continue") => {
             let body = req.json()?;
             let (key, run, from) = (field(&body, "key")?, field(&body, "run")?, field(&body, "turn")?);
