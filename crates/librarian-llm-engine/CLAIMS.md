@@ -127,6 +127,7 @@ contextos antigos continuam sendo lidos.
 | `project_instructions` | campo `project_instructions` e uma instrução: complementam as fixas e, em conflito, valem as fixas e o `response_schema` | nenhum |
 | `strict_text` | `strict_text: true` e uma instrução descrevendo a regra | as duas regras abaixo |
 | `allow_patch` | `allow_patch: true`, o campo `patch` no schema e uma instrução | as regras do perfil `allow_patch` (abaixo) |
+| `allow_edits` | `allow_edits: true`, o campo `edits` no schema e uma instrução, que também vale como o pedido explícito de hipótese | as regras do perfil `allow_edits` (abaixo) |
 | `reviewed_facts` | `evidence.reviewed_facts` (id, enunciado, autoria, path e linhas) e uma instrução: são afirmações revisadas por uma pessoa numa pergunta anterior, orientam mas não são citáveis | só a validação de identidade (id único, enunciado, linhas); não são `evidence_id` válidos nas citações |
 
 As instruções novas entram depois das fixas, que mantêm a ordem.
@@ -193,6 +194,55 @@ conta como contexto vazio. O checker não aplica, não compila e não executa na
 que encaixa não prova que o programa ficou correto nem mais rápido. O ganho continua
 hipótese, com `verification_plan`. Ausente, a query sai idêntica e o campo `patch` não
 existe no schema.
+
+### Perfil `allow_edits`
+
+O diff unificado se mostrou difícil para modelos locais de 14–16B: contagens erradas,
+linhas de contexto inventadas, blocos que não mudam nada. Com `allow_edits: true`, uma
+HYPOTHESIS descreve a mudança como edições de linhas, e o diff é derivado delas:
+
+```json
+"edits": [
+  {"path": "src/a.rs", "op": "insert_after", "start_line": 2, "end_line": 2, "new_lines": ["    inv: f64,"]},
+  {"path": "src/a.rs", "op": "replace", "start_line": 11, "end_line": 11, "new_lines": ["        self.inv"]}
+]
+```
+
+Operações:
+
+- `replace` troca as linhas `start_line..end_line` por `new_lines` (vazia apaga), e cada
+  linha trocada precisa estar citada no item;
+- `rewrite` reescreve uma declaração inteira: `new_lines` é a declaração já mudada. Não
+  exige citar cada linha, porque o diff derivado mostra tudo o que sai;
+- `insert_before` e `insert_after` inserem antes ou depois de `start_line`, com
+  `end_line` igual, sem apagar nada.
+
+A instrução diz que `allow_edits` vale como o pedido explícito de hipótese e prevalece
+sobre `project_instructions` que proíbem propor alterações. Códigos:
+
+- **`edits_not_allowed`** e **`edits_require_hypothesis`**: como no perfil `allow_patch`;
+- **`edits_malformed`**: `op` desconhecido, linhas fora de ordem, inserção com
+  `end_line` diferente ou linha nova com quebra de linha;
+- **`edits_unknown_path`** e **`edits_outside_evidence`**: arquivo fora da evidência, ou
+  linhas fora de um único trecho;
+- **`edits_change_uncited_lines`**: uma linha trocada por `replace` não está citada no
+  próprio item (a citação continua conferida com `quote_mismatch`);
+- **`edits_no_change`**: troca ou reescrita que devolve as mesmas linhas, ou inserção vazia;
+- **`edits_unbalanced`**: a edição muda o saldo de `{}`, `()` ou `[]` das linhas que troca
+  (por exemplo, apaga a chave que fecha um bloco). Delimitadores dentro de textos contam;
+- **`edits_overlap`**: duas edições nas mesmas linhas.
+
+`claims::edits_diff` devolve o diff unificado das edições que passam: cada trecho da
+evidência é refeito com as suas edições, a reescrita vira o diff mínimo (maior subsequência
+comum, então só aparecem as linhas que de fato mudaram) e cada bloco leva até 3 linhas de
+contexto dos dois lados, dentro do trecho, como o `git apply` exige. Nada é aplicado nem
+compilado. Ausente, a query sai idêntica.
+
+Por que essas operações, segundo o teste real no renderer (23/10/2026, qwen2.5-coder:14b):
+com só `replace` e `insert_after`, o modelo errava por uma linha (pensava em "antes do `}`");
+com `insert_before`, acertava o lugar, mas esquecia vírgulas e apagava variáveis ainda
+usadas; com `rewrite`, reescreveu as quatro declarações quase certas e só perdeu um
+`#[derive(...)]`, que o diff mínimo mostra na primeira linha.
 
 ### Cercas de Markdown
 

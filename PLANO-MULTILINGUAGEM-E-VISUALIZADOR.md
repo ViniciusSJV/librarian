@@ -817,7 +817,31 @@ Formas de uso que o perfil v3 **não registra**, e que fazem a vista mostrar men
 - Python: argumentos nomeados (`User(email=...)`, comum em SQLModel e Pydantic), `getattr` e nomes em texto.
 - Nos dois: nomes com mais de 8 homônimos (no renderer, 914 ocorrências, como `new`).
 
-Ausência na vista não prova que ninguém usa. Registrar literais de struct, padrões e argumentos nomeados é extensão possível do v3 em um perfil seguinte.
+Ausência na vista não prova que ninguém usa. Registrar literais de struct, padrões e argumentos nomeados é extensão possível do v3 em um perfil seguinte. Os literais de struct entraram no perfil v4 (veja "G6d-1 — resultado"); padrões e argumentos nomeados continuam fora.
+
+### G6d-1 — contexto do dono — resultado (23/10/2026)
+
+Origem: na cadeia da câmera, nenhum modelo produziu patch, porque guardar `transform.inverse()` em `Camera` mexe na struct e no construtor, e a cadeia passava só `ray_from_pixel`. Decisões do usuário: a expansão é automática (dono, campos lidos e quem escreve neles); o literal de struct entra num perfil v4; a declaração do dono vai inteira.
+
+- **Perfil v4** (`librarian-ingest/0.4.0;…;rust-structural-v3;python-structural-v2`, grafo `rust-python-syntax-graph-v3`), o novo atual. Só o adaptador de Rust muda; v1, v2 e v3 continuam lidos e reproduzíveis. Ocorrências novas, todas candidatas pelo nome:
+  - `struct_literal` (`Camera { .. }`, `Self { .. }`) e `field_init` (cada campo nomeado que o literal preenche, inclusive a forma curta);
+  - `field_assign` (`x.campo = …`, `x.campo += …`), que deixa de ser também `attribute_access`;
+  - `impl_self_type` (o tipo escrito no `impl`, `impl<T> Shape for Sphere<T>` → `Sphere`), que deixa de ser também `type_reference`.
+- **`OwnerSyntax`** no contrato do extractor: que contêiner é o dono (classe em Python) ou o nomeia (`impl` em Rust), o receptor (`self`), os tipos de ocorrência de leitura, escrita e literal. O `owner.rs` aplica a regra sem nomear linguagem e entrou na cerca do `agnostic.rs`.
+- **`prepare`, opção `owner_context`** (só no passo de cadeia, só em edition v4; ausente, o pedido sai idêntico). Para cada target que é método:
+  1. o dono: em Python, a classe que contém o método; em Rust, o tipo com o nome escrito no `impl`, preferindo o do mesmo arquivo; homônimos em outros arquivos deixam o dono sem escolha, com nota;
+  2. os campos que o método lê (`self.<campo>`, só campos do dono);
+  3. quem escreve esses campos: outro método do mesmo dono por `self.<campo> = …`, ou um literal do tipo (`Camera { campo: .. }`, ou `Self { .. }` num `impl` dele).
+
+  As declarações entram depois dos targets, no máximo 8 (`truncated` acima disso), cada uma como ficha E com o motivo e as linhas da ligação. Escritas por outro receptor (`camera.transform = …`) não entram, porque o tipo do receptor é desconhecido; são contadas e listadas (até 20) no `search.json` (`owner_context`) e citadas em `unknowns`.
+- **Studio:** a cadeia liga o contexto do dono sozinha quando a edition é v4 (`chain.owner_context` no `question.json`). A faixa da cadeia ganha **contexto do dono**, com o que entrou, por quê e quantas escritas não foram seguidas. A vista Caminho nomeia os usos novos (escreve, preenche, constrói, implementa).
+- **Modelfiles:** o `performance` explica que uma mudança com campo novo usa um bloco `@@` por declaração; `performance-qwen` é o mesmo SYSTEM com o qwen, para comparar.
+
+Verificação: `tests/g6d.rs` (ocorrências novas e o v3 sem elas; `s.transform += 1.0` casando os dois campos `transform` sem escolher; "Onde é usado?" de `Camera` mostrando o `impl` e o literal; contexto do dono com tipo, `new` pelo literal `Self`, `with_transform` pela atribuição e `scene` pelo literal `Camera { .. }`, nessa ordem; `with_depth` fora, porque escreve campo que o método não lê; `Sphere::set` fora, porque o `self` é de outro tipo; as duas escritas por outro receptor contadas; Python com a classe inteira; recusas em edition v3 e fora da cadeia; método livre sem acréscimo). O teste do studio confere `chain.owner_context` e o dono na cadeia. Os testes da G6 passaram a gerar com o perfil v3. Workspace com 134 aprovados e 1 ignorado.
+
+Conferência no renderer real (edition v4 no scratchpad, sem LLM): a cadeia de `ray_from_pixel` levou `Camera` (24–34, campos lidos `half_height`, `half_width`, `pixel_size`, `transform`), `Camera::new` (literal `Self { .. }`, linhas 57–60) e `Camera::with_transform` (linha 66). Ficaram de fora, contadas, 32 escritas `x.transform = …` dos `bin/cap*.rs`, todas de formas (`transform` tem 14 homônimos). Um patch montado à mão com quatro blocos (campo `inverse_transform` na struct, preenchido em `new` e em `with_transform`, usado na linha 82) passou na conferência mecânica contra essa evidência. Sem o contexto do dono, o mesmo patch cairia em `patch_outside_evidence`. Falta ver se um modelo local chega lá (roteiro de teste do usuário).
+
+Limites: tudo é pelo nome escrito. O dono em Rust é o tipo com o nome do `impl`, não o tipo resolvido; um `impl` de trait conta igual. Escritas por outro receptor, por referência mutável devolvida (`fn transform_mut(&mut self) -> &mut Matrix`), em macros e em padrões não são vistas. Em Python a classe inteira entra como dono, então classes grandes pesam no contexto. Campos com mais de 8 homônimos ainda aparecem no contexto do dono, porque a regra usa `self.<campo>` e o tipo do `impl`, não as arestas candidatas.
 
 ## G7 — Infraestrutura como código (planejado em 21/10/2026)
 

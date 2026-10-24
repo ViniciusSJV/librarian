@@ -133,7 +133,7 @@ assinatura. Envios feitos antes dele não têm `link`.
 
 | Opção | O que faz |
 | --- | --- |
-| Nenhum (só preparar para copiar) | Não envia. Abre a `query.json` exata; **Copiar query** leva para a área de transferência. |
+| Nenhum (só preparar para copiar) | Não envia. Abre a `query.json` exata; **Copiar query** leva para a área de transferência. Em claims, a caixa **Resposta colada** recebe a resposta trazida de fora: a pergunta é reconferida, a resposta é ligada à query pelo hash e passa pela mesma conferência mecânica. Aparece como "Resposta colada", porque o studio não sabe quem a escreveu. |
 | Ollama (Modelfile) | Copia o Modelfile para a pasta do envio, roda `ollama create librarian-<nome>` e envia ao Ollama em `127.0.0.1:11434`. |
 | Claude (Claude Code CLI) | `claude -p` com a sua sessão do Claude Code, sem ferramentas, sem MCP e sem sessão salva. Modelo `sonnet`, `opus` ou `haiku`. O `SYSTEM` do Modelfile escolhido vira o system prompt. Cobra pela sua conta, e o custo aparece na resposta. |
 | Claude (API), DeepSeek | Listados como "em breve"; ainda não enviam. |
@@ -195,11 +195,15 @@ Depois do envio, a resposta passa pela **conferência mecânica**:
   começar na linha da declaração, ou cobrir todo o corpo, é recusado, exceto em funções
   ou corpos de uma linha. Também vale só para as perguntas novas.
 - com **Claims: permitir patch numa HYPOTHESIS** (opção do projeto, gravada com cada
-  pergunta, junto com **permitir HYPOTHESIS**), uma hipótese pode trazer um diff
-  unificado da mudança proposta. O diff precisa partir do texto real das linhas entregues,
-  ficar dentro delas e citar cada linha que remove. Ele aparece em **Patch proposto** e
-  nunca é aplicado: nada é escrito no projeto, e encaixar não prova que ficou mais rápido.
-  É a etapa de performance da cadeia, com o Modelfile `performance`.
+  pergunta, junto com **permitir HYPOTHESIS**), uma hipótese pode trazer a mudança
+  proposta como **edições de linhas** (`edits`: troque as linhas X–Y por estas, insira
+  depois da linha Z). As edições precisam ficar dentro das linhas entregues, citar cada
+  linha que trocam e não se sobrepor. O studio monta o diff, mostra em **Mudança
+  proposta** e grava `patch-<id>.diff` na pasta do envio, para você aplicar com
+  `git apply` numa branch do projeto. O studio nunca aplica nada, e encaixar não prova que
+  compila nem que ficou mais rápido. É a etapa de performance da cadeia, com os Modelfiles
+  `performance` (DeepSeek) e `performance-qwen`. As perguntas feitas antes desta mudança
+  continuam com o diff unificado (`patch`), conferido como antes.
 
 A resposta mostra **Mecânica: aprovada** ou **recusada**, com os problemas por claim (cada um com uma frase simples e um **?** que explica), e a
 lista de claims com location e citações. A resposta bruta fica em **Resposta bruta**. Se
@@ -251,12 +255,19 @@ próxima pergunta. O studio cria uma pergunta nova e a envia como as outras:
   como fichas F (autoria "revisão humana no Librarian Studio"), com os trechos conferidos
   contra a edition. No formato claims, eles aparecem em `evidence.reviewed_facts`, com a
   instrução de que orientam a resposta, mas não são citáveis.
+- **Contexto do dono** (grafo gerado no perfil v4): quando a declaração é um método, entram
+  também o tipo dono (a struct com o nome do `impl`, ou a classe que contém o método em
+  Python) e os métodos que escrevem os campos que esse método lê (por `self.campo = …` ou
+  por um literal do tipo, como `Self { campo: .. }`). Assim uma etapa de performance vê
+  onde guardar um valor num campo novo. No máximo 8 declarações. Escritas por outra
+  variável (`camera.transform = …`) não entram, porque o tipo dela não é conhecido; a faixa
+  diz quantas foram.
 - **O que não passa:** o texto das respostas anteriores. Elas ficam ligadas por hash
   (`chain` no `question.json`: pergunta de origem, envios, itens usados, hash da resposta,
   declarações e fatos).
 
 A pergunta nova mostra a faixa **cadeia ← NN** com a evidência, os fatos e as respostas
-usadas, e pode ser continuada de novo. No teste real, o DeepSeek copiou um fato revisado
+usadas (e, no v4, a faixa **contexto do dono**), e pode ser continuada de novo. No teste real, o DeepSeek copiou um fato revisado
 como resposta, com a função inteira como operação, e a conferência mecânica recusou.
 
 ### Comparar respostas
@@ -303,7 +314,9 @@ diante, até a **profundidade** escolhida (padrão 2).
   **só usos sem homônimos** tira as linhas tracejadas.
 - Há um teto de 120 pontos; acima dele, a vista avisa.
 
-Exige um grafo gerado com o perfil v3 (desde a G6). É um mapa de candidatos pelo nome
+Exige um grafo gerado com o perfil v3 ou v4 (desde a G6). No v4, também aparecem quem
+constrói o tipo (`Camera { .. }`), quem preenche ou escreve um campo (`self.transform = …`)
+e o `impl` que implementa o tipo. É um mapa de candidatos pelo nome
 escrito, não um grafo de chamadas resolvido.
 
 **Quando não aparece nada, ou aparece menos do que existe:**
@@ -313,9 +326,9 @@ escrito, não um grafo de chamadas resolvido.
   e a inspeção da ocorrência mostra a contagem;
 - os filtros esconderam os usos (a vista avisa quantos);
 - o uso está escrito numa forma que ainda não é registrada: em Rust, dentro de macros
-  (`assert_eq!`, `println!`), em literais (`Vehicle { placa: x }`) e padrões, e usos de
-  constantes e variantes de enum; em Python, argumentos nomeados (`User(email=...)`) e
-  `getattr`;
+  (`assert_eq!`, `println!`), em padrões, e usos de constantes e variantes de enum (os
+  literais, como `Vehicle { placa: x }`, só a partir do perfil v4); em Python, argumentos
+  nomeados (`User(email=...)`) e `getattr`;
 - o nome não aparece escrito em outro lugar, ou só em outra linguagem.
 
 **Ausência na vista não prova que ninguém usa.**
