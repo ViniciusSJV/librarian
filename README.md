@@ -119,6 +119,8 @@ registrado e a avaliação pendente. Os detalhes estão no [STUDIO.md](STUDIO.md
   - Python entrou só por extractor e pelo perfil v2 (G5), testado com o TheAlgorithms/Python (1.608 arquivos).
   - Perfil v3 (G6): campos são símbolos, e acessos, chamadas e heranças viram candidatos
     pelo nome. O studio mostra **Onde é usado?** na vista Caminho, em camadas.
+  - Perfil v4 (G6d): em Rust, literais de struct, escritas de campo e o tipo do `impl`.
+    Na cadeia, um método leva junto o tipo dono e quem escreve os campos que ele lê.
 - **LLM Engine:** o transporte funciona e preserva tudo. A explicação **ainda não está
   aprovada**. Com o contexto numerado (fase L, passo 1), a resposta da câmera cita a
   linha 86 do arquivo, onde antes citava "linha 11", a posição no trecho. Foi uma

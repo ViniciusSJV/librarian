@@ -72,13 +72,22 @@ Saída 0 indica candidatos sem diagnósticos; 2, nenhum candidato ou diagnóstic
 registra o padrão de uma variável local. `call_observed` e `method_call_observed`
 registram expressões, sem resolver destino/receptor ou comprovar execução.
 
-No perfil v3 (G6, o atual), campos também são símbolos (`field`: struct nomeada em Rust;
+No perfil v3 (G6), campos também são símbolos (`field`: struct nomeada em Rust;
 corpo da classe e `self.<nome>` no `__init__` em Python), e há duas ocorrências novas:
 `attribute_access` (`a.b`, leitura ou escrita) e `base_class` (base escrita numa classe
 Python). Acessos, chamadas e bases ganham `name_candidate` para campos, funções/métodos e
 classes de mesmo nome. Acima de 8 declarações candidatas, nenhuma ligação é desenhada e o
 nó da ocorrência guarda `ambiguous_candidates` com a contagem. Os perfis v1 e v2 continuam
 lidos e reproduzíveis sem nada disso.
+
+No perfil v4 (G6d, o atual), o adaptador de Rust registra também `struct_literal`
+(`Camera { .. }`, `Self { .. }`), `field_init` (cada campo nomeado que o literal preenche),
+`field_assign` (`x.campo = …` e `x.campo += …`, que deixam de ser `attribute_access`) e
+`impl_self_type` (o tipo escrito no `impl`, que deixa de ser `type_reference`). Literais e
+`impl` são candidatos a struct, enum, union e type; campos preenchidos e escritos, a
+campos. O Python continua com o adaptador do v3. No passo de cadeia, o `prepare` usa essas
+ocorrências para o contexto do dono (`owner_context`): o tipo dono de um método e quem
+escreve os campos que ele lê, registrados em `owner_context` no relatório `chain-step-v1`.
 
 Referências a tipos ganham ligações `name_candidate` para declarações homônimas,
 inclusive múltiplas e entre arquivos. Elas são candidatas lexicais, não resolução

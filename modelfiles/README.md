@@ -8,8 +8,9 @@ escolha de quem pergunta, não do núcleo. Cada arquivo `<nome>.Modelfile` apare
 | --- | --- |
 | `analista.Modelfile` | Explica somente as evidências selecionadas (FACT, LACUNA; inferência e hipótese só quando pedidas). |
 | `lexico.Modelfile` | Propõe grupos de sinônimos para o léxico (**Sugerir léxico** no studio); contexto maior, saída só em JSON. |
-| `verificavel.Modelfile` | Responde no formato **claims**: só o JSON pedido, com cada item carregando a própria prova (declaração e operação citadas em cada item). O `analista` foi escrito para prosa. |
-| `performance.Modelfile` | Etapa de performance em claims, com `deepseek-coder-v2:16b`: o que o código faz hoje como FACT e cada mudança como HYPOTHESIS com `patch` e plano de medição. Exige **permitir HYPOTHESIS** e **permitir patch** no projeto. |
+| `verificavel.Modelfile` | Responde no formato **claims**: só o JSON pedido, com cada item carregando a própria prova (declaração e operação citadas em cada item), com um exemplo completo da forma. O `analista` foi escrito para prosa. |
+| `performance.Modelfile` | Etapa de performance em claims, com `deepseek-coder-v2:16b`: cada mudança como HYPOTHESIS com edições de linhas (`edits`) e plano de medição, com um exemplo completo da forma. Exige **permitir HYPOTHESIS** e **permitir patch** no projeto. |
+| `performance-qwen.Modelfile` | O `performance` com `qwen2.5-coder:14b`, com o mesmo SYSTEM e parâmetros, para comparar os dois modelos na mesma etapa. |
 | `verificavel-deepseek.Modelfile` | O `verificavel` com `deepseek-coder-v2:16b` no lugar do qwen, com o mesmo SYSTEM e parâmetros, para comparar modelos. Exige `ollama pull deepseek-coder-v2:16b`. |
 
 - **Ollama:** o studio cria o modelo `librarian-<nome>` com `ollama create` a cada envio e
