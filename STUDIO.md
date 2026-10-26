@@ -279,6 +279,11 @@ próxima pergunta. O studio cria uma pergunta nova e a envia como as outras:
   onde guardar um valor num campo novo. No máximo 8 declarações. Escritas por outra
   variável (`camera.transform = …`) não entram, porque o tipo dela não é conhecido; a faixa
   diz quantas foram.
+- **O que ele chama** (perguntas novas, com o contexto do dono): cada declaração também
+  traz as que ela chama quando a chamada tem uma só declaração com esse nome, ou uma no
+  mesmo bloco pelo próprio receptor (`self.is_invertible()`), como em **O que ele chama?**.
+  Homônimos ficam de fora. Entram no mesmo limite de 8. Sem isso, uma mudança em `inverse`
+  não via o que `is_invertible` faz, e o modelo respondeu com uma lacuna.
 - **O que não passa:** o texto das respostas anteriores. Elas ficam ligadas por hash
   (`chain` no `question.json`: pergunta de origem, envios, itens usados, hash da resposta,
   declarações e fatos).
@@ -401,6 +406,36 @@ repetição: um hash só quer dizer o mesmo conteúdo em todas.
 
 Um tempo medido vale para aquela máquina, com o que mais estiver rodando nela. Ele não
 prova a causa de uma diferença.
+
+**Rodar com uma mudança.** Embaixo de cada mudança proposta que passou na conferência
+(a do formato claims com edições), cada comando aprovado ganha o botão **Rodar «comando»
+com esta mudança**. O diff que o Librarian derivou das edições é aplicado com `git apply`
+numa cópia separada, no mesmo commit; a cópia da linha de base não muda, e as fontes que a
+mudança não toca continuam conferidas contra a edition. A execução guarda qual mudança
+rodou (pergunta, envio, item, sha256 do diff e arquivos) e se compara com a **última linha
+de base** do mesmo comando nesta edition:
+
+- para cada número: a mediana antes e depois, a variação em %, e se as faixas (mínimo a
+  máximo) **se sobrepõem**, ou seja, se a diferença cabe na variação entre repetições;
+- para cada arquivo em `outputs`: o mesmo conteúdo da linha de base, ou diferente.
+
+Faixas separadas não provam a causa, e faixas sobrepostas não provam que não há diferença.
+Para comparar sem a deriva da máquina, alterne linha de base e mudança, como no teste real:
+uma primeira comparação deu −4%, que intercalada virou −1%, dentro da variação.
+
+### Pergunta com declarações juntadas
+
+No inspetor, **Juntar à pergunta** acrescenta a declaração selecionada a uma lista, que
+aparece acima dele. **Perguntar com estas declarações** cria uma pergunta só, com todas
+como evidência, na ordem em que foram juntadas: nada é buscado e nada é acrescentado (nem
+o contexto do dono). A pergunta mostra a faixa **juntadas (N)**, e o `search.json` diz
+"Gathered step". Até 16 declarações.
+
+Serve para uma mudança que o grafo não liga pelo nome: guardar a inversa de cada objeto no
+`World` precisou da struct, de `new`, de `default`, de `intersect_world`, do método do trait
+que calcula a inversa, do `transform` do `Object` e da struct `Matrix`. Faltando `default`
+e `Matrix`, a mudança não compilou; com elas, passou nos 210 testes do renderer, com a
+imagem idêntica e o render cerca de 30% mais rápido.
 
 ### 5. Modelfiles
 

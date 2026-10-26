@@ -232,7 +232,12 @@ sobre `project_instructions` que proíbem propor alterações. Códigos:
 - **`edits_no_change`**: troca ou reescrita que devolve as mesmas linhas, ou inserção vazia;
 - **`edits_unbalanced`**: a edição muda o saldo de `{}`, `()` ou `[]` das linhas que troca
   (por exemplo, apaga a chave que fecha um bloco). Delimitadores dentro de textos contam;
-- **`edits_overlap`**: duas edições nas mesmas linhas.
+- **`edits_overlap`**: duas edições nas mesmas linhas;
+- **`edits_rewrite_not_whole_declaration`**: com registros de símbolo na evidência, um
+  `rewrite` precisa terminar na última linha de uma declaração e começar nela ou nos
+  atributos acima. O qwen reescreveu só a assinatura de `normal_at` com o corpo novo: o
+  corpo antigo ficou depois, os delimitadores empataram, e o código não compilou. Sem
+  registros de símbolo, a regra não se aplica.
 
 `claims::edits_diff` devolve o diff unificado das edições que passam: cada trecho da
 evidência é refeito com as suas edições, a reescrita vira o diff mínimo (maior subsequência
