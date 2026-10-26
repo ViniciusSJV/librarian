@@ -11,13 +11,36 @@ use std::collections::BTreeSet;
 /// How many of the most frequent code terms go into the request.
 pub const TERMS: usize = 80;
 
+/// Languages a lexicon request can ask the question words in.
+pub const LANGUAGES: [&str; 2] = ["pt", "en"];
+
 /// The query sent to the LLM, in the shape the transports accept (question, evidence, instructions).
-pub fn request(catalog: &Catalog, current: &Lexicon) -> Value {
+/// `language` is the language of the proposed question words, and of the query itself.
+pub fn request(catalog: &Catalog, current: &Lexicon, language: &str) -> Value {
     let terms: Vec<Value> = vocabulary(catalog)
         .into_iter()
         .take(TERMS)
         .map(|(term, symbols)| json!({ "term": term, "symbols": symbols }))
         .collect();
+    if language == "en" {
+        return json!({
+            "question": "Propose synonym groups for this project's search lexicon: English words a person would use in a question, each group linked to terms that exist in the code.",
+            "evidence": {
+                "code_terms": terms,
+                "current_lexicon": current,
+                "scope": "code_terms are tokens of the names declared in the code, with how many symbols use them. They do not describe behavior.",
+            },
+            "instructions": [
+                "Answer only with a JSON object, without Markdown: {\"groups\": [[\"word\", \"synonym\", \"code_term\"], ...]}.",
+                "Each group must contain at least one term copied exactly from evidence.code_terms[].term and at least one English word that is not a code term.",
+                "Use single words, without spaces, hyphens or underscores. Include singular and plural when it makes sense (ray, rays).",
+                "Propose at most 40 groups, starting with the most important concepts of the domain.",
+                "Do not repeat a word in two groups, nor words already in current_lexicon.",
+                "Propose only synonyms with the same meaning. Do not invent code terms or group different concepts.",
+                "Prefer code terms that name domain concepts; ignore generic names such as get, set, self, test, init.",
+            ]
+        });
+    }
     json!({
         "question": "Proponha grupos de sinônimos para o léxico de busca deste projeto: palavras em português que uma pessoa usaria numa pergunta, cada grupo ligado a termos que existem no código.",
         "evidence": {

@@ -164,7 +164,9 @@ fn route(app: &App, req: &Request) -> Result<Response> {
                 return Ok(Response::error(501, format!("Provedor sem envio implementado: {provider}")));
             }
             let choice = choice(store, &body)?;
-            ok(store.suggest_lexicon(&field(&body, "key")?, &field(&body, "run")?, &provider, choice)?)
+            // The language of the proposed words; the page takes it from the Modelfile name (-en).
+            let language = body["language"].as_str().unwrap_or("pt");
+            ok(store.suggest_lexicon(&field(&body, "key")?, &field(&body, "run")?, &provider, language, choice)?)
         }
         ("POST", "/api/lexicon/check") => {
             let body = req.json()?;

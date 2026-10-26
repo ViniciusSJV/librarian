@@ -469,11 +469,14 @@ impl Store {
 
     /// Asks an LLM for lexicon groups over the edition's code vocabulary and checks them.
     /// `provider: manual` only writes and returns the request, for a pasted answer later.
-    pub fn suggest_lexicon(&self, key: &str, run: &str, provider: &str, send: crate::llm::Choice) -> Result<Value> {
+    pub fn suggest_lexicon(&self, key: &str, run: &str, provider: &str, language: &str, send: crate::llm::Choice) -> Result<Value> {
+        if !crate::lexicon::LANGUAGES.contains(&language) {
+            return Err(format!("Idioma do léxico desconhecido: {language}").into());
+        }
         let settings = self.settings(key)?;
         let catalog = Catalog::load(&self.edition(key, run)?)?;
         let (id, dir) = reserve(&self.project_dir(key)?.join("lexicon"), &stamp())?;
-        let request = crate::lexicon::request(&catalog, &settings.lexicon);
+        let request = crate::lexicon::request(&catalog, &settings.lexicon, language);
         let mut bytes = serde_json::to_vec_pretty(&request)?;
         bytes.push(b'\n');
         fs::write(dir.join("query.json"), &bytes)?;
@@ -1299,11 +1302,18 @@ mod tests {
         let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
 
         // Manual: the request is written and returned; nothing is sent.
-        let manual = store.suggest_lexicon(&key, &run, "manual", crate::llm::Choice {
+        let manual = store.suggest_lexicon(&key, &run, "manual", "pt", crate::llm::Choice {
             modelfile: None, modelfile_name: None, claude_model: None }).unwrap();
         let query: Value = serde_json::from_str(manual["query"].as_str().unwrap()).unwrap();
         let terms: Vec<_> = query["evidence"]["code_terms"].as_array().unwrap().iter().map(|t| t["term"].clone()).collect();
         assert!(terms.contains(&json!("camera")) && terms.contains(&json!("pixel")));
+        // In English the same code terms go with a request for English words; others are refused.
+        let none = || crate::llm::Choice { modelfile: None, modelfile_name: None, claude_model: None };
+        let english = store.suggest_lexicon(&key, &run, "manual", "en", none()).unwrap();
+        let english: Value = serde_json::from_str(english["query"].as_str().unwrap()).unwrap();
+        assert!(english["question"].as_str().unwrap().contains("English words"));
+        assert_eq!(english["evidence"]["code_terms"], query["evidence"]["code_terms"]);
+        assert!(store.suggest_lexicon(&key, &run, "manual", "fr", none()).is_err());
 
         let answer = "Aqui está:\n```json\n{\"groups\": [[\"raio\", \"raios\", \"ray\"], [\"banco\", \"dados\"], \
             [\"duas palavras\", \"câmera\", \"camera\"], [\"ray\", \"feixe\"]]}\n```";

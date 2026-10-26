@@ -56,7 +56,9 @@ próximas perguntas e são guardadas no `.studio` (o `librarian.json` do projeto
 
 1. O Librarian tira da edition, sem LLM, os 80 termos mais frequentes nos nomes do código.
 2. O LLM escolhido na Conversa propõe até 40 grupos de palavras em português. No Ollama,
-   o studio usa o Modelfile `lexico` sozinho. Com **Nenhum**, o pedido aparece para copiar, e a resposta de
+   o studio usa o Modelfile `lexico` sozinho, a menos que outro `lexico-…` esteja escolhido. Se o nome
+   do Modelfile termina em `-en` (por exemplo `lexico-deepseek-en`), o pedido vai em inglês e pede
+   palavras em inglês. Com **Nenhum**, o pedido aparece para copiar, e a resposta de
    qualquer LLM pode ser colada em **Conferir resposta**.
 3. Cada grupo é conferido. Ele é recusado se tiver menos de duas palavras, se nenhuma
    palavra existir no código ou se as palavras não forem únicas; palavras já usadas
