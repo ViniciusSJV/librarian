@@ -697,4 +697,15 @@ fn a_rewrite_restates_a_declaration_and_shows_only_what_changed() {
     let mut same = r.clone();
     same["claims"][0]["edits"][0]["new_lines"] = json!(["    fn ray(&self) -> f64 {", "        1.0 / self.m", "    }"]);
     assert_eq!(codes(&c, &same), ["edits_no_change"]);
+    // With the caller's symbol records, a rewrite must end where the declaration ends. A local
+    // model rewrote only the signature line with the new body: the old body stayed after it,
+    // the delimiters still balanced, and the change did not compile.
+    let mut v = serde_json::to_value(&c).unwrap();
+    v["evidence"][1]["symbols"] = json!([{"name": "ray", "declaration_line": 10, "name_column": 8, "end_line": 12}]);
+    let located: Context = serde_json::from_value(v).unwrap();
+    assert_eq!(codes(&located, &r), Vec::<String>::new());
+    let mut short = r.clone();
+    short["claims"][0]["edits"][0]["end_line"] = json!(10);
+    short["claims"][0]["edits"][0]["new_lines"] = json!(["    fn ray(&self) -> f64 {", "        self.inv"]);
+    assert_eq!(codes(&located, &short), ["edits_rewrite_not_whole_declaration"]);
 }

@@ -179,7 +179,12 @@ fn route(app: &App, req: &Request) -> Result<Response> {
         }
         ("POST", "/api/commands/run") => {
             let body = req.json()?;
-            ok(store.execute(&field(&body, "key")?, &field(&body, "run")?, &field(&body, "name")?)?)
+            // With `change` ({turn, send, claim}), the run is in a copy with that answer's diff applied.
+            let change: Option<execution::ChangeRef> = match body.get("change") {
+                Some(c) if !c.is_null() => Some(serde_json::from_value(c.clone())?),
+                _ => None,
+            };
+            ok(store.execute(&field(&body, "key")?, &field(&body, "run")?, &field(&body, "name")?, change.as_ref())?)
         }
         ("GET", "/api/executions") => ok(json!(store.executions(param("key")?, param("run")?)?)),
         ("DELETE", "/api/turn") => {

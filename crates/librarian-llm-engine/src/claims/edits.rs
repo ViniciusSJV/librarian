@@ -58,6 +58,15 @@ fn place<'c>(context: &'c Context, edit: &Edit) -> Result<Vec<&'c str>, &'static
         .collect())
 }
 
+/// A rewrite restates a whole declaration, so it ends on the last line of one the caller's
+/// symbols mark, and starts on its declaration line or above it (its attributes). Rewriting
+/// only the first lines would leave the old body after the new one. Evidence without symbol
+/// records gives nothing to compare, and the rule does not apply.
+fn whole_declaration(context: &Context, edit: &Edit) -> bool {
+    let symbols: Vec<_> = context.evidence.iter().filter(|e| e.path == edit.path).flat_map(|e| &e.symbols).collect();
+    symbols.is_empty() || symbols.iter().any(|s| edit.start_line <= s.declaration_line && edit.end_line == s.end_line)
+}
+
 pub(super) fn check(context: &Context, claim: &Claim) -> Vec<&'static str> {
     let Some(edits) = &claim.edits else { return vec![] };
     if !context.allow_edits {
@@ -93,6 +102,9 @@ pub(super) fn check(context: &Context, claim: &Claim) -> Vec<&'static str> {
             }
             if old == edit.new_lines.iter().map(String::as_str).collect::<Vec<_>>() {
                 push("edits_no_change");
+            }
+            if edit.op == "rewrite" && !whole_declaration(context, edit) {
+                push("edits_rewrite_not_whole_declaration");
             }
         } else if edit.new_lines.is_empty() {
             push("edits_no_change");

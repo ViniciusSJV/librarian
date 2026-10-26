@@ -444,6 +444,18 @@ const STRINGS = {
   'executions.output': ['Saída da última repetição (código {code}{timeout})', 'Output of the last repetition (code {code}{timeout})'],
   'executions.timedOut': [', estourou o tempo', ', timed out'],
   'executions.lineEndings': ['{n} fonte(s) diferem da edition só no fim de linha (CRLF/LF), o mesmo texto: {list}', '{n} source(s) differ from the edition only in line endings (CRLF/LF), the same text: {list}'],
+  'edits.run': ['Rodar {name} com esta mudança', 'Run {name} with this change'],
+  'edits.runInfo': ['Aplica esta mudança numa cópia separada, no commit da edition (a sua pasta não muda), roda o comando aprovado e compara com a última linha de base dele.', 'Applies this change in a separate copy, at the edition\'s commit (your folder does not change), runs the approved command and compares with its latest baseline.'],
+  'edits.noCommands': ['Aprove um comando no painel Execução para medir esta mudança.', 'Approve a command in the Execution panel to measure this change.'],
+  'executions.change': ['com a mudança da pergunta {turn}, envio {send}, item {claim} · arquivos: {files}', 'with the change of question {turn}, send {send}, item {claim} · files: {files}'],
+  'executions.baseline': ['linha de base (sem mudança)', 'baseline (no change)'],
+  'executions.compare': ['{name}: {base} → {median} {unit} ({pct}) · {verdict}', '{name}: {base} → {median} {unit} ({pct}) · {verdict}'],
+  'executions.overlap': ['as faixas se sobrepõem: diferença dentro da variação das repetições', 'ranges overlap: difference within the repetitions\' variation'],
+  'executions.apart': ['as faixas não se sobrepõem', 'ranges do not overlap'],
+  'executions.compareTo': ['Comparada com a execução {id}', 'Compared with execution {id}'],
+  'executions.same': ['{path}: o mesmo conteúdo da linha de base', '{path}: the same content as the baseline'],
+  'executions.different': ['{path}: conteúdo DIFERENTE da linha de base', '{path}: content DIFFERENT from the baseline'],
+  'executions.unstable': ['{path}: o conteúdo variou entre repetições; sem comparação', '{path}: content varied across repetitions; no comparison'],
   'executions.outputSame': ['{path}: mesmo conteúdo em todas as repetições, sha256 {sha}', '{path}: same content in every repetition, sha256 {sha}'],
   'executions.outputDiffers': ['{path}: {n} conteúdos diferentes entre as repetições', '{path}: {n} different contents across repetitions'],
   'executions.outputMissing': ['{path}: o comando não escreveu o arquivo', '{path}: the command did not write the file'],
@@ -2090,6 +2102,9 @@ const ISSUES = {
   edits_no_change: {
     pt: ['edição que não muda nada', 'O replace devolve as mesmas linhas, ou o insert_after não insere nada.'],
     en: ['an edit that changes nothing', 'The replace gives back the same lines, or the insert_after inserts nothing.'] },
+  edits_rewrite_not_whole_declaration: {
+    pt: ['reescreveu só o começo da declaração', 'Um rewrite reescreve a declaração inteira: termina na última linha dela (a que o catálogo marca) e começa na declaração ou nos atributos acima. Reescrever só a primeira linha deixa o corpo antigo depois do novo, e o código não compila.'],
+    en: ['rewrote only the start of the declaration', 'A rewrite restates the whole declaration: it ends on its last line (the one the catalog marks) and starts at the declaration or the attributes above it. Rewriting only the first line leaves the old body after the new one, and the code does not compile.'] },
   edits_overlap: {
     pt: ['edições sobrepostas', 'Duas edições mexem nas mesmas linhas. Cada linha só pode ser trocada uma vez; junte as duas numa edição.'],
     en: ['overlapping edits', 'Two edits touch the same lines. Each line may only be replaced once; merge the two into one edit.'] },
@@ -2151,7 +2166,7 @@ const UNKNOWN_ISSUE = {
 };
 
 // Proposed line edits: the derived diff when they pass, otherwise the edits as written.
-function editsView(k, diff, s) {
+function editsView(k, diff, s, turn) {
   const opName = op => STRINGS[`edits.${op}`] ? t(`edits.${op}`) : op;
   const written = k.edits.map(e => `${opName(e.op)} ${e.path}:${e.start_line}${e.end_line !== e.start_line ? `–${e.end_line}` : ''}\n${e.new_lines.map(l => `  + ${l}`).join('\n') || t('edits.delete')}`).join('\n\n');
   if (!diff) {
@@ -2162,7 +2177,29 @@ function editsView(k, diff, s) {
     el('summary', { textContent: t('edits.passed', { n: k.edits.length }) }),
     el('pre', { textContent: diff }),
     file ? el('div', { className: 'muted mono', textContent: t('edits.apply', { file }) }) : null,
-    helpButton(t('help.edits')));
+    helpButton(t('help.edits')),
+    s && turn ? runWithChange(k, s, turn) : null);
+}
+
+// P4: the approved commands, each run in a copy with this claim's diff applied.
+function runWithChange(k, s, turn) {
+  const approved = (studio.commands ?? []).filter(c => c.approved);
+  const note = el('div', { className: 'muted' });
+  const buttons = approved.map(c => {
+    const b = el('button', { textContent: t('edits.run', { name: c.name }) });
+    b.addEventListener('click', () => busy(buttons, note, async () => {
+      say(note, t('commands.running', { name: c.name }));
+      const x = await api('POST', '/api/commands/run', { key: studio.project.key, run: studio.run, name: c.name,
+        change: { turn: turn.id, send: s.id, claim: k.id } });
+      note.replaceChildren(executionView(x));
+      await loadCommands();
+    }));
+    return b;
+  });
+  return el('div', { style: 'margin-top: 6px' },
+    approved.length ? el('div', { className: 'row', style: 'gap: 6px' }, ...buttons, helpButton(t('edits.runInfo')))
+      : el('div', { className: 'muted', textContent: t('edits.noCommands') }),
+    note);
 }
 
 // Mechanical verdict and the claims as the checker parsed them; meaning is still for review.
@@ -2183,7 +2220,7 @@ function checkView(c, s, turn) {
     k.premises.length ? el('div', { className: 'muted', textContent: t('check.premises', { list: k.premises.join(' · ') }) }) : null,
     k.verification_plan ? el('div', { className: 'muted', textContent: t('check.plan', { plan: k.verification_plan }) }) : null,
     k.patch ? el('details', {}, el('summary', { textContent: t('check.patch') }), el('pre', { textContent: k.patch })) : null,
-    k.edits ? editsView(k, c.diffs?.[k.id], s) : null,
+    k.edits ? editsView(k, c.diffs?.[k.id], s, turn) : null,
     s && turn ? reviewView(k, passed, s, turn) : null);
   return el('div', { style: 'margin-top: 6px' },
     el('div', {},
@@ -2294,28 +2331,45 @@ async function loadCommands() {
       c.outputs?.length ? el('div', { className: 'muted mono', textContent: t('commands.outputs', { list: c.outputs.join(', ') }) }) : null,
       el('div', { className: 'row', style: 'margin-top: 4px; gap: 6px' }, c.approved ? null : approve, runIt));
   };
-  const number = v => typeof v === 'number' ? (Math.abs(v) >= 100 ? v.toFixed(1) : v.toPrecision(4)) : v;
-  const execution = x => {
-    const last = x.runs.at(-1);
-    return el('li', {},
-      el('div', { textContent: t('executions.head', { name: x.name, started: x.started, ok: x.summary.succeeded, attempted: x.summary.attempted,
-        head: (x.git_head ?? '').slice(0, 12), sources: x.sources_verified }) }),
-      el('div', { className: 'mono muted', textContent: x.argv.join(' ') }),
-      x.sources_line_endings_only?.length ? el('div', { className: 'muted', textContent: t('executions.lineEndings', { n: x.sources_line_endings_only.length, list: x.sources_line_endings_only.join(', ') }) }) : null,
-      el('ul', {}, ...Object.entries(x.summary.stats).map(([name, s]) => el('li', { className: 'mono',
-        textContent: t('executions.stat', { name, median: number(s.median), unit: s.unit ?? '', min: number(s.min), max: number(s.max), n: s.n }) })),
-        ...Object.entries(x.summary.outputs ?? {}).map(([path, shas]) => el('li', { className: 'mono',
-          textContent: shas.length === 1 && shas[0] ? t('executions.outputSame', { path, sha: shas[0].slice(0, 16) })
-            : shas.every(s => !s) ? t('executions.outputMissing', { path }) : t('executions.outputDiffers', { path, n: shas.length }) }))),
-      last ? el('details', {}, el('summary', { className: 'muted', textContent: t('executions.output', { code: last.exit_code ?? '?', timeout: last.timed_out ? t('executions.timedOut') : '' }) }),
-        el('pre', { textContent: [last.stdout_tail, last.stderr_tail].filter(Boolean).join('\n---\n') })) : null);
-  };
+  studio.commands = data.commands;
+  const execution = x => el('li', {}, executionView(x));
   $('#commandsList').replaceChildren(
     data.commands.length ? el('ol', { className: 'claims' }, ...data.commands.map(item)) : el('p', { className: 'muted', textContent: t('commands.none') }),
     studio.run ? null : el('p', { className: 'muted', textContent: t('commands.noRun') }), note);
   $('#executionsList').replaceChildren(
     executions.length ? el('div', {}, el('strong', { textContent: t('executions.title') }), el('ol', { className: 'claims' }, ...executions.map(execution))) : '',
     el('p', { className: 'muted', style: 'font-size: 11px', textContent: serverText(data.limits) }));
+}
+
+const number = v => typeof v === 'number' ? (Math.abs(v) >= 100 ? v.toFixed(1) : v.toPrecision(4)) : v;
+
+// One execution: what ran where, its numbers, and how a change compares with its baseline.
+function executionView(x) {
+  const last = x.runs.at(-1);
+  const cmp = x.comparison;
+  const pct = s => s.change_pct == null ? '?' : `${s.change_pct > 0 ? '+' : ''}${s.change_pct}%`;
+  return el('div', {},
+    el('div', { textContent: t('executions.head', { name: x.name, started: x.started, ok: x.summary.succeeded, attempted: x.summary.attempted,
+      head: (x.git_head ?? '').slice(0, 12), sources: x.sources_verified }) }),
+    el('div', { className: 'mono muted', textContent: x.argv.join(' ') }),
+    el('div', { className: x.change ? '' : 'muted', textContent: x.change
+      ? t('executions.change', { turn: x.change.turn, send: x.change.send, claim: x.change.claim, files: x.change.files.join(', ') })
+      : t('executions.baseline') }),
+    x.sources_line_endings_only?.length ? el('div', { className: 'muted', textContent: t('executions.lineEndings', { n: x.sources_line_endings_only.length, list: x.sources_line_endings_only.join(', ') }) }) : null,
+    el('ul', {}, ...Object.entries(x.summary.stats).map(([name, s]) => el('li', { className: 'mono',
+      textContent: t('executions.stat', { name, median: number(s.median), unit: s.unit ?? '', min: number(s.min), max: number(s.max), n: s.n }) })),
+      ...Object.entries(x.summary.outputs ?? {}).map(([path, shas]) => el('li', { className: 'mono',
+        textContent: shas.length === 1 && shas[0] ? t('executions.outputSame', { path, sha: shas[0].slice(0, 16) })
+          : shas.every(s => !s) ? t('executions.outputMissing', { path }) : t('executions.outputDiffers', { path, n: shas.length }) }))),
+    cmp?.baseline ? el('div', { style: 'margin-top: 4px' },
+      el('strong', { textContent: t('executions.compareTo', { id: cmp.baseline }) }),
+      el('ul', {}, ...Object.entries(cmp.stats).map(([name, s]) => el('li', { className: 'mono', textContent: t('executions.compare', {
+        name, base: number(s.baseline_median), median: number(s.median), unit: s.unit ?? '', pct: pct(s),
+        verdict: s.ranges_overlap ? t('executions.overlap') : t('executions.apart') }) })),
+        ...Object.entries(cmp.outputs).map(([path, v]) => el('li', { className: v === 'different' ? 'mono error' : 'mono', textContent: t(`executions.${v}`, { path }) }))))
+      : cmp ? el('div', { className: 'muted', textContent: serverText(cmp.note) }) : null,
+    last ? el('details', {}, el('summary', { className: 'muted', textContent: t('executions.output', { code: last.exit_code ?? '?', timeout: last.timed_out ? t('executions.timedOut') : '' }) }),
+      el('pre', { textContent: [last.stdout_tail, last.stderr_tail].filter(Boolean).join('\n---\n') })) : null);
 }
 
 const helpButton = text => {

@@ -1534,12 +1534,12 @@ mod tests {
         let listed = store.commands(&key).unwrap();
         let sha = listed["commands"][0]["sha256"].as_str().unwrap().to_owned();
         assert_eq!(listed["commands"][0]["approved"], Value::Null);
-        assert!(refusal(store.execute(&key, &run, "probe")).contains("sem aprovação"));
+        assert!(refusal(store.execute(&key, &run, "probe", None)).contains("sem aprovação"));
         assert!(refusal(store.approve_command(&key, "probe", "0")).contains("mudou"));
         assert!(refusal(store.approve_command(&key, "other", &sha)).contains("não declarado"));
         store.approve_command(&key, "probe", &sha).unwrap();
 
-        let done = store.execute(&key, &run, "probe").unwrap();
+        let done = store.execute(&key, &run, "probe", None).unwrap();
         assert_eq!(done["summary"]["succeeded"], 2, "{:#}", done["runs"]);
         assert_eq!(done["summary"]["stats"]["answer"]["median"], 42.0);
         assert_eq!(done["summary"]["stats"]["answer"]["unit"], "units");
@@ -1551,16 +1551,42 @@ mod tests {
         // A declared output is hashed after each repetition; the same bytes give one hash.
         let sha = store.commands(&key).unwrap()["commands"][1]["sha256"].as_str().unwrap().to_owned();
         store.approve_command(&key, "write", &sha).unwrap();
-        let wrote = store.execute(&key, &run, "write").unwrap();
+        let wrote = store.execute(&key, &run, "write", None).unwrap();
         assert_eq!(wrote["summary"]["outputs"]["made.txt"].as_array().unwrap().len(), 1);
-        assert_eq!(wrote["runs"][0]["outputs"]["made.txt"], librarian_ingest::hash(b"x
-"));
+        assert_eq!(wrote["runs"][0]["outputs"]["made.txt"], librarian_ingest::hash(b"x\n"));
+
+        // A change an answer proposes runs in its own copy, compared with the latest baseline.
+        let mut settings = store.settings(&key).unwrap();
+        settings.lexicon.groups = vec![vec!["raios".into(), "ray".into()], vec!["direcao".into(), "direction".into()]];
+        (settings.allow_hypothesis, settings.allow_patch) = (true, true);
+        store.save_settings(&key, &settings).unwrap();
+        let turn = store.ask(&key, &run, "Onde a câmera calcula a direção dos raios?").unwrap()["id"].as_str().unwrap().to_owned();
+        let answer = json!({"schema_version": 1, "claims": [{
+            "id": "H1", "kind": "HYPOTHESIS", "text": "Triplicar no lugar de dobrar.",
+            "citations": [{"evidence_id": "E1", "path": "src/lib.rs", "start_line": 5, "end_line": 5, "quote": "        let direction = x * 2.0;"}],
+            "premises": [], "verification_plan": "Medir antes e depois.", "location": null,
+            "edits": [{"path": "src/lib.rs", "op": "replace", "start_line": 5, "end_line": 5, "new_lines": ["        let direction = x * 3.0;"]}]}]});
+        let sent = record_answer(&store, &key, &run, &turn, "manual", &answer.to_string()).unwrap();
+        let send = Path::new(sent["directory"].as_str().unwrap()).file_name().unwrap().to_string_lossy().into_owned();
+        let change = crate::execution::ChangeRef { turn: turn.clone(), send: send.clone(), claim: "H1".into() };
+        let changed = store.execute(&key, &run, "probe", Some(&change)).unwrap();
+        assert_eq!(changed["change"]["files"], json!(["src/lib.rs"]));
+        assert_eq!(changed["comparison"]["baseline"], store.executions(&key, &run).unwrap()[0]["id"]);
+        assert_eq!(changed["comparison"]["stats"]["answer"]["change_pct"], 0.0);
+        assert_eq!(changed["comparison"]["stats"]["answer"]["ranges_overlap"], true);
+        let changed_copy = Path::new(changed["copy"].as_str().unwrap()).to_path_buf();
+        assert!(fs::read_to_string(changed_copy.join("src/lib.rs")).unwrap().contains("x * 3.0"));
+        assert!(!fs::read_to_string(Path::new(done["copy"].as_str().unwrap()).join("src/lib.rs")).unwrap().contains("x * 3.0"));
+        // The same change again reuses its copy; a claim with no derived change is refused.
+        store.execute(&key, &run, "probe", Some(&change)).unwrap();
+        let none = crate::execution::ChangeRef { turn, send, claim: "C9".into() };
+        assert!(refusal(store.execute(&key, &run, "probe", Some(&none))).contains("não tem mudança derivada"));
 
         // A source that differs only in line endings is the same text, recorded as such.
         let lib = root.join("src/lib.rs");
         fs::write(&lib, fs::read_to_string(&lib).unwrap().replace('\n', "\r\n")).unwrap();
         let crlf = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
-        let same = store.execute(&key, &crlf, "probe").unwrap();
+        let same = store.execute(&key, &crlf, "probe", None).unwrap();
         assert_eq!(same["sources_line_endings_only"], json!(["src/lib.rs"]));
         git(&["checkout", "--", "src/lib.rs"]);
 
@@ -1568,13 +1594,13 @@ mod tests {
         let mut edited = profile.clone();
         edited["commands"]["probe"]["repeat"] = json!(3);
         fs::write(root.join(PROFILE), edited.to_string()).unwrap();
-        assert!(refusal(store.execute(&key, &run, "probe")).contains("sem aprovação"));
+        assert!(refusal(store.execute(&key, &run, "probe", None)).contains("sem aprovação"));
         // An edition read from uncommitted changes has no faithful copy.
         fs::write(root.join("src/lib.rs"), "pub struct Camera;\n").unwrap();
         let dirty = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
         let sha = store.commands(&key).unwrap()["commands"][0]["sha256"].as_str().unwrap().to_owned();
         store.approve_command(&key, "probe", &sha).unwrap();
-        assert!(refusal(store.execute(&key, &dirty, "probe")).contains("difere da edition"));
+        assert!(refusal(store.execute(&key, &dirty, "probe", None)).contains("difere da edition"));
         // Outputs stay inside the copy.
         let mut outside = edited.clone();
         outside["commands"]["write"]["outputs"] = json!(["../x.txt"]);

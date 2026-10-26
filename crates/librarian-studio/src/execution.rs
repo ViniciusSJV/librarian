@@ -136,17 +136,20 @@ impl Store {
     }
 
     /// Runs an approved command in the copy of `run`'s edition and records every repetition.
-    pub fn execute(&self, key: &str, run: &str, name: &str) -> Result<Value> {
+    /// With `change`, the copy is a separate one with that answer's derived diff applied, and
+    /// the record is compared with the latest baseline of the same command.
+    pub fn execute(&self, key: &str, run: &str, name: &str, change: Option<&ChangeRef>) -> Result<Value> {
         let root = PathBuf::from(self.settings(key)?.root);
         let command = declared(&root)?.remove(name).ok_or_else(|| format!("Comando não declarado em {PROFILE}: {name}"))?;
         let sha256 = command.sha256(name);
         let approval = self.approvals(key)?.into_iter().rev().find(|a| a["name"] == name && a["sha256"] == sha256.as_str())
             .ok_or("Comando sem aprovação para esta versão; aprove-o antes de rodar")?;
+        let diff = change.map(|c| self.diff(key, run, c)).transpose()?;
         let _one = RUNNING.lock().map_err(|_| "Uma execução anterior falhou no meio; reinicie o studio")?;
         let edition = self.edition(key, run)?;
         let catalog = Catalog::load(&edition)?;
-        let copy = self.copy(key, run, &root, &edition, &catalog)?;
-        let (_, dir) = crate::store::reserve(&self.run_dir(key, run)?.join("executions"), &format!("{:02}-{name}", self.executions(key, run)?.len() + 1))?;
+        let copy = self.copy(key, run, &root, &edition, &catalog, change.zip(diff.as_deref()))?;
+        let (id, dir) = crate::store::reserve(&self.run_dir(key, run)?.join("executions"), &format!("{:02}-{name}", self.executions(key, run)?.len() + 1))?;
         let started = stamp();
         let mut runs = vec![];
         for index in 1..=command.repeat {
@@ -157,8 +160,8 @@ impl Store {
                 break;
             }
         }
-        let record = json!({
-            "format_version": 1, "name": name, "argv": command.argv, "timeout_s": command.timeout_s,
+        let mut record = json!({
+            "format_version": 1, "id": id, "name": name, "argv": command.argv, "timeout_s": command.timeout_s,
             "repeat": command.repeat, "outputs": command.outputs, "command_sha256": sha256, "approved": approval["approved"],
             "edition": format!("edition:{}", hash(&serde_json::to_vec(catalog.manifest())?)),
             "git_head": copy.head, "copy": display(&copy.dir), "sources_verified": copy.verified,
@@ -166,40 +169,89 @@ impl Store {
             "machine": machine(), "started": started, "finished": stamp(),
             "runs": runs, "summary": summary(&runs), "limits": LIMITS,
         });
+        if let (Some(c), Some(diff)) = (change, &diff) {
+            record["change"] = json!({ "turn": c.turn, "send": c.send, "claim": c.claim,
+                "diff_sha256": hash(diff.as_bytes()), "files": copy.touched });
+            let baseline = self.executions(key, run)?.into_iter().rev()
+                .find(|x| x["name"] == name && x["command_sha256"] == sha256.as_str() && x["change"].is_null() && x["summary"]["succeeded"].as_u64() > Some(0));
+            record["comparison"] = match baseline {
+                Some(b) => compare(&b, &record),
+                None => json!({ "baseline": null, "note": "Sem linha de base: rode o mesmo comando sem mudança nesta edition para comparar." }),
+            };
+        }
         fs::write(dir.join("execution.json"), serde_json::to_vec_pretty(&record)?)?;
         Ok(record)
     }
 
-    /// Executions recorded for `run`, oldest first.
+    /// Executions recorded for `run`, oldest first; each carries its folder name as `id`.
     pub fn executions(&self, key: &str, run: &str) -> Result<Vec<Value>> {
         let dir = self.run_dir(key, run)?.join("executions");
         let Ok(entries) = fs::read_dir(&dir) else { return Ok(vec![]) };
         let mut names: Vec<_> = entries.flatten().map(|e| e.path()).filter(|p| p.join("execution.json").is_file()).collect();
         names.sort();
-        names.iter().map(|p| Ok(serde_json::from_slice(&fs::read(p.join("execution.json"))?)?)).collect()
+        names.iter().map(|p| {
+            let mut x: Value = serde_json::from_slice(&fs::read(p.join("execution.json"))?)?;
+            x["id"] = json!(p.file_name().map(|n| n.to_string_lossy().into_owned()));
+            Ok(x)
+        }).collect()
     }
 
-    /// The copy of the project at the edition's commit, made once per run and checked against
-    /// the edition: every source the edition read must be there with the same bytes.
-    fn copy(&self, key: &str, run: &str, root: &Path, edition: &Path, catalog: &Catalog) -> Result<Copy> {
+    /// The diff a check derived from one claim's line edits; only an answer whose edits passed
+    /// has one. It is applied as written, never edited by the Librarian.
+    fn diff(&self, key: &str, run: &str, change: &ChangeRef) -> Result<String> {
+        let send = self.turn_dir(key, run, &change.turn)?.join("sends").join(crate::store::safe_id(&change.send)?);
+        let check: Value = serde_json::from_slice(&fs::read(send.join("check.json")).map_err(|_| "Envio sem conferência de claims")?)?;
+        if check["report"]["mechanical_status"] != "passed" {
+            return Err("A resposta não passou na conferência mecânica; a mudança não é aplicada".into());
+        }
+        Ok(check["diffs"][&change.claim].as_str().ok_or_else(|| format!("{} não tem mudança derivada", change.claim))?.to_owned())
+    }
+
+    /// The copy of the project at the edition's commit, made once per run (and once per change)
+    /// and checked against the edition: every source the edition read must be there with the
+    /// same bytes, except the files the change touches.
+    fn copy(&self, key: &str, run: &str, root: &Path, edition: &Path, catalog: &Catalog, change: Option<(&ChangeRef, &str)>) -> Result<Copy> {
         let head = catalog.manifest().git.head.clone()
             .ok_or("A edition não tem commit (o projeto não é um repositório git); não há cópia para rodar")?;
-        let dir = copies().join(crate::store::safe_id(key)?).join(crate::store::safe_id(run)?);
+        let folder = match change {
+            Some((c, _)) => format!("{run}--{}-{}-{}", c.turn, c.send, c.claim),
+            None => run.to_owned(),
+        };
+        let dir = copies().join(crate::store::safe_id(key)?).join(crate::store::safe_id(&folder)?);
+        let git = |at: &Path, args: &[&str]| Process::new("git").arg("-C").arg(at).args(args).output()
+            .map_err(|e| format!("git não foi encontrado: {e}"));
         if !dir.join(".git").exists() {
             fs::create_dir_all(dir.parent().unwrap())?;
-            let git = |args: &[&str]| Process::new("git").arg("-C").arg(root).args(args).output()
-                .map_err(|e| format!("git não foi encontrado: {e}"));
             // A copy whose folder was deleted (a cleaned temporary folder) is still registered.
-            git(&["worktree", "prune"])?;
-            let output = git(&["worktree", "add", "--detach", &display(&dir), &head])?;
+            git(root, &["worktree", "prune"])?;
+            let output = git(root, &["worktree", "add", "--detach", &display(&dir), &head])?;
             if !output.status.success() {
                 return Err(format!("git worktree falhou: {}", String::from_utf8_lossy(&output.stderr).trim()).into());
+            }
+        }
+        // The applied diff is kept beside the copy; a copy holds one change, applied once.
+        let mut touched = vec![];
+        if let Some((_, diff)) = change {
+            touched = diff_files(diff);
+            let applied = dir.with_extension("diff");
+            match fs::read_to_string(&applied) {
+                Ok(previous) if previous == diff => {}
+                Ok(_) => return Err("Esta cópia já tem outra mudança aplicada".into()),
+                Err(_) => {
+                    fs::write(&applied, diff)?;
+                    let output = git(&dir, &["apply", "--whitespace=nowarn", &display(&applied)])?;
+                    if !output.status.success() {
+                        let _ = fs::remove_file(&applied);
+                        let _ = git(root, &["worktree", "remove", "--force", &display(&dir)]);
+                        return Err(format!("git apply recusou a mudança: {}", String::from_utf8_lossy(&output.stderr).trim()).into());
+                    }
+                }
             }
         }
         // Git may check a file out with other line endings than a tool left in the project
         // (`core.autocrlf`); such a file is the same text, and is counted apart, not hidden.
         let (mut differ, mut line_endings) = (vec![], vec![]);
-        for s in catalog.sources().values() {
+        for s in catalog.sources().values().filter(|s| !touched.contains(&s.path)) {
             let copied = fs::read(dir.join(&s.path)).ok();
             if copied.as_deref().is_some_and(|b| hash(b) == s.sha256) {
                 continue;
@@ -214,8 +266,47 @@ impl Store {
             return Err(format!("A cópia no commit {} difere da edition em {} arquivo(s), por exemplo {}; a edition foi gerada com mudanças sem commit. Faça commit e gere o grafo de novo.",
                 &head[..head.len().min(12)], differ.len(), differ.iter().take(3).copied().collect::<Vec<_>>().join(", ")).into());
         }
-        Ok(Copy { dir, head, verified: catalog.sources().len(), line_endings })
+        Ok(Copy { dir, head, verified: catalog.sources().len() - touched.len(), line_endings, touched })
     }
+}
+
+/// Which answer's change to apply: the claim of one send of one question of the run.
+#[derive(Debug, Deserialize)]
+pub struct ChangeRef {
+    pub turn: String,
+    pub send: String,
+    pub claim: String,
+}
+
+/// Paths a unified diff writes, from its `+++ b/` headers.
+fn diff_files(diff: &str) -> Vec<String> {
+    diff.lines().filter_map(|l| l.strip_prefix("+++ b/")).map(|p| p.trim().to_owned()).collect()
+}
+
+/// A change's numbers next to its baseline's. Ranges that overlap say the difference is
+/// within what the repetitions vary; they do not say there is none, nor why.
+fn compare(baseline: &Value, current: &Value) -> Value {
+    let (b, c) = (&baseline["summary"], &current["summary"]);
+    let mut stats = serde_json::Map::new();
+    for (name, s) in c["stats"].as_object().into_iter().flatten() {
+        let Some(base) = b["stats"].get(name) else { continue };
+        let (median, base_median) = (s["median"].as_f64().unwrap_or(0.0), base["median"].as_f64().unwrap_or(0.0));
+        let overlap = !(s["max"].as_f64() < base["min"].as_f64() || s["min"].as_f64() > base["max"].as_f64());
+        stats.insert(name.clone(), json!({ "baseline_median": base_median, "median": median, "unit": s["unit"],
+            "change_pct": (base_median != 0.0).then(|| ((median - base_median) / base_median * 1000.0).round() / 10.0),
+            "ranges_overlap": overlap }));
+    }
+    let mut outputs = serde_json::Map::new();
+    for (path, shas) in c["outputs"].as_object().into_iter().flatten() {
+        let base = &b["outputs"][path];
+        let one = |v: &Value| v.as_array().filter(|a| a.len() == 1).and_then(|a| a[0].as_str().map(str::to_owned));
+        outputs.insert(path.clone(), json!(match (one(base), one(shas)) {
+            (Some(x), Some(y)) if x == y => "same",
+            (Some(_), Some(_)) => "different",
+            _ => "unstable",
+        }));
+    }
+    json!({ "baseline": baseline["id"], "stats": stats, "outputs": outputs })
 }
 
 /// Where copies live: `LIBRARIAN_COPIES`, or the system's temporary folder. Never inside the
@@ -242,6 +333,8 @@ struct Copy {
     dir: PathBuf,
     /// Sources whose copy differs from the edition only in line endings.
     line_endings: Vec<String>,
+    /// Files the applied change writes; they are not compared with the edition.
+    touched: Vec<String>,
     head: String,
     verified: usize,
 }
