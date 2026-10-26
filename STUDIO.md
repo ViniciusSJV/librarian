@@ -372,6 +372,36 @@ as escolhas. **Só chamadas seguidas** esconde as tracejadas.
 
 É um mapa pelo nome, sem compilador: não prova que a chamada acontece nem quantas vezes.
 
+### Execução (comandos do projeto)
+
+O painel **Execução**, abaixo do acervo, lista os comandos que o próprio projeto declara no
+`librarian.json`, em `commands` (veja o [perfil](#perfil-do-projeto-librarianjson)). O
+Librarian não sabe o que um comando faz nem qual ferramenta ele chama: guarda a lista de
+argumentos, o código de saída, o tempo de cada repetição e a saída inteira.
+
+1. **Aprovar comando** mostra exatamente o que vai rodar. A aprovação vale para aquela versão
+   do comando (o hash do nome, dos argumentos, do tempo máximo, das repetições e dos arquivos
+   gerados). Mudar o comando no perfil pede aprovação de novo.
+2. **Rodar** executa numa cópia do projeto: um `git worktree` no commit da edition escolhida,
+   na pasta temporária do sistema (ou em `LIBRARIAN_COPIES`). Ela fica fora do Librarian porque
+   as ferramentas procuram os arquivos de projeto nas pastas acima, e uma cópia dentro de outro
+   projeto seria lida como parte dele. Antes, cada fonte da edition é conferida na cópia, byte a byte. Uma
+   edition gerada com mudanças sem commit não tem cópia fiel, e a execução é recusada. Uma
+   fonte que difere só no fim de linha (CRLF/LF, por `core.autocrlf`) é o mesmo texto e
+   aparece listada à parte.
+   Nada roda na sua pasta, e uma execução de cada vez.
+3. Sem shell: os argumentos vão como estão, sem expansão. Ao estourar o tempo máximo, o
+   processo é encerrado. A primeira repetição que falhar interrompe as outras.
+
+O resultado mostra a mediana, o mínimo e o máximo do tempo de parede e de cada linha
+`librarian-measure nome=valor unidade` que o programa imprimir. É assim que o projeto
+informa os próprios números, sem o Librarian conhecer o formato de uma ferramenta de
+medição. Para cada arquivo em `outputs`, o resultado mostra o sha256 depois de cada
+repetição: um hash só quer dizer o mesmo conteúdo em todas.
+
+Um tempo medido vale para aquela máquina, com o que mais estiver rodando nela. Ele não
+prova a causa de uma diferença.
+
 ### 5. Modelfiles
 
 O seletor **Modelfile** mostra o resumo do escolhido (FROM, PARAMETER, SYSTEM).
@@ -394,7 +424,14 @@ studio lê o arquivo ao abrir a pasta pela primeira vez. Exemplo real:
   "criteria": "ai/librarian/criteria-before.md",
   "search": { "top": 5, "depth": 2, "hits": 1 },
   "prepare": { "radius": 0, "numbered_lines": true },
-  "answer": { "format": "claims", "allow_inference": false, "allow_hypothesis": false }
+  "answer": { "format": "claims", "allow_inference": false, "allow_hypothesis": false },
+  "commands": {
+    "testes": { "argv": ["cargo", "test", "--release", "--quiet"], "timeout_s": 1800 },
+    "medir": {
+      "argv": ["cargo", "run", "--release", "--quiet", "--bin", "librarian_measure", "--", "librarian-cap11.png", "1280", "676"],
+      "timeout_s": 900, "repeat": 5, "outputs": ["librarian-cap11.png"]
+    }
+  }
 }
 ```
 
@@ -410,6 +447,7 @@ studio lê o arquivo ao abrir a pasta pela primeira vez. Exemplo real:
 | `prepare.radius`, `prepare.numbered_lines` | Linhas extras de contexto e linhas com o número original do arquivo |
 | `answer.format` | `claims` ou `prose`; sem o campo, um projeto novo começa em `claims` |
 | `answer.allow_inference`, `answer.allow_hypothesis` | Política do formato claims (padrão `false`) |
+| `commands` | Comandos que o painel **Execução** roda numa cópia do projeto, depois da sua aprovação: `argv` (programa e argumentos, sem shell), `timeout_s` (padrão 600, até 3600), `repeat` (padrão 1, até 20) e `outputs` (arquivos gerados, relativos à cópia, com o sha256 guardado). O studio lê os comandos do arquivo a cada uso e nunca os escreve; **Exportar perfil** mantém os que já estão lá |
 
 Instruções e critérios entram nos bytes da query e dos hashes. Marque-os `-text` no
 `.gitattributes` do projeto.
@@ -457,15 +495,19 @@ flowchart TD
 
 ## Onde ficam os dados
 
-Tudo fica em `.studio/`, na raiz do Librarian, ignorado pelo Git. Nada é escrito dentro do
-projeto analisado.
+Tudo fica em `.studio/`, na raiz do Librarian, ignorado pelo Git. Nada é escrito dentro da
+pasta do projeto analisado. A cópia para os comandos é um `git worktree` fora do Librarian
+(pasta temporária do sistema ou `LIBRARIAN_COPIES`), que o Git do projeto registra em `.git/worktrees` (`git worktree list` mostra; `git worktree remove`
+apaga).
 
 ```text
 .studio/projects/<projeto>-<hash>/
   project.json                     configurações editadas na página
   facts.jsonl                      acervo de fatos: promoções e revogações, só acrescentadas
+  commands.jsonl                   aprovações de comandos, cada uma com o hash do comando
   runs/<AAAAMMDD-HHMMSS>/
     edition/  graph-v2.json  run.json
+    executions/<NN>-<comando>/     execution.json, stdout-N.txt, stderr-N.txt
     last-turn.txt                  maior número de pergunta já usado (não é reutilizado)
     turns/<NN>/
       question.json                pergunta, data, formato, hash dos critérios, recusas
