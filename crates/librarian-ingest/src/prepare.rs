@@ -47,6 +47,10 @@ pub struct Request {
     /// that write the fields it reads. Needs an edition of profile v4.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub owner_context: bool,
+    /// Lexical search only: leaves out test symbols and the declarations inside them. Absent,
+    /// the request is the same as before.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub exclude_tests: bool,
 }
 
 /// A declaration as a checked claim locates it.
@@ -112,11 +116,11 @@ pub fn prepare(catalog: &Catalog, request: &Request) -> Result<Prepared> {
             if !request.reviewed_facts.is_empty() || request.owner_context {
                 return Err("Reviewed facts and owner context are carried only by a chain step".into());
             }
-            let report = SearchIndex::new(catalog, request.lexicon.clone())?.search(
-                &request.question,
-                request.top,
-                request.depth,
-            )?;
+            let mut index = SearchIndex::new(catalog, request.lexicon.clone())?;
+            if request.exclude_tests {
+                index = index.without_tests();
+            }
+            let report = index.search(&request.question, request.top, request.depth)?;
             if report.hits.len() < request.hits {
                 return Err(format!(
                     "Search returned {} candidates; {} requested",

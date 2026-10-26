@@ -118,6 +118,8 @@ pub struct SearchIndex<'a> {
     aliases: BTreeMap<String, BTreeSet<String>>,
     stops: BTreeSet<String>,
     documents: Vec<Document>,
+    /// Symbols marked as tests, and declarations inside them, were left out (`without_tests`).
+    tests_excluded: bool,
 }
 
 impl<'a> SearchIndex<'a> {
@@ -174,7 +176,25 @@ impl<'a> SearchIndex<'a> {
             aliases,
             stops,
             documents,
+            tests_excluded: false,
         })
+    }
+
+    /// Leaves out symbols the extractor marked as tests and every declaration inside one (a
+    /// helper written within a test function). Helpers outside test functions stay.
+    pub fn without_tests(mut self) -> Self {
+        fn span<'c>(catalog: &'c Catalog, s: &'c crate::Symbol) -> (&'c str, usize, usize) {
+            let c = &catalog.chunks[&s.chunk_id];
+            (s.source_id.as_str(), c.start_byte, c.end_byte)
+        }
+        let catalog = self.catalog;
+        let tests: Vec<_> = catalog.symbols.values().filter(|s| s.is_test).map(|s| span(catalog, s)).collect();
+        self.documents.retain(|d| {
+            let (source, start, end) = span(catalog, &catalog.symbols[&d.id]);
+            !tests.iter().any(|(s, a, b)| *s == source && *a <= start && end <= *b)
+        });
+        self.tests_excluded = true;
+        self
     }
 
     pub fn search(&self, question: &str, top: usize, depth: usize) -> Result<SearchReport> {
@@ -268,7 +288,10 @@ impl<'a> SearchIndex<'a> {
             terms: groups.values().map(|(term,_)| term.clone()).collect(),
             status: if hits.is_empty() { "no_lexical_evidence" } else { "candidates" }.into(), hits,
             graph: neighborhood, diagnostics: self.catalog.diagnostics.len(),
-            limits: self.catalog.registry.search_limits.iter().map(|l| l.to_string()).collect(), owner_context: None })
+            limits: self.catalog.registry.search_limits.iter().map(|l| l.to_string())
+                .chain(self.tests_excluded.then(|| "Test symbols marked by the extractor, and declarations inside them, were left out; helpers outside test functions remain.".to_owned()))
+                .collect(),
+            owner_context: None })
     }
 }
 

@@ -177,6 +177,7 @@ fn python_methods_are_searched_and_prepared_like_rust() {
         targets: None,
         reviewed_facts: vec![],
         owner_context: false,
+        exclude_tests: false,
     };
     let prepared = prepare::prepare(&catalog, &request).unwrap();
     let dossier: serde_json::Value = serde_json::from_str(&prepared.dossier).unwrap();

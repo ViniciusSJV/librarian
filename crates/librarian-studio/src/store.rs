@@ -55,6 +55,9 @@ pub struct Settings {
     /// A HYPOTHESIS may carry a unified diff, checked against the evidence (performance step).
     #[serde(default)]
     pub allow_patch: bool,
+    /// The search leaves out test symbols and the declarations inside them (P1b).
+    #[serde(default)]
+    pub exclude_tests: bool,
 }
 
 /// `prose` sends the Graph Engine query; `claims` sends a claims query and checks each answer.
@@ -275,11 +278,11 @@ impl Store {
     pub fn ask(&self, key: &str, run: &str, question: &str) -> Result<Value> {
         let settings = self.settings(key)?;
         let catalog = Catalog::load(&self.edition(key, run)?)?;
-        let report = SearchIndex::new(&catalog, settings.lexicon.clone())?.search(
-            question,
-            settings.top,
-            settings.depth,
-        )?;
+        let mut index = SearchIndex::new(&catalog, settings.lexicon.clone())?;
+        if settings.exclude_tests {
+            index = index.without_tests();
+        }
+        let report = index.search(question, settings.top, settings.depth)?;
         let mut search = serde_json::to_vec_pretty(&report)?;
         search.push(b'\n');
         let request = request(&settings, question, None, vec![], false);
@@ -567,7 +570,7 @@ impl Store {
             "project_root": ".",
             "sources_config": path("sources_config", "ai/librarian/sources.json")?,
             "lexicon": path("lexicon", "ai/librarian/lexicon.json")?,
-            "search": { "top": settings.top, "depth": settings.depth, "hits": settings.hits },
+            "search": { "top": settings.top, "depth": settings.depth, "hits": settings.hits, "exclude_tests": settings.exclude_tests },
             "prepare": { "radius": settings.radius, "numbered_lines": settings.numbered_lines,
                 "accept_diagnostics": settings.accept_diagnostics },
             "answer": { "format": settings.answer_format, "allow_inference": settings.allow_inference,
@@ -688,6 +691,8 @@ fn request(settings: &Settings, question: &str, targets: Option<Vec<Target>>, re
         numbered_lines: settings.numbered_lines,
         instructions: settings.instructions.clone(),
         accept_diagnostics: settings.accept_diagnostics,
+        // A chain step does not search; the option only shapes a lexical search.
+        exclude_tests: settings.exclude_tests && targets.is_none(),
         targets,
         reviewed_facts,
         owner_context,
@@ -787,6 +792,7 @@ fn initial_settings(name: &str, root: &str) -> Result<Settings> {
         allow_inference: false,
         allow_hypothesis: false,
         allow_patch: false,
+        exclude_tests: false,
     };
     let profile = Path::new(root).join(PROFILE);
     if let Ok(bytes) = fs::read(&profile) {
@@ -810,6 +816,7 @@ fn initial_settings(name: &str, root: &str) -> Result<Settings> {
         settings.top = number(&p["search"]["top"], settings.top);
         settings.depth = number(&p["search"]["depth"], settings.depth);
         settings.hits = number(&p["search"]["hits"], settings.hits);
+        settings.exclude_tests = p["search"]["exclude_tests"].as_bool().unwrap_or(false);
         settings.radius = number(&p["prepare"]["radius"], settings.radius);
         settings.numbered_lines = p["prepare"]["numbered_lines"].as_bool().unwrap_or(false);
         settings.accept_diagnostics = p["prepare"]["accept_diagnostics"].as_bool().unwrap_or(false);
@@ -1292,7 +1299,7 @@ mod tests {
             root.join(PROFILE),
             r#"{"project_root": ".", "sources_config": "ai/sources.json", "lexicon": "ai/lexicon.json",
                 "instructions": "ai/instructions.json", "criteria": "ai/criteria.md",
-                "search": {"top": 3, "depth": 1, "hits": 1}, "prepare": {"radius": 1, "numbered_lines": true},
+                "search": {"top": 3, "depth": 1, "hits": 1, "exclude_tests": true}, "prepare": {"radius": 1, "numbered_lines": true},
                 "answer": {"format": "prose", "allow_hypothesis": true}}"#,
         )
         .unwrap();
@@ -1300,7 +1307,7 @@ mod tests {
         let opened = store.open(&display(&root)).unwrap();
         let settings: Settings = serde_json::from_value(opened["settings"].clone()).unwrap();
         assert_eq!(settings.inputs, ["src"]);
-        assert_eq!((settings.top, settings.depth, settings.radius), (3, 1, 1));
+        assert_eq!((settings.top, settings.depth, settings.radius, settings.exclude_tests), (3, 1, 1, true));
         assert_eq!(settings.instructions.as_deref(), Some(&["Cite E1.".to_string()][..]));
         assert_eq!(
             (settings.answer_format, settings.allow_inference, settings.allow_hypothesis),

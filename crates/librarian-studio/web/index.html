@@ -229,6 +229,7 @@
             <label class="field" data-i18n-title="search.radius.title"><span>radius</span><input id="radius" type="number" min="0"></label>
           </div>
           <label class="check"><input id="numbered" type="checkbox"><span><span data-i18n="settings.numbered"></span><button type="button" class="help" data-help-key="help.numbered">?</button></span></label>
+          <label class="check"><input id="excludeTests" type="checkbox"><span><span data-i18n="settings.excludeTests"></span><button type="button" class="help" data-help-key="help.excludeTests">?</button></span></label>
           <label class="check"><input id="acceptDiag" type="checkbox"><span><span data-i18n="settings.acceptDiag"></span><button type="button" class="help" data-help-key="help.acceptDiag">?</button></span></label>
           <label class="field" data-i18n-title="settings.format.title"><span><span data-i18n="settings.format"></span><button type="button" class="help" data-help-key="help.format">?</button></span><select id="answerFormat"><option value="claims" data-i18n="settings.format.claims"></option><option value="prose" data-i18n="settings.format.prose"></option></select></label>
           <label class="check"><input id="allowInference" type="checkbox"><span><span data-i18n="settings.inference"></span><button type="button" class="help" data-help-key="help.inference">?</button></span></label>
@@ -475,6 +476,9 @@ const STRINGS = {
   'settings.numbered': ['Linhas numeradas no contexto', 'Numbered lines in the context'],
   'help.numbered': ['Entrega os trechos com as páginas numeradas, como num livro. Quem responde não precisa contar linhas e erra menos ao dizer onde algo está. Recomendado deixar ligado.',
     'Delivers the excerpts with numbered pages, as in a book. Whoever answers does not need to count lines and makes fewer mistakes saying where something is. Best left on.'],
+  'settings.excludeTests': ['Busca sem testes', 'Search without tests'],
+  'help.excludeTests': ['Deixa de fora da busca as funções que o catálogo marca como teste (#[test] em Rust, test_ em Python) e o que está escrito dentro delas. Sem isso, testes que citam raio e pixel tomam o lugar das funções reais. Funções auxiliares fora de uma função de teste continuam. Vale para as perguntas comuns, não para a cadeia.',
+    'Leaves out of the search the functions the catalog marks as tests (#[test] in Rust, test_ in Python) and what is written inside them. Without it, tests that mention ray and pixel take the place of the real functions. Helpers outside a test function remain. Applies to ordinary questions, not to the chain.'],
   'settings.acceptDiag': ['Aceitar edition com diagnósticos', 'Accept edition with diagnostics'],
   'help.acceptDiag': ['Alguns livros chegaram danificados e não puderam ser catalogados (por exemplo, sintaxe nova demais). Com o catálogo incompleto, o bibliotecário prefere não atender. Ligue para atender mesmo assim, sabendo que pode faltar livro na estante.',
     'Some books arrived damaged and could not be cataloged (for example, syntax that is too new). With an incomplete catalog, the librarian prefers not to serve. Turn on to serve anyway, knowing a book may be missing from the shelf.'],
@@ -1575,6 +1579,7 @@ function renderProject() {
   for (const [id, field] of [['#top', 'top'], ['#depth', 'depth'], ['#hits', 'hits'], ['#radius', 'radius']]) $(id).value = settings[field];
   $('#numbered').checked = settings.numbered_lines;
   $('#acceptDiag').checked = settings.accept_diagnostics;
+  $('#excludeTests').checked = settings.exclude_tests ?? false;
   $('#answerFormat').value = settings.answer_format ?? 'prose';
   $('#allowInference').checked = settings.allow_inference ?? false;
   $('#allowHypothesis').checked = settings.allow_hypothesis ?? false;
@@ -1613,7 +1618,7 @@ function collectSettings() {
     instructions: instructions.length ? instructions : null,
     criteria: $('#criteria').value.trim() ? $('#criteria').value : null,
     top: number('#top'), depth: number('#depth'), hits: number('#hits'), radius: number('#radius'),
-    numbered_lines: $('#numbered').checked, accept_diagnostics: $('#acceptDiag').checked,
+    numbered_lines: $('#numbered').checked, accept_diagnostics: $('#acceptDiag').checked, exclude_tests: $('#excludeTests').checked,
     answer_format: $('#answerFormat').value,
     allow_inference: $('#allowInference').checked, allow_hypothesis: $('#allowHypothesis').checked, allow_patch: $('#allowPatch').checked,
   };

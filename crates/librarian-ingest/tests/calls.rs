@@ -46,6 +46,14 @@ pub fn lighting(h: f64) -> f64 {
 pub fn render(world: &World, x: f64) -> f64 {
     world.color_at(x)
 }
+
+#[test]
+fn render_world_check() {
+    fn render_world_helper() -> f64 {
+        1.0
+    }
+    assert_eq!(render_world_helper(), 1.0);
+}
 ";
 
 const SHAPES: &str = "class World:
@@ -148,4 +156,24 @@ fn calls_are_followed_only_where_the_written_name_points_to_one_declaration() {
     let bare = v2::CallSyntax { languages: syntax.languages.iter().map(|(l, (k, _))| (l.clone(), (k.clone(), None))).collect() };
     let homonyms = graph.calls_from(&symbol(&graph, "World.color_at"), 1, 50, &bare, &BTreeMap::new()).unwrap();
     assert!(homonyms.links.iter().all(|l| l.resolution == "homonym") && homonyms.links.len() == 2);
+}
+
+#[test]
+fn a_search_without_tests_leaves_out_test_functions_and_what_is_written_inside_them() {
+    use librarian_ingest::search::{Lexicon, SearchIndex};
+    let project = Project::new();
+    let catalog = project.catalog();
+    let names = |index: SearchIndex| -> Vec<String> {
+        let mut found: Vec<_> = index.search("render world", 10, 0).unwrap().hits.into_iter().map(|h| h.name).collect();
+        found.sort();
+        found
+    };
+    let all = names(SearchIndex::new(&catalog, Lexicon::default()).unwrap());
+    // Without the filter, a helper written inside the test function is a hit like any other.
+    assert_eq!(all, ["render", "render_world_check::render_world_helper"]);
+    let index = SearchIndex::new(&catalog, Lexicon::default()).unwrap().without_tests();
+    let report = index.search("render world", 10, 0).unwrap();
+    assert!(report.hits.iter().all(|h| !h.name.starts_with("render_world_check")));
+    assert!(report.hits.iter().any(|h| h.name == "render"));
+    assert!(report.limits.last().unwrap().starts_with("Test symbols"));
 }
