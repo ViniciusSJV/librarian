@@ -219,6 +219,14 @@ lista de claims com location e citações. A resposta bruta fica em **Resposta b
 o JSON vier dentro de uma única cerca de Markdown (` ```json `), ele é extraído e isso
 aparece na resposta e no `check.json`.
 
+Antes da conferência, o Librarian completa as citações a partir da evidência: cita a
+declaração e as linhas da operação que o modelo escreveu em `location` e não citou, e move
+uma citação cujo trecho transcrito está, exatamente e uma só vez, em outras linhas (a
+operação vai junto, se apontava as mesmas linhas). Nenhuma regra é afrouxada; o que foi
+completado aparece em **Completado pelo Librarian a partir da evidência**, fica em
+`resolutions` no `check.json` e vai junto com o fato aprovado. A resposta bruta não muda.
+Detalhes em [CLAIMS.md](crates/librarian-llm-engine/CLAIMS.md#citações-completadas-a-partir-da-evidência).
+
 **Aprovada na mecânica não quer dizer correta.** Quer dizer só que a resposta aponta para
 linhas reais da edition no formato pedido. O sentido continua pendente (`semantic_status:
 pending`, `accepted: false`) e é avaliado por você, com os critérios gravados antes.
@@ -342,6 +350,28 @@ escrito, não um grafo de chamadas resolvido.
 
 **Ausência na vista não prova que ninguém usa.**
 
+### O que ele chama? (vista Caminho, para a frente)
+
+Ao lado de **Onde é usado?**, na **Inspeção**. A mesma vista, no sentido contrário: o ponto
+escolhido à esquerda, o que ele chama, o que esses chamam, até a profundidade escolhida.
+Serve para achar o caminho de uma operação (por exemplo, de `render` até `shade_hit` e
+`lighting`) quando a busca por nome não chega lá.
+
+Uma chamada só é **seguida** (linha cheia) quando o nome escrito aponta uma declaração:
+
+- **única:** só existe uma declaração com esse nome;
+- **receptor:** é chamada do próprio receptor (`self.shade_hit(...)`) e só um dos homônimos
+  está na mesma classe ou `impl` de quem chama (exige o perfil v4);
+- **escolhida:** você escolheu.
+
+Se o nome combina com vários homônimos (`world.color_at(...)` combina com sete `color_at`),
+a linha fica **tracejada** e o caminho para ali. Clique nela: o detalhe mostra o nome
+completo (`impl World::color_at`) e **Seguir por este** continua a partir dele.
+**Limpar escolhas** desfaz todas; **duplo clique** num ponto recomeça a vista dele mantendo
+as escolhas. **Só chamadas seguidas** esconde as tracejadas.
+
+É um mapa pelo nome, sem compilador: não prova que a chamada acontece nem quantas vezes.
+
 ### 5. Modelfiles
 
 O seletor **Modelfile** mostra o resumo do escolhido (FROM, PARAMETER, SYSTEM).
@@ -376,6 +406,7 @@ studio lê o arquivo ao abrir a pasta pela primeira vez. Exemplo real:
 | `criteria` | Texto gravado como `criteria-before.md` em cada pergunta, antes da resposta |
 | `search.top`, `search.depth` | Corte do ranking (1–10) e profundidade da vizinhança acesa (0–3) |
 | `search.hits` | Quantos primeiros resultados viram fichas E1…En (padrão 1) |
+| `search.exclude_tests` | **Busca sem testes**: deixa de fora as funções que o catálogo marca como teste e o que está escrito dentro delas (padrão `false`); auxiliares fora de uma função de teste continuam |
 | `prepare.radius`, `prepare.numbered_lines` | Linhas extras de contexto e linhas com o número original do arquivo |
 | `answer.format` | `claims` ou `prose`; sem o campo, um projeto novo começa em `claims` |
 | `answer.allow_inference`, `answer.allow_hypothesis` | Política do formato claims (padrão `false`) |
