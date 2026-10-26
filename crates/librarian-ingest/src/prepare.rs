@@ -60,6 +60,10 @@ pub struct Request {
     /// is the same as before.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub callees: bool,
+    /// The targets were gathered one by one by the person (P4), not named by checked answers;
+    /// the report says so. Absent, the request is the same as before.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub gathered: bool,
 }
 
 /// A declaration as a checked claim locates it.
@@ -108,6 +112,12 @@ pub fn prepare(catalog: &Catalog, request: &Request) -> Result<Prepared> {
             if ids.is_empty() || (1..ids.len()).any(|i| ids[..i].contains(&ids[i])) {
                 return Err("A chain step needs distinct targets".into());
             }
+            let origin = match (request.picked, request.gathered) {
+                (true, true) => return Err("A step is picked on a path or gathered, not both".into()),
+                (true, false) => crate::search::StepOrigin::Path,
+                (false, true) => crate::search::StepOrigin::Gathered,
+                (false, false) => crate::search::StepOrigin::Chain,
+            };
             let graph = Graph::build(catalog);
             let targeted = ids.len();
             let mut context = if request.owner_context {
@@ -128,7 +138,7 @@ pub fn prepare(catalog: &Catalog, request: &Request) -> Result<Prepared> {
                 owner.added.extend(called);
                 owner.truncated |= truncated;
             }
-            let mut report = chain_report(catalog, &graph, &request.question, &ids, request.depth, context, request.picked)?;
+            let mut report = chain_report(catalog, &graph, &request.question, &ids, request.depth, context, origin)?;
             if request.callees {
                 report.limits.push("Called declarations: a target also brings what it calls when the call has one declaration of that name, or one in its own container reached through its receiver; homonyms are not added. Written names only, nothing resolved by a compiler.".into());
             }

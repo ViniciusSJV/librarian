@@ -24,6 +24,8 @@ const CRITERIA: &str = "criteria-before.md";
 const LAST_TURN: &str = "last-turn.txt";
 /// At most this many questions from one path at once (P1b).
 const MAX_PATH_QUESTIONS: usize = 40;
+/// Declarations one gathered question may carry; each one is a whole excerpt in the query.
+const MAX_GATHERED: usize = 16;
 
 /// Everything a question needs besides the question itself; edited from the page.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -271,6 +273,7 @@ impl Store {
             "criteria_sha256": question["criteria_sha256"],
             "chain": question["chain"],
             "path": question["path"],
+            "gathered": question["gathered"],
             "prepare_error": question["prepare_error"],
             "comparison": compare_sends(&sends),
             "sends": sends,
@@ -304,18 +307,27 @@ impl Store {
         let symbols = catalog.symbols();
         let mut turns = vec![];
         for (index, id) in nodes.iter().enumerate() {
-            let symbol = symbols.get(id).ok_or_else(|| format!("Ponto desconhecido: {id}"))?;
-            let target = Target {
-                path: catalog.sources()[&symbol.source_id].path.clone(),
-                symbol_name: symbol.name.clone(),
-                declaration_line: catalog.chunks().get(&symbol.chunk_id).ok_or("Ponto sem trecho")?.start_line,
-            };
+            let target = target_of(&catalog, symbols, id)?;
             let path = json!({ "seed": seed, "node": id, "index": index + 1, "total": nodes.len(), "chosen": chosen });
             let mut request = request(&settings, question, Some(vec![target]), vec![], false);
             request.picked = true;
             turns.push(self.new_turn(key, run, &settings, &catalog, question, None, request, Some(("path", path)))?);
         }
         Ok(json!(turns))
+    }
+
+    /// P4: one question whose evidence is the declarations the person gathered one by one (in
+    /// the order gathered), with nothing searched and nothing added; the step says so.
+    pub fn ask_gathered(&self, key: &str, run: &str, question: &str, nodes: &[String]) -> Result<Value> {
+        if nodes.is_empty() || nodes.len() > MAX_GATHERED {
+            return Err(format!("Junte de 1 a {MAX_GATHERED} declarações").into());
+        }
+        let settings = self.settings(key)?;
+        let catalog = Catalog::load(&self.edition(key, run)?)?;
+        let targets = nodes.iter().map(|id| target_of(&catalog, catalog.symbols(), id)).collect::<Result<Vec<_>>>()?;
+        let mut request = request(&settings, question, Some(targets), vec![], false);
+        request.gathered = true;
+        self.new_turn(key, run, &settings, &catalog, question, None, request, Some(("gathered", json!({ "nodes": nodes }))))
     }
 
     /// Chain step: a new question whose evidence is the declarations located by the answers to
@@ -714,6 +726,16 @@ fn compare_sends(sends: &[Value]) -> Value {
     json!({ "sends": columns, "rows": compare(&answers) })
 }
 
+/// The target a graph node names: its file, name and the first line of its excerpt.
+fn target_of(catalog: &Catalog, symbols: &std::collections::BTreeMap<String, librarian_ingest::Symbol>, id: &str) -> Result<Target> {
+    let symbol = symbols.get(id).ok_or_else(|| format!("Ponto desconhecido: {id}"))?;
+    Ok(Target {
+        path: catalog.sources()[&symbol.source_id].path.clone(),
+        symbol_name: symbol.name.clone(),
+        declaration_line: catalog.chunks().get(&symbol.chunk_id).ok_or("Ponto sem trecho")?.start_line,
+    })
+}
+
 /// The prepare request of a question with the project's settings; a chain step adds targets.
 fn request(settings: &Settings, question: &str, targets: Option<Vec<Target>>, reviewed_facts: Vec<ReviewedFact>,
     owner_context: bool) -> Request {
@@ -736,6 +758,7 @@ fn request(settings: &Settings, question: &str, targets: Option<Vec<Target>>, re
         // New chain steps also bring what each target calls without ambiguity (P4); a
         // recorded question keeps its request as it was written, so its bytes still verify.
         callees: owner_context,
+        gathered: false,
     }
 }
 
@@ -1418,6 +1441,18 @@ mod tests {
         }
         assert!(store.ask_path(&key, &run, "x", &[], &nodes[0], &chosen).is_err());
         assert!(store.ask_path(&key, &run, "x", &["symbol:nada".into()], &nodes[0], &chosen).is_err());
+
+        // Gathered: one question with every declaration the person gathered, in that order.
+        let gathered = store.ask_gathered(&key, &run, "Como guardar o valor?", &[nodes[1].clone(), nodes[0].clone()]).unwrap();
+        assert_eq!(gathered["prepare_error"], Value::Null, "{}", gathered["prepare_error"]);
+        assert_eq!(gathered["search"]["status"], "gathered");
+        assert!(gathered["search"]["limits"][0].as_str().unwrap().starts_with("Gathered step"));
+        let hits: Vec<&Value> = gathered["search"]["hits"].as_array().unwrap().iter().map(|h| &h["symbol_id"]).collect();
+        assert_eq!(hits, [&json!(nodes[1]), &json!(nodes[0])]);
+        assert_eq!(gathered["gathered"]["nodes"], json!([nodes[1], nodes[0]]));
+        assert_eq!(gathered["request"]["gathered"], true);
+        assert_eq!(gathered["request"].get("picked"), None);
+        assert!(store.ask_gathered(&key, &run, "x", &[]).is_err());
     }
 
     #[test]

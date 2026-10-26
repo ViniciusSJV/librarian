@@ -137,6 +137,12 @@ fn route(app: &App, req: &Request) -> Result<Response> {
             ok(store.ask_path(&field(&body, "key")?, &field(&body, "run")?, &field(&body, "question")?, &nodes,
                 &field(&body, "seed")?, &body["chosen"])?)
         }
+        ("POST", "/api/gathered-question") => {
+            // P4: one question over the declarations the person gathered one by one.
+            let body = req.json()?;
+            let nodes: Vec<String> = serde_json::from_value(body["nodes"].clone())?;
+            ok(store.ask_gathered(&field(&body, "key")?, &field(&body, "run")?, &field(&body, "question")?, &nodes)?)
+        }
         ("GET", "/api/graph") => Ok(Response {
             status: 200,
             content_type: "application/json; charset=utf-8",

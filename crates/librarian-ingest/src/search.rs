@@ -323,25 +323,36 @@ fn hit(catalog: &Catalog, id: String, score: usize, reasons: Vec<MatchReason>, b
 }
 
 /// Report of a chain step: the given declarations, in order, as hits without score or reasons.
+/// Where the targets of a step without search came from.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum StepOrigin {
+    /// Named by mechanically checked answers to an earlier question.
+    Chain,
+    /// Picked on a "what does it call?" path (P1b).
+    Path,
+    /// Gathered one by one by the person (P4).
+    Gathered,
+}
+
 /// Nothing is searched; the neighborhood is the first hit's, as in a search, for the page.
 /// With an owner context, its added declarations follow the targets in `symbol_ids`.
 pub fn chain_report(catalog: &Catalog, graph: &Graph, question: &str, symbol_ids: &[String], depth: usize,
-    owner_context: Option<crate::owner::OwnerContext>, picked: bool) -> Result<SearchReport> {
+    owner_context: Option<crate::owner::OwnerContext>, origin: StepOrigin) -> Result<SearchReport> {
     let mut budget = 16000usize;
     let hits = symbol_ids.iter().map(|id| hit(catalog, id.clone(), 0, vec![], &mut budget)).collect::<Result<Vec<_>>>()?;
     let neighborhood = hits.first().map(|h| graph.neighborhood(&h.symbol_id, depth, 48, 96)).transpose()?;
-    let origin = if picked {
-        "Path step: declarations the person picked on a \"what does it call?\" path, followed by written names; nothing was searched."
-    } else {
-        "Chain step: declarations named by mechanically checked answers to an earlier question; nothing was searched."
+    let (text, status) = match origin {
+        StepOrigin::Path => ("Path step: declarations the person picked on a \"what does it call?\" path, followed by written names; nothing was searched.", "path"),
+        StepOrigin::Gathered => ("Gathered step: declarations the person gathered one by one; nothing was searched.", "gathered"),
+        StepOrigin::Chain => ("Chain step: declarations named by mechanically checked answers to an earlier question; nothing was searched.", "chain"),
     };
-    let mut limits = vec![origin.to_owned()];
+    let mut limits = vec![text.to_owned()];
     if owner_context.is_some() {
         limits.push(format!("Owner context: a method target brings the type its container is or names and the declarations that write the fields it reads, by written names; writes through other receivers are counted, not added; at most {} additions.", crate::owner::MAX_ADDED));
     }
     // The lexical-coverage limit does not apply: no term was matched.
     limits.extend(catalog.registry.search_limits.iter().filter(|l| !l.starts_with("Lexical")).map(|l| l.to_string()));
     Ok(SearchReport { version: "chain-step-v1".into(), catalog_sha256: graph.catalog_sha256.clone(),
-        lexicon_sha256: String::new(), question: question.into(), terms: vec![], status: if picked { "path" } else { "chain" }.into(), hits,
+        lexicon_sha256: String::new(), question: question.into(), terms: vec![], status: status.into(), hits,
         graph: neighborhood, diagnostics: catalog.diagnostics.len(), limits, owner_context })
 }

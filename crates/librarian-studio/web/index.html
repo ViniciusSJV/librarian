@@ -293,6 +293,7 @@
 
     <section class="card">
       <h2><span data-i18n="inspector.title"></span><button type="button" class="help" data-help-key="help.inspector">?</button></h2>
+      <div id="gathered" hidden></div>
       <div id="inspector" class="muted" data-i18n="inspector.empty"></div>
     </section>
   </aside>
@@ -678,6 +679,17 @@ const STRINGS = {
   'path.clickLine': [' Clique numa linha para ver onde o nome está escrito.', ' Click a line to see where the name is written.'],
   'path.candidates': ['O nome escrito combina com {n} declarações; esta é uma delas.', 'The written name matches {n} declarations; this is one of them.'],
   'inspector.calls': ['O que ele chama?', 'What does it call?'],
+  'gather.add': ['Juntar à pergunta', 'Add to the question'],
+  'gather.remove': ['Tirar da pergunta', 'Remove from the question'],
+  'help.gather': ['Junta esta declaração numa pergunta montada à mão. Junte as declarações que uma mudança precisa ver (por exemplo, o método, o tipo dele e quem escreve o campo) e pergunte uma vez sobre todas. Nada é buscado nem acrescentado: o modelo vê exatamente o que você juntou, e a pergunta registra que foi você quem escolheu.',
+    'Adds this declaration to a hand-built question. Gather the declarations a change needs to see (for example the method, its type and whoever writes the field) and ask once about all of them. Nothing is searched or added: the model sees exactly what you gathered, and the question records that you chose.'],
+  'gather.title': ['Declarações juntadas ({n})', 'Gathered declarations ({n})'],
+  'gather.ask': ['Perguntar com estas declarações', 'Ask with these declarations'],
+  'gather.clear': ['Limpar', 'Clear'],
+  'gather.askTitle': ['Pergunta sobre as declarações juntadas', 'Question about the gathered declarations'],
+  'gather.askMessage': ['Uma pergunta só, com estas {n} declarações como evidência, nesta ordem:\n{list}', 'One question, with these {n} declarations as evidence, in this order:\n{list}'],
+  'gather.turnTag': ['juntadas ({n})', 'gathered ({n})'],
+  'help.gatheredTurn': ['Esta pergunta foi montada à mão: as declarações foram juntadas uma a uma por você, sem busca e sem nada acrescentado.', 'This question was built by hand: you gathered the declarations one by one, with no search and nothing added.'],
   'help.calls': ['Abre a vista Caminho a partir deste ponto, para a frente: o que ele chama e o que esses chamam, em camadas. Uma chamada com homônimos fica tracejada e o caminho para ali; clique nela para escolher o candidato certo e seguir.',
     'Opens the Path view from this point, forward: what it calls and what those call, in layers. A call with homonyms is dashed and the path stops there; click it to choose the right candidate and go on.'],
   'help.pathCalls': ['O que este ponto chama, em camadas da esquerda para a direita, pelo nome escrito em cada chamada. Linha cheia: a chamada foi seguida porque o nome só combina com uma declaração, porque é uma chamada do próprio receptor (self.f()) e só um homônimo está na mesma classe ou impl, ou porque você escolheu. Linha tracejada: o nome combina com vários homônimos e o caminho para ali até você escolher qual seguir. É um mapa pelo nome, sem compilador: não prova que aquela chamada acontece nem quantas vezes.',
@@ -1407,7 +1419,9 @@ function inspect() {
         el('button', { textContent: t('inspector.usedBy'), onclick: () => openPath(n.id, 'used') }),
         helpButton(t('help.usedBy')),
         el('button', { textContent: t('inspector.calls'), onclick: () => openPath(n.id, 'calls') }),
-        helpButton(t('help.calls')))
+        helpButton(t('help.calls')),
+        el('button', { textContent: gathered.includes(n.id) ? t('gather.remove') : t('gather.add'), onclick: () => toggleGathered(n.id) }),
+        helpButton(t('help.gather')))
       : null;
     box.replaceChildren(
       el('strong', { className: 'mono', textContent: n.label }),
@@ -1717,6 +1731,9 @@ function showRunNote() {
 
 async function loadRun(id) {
   studio.run = id;
+  // Gathered declarations belong to one edition's graph.
+  gathered = [];
+  renderGathered();
   $('#runs').value = id;
   status(t('status.loading'));
   showGraph(await api('GET', `/api/graph?${query({ key: studio.project.key, run: id })}`));
@@ -1797,6 +1814,47 @@ async function continueTurn(from, button) {
     $('#turns').scrollTop = $('#turns').scrollHeight;
     if (turn.query) await sendTurn(turn);
   });
+}
+
+// P4: declarations gathered one by one for a single question; reset with the run.
+let gathered = [];
+function toggleGathered(id) {
+  gathered = gathered.includes(id) ? gathered.filter(g => g !== id) : [...gathered, id];
+  renderGathered();
+  inspect();
+}
+function renderGathered() {
+  const box = $('#gathered');
+  box.hidden = !gathered.length;
+  if (!gathered.length) { box.replaceChildren(); return; }
+  const label = id => state.nodes[state.index.get(id)]?.label ?? id;
+  const ask = el('button', { className: 'primary', textContent: t('gather.ask') });
+  ask.onclick = () => askGathered(ask);
+  box.replaceChildren(
+    el('strong', { textContent: t('gather.title', { n: gathered.length }) }),
+    el('ol', { className: 'list' }, ...gathered.map(id => el('li', {}, el('span', { className: 'mono', textContent: label(id) }), ' ',
+      el('button', { textContent: '×', title: t('gather.remove'), onclick: () => toggleGathered(id) })))),
+    el('div', { className: 'row', style: 'margin: 6px 0 10px; gap: 6px' }, ask,
+      el('button', { textContent: t('gather.clear'), onclick: () => { gathered = []; renderGathered(); inspect(); } })));
+}
+async function askGathered(button) {
+  const label = id => state.nodes[state.index.get(id)]?.label ?? id;
+  const question = await modal({ title: t('gather.askTitle'), input: true, required: t('chain.required'),
+    message: t('gather.askMessage', { n: gathered.length, list: gathered.map(label).join('\n') }), ok: t('gather.ask') });
+  if (!question) return;
+  await busy([button], $('#llmNote'), async () => {
+    await saveSettings();
+    const turn = await api('POST', '/api/gathered-question', { key: studio.project.key, run: studio.run, question, nodes: gathered });
+    studio.turns.push(turn);
+    renderTurns();
+    $('#turns').scrollTop = $('#turns').scrollHeight;
+    if ($('#provider').value !== 'manual' && !turn.prepare_error) await sendTurn(turn);
+  });
+}
+function gatheredTurnView(g) {
+  return el('div', { className: 'muted', style: 'margin-top: 6px' },
+    el('span', { className: 'tag', textContent: t('gather.turnTag', { n: g.nodes.length }) }),
+    helpButton(t('help.gatheredTurn')));
 }
 
 // P1b: a question about one point picked on a "what does it call?" path.
@@ -1956,6 +2014,7 @@ function renderTurn(turn) {
     el('div', { className: 'bubble user', textContent: turn.question, title: t('turn.highlight'), onclick: () => activate(turn.id) }),
     turn.chain ? chainView(turn.chain, turn.search?.owner_context) : null,
     turn.path ? pathTurnView(turn.path) : null,
+    turn.gathered ? gatheredTurnView(turn.gathered) : null,
     el('div', { style: 'margin-top: 6px' }, el('span', { className: 'muted', textContent: t('turn.lexicon') }),
       ...(turn.search?.terms ?? []).map(term => el('span', {
         className: `chip ${touched.has(term) ? 'hit' : 'miss'}`, textContent: term,
@@ -2867,6 +2926,7 @@ function setLang(lang) {
   hideHelp();
   if (studio.status) { fillProviders(); setModelfiles(studio.modelfiles); }
   if (studio.project) { renderProjectInfo(); renderRuns(); showRunNote(); loadFacts().catch(console.error); }
+  renderGathered();
   if (studio.status) renderTurns();
   if (state.graph) {
     showProvenance();
