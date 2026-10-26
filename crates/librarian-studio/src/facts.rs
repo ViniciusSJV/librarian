@@ -2,7 +2,8 @@
 //! answer passes the mechanical check again, the send is linked to the question's bundle and
 //! that bundle still verifies, and a person approves it with a note. Promoted facts form the
 //! project's collection (`facts.jsonl`, append-only), rechecked by text against any run's
-//! edition. They are not evidence: no query reads them yet.
+//! edition. Only chain steps read them: current facts about the targets go to
+//! `evidence.reviewed_facts`; an ordinary question does not.
 //! Layout: sends/<NN>/reviews.jsonl (each decision), projects/<key>/facts.jsonl (promotions and
 //! revocations).
 use crate::store::{safe_id, stamp, Store};
