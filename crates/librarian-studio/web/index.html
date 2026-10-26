@@ -132,7 +132,9 @@
   .compare td.absent { color: var(--text-muted); }
   #pathView { position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column; background: var(--surface-0); }
   #pathView[hidden] { display: none; }
-  #pathBar { display: flex; gap: 10px; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--border); background: var(--surface-1); }
+  #pathBar { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--border); background: var(--surface-1); }
+  #pathBar .check span { white-space: nowrap; }
+  #pathDepth { width: auto; min-width: 56px; }
   #pathNote { margin: 6px 14px; }
   #pathCanvas { flex: 1; overflow: auto; padding: 8px 14px 14px; }
   #pathCanvas svg { display: block; }
@@ -297,11 +299,12 @@
     <div id="pathView" hidden>
       <div id="pathBar">
         <strong id="pathTitle" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0"></strong>
-        <button type="button" class="help" data-help-key="help.path">?</button>
+        <button type="button" class="help" id="pathHelp" data-help-key="help.path">?</button>
         <label class="check" style="margin: 0 0 0 auto"><input id="pathNoTests" type="checkbox" checked><span><span data-i18n="path.noTests"></span><button type="button" class="help" data-help-key="help.pathNoTests">?</button></span></label>
-        <label class="check" style="margin: 0"><input id="pathSolid" type="checkbox"><span><span data-i18n="path.solid"></span><button type="button" class="help" data-help-key="help.pathSolid">?</button></span></label>
+        <label class="check" style="margin: 0"><input id="pathSolid" type="checkbox"><span><span id="pathSolidText" data-i18n="path.solid"></span><button type="button" class="help" id="pathSolidHelp" data-help-key="help.pathSolid">?</button></span></label>
         <label class="row" style="flex-wrap: nowrap"><span data-i18n="path.depth"></span>
           <select id="pathDepth"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></label>
+        <button id="pathResetChoices" data-i18n="path.resetChoices" hidden></button>
         <button id="pathClose" data-i18n="path.close"></button>
       </div>
       <p id="pathNote" class="muted"></p>
@@ -627,6 +630,30 @@ const STRINGS = {
   'path.truncated': [' Parou no teto de {n} pontos; reduza a profundidade para ver tudo.', ' Stopped at the cap of {n} points; reduce the depth to see everything.'],
   'path.clickLine': [' Clique numa linha para ver onde o nome está escrito.', ' Click a line to see where the name is written.'],
   'path.candidates': ['O nome escrito combina com {n} declarações; esta é uma delas.', 'The written name matches {n} declarations; this is one of them.'],
+  'inspector.calls': ['O que ele chama?', 'What does it call?'],
+  'help.calls': ['Abre a vista Caminho a partir deste ponto, para a frente: o que ele chama e o que esses chamam, em camadas. Uma chamada com homônimos fica tracejada e o caminho para ali; clique nela para escolher o candidato certo e seguir.',
+    'Opens the Path view from this point, forward: what it calls and what those call, in layers. A call with homonyms is dashed and the path stops there; click it to choose the right candidate and go on.'],
+  'help.pathCalls': ['O que este ponto chama, em camadas da esquerda para a direita, pelo nome escrito em cada chamada. Linha cheia: a chamada foi seguida porque o nome só combina com uma declaração, porque é uma chamada do próprio receptor (self.f()) e só um homônimo está na mesma classe ou impl, ou porque você escolheu. Linha tracejada: o nome combina com vários homônimos e o caminho para ali até você escolher qual seguir. É um mapa pelo nome, sem compilador: não prova que aquela chamada acontece nem quantas vezes.',
+    'What this point calls, in layers from left to right, by the name written in each call. Solid line: the call was followed because the name matches only one declaration, because it is the receiver\'s own call (self.f()) and only one homonym is in the same class or impl, or because you chose it. Dashed line: the name matches several homonyms and the path stops there until you choose which one to follow. It is a map by name, without a compiler: it does not prove the call happens or how often.'],
+  'path.solidCalls': ['só chamadas seguidas', 'only followed calls'],
+  'help.pathSolidCalls': ['Esconde as linhas tracejadas: chamadas cujo nome combina com vários homônimos e que você ainda não escolheu. Sobra o caminho que foi seguido.',
+    'Hides the dashed lines: calls whose name matches several homonyms and that you have not chosen yet. What remains is the path that was followed.'],
+  'path.callsTitle': ['O que ele chama: {name}', 'What it calls: {name}'],
+  'path.callsSearching': ['Seguindo as chamadas…', 'Following the calls…'],
+  'path.callsAllHidden': ['As {n} chamadas encontradas foram escondidas pelos filtros acima.', 'The {n} calls found were hidden by the filters above.'],
+  'path.callsNone': ['Nenhuma chamada encontrada: este ponto não escreve chamadas para outras declarações do acervo, ou elas têm mais de 8 homônimos.', 'No call found: this point writes no calls to other declarations in the collection, or they have more than 8 homonyms.'],
+  'path.callsNodeTitle': ['{label}\n{kind} · {location}\nclique: inspecionar · duplo clique: ver o que este chama', '{label}\n{kind} · {location}\nclick: inspect · double click: see what this calls'],
+  'path.callsSummary': ['{nodes} pontos e {links} chamadas até a profundidade {depth}.', '{nodes} points and {links} calls up to depth {depth}.'],
+  'path.callsAmbiguous': [' {n} chamada(s) tracejada(s): o nome combina com homônimos e o caminho para ali até você escolher.', ' {n} dashed call(s): the name matches homonyms and the path stops there until you choose.'],
+  'path.chosenCount': [' {n} escolha(s) sua(s).', ' {n} choice(s) of yours.'],
+  'path.callsClick': [' Clique numa linha tracejada para escolher o candidato.', ' Click a dashed line to choose the candidate.'],
+  'path.resolution.unique': ['seguida: o nome só combina com esta declaração', 'followed: the name matches only this declaration'],
+  'path.resolution.receiver': ['seguida: chamada do próprio receptor, e só este homônimo está na mesma classe ou impl', 'followed: the receiver\'s own call, and only this homonym is in the same class or impl'],
+  'path.resolution.chosen': ['seguida: escolhida por você', 'followed: chosen by you'],
+  'path.resolution.homonym': ['não seguida: o nome combina com {n} declarações; esta é uma delas', 'not followed: the name matches {n} declarations; this is one of them'],
+  'path.choose': ['Seguir por este', 'Follow this one'],
+  'path.unchoose': ['Desfazer escolha', 'Undo choice'],
+  'path.resetChoices': ['Limpar escolhas', 'Clear choices'],
   'use.attribute_access': ['lê ou escreve', 'reads or writes'],
   'use.field_assign': ['escreve', 'writes'],
   'use.field_init': ['preenche', 'fills'],
@@ -1303,11 +1330,13 @@ function inspect() {
       return el('li', { onclick: () => selectEdge(k) }, el('span', { className: 'tag', textContent: e.kind }), outward ? ' → ' : ' ← ',
         state.nodes[outward ? e.t : e.s].label.slice(0, 70), el('div', { className: 'muted', textContent: `${e.resolution} · ${e.evidence.path}:${e.evidence.start_line}` }));
     };
-    // "Onde é usado?" needs the studio: the traversal runs on the server over the run's graph.
+    // "Onde é usado?" and "O que ele chama?" need the studio: the traversals run on the server.
     const usedBy = n.category === 'symbol' && studio.project && studio.run
       ? el('div', { className: 'row', style: 'margin-top: 8px' },
-        el('button', { textContent: t('inspector.usedBy'), onclick: () => openPath(n.id) }),
-        helpButton(t('help.usedBy')))
+        el('button', { textContent: t('inspector.usedBy'), onclick: () => openPath(n.id, 'used') }),
+        helpButton(t('help.usedBy')),
+        el('button', { textContent: t('inspector.calls'), onclick: () => openPath(n.id, 'calls') }),
+        helpButton(t('help.calls')))
       : null;
     box.replaceChildren(
       el('strong', { className: 'mono', textContent: n.label }),
@@ -2188,7 +2217,8 @@ function compareView(c) {
     el('p', { className: 'muted', textContent: t('compare.summary', { all, rows: c.rows.length }) }));
 }
 
-// ---- G6c: "Onde é usado?" Who uses a symbol, in layers, laid out by ELK (layered algorithm).
+// ---- G6c and P1b: who uses a symbol ("Onde é usado?") or what it calls ("O que ele chama?"),
+// in layers from the seed on the left, laid out by ELK (layered algorithm).
 let elkLoading = null;
 const loadElk = () => elkLoading ??= new Promise((resolve, reject) => {
   const script = document.createElement('script');
@@ -2197,32 +2227,51 @@ const loadElk = () => elkLoading ??= new Promise((resolve, reject) => {
   script.onerror = () => { elkLoading = null; reject(new Error(t('path.elkFailed'))); };
   document.head.append(script);
 });
-let pathSeed = null;
+let pathSeed = null, pathMode = 'used';
+// P1b: the homonym the person chose for each ambiguous call (occurrence → symbol).
+let pathChosen = {};
 
-async function openPath(id) {
+/// `fresh` starts a new exploration; a double click on a node keeps the choices made so far.
+async function openPath(id, mode = pathMode, fresh = true) {
   pathSeed = id;
+  pathMode = mode;
+  if (fresh) pathChosen = {};
   $('#pathView').hidden = false;
   await drawPath();
 }
 
+const callsMode = () => pathMode === 'calls';
+// The end of a link closer to the seed, and the farther one: the user of a use, the callee of a call.
+const nearEnd = l => callsMode() ? l.from : l.to;
+const farEnd = l => callsMode() ? l.to : l.from;
+// Dashed: a use whose name matches homonyms, or a call left unresolved among homonyms.
+const dashed = l => callsMode() ? l.resolution === 'homonym' : l.candidates > 1;
+
 async function drawPath() {
-  const note = $('#pathNote'), canvas = $('#pathCanvas');
+  const note = $('#pathNote'), canvas = $('#pathCanvas'), calls = callsMode();
   $('#pathDetail').hidden = true;
   const seed = state.nodes[state.index.get(pathSeed)];
-  $('#pathTitle').textContent = t('path.title', { name: seed?.label ?? pathSeed });
-  note.textContent = t('path.searching');
+  $('#pathTitle').textContent = t(calls ? 'path.callsTitle' : 'path.title', { name: seed?.label ?? pathSeed });
+  $('#pathHelp').dataset.helpKey = calls ? 'help.pathCalls' : 'help.path';
+  $('#pathSolidText').dataset.i18n = calls ? 'path.solidCalls' : 'path.solid';
+  $('#pathSolidText').textContent = t($('#pathSolidText').dataset.i18n);
+  $('#pathSolidHelp').dataset.helpKey = calls ? 'help.pathSolidCalls' : 'help.pathSolid';
+  $('#pathResetChoices').hidden = !calls || !Object.keys(pathChosen).length;
+  note.textContent = t(calls ? 'path.callsSearching' : 'path.searching');
   canvas.replaceChildren();
   try {
-    const params = query({ key: studio.project.key, run: studio.run, node: pathSeed, depth: $('#pathDepth').value });
-    const [full, elk] = await Promise.all([api('GET', `/api/used-by?${params}`), loadElk()]);
+    const request = calls
+      ? api('POST', '/api/calls', { key: studio.project.key, run: studio.run, node: pathSeed, depth: Number($('#pathDepth').value), chosen: pathChosen })
+      : api('GET', `/api/used-by?${query({ key: studio.project.key, run: studio.run, node: pathSeed, depth: $('#pathDepth').value })}`);
+    const [full, elk] = await Promise.all([request, loadElk()]);
     const data = filterPath(full);
     if (!data.links.length && full.links.length) {
-      note.textContent = t('path.allHidden', { n: full.links.length });
+      note.textContent = t(calls ? 'path.callsAllHidden' : 'path.allHidden', { n: full.links.length });
       return;
     }
     if (!data.links.length) {
       const old = !String(state.graph?.derived_from ?? '').endsWith('-v2');
-      note.textContent = old ? t('path.oldGraph') : t('path.none');
+      note.textContent = old ? t('path.oldGraph') : t(calls ? 'path.callsNone' : 'path.none');
       return;
     }
     const { graph, groups, edges } = pathGraph(data);
@@ -2241,12 +2290,12 @@ const isTest = n => /(^|[.:])(test|tests_)/i.test(n.label) || /(^|\/)tests?\//.t
 function filterPath(data) {
   const noTests = $('#pathNoTests').checked, solid = $('#pathSolid').checked;
   const byId = new Map(data.nodes.map(n => [n.id, n]));
-  const links = data.links.filter(l => (!solid || l.candidates === 1)
+  const links = data.links.filter(l => (!solid || !dashed(l))
     && (!noTests || (!isTest(byId.get(l.from)) && !isTest(byId.get(l.to)))));
   const reached = new Set([data.seed]);
   for (let grew = true; grew;) {
     grew = false;
-    for (const l of links) if (reached.has(l.to) && !reached.has(l.from)) { reached.add(l.from); grew = true; }
+    for (const l of links) if (reached.has(nearEnd(l)) && !reached.has(farEnd(l))) { reached.add(farEnd(l)); grew = true; }
   }
   return { ...data, nodes: data.nodes.filter(n => reached.has(n.id)), links: links.filter(l => reached.has(l.from) && reached.has(l.to)),
     hidden: data.nodes.length - reached.size };
@@ -2266,8 +2315,8 @@ function pathGraph(data) {
   for (const link of data.links) {
     // A symbol using its own name (recursion, or a homonym of itself) adds no step to the path.
     if (link.to === link.from) continue;
-    const id = `${link.to}→${link.from}`;
-    if (!edges.has(id)) edges.set(id, { id: `e${edges.size}`, used: link.to, user: link.from, links: [] });
+    const id = `${nearEnd(link)}→${farEnd(link)}`;
+    if (!edges.has(id)) edges.set(id, { id: `e${edges.size}`, near: nearEnd(link), far: farEnd(link), from: link.from, to: link.to, links: [] });
     edges.get(id).links.push(link);
   }
   const graph = {
@@ -2279,13 +2328,13 @@ function pathGraph(data) {
       'elk.json.edgeCoords': 'ROOT' },
     children: [...groups.values()].map(g => ({ id: g.id, width: Math.max(120, g.title.length * 6.6 + 24),
       layoutOptions: { 'elk.padding': '[top=26,left=10,bottom=10,right=10]' }, children: g.children })),
-    edges: [...edges.values()].map(e => ({ id: e.id, sources: [e.used], targets: [e.user] })),
+    edges: [...edges.values()].map(e => ({ id: e.id, sources: [e.near], targets: [e.far] })),
   };
   return { graph, groups: { byId: new Map([...groups.values()].map(g => [g.id, g])), nodes: nodeInfo }, edges: new Map([...edges.values()].map(e => [e.id, e])) };
 }
 
 function renderPath(data, layout, groups, edges) {
-  const ns = 'http://www.w3.org/2000/svg';
+  const ns = 'http://www.w3.org/2000/svg', calls = callsMode();
   const svg = (tag, attrs = {}, ...children) => {
     const node = document.createElementNS(ns, tag);
     for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
@@ -2305,14 +2354,14 @@ function renderPath(data, layout, groups, edges) {
       const node = svg('g', { class: `node${info2.layer === 0 ? ' seed' : ''}`, 'data-id': n.id },
         svg('rect', { x: g.x + n.x, y: g.y + n.y, width: n.width, height: n.height, rx: 6 }),
         svg('text', { x: g.x + n.x + 12, y: g.y + n.y + 19 }, info2.text),
-        title(t('path.nodeTitle', { label: info2.label, kind: info2.kind, location: `${info2.path}:${info2.line}` })));
+        title(t(calls ? 'path.callsNodeTitle' : 'path.nodeTitle', { label: info2.label, kind: info2.kind, location: `${info2.path}:${info2.line}` })));
       node.addEventListener('click', () => {
         root.querySelectorAll('.node.selected').forEach(x => x.classList.remove('selected'));
         node.classList.add('selected');
         const i = state.index.get(n.id);
         if (i != null) selectNode(i);
       });
-      node.addEventListener('dblclick', () => openPath(n.id));
+      node.addEventListener('dblclick', () => openPath(n.id, pathMode, false));
       root.append(node);
     }
   }
@@ -2325,36 +2374,49 @@ function renderPath(data, layout, groups, edges) {
     const [dx, dy] = box ? [box.x, box.y] : [0, 0];
     const points = (e.sections ?? []).flatMap(s => [s.startPoint, ...(s.bendPoints ?? []), s.endPoint]).map(p => ({ x: p.x + dx, y: p.y + dy }));
     if (!points.length) continue;
-    const ambiguous = info.links.some(l => l.candidates > 1);
-    const path = svg('polyline', { class: `edge${ambiguous ? ' ambiguous' : ''}`, points: points.map(p => `${p.x},${p.y}`).join(' '), 'marker-end': 'url(#arrow)' },
+    const path = svg('polyline', { class: `edge${info.links.some(dashed) ? ' ambiguous' : ''}`, points: points.map(p => `${p.x},${p.y}`).join(' '), 'marker-end': 'url(#arrow)' },
       title(info.links.map(l => `${l.text.slice(0, 80)} · ${l.evidence.path}:${l.evidence.start_line}`).join('\n')));
     path.addEventListener('click', () => showUse(info, groups.nodes));
     root.append(path);
   }
   $('#pathCanvas').replaceChildren(root);
-  const ambiguous = data.links.filter(l => l.candidates > 1).length;
-  $('#pathNote').textContent = t('path.summary', { nodes: data.nodes.length, links: data.links.length, depth: data.depth })
-    + (ambiguous ? t('path.ambiguous', { n: ambiguous }) : '')
+  const ambiguous = new Set(data.links.filter(dashed).map(l => calls ? l.occurrence : l.candidate_edge)).size;
+  const chosen = Object.keys(pathChosen).length;
+  $('#pathNote').textContent = t(calls ? 'path.callsSummary' : 'path.summary', { nodes: data.nodes.length, links: data.links.length, depth: data.depth })
+    + (ambiguous ? t(calls ? 'path.callsAmbiguous' : 'path.ambiguous', { n: ambiguous }) : '')
+    + (calls && chosen ? t('path.chosenCount', { n: chosen }) : '')
     + (data.hidden ? t('path.hidden', { n: data.hidden }) : '')
     + (data.truncated ? t('path.truncated', { n: data.max_nodes }) : '')
-    + t('path.clickLine');
+    + t(calls ? 'path.callsClick' : 'path.clickLine');
 }
 
+// The links of one pair of points; in calls mode, a homonym can be chosen to follow from there.
 function showUse(info, nodes) {
   const box = $('#pathDetail');
   const kind = code => STRINGS[`use.${code}`] ? t(`use.${code}`) : code;
+  const decide = (l, follow) => () => {
+    if (follow) pathChosen[l.occurrence] = l.to;
+    else delete pathChosen[l.occurrence];
+    drawPath();
+  };
+  const resolution = l => el('div', { className: 'muted' }, t(`path.resolution.${l.resolution}`, { n: l.candidates }),
+    l.resolution === 'homonym' ? el('button', { textContent: t('path.choose'), style: 'margin-left: 8px', onclick: decide(l, true) }) : null,
+    l.resolution === 'chosen' ? el('button', { textContent: t('path.unchoose'), style: 'margin-left: 8px', onclick: decide(l, false) }) : null);
   box.replaceChildren(
     el('div', { className: 'row', style: 'justify-content: space-between' },
-      el('strong', { textContent: `${shortName(nodes.get(info.user).label)} → ${shortName(nodes.get(info.used).label)}` }),
+      // Full labels: homonyms share the short name (color_at), only the container tells them apart.
+      el('strong', { textContent: `${nodes.get(info.from).label} → ${nodes.get(info.to).label}` }),
       el('button', { textContent: t('common.close'), onclick: () => { box.hidden = true; } })),
     el('ul', { className: 'claims' }, ...info.links.map(l => el('li', {},
       `${kind(l.occurrence_kind)}: `, el('code', { textContent: l.text.slice(0, 160) }),
       el('div', { className: 'muted mono', textContent: `${l.evidence.path}:${l.evidence.start_line}` }),
-      l.candidates > 1 ? el('div', { className: 'muted', textContent: t('path.candidates', { n: l.candidates }) }) : null))));
+      callsMode() ? resolution(l)
+        : l.candidates > 1 ? el('div', { className: 'muted', textContent: t('path.candidates', { n: l.candidates }) }) : null))));
   box.hidden = false;
 }
 
 $('#pathClose').onclick = () => { $('#pathView').hidden = true; };
+$('#pathResetChoices').onclick = () => { pathChosen = {}; drawPath(); };
 for (const id of ['#pathDepth', '#pathNoTests', '#pathSolid']) $(id).onchange = () => { if (pathSeed) drawPath(); };
 
 // ---- help: each "?" explains a part of the page in plain words, on hover or click.
