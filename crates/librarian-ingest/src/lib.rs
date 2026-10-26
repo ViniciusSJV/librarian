@@ -512,6 +512,18 @@ impl Catalog {
     pub fn owner_context(&self) -> bool {
         self.registry.owner_context
     }
+    /// What "what does it call?" needs from this edition's profile, for each language present:
+    /// the occurrence kinds that are calls and, where the profile records owner syntax, the
+    /// receiver of a method's own calls.
+    pub fn call_syntax(&self) -> graph::v2::CallSyntax {
+        let mut syntax = graph::v2::CallSyntax::default();
+        for source in self.sources.values() {
+            let Some(extractor) = self.registry.extractor(&source.language) else { continue };
+            let receiver = self.registry.owner_syntax(&source.language).map(|o| o.receiver);
+            syntax.languages.insert(source.language.clone(), (extractor.call_kinds().to_vec(), receiver));
+        }
+        syntax
+    }
     pub fn sources(&self) -> &BTreeMap<String, Source> {
         &self.sources
     }

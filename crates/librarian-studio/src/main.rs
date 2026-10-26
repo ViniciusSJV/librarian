@@ -119,6 +119,16 @@ fn route(app: &App, req: &Request) -> Result<Response> {
             let graph = graph(app, param("key")?, param("run")?)?;
             ok(serde_json::to_value(graph.used_by(param("node")?, depth, USED_BY_NODES)?)?)
         }
+        ("POST", "/api/calls") => {
+            // P1b: what a symbol calls; `chosen` maps a call occurrence to the homonym the person picked.
+            let body = req.json()?;
+            let (key, run) = (field(&body, "key")?, field(&body, "run")?);
+            let depth = body["depth"].as_u64().ok_or("depth precisa ser um número")? as usize;
+            let chosen: std::collections::BTreeMap<String, String> = serde_json::from_value(body["chosen"].clone()).unwrap_or_default();
+            let syntax = librarian_ingest::Catalog::load(&store.edition(&key, &run)?)?.call_syntax();
+            let graph = graph(app, &key, &run)?;
+            ok(serde_json::to_value(graph.calls_from(&field(&body, "node")?, depth, USED_BY_NODES, &syntax, &chosen)?)?)
+        }
         ("GET", "/api/graph") => Ok(Response {
             status: 200,
             content_type: "application/json; charset=utf-8",

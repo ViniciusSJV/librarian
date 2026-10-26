@@ -38,6 +38,10 @@ pub(crate) trait Extractor: Sync {
     fn owner_syntax(&self) -> Option<&'static OwnerSyntax> {
         None
     }
+    /// Occurrence kinds that are calls, followed by "what does it call?" (P1b).
+    fn call_kinds(&self) -> &'static [&'static str] {
+        &[]
+    }
 }
 
 /// G6d: the written forms an owner context follows in one language. Only names and occurrence

@@ -81,6 +81,10 @@ impl Extractor for Python {
     fn owner_syntax(&self) -> Option<&'static OwnerSyntax> {
         self.g6.then_some(&OWNER)
     }
+
+    fn call_kinds(&self) -> &'static [&'static str] {
+        &["call_observed", "method_call_observed"]
+    }
 }
 
 /// A method's owner is the class that contains it. The class spans its methods, so the writes

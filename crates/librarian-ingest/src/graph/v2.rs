@@ -252,3 +252,139 @@ impl Graph {
         Ok(UsedBy { seed: seed.into(), depth, max_nodes, truncated, nodes, links })
     }
 }
+
+/// What "what does it call?" needs from the edition profile, by language: the occurrence kinds
+/// that are calls and the receiver of a method's own calls (`<receiver>.f()`), when recorded.
+#[derive(Debug, Clone, Default)]
+pub struct CallSyntax {
+    pub languages: BTreeMap<String, (Vec<&'static str>, Option<&'static str>)>,
+}
+
+/// P1b: what a symbol calls, forward, in layers. A call is followed only when its written name
+/// points to one declaration: it matches only one (`unique`), it is the receiver's own call and
+/// only one homonym shares the caller's container (`receiver`), or the person chose one
+/// (`chosen`). Otherwise every candidate is reported (`homonym`) and none is followed.
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+pub struct Calls {
+    pub seed: String,
+    pub depth: usize,
+    pub max_nodes: usize,
+    /// True when a node was left out because of `max_nodes`.
+    pub truncated: bool,
+    pub nodes: Vec<UsedNode>,
+    pub links: Vec<CallLink>,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+pub struct CallLink {
+    /// The symbol whose body writes the call.
+    pub from: String,
+    /// A declaration the written name matches.
+    pub to: String,
+    pub occurrence: String,
+    pub occurrence_kind: String,
+    /// The written text, e.g. `self.shade_hit(comps, remaining)`.
+    pub text: String,
+    /// How many declarations the written name matched.
+    pub candidates: usize,
+    /// unique, receiver, chosen or homonym; homonym links are reported, never followed.
+    pub resolution: String,
+    pub candidate_edge: String,
+    pub evidence: Evidence,
+}
+
+impl Graph {
+    /// `chosen` maps a call occurrence to the candidate the person picked among its homonyms.
+    pub fn calls_from(&self, seed: &str, depth: usize, max_nodes: usize, syntax: &CallSyntax,
+        chosen: &BTreeMap<String, String>) -> Result<Calls> {
+        if self.nodes.get(seed).is_none_or(|n| n.category != "symbol") || !(1..=6).contains(&depth) || !(1..=300).contains(&max_nodes) {
+            return Err("The seed must be a symbol; depth 1..6, nodes 1..300".into());
+        }
+        let mut candidates_from: BTreeMap<&str, Vec<&Edge>> = BTreeMap::new();
+        let mut observed: BTreeMap<&str, Vec<&str>> = BTreeMap::new();
+        let mut parent: BTreeMap<&str, &str> = BTreeMap::new();
+        let mut declared: BTreeMap<&str, &Evidence> = BTreeMap::new();
+        for e in &self.edges {
+            match e.kind.as_str() {
+                "name_candidate" => candidates_from.entry(&e.from).or_default().push(e),
+                "observes" => observed.entry(&e.from).or_default().push(&e.to),
+                "contains" => {
+                    parent.insert(&e.to, &e.from);
+                }
+                "declares" => {
+                    declared.insert(&e.to, &e.evidence);
+                }
+                _ => {}
+            }
+        }
+        let container = |id: &str| parent.get(id).map(|p| self.nodes[*p].label.as_str());
+        let node = |id: &str, layer: usize| {
+            let n = &self.nodes[id];
+            let place = declared.get(id);
+            UsedNode {
+                id: id.into(),
+                label: n.label.clone(),
+                kind: n.kind.clone(),
+                language: n.language.clone(),
+                layer,
+                container: container(id).map(str::to_owned),
+                path: place.map_or_else(String::new, |e| e.path.clone()),
+                line: place.map_or(0, |e| e.start_line),
+            }
+        };
+        let mut nodes = vec![node(seed, 0)];
+        let mut layer_of: BTreeMap<String, usize> = BTreeMap::from([(seed.to_owned(), 0)]);
+        let mut followed: std::collections::BTreeSet<String> = std::collections::BTreeSet::from([seed.to_owned()]);
+        let mut links = vec![];
+        let mut truncated = false;
+        let mut frontier = vec![seed.to_owned()];
+        for layer in 1..=depth {
+            let mut next = vec![];
+            for caller in &frontier {
+                let Some((kinds, receiver)) = syntax.languages.get(&self.nodes[caller].language) else { continue };
+                for occurrence in observed.get(caller.as_str()).into_iter().flatten() {
+                    let written = &self.nodes[*occurrence];
+                    if !kinds.contains(&written.kind.as_str()) {
+                        continue;
+                    }
+                    let edges = candidates_from.get(occurrence).cloned().unwrap_or_default();
+                    let own = receiver.is_some_and(|r| written.label.starts_with(&format!("{r}.")));
+                    let same: Vec<&Edge> = edges.iter().copied().filter(|e| container(&e.to) == container(caller)).collect();
+                    let pick = chosen.get(*occurrence).and_then(|c| edges.iter().find(|e| &e.to == c));
+                    let (reported, resolution): (Vec<&Edge>, &str) = match (pick, edges.len(), own && same.len() == 1) {
+                        (Some(e), _, _) => (vec![*e], "chosen"),
+                        (None, 1, _) => (edges.clone(), "unique"),
+                        (None, _, true) => (same, "receiver"),
+                        _ => (edges.clone(), "homonym"),
+                    };
+                    for edge in reported {
+                        if !layer_of.contains_key(&edge.to) {
+                            if nodes.len() >= max_nodes {
+                                truncated = true;
+                                continue;
+                            }
+                            layer_of.insert(edge.to.clone(), layer);
+                            nodes.push(node(&edge.to, layer));
+                        }
+                        if resolution != "homonym" && followed.insert(edge.to.clone()) {
+                            next.push(edge.to.clone());
+                        }
+                        links.push(CallLink {
+                            from: caller.clone(),
+                            to: edge.to.clone(),
+                            occurrence: (*occurrence).to_owned(),
+                            occurrence_kind: written.kind.clone(),
+                            text: written.label.clone(),
+                            candidates: edges.len(),
+                            resolution: resolution.into(),
+                            candidate_edge: edge.id.clone(),
+                            evidence: edge.evidence.clone(),
+                        });
+                    }
+                }
+            }
+            frontier = next;
+        }
+        Ok(Calls { seed: seed.into(), depth, max_nodes, truncated, nodes, links })
+    }
+}

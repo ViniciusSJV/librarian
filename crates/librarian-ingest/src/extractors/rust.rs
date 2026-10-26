@@ -94,6 +94,10 @@ impl Extractor for Rust {
     fn owner_syntax(&self) -> Option<&'static OwnerSyntax> {
         self.g6d.then_some(&OWNER)
     }
+
+    fn call_kinds(&self) -> &'static [&'static str] {
+        &["call_observed", "method_call_observed"]
+    }
 }
 
 /// A method's owner is the type its impl names; fields are written by assignment or literal.
