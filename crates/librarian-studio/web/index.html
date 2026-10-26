@@ -2398,7 +2398,7 @@ async function loadCommands() {
   const execution = x => el('li', {}, executionView(x));
   $('#commandsList').replaceChildren(
     data.commands.length ? el('ol', { className: 'claims' }, ...data.commands.map(item)) : el('p', { className: 'muted', textContent: t('commands.none') }),
-    studio.run ? null : el('p', { className: 'muted', textContent: t('commands.noRun') }), note);
+    studio.run ? '' : el('p', { className: 'muted', textContent: t('commands.noRun') }), note);
   $('#executionsList').replaceChildren(
     executions.length ? el('div', {}, el('strong', { textContent: t('executions.title') }), el('ol', { className: 'claims' }, ...executions.map(execution))) : '',
     el('p', { className: 'muted', style: 'font-size: 11px', textContent: serverText(data.limits) }));
