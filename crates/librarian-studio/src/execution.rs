@@ -5,7 +5,8 @@
 //! read prints `librarian-measure name=value [unit]` lines.
 //! Commands are read from the profile on disk at each call, never from a request; each one
 //! runs only after a person approved that exact command (its hash).
-//! Layout: projects/<key>/commands.jsonl (approvals), projects/<key>/copies/<run>/ (the copy),
+//! Layout: projects/<key>/commands.jsonl (approvals), <copies>/<key>/<run>/ (the copy, outside
+//! the Librarian: see `copies`),
 //! runs/<run>/executions/<NN-name>/{execution.json, stdout-N.txt, stderr-N.txt}.
 use crate::store::{display, stamp, Store, PROFILE};
 use librarian_ingest::{hash, Catalog, Result};
@@ -142,8 +143,9 @@ impl Store {
         let approval = self.approvals(key)?.into_iter().rev().find(|a| a["name"] == name && a["sha256"] == sha256.as_str())
             .ok_or("Comando sem aprovação para esta versão; aprove-o antes de rodar")?;
         let _one = RUNNING.lock().map_err(|_| "Uma execução anterior falhou no meio; reinicie o studio")?;
-        let catalog = Catalog::load(&self.edition(key, run)?)?;
-        let copy = self.copy(key, run, &root, &catalog)?;
+        let edition = self.edition(key, run)?;
+        let catalog = Catalog::load(&edition)?;
+        let copy = self.copy(key, run, &root, &edition, &catalog)?;
         let (_, dir) = crate::store::reserve(&self.run_dir(key, run)?.join("executions"), &format!("{:02}-{name}", self.executions(key, run)?.len() + 1))?;
         let started = stamp();
         let mut runs = vec![];
@@ -160,6 +162,7 @@ impl Store {
             "repeat": command.repeat, "outputs": command.outputs, "command_sha256": sha256, "approved": approval["approved"],
             "edition": format!("edition:{}", hash(&serde_json::to_vec(catalog.manifest())?)),
             "git_head": copy.head, "copy": display(&copy.dir), "sources_verified": copy.verified,
+            "sources_line_endings_only": copy.line_endings,
             "machine": machine(), "started": started, "finished": stamp(),
             "runs": runs, "summary": summary(&runs), "limits": LIMITS,
         });
@@ -178,32 +181,67 @@ impl Store {
 
     /// The copy of the project at the edition's commit, made once per run and checked against
     /// the edition: every source the edition read must be there with the same bytes.
-    fn copy(&self, key: &str, run: &str, root: &Path, catalog: &Catalog) -> Result<Copy> {
+    fn copy(&self, key: &str, run: &str, root: &Path, edition: &Path, catalog: &Catalog) -> Result<Copy> {
         let head = catalog.manifest().git.head.clone()
             .ok_or("A edition não tem commit (o projeto não é um repositório git); não há cópia para rodar")?;
-        let dir = self.project_dir(key)?.join("copies").join(crate::store::safe_id(run)?);
+        let dir = copies().join(crate::store::safe_id(key)?).join(crate::store::safe_id(run)?);
         if !dir.join(".git").exists() {
             fs::create_dir_all(dir.parent().unwrap())?;
-            let output = Process::new("git").arg("-C").arg(root).args(["worktree", "add", "--detach"]).arg(&dir).arg(&head).output()
-                .map_err(|e| format!("git não foi encontrado: {e}"))?;
+            let git = |args: &[&str]| Process::new("git").arg("-C").arg(root).args(args).output()
+                .map_err(|e| format!("git não foi encontrado: {e}"));
+            // A copy whose folder was deleted (a cleaned temporary folder) is still registered.
+            git(&["worktree", "prune"])?;
+            let output = git(&["worktree", "add", "--detach", &display(&dir), &head])?;
             if !output.status.success() {
                 return Err(format!("git worktree falhou: {}", String::from_utf8_lossy(&output.stderr).trim()).into());
             }
         }
-        let differ: Vec<&str> = catalog.sources().values()
-            .filter(|s| fs::read(dir.join(&s.path)).map_or(true, |b| hash(&b) != s.sha256))
-            .map(|s| s.path.as_str())
-            .collect();
+        // Git may check a file out with other line endings than a tool left in the project
+        // (`core.autocrlf`); such a file is the same text, and is counted apart, not hidden.
+        let (mut differ, mut line_endings) = (vec![], vec![]);
+        for s in catalog.sources().values() {
+            let copied = fs::read(dir.join(&s.path)).ok();
+            if copied.as_deref().is_some_and(|b| hash(b) == s.sha256) {
+                continue;
+            }
+            let read = fs::read(edition.join("snapshots").join(&s.sha256)).ok();
+            match (copied, read) {
+                (Some(c), Some(r)) if lf(&c) == lf(&r) => line_endings.push(s.path.clone()),
+                _ => differ.push(s.path.as_str()),
+            }
+        }
         if !differ.is_empty() {
             return Err(format!("A cópia no commit {} difere da edition em {} arquivo(s), por exemplo {}; a edition foi gerada com mudanças sem commit. Faça commit e gere o grafo de novo.",
                 &head[..head.len().min(12)], differ.len(), differ.iter().take(3).copied().collect::<Vec<_>>().join(", ")).into());
         }
-        Ok(Copy { dir, head, verified: catalog.sources().len() })
+        Ok(Copy { dir, head, verified: catalog.sources().len(), line_endings })
     }
+}
+
+/// Where copies live: `LIBRARIAN_COPIES`, or the system's temporary folder. Never inside the
+/// Librarian's own tree: tools look for their project files in parent folders, and a copy
+/// inside another project would be read as part of it.
+fn copies() -> PathBuf {
+    let base = std::env::var_os("LIBRARIAN_COPIES").map(PathBuf::from).unwrap_or_else(|| std::env::temp_dir().join("librarian-copies"));
+    // A plain path: tools given the Windows verbatim form (\\?\) refuse or misread it.
+    PathBuf::from(display(&base))
+}
+
+/// The bytes with CRLF read as LF.
+fn lf(bytes: &[u8]) -> Vec<u8> {
+    let mut out = Vec::with_capacity(bytes.len());
+    for (i, &b) in bytes.iter().enumerate() {
+        if !(b == b'\r' && bytes.get(i + 1) == Some(&b'\n')) {
+            out.push(b);
+        }
+    }
+    out
 }
 
 struct Copy {
     dir: PathBuf,
+    /// Sources whose copy differs from the edition only in line endings.
+    line_endings: Vec<String>,
     head: String,
     verified: usize,
 }

@@ -424,8 +424,8 @@ const STRINGS = {
 
   // facts
   'commands.title': ['Execução (comandos do projeto)', 'Execution (project commands)'],
-  'help.commands': ['Comandos que o próprio projeto declara no librarian.json, em "commands": a lista de argumentos (sem shell), o tempo máximo e quantas repetições. O Librarian não sabe o que cada comando faz. Ele roda numa cópia do projeto no commit da edition (um git worktree dentro do .studio), conferida contra as impressões digitais da edition, nunca na sua pasta. Cada comando só roda depois que você aprova aquela versão exata; mudar o comando no perfil pede aprovação de novo. Ele guarda o tempo de cada repetição, o código de saída, a saída inteira e as linhas "librarian-measure nome=valor unidade" que o projeto imprimir.',
-    'Commands the project itself declares in librarian.json, under "commands": the argument list (no shell), the time limit and how many repetitions. The Librarian does not know what each command does. It runs in a copy of the project at the edition\'s commit (a git worktree inside .studio), checked against the edition\'s fingerprints, never in your folder. Each command runs only after you approve that exact version; changing the command in the profile asks for approval again. It keeps each repetition\'s time, exit code, whole output and the "librarian-measure name=value unit" lines the project prints.'],
+  'help.commands': ['Comandos que o próprio projeto declara no librarian.json, em "commands": a lista de argumentos (sem shell), o tempo máximo e quantas repetições. O Librarian não sabe o que cada comando faz. Ele roda numa cópia do projeto no commit da edition (um git worktree na pasta temporária do sistema, ou em LIBRARIAN_COPIES, fora de qualquer outro projeto), conferida contra as impressões digitais da edition, nunca na sua pasta. Cada comando só roda depois que você aprova aquela versão exata; mudar o comando no perfil pede aprovação de novo. Ele guarda o tempo de cada repetição, o código de saída, a saída inteira e as linhas "librarian-measure nome=valor unidade" que o projeto imprimir.',
+    'Commands the project itself declares in librarian.json, under "commands": the argument list (no shell), the time limit and how many repetitions. The Librarian does not know what each command does. It runs in a copy of the project at the edition\'s commit (a git worktree in the system temporary folder, or in LIBRARIAN_COPIES, outside any other project), checked against the edition\'s fingerprints, never in your folder. Each command runs only after you approve that exact version; changing the command in the profile asks for approval again. It keeps each repetition\'s time, exit code, whole output and the "librarian-measure name=value unit" lines the project prints.'],
   'commands.none': ['O librarian.json do projeto não declara commands.', 'The project\'s librarian.json declares no commands.'],
   'commands.spec': ['tempo máximo {timeout} s · {repeat} repetição(ões)', 'time limit {timeout} s · {repeat} repetition(s)'],
   'commands.approved': ['aprovado em {when}', 'approved on {when}'],
@@ -443,6 +443,7 @@ const STRINGS = {
   'executions.stat': ['{name}: mediana {median} {unit} (mín {min}, máx {max}, n={n})', '{name}: median {median} {unit} (min {min}, max {max}, n={n})'],
   'executions.output': ['Saída da última repetição (código {code}{timeout})', 'Output of the last repetition (code {code}{timeout})'],
   'executions.timedOut': [', estourou o tempo', ', timed out'],
+  'executions.lineEndings': ['{n} fonte(s) diferem da edition só no fim de linha (CRLF/LF), o mesmo texto: {list}', '{n} source(s) differ from the edition only in line endings (CRLF/LF), the same text: {list}'],
   'executions.outputSame': ['{path}: mesmo conteúdo em todas as repetições, sha256 {sha}', '{path}: same content in every repetition, sha256 {sha}'],
   'executions.outputDiffers': ['{path}: {n} conteúdos diferentes entre as repetições', '{path}: {n} different contents across repetitions'],
   'executions.outputMissing': ['{path}: o comando não escreveu o arquivo', '{path}: the command did not write the file'],
@@ -2300,6 +2301,7 @@ async function loadCommands() {
       el('div', { textContent: t('executions.head', { name: x.name, started: x.started, ok: x.summary.succeeded, attempted: x.summary.attempted,
         head: (x.git_head ?? '').slice(0, 12), sources: x.sources_verified }) }),
       el('div', { className: 'mono muted', textContent: x.argv.join(' ') }),
+      x.sources_line_endings_only?.length ? el('div', { className: 'muted', textContent: t('executions.lineEndings', { n: x.sources_line_endings_only.length, list: x.sources_line_endings_only.join(', ') }) }) : null,
       el('ul', {}, ...Object.entries(x.summary.stats).map(([name, s]) => el('li', { className: 'mono',
         textContent: t('executions.stat', { name, median: number(s.median), unit: s.unit ?? '', min: number(s.min), max: number(s.max), n: s.n }) })),
         ...Object.entries(x.summary.outputs ?? {}).map(([path, shas]) => el('li', { className: 'mono',

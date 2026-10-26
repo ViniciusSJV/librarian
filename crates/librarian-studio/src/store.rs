@@ -1545,6 +1545,8 @@ mod tests {
         assert_eq!(done["summary"]["stats"]["answer"]["unit"], "units");
         assert!(done["sources_verified"].as_u64().unwrap() > 0);
         assert!(Path::new(done["copy"].as_str().unwrap()).join("src/lib.rs").is_file());
+        // The copy lives outside the studio data, so no tool takes it for part of another project.
+        assert!(!done["copy"].as_str().unwrap().starts_with(&display(&store.dir)));
         assert_eq!(store.executions(&key, &run).unwrap().len(), 1);
         // A declared output is hashed after each repetition; the same bytes give one hash.
         let sha = store.commands(&key).unwrap()["commands"][1]["sha256"].as_str().unwrap().to_owned();
@@ -1553,6 +1555,14 @@ mod tests {
         assert_eq!(wrote["summary"]["outputs"]["made.txt"].as_array().unwrap().len(), 1);
         assert_eq!(wrote["runs"][0]["outputs"]["made.txt"], librarian_ingest::hash(b"x
 "));
+
+        // A source that differs only in line endings is the same text, recorded as such.
+        let lib = root.join("src/lib.rs");
+        fs::write(&lib, fs::read_to_string(&lib).unwrap().replace('\n', "\r\n")).unwrap();
+        let crlf = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        let same = store.execute(&key, &crlf, "probe").unwrap();
+        assert_eq!(same["sources_line_endings_only"], json!(["src/lib.rs"]));
+        git(&["checkout", "--", "src/lib.rs"]);
 
         // Editing the command in the profile voids the approval.
         let mut edited = profile.clone();
@@ -1570,6 +1580,7 @@ mod tests {
         outside["commands"]["write"]["outputs"] = json!(["../x.txt"]);
         fs::write(root.join(PROFILE), outside.to_string()).unwrap();
         assert!(refusal(store.commands(&key)).contains("fora da cópia"));
+        let _ = fs::remove_dir_all(Path::new(done["copy"].as_str().unwrap()).parent().unwrap());
     }
 
     #[test]
