@@ -306,6 +306,7 @@
         <label class="row" style="flex-wrap: nowrap"><span data-i18n="path.depth"></span>
           <select id="pathDepth"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></label>
         <button id="pathResetChoices" data-i18n="path.resetChoices" hidden></button>
+        <button id="pathAsk" class="primary" hidden></button>
         <button id="pathClose" data-i18n="path.close"></button>
       </div>
       <p id="pathNote" class="muted"></p>
@@ -658,6 +659,18 @@ const STRINGS = {
   'path.choose': ['Seguir por este', 'Follow this one'],
   'path.unchoose': ['Desfazer escolha', 'Undo choice'],
   'path.resetChoices': ['Limpar escolhas', 'Clear choices'],
+  'path.ask': ['Perguntar sobre estes pontos ({n})', 'Ask about these points ({n})'],
+  'path.askTitle': ['Perguntar sobre o caminho', 'Ask about the path'],
+  'path.askMessage': ['Uma pergunta para cada um dos {n} pontos seguidos (sem testes e sem homônimos não escolhidos), cada uma só com o trecho daquele ponto. Com um LLM escolhido, elas são enviadas uma depois da outra.\n\n{list}',
+    'One question for each of the {n} followed points (no tests, no unchosen homonyms), each with only that point\'s snippet. With an LLM chosen, they are sent one after the other.\n\n{list}'],
+  'path.askDefault': ['Onde este trecho faz cálculos para cada raio ou pixel?', 'Where does this snippet compute something for each ray or pixel?'],
+  'path.askOk': ['Perguntar ({n})', 'Ask ({n})'],
+  'path.sending': ['Enviando {index} de {total}: {name}…', 'Sending {index} of {total}: {name}…'],
+  'path.sent': ['{total} perguntas do caminho enviadas.', '{total} path questions sent.'],
+  'path.turnTag': ['caminho ← {seed} ({index}/{total})', 'path ← {seed} ({index}/{total})'],
+  'path.turnSummary': [' Evidência: {node}, escolhido por você no caminho; nada foi buscado. Escolhas entre homônimos no caminho: {chosen}.', ' Evidence: {node}, picked by you on the path; nothing was searched. Choices among homonyms on the path: {chosen}.'],
+  'help.pathTurn': ['Esta pergunta veio de "O que ele chama?": você montou o caminho, e o bibliotecário fez uma pergunta para cada ponto, com só o trecho daquele ponto. Um modelo pequeno acerta mais com um trecho por vez. O caminho foi seguido pelo nome escrito e pelas suas escolhas, não por um compilador.',
+    'This question came from "What does it call?": you built the path, and the librarian asked one question for each point, with only that point\'s snippet. A small model gets it right more often with one snippet at a time. The path was followed by written names and by your choices, not by a compiler.'],
   'use.attribute_access': ['lê ou escreve', 'reads or writes'],
   'use.field_assign': ['escreve', 'writes'],
   'use.field_init': ['preenche', 'fills'],
@@ -1732,6 +1745,16 @@ async function continueTurn(from, button) {
   });
 }
 
+// P1b: a question about one point picked on a "what does it call?" path.
+function pathTurnView(p) {
+  const label = id => state.nodes[state.index.get(id)]?.label ?? id;
+  const chosen = Object.keys(p.chosen ?? {}).length;
+  return el('div', { className: 'muted', style: 'margin-top: 6px' },
+    el('span', { className: 'tag', textContent: t('path.turnTag', { seed: shortName(label(p.seed)), index: p.index, total: p.total }) }),
+    t('path.turnSummary', { node: label(p.node), chosen }),
+    helpButton(t('help.pathTurn')));
+}
+
 function chainView(c, owner) {
   const where = c.targets.map(x => `${x.symbol_name} (${x.path}:${x.declaration_line})`).join(', ');
   const answers = c.answers.map(a => `${a.send} (${a.claims.join(', ')})`).join(', ');
@@ -1878,6 +1901,7 @@ function renderTurn(turn) {
   return el('div', { className: 'turn' + (studio.activeTurn === turn.id ? ' active' : '') },
     el('div', { className: 'bubble user', textContent: turn.question, title: t('turn.highlight'), onclick: () => activate(turn.id) }),
     turn.chain ? chainView(turn.chain, turn.search?.owner_context) : null,
+    turn.path ? pathTurnView(turn.path) : null,
     el('div', { style: 'margin-top: 6px' }, el('span', { className: 'muted', textContent: t('turn.lexicon') }),
       ...(turn.search?.terms ?? []).map(term => el('span', {
         className: `chip ${touched.has(term) ? 'hit' : 'miss'}`, textContent: term,
@@ -2233,8 +2257,9 @@ const loadElk = () => elkLoading ??= new Promise((resolve, reject) => {
   document.head.append(script);
 });
 let pathSeed = null, pathMode = 'used';
-// P1b: the homonym the person chose for each ambiguous call (occurrence → symbol).
-let pathChosen = {};
+// P1b: the homonym the person chose for each ambiguous call (occurrence → symbol), and the
+// points of the drawn path a question can be asked about.
+let pathChosen = {}, pathTargets = [];
 
 /// `fresh` starts a new exploration; a double click on a node keeps the choices made so far.
 async function openPath(id, mode = pathMode, fresh = true) {
@@ -2262,6 +2287,7 @@ async function drawPath() {
   $('#pathSolidText').textContent = t($('#pathSolidText').dataset.i18n);
   $('#pathSolidHelp').dataset.helpKey = calls ? 'help.pathSolidCalls' : 'help.pathSolid';
   $('#pathResetChoices').hidden = !calls || !Object.keys(pathChosen).length;
+  $('#pathAsk').hidden = true;
   note.textContent = t(calls ? 'path.callsSearching' : 'path.searching');
   canvas.replaceChildren();
   try {
@@ -2385,6 +2411,12 @@ function renderPath(data, layout, groups, edges) {
     root.append(path);
   }
   $('#pathCanvas').replaceChildren(root);
+  // The points a path question can ask about: the seed and what was followed to, never a homonym
+  // left unchosen nor a test.
+  pathTargets = calls ? data.nodes.filter(n => !isTest(n) && (n.id === data.seed
+    || data.links.some(l => l.to === n.id && !dashed(l)))).map(n => n.id) : [];
+  $('#pathAsk').hidden = !calls || !pathTargets.length;
+  $('#pathAsk').textContent = t('path.ask', { n: pathTargets.length });
   const ambiguous = new Set(data.links.filter(dashed).map(l => calls ? l.occurrence : l.candidate_edge)).size;
   const chosen = Object.keys(pathChosen).length;
   $('#pathNote').textContent = t(calls ? 'path.callsSummary' : 'path.summary', { nodes: data.nodes.length, links: data.links.length, depth: data.depth })
@@ -2422,6 +2454,31 @@ function showUse(info, nodes) {
 
 $('#pathClose').onclick = () => { $('#pathView').hidden = true; };
 $('#pathResetChoices').onclick = () => { pathChosen = {}; drawPath(); };
+
+// P1b: one question per point of the path, each with that point alone as evidence; with an LLM
+// chosen, they are sent one after the other.
+async function askPath(button) {
+  const label = id => state.nodes[state.index.get(id)]?.label ?? id;
+  const targets = [...pathTargets];
+  const question = await modal({ title: t('path.askTitle'), input: true, value: t('path.askDefault'), required: t('chain.required'),
+    message: t('path.askMessage', { n: targets.length, list: targets.map(label).join('\n') }), ok: t('path.askOk', { n: targets.length }) });
+  if (!question) return;
+  await busy([button], $('#llmNote'), async () => {
+    await saveSettings();
+    const turns = await api('POST', '/api/path-questions', { key: studio.project.key, run: studio.run, question, nodes: targets,
+      seed: pathSeed, chosen: pathChosen });
+    studio.turns.push(...turns);
+    renderTurns();
+    $('#turns').scrollTop = $('#turns').scrollHeight;
+    if ($('#provider').value === 'manual') return;
+    for (const [i, turn] of turns.entries()) {
+      say($('#llmNote'), t('path.sending', { index: i + 1, total: turns.length, name: label(turn.path.node) }));
+      await sendTurn(turn);
+    }
+    say($('#llmNote'), t('path.sent', { total: turns.length }));
+  });
+}
+$('#pathAsk').onclick = () => askPath($('#pathAsk'));
 for (const id of ['#pathDepth', '#pathNoTests', '#pathSolid']) $(id).onchange = () => { if (pathSeed) drawPath(); };
 
 // ---- help: each "?" explains a part of the page in plain words, on hover or click.

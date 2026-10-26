@@ -530,6 +530,9 @@ impl Catalog {
     pub fn symbols(&self) -> &BTreeMap<String, Symbol> {
         &self.symbols
     }
+    pub fn chunks(&self) -> &BTreeMap<String, Chunk> {
+        &self.chunks
+    }
     pub fn diagnostics(&self) -> &[Diagnostic] {
         &self.diagnostics
     }

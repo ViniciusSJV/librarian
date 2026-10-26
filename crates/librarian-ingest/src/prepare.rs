@@ -51,6 +51,10 @@ pub struct Request {
     /// the request is the same as before.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub exclude_tests: bool,
+    /// The targets were picked by the person on a "what does it call?" path (P1b), not named by
+    /// checked answers; the report says so. Absent, the request is the same as before.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub picked: bool,
 }
 
 /// A declaration as a checked claim locates it.
@@ -107,7 +111,7 @@ pub fn prepare(catalog: &Catalog, request: &Request) -> Result<Prepared> {
             } else {
                 None
             };
-            (chain_report(catalog, &graph, &request.question, &ids, request.depth, context)?, ids.len())
+            (chain_report(catalog, &graph, &request.question, &ids, request.depth, context, request.picked)?, ids.len())
         }
         None => {
             if request.hits == 0 || request.hits > request.top {

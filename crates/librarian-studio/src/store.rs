@@ -22,6 +22,8 @@ pub const PROFILE: &str = "librarian.json";
 const CRITERIA: &str = "criteria-before.md";
 /// Highest question number handed out in a run, so numbers are never reused.
 const LAST_TURN: &str = "last-turn.txt";
+/// At most this many questions from one path at once (P1b).
+const MAX_PATH_QUESTIONS: usize = 40;
 
 /// Everything a question needs besides the question itself; edited from the page.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -268,6 +270,7 @@ impl Store {
             "criteria": fs::read_to_string(dir.join(CRITERIA)).ok(),
             "criteria_sha256": question["criteria_sha256"],
             "chain": question["chain"],
+            "path": question["path"],
             "prepare_error": question["prepare_error"],
             "comparison": compare_sends(&sends),
             "sends": sends,
@@ -286,7 +289,33 @@ impl Store {
         let mut search = serde_json::to_vec_pretty(&report)?;
         search.push(b'\n');
         let request = request(&settings, question, None, vec![], false);
-        self.new_turn(key, run, &settings, &catalog, question, Some(search), request, Value::Null)
+        self.new_turn(key, run, &settings, &catalog, question, Some(search), request, None)
+    }
+
+    /// P1b: one question per declaration the person picked on a "what does it call?" path, each
+    /// with that declaration alone as evidence (like `hits: 1`). Nothing is searched; the path
+    /// (seed, position, the choices among homonyms) is recorded with each question.
+    pub fn ask_path(&self, key: &str, run: &str, question: &str, nodes: &[String], seed: &str, chosen: &Value) -> Result<Value> {
+        if nodes.is_empty() || nodes.len() > MAX_PATH_QUESTIONS {
+            return Err(format!("Escolha de 1 a {MAX_PATH_QUESTIONS} pontos do caminho").into());
+        }
+        let settings = self.settings(key)?;
+        let catalog = Catalog::load(&self.edition(key, run)?)?;
+        let symbols = catalog.symbols();
+        let mut turns = vec![];
+        for (index, id) in nodes.iter().enumerate() {
+            let symbol = symbols.get(id).ok_or_else(|| format!("Ponto desconhecido: {id}"))?;
+            let target = Target {
+                path: catalog.sources()[&symbol.source_id].path.clone(),
+                symbol_name: symbol.name.clone(),
+                declaration_line: catalog.chunks().get(&symbol.chunk_id).ok_or("Ponto sem trecho")?.start_line,
+            };
+            let path = json!({ "seed": seed, "node": id, "index": index + 1, "total": nodes.len(), "chosen": chosen });
+            let mut request = request(&settings, question, Some(vec![target]), vec![], false);
+            request.picked = true;
+            turns.push(self.new_turn(key, run, &settings, &catalog, question, None, request, Some(("path", path)))?);
+        }
+        Ok(json!(turns))
     }
 
     /// Chain step: a new question whose evidence is the declarations located by the answers to
@@ -347,14 +376,14 @@ impl Store {
             "targets": targets, "reviewed_facts": reviewed.iter().map(|f| &f.id).collect::<Vec<_>>(),
             "owner_context": owner_context });
         let request = request(&settings, question, Some(targets), reviewed, owner_context);
-        self.new_turn(key, run, &settings, &catalog, question, None, request, chain)
+        self.new_turn(key, run, &settings, &catalog, question, None, request, Some(("chain", chain)))
     }
 
     /// Fixes the criteria, prepares and verifies the bundle and, in claims, its claims files.
     /// A refusal is kept with the question. Without `search`, the prepared report is recorded.
     #[allow(clippy::too_many_arguments)]
     fn new_turn(&self, key: &str, run: &str, settings: &Settings, catalog: &Catalog, question: &str,
-        search: Option<Vec<u8>>, request: Request, chain: Value) -> Result<Value> {
+        search: Option<Vec<u8>>, request: Request, origin: Option<(&str, Value)>) -> Result<Value> {
         let run_dir = self.run_dir(key, run)?;
         fs::create_dir_all(run_dir.join("turns"))?;
         let turns = run_dir.join("turns");
@@ -401,8 +430,9 @@ impl Store {
         };
         let mut record = json!({ "question": question, "created": stamp(), "prepare_error": prepare_error,
             "criteria_sha256": criteria_sha256, "answer_format": format, "claims_error": claims_error });
-        if !chain.is_null() {
-            record["chain"] = chain;
+        // Where the evidence came from when nothing was searched: a chain step or a picked path.
+        if let Some((field, value)) = origin {
+            record[field] = value;
         }
         fs::write(dir.join("question.json"), serde_json::to_vec_pretty(&record)?)?;
         self.turn(key, run, &id)
@@ -693,6 +723,7 @@ fn request(settings: &Settings, question: &str, targets: Option<Vec<Target>>, re
         accept_diagnostics: settings.accept_diagnostics,
         // A chain step does not search; the option only shapes a lexical search.
         exclude_tests: settings.exclude_tests && targets.is_none(),
+        picked: false,
         targets,
         reviewed_facts,
         owner_context,
@@ -1329,6 +1360,35 @@ mod tests {
         let criteria = store.turn_dir(key, run, "01").unwrap().join(CRITERIA);
         fs::write(&criteria, "- Qualquer resposta serve.\n").unwrap();
         assert!(store.verify_for_send(key, run, "01").err().unwrap().to_string().contains("Critérios"));
+    }
+
+    #[test]
+    fn path_questions_ask_one_picked_declaration_at_a_time() {
+        let scratch = project();
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let key = store.open(&display(&scratch.0.join("project"))).unwrap()["key"].as_str().unwrap().to_owned();
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        let catalog = Catalog::load(&store.edition(&key, &run).unwrap()).unwrap();
+        let id = |name: &str| catalog.symbols().values().find(|s| s.name == name).unwrap().id.clone();
+        let nodes = [id("ray_from_pixel"), id("Camera")];
+        let chosen = json!({ "occ:x": "symbol:y" });
+        let turns = store.ask_path(&key, &run, "Onde este trecho calcula algo?", &nodes, &nodes[0], &chosen).unwrap();
+        let turns = turns.as_array().unwrap();
+        assert_eq!(turns.len(), 2);
+        // Each question carries one declaration, says it was picked on a path, and records where.
+        for (i, turn) in turns.iter().enumerate() {
+            assert_eq!(turn["prepare_error"], Value::Null, "{}", turn["prepare_error"]);
+            assert_eq!(turn["search"]["status"], "path");
+            assert!(turn["search"]["limits"][0].as_str().unwrap().starts_with("Path step"));
+            assert_eq!(turn["search"]["hits"].as_array().unwrap().len(), 1);
+            assert_eq!(turn["search"]["hits"][0]["symbol_id"], json!(nodes[i]));
+            assert_eq!((turn["path"]["index"].as_u64(), turn["path"]["total"].as_u64()), (Some(i as u64 + 1), Some(2)));
+            assert_eq!(turn["path"]["chosen"], chosen);
+            assert_eq!(turn["chain"], Value::Null);
+            assert_eq!(turn["request"]["picked"], true);
+        }
+        assert!(store.ask_path(&key, &run, "x", &[], &nodes[0], &chosen).is_err());
+        assert!(store.ask_path(&key, &run, "x", &["symbol:nada".into()], &nodes[0], &chosen).is_err());
     }
 
     #[test]

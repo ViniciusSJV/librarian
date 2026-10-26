@@ -129,6 +129,13 @@ fn route(app: &App, req: &Request) -> Result<Response> {
             let graph = graph(app, &key, &run)?;
             ok(serde_json::to_value(graph.calls_from(&field(&body, "node")?, depth, USED_BY_NODES, &syntax, &chosen)?)?)
         }
+        ("POST", "/api/path-questions") => {
+            // P1b: one question per point picked on a "what does it call?" path.
+            let body = req.json()?;
+            let nodes: Vec<String> = serde_json::from_value(body["nodes"].clone())?;
+            ok(store.ask_path(&field(&body, "key")?, &field(&body, "run")?, &field(&body, "question")?, &nodes,
+                &field(&body, "seed")?, &body["chosen"])?)
+        }
         ("GET", "/api/graph") => Ok(Response {
             status: 200,
             content_type: "application/json; charset=utf-8",
