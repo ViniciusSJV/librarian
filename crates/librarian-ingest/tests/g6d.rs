@@ -279,3 +279,30 @@ fn owner_context_is_refused_where_it_cannot_be_told() {
     assert_eq!(search["hits"].as_array().unwrap().len(), 1);
     assert_eq!(search["owner_context"]["added"], json!([]));
 }
+
+#[test]
+fn callees_bring_what_the_target_calls_without_ambiguity() {
+    let project = Project::new();
+    let catalog = project.edition("v4", None);
+    let mut request = chain("ray", 32, "src/camera.rs", true);
+    request["callees"] = json!(true);
+    let prepared = prepare_value(&catalog, request.clone()).unwrap();
+    let search: Value = serde_json::from_slice(&prepared.search).unwrap();
+    // `ray` calls `self.transform.inverse()`: one declaration has that name, so it comes too,
+    // after the owner context, with the call's line as its evidence.
+    let added = search["owner_context"]["added"].as_array().unwrap();
+    let called: Vec<(&str, &str)> = added.iter().filter(|a| a["reason"] == "called")
+        .map(|a| (a["name"].as_str().unwrap(), a["resolution"].as_str().unwrap())).collect();
+    assert_eq!(called, [("inverse", "unique")]);
+    assert_eq!(added.last().unwrap()["evidence"][0]["start_line"], 33);
+    assert!(search["limits"].to_string().contains("Called declarations"));
+    let dossier: Value = serde_json::from_str(&prepared.dossier).unwrap();
+    assert!(dossier["facts"].to_string().contains("Chamada por `impl Camera::ray`"));
+    // Written and verified like any chain step; the option needs the owner context.
+    let dir = project.0.join("prepared-callees");
+    prepare::write(&catalog, &serde_json::to_vec_pretty(&request).unwrap(), &dir).unwrap();
+    prepare::verify(&catalog, &dir).unwrap();
+    let mut alone = chain("ray", 32, "src/camera.rs", false);
+    alone["callees"] = json!(true);
+    assert!(prepare_value(&catalog, alone).err().unwrap().contains("owner_context"));
+}

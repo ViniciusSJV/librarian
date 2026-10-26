@@ -16,7 +16,7 @@ pub const MAX_ADDED: usize = 8;
 /// Writes not followed are listed up to this many; the total is always reported.
 const MAX_LISTED: usize = 20;
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub struct OwnerContext {
     pub added: Vec<Added>,
     /// Writes of a read field through another receiver (`camera.transform = ...`): the receiver
@@ -34,13 +34,14 @@ pub struct Added {
     pub symbol_id: String,
     pub name: String,
     pub kind: String,
-    /// `owner_type` or `field_writer`.
+    /// `owner_type`, `field_writer` or `called` (a declaration the target calls).
     pub reason: String,
     /// Qualified name of the target this declaration was added for.
     pub for_target: String,
     /// `container` (the declaration that contains the target is its owner), `container_name`
     /// (the type named by the target's container), `receiver_in_owner` (`<receiver>.f = ...` in
-    /// another method of the owner) or `owner_literal` (a literal of the owner type).
+    /// another method of the owner), `owner_literal` (a literal of the owner type), or, for a
+    /// called declaration, `unique` or `receiver` as the call traversal resolved it.
     pub resolution: String,
     /// Owner type: the fields the target reads. Writer: the read fields it writes.
     pub fields: Vec<String>,
@@ -343,4 +344,38 @@ fn literal_around<'a, 'g>(index: &'a Index<'g>, kind: &str, field: &Occurrence) 
 /// Whether a literal's text starts with the written name `name` as a whole word.
 fn names(literal: &str, name: &str) -> bool {
     literal.strip_prefix(name).is_some_and(|rest| !rest.starts_with(|c: char| c.is_alphanumeric() || c == '_'))
+}
+
+/// P4: the declarations a target calls, added to a chain step so that a change to the target is
+/// written with what they do in view. Only calls the "what does it call?" traversal follows
+/// without a person's choice: the one declaration of that name (`unique`), or the one in the
+/// target's own container reached through its receiver (`receiver`). Homonyms are not added.
+/// At most `room` declarations; the rest is reported as truncated.
+pub fn called(catalog: &Catalog, targets: &[String], already: &[String], room: usize) -> Result<(Vec<Added>, bool)> {
+    let graph = crate::graph::v2::Graph::build(catalog);
+    let syntax = catalog.call_syntax();
+    let (mut added, mut truncated): (Vec<Added>, bool) = (vec![], false);
+    for target in targets {
+        let calls = graph.calls_from(target, 1, 64, &syntax, &BTreeMap::new())?;
+        let qualified = catalog.symbols.get(target).map_or_else(|| target.clone(), |s| s.qualified_name.clone());
+        for link in calls.links.iter().filter(|l| &l.from == target && matches!(l.resolution.as_str(), "unique" | "receiver")) {
+            if already.contains(&link.to) {
+                continue;
+            }
+            if let Some(known) = added.iter_mut().find(|a| a.symbol_id == link.to) {
+                known.evidence.push(link.evidence.clone());
+                continue;
+            }
+            let Some(symbol) = catalog.symbols.get(&link.to) else { continue };
+            if added.len() >= room {
+                truncated = true;
+                continue;
+            }
+            added.push(Added {
+                symbol_id: link.to.clone(), name: symbol.name.clone(), kind: symbol.kind.clone(), reason: "called".into(),
+                for_target: qualified.clone(), resolution: link.resolution.clone(), fields: vec![], evidence: vec![link.evidence.clone()],
+            });
+        }
+    }
+    Ok((added, truncated))
 }

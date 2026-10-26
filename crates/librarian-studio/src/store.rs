@@ -336,11 +336,12 @@ impl Store {
             let Some(text) = ["response.txt", "attempt/response.txt"].iter().find_map(|f| fs::read_to_string(send.join(f)).ok()) else {
                 continue;
             };
-            let body = claims::extract_fenced(&text).unwrap_or(&text);
-            if claims::check(&context, body)?.mechanical_status != "passed" {
+            // Read as the check read it: out of a fence, with the citations it completed.
+            let (body, _, _) = crate::claims::resolved(&context, &text);
+            if claims::check(&context, &body)?.mechanical_status != "passed" {
                 continue;
             }
-            let response: claims::Response = serde_json::from_str(body)?;
+            let response: claims::Response = serde_json::from_str(&body)?;
             let mut used = vec![];
             for claim in response.claims.iter().filter(|c| matches!(c.kind, claims::Kind::Fact)) {
                 let Some(location) = &claim.location else { continue };
@@ -732,6 +733,9 @@ fn request(settings: &Settings, question: &str, targets: Option<Vec<Target>>, re
         targets,
         reviewed_facts,
         owner_context,
+        // New chain steps also bring what each target calls without ambiguity (P4); a
+        // recorded question keeps its request as it was written, so its bytes still verify.
+        callees: owner_context,
     }
 }
 
@@ -1235,6 +1239,10 @@ mod tests {
         assert_eq!(fact["resolutions"][0]["code"], "declaration_citation_added");
         assert_eq!(fact["citations"].as_array().unwrap().len(), 2);
         assert_eq!(fact["status"], "current");
+        // Continuing in chain reads an answer as the check did, with the completed citations.
+        let next = store.ask(&key, &run, "Onde a câmera calcula a direção dos raios?").unwrap()["id"].as_str().unwrap().to_owned();
+        record_answer(&store, &key, &run, &next, "manual", &short.to_string()).unwrap();
+        assert!(store.continue_turn(&key, &run, &next, "E o que vem depois?").is_ok());
     }
 
     #[test]

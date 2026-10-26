@@ -55,6 +55,11 @@ pub struct Request {
     /// checked answers; the report says so. Absent, the request is the same as before.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub picked: bool,
+    /// Chain step with owner context (P4): each target also brings the declarations it calls
+    /// without ambiguity (one of that name, or through its own receiver). Absent, the request
+    /// is the same as before.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub callees: bool,
 }
 
 /// A declaration as a checked claim locates it.
@@ -104,14 +109,30 @@ pub fn prepare(catalog: &Catalog, request: &Request) -> Result<Prepared> {
                 return Err("A chain step needs distinct targets".into());
             }
             let graph = Graph::build(catalog);
-            let context = if request.owner_context {
+            let targeted = ids.len();
+            let mut context = if request.owner_context {
                 let context = owner_context(catalog, &graph, &ids)?;
                 ids.extend(context.added.iter().map(|a| a.symbol_id.clone()));
                 Some(context)
             } else {
                 None
             };
-            (chain_report(catalog, &graph, &request.question, &ids, request.depth, context, request.picked)?, ids.len())
+            // The calls ride on the owner context: they share its record and its budget.
+            if request.callees {
+                let Some(owner) = context.as_mut() else {
+                    return Err("callees needs owner_context".into());
+                };
+                let room = crate::owner::MAX_ADDED.saturating_sub(owner.added.len());
+                let (called, truncated) = crate::owner::called(catalog, &ids[..targeted], &ids, room)?;
+                ids.extend(called.iter().map(|a| a.symbol_id.clone()));
+                owner.added.extend(called);
+                owner.truncated |= truncated;
+            }
+            let mut report = chain_report(catalog, &graph, &request.question, &ids, request.depth, context, request.picked)?;
+            if request.callees {
+                report.limits.push("Called declarations: a target also brings what it calls when the call has one declaration of that name, or one in its own container reached through its receiver; homonyms are not added. Written names only, nothing resolved by a compiler.".into());
+            }
+            (report, ids.len())
         }
         None => {
             if request.hits == 0 || request.hits > request.top {
@@ -227,6 +248,12 @@ pub fn prepare(catalog: &Catalog, request: &Request) -> Result<Prepared> {
                 context.not_followed_total
             ));
         }
+        if context.added.iter().any(|a| a.reason == "called") {
+            unknowns.push(
+                "Declarações chamadas pelo alvo entram quando a chamada tem uma só declaração com esse nome, ou uma no mesmo bloco pelo próprio receptor; homônimos ficam de fora. Nada foi resolvido pelo compilador."
+                    .into(),
+            );
+        }
         if context.truncated {
             unknowns.push(format!("Contexto do dono truncado em {} declarações.", crate::owner::MAX_ADDED));
         }
@@ -281,6 +308,14 @@ fn owner_statement(added: &Added) -> String {
     let lines = format!("{} {lines}", if added.evidence.len() == 1 { "linha" } else { "linhas" });
     let read = if fields.is_empty() { "nenhum".to_owned() } else { fields.clone() };
     match (added.reason.as_str(), added.resolution.as_str()) {
+        ("called", "receiver") => format!(
+            "Chamada por `{}` pelo próprio receptor ({lines}): é a declaração de mesmo nome no mesmo bloco.",
+            added.for_target
+        ),
+        ("called", _) => format!(
+            "Chamada por `{}` ({lines}): é a única declaração com esse nome na edition.",
+            added.for_target
+        ),
         ("owner_type", "container") => format!(
             "Contexto do dono: declaração que contém `{}`; campos que ele lê: {read}.",
             added.for_target
