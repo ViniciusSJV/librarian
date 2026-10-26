@@ -170,6 +170,58 @@ fn location_needs_both_citations_and_literal_quotes() {
 }
 
 #[test]
+fn resolve_completes_the_cited_positions_and_records_each_change() {
+    let (c, mut r) = located();
+    // A passing answer comes back byte for byte.
+    assert_eq!(claims::resolve(&c, &r.to_string()), (r.to_string(), vec![]));
+    // Location given, citations missing: both are quoted from the evidence.
+    r["claims"][0]["citations"] = json!([]);
+    let (body, resolutions) = claims::resolve(&c, &r.to_string());
+    assert_eq!(codes(&c, &serde_json::from_str(&body).unwrap()), Vec::<String>::new());
+    let added: Vec<_> = resolutions.iter().map(|x| (x.code, x.start_line, x.end_line)).collect();
+    assert_eq!(added, vec![("declaration_citation_added", 10, 10), ("operation_citation_added", 11, 11)]);
+    // The model's numbers are off by one, its quote is right: the lines follow the quote.
+    r["claims"][0]["location"]["operation_start_line"] = json!(12);
+    r["claims"][0]["location"]["operation_end_line"] = json!(12);
+    r["claims"][0]["citations"] = json!([{"evidence_id":"S","path":"other.lang","start_line":12,"end_line":12,"quote":"  act();"}]);
+    assert_eq!(codes(&c, &r), vec!["location_declaration_not_cited", "quote_mismatch"]);
+    let (body, resolutions) = claims::resolve(&c, &r.to_string());
+    let fixed: Value = serde_json::from_str(&body).unwrap();
+    assert_eq!(fixed["claims"][0]["location"]["operation_start_line"], 11);
+    assert_eq!(codes(&c, &fixed), Vec::<String>::new());
+    assert_eq!(resolutions[0].code, "citation_range_from_quote");
+    assert_eq!(resolutions[0].original, Some([12, 12]));
+    assert_eq!(resolutions[1].code, "operation_range_from_quote");
+}
+
+#[test]
+fn resolve_relaxes_no_rule() {
+    let (c, mut r) = located();
+    // The whole function is still the whole function.
+    r["claims"][0]["location"]["operation_start_line"] = json!(10);
+    r["claims"][0]["location"]["operation_end_line"] = json!(12);
+    r["claims"][0]["citations"] = json!([]);
+    let mut c = c;
+    c.precise_location = true;
+    let (body, _) = claims::resolve(&c, &r.to_string());
+    assert!(codes(&c, &serde_json::from_str(&body).unwrap()).contains(&"location_operation_includes_declaration".to_owned()));
+    // A quote that is nowhere, or a brace that is everywhere, is not moved.
+    let (c, mut r) = located();
+    for quote in ["  invented();", "}"] {
+        r["claims"][0]["citations"][0] = json!({"evidence_id":"S","path":"other.lang","start_line":10,"end_line":11,"quote":quote});
+        let (body, _) = claims::resolve(&c, &r.to_string());
+        assert!(codes(&c, &serde_json::from_str(&body).unwrap()).contains(&"quote_mismatch".to_owned()), "{quote}");
+    }
+    // Text that names a line outside every citation still fails; not a JSON answer is untouched.
+    let (mut c, mut r) = located();
+    c.strict_text = true;
+    r["claims"][0]["text"] = json!("first calls act on line 14.");
+    let (body, _) = claims::resolve(&c, &r.to_string());
+    assert!(codes(&c, &serde_json::from_str(&body).unwrap()).contains(&"text_cites_uncited_line".to_owned()));
+    assert_eq!(claims::resolve(&c, "not json"), ("not json".to_owned(), vec![]));
+}
+
+#[test]
 fn missing_symbols_allow_lacuna_without_fabricating_location() {
     let (mut c, mut r) = located();
     c.evidence[0].symbols.clear();

@@ -4,10 +4,12 @@ use std::collections::HashSet;
 mod edits;
 mod location;
 mod patch;
+mod resolve;
 mod text;
 pub mod compare;
 pub use edits::{diff as edits_diff, Edit};
 pub use location::{Location, Symbol};
+pub use resolve::{resolve, Resolution};
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]

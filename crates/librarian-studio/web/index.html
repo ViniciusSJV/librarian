@@ -802,6 +802,14 @@ const STRINGS = {
   'check.pending': ['pendente', 'pending'],
   'check.fence': [' · JSON extraído de uma cerca de Markdown', ' · JSON extracted from a Markdown fence'],
   'check.answer': ['Resposta', 'Answer'],
+  'check.resolved': ['Completado pelo Librarian a partir da evidência (o modelo deu as posições; o texto vem da edition)',
+    'Completed by the Librarian from the evidence (the model gave the positions; the text comes from the edition)'],
+  'resolution.declaration_citation_added': ['citação da declaração, linha {lines}', 'declaration citation, line {lines}'],
+  'resolution.operation_citation_added': ['citação da operação, linhas {lines}', 'operation citation, lines {lines}'],
+  'resolution.citation_range_from_quote': ['citação movida para {lines}, onde está o trecho transcrito (o modelo disse {original})',
+    'citation moved to {lines}, where the quoted text is (the model said {original})'],
+  'resolution.operation_range_from_quote': ['operação movida junto para {lines} (o modelo disse {original})',
+    'operation moved along to {lines} (the model said {original})'],
   'check.location': ['{symbol} (declaração {line}) · operação {location}', '{symbol} (declaration {line}) · operation {location}'],
   'check.cites': ['cita {list}', 'cites {list}'],
   'check.premises': ['premissas: {list}', 'premises: {list}'],
@@ -2136,6 +2144,7 @@ function checkView(c, s, turn) {
       el('div', { className: 'mono muted', textContent: i.code }));
   };
   const lines = x => `${x.path}:${x.start_line}${x.end_line !== x.start_line ? `–${x.end_line}` : ''}`;
+  const span = (a, b) => a === b ? `${a}` : `${a}–${b}`;
   const claim = k => el('li', {},
     el('span', { className: 'tag', textContent: k.kind }), ' ', k.text,
     k.location ? el('div', { className: 'muted mono', textContent: t('check.location', { symbol: k.location.symbol_name, line: k.location.declaration_line,
@@ -2154,6 +2163,11 @@ function checkView(c, s, turn) {
         status: c.report.semantic_status === 'pending' ? t('check.pending') : c.report.semantic_status,
         fence: c.extracted_from_fence ? t('check.fence') : '' }) })),
     c.report.issues.length ? el('ul', { className: 'claims error' }, ...c.report.issues.map(issue)) : null,
+    c.resolutions?.length ? el('details', {},
+      el('summary', { className: 'muted', textContent: `${t('check.resolved')} (${c.resolutions.length})` }),
+      el('ul', { className: 'claims' }, ...c.resolutions.map(r => el('li', { className: 'muted mono',
+        textContent: `${r.claim_id}: ${t(`resolution.${r.code}`, { lines: span(r.start_line, r.end_line),
+          original: r.original ? span(...r.original) : '' })}` })))) : null,
     c.claims ? el('ol', { className: 'claims' }, ...c.claims.map(claim)) : null,
     el('div', { className: 'muted', style: 'font-size: 11px', textContent: serverText(c.limits) }));
 }

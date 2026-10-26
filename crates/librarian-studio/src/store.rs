@@ -1214,6 +1214,22 @@ mod tests {
         assert_eq!(statuses, ["revoked", "stale"]);
         assert!(rechecked["facts"][1]["status_reason"].as_str().unwrap().contains("src/lib.rs:4–5"));
         assert_eq!(store.facts(&key, &run).unwrap()["facts"][1]["status"], "current");
+
+        // The declaration the model left uncited is cited by the Librarian, and the fact says so.
+        let mut short = answer.clone();
+        short["claims"][0]["citations"][0] = json!({"evidence_id": "E1", "path": "src/lib.rs", "start_line": 5, "end_line": 5,
+            "quote": "        let direction = x * 2.0;"});
+        let sent = record_answer(&store, &key, &run, "01", "manual", &short.to_string()).unwrap();
+        let check: Value = serde_json::from_slice(&fs::read(Path::new(sent["directory"].as_str().unwrap()).join("check.json")).unwrap()).unwrap();
+        assert_eq!(check["report"]["mechanical_status"], "passed");
+        assert_eq!(check["resolutions"][0]["code"], "declaration_citation_added");
+        assert_eq!(check["claims"][0]["citations"].as_array().unwrap().len(), 2);
+        let id = review("04-manual", true, "A linha 5 calcula direction.").unwrap()["fact_id"].clone();
+        let facts = store.facts(&key, &run).unwrap();
+        let fact = facts["facts"].as_array().unwrap().iter().find(|f| f["id"] == id).unwrap();
+        assert_eq!(fact["resolutions"][0]["code"], "declaration_citation_added");
+        assert_eq!(fact["citations"].as_array().unwrap().len(), 2);
+        assert_eq!(fact["status"], "current");
     }
 
     #[test]

@@ -6,9 +6,9 @@
 //! `evidence.reviewed_facts`; an ordinary question does not.
 //! Layout: sends/<NN>/reviews.jsonl (each decision), projects/<key>/facts.jsonl (promotions and
 //! revocations).
-use crate::store::{safe_id, stamp, Store};
+use crate::store::{safe_id, stamp, Store, Verified};
 use librarian_ingest::{hash, prepare, Catalog, Result};
-use librarian_llm_engine::claims::{self, Claim, Kind};
+use librarian_llm_engine::claims::{self, Claim, Context, Kind, Resolution};
 use serde_json::{json, Value};
 use std::{
     fs::{self, OpenOptions},
@@ -27,7 +27,11 @@ impl Store {
     pub fn review(&self, key: &str, run: &str, turn: &str, send: &str, claim_id: &str, approved: bool, note: &str) -> Result<Value> {
         let send_dir = self.turn_dir(key, run, turn)?.join("sends").join(safe_id(send)?);
         let note = note.trim();
-        let (claim, response_sha256) = preserved_claim(&send_dir, claim_id)?;
+        // The verified context resolves the claim as the check read it; a rejection does not
+        // need the question to verify, and then records the claim as the model wrote it.
+        let verified = self.verify_for_send(key, run, turn);
+        let context = verified.as_ref().ok().and_then(|v| v.context.as_ref());
+        let (claim, response_sha256, resolutions) = preserved_claim(&send_dir, claim_id, context)?;
         let claim_sha256 = hash(&serde_json::to_vec(&claim)?);
         let active = self.active_fact(key, |f| f["run"] == run && f["turn"] == turn && f["send"] == send && f["claim_id"] == claim_id)?;
         let mut review = json!({ "format_version": 1, "claim_id": claim_id, "claim_sha256": claim_sha256,
@@ -39,10 +43,10 @@ impl Store {
             if note.is_empty() {
                 return Err("Escreva na nota por que o item é verdadeiro; a aprovação fica registrada com ela".into());
             }
-            let link = self.gates(key, run, turn, &send_dir, &claim)?;
+            let link = gates(verified, &send_dir, &claim)?;
             let location = claim.location.as_ref().ok_or("Portão 1: FACT sem location")?;
             let id = format!("F{}", self.facts_log(key)?.iter().filter(|e| e["event"] == "promoted").count() + 1);
-            let fact = json!({
+            let mut fact = json!({
                 "format_version": 1, "event": "promoted", "id": id, "kind": "FACT",
                 "statement": claim.text, "authorship": AUTHORSHIP,
                 "path": location.path, "symbol_name": location.symbol_name, "declaration_line": location.declaration_line,
@@ -54,6 +58,9 @@ impl Store {
                 "note": note, "reviewed": review["reviewed"],
                 "gates": ["mechanical_passed", "link_verified", "human_review"],
             });
+            if !resolutions.is_empty() {
+                fact["resolutions"] = json!(resolutions);
+            }
             review["fact_id"] = json!(id);
             append(&send_dir.join(REVIEWS), &review)?;
             append(&self.project_dir(key)?.join(FACTS), &fact)?;
@@ -68,35 +75,6 @@ impl Store {
         Ok(review)
     }
 
-    /// Gates 1 and 2, recomputed now instead of trusting the stored records: the question still
-    /// verifies, the send was linked to that same query, the preserved query has the linked
-    /// hash, and the preserved answer passes the mechanical check against the verified context.
-    fn gates(&self, key: &str, run: &str, turn: &str, send_dir: &Path, claim: &Claim) -> Result<Value> {
-        if !matches!(claim.kind, Kind::Fact) {
-            return Err("Só FACT vira fato; LACUNA, INFERENCE e HYPOTHESIS não são promovidos".into());
-        }
-        let summary: Value = serde_json::from_slice(&fs::read(send_dir.join("send.json"))?)?;
-        let link = summary["link"].clone();
-        if !link.is_object() {
-            return Err("Portão 2: envio sem vínculo com o bundle (anterior à L3); pergunte e envie de novo".into());
-        }
-        let verified = self.verify_for_send(key, run, turn).map_err(|e| format!("Portão 2: a pergunta não confere mais: {e}"))?;
-        if verified.link["query_sha256"] != link["query_sha256"] {
-            return Err("Portão 2: a query da pergunta não é mais a que foi enviada".into());
-        }
-        let sent = ["query.json", "attempt/query.json"].iter().map(|f| send_dir.join(f)).find(|p| p.is_file())
-            .ok_or("Portão 2: a query enviada não foi preservada")?;
-        if link["query_sha256"].as_str() != Some(hash(&fs::read(sent)?).as_str()) {
-            return Err("Portão 2: a query preservada no envio difere do vínculo".into());
-        }
-        let context = verified.context.ok_or("Portão 1: só perguntas em claims têm conferência mecânica")?;
-        let text = fs::read_to_string(response_path(send_dir)?)?;
-        let report = claims::check(&context, claims::extract_fenced(&text).unwrap_or(&text))?;
-        if report.mechanical_status != "passed" {
-            return Err("Portão 1: a resposta não passa na conferência mecânica".into());
-        }
-        Ok(link)
-    }
 
     /// The collection: each promotion with its current state, rechecked by text against the
     /// edition of `run`. Revoked facts stay listed as revoked.
@@ -147,19 +125,57 @@ impl Store {
     }
 }
 
-/// The claim as written in the preserved answer, and that answer's hash, which must be the
-/// one the stored check recorded.
-fn preserved_claim(send_dir: &Path, claim_id: &str) -> Result<(Claim, String)> {
+/// Gates 1 and 2, recomputed now instead of trusting the stored records: the question still
+/// verifies, the send was linked to that same query, the preserved query has the linked
+/// hash, and the preserved answer, resolved as the check reads it, passes the mechanical check
+/// against the verified context.
+fn gates(verified: Result<Verified>, send_dir: &Path, claim: &Claim) -> Result<Value> {
+    if !matches!(claim.kind, Kind::Fact) {
+        return Err("Só FACT vira fato; LACUNA, INFERENCE e HYPOTHESIS não são promovidos".into());
+    }
+    let summary: Value = serde_json::from_slice(&fs::read(send_dir.join("send.json"))?)?;
+    let link = summary["link"].clone();
+    if !link.is_object() {
+        return Err("Portão 2: envio sem vínculo com o bundle (anterior à L3); pergunte e envie de novo".into());
+    }
+    let verified = verified.map_err(|e| format!("Portão 2: a pergunta não confere mais: {e}"))?;
+    if verified.link["query_sha256"] != link["query_sha256"] {
+        return Err("Portão 2: a query da pergunta não é mais a que foi enviada".into());
+    }
+    let sent = ["query.json", "attempt/query.json"].iter().map(|f| send_dir.join(f)).find(|p| p.is_file())
+        .ok_or("Portão 2: a query enviada não foi preservada")?;
+    if link["query_sha256"].as_str() != Some(hash(&fs::read(sent)?).as_str()) {
+        return Err("Portão 2: a query preservada no envio difere do vínculo".into());
+    }
+    let context = verified.context.ok_or("Portão 1: só perguntas em claims têm conferência mecânica")?;
+    let text = fs::read_to_string(response_path(send_dir)?)?;
+    let report = claims::check(&context, &crate::claims::resolved(&context, &text).0)?;
+    if report.mechanical_status != "passed" {
+        return Err("Portão 1: a resposta não passa na conferência mecânica".into());
+    }
+    Ok(link)
+}
+
+/// The claim of the preserved answer, resolved with `context` when there is one, with the
+/// resolutions that touched it; and that answer's hash, which must be the one the stored check
+/// recorded.
+fn preserved_claim(send_dir: &Path, claim_id: &str, context: Option<&Context>) -> Result<(Claim, String, Vec<Resolution>)> {
     let text = fs::read_to_string(response_path(send_dir)?)?;
     let response_sha256 = hash(text.as_bytes());
     let check: Value = serde_json::from_slice(&fs::read(send_dir.join("check.json")).map_err(|_| "Envio sem conferência de claims")?)?;
     if check["response_sha256"].as_str() != Some(response_sha256.as_str()) {
         return Err("A resposta preservada difere da que foi conferida".into());
     }
-    let parsed: claims::Response = serde_json::from_str(claims::extract_fenced(&text).unwrap_or(&text))
-        .map_err(|_| "A resposta não é um JSON de claims legível")?;
+    let (body, resolutions) = match context {
+        Some(context) => {
+            let (body, resolutions, _) = crate::claims::resolved(context, &text);
+            (body, resolutions)
+        }
+        None => (claims::extract_fenced(&text).unwrap_or(&text).to_owned(), vec![]),
+    };
+    let parsed: claims::Response = serde_json::from_str(&body).map_err(|_| "A resposta não é um JSON de claims legível")?;
     let claim = parsed.claims.into_iter().find(|c| c.id == claim_id).ok_or_else(|| format!("Item desconhecido: {claim_id}"))?;
-    Ok((claim, response_sha256))
+    Ok((claim, response_sha256, resolutions.into_iter().filter(|r| r.claim_id == claim_id).collect()))
 }
 
 fn response_path(send_dir: &Path) -> Result<std::path::PathBuf> {

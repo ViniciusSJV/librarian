@@ -202,13 +202,21 @@ pub fn verify(catalog: &Catalog, turn: &Path) -> Result<Context> {
     Ok(recorded)
 }
 
-/// Checks one answer and writes check.json next to it. One Markdown fence around the JSON is
-/// accepted and recorded as `extracted_from_fence`; the raw answer is kept by the send itself.
-pub fn check(context: &Context, send: &Path, answer: &str) -> Result<Value> {
+/// The answer as the check reads it: out of one Markdown fence, if it has one, and with the
+/// citations the Librarian completes from the evidence (`claims::resolve`).
+pub fn resolved(context: &Context, answer: &str) -> (String, Vec<claims::Resolution>, bool) {
     let fenced = claims::extract_fenced(answer);
-    let body = fenced.unwrap_or(answer);
-    let report = claims::check(context, body)?;
-    let parsed: Option<claims::Response> = serde_json::from_str(body).ok();
+    let (body, resolutions) = claims::resolve(context, fenced.unwrap_or(answer));
+    (body, resolutions, fenced.is_some())
+}
+
+/// Checks one answer and writes check.json next to it. One Markdown fence around the JSON is
+/// accepted and recorded as `extracted_from_fence`; completed citations are listed in
+/// `resolutions`; the raw answer is kept by the send itself.
+pub fn check(context: &Context, send: &Path, answer: &str) -> Result<Value> {
+    let (body, resolutions, fenced) = resolved(context, answer);
+    let report = claims::check(context, &body)?;
+    let parsed: Option<claims::Response> = serde_json::from_str(&body).ok();
     // The diff each claim's edits describe, derived from the evidence when the edits pass.
     let diffs: serde_json::Map<String, Value> = parsed
         .iter()
@@ -217,11 +225,14 @@ pub fn check(context: &Context, send: &Path, answer: &str) -> Result<Value> {
         .collect();
     let mut value = json!({
         "response_sha256": hash(answer.as_bytes()),
-        "extracted_from_fence": fenced.is_some(),
+        "extracted_from_fence": fenced,
         "report": report,
         "claims": parsed.map(|r| r.claims),
         "limits": LIMITS,
     });
+    if !resolutions.is_empty() {
+        value["resolutions"] = json!(resolutions);
+    }
     // Each derived diff also as a file the person can `git apply`; nothing touches the project.
     for (id, diff) in &diffs {
         let safe: String = id.chars().map(|c| if c.is_ascii_alphanumeric() || c == '-' || c == '_' { c } else { '_' }).collect();

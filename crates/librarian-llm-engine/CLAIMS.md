@@ -114,7 +114,9 @@ da versão 1.
 
 A [série 05](../../experiments/claims-camera-20260928-05/README.md) identificou
 nome e linhas corretos em três respostas, mas todas foram rejeitadas por falta
-da citação da declaração (`location_declaration_not_cited`).
+da citação da declaração (`location_declaration_not_cited`). Desde então essa
+citação é completada a partir da evidência (ver
+[Citações completadas](#citações-completadas-a-partir-da-evidência)).
 
 ## Campos opcionais do contexto (L2)
 
@@ -250,6 +252,33 @@ usadas; com `rewrite`, reescreveu as quatro declarações quase certas e só per
 devolve o corpo de uma resposta que é exatamente uma cerca (` ```json ` ou sem
 rótulo), sem nada fora dela. Quem usar a extração precisa registrar que extraiu;
 o studio grava `extracted_from_fence` no `check.json`.
+
+### Citações completadas a partir da evidência
+
+`claims::check` continua estrito. `claims::resolve(context, response)` roda antes
+dele e devolve a resposta com as citações completadas e a lista do que mudou
+(`Resolution`). Uma resposta que não é JSON de claims, ou que não precisa de nada,
+volta idêntica byte a byte. O modelo indica as posições; o texto vem da evidência.
+
+| Código | Quando |
+| --- | --- |
+| `citation_range_from_quote` | o `quote` não é o texto das linhas indicadas, mas é exatamente o texto de uma única outra sequência de linhas da mesma evidência; a citação passa para essas linhas (`original` guarda as do modelo). Um `quote` sem letra nem dígito (uma chave sozinha) não é movido |
+| `operation_range_from_quote` | a `location` indicava as mesmas linhas da citação movida; a operação vai junto |
+| `declaration_citation_added` | FACT com `location` válida e nenhuma citação cobrindo a linha da declaração; a linha é citada com o texto da evidência |
+| `operation_citation_added` | idem para as linhas da operação, quando estão dentro do símbolo |
+
+Nenhuma regra é relaxada: operação no corpo inteiro, `location` inventada, linha
+citada no `text` fora das citações e `quote` que não aparece na evidência
+continuam recusados. O ganho é não exigir do modelo a repetição de posições que
+ele já escreveu em `location`. O custo: sem o `quote` do modelo para a declaração
+e a operação, o checker não tem mais prova de que ele leu essas linhas; continua
+cabendo à revisão humana conferir se a operação é a perguntada.
+
+O studio grava `resolutions` no `check.json`, mostra a lista na conferência, e
+o fato aprovado guarda as resoluções do seu item. A resposta bruta e o seu
+`response_sha256` ficam como vieram; o Portão 1 refaz `resolve` e `check`.
+Num experimento sem LLM, sobre 15 respostas do qwen 2.5 Coder 14B a perguntas
+por bloco de funções grandes, a mecânica foi de 2 para 12 aprovadas.
 
 ## Comparação por conteúdo (L2b)
 
