@@ -526,7 +526,7 @@ impl Store {
         Ok(Verified { query, context, criteria_sha256, link })
     }
 
-    fn settings(&self, key: &str) -> Result<Settings> {
+    pub(crate) fn settings(&self, key: &str) -> Result<Settings> {
         Ok(serde_json::from_slice(&fs::read(self.project_dir(key)?.join("project.json"))?)?)
     }
 
@@ -606,6 +606,11 @@ impl Store {
             "answer": { "format": settings.answer_format, "allow_inference": settings.allow_inference,
                 "allow_hypothesis": settings.allow_hypothesis, "allow_patch": settings.allow_patch },
         });
+        // Commands are written by hand in the profile and approved one by one; the studio
+        // never writes them, so an export keeps them exactly as they are.
+        if let Some(commands) = existing.get("commands") {
+            profile["commands"] = commands.clone();
+        }
         let mut files: Vec<(String, Vec<u8>)> = vec![];
         let pretty = |v: &Value| -> Result<Vec<u8>> {
             let mut b = serde_json::to_vec_pretty(v)?;
@@ -864,7 +869,7 @@ fn initial_settings(name: &str, root: &str) -> Result<Settings> {
 }
 
 /// Creates a new directory named `base`, or `base-2`, `base-3`... if taken.
-fn reserve(parent: &Path, base: &str) -> Result<(String, PathBuf)> {
+pub(crate) fn reserve(parent: &Path, base: &str) -> Result<(String, PathBuf)> {
     fs::create_dir_all(parent)?;
     for n in 1..1000 {
         let id = if n == 1 { base.to_owned() } else { format!("{base}-{n}") };
@@ -1500,6 +1505,71 @@ mod tests {
         assert_eq!(list[0]["name"], "cenas");
         assert_eq!(list[0]["model"], "librarian-cenas");
         assert!(store.modelfile_path("cenas").is_ok());
+    }
+
+    #[test]
+    fn profile_commands_run_only_approved_in_a_verified_copy() {
+        let scratch = project();
+        let root = scratch.0.join("project");
+        let git = |args: &[&str]| {
+            let out = std::process::Command::new("git").arg("-C").arg(&root)
+                .args(["-c", "user.name=t", "-c", "user.email=t@t"]).args(args).output().unwrap();
+            assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
+        };
+        // The command prints one measure line; nothing in the Librarian knows what it runs.
+        let profile = json!({ "project_root": ".", "commands": { "probe": {
+            "argv": ["git", "log", "-1", "--format=tformat:librarian-measure answer=42 units"], "repeat": 2 },
+            "write": { "argv": ["git", "log", "-1", "--format=tformat:%s", "--output=made.txt"], "repeat": 2, "outputs": ["made.txt"] } } });
+        fs::write(root.join(PROFILE), profile.to_string()).unwrap();
+        git(&["init", "-q"]);
+        // The repository's own line-ending setting governs both the project and its copy.
+        git(&["config", "core.autocrlf", "false"]);
+        git(&["add", "."]);
+        git(&["commit", "-q", "-m", "x"]);
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let key = store.open(&display(&root)).unwrap()["key"].as_str().unwrap().to_owned();
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        let refusal = |r: Result<Value>| r.err().unwrap().to_string();
+
+        let listed = store.commands(&key).unwrap();
+        let sha = listed["commands"][0]["sha256"].as_str().unwrap().to_owned();
+        assert_eq!(listed["commands"][0]["approved"], Value::Null);
+        assert!(refusal(store.execute(&key, &run, "probe")).contains("sem aprovação"));
+        assert!(refusal(store.approve_command(&key, "probe", "0")).contains("mudou"));
+        assert!(refusal(store.approve_command(&key, "other", &sha)).contains("não declarado"));
+        store.approve_command(&key, "probe", &sha).unwrap();
+
+        let done = store.execute(&key, &run, "probe").unwrap();
+        assert_eq!(done["summary"]["succeeded"], 2, "{:#}", done["runs"]);
+        assert_eq!(done["summary"]["stats"]["answer"]["median"], 42.0);
+        assert_eq!(done["summary"]["stats"]["answer"]["unit"], "units");
+        assert!(done["sources_verified"].as_u64().unwrap() > 0);
+        assert!(Path::new(done["copy"].as_str().unwrap()).join("src/lib.rs").is_file());
+        assert_eq!(store.executions(&key, &run).unwrap().len(), 1);
+        // A declared output is hashed after each repetition; the same bytes give one hash.
+        let sha = store.commands(&key).unwrap()["commands"][1]["sha256"].as_str().unwrap().to_owned();
+        store.approve_command(&key, "write", &sha).unwrap();
+        let wrote = store.execute(&key, &run, "write").unwrap();
+        assert_eq!(wrote["summary"]["outputs"]["made.txt"].as_array().unwrap().len(), 1);
+        assert_eq!(wrote["runs"][0]["outputs"]["made.txt"], librarian_ingest::hash(b"x
+"));
+
+        // Editing the command in the profile voids the approval.
+        let mut edited = profile.clone();
+        edited["commands"]["probe"]["repeat"] = json!(3);
+        fs::write(root.join(PROFILE), edited.to_string()).unwrap();
+        assert!(refusal(store.execute(&key, &run, "probe")).contains("sem aprovação"));
+        // An edition read from uncommitted changes has no faithful copy.
+        fs::write(root.join("src/lib.rs"), "pub struct Camera;\n").unwrap();
+        let dirty = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        let sha = store.commands(&key).unwrap()["commands"][0]["sha256"].as_str().unwrap().to_owned();
+        store.approve_command(&key, "probe", &sha).unwrap();
+        assert!(refusal(store.execute(&key, &dirty, "probe")).contains("difere da edition"));
+        // Outputs stay inside the copy.
+        let mut outside = edited.clone();
+        outside["commands"]["write"]["outputs"] = json!(["../x.txt"]);
+        fs::write(root.join(PROFILE), outside.to_string()).unwrap();
+        assert!(refusal(store.commands(&key)).contains("fora da cópia"));
     }
 
     #[test]

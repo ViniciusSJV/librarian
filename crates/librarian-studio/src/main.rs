@@ -2,6 +2,7 @@
 //! verified graph, ask questions that light the graph, and send prepared queries to an LLM.
 //! Listens on 127.0.0.1 only; requests from other origins are refused.
 mod claims;
+mod execution;
 mod facts;
 mod http;
 mod lexicon;
@@ -170,6 +171,17 @@ fn route(app: &App, req: &Request) -> Result<Response> {
             ok(store.review(&key, &run, &turn, &field(&body, "send")?, &field(&body, "claim")?, approved, note)?)
         }
         ("GET", "/api/facts") => ok(store.facts(param("key")?, param("run")?)?),
+        // P2: the profile's commands; approval is for one exact command, running needs it.
+        ("GET", "/api/commands") => ok(store.commands(param("key")?)?),
+        ("POST", "/api/commands/approve") => {
+            let body = req.json()?;
+            ok(store.approve_command(&field(&body, "key")?, &field(&body, "name")?, &field(&body, "sha256")?)?)
+        }
+        ("POST", "/api/commands/run") => {
+            let body = req.json()?;
+            ok(store.execute(&field(&body, "key")?, &field(&body, "run")?, &field(&body, "name")?)?)
+        }
+        ("GET", "/api/executions") => ok(json!(store.executions(param("key")?, param("run")?)?)),
         ("DELETE", "/api/turn") => {
             let body = req.json()?;
             ok(store.delete_turn(&field(&body, "key")?, &field(&body, "run")?, &field(&body, "turn")?)?)

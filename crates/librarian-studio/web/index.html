@@ -206,6 +206,11 @@
           <summary><span data-i18n="facts.title"></span> <span id="factsCount" class="muted"></span><button type="button" class="help" data-help-key="help.facts">?</button></summary>
           <div id="factsList"></div>
         </details>
+        <details id="commandsBox">
+          <summary><span data-i18n="commands.title"></span> <span id="commandsCount" class="muted"></span><button type="button" class="help" data-help-key="help.commands">?</button></summary>
+          <div id="commandsList"></div>
+          <div id="executionsList"></div>
+        </details>
         <details>
           <summary><span data-i18n="settings.title"></span><button type="button" class="help" data-help-key="help.settings">?</button></summary>
           <label class="field"><span><span data-i18n="settings.lexicon"></span><button type="button" class="help" data-help-key="help.lexicon">?</button></span><textarea id="lexicon" class="code" rows="8" spellcheck="false"></textarea></label>
@@ -418,6 +423,30 @@ const STRINGS = {
   'project.dirty': [' (com alterações)', ' (with changes)'],
 
   // facts
+  'commands.title': ['Execução (comandos do projeto)', 'Execution (project commands)'],
+  'help.commands': ['Comandos que o próprio projeto declara no librarian.json, em "commands": a lista de argumentos (sem shell), o tempo máximo e quantas repetições. O Librarian não sabe o que cada comando faz. Ele roda numa cópia do projeto no commit da edition (um git worktree dentro do .studio), conferida contra as impressões digitais da edition, nunca na sua pasta. Cada comando só roda depois que você aprova aquela versão exata; mudar o comando no perfil pede aprovação de novo. Ele guarda o tempo de cada repetição, o código de saída, a saída inteira e as linhas "librarian-measure nome=valor unidade" que o projeto imprimir.',
+    'Commands the project itself declares in librarian.json, under "commands": the argument list (no shell), the time limit and how many repetitions. The Librarian does not know what each command does. It runs in a copy of the project at the edition\'s commit (a git worktree inside .studio), checked against the edition\'s fingerprints, never in your folder. Each command runs only after you approve that exact version; changing the command in the profile asks for approval again. It keeps each repetition\'s time, exit code, whole output and the "librarian-measure name=value unit" lines the project prints.'],
+  'commands.none': ['O librarian.json do projeto não declara commands.', 'The project\'s librarian.json declares no commands.'],
+  'commands.spec': ['tempo máximo {timeout} s · {repeat} repetição(ões)', 'time limit {timeout} s · {repeat} repetition(s)'],
+  'commands.approved': ['aprovado em {when}', 'approved on {when}'],
+  'commands.unapproved': ['não aprovado', 'not approved'],
+  'commands.approve': ['Aprovar comando', 'Approve command'],
+  'commands.approveTitle': ['Aprovar "{name}"?', 'Approve "{name}"?'],
+  'commands.approveMessage': ['O Librarian vai rodar exatamente isto, numa cópia do projeto no commit da edition, quando você clicar em Rodar:\n\n{argv}\n\nTempo máximo {timeout} s, {repeat} repetição(ões). Se o comando mudar no librarian.json, ele precisa de nova aprovação.',
+    'The Librarian will run exactly this, in a copy of the project at the edition\'s commit, when you click Run:\n\n{argv}\n\nTime limit {timeout} s, {repeat} repetition(s). If the command changes in librarian.json, it needs a new approval.'],
+  'commands.run': ['Rodar', 'Run'],
+  'commands.running': ['Rodando {name}… (a página espera o fim)', 'Running {name}… (the page waits for the end)'],
+  'commands.noRun': ['Gere o grafo antes: a cópia é feita no commit da edition.', 'Generate the graph first: the copy is made at the edition\'s commit.'],
+  'executions.title': ['Execuções desta edition', 'Executions of this edition'],
+  'executions.head': ['{name} · {started} · {ok} de {attempted} repetição(ões) com sucesso · commit {head} · {sources} fontes conferidas',
+    '{name} · {started} · {ok} of {attempted} repetition(s) succeeded · commit {head} · {sources} sources checked'],
+  'executions.stat': ['{name}: mediana {median} {unit} (mín {min}, máx {max}, n={n})', '{name}: median {median} {unit} (min {min}, max {max}, n={n})'],
+  'executions.output': ['Saída da última repetição (código {code}{timeout})', 'Output of the last repetition (code {code}{timeout})'],
+  'executions.timedOut': [', estourou o tempo', ', timed out'],
+  'executions.outputSame': ['{path}: mesmo conteúdo em todas as repetições, sha256 {sha}', '{path}: same content in every repetition, sha256 {sha}'],
+  'executions.outputDiffers': ['{path}: {n} conteúdos diferentes entre as repetições', '{path}: {n} different contents across repetitions'],
+  'executions.outputMissing': ['{path}: o comando não escreveu o arquivo', '{path}: the command did not write the file'],
+  'commands.outputs': ['arquivos gerados: {list}', 'files written: {list}'],
   'facts.title': ['Acervo de fatos', 'Fact collection'],
   'help.facts': ['O fichário do bibliotecário com o que você já aprovou. Um item só entra aqui se passou em quatro portões: a conferência mecânica (refeita na hora), o vínculo com a pasta conferida, a sua aprovação com uma nota e o registro de origem. A cada catálogo novo, ele volta à estante e confere se as páginas citadas continuam iguais: vigente quando batem, desatualizado quando o texto mudou. Ele confere o texto, não o sentido. As fichas vigentes vão junto quando você continua em cadeia, sobre os capítulos que a etapa anterior apontou; uma pergunta comum não consulta o fichário.',
     'The librarian\'s card file with what you have already approved. An item only gets in after passing four gates: the mechanical check (redone on the spot), the link to the checked folder, your approval with a note, and the record of origin. With each new catalog, the librarian goes back to the shelf and checks whether the cited pages are still the same: current when they match, stale when the text changed. It checks the text, not the meaning. Current cards go along when you continue in a chain, about the chapters the previous step pointed to; an ordinary question does not consult the card file.'],
@@ -2213,7 +2242,7 @@ function reviewView(k, passed, s, turn) {
 }
 
 async function loadFacts() {
-  if (!studio.project || !studio.run) { $('#factsList').replaceChildren(); $('#factsCount').textContent = ''; return; }
+  if (!studio.project || !studio.run) { $('#factsList').replaceChildren(); $('#factsCount').textContent = ''; return loadCommands(); }
   const data = await api('GET', `/api/facts?${query({ key: studio.project.key, run: studio.run })}`);
   const classes = { current: 'verdict passed', stale: 'error', revoked: 'muted' };
   const active = data.facts.filter(f => f.status !== 'revoked').length;
@@ -2227,6 +2256,63 @@ async function loadFacts() {
       el('div', { className: 'muted', textContent: t('facts.note', { note: f.note }) }),
       el('div', { className: 'muted', style: 'font-size: 11px', textContent: t('facts.origin', { reviewed: f.reviewed, run: f.run, turn: f.turn, send: f.send, claim: f.claim_id }) }))))
       : el('p', { className: 'muted', textContent: t('facts.empty') }),
+    el('p', { className: 'muted', style: 'font-size: 11px', textContent: serverText(data.limits) }));
+  await loadCommands();
+}
+
+// P2: the profile's commands, approved one exact version at a time, and what each run recorded.
+async function loadCommands() {
+  if (!studio.project) { $('#commandsList').replaceChildren(); $('#executionsList').replaceChildren(); $('#commandsCount').textContent = ''; return; }
+  const key = studio.project.key;
+  const [data, executions] = await Promise.all([
+    api('GET', `/api/commands?${query({ key })}`),
+    studio.run ? api('GET', `/api/executions?${query({ key, run: studio.run })}`) : [],
+  ]);
+  $('#commandsCount').textContent = data.commands.length ? `(${data.commands.length})` : '';
+  const note = el('span', { className: 'muted' });
+  const item = c => {
+    const approve = el('button', { textContent: t('commands.approve') });
+    const runIt = el('button', { className: 'primary', textContent: t('commands.run'), disabled: !c.approved || !studio.run });
+    approve.addEventListener('click', () => busy([approve, runIt], note, async () => {
+      const ok = await modal({ title: t('commands.approveTitle', { name: c.name }), ok: t('commands.approve'),
+        message: t('commands.approveMessage', { argv: c.argv.join(' '), timeout: c.timeout_s, repeat: c.repeat }) });
+      if (!ok) return;
+      await api('POST', '/api/commands/approve', { key, name: c.name, sha256: c.sha256 });
+      await loadCommands();
+    }));
+    runIt.addEventListener('click', () => busy([approve, runIt], note, async () => {
+      say(note, t('commands.running', { name: c.name }));
+      await api('POST', '/api/commands/run', { key, run: studio.run, name: c.name });
+      await loadCommands();
+    }));
+    return el('li', {},
+      el('strong', { textContent: c.name }), ' ',
+      el('span', { className: c.approved ? 'verdict passed' : 'muted', textContent: c.approved ? t('commands.approved', { when: c.approved }) : t('commands.unapproved') }),
+      el('div', { className: 'mono', textContent: c.argv.join(' ') }),
+      el('div', { className: 'muted', textContent: t('commands.spec', { timeout: c.timeout_s, repeat: c.repeat }) }),
+      c.outputs?.length ? el('div', { className: 'muted mono', textContent: t('commands.outputs', { list: c.outputs.join(', ') }) }) : null,
+      el('div', { className: 'row', style: 'margin-top: 4px; gap: 6px' }, c.approved ? null : approve, runIt));
+  };
+  const number = v => typeof v === 'number' ? (Math.abs(v) >= 100 ? v.toFixed(1) : v.toPrecision(4)) : v;
+  const execution = x => {
+    const last = x.runs.at(-1);
+    return el('li', {},
+      el('div', { textContent: t('executions.head', { name: x.name, started: x.started, ok: x.summary.succeeded, attempted: x.summary.attempted,
+        head: (x.git_head ?? '').slice(0, 12), sources: x.sources_verified }) }),
+      el('div', { className: 'mono muted', textContent: x.argv.join(' ') }),
+      el('ul', {}, ...Object.entries(x.summary.stats).map(([name, s]) => el('li', { className: 'mono',
+        textContent: t('executions.stat', { name, median: number(s.median), unit: s.unit ?? '', min: number(s.min), max: number(s.max), n: s.n }) })),
+        ...Object.entries(x.summary.outputs ?? {}).map(([path, shas]) => el('li', { className: 'mono',
+          textContent: shas.length === 1 && shas[0] ? t('executions.outputSame', { path, sha: shas[0].slice(0, 16) })
+            : shas.every(s => !s) ? t('executions.outputMissing', { path }) : t('executions.outputDiffers', { path, n: shas.length }) }))),
+      last ? el('details', {}, el('summary', { className: 'muted', textContent: t('executions.output', { code: last.exit_code ?? '?', timeout: last.timed_out ? t('executions.timedOut') : '' }) }),
+        el('pre', { textContent: [last.stdout_tail, last.stderr_tail].filter(Boolean).join('\n---\n') })) : null);
+  };
+  $('#commandsList').replaceChildren(
+    data.commands.length ? el('ol', { className: 'claims' }, ...data.commands.map(item)) : el('p', { className: 'muted', textContent: t('commands.none') }),
+    studio.run ? null : el('p', { className: 'muted', textContent: t('commands.noRun') }), note);
+  $('#executionsList').replaceChildren(
+    executions.length ? el('div', {}, el('strong', { textContent: t('executions.title') }), el('ol', { className: 'claims' }, ...executions.map(execution))) : '',
     el('p', { className: 'muted', style: 'font-size: 11px', textContent: serverText(data.limits) }));
 }
 
