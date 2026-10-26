@@ -203,6 +203,36 @@ impl Store {
         Ok(json!(turns))
     }
 
+    /// Terms of the project's questions, in every run, that touched no search result, with how
+    /// many questions used them; words the lexicon already covers (stop words, groups) are left out.
+    /// Most used first.
+    pub fn missed_terms(&self, key: &str, lexicon: &librarian_ingest::search::Lexicon) -> Result<Vec<(String, usize)>> {
+        use librarian_ingest::search::{tokens, BUILTIN_STOP_WORDS};
+        use std::collections::{BTreeMap, BTreeSet};
+        let mut known: BTreeSet<String> = tokens(BUILTIN_STOP_WORDS).into_iter().collect();
+        known.extend(lexicon.stop_words.iter().chain(lexicon.groups.iter().flatten()).flat_map(|w| tokens(w)));
+        let mut counts: BTreeMap<String, usize> = BTreeMap::new();
+        let runs = self.project_dir(key)?.join("runs");
+        for run in fs::read_dir(&runs).into_iter().flatten().flatten() {
+            for turn in fs::read_dir(run.path().join("turns")).into_iter().flatten().flatten() {
+                let Some(search) = fs::read(turn.path().join("search.json")).ok().and_then(|b| serde_json::from_slice::<Value>(&b).ok()) else {
+                    continue;
+                };
+                let touched: BTreeSet<&str> = search["hits"].as_array().into_iter().flatten()
+                    .flat_map(|h| h["reasons"].as_array().into_iter().flatten().filter_map(|r| r["term"].as_str()))
+                    .collect();
+                for term in search["terms"].as_array().into_iter().flatten().filter_map(Value::as_str) {
+                    if !touched.contains(term) && !known.contains(term) {
+                        *counts.entry(term.to_owned()).or_default() += 1;
+                    }
+                }
+            }
+        }
+        let mut missed: Vec<(String, usize)> = counts.into_iter().collect();
+        missed.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0)));
+        Ok(missed)
+    }
+
     pub fn turn(&self, key: &str, run: &str, id: &str) -> Result<Value> {
         let dir = self.turn_dir(key, run, id)?;
         let read_json = |path: PathBuf| -> Option<Value> {
@@ -475,8 +505,9 @@ impl Store {
         }
         let settings = self.settings(key)?;
         let catalog = Catalog::load(&self.edition(key, run)?)?;
+        let missed = self.missed_terms(key, &settings.lexicon)?;
         let (id, dir) = reserve(&self.project_dir(key)?.join("lexicon"), &stamp())?;
-        let request = crate::lexicon::request(&catalog, &settings.lexicon, language);
+        let request = crate::lexicon::request(&catalog, &settings.lexicon, language, &missed);
         let mut bytes = serde_json::to_vec_pretty(&request)?;
         bytes.push(b'\n');
         fs::write(dir.join("query.json"), &bytes)?;
@@ -1300,6 +1331,8 @@ mod tests {
         let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
         let key = store.open(&display(&root)).unwrap()["key"].as_str().unwrap().to_owned();
         let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        // A question whose words "fica" and "hoje" touch no result: candidates for stop words.
+        store.ask(&key, &run, "Onde fica o ray_from_pixel da Camera hoje?").unwrap();
 
         // Manual: the request is written and returned; nothing is sent.
         let manual = store.suggest_lexicon(&key, &run, "manual", "pt", crate::llm::Choice {
@@ -1307,6 +1340,7 @@ mod tests {
         let query: Value = serde_json::from_str(manual["query"].as_str().unwrap()).unwrap();
         let terms: Vec<_> = query["evidence"]["code_terms"].as_array().unwrap().iter().map(|t| t["term"].clone()).collect();
         assert!(terms.contains(&json!("camera")) && terms.contains(&json!("pixel")));
+        assert_eq!(query["evidence"]["missed_terms"], json!([{ "term": "fica", "questions": 1 }, { "term": "hoje", "questions": 1 }]));
         // In English the same code terms go with a request for English words; others are refused.
         let none = || crate::llm::Choice { modelfile: None, modelfile_name: None, claude_model: None };
         let english = store.suggest_lexicon(&key, &run, "manual", "en", none()).unwrap();
@@ -1328,6 +1362,26 @@ mod tests {
         assert_eq!(report[2]["status"], "rejected");
         assert!(report[3]["notes"][0].as_str().unwrap().contains("já está em outro grupo"));
         assert_eq!(proposal["lexicon"]["groups"], json!([["raio", "raios", "ray"]]));
+        assert_eq!(proposal["stop_report"], json!([]));
+
+        // Stop words never hide code: names and paths, group words and existing stops are refused;
+        // a word only inside code bodies passes with a note. A cut-off list is not read as a group.
+        let stops = "{\"groups\": [[\"raio\", \"ray\"], [\"para\", \"for\", \"camera\"]], \"stop_words\": [\"fica\", \"camera\", \"let\", \"raio\", \"duas palavras\", \"onde\"]}";
+        let proposal = store.check_lexicon(&key, &run, manual["id"].as_str().unwrap(), stops).unwrap()["proposal"].clone();
+        let verdict: Vec<_> = proposal["stop_report"].as_array().unwrap().iter()
+            .map(|r| (r["word"].as_str().unwrap().to_owned(), r["status"].as_str().unwrap().to_owned())).collect();
+        let pair = |w: &str, s: &str| (w.to_owned(), s.to_owned());
+        assert_eq!(verdict, [pair("fica", "accepted"), pair("camera", "rejected"), pair("let", "accepted"),
+            pair("raio", "rejected"), pair("duas palavras", "rejected"), pair("onde", "rejected")]);
+        assert_eq!(proposal["stop_report"][2]["notes"], json!(["\"let\" aparece no corpo do código"]));
+        // A stop word inside a group is dropped from it: "para" never reaches the search.
+        assert_eq!(proposal["report"][1]["words"], json!(["for", "camera"]));
+        assert_eq!(proposal["report"][1]["notes"], json!(["\"para\" é stop word"]));
+        assert_eq!(proposal["lexicon"]["stop_words"], json!(["fica", "let"]));
+        assert_eq!((proposal["stop_accepted"].as_u64(), proposal["stop_rejected"].as_u64()), (Some(2), Some(4)));
+        let cut = "{\"groups\": [[\"raio\", \"ray\"]], \"stop_words\": [\"fica\", \"ho";
+        let proposal = store.check_lexicon(&key, &run, manual["id"].as_str().unwrap(), cut).unwrap()["proposal"].clone();
+        assert_eq!((proposal["accepted"].as_u64(), proposal["rejected"].as_u64()), (Some(1), Some(0)));
         assert!(store.check_lexicon(&key, &run, "../x", answer).is_err());
         assert!(store.check_lexicon(&key, &run, manual["id"].as_str().unwrap(), "sem json").unwrap()["proposal"]["error"].is_string());
 

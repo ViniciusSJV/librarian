@@ -15,6 +15,10 @@ pub struct Lexicon {
     pub stop_words: Vec<String>,
 }
 
+/// Words every question drops before searching, in addition to the lexicon's `stop_words`.
+pub const BUILTIN_STOP_WORDS: &str =
+    "a o as os de da do das dos e em no na nos nas um uma para por que qual quais onde como the of in to from with is does how where";
+
 /// Accent folding for Portuguese, identifier splitting (including acronym boundaries).
 pub fn tokens(text: &str) -> Vec<String> {
     let chars: Vec<char> = text.chars().collect();
@@ -134,7 +138,7 @@ impl<'a> SearchIndex<'a> {
                 }
             }
         }
-        let mut stops: BTreeSet<String> = tokens("a o as os de da do das dos e em no na nos nas um uma para por que qual quais onde como the of in to from with is does how where").into_iter().collect();
+        let mut stops: BTreeSet<String> = tokens(BUILTIN_STOP_WORDS).into_iter().collect();
         for word in &lexicon.stop_words {
             stops.extend(tokens(word));
         }

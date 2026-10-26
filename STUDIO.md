@@ -60,10 +60,17 @@ próximas perguntas e são guardadas no `.studio` (o `librarian.json` do projeto
    do Modelfile termina em `-en` (por exemplo `lexico-deepseek-en`), o pedido vai em inglês e pede
    palavras em inglês. Com **Nenhum**, o pedido aparece para copiar, e a resposta de
    qualquer LLM pode ser colada em **Conferir resposta**.
-3. Cada grupo é conferido. Ele é recusado se tiver menos de duas palavras, se nenhuma
+3. O pedido leva também as palavras das perguntas do projeto que não tocaram nenhum resultado
+   (`missed_terms`, com quantas perguntas as usaram), e o LLM pode devolver `stop_words`: as
+   palavras de ligação ("fica", "durante") vão para lá; as do domínio entram num grupo.
+4. Cada grupo é conferido. Ele é recusado se tiver menos de duas palavras, se nenhuma
    palavra existir no código ou se as palavras não forem únicas; palavras já usadas
    noutro grupo saem.
-4. Você vê aceitos e recusados, com o motivo, e clica em **Aplicar** para juntar os
+5. Cada stop word também é conferida, porque ela some de toda pergunta e pode esconder
+   resultados sem aviso. Ela é recusada se aparece em nomes, nomes qualificados ou caminhos
+   do código, se está num grupo ou se já é stop word; se só aparece no corpo do código,
+   passa com um aviso.
+6. Você vê aceitos e recusados, com o motivo, e clica em **Aplicar** para juntar os
    aceitos ao léxico. Pedido, resposta e conferência ficam em
    `.studio/projects/<projeto>/lexicon/`.
 

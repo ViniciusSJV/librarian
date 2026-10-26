@@ -432,8 +432,8 @@ const STRINGS = {
   'help.lexicon': ['O dicionário de sinônimos do bibliotecário. Você pergunta por raios, mas na estante o livro se chama ray: o léxico faz essa ponte. Sem ele, uma pergunta em português não encontra nomes em inglês. stop_words são palavras que ele ignora, como de e o.',
     'The librarian\'s synonym dictionary. You ask about raios, but on the shelf the book is called ray: the lexicon builds that bridge. Without it, a question in Portuguese does not find names in English. stop_words are words the librarian ignores, such as the and of.'],
   'lexicon.suggest': ['Sugerir léxico com o LLM', 'Suggest lexicon with the LLM'],
-  'lexicon.suggest.info': ['Os termos vêm do código da edition; o LLM escolhido na Conversa só propõe as palavras da pergunta (no Ollama, com o Modelfile <code>lexico</code>, a menos que você escolha outro <code>lexico-…</code>). As palavras vêm em português, ou em inglês quando o nome do Modelfile termina em <code>-en</code>. Cada grupo é conferido, e nada entra no léxico sem você aplicar.',
-    'The terms come from the edition\'s code; the LLM chosen in Conversation only proposes the question words (in Ollama, with the <code>lexico</code> Modelfile, unless you choose another <code>lexico-…</code>). The words come in Portuguese, or in English when the Modelfile name ends in <code>-en</code>. Each group is checked, and nothing enters the lexicon unless you apply it.'],
+  'lexicon.suggest.info': ['Os termos vêm do código da edition; o LLM escolhido na Conversa só propõe as palavras da pergunta (no Ollama, com o Modelfile <code>lexico</code>, a menos que você escolha outro <code>lexico-…</code>). As palavras vêm em português, ou em inglês quando o nome do Modelfile termina em <code>-en</code>. O pedido leva também as palavras das suas perguntas que não acharam nada, para virar stop word ou grupo. Cada grupo e cada stop word é conferido, e nada entra no léxico sem você aplicar.',
+    'The terms come from the edition\'s code; the LLM chosen in Conversation only proposes the question words (in Ollama, with the <code>lexico</code> Modelfile, unless you choose another <code>lexico-…</code>). The words come in Portuguese, or in English when the Modelfile name ends in <code>-en</code>. The request also carries the words of your questions that found nothing, to become a stop word or a group. Each group and each stop word is checked, and nothing enters the lexicon unless you apply it.'],
   'lexicon.manual': ['Com <strong>Nenhum</strong> (o Studio não chama ninguém): copie o pedido, leve a outro chat e cole a resposta aqui.',
     'With <strong>None</strong> (the Studio calls no one): copy the request, take it to another chat and paste the answer here.'],
   'lexicon.copy': ['Copiar pedido', 'Copy request'],
@@ -453,8 +453,11 @@ const STRINGS = {
   'lexicon.accepted': ['aceito', 'accepted'],
   'lexicon.rejected': ['recusado', 'rejected'],
   'lexicon.inCode': ['existe no código', 'exists in the code'],
-  'lexicon.apply': ['Aplicar {n} grupo(s) ao léxico', 'Apply {n} group(s) to the lexicon'],
-  'lexicon.applied': ['{n} grupo(s) aplicados e salvos. Valem para as próximas perguntas.', '{n} group(s) applied and saved. They apply to the next questions.'],
+  'lexicon.apply': ['Aplicar {n} grupo(s) e {stops} stop word(s) ao léxico', 'Apply {n} group(s) and {stops} stop word(s) to the lexicon'],
+  'lexicon.applied': ['{n} grupo(s) e {stops} stop word(s) aplicados e salvos. Valem para as próximas perguntas.', '{n} group(s) and {stops} stop word(s) applied and saved. They apply to the next questions.'],
+  'lexicon.stopSummary': ['Stop words: {accepted} aceita(s), {rejected} recusada(s).', 'Stop words: {accepted} accepted, {rejected} rejected.'],
+  'help.stopWords': ['Palavras que o bibliotecário tira de toda pergunta antes de procurar, como fica ou existe. O pedido leva as palavras das suas perguntas que não acharam nada, e o LLM separa as de ligação das que precisam de um grupo de sinônimos. Uma stop word errada some com resultados sem avisar, por isso ela é recusada se nomeia algo do código (nome, caminho) ou está num grupo; se só aparece dentro do corpo do código, passa com um aviso.',
+    'Words the librarian removes from every question before searching, such as is or there. The request carries the words of your questions that found nothing, and the LLM separates connecting words from words that need a synonym group. A wrong stop word silently drops results, so it is refused if it names something in the code (a name, a path) or is in a group; if it only appears inside code bodies, it passes with a note.'],
   'lexicon.summary': ['{accepted} aceito(s), {rejected} recusado(s). Realçadas: palavras que existem no código.{truncated} A conferência é mecânica; julgue você se os sinônimos fazem sentido antes de aplicar.',
     '{accepted} accepted, {rejected} rejected. Highlighted: words that exist in the code.{truncated} The check is mechanical; judge for yourself whether the synonyms make sense before applying.'],
   'lexicon.truncated': [' Resposta incompleta: aproveitados só os grupos que vieram inteiros.', ' Incomplete answer: only the groups that came whole are used.'],
@@ -833,10 +836,15 @@ const SERVER_EN = new Map([
   ['item que não é texto ignorado', 'non-text item ignored'],
   ['menos de duas palavras', 'fewer than two words'],
   ['nenhuma palavra existe no código', 'no word exists in the code'],
+  ['já é stop word', 'already a stop word'],
 ]);
 const SERVER_EN_PATTERNS = [
   [/^"(.*)" não é uma palavra única$/, '"$1" is not a single word'],
   [/^"(.*)" já está em outro grupo$/, '"$1" is already in another group'],
+  [/^"(.*)" está num grupo de sinônimos$/, '"$1" is in a synonym group'],
+  [/^"(.*)" é stop word$/, '"$1" is a stop word'],
+  [/^"(.*)" existe em nomes ou caminhos do código$/, '"$1" exists in code names or paths'],
+  [/^"(.*)" aparece no corpo do código$/, '"$1" appears in code bodies'],
   [/^Revogado em ([^:]*): ([\s\S]*)$/, 'Revoked on $1: $2'],
   [/^(.*): o bloco que o contém escreve o tipo `(.*)`, com (\d+) declarações com esse nome; nenhuma acrescentada\.$/,
     '$1: the enclosing block writes the type `$2`, with $3 declarations of that name; none added.'],
@@ -2431,16 +2439,25 @@ function showProposal(p) {
     el('span', { className: 'tag', textContent: r.status === 'accepted' ? t('lexicon.accepted') : t('lexicon.rejected') }), ' ',
     ...r.words.map(w => el('span', { className: `chip ${r.code_terms.includes(w) ? 'hit' : ''}`, textContent: w, title: r.code_terms.includes(w) ? t('lexicon.inCode') : '' })),
     r.notes.length ? el('div', { className: 'muted', textContent: r.notes.map(serverText).join(' · ') }) : null);
-  const apply = el('button', { className: 'primary', textContent: t('lexicon.apply', { n: p.accepted }), disabled: !p.accepted });
+  const stops = p.stop_report ?? [], stopsAccepted = p.stop_accepted ?? 0;
+  const stopLine = r => el('li', { style: 'cursor: default' },
+    el('span', { className: 'tag', textContent: r.status === 'accepted' ? t('lexicon.accepted') : t('lexicon.rejected') }), ' ',
+    el('span', { className: 'chip', textContent: r.word }),
+    r.notes.length ? el('div', { className: 'muted', textContent: r.notes.map(serverText).join(' · ') }) : null);
+  const apply = el('button', { className: 'primary', textContent: t('lexicon.apply', { n: p.accepted, stops: stopsAccepted }),
+    disabled: !p.accepted && !stopsAccepted });
   apply.onclick = () => busy([apply], $('#suggestNote'), async () => {
     $('#lexicon').value = JSON.stringify(p.lexicon, null, 2);
     await saveSettings();
     box.hidden = true;
-    say($('#suggestNote'), t('lexicon.applied', { n: p.accepted }));
+    say($('#suggestNote'), t('lexicon.applied', { n: p.accepted, stops: stopsAccepted }));
   });
   box.replaceChildren(
     el('p', { className: 'muted', textContent: t('lexicon.summary', { accepted: p.accepted, rejected: p.rejected, truncated: p.truncated ? t('lexicon.truncated') : '' }) }),
     el('ul', { className: 'list', style: 'max-height: 320px' }, ...p.report.map(line)),
+    stops.length ? el('p', { className: 'muted', style: 'margin-top: 8px' }, t('lexicon.stopSummary', { accepted: stopsAccepted, rejected: p.stop_rejected ?? 0 }),
+      helpButton(t('help.stopWords'))) : null,
+    stops.length ? el('ul', { className: 'list', style: 'max-height: 200px' }, ...stops.map(stopLine)) : null,
     el('div', { className: 'row', style: 'margin-top: 6px' }, apply,
       el('button', { textContent: t('lexicon.discard'), onclick: () => { box.hidden = true; } })));
 }
