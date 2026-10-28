@@ -155,6 +155,46 @@
   dialog::backdrop { background: rgb(0 0 0 / .4); }
   #askDialog { width: min(560px, calc(100vw - 32px)); }
   #askMessage { white-space: pre-wrap; word-break: break-word; }
+  /* Tabs: one step of the method at a time (studio only; the file viewer shows every panel). */
+  #tabs { display: none; gap: 2px; margin-top: 12px; padding: 3px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-0); }
+  body.studio #tabs { display: flex; }
+  #tabs button { flex: 1; padding: 6px 2px; border: 0; border-radius: 7px; background: transparent; color: var(--text-secondary); font-size: 12px; }
+  #tabs button[aria-selected="true"] { background: var(--surface-2); color: var(--text-primary); font-weight: 600; box-shadow: 0 1px 2px rgb(0 0 0 / .1); }
+  #tabs .count { margin-left: 3px; color: var(--text-muted); font-size: 11px; font-weight: 400; }
+  body:not(.studio) .studio-only { display: none; }
+  body.studio #subtitle { display: none; }
+  details.card > summary { margin-top: 0; }
+  /* Segmented control: the question mode. */
+  .seg { display: inline-flex; }
+  .seg button { padding: 5px 12px; font-size: 12px; }
+  .seg button:first-child { border-radius: 8px 0 0 8px; }
+  .seg button:last-child { border-radius: 0 8px 8px 0; border-left: 0; }
+  .seg button[aria-pressed="true"] { background: var(--text-primary); border-color: var(--text-primary); color: var(--surface-1); }
+  /* LLM picker: next to the action that sends. */
+  .picker { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 8px; }
+  .picker select { width: auto; max-width: 100%; padding: 5px 7px; font-size: 12px; }
+  .picker .label { color: var(--text-secondary); font-size: 12px; }
+  #askExtra:empty { display: none; }
+  #askExtra { margin-top: 8px; }
+  #composer #question { margin-top: 8px; }
+  #criteriaBox textarea { margin-top: 6px; }
+  /* Envelope: the declarations gathered for one question, as chips over the composer. */
+  #gathered { margin-bottom: 8px; padding: 8px; border: 1px dashed var(--cat-symbol); border-radius: 8px; }
+  .chip.env { display: inline-flex; gap: 2px; align-items: center; padding: 1px 2px 1px 8px; font-size: 12px; }
+  .chip.env button, button.link { padding: 0 5px; border: 0; background: transparent; color: var(--text-secondary); }
+  button.link { text-decoration: underline; font-size: 12px; }
+  /* Legend: a small panel in the map corner. */
+  #legendHud { position: absolute; left: 12px; bottom: 12px; max-width: 290px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 8px;
+    background: color-mix(in srgb, var(--surface-1) 92%, transparent); }
+  #legendHud summary { margin: 0; font-size: 12px; }
+  #legendHud[open] > h2:first-of-type { margin-top: 8px; }
+  /* Fewer "?": section titles keep theirs; inside, a "?" shows when its line is hovered. */
+  .help { opacity: .25; border-color: transparent; background: transparent; }
+  :is(h2, summary) > .help, *:hover > .help, *:hover > span > .help, .help:focus-visible { opacity: 1; border-color: var(--border); }
+  /* Turn card: a summary on top, details folded, the destructive action behind "⋯". */
+  .turn-sum { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 6px; font-size: 12px; }
+  details.older > summary { font-size: 12px; }
+  button.danger { color: var(--danger); border-color: var(--danger); }
   @media (max-width: 1200px) { body.studio #app { grid-template-columns: 300px 1fr 360px; } }
   @media (max-width: 800px) {
     #app, body.studio #app { grid-template-columns: 1fr; grid-template-rows: 60vh auto; }
@@ -173,7 +213,7 @@
 </head>
 <body>
 <div id="app">
-  <aside>
+  <aside id="side">
     <div class="row" style="justify-content: space-between">
       <h1>Librarian Studio</h1>
       <div class="row" style="gap: 6px">
@@ -181,121 +221,135 @@
         <button id="theme" data-i18n-title="theme.title">◐</button>
       </div>
     </div>
-    <p class="muted" data-i18n="app.subtitle"></p>
+    <p id="subtitle" class="muted" data-i18n="app.subtitle"></p>
+    <!-- Studio: one step of the method at a time, in the order it is used. -->
+    <nav id="tabs" role="tablist">
+      <button type="button" role="tab" data-tab="project" data-i18n="tab.project"></button>
+      <button type="button" role="tab" data-tab="lexicon" data-i18n="tab.lexicon"></button>
+      <button type="button" role="tab" data-tab="ruler"><span data-i18n="tab.ruler"></span><span id="commandsCount" class="count"></span></button>
+      <button type="button" role="tab" data-tab="facts"><span data-i18n="tab.facts"></span><span id="factsCount" class="count"></span></button>
+      <button type="button" role="tab" data-tab="map" data-i18n="tab.map"></button>
+    </nav>
 
-    <section class="card" id="projectCard" hidden>
-      <h2><span data-i18n="project.title"></span><button type="button" class="help" data-help-key="help.project">?</button></h2>
-      <div class="row" style="flex-wrap: nowrap">
-        <input id="projectPath" type="text" data-i18n-placeholder="project.path.placeholder">
-        <button id="browse" data-i18n="project.browse"></button>
-      </div>
-      <div class="row" style="margin-top: 8px">
-        <button id="openProject" class="primary" data-i18n="project.open"></button>
-        <button id="resetStudio" data-i18n="project.reset" data-i18n-title="project.reset.title"></button>
-        <span id="projectNote" class="muted"></span>
-      </div>
-      <div id="projectBody" hidden>
-        <dl id="projectInfo"></dl>
-        <label class="field"><span><span data-i18n="project.inputs"></span><button type="button" class="help" data-help-key="help.inputs">?</button></span><input id="inputs" type="text"></label>
-        <div class="row" style="margin-top: 8px; flex-wrap: nowrap">
-          <button id="generate" class="primary" data-i18n="project.generate"></button>
-          <select id="runs" data-i18n-title="project.runs.title"></select><button type="button" class="help" data-help-key="help.runs">?</button>
+    <div class="tabpanel studio-only" data-panel="project">
+      <section class="card" id="projectCard" hidden>
+        <h2><span data-i18n="project.title"></span><button type="button" class="help" data-help-key="help.project">?</button></h2>
+        <div class="row" style="flex-wrap: nowrap">
+          <input id="projectPath" type="text" data-i18n-placeholder="project.path.placeholder">
+          <button id="browse" data-i18n="project.browse"></button>
         </div>
-        <p id="runNote" class="muted"></p>
-        <details id="factsBox">
-          <summary><span data-i18n="facts.title"></span> <span id="factsCount" class="muted"></span><button type="button" class="help" data-help-key="help.facts">?</button></summary>
-          <div id="factsList"></div>
-        </details>
-        <details id="commandsBox">
-          <summary><span data-i18n="commands.title"></span> <span id="commandsCount" class="muted"></span><button type="button" class="help" data-help-key="help.commands">?</button></summary>
-          <div id="commandsList"></div>
-          <div id="executionsList"></div>
-        </details>
-        <details>
-          <summary><span data-i18n="settings.title"></span><button type="button" class="help" data-help-key="help.settings">?</button></summary>
-          <label class="field"><span><span data-i18n="settings.lexicon"></span><button type="button" class="help" data-help-key="help.lexicon">?</button></span><textarea id="lexicon" class="code" rows="8" spellcheck="false"></textarea></label>
-          <div class="field">
-            <div class="row"><button id="suggestLexicon" data-i18n="lexicon.suggest"></button><span id="suggestNote" class="muted"></span></div>
-            <span data-i18n="lexicon.suggest.info"></span>
-            <div id="manualLexicon" hidden>
-              <span data-i18n="lexicon.manual"></span>
-              <pre id="lexiconQuery"></pre>
-              <div class="row"><button id="copyLexiconQuery" data-i18n="lexicon.copy"></button></div>
-              <textarea id="lexiconAnswer" class="code" rows="5" data-i18n-placeholder="lexicon.answer.placeholder"></textarea>
-              <div class="row" style="margin-top: 6px"><button id="checkLexicon" data-i18n="lexicon.check"></button></div>
+        <div class="row" style="margin-top: 8px">
+          <button id="openProject" class="primary" data-i18n="project.open"></button>
+          <button id="resetStudio" data-i18n="project.reset" data-i18n-title="project.reset.title"></button>
+          <span id="projectNote" class="muted"></span>
+        </div>
+        <div id="projectBody" hidden>
+          <dl id="projectInfo"></dl>
+          <label class="field"><span><span data-i18n="project.inputs"></span><button type="button" class="help" data-help-key="help.inputs">?</button></span><input id="inputs" type="text"></label>
+          <div class="row" style="margin-top: 8px; flex-wrap: nowrap">
+            <button id="generate" class="primary" data-i18n="project.generate"></button>
+            <select id="runs" data-i18n-title="project.runs.title"></select><button type="button" class="help" data-help-key="help.runs">?</button>
+          </div>
+          <p id="runNote" class="muted"></p>
+          <details id="settingsBox">
+            <summary><span data-i18n="settings.title"></span><button type="button" class="help" data-help-key="help.settings">?</button></summary>
+            <div class="field"><span><span data-i18n="search.title"></span><button type="button" class="help" data-help-key="help.search">?</button></span></div>
+            <div class="grid4">
+              <label class="field" data-i18n-title="search.top.title"><span>top</span><input id="top" type="number" min="1" max="10"></label>
+              <label class="field" data-i18n-title="search.depth.title"><span>depth</span><input id="depth" type="number" min="0" max="3"></label>
+              <label class="field" data-i18n-title="search.hits.title"><span>hits</span><input id="hits" type="number" min="1" max="10"></label>
+              <label class="field" data-i18n-title="search.radius.title"><span>radius</span><input id="radius" type="number" min="0"></label>
             </div>
-            <div id="lexiconProposal" hidden></div>
-          </div>
-          <div class="field"><span><span data-i18n="search.title"></span><button type="button" class="help" data-help-key="help.search">?</button></span></div>
-          <div class="grid4">
-            <label class="field" data-i18n-title="search.top.title"><span>top</span><input id="top" type="number" min="1" max="10"></label>
-            <label class="field" data-i18n-title="search.depth.title"><span>depth</span><input id="depth" type="number" min="0" max="3"></label>
-            <label class="field" data-i18n-title="search.hits.title"><span>hits</span><input id="hits" type="number" min="1" max="10"></label>
-            <label class="field" data-i18n-title="search.radius.title"><span>radius</span><input id="radius" type="number" min="0"></label>
-          </div>
-          <label class="check"><input id="numbered" type="checkbox"><span><span data-i18n="settings.numbered"></span><button type="button" class="help" data-help-key="help.numbered">?</button></span></label>
-          <label class="check"><input id="excludeTests" type="checkbox"><span><span data-i18n="settings.excludeTests"></span><button type="button" class="help" data-help-key="help.excludeTests">?</button></span></label>
-          <label class="check"><input id="acceptDiag" type="checkbox"><span><span data-i18n="settings.acceptDiag"></span><button type="button" class="help" data-help-key="help.acceptDiag">?</button></span></label>
-          <label class="field" data-i18n-title="settings.format.title"><span><span data-i18n="settings.format"></span><button type="button" class="help" data-help-key="help.format">?</button></span><select id="answerFormat"><option value="claims" data-i18n="settings.format.claims"></option><option value="prose" data-i18n="settings.format.prose"></option></select></label>
-          <label class="check"><input id="allowInference" type="checkbox"><span><span data-i18n="settings.inference"></span><button type="button" class="help" data-help-key="help.inference">?</button></span></label>
-          <label class="check"><input id="allowHypothesis" type="checkbox"><span><span data-i18n="settings.hypothesis"></span><button type="button" class="help" data-help-key="help.hypothesis">?</button></span></label>
-          <label class="check"><input id="allowPatch" type="checkbox"><span><span data-i18n="settings.patch"></span><button type="button" class="help" data-help-key="help.patch">?</button></span></label>
-          <label class="field"><span><span data-i18n="settings.instructions"></span><button type="button" class="help" data-help-key="help.instructions">?</button> <span data-i18n="settings.instructions.hint"></span></span><textarea id="instructions" rows="6"></textarea></label>
-          <label class="field"><span><span data-i18n="settings.criteria"></span><button type="button" class="help" data-help-key="help.criteria">?</button></span><textarea id="criteria" rows="6"></textarea></label>
-          <div class="row" style="margin-top: 8px">
-            <button id="saveSettings" data-i18n="settings.save"></button>
-            <button id="exportProfile" data-i18n="settings.export" data-i18n-title="settings.export.title"></button><button type="button" class="help" data-help-key="help.export">?</button>
-          </div>
-          <span id="settingsNote" class="muted"></span>
-        </details>
-      </div>
-    </section>
+            <label class="check"><input id="numbered" type="checkbox"><span><span data-i18n="settings.numbered"></span><button type="button" class="help" data-help-key="help.numbered">?</button></span></label>
+            <label class="check"><input id="excludeTests" type="checkbox"><span><span data-i18n="settings.excludeTests"></span><button type="button" class="help" data-help-key="help.excludeTests">?</button></span></label>
+            <label class="check"><input id="acceptDiag" type="checkbox"><span><span data-i18n="settings.acceptDiag"></span><button type="button" class="help" data-help-key="help.acceptDiag">?</button></span></label>
+            <label class="field" data-i18n-title="settings.format.title"><span><span data-i18n="settings.format"></span><button type="button" class="help" data-help-key="help.format">?</button></span><select id="answerFormat"><option value="claims" data-i18n="settings.format.claims"></option><option value="prose" data-i18n="settings.format.prose"></option></select></label>
+            <label class="check"><input id="allowInference" type="checkbox"><span><span data-i18n="settings.inference"></span><button type="button" class="help" data-help-key="help.inference">?</button></span></label>
+            <!-- Hypothesis and patch follow the question mode (Locate / Improve) in the conversation. -->
+            <div hidden><input id="allowHypothesis" type="checkbox"><input id="allowPatch" type="checkbox"></div>
+            <p class="muted" data-i18n="settings.byMode"></p>
+            <label class="field"><span><span data-i18n="settings.instructions"></span><button type="button" class="help" data-help-key="help.instructions">?</button> <span data-i18n="settings.instructions.hint"></span></span><textarea id="instructions" rows="6"></textarea></label>
+            <div class="row" style="margin-top: 8px">
+              <button id="saveSettings" data-i18n="settings.save"></button>
+              <button id="exportProfile" data-i18n="settings.export" data-i18n-title="settings.export.title"></button><button type="button" class="help" data-help-key="help.export">?</button>
+            </div>
+            <span id="settingsNote" class="muted"></span>
+          </details>
+        </div>
+      </section>
+    </div>
 
-    <section class="card">
-      <h2><span data-i18n="files.title"></span><button type="button" class="help" data-help-key="help.files">?</button></h2>
-      <div class="row">
-        <label class="file"><span data-i18n="files.folder"></span><input id="folder" type="file" webkitdirectory multiple></label>
-        <label class="file"><span data-i18n="files.files"></span><input id="files" type="file" accept=".json" multiple></label>
-      </div>
-      <p class="muted" data-i18n="files.info"></p>
-      <dl id="provenance"></dl>
-    </section>
+    <div class="tabpanel studio-only" data-panel="lexicon">
+      <section class="card">
+        <h2><span data-i18n="settings.lexicon"></span><button type="button" class="help" data-help-key="help.lexicon">?</button></h2>
+        <textarea id="lexicon" class="code" rows="12" spellcheck="false"></textarea>
+        <div class="row" style="margin-top: 8px">
+          <button id="saveLexicon" data-i18n="lexicon.save"></button>
+          <span id="lexiconNote" class="muted"></span>
+        </div>
+        <h2 style="margin-top: 14px"><span data-i18n="lexicon.suggestTitle"></span><button type="button" class="help" data-help-key="lexicon.suggest.info">?</button></h2>
+        <div id="lexiconPicker"></div>
+        <div class="row" style="margin-top: 8px"><button id="suggestLexicon" class="primary" data-i18n="lexicon.suggest"></button><span id="suggestNote" class="muted"></span></div>
+        <div id="manualLexicon" hidden>
+          <span data-i18n="lexicon.manual"></span>
+          <pre id="lexiconQuery"></pre>
+          <div class="row"><button id="copyLexiconQuery" data-i18n="lexicon.copy"></button></div>
+          <textarea id="lexiconAnswer" class="code" rows="5" data-i18n-placeholder="lexicon.answer.placeholder"></textarea>
+          <div class="row" style="margin-top: 6px"><button id="checkLexicon" data-i18n="lexicon.check"></button></div>
+        </div>
+        <div id="lexiconProposal" hidden></div>
+      </section>
+    </div>
 
-    <section class="card legend">
-      <h2><span data-i18n="legend.nodes"></span><button type="button" class="help" data-help-key="help.nodes">?</button></h2>
-      <label><input type="checkbox" data-category="source" checked><span class="swatch source"></span><span data-i18n="legend.source"></span><button type="button" class="help" data-help-key="help.source">?</button><span class="count" data-count="source">0</span></label>
-      <label><input type="checkbox" data-category="symbol" checked><span class="swatch symbol"></span><span data-i18n="legend.symbol"></span><button type="button" class="help" data-help-key="help.symbol">?</button><span class="count" data-count="symbol">0</span></label>
-      <label><input type="checkbox" data-category="occurrence" checked><span class="swatch occurrence"></span><span data-i18n="legend.occurrence"></span><button type="button" class="help" data-help-key="help.occurrence">?</button><span class="count" data-count="occurrence">0</span></label>
-      <h2 style="margin-top: 12px"><span data-i18n="legend.edges"></span><button type="button" class="help" data-help-key="help.edges">?</button></h2>
-      <label><input type="checkbox" data-edge="declares" checked><span class="swatch line"></span>declares<button type="button" class="help" data-help-key="help.declares">?</button><span class="count" data-count="declares">0</span></label>
-      <label><input type="checkbox" data-edge="contains" checked><span class="swatch line"></span>contains<button type="button" class="help" data-help-key="help.contains">?</button><span class="count" data-count="contains">0</span></label>
-      <label><input type="checkbox" data-edge="observes" checked><span class="swatch line"></span>observes<button type="button" class="help" data-help-key="help.observes">?</button><span class="count" data-count="observes">0</span></label>
-      <label><input type="checkbox" data-edge="name_candidate" checked><span class="swatch line dashed"></span><span data-i18n="legend.nameCandidate"></span><button type="button" class="help" data-help-key="help.nameCandidate">?</button><span class="count" data-count="name_candidate">0</span></label>
-    </section>
+    <div class="tabpanel studio-only" data-panel="ruler">
+      <section class="card">
+        <h2><span data-i18n="commands.title"></span><button type="button" class="help" data-help-key="help.commands">?</button></h2>
+        <div id="commandsList"></div>
+        <div id="executionsList"></div>
+      </section>
+    </div>
 
-    <section class="card">
-      <h2><span data-i18n="find.title"></span><button type="button" class="help" data-help-key="help.find">?</button></h2>
-      <input id="query" type="search" data-i18n-placeholder="find.placeholder" disabled>
-      <ul id="results" class="list"></ul>
-      <div class="row" style="margin-top: 8px">
-        <button id="fit" data-i18n="find.fit" disabled></button>
-        <button id="clear" data-i18n="find.clear" disabled></button>
-      </div>
-    </section>
+    <div class="tabpanel studio-only" data-panel="facts">
+      <section class="card">
+        <h2><span data-i18n="facts.title"></span><button type="button" class="help" data-help-key="help.facts">?</button></h2>
+        <div id="factsList"></div>
+      </section>
+    </div>
 
-    <section class="card" id="overlayCard" hidden>
-      <h2><span data-i18n="overlay.title"></span><button type="button" class="help" data-help-key="help.overlay">?</button></h2>
-      <label class="check"><input id="overlayToggle" type="checkbox" checked><span data-i18n="overlay.toggle"></span></label>
-      <p id="overlayQuestion"></p>
-      <ul id="overlayHits" class="list"></ul>
-      <p id="overlayNote" class="muted"></p>
-    </section>
+    <div class="tabpanel" data-panel="map">
+      <section class="card">
+        <h2><span data-i18n="find.title"></span><button type="button" class="help" data-help-key="help.find">?</button></h2>
+        <input id="query" type="search" data-i18n-placeholder="find.placeholder" disabled>
+        <ul id="results" class="list"></ul>
+        <div class="row" style="margin-top: 8px">
+          <button id="fit" data-i18n="find.fit" disabled></button>
+          <button id="clear" data-i18n="find.clear" disabled></button>
+        </div>
+      </section>
 
-    <section class="card">
-      <h2><span data-i18n="inspector.title"></span><button type="button" class="help" data-help-key="help.inspector">?</button></h2>
-      <div id="gathered" hidden></div>
-      <div id="inspector" class="muted" data-i18n="inspector.empty"></div>
-    </section>
+      <section class="card">
+        <h2><span data-i18n="inspector.title"></span><button type="button" class="help" data-help-key="help.inspector">?</button></h2>
+        <div id="inspector" class="muted" data-i18n="inspector.empty"></div>
+      </section>
+
+      <section class="card" id="overlayCard" hidden>
+        <h2><span data-i18n="overlay.title"></span><button type="button" class="help" data-help-key="help.overlay">?</button></h2>
+        <label class="check"><input id="overlayToggle" type="checkbox" checked><span data-i18n="overlay.toggle"></span></label>
+        <p id="overlayQuestion"></p>
+        <ul id="overlayHits" class="list"></ul>
+        <p id="overlayNote" class="muted"></p>
+      </section>
+
+      <!-- Advanced in the studio (the graph comes from the project); the way in when opened as a file. -->
+      <details class="card" id="filesCard" open>
+        <summary><span data-i18n="files.title"></span><button type="button" class="help" data-help-key="files.info">?</button></summary>
+        <div class="row" style="margin-top: 8px">
+          <label class="file"><span data-i18n="files.folder"></span><input id="folder" type="file" webkitdirectory multiple></label>
+          <label class="file"><span data-i18n="files.files"></span><input id="files" type="file" accept=".json" multiple></label>
+        </div>
+        <dl id="provenance"></dl>
+      </details>
+    </div>
   </aside>
   <main id="viewport">
     <canvas id="scene"></canvas>
@@ -303,6 +357,18 @@
     <div id="labels"></div>
     <div id="tooltip" class="hud"></div>
     <div id="drop" data-i18n="drop"></div>
+    <details id="legendHud" class="legend">
+      <summary data-i18n="legend.title"></summary>
+      <h2><span data-i18n="legend.nodes"></span><button type="button" class="help" data-help-key="help.nodes">?</button></h2>
+      <label><input type="checkbox" data-category="source" checked><span class="swatch source"></span><span data-i18n="legend.source"></span><button type="button" class="help" data-help-key="help.source">?</button><span class="count" data-count="source">0</span></label>
+      <label><input type="checkbox" data-category="symbol" checked><span class="swatch symbol"></span><span data-i18n="legend.symbol"></span><button type="button" class="help" data-help-key="help.symbol">?</button><span class="count" data-count="symbol">0</span></label>
+      <label><input type="checkbox" data-category="occurrence" checked><span class="swatch occurrence"></span><span data-i18n="legend.occurrence"></span><button type="button" class="help" data-help-key="help.occurrence">?</button><span class="count" data-count="occurrence">0</span></label>
+      <h2 style="margin-top: 10px"><span data-i18n="legend.edges"></span><button type="button" class="help" data-help-key="help.edges">?</button></h2>
+      <label><input type="checkbox" data-edge="declares" checked><span class="swatch line"></span>declares<button type="button" class="help" data-help-key="help.declares">?</button><span class="count" data-count="declares">0</span></label>
+      <label><input type="checkbox" data-edge="contains" checked><span class="swatch line"></span>contains<button type="button" class="help" data-help-key="help.contains">?</button><span class="count" data-count="contains">0</span></label>
+      <label><input type="checkbox" data-edge="observes" checked><span class="swatch line"></span>observes<button type="button" class="help" data-help-key="help.observes">?</button><span class="count" data-count="observes">0</span></label>
+      <label><input type="checkbox" data-edge="name_candidate" checked><span class="swatch line dashed"></span><span data-i18n="legend.nameCandidate"></span><button type="button" class="help" data-help-key="help.nameCandidate">?</button><span class="count" data-count="name_candidate">0</span></label>
+    </details>
     <div id="pathView" hidden>
       <div id="pathBar">
         <strong id="pathTitle" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0"></strong>
@@ -327,15 +393,26 @@
     </div>
     <div id="turns"></div>
     <div id="composer">
-      <textarea id="question" rows="3" data-i18n-placeholder="composer.placeholder" disabled></textarea>
-      <label class="field"><span>LLM<button type="button" class="help" data-help-key="help.llm">?</button></span><select id="provider"></select></label>
-      <label class="field" id="claudeModelRow"><span data-i18n="composer.claudeModel"></span><select id="claudeModel"></select></label>
-      <div class="field" id="modelfileRow">
-        <span>Modelfile<button type="button" class="help" data-help-key="help.modelfile">?</button></span>
-        <div class="row" style="flex-wrap: nowrap"><select id="modelfile"></select><button id="editModelfile" data-i18n="composer.edit"></button></div>
-        <span id="modelfileSummary" class="muted mono"></span>
+      <div id="gathered" hidden></div>
+      <div class="row" style="justify-content: space-between">
+        <div class="seg" id="modeSeg" role="group" data-i18n-aria="mode.aria">
+          <button type="button" data-mode="locate" data-i18n="mode.locate"></button><button type="button" data-mode="improve" data-i18n="mode.improve"></button>
+        </div>
+        <button type="button" class="help" data-help-key="help.mode">?</button>
       </div>
-      <div class="row" style="margin-top: 10px">
+      <details id="criteriaBox" hidden>
+        <summary><span data-i18n="settings.criteria"></span> <span id="criteriaCount" class="muted"></span><button type="button" class="help" data-help-key="help.criteria">?</button></summary>
+        <textarea id="criteria" rows="6"></textarea>
+      </details>
+      <textarea id="question" rows="3" data-i18n-placeholder="composer.placeholder" disabled></textarea>
+      <div class="picker">
+        <select id="provider" data-i18n-title="composer.llm"></select>
+        <span id="claudeModelRow"><select id="claudeModel" data-i18n-title="composer.claudeModel"></select></span>
+        <span id="modelfileRow" class="row" style="flex-wrap: nowrap; gap: 4px"><select id="modelfile" title="Modelfile"></select><button id="editModelfile" data-i18n="composer.edit"></button></span>
+        <button type="button" class="help" data-help-key="help.llm">?</button>
+      </div>
+      <span id="modelfileSummary" class="muted mono"></span>
+      <div class="row" style="margin-top: 8px">
         <button id="ask" class="primary" data-i18n="composer.ask" disabled></button>
       </div>
       <p id="llmNote" class="muted" style="margin-bottom: 0"></p>
@@ -368,6 +445,7 @@
   <form method="dialog">
     <div class="row" style="justify-content: space-between; flex-wrap: nowrap"><h2 id="askTitle" style="margin: 0"></h2><button type="button" data-close data-i18n="common.close"></button></div>
     <p id="askMessage"></p>
+    <div id="askExtra"></div>
     <textarea id="askInput" rows="5"></textarea>
     <p id="askNote" class="error" hidden></p>
     <div class="row" style="margin-top: 10px; justify-content: flex-end">
@@ -424,7 +502,7 @@ const STRINGS = {
   'project.dirty': [' (com alterações)', ' (with changes)'],
 
   // facts
-  'commands.title': ['Execução (comandos do projeto)', 'Execution (project commands)'],
+  'commands.title': ['Régua: comandos do projeto', 'Ruler: project commands'],
   'help.commands': ['Comandos que o próprio projeto declara no librarian.json, em "commands": a lista de argumentos (sem shell), o tempo máximo e quantas repetições. O Librarian não sabe o que cada comando faz. Ele roda numa cópia do projeto no commit da edition (um git worktree na pasta temporária do sistema, ou em LIBRARIAN_COPIES, fora de qualquer outro projeto), conferida contra as impressões digitais da edition, nunca na sua pasta. Cada comando só roda depois que você aprova aquela versão exata; mudar o comando no perfil pede aprovação de novo. Ele guarda o tempo de cada repetição, o código de saída, a saída inteira e as linhas "librarian-measure nome=valor unidade" que o projeto imprimir.',
     'Commands the project itself declares in librarian.json, under "commands": the argument list (no shell), the time limit and how many repetitions. The Librarian does not know what each command does. It runs in a copy of the project at the edition\'s commit (a git worktree in the system temporary folder, or in LIBRARIAN_COPIES, outside any other project), checked against the edition\'s fingerprints, never in your folder. Each command runs only after you approve that exact version; changing the command in the profile asks for approval again. It keeps each repetition\'s time, exit code, whole output and the "librarian-measure name=value unit" lines the project prints.'],
   'commands.none': ['O librarian.json do projeto não declara commands.', 'The project\'s librarian.json declares no commands.'],
@@ -473,15 +551,15 @@ const STRINGS = {
   'facts.empty': ['Nenhum fato aprovado ainda. Aprove um FACT de uma resposta que passou na conferência mecânica.', 'No fact approved yet. Approve a FACT from an answer that passed the mechanical check.'],
 
   // settings
-  'settings.title': ['Léxico, busca e instruções', 'Lexicon, search and instructions'],
+  'settings.title': ['Configurações das perguntas', 'Question settings'],
   'help.settings': ['As regras do balcão: como o bibliotecário procura nas estantes e o que ele exige de quem responde. Vale para as próximas consultas; as já feitas guardam as regras da época.',
     'The rules of the desk: how the librarian searches the shelves and what they require from whoever answers. Applies to the next consultations; those already made keep the rules of their time.'],
   'settings.lexicon': ['Léxico (JSON: <code>groups</code> de sinônimos e <code>stop_words</code>)', 'Lexicon (JSON: synonym <code>groups</code> and <code>stop_words</code>)'],
   'help.lexicon': ['O dicionário de sinônimos do bibliotecário. Você pergunta por raios, mas na estante o livro se chama ray: o léxico faz essa ponte. Sem ele, uma pergunta em português não encontra nomes em inglês. stop_words são palavras que ele ignora, como de e o.',
     'The librarian\'s synonym dictionary. You ask about raios, but on the shelf the book is called ray: the lexicon builds that bridge. Without it, a question in Portuguese does not find names in English. stop_words are words the librarian ignores, such as the and of.'],
   'lexicon.suggest': ['Sugerir léxico com o LLM', 'Suggest lexicon with the LLM'],
-  'lexicon.suggest.info': ['Os termos vêm do código da edition; o LLM escolhido na Conversa só propõe as palavras da pergunta (no Ollama, com o Modelfile <code>lexico</code>, a menos que você escolha outro <code>lexico-…</code>). As palavras vêm em português, ou em inglês quando o nome do Modelfile termina em <code>-en</code>. O pedido leva também as palavras das suas perguntas que não acharam nada, para virar stop word ou grupo. Cada grupo e cada stop word é conferido, e nada entra no léxico sem você aplicar.',
-    'The terms come from the edition\'s code; the LLM chosen in Conversation only proposes the question words (in Ollama, with the <code>lexico</code> Modelfile, unless you choose another <code>lexico-…</code>). The words come in Portuguese, or in English when the Modelfile name ends in <code>-en</code>. The request also carries the words of your questions that found nothing, to become a stop word or a group. Each group and each stop word is checked, and nothing enters the lexicon unless you apply it.'],
+  'lexicon.suggest.info': ['Os termos vêm do código da edition; o LLM escolhido aqui só propõe as palavras da pergunta (no Ollama, com o Modelfile <code>lexico</code>, a menos que você escolha outro <code>lexico-…</code>). As palavras vêm em português, ou em inglês quando o nome do Modelfile termina em <code>-en</code>. O pedido leva também as palavras das suas perguntas que não acharam nada, para virar stop word ou grupo. Cada grupo e cada stop word é conferido, e nada entra no léxico sem você aplicar.',
+    'The terms come from the edition\'s code; the LLM chosen here only proposes the question words (in Ollama, with the <code>lexico</code> Modelfile, unless you choose another <code>lexico-…</code>). The words come in Portuguese, or in English when the Modelfile name ends in <code>-en</code>. The request also carries the words of your questions that found nothing, to become a stop word or a group. Each group and each stop word is checked, and nothing enters the lexicon unless you apply it.'],
   'lexicon.manual': ['Com <strong>Nenhum</strong> (o Studio não chama ninguém): copie o pedido, leve a outro chat e cole a resposta aqui.',
     'With <strong>None</strong> (the Studio calls no one): copy the request, take it to another chat and paste the answer here.'],
   'lexicon.copy': ['Copiar pedido', 'Copy request'],
@@ -751,7 +829,9 @@ const STRINGS = {
   'composer.edit': ['Editar', 'Edit'],
   'composer.ask': ['Perguntar', 'Ask'],
   'composer.askManual': ['Perguntar (sem enviar)', 'Ask (without sending)'],
-  'composer.askSend': ['Perguntar e enviar · {provider}', 'Ask and send · {provider}'],
+  'composer.askSend': ['Perguntar · {target}', 'Ask · {target}'],
+  'composer.askGathered': ['Perguntar com o envelope ({n}) · {target}', 'Ask with the envelope ({n}) · {target}'],
+  'composer.llm': ['Quem responde', 'Who answers'],
   'composer.defaultSystem': ['SYSTEM padrão do studio.', 'Studio default SYSTEM.'],
   'provider.manual': ['Nenhum (só preparar para copiar)', 'None (only prepare to copy)'],
   'provider.ollama': ['Ollama local: qwen, DeepSeek… (Modelfile)', 'Local Ollama: qwen, DeepSeek… (Modelfile)'],
@@ -771,8 +851,8 @@ const STRINGS = {
 
   // chain
   'chain.title': ['Continuar em cadeia', 'Continue in a chain'],
-  'chain.message': ['Próxima pergunta, a partir das respostas conferidas da pergunta {id}. Escolha antes o LLM e o Modelfile da próxima etapa (por exemplo, performance).',
-    'Next question, starting from the checked answers of question {id}. Choose the LLM and Modelfile of the next step first (for example, performance).'],
+  'chain.message': ['Próxima pergunta, a partir das respostas conferidas da pergunta {id}. Escolha abaixo o modo e quem responde nesta etapa.',
+    'Next question, starting from the checked answers of question {id}. Choose below the mode and who answers this step.'],
   'chain.placeholder': ['Por exemplo: como deixar esta função mais rápida?', 'For example: how can this function be made faster?'],
   'chain.ok': ['Perguntar', 'Ask'],
   'chain.required': ['Escreva a próxima pergunta.', 'Write the next question.'],
@@ -929,6 +1009,37 @@ const STRINGS = {
   'mf.placeholderModel': ['librarian-<nome>', 'librarian-<name>'],
   'mf.save': ['Salvar', 'Save'],
   'mf.saved': ['Salvo em modelfiles/{name}.Modelfile.', 'Saved to modelfiles/{name}.Modelfile.'],
+  'tab.project': ['Projeto', 'Project'],
+  'tab.lexicon': ['Léxico', 'Lexicon'],
+  'tab.ruler': ['Régua', 'Ruler'],
+  'tab.facts': ['Acervo', 'Facts'],
+  'tab.map': ['Mapa', 'Map'],
+  'settings.byMode': ['Hipótese e mudança proposta seguem o modo da pergunta (Localizar ou Melhorar), escolhido na Conversa.', 'Hypothesis and proposed change follow the question mode (Locate or Improve), chosen in the Conversation.'],
+  'lexicon.save': ['Salvar léxico', 'Save lexicon'],
+  'lexicon.saved': ['Léxico salvo.', 'Lexicon saved.'],
+  'lexicon.suggestTitle': ['Sugerir com um LLM', 'Suggest with an LLM'],
+  'legend.title': ['Legenda do mapa', 'Map legend'],
+  'mode.aria': ['Modo da pergunta', 'Question mode'],
+  'mode.label': ['Modo', 'Mode'],
+  'mode.locate': ['Localizar', 'Locate'],
+  'mode.improve': ['Melhorar', 'Improve'],
+  'mode.criteriaLines': ['({n} linhas)', '({n} lines)'],
+  'mode.criteriaNone': ['(vazio)', '(empty)'],
+  'help.mode': ['Localizar pede só fatos: onde o código faz algo, com a linha e o trecho copiado. Melhorar também aceita uma hipótese com uma mudança proposta, conferida linha a linha, e grava antes da resposta os critérios prévios que vão julgá-la. O modo vale para as próximas perguntas, inclusive as da cadeia; as já feitas guardam o modo da época.',
+    'Locate asks only for facts: where the code does something, with the line and the copied excerpt. Improve also accepts a hypothesis with a proposed change, checked line by line, and records before the answer the prior criteria that will judge it. The mode applies to the next questions, chain steps included; the ones already asked keep the mode of their time.'],
+  'picker.label': ['Quem responde', 'Who answers'],
+  'resend.title': ['Enviar a pergunta', 'Send the question'],
+  'resend.message': ['A mesma pergunta, com a mesma evidência, para quem você escolher:\n{question}', 'The same question, with the same evidence, to whoever you choose:\n{question}'],
+  'resend.ok': ['Enviar', 'Send'],
+  'gather.hint': ['A próxima pergunta da Conversa vai só com estas declarações, nesta ordem.', 'The next question in the Conversation goes with these declarations only, in this order.'],
+  'turn.notSent': ['ainda não enviada', 'not sent yet'],
+  'turn.answers': ['{n} respostas', '{n} answers'],
+  'turn.facts': ['fato {list}', 'fact {list}'],
+  'turn.olderAnswer': ['Resposta anterior · {who} · {verdict}', 'Earlier answer · {who} · {verdict}'],
+  'turn.resend': ['Enviar de novo…', 'Send again…'],
+  'turn.sendFirst': ['Enviar…', 'Send…'],
+  'turn.evidence': ['Evidência: {n} declarações', 'Evidence: {n} declarations'],
+  'turn.more': ['Mais ações', 'More actions'],
 };
 
 // Fixed texts the server writes in Portuguese (constants and a few formats), shown in English
@@ -1384,6 +1495,8 @@ function focusNode(i) {
 // ---------------------------------------------------------------- selection & inspector
 function selectNode(i, fly = false) {
   state.selectedNode = i; state.selectedEdge = null;
+  // The inspector is on the Map tab: a click on the map shows it.
+  if (studio.status) showTab('map');
   repaint(); inspect();
   if (fly) focusNode(i);
 }
@@ -1548,11 +1661,13 @@ new ResizeObserver(resize).observe(viewport);
 // ---------------------------------------------------------------- in-page dialogs
 // Replaces prompt() and confirm(). With `input`, resolves the trimmed text on OK and null when
 // closed; without, true or false. `required` is the message shown when OK finds the text empty.
-function modal({ title, message = '', input = false, placeholder = '', value = '', ok, required = '' }) {
+function modal({ title, message = '', input = false, placeholder = '', value = '', ok, required = '', extra = null }) {
   const dialog = $('#askDialog'), box = $('#askInput');
   $('#askTitle').textContent = title;
   $('#askMessage').textContent = message;
   $('#askMessage').hidden = !message;
+  // Controls that belong to this action (the LLM that will answer, the question mode).
+  $('#askExtra').replaceChildren(...(extra ? [extra] : []));
   box.hidden = !input;
   Object.assign(box, { value, placeholder });
   $('#askOk').textContent = ok ?? t('common.ok');
@@ -1611,7 +1726,7 @@ function fillProviders() {
   const llm = studio.status.llm, current = $('#provider').value;
   // Providers without sending yet stay off the list: they only confused the choice.
   $('#provider').replaceChildren(...llm.providers.filter(p => p.implemented)
-    .map(p => el('option', { value: p.id, textContent: STRINGS[`provider.${p.id}`] ? t(`provider.${p.id}`) : p.label })));
+    .map(p => el('option', { value: p.id, textContent: providerLabel(p.id), title: STRINGS[`provider.${p.id}`] ? t(`provider.${p.id}`) : p.label })));
   if (current) $('#provider').value = current;
 }
 
@@ -1625,10 +1740,11 @@ async function initStudio() {
   const llm = studio.status.llm;
   fillProviders();
   $('#claudeModel').replaceChildren(...llm.claude_cli.models.map(m => el('option', { value: m, textContent: m })));
-  const provider = saved.get('provider');
-  if (provider && llm.providers.some(p => p.id === provider && p.implemented)) $('#provider').value = provider;
-  $('#claudeModel').value = saved.get('claudeModel') ?? llm.claude_cli.models[0];
-  setModelfiles(studio.status.modelfiles, saved.get('modelfile'));
+  setModelfiles(studio.status.modelfiles);
+  // The composer follows the question mode; each mode remembers its own LLM and Modelfile.
+  setMode(saved.get('mode') === 'improve' ? 'improve' : 'locate');
+  showTab(saved.get('tab') ?? 'project');
+  $('#filesCard').open = false;
   $('#projectPath').value = saved.get('project') ?? '';
   refreshComposer();
   resize();
@@ -1667,6 +1783,7 @@ function renderProject() {
   $('#allowPatch').checked = settings.allow_patch ?? false;
   $('#instructions').value = (settings.instructions ?? []).join('\n');
   $('#criteria').value = settings.criteria ?? '';
+  applyMode();
   renderRuns();
 }
 
@@ -1751,19 +1868,120 @@ async function loadRun(id) {
 const providerLabel = id => (id === 'manual' ? t('provider.short.manual') : { ollama: 'Ollama', 'claude-cli': 'Claude CLI' }[id])
   ?? studio.status?.llm.providers.find(p => p.id === id)?.label ?? id;
 
+// ---- LLM choice next to each action. Each kind of action remembers its own LLM and Modelfile:
+// the lexicon suggestion, locating, improving, chaining and sending a question again.
+const DEFAULT_MODELFILES = {
+  lexicon: ['lexico'], locate: ['verificavel'], improve: ['performance-qwen', 'performance'],
+  chain: ['performance-qwen', 'performance'], resend: ['verificavel'],
+};
+const implementedProviders = () => studio.status.llm.providers.filter(p => p.implemented).map(p => p.id);
+function defaultProvider() {
+  const llm = studio.status.llm, ids = implementedProviders();
+  if (llm.ollama.running && ids.includes('ollama')) return 'ollama';
+  if (llm.claude_cli.executable && ids.includes('claude-cli')) return 'claude-cli';
+  return ids[0] ?? 'manual';
+}
+function choiceFor(kind) {
+  let c = null;
+  try { c = JSON.parse(saved.get(`llm.${kind}`) ?? 'null'); } catch { /* a broken entry falls back to the default */ }
+  const names = studio.modelfiles.map(m => m.name);
+  if (!c || !implementedProviders().includes(c.provider)) {
+    c = { provider: defaultProvider(), modelfile: (DEFAULT_MODELFILES[kind] ?? []).find(n => names.includes(n)) ?? names[0] ?? null };
+  }
+  if (c.modelfile && !names.includes(c.modelfile)) c.modelfile = null;
+  if (c.provider === 'ollama' && !c.modelfile) c.modelfile = names[0] ?? null;
+  if (c.provider === 'manual') c.modelfile = null;
+  c.claude_model = c.provider === 'claude-cli' ? (c.claude_model ?? studio.status.llm.claude_cli.models[0] ?? null) : null;
+  return c;
+}
+const keepChoice = (kind, c) => saved.set(`llm.${kind}`, JSON.stringify(c));
+const choiceLabel = c => [providerLabel(c.provider), c.modelfile].filter(Boolean).join(' · ');
+
+/// Provider, Modelfile and Claude model for one kind of action, saved as it changes.
+function llmPicker(kind) {
+  const c = choiceFor(kind);
+  const provider = el('select', { title: t('composer.llm') }, ...implementedProviders().map(id =>
+    el('option', { value: id, textContent: providerLabel(id), title: STRINGS[`provider.${id}`] ? t(`provider.${id}`) : id })));
+  provider.value = c.provider;
+  const modelfile = el('select', { title: 'Modelfile' }, el('option', { value: '', textContent: t('mf.none') }),
+    ...studio.modelfiles.map(m => el('option', { value: m.name, textContent: m.name })));
+  modelfile.value = c.modelfile ?? '';
+  const claude = el('select', { title: t('composer.claudeModel') }, ...studio.status.llm.claude_cli.models.map(m => el('option', { value: m, textContent: m })));
+  if (c.claude_model) claude.value = c.claude_model;
+  const read = () => ({ provider: provider.value, modelfile: provider.value === 'manual' ? null : (modelfile.value || null),
+    claude_model: provider.value === 'claude-cli' ? claude.value : null });
+  const sync = () => {
+    modelfile.hidden = provider.value === 'manual';
+    claude.hidden = provider.value !== 'claude-cli';
+    modelfile.querySelector('option[value=""]').disabled = provider.value === 'ollama';
+    if (provider.value === 'ollama' && !modelfile.value) modelfile.value = studio.modelfiles[0]?.name ?? '';
+  };
+  for (const s of [provider, modelfile, claude]) s.onchange = () => { sync(); keepChoice(kind, read()); };
+  sync();
+  return { node: el('div', { className: 'picker' }, el('span', { className: 'label', textContent: t('picker.label') }), provider, modelfile, claude), read };
+}
+
+// ---- question mode: Locate asks for facts; Improve also accepts a hypothesis with a proposed
+// change, under the criteria written before the answer.
+let mode = 'locate';
+function applyMode() {
+  $('#allowHypothesis').checked = mode === 'improve';
+  $('#allowPatch').checked = mode === 'improve';
+  $('#criteriaBox').hidden = mode !== 'improve';
+  const lines = $('#criteria').value.split('\n').filter(l => l.trim()).length;
+  $('#criteriaCount').textContent = lines ? t('mode.criteriaLines', { n: lines }) : t('mode.criteriaNone');
+  for (const b of document.querySelectorAll('#modeSeg [data-mode]')) b.setAttribute('aria-pressed', String(b.dataset.mode === mode));
+}
+function setComposerChoice(c) {
+  $('#provider').value = c.provider;
+  $('#modelfile').value = c.modelfile ?? '';
+  if (c.claude_model) $('#claudeModel').value = c.claude_model;
+}
+function setMode(next) {
+  mode = next;
+  saved.set('mode', next);
+  applyMode();
+  if (studio.status) setComposerChoice(choiceFor(next));
+  refreshComposer();
+}
+/// The mode as a control inside a dialog; the chosen one becomes the page's mode on OK.
+function modeChooser(initial) {
+  let value = initial;
+  const buttons = ['locate', 'improve'].map(id => el('button', { type: 'button', textContent: t(`mode.${id}`), onclick: () => { value = id; paint(); } }));
+  const paint = () => buttons.forEach((b, i) => b.setAttribute('aria-pressed', String(['locate', 'improve'][i] === value)));
+  paint();
+  return { node: el('div', { className: 'row' }, el('span', { className: 'label muted', textContent: t('mode.label') }), el('div', { className: 'seg' }, ...buttons)), read: () => value };
+}
+
+// ---- tabs: one step of the method at a time.
+function showTab(id) {
+  for (const b of document.querySelectorAll('#tabs [data-tab]')) b.setAttribute('aria-selected', String(b.dataset.tab === id));
+  for (const p of document.querySelectorAll('.tabpanel')) p.hidden = p.dataset.panel !== id;
+  saved.set('tab', id);
+}
+for (const b of document.querySelectorAll('#tabs [data-tab]')) b.addEventListener('click', () => showTab(b.dataset.tab));
+
+const composerChoice = () => {
+  const provider = $('#provider').value;
+  return { provider, modelfile: $('#modelfileRow').hidden ? null : ($('#modelfile').value || null),
+    claude_model: provider === 'claude-cli' ? $('#claudeModel').value : null };
+};
+
 function refreshComposer() {
   if (!studio.status) return;
   const provider = $('#provider').value;
   const ready = Boolean(studio.run);
   $('#question').disabled = !ready;
   $('#ask').disabled = !ready;
-  $('#ask').textContent = provider === 'manual' ? t('composer.askManual') : t('composer.askSend', { provider: providerLabel(provider) });
   $('#claudeModelRow').hidden = provider !== 'claude-cli';
   $('#modelfileRow').hidden = !['ollama', 'claude-cli'].includes(provider);
   const noneOption = $('#modelfile').querySelector('option[value=""]');
   if (noneOption) noneOption.disabled = provider === 'ollama';
   if (provider === 'ollama' && !$('#modelfile').value && studio.modelfiles.length) $('#modelfile').value = studio.modelfiles[0].name;
   const mf = studio.modelfiles.find(m => m.name === $('#modelfile').value);
+  const target = choiceLabel(composerChoice());
+  $('#ask').textContent = gathered.length ? t('composer.askGathered', { n: gathered.length, target })
+    : provider === 'manual' ? t('composer.askManual') : t('composer.askSend', { target });
   $('#modelfileSummary').textContent = mf ? modelfileSummary(mf.content, provider) : (provider === 'claude-cli' ? t('composer.defaultSystem') : '');
   const llm = studio.status.llm;
   $('#llmNote').textContent = {
@@ -1783,40 +2001,57 @@ function modelfileSummary(content, provider) {
   return provider === 'claude-cli' ? t('mf.claudeOnly', { system: systemText }) : [from, ...params, systemText].join(' · ');
 }
 
+// The composer asks a free question, or, with an envelope, a question over the gathered declarations.
 async function ask() {
   const question = $('#question').value.trim();
   if (!question || !studio.run) return;
+  const choice = composerChoice();
   await busy([$('#ask')], $('#llmNote'), async () => {
     // The question uses the saved settings; save what is on screen so nothing is forgotten.
     await saveSettings();
     say($('#chatNote'), t('chat.preparing'));
-    const turn = await api('POST', '/api/ask', { key: studio.project.key, run: studio.run, question });
+    const turn = gathered.length
+      ? await api('POST', '/api/gathered-question', { key: studio.project.key, run: studio.run, question, nodes: gathered })
+      : await api('POST', '/api/ask', { key: studio.project.key, run: studio.run, question });
     studio.turns.push(turn);
     $('#question').value = '';
     activate(turn.id);
     $('#turns').scrollTop = $('#turns').scrollHeight;
-    // One button: the LLM select decides. Nenhum only shows the query; any LLM also sends it.
-    if (turn.query) await sendTurn(turn);
+    // The composer's LLM decides. Nenhum only shows the query; any LLM also sends it.
+    if (turn.query && !turn.prepare_error) await sendTurn(turn, choice);
   });
 }
 
 // Chain step: a new question over the declarations the checked answers located, with the
-// reviewed facts about them. Sent like a question, with the LLM and Modelfile chosen now.
+// reviewed facts about them. The dialog carries the mode and the LLM of this step.
 async function continueTurn(from, button) {
+  const chooser = modeChooser('improve');
+  const picker = llmPicker('chain');
   const question = await modal({ title: t('chain.title'), message: t('chain.message', { id: from.id }), input: true,
-    placeholder: t('chain.placeholder'), ok: t('chain.ok'), required: t('chain.required') });
+    placeholder: t('chain.placeholder'), ok: t('chain.ok'), required: t('chain.required'),
+    extra: el('div', {}, chooser.node, picker.node) });
   if (!question) return;
+  setMode(chooser.read());
   await busy([button], $('#llmNote'), async () => {
     await saveSettings();
     const turn = await api('POST', '/api/continue', { key: studio.project.key, run: studio.run, turn: from.id, question });
     studio.turns.push(turn);
     activate(turn.id);
     $('#turns').scrollTop = $('#turns').scrollHeight;
-    if (turn.query) await sendTurn(turn);
+    if (turn.query) await sendTurn(turn, picker.read());
   });
 }
 
-// P4: declarations gathered one by one for a single question; reset with the run.
+// Sends the same question (same evidence) to an LLM chosen now.
+async function resendTurn(turn, button) {
+  const picker = llmPicker('resend');
+  const ok = await modal({ title: t('resend.title'), message: t('resend.message', { question: turn.question }), ok: t('resend.ok'), extra: picker.node });
+  if (!ok) return;
+  await busy([button], $('#llmNote'), () => sendTurn(turn, picker.read()));
+}
+
+// P4: the envelope, declarations gathered one by one for a single question; reset with the run.
+// It lives over the composer: with an envelope, the composer asks over exactly these declarations.
 let gathered = [];
 function toggleGathered(id) {
   gathered = gathered.includes(id) ? gathered.filter(g => g !== id) : [...gathered, id];
@@ -1826,30 +2061,17 @@ function toggleGathered(id) {
 function renderGathered() {
   const box = $('#gathered');
   box.hidden = !gathered.length;
+  refreshComposer();
   if (!gathered.length) { box.replaceChildren(); return; }
   const label = id => state.nodes[state.index.get(id)]?.label ?? id;
-  const ask = el('button', { className: 'primary', textContent: t('gather.ask') });
-  ask.onclick = () => askGathered(ask);
   box.replaceChildren(
-    el('strong', { textContent: t('gather.title', { n: gathered.length }) }),
-    el('ol', { className: 'list' }, ...gathered.map(id => el('li', {}, el('span', { className: 'mono', textContent: label(id) }), ' ',
+    el('div', { className: 'row', style: 'gap: 4px' },
+      el('strong', { textContent: t('gather.title', { n: gathered.length }) }), helpButton(t('help.gather')),
+      el('button', { className: 'link', style: 'margin-left: auto', textContent: t('gather.clear'), onclick: () => { gathered = []; renderGathered(); inspect(); } })),
+    el('div', {}, ...gathered.map(id => el('span', { className: 'chip env', title: label(id) },
+      el('span', { className: 'mono', textContent: label(id).replace(/^impl (.+ for )?/, '') }),
       el('button', { textContent: '×', title: t('gather.remove'), onclick: () => toggleGathered(id) })))),
-    el('div', { className: 'row', style: 'margin: 6px 0 10px; gap: 6px' }, ask,
-      el('button', { textContent: t('gather.clear'), onclick: () => { gathered = []; renderGathered(); inspect(); } })));
-}
-async function askGathered(button) {
-  const label = id => state.nodes[state.index.get(id)]?.label ?? id;
-  const question = await modal({ title: t('gather.askTitle'), input: true, required: t('chain.required'),
-    message: t('gather.askMessage', { n: gathered.length, list: gathered.map(label).join('\n') }), ok: t('gather.ask') });
-  if (!question) return;
-  await busy([button], $('#llmNote'), async () => {
-    await saveSettings();
-    const turn = await api('POST', '/api/gathered-question', { key: studio.project.key, run: studio.run, question, nodes: gathered });
-    studio.turns.push(turn);
-    renderTurns();
-    $('#turns').scrollTop = $('#turns').scrollHeight;
-    if ($('#provider').value !== 'manual' && !turn.prepare_error) await sendTurn(turn);
-  });
+    el('div', { className: 'muted', style: 'font-size: 12px', textContent: t('gather.hint') }));
 }
 function gatheredTurnView(g) {
   return el('div', { className: 'muted', style: 'margin-top: 6px' },
@@ -1891,8 +2113,9 @@ function ownerView(o) {
     helpButton(t('help.owner')));
 }
 
-async function sendTurn(turn) {
-  const provider = $('#provider').value;
+/// Sends one prepared question with the LLM chosen at the action that asked for it.
+async function sendTurn(turn, choice = composerChoice()) {
+  const { provider, modelfile, claude_model } = choice;
   if (!turn.query) {
     turn.sendError = t('turn.noQuery');
     renderTurns();
@@ -1900,19 +2123,18 @@ async function sendTurn(turn) {
   }
   if (provider === 'manual') {
     turn.showQuery = true;
+    turn.manual = true;
     renderTurns();
     return;
   }
   // Ollama cuts prompts longer than num_ctx without failing; warn before that happens.
-  if (provider === 'ollama' && !(await confirmContext(turn.query, $('#modelfile').value))) return;
-  turn.pending = providerLabel(provider);
+  if (provider === 'ollama' && !(await confirmContext(turn.query, modelfile))) return;
+  turn.pending = choiceLabel(choice);
   turn.sendError = null;
   renderTurns();
   try {
-    const modelfile = $('#modelfileRow').hidden ? null : ($('#modelfile').value || null);
     const result = await api('POST', '/api/send', {
-      key: studio.project.key, run: studio.run, turn: turn.id, provider, modelfile,
-      claude_model: provider === 'claude-cli' ? $('#claudeModel').value : null,
+      key: studio.project.key, run: studio.run, turn: turn.id, provider, modelfile, claude_model,
     });
     (turn.sends ??= []).push(result);
     await refreshSends(turn);
@@ -1996,11 +2218,30 @@ function renderTurns() {
   refreshComposer();
 }
 
+// One line on top of each question: the last verdict, the facts approved from it and what it cost.
+function turnSummary(turn) {
+  const sends = turn.sends ?? [];
+  const last = sends.at(-1);
+  const status = last?.check?.report.mechanical_status;
+  const facts = sends.flatMap(s => Object.values(s.reviews ?? {})).filter(r => r.decision === 'approved').map(r => r.fact_id);
+  const cost = sends.reduce((a, s) => a + (s.cost_usd ?? 0), 0);
+  const items = [
+    !sends.length ? el('span', { className: 'muted', textContent: t('turn.notSent') }) : null,
+    status ? el('span', { className: `verdict ${status === 'passed' ? 'passed' : 'error'}`, textContent: status === 'passed' ? t('check.passed') : t('check.failed') }) : null,
+    last ? el('span', { className: 'muted', textContent: choiceLabel({ provider: last.state === 'pasted' ? 'manual' : last.provider, modelfile: last.modelfile }) }) : null,
+    sends.length > 1 ? el('span', { className: 'tag', textContent: t('turn.answers', { n: sends.length }) }) : null,
+    facts.length ? el('span', { className: 'tag', textContent: t('turn.facts', { list: facts.join(', ') }) }) : null,
+    cost ? el('span', { className: 'muted', textContent: `US$ ${cost.toFixed(4)}` }) : null,
+  ].filter(Boolean);
+  return items.length ? el('div', { className: 'turn-sum' }, ...items) : null;
+}
+
 function renderTurn(turn) {
   const hits = turn.search?.hits ?? [];
   const touched = new Set(hits.flatMap(h => h.reasons.map(r => r.term)));
   const facts = turn.request?.hits ?? 0;
-  const provider = $('#provider').value;
+  const active = studio.activeTurn === turn.id;
+  const manual = turn.manual || $('#provider').value === 'manual';
   const hitItem = (h, r) => el('li', {
     onclick: () => { if (studio.activeTurn !== turn.id) activate(turn.id); const i = state.index.get(h.symbol_id); if (i != null) selectNode(i, true); },
   }, el('span', { className: 'tag', textContent: r < facts ? `E${r + 1}` : `#${r + 1}` }), ' ', h.name,
@@ -2010,8 +2251,26 @@ function renderTurn(turn) {
     try { await navigator.clipboard.writeText(turn.query); copyButton.textContent = t('turn.copied'); }
     catch { copyButton.textContent = t('turn.copyBlocked'); turn.showQuery = true; renderTurns(); }
   };
-  return el('div', { className: 'turn' + (studio.activeTurn === turn.id ? ' active' : '') },
+  const sends = turn.sends ?? [];
+  const passed = sends.some(s => s.check?.report.mechanical_status === 'passed');
+  // Older answers fold under their header; the latest stays open.
+  const replies = sends.map((s, k) => k < sends.length - 1
+    ? el('details', { className: 'older' }, el('summary', { textContent: t('turn.olderAnswer', {
+      who: choiceLabel({ provider: s.state === 'pasted' ? 'manual' : s.provider, modelfile: s.modelfile }),
+      verdict: s.check ? (s.check.report.mechanical_status === 'passed' ? t('check.passed') : t('check.failed')) : s.state }) }), reply(s, turn))
+    : reply(s, turn));
+  const more = el('span', { hidden: true },
+    el('button', { className: 'danger', textContent: t('turn.delete'), title: t('turn.delete.title'), disabled: Boolean(turn.pending), onclick: () => deleteTurn(turn) }));
+  const chain = passed ? (() => {
+    const b = el('button', { className: 'primary', textContent: t('chain.button'), title: t('chain.button.title'), disabled: Boolean(turn.pending) });
+    b.onclick = () => continueTurn(turn, b);
+    return b;
+  })() : null;
+  const send = el('button', { textContent: sends.length ? t('turn.resend') : t('turn.sendFirst'), disabled: !turn.query || Boolean(turn.pending) });
+  send.onclick = () => resendTurn(turn, send);
+  return el('div', { className: 'turn' + (active ? ' active' : '') },
     el('div', { className: 'bubble user', textContent: turn.question, title: t('turn.highlight'), onclick: () => activate(turn.id) }),
+    turnSummary(turn),
     turn.chain ? chainView(turn.chain, turn.search?.owner_context) : null,
     turn.path ? pathTurnView(turn.path) : null,
     turn.gathered ? gatheredTurnView(turn.gathered) : null,
@@ -2021,7 +2280,9 @@ function renderTurn(turn) {
         title: touched.has(term) ? t('turn.termHit') : t('turn.termMiss'),
       })),
       (turn.search?.terms ?? []).length ? null : el('span', { className: 'muted', textContent: t('turn.noTerms') })),
-    hits.length ? el('ul', { className: 'list' }, ...hits.map(hitItem))
+    hits.length ? el('details', { open: active || hits.length <= 3 },
+      el('summary', { textContent: t('turn.evidence', { n: hits.length }) }),
+      el('ul', { className: 'list' }, ...hits.map(hitItem)))
       : el('p', { className: 'muted', textContent: t('turn.noHits') }),
     turn.prepare_error ? el('p', { className: 'error', textContent: turn.prepare_error.includes('accept_diagnostics')
       ? t('turn.diagnostics') : t('turn.prepareError', { error: turn.prepare_error }) }) : null,
@@ -2035,24 +2296,15 @@ function renderTurn(turn) {
       el('p', { className: 'muted', textContent: t('turn.sentHow') }),
       turn.answer_format === 'claims' ? el('p', { className: 'muted', textContent: t('turn.claimsHow') }) : null,
       el('pre', { textContent: turn.query })) : null,
-    ...(turn.sends ?? []).map(s => reply(s, turn)),
+    ...replies,
     turn.comparison ? compareView(turn.comparison) : null,
     turn.pending ? el('div', { className: 'bubble reply muted', textContent: t('turn.sending', { provider: turn.pending }) }) : null,
     turn.sendError ? el('p', { className: 'error', textContent: turn.sendError }) : null,
-    provider === 'manual' && turn.answer_format === 'claims' && turn.query ? pasteView(turn) : null,
+    manual && turn.answer_format === 'claims' && turn.query ? pasteView(turn) : null,
     el('div', { className: 'row', style: 'margin-top: 8px' },
-      el('button', {
-        textContent: provider === 'manual' ? t('turn.show') : t('turn.send', { provider: providerLabel(provider) }),
-        disabled: !turn.query || Boolean(turn.pending), onclick: () => sendTurn(turn),
-      }),
-      copyButton,
-      (turn.sends ?? []).some(s => s.check?.report.mechanical_status === 'passed') ? (() => {
-        const b = el('button', { textContent: t('chain.button'), title: t('chain.button.title'), disabled: Boolean(turn.pending) });
-        b.onclick = () => continueTurn(turn, b);
-        return b;
-      })() : null,
-      el('button', { textContent: t('turn.delete'), title: t('turn.delete.title'), disabled: Boolean(turn.pending),
-        style: 'margin-left: auto', onclick: () => deleteTurn(turn) })));
+      chain, send, copyButton,
+      el('span', { className: 'row', style: 'margin-left: auto; gap: 6px' }, more,
+        el('button', { textContent: '⋯', title: t('turn.more'), onclick: () => { more.hidden = !more.hidden; } }))));
 }
 
 async function deleteTurn(turn) {
@@ -2679,9 +2931,14 @@ $('#pathResetChoices').onclick = () => { pathChosen = {}; drawPath(); };
 async function askPath(button) {
   const label = id => state.nodes[state.index.get(id)]?.label ?? id;
   const targets = [...pathTargets];
+  // Questions about the points of a path locate: they are asked in the Locate mode.
+  const picker = llmPicker('locate');
   const question = await modal({ title: t('path.askTitle'), input: true, value: t('path.askDefault'), required: t('chain.required'),
-    message: t('path.askMessage', { n: targets.length, list: targets.map(label).join('\n') }), ok: t('path.askOk', { n: targets.length }) });
+    message: t('path.askMessage', { n: targets.length, list: targets.map(label).join('\n') }), ok: t('path.askOk', { n: targets.length }),
+    extra: picker.node });
   if (!question) return;
+  const choice = picker.read();
+  setMode('locate');
   await busy([button], $('#llmNote'), async () => {
     await saveSettings();
     const turns = await api('POST', '/api/path-questions', { key: studio.project.key, run: studio.run, question, nodes: targets,
@@ -2689,10 +2946,10 @@ async function askPath(button) {
     studio.turns.push(...turns);
     renderTurns();
     $('#turns').scrollTop = $('#turns').scrollHeight;
-    if ($('#provider').value === 'manual') return;
+    if (choice.provider === 'manual') return;
     for (const [i, turn] of turns.entries()) {
       say($('#llmNote'), t('path.sending', { index: i + 1, total: turns.length, name: label(turn.path.node) }));
-      await sendTurn(turn);
+      await sendTurn(turn, choice);
     }
     say($('#llmNote'), t('path.sent', { total: turns.length }));
   });
@@ -2705,7 +2962,9 @@ const helpTip = el('div', { id: 'helpTip', role: 'tooltip', hidden: true });
 document.body.append(helpTip);
 let helpPinned = null;
 function showHelp(button) {
-  helpTip.textContent = button.dataset.helpKey ? t(button.dataset.helpKey) : button.dataset.help;
+  // Texts from STRINGS may hold markup (they are ours); texts built from data stay plain.
+  if (button.dataset.helpKey) helpTip.innerHTML = t(button.dataset.helpKey);
+  else helpTip.textContent = button.dataset.help;
   helpTip.hidden = false;
   const r = button.getBoundingClientRect();
   const left = Math.min(Math.max(8, r.left + r.width / 2 - helpTip.offsetWidth / 2), innerWidth - helpTip.offsetWidth - 8);
@@ -2729,23 +2988,19 @@ document.addEventListener('mouseout', e => { if (e.target.closest?.('.help') && 
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !helpTip.hidden) hideHelp(); });
 
 // ---- lexicon proposals and profile export
-function llmChoice() {
-  const provider = $('#provider').value;
-  return {
-    provider,
-    modelfile: $('#modelfileRow').hidden ? null : ($('#modelfile').value || null),
-    claude_model: provider === 'claude-cli' ? $('#claudeModel').value : null,
-  };
+// The lexicon suggestion has its own LLM picker, next to its button.
+let lexiconPicker = null;
+function renderLexiconPicker() {
+  if (!studio.status) return;
+  lexiconPicker = llmPicker('lexicon');
+  $('#lexiconPicker').replaceChildren(lexiconPicker.node);
 }
 
 async function suggestLexicon() {
   if (!studio.run) { say($('#suggestNote'), t('lexicon.needRun')); return; }
   await busy([$('#suggestLexicon')], $('#suggestNote'), async () => {
     await saveSettings();
-    const choice = llmChoice();
-    // The conversation Modelfile is tuned for explanations; vocabulary has its own when present.
-    // A lexicon Modelfile chosen by hand (lexico-deepseek-en…) is kept.
-    if (choice.provider === 'ollama' && !/^lexico/.test(choice.modelfile ?? '') && studio.modelfiles.some(m => m.name === 'lexico')) choice.modelfile = 'lexico';
+    const choice = lexiconPicker.read();
     // The proposed words follow the Modelfile's language: a name ending in -en asks for English.
     choice.language = /-en$/.test(choice.modelfile ?? '') ? 'en' : 'pt';
     say($('#suggestNote'), choice.provider === 'manual' ? t('lexicon.building')
@@ -2831,6 +3086,7 @@ function setModelfiles(list, selected) {
   $('#modelfile').replaceChildren(el('option', { value: '', textContent: t('mf.none') }),
     ...list.map(m => el('option', { value: m.name, textContent: m.name })));
   $('#modelfile').value = list.some(m => m.name === current) ? current : (list[0]?.name ?? '');
+  renderLexiconPicker();
   refreshComposer();
 }
 
@@ -2892,9 +3148,14 @@ $('#saveSettings').addEventListener('click', () => busy([$('#saveSettings')], $(
 }));
 $('#ask').addEventListener('click', ask);
 $('#question').addEventListener('keydown', ev => { if (ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey)) ask(); });
-$('#provider').addEventListener('change', ev => { saved.set('provider', ev.target.value); renderTurns(); });
-$('#claudeModel').addEventListener('change', ev => saved.set('claudeModel', ev.target.value));
-$('#modelfile').addEventListener('change', ev => { saved.set('modelfile', ev.target.value); refreshComposer(); });
+// The composer's choice belongs to the current mode.
+for (const id of ['#provider', '#claudeModel', '#modelfile']) $(id).addEventListener('change', () => { refreshComposer(); keepChoice(mode, composerChoice()); renderTurns(); });
+for (const b of document.querySelectorAll('#modeSeg [data-mode]')) b.addEventListener('click', () => setMode(b.dataset.mode));
+$('#criteria').addEventListener('input', applyMode);
+$('#saveLexicon').addEventListener('click', () => busy([$('#saveLexicon')], $('#lexiconNote'), async () => {
+  await saveSettings();
+  say($('#lexiconNote'), t('lexicon.saved'));
+}));
 $('#editModelfile').addEventListener('click', () => openModelfiles($('#modelfile').value));
 $('#mfSelect').addEventListener('change', ev => showModelfile(ev.target.value));
 $('#mfNew').addEventListener('click', () => {
@@ -2924,6 +3185,7 @@ function setLang(lang) {
   saved.set('lang', lang);
   applyI18n();
   hideHelp();
+  applyMode();
   if (studio.status) { fillProviders(); setModelfiles(studio.modelfiles); }
   if (studio.project) { renderProjectInfo(); renderRuns(); showRunNote(); loadFacts().catch(console.error); }
   renderGathered();
