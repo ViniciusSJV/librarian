@@ -195,6 +195,10 @@
   .turn-sum { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 6px; font-size: 12px; }
   details.older > summary { font-size: 12px; }
   button.danger { color: var(--danger); border-color: var(--danger); }
+  .turn-head { display: flex; gap: 6px; align-items: flex-start; }
+  .turn-head .bubble { flex: 1; min-width: 0; }
+  button.fold { min-width: 30px; padding: 3px 8px; font-size: 15px; line-height: 1; color: var(--text-secondary); }
+  #executionsList details > summary { margin-top: 0; font-size: 12px; }
   @media (max-width: 1200px) { body.studio #app { grid-template-columns: 300px 1fr 360px; } }
   @media (max-width: 800px) {
     #app, body.studio #app { grid-template-columns: 1fr; grid-template-rows: 60vh auto; }
@@ -1040,6 +1044,14 @@ const STRINGS = {
   'turn.sendFirst': ['Enviar…', 'Send…'],
   'turn.evidence': ['Evidência: {n} declarações', 'Evidence: {n} declarations'],
   'turn.more': ['Mais ações', 'More actions'],
+  'turn.expand': ['Abrir a pergunta', 'Open the question'],
+  'turn.collapse': ['Recolher a pergunta', 'Fold the question'],
+  'executions.okShort': ['{ok} de {attempted} ok', '{ok} of {attempted} ok'],
+  'executions.changeShort': ['mudança da pergunta {turn}', 'change from question {turn}'],
+  'executions.baselineShort': ['linha de base', 'baseline'],
+  'executions.sameShort': ['mesmos arquivos', 'same files'],
+  'executions.noiseShort': ['ruído', 'noise'],
+  'executions.differentShort': ['arquivos diferentes', 'different files'],
 };
 
 // Fixed texts the server writes in Portuguese (constants and a few formats), shown in English
@@ -2268,8 +2280,17 @@ function renderTurn(turn) {
   })() : null;
   const send = el('button', { textContent: sends.length ? t('turn.resend') : t('turn.sendFirst'), disabled: !turn.query || Boolean(turn.pending) });
   send.onclick = () => resendTurn(turn, send);
-  return el('div', { className: 'turn' + (active ? ' active' : '') },
+  // Answered and validated (a fact approved from it): folded to its question and summary,
+  // unless it is the active one or you opened it.
+  const validated = sends.some(s => Object.values(s.reviews ?? {}).some(r => r.decision === 'approved'));
+  const collapsed = turn.expanded == null ? validated && !active : !turn.expanded;
+  const head = el('div', { className: 'turn-head' },
     el('div', { className: 'bubble user', textContent: turn.question, title: t('turn.highlight'), onclick: () => activate(turn.id) }),
+    el('button', { className: 'fold', textContent: collapsed ? '▸' : '▾', title: collapsed ? t('turn.expand') : t('turn.collapse'),
+      onclick: () => { turn.expanded = collapsed; renderTurns(); } }));
+  if (collapsed) return el('div', { className: 'turn folded' }, head, turnSummary(turn));
+  return el('div', { className: 'turn' + (active ? ' active' : '') },
+    head,
     turnSummary(turn),
     turn.chain ? chainView(turn.chain, turn.search?.owner_context) : null,
     turn.path ? pathTurnView(turn.path) : null,
@@ -2647,7 +2668,9 @@ async function loadCommands() {
       el('div', { className: 'row', style: 'margin-top: 4px; gap: 6px' }, c.approved ? null : approve, runIt));
   };
   studio.commands = data.commands;
-  const execution = x => el('li', {}, executionView(x));
+  // The Ruler keeps the history: one line per execution, opened on demand. The result of a
+  // run with a change also shows under the change itself, in the Conversation.
+  const execution = x => el('li', {}, el('details', {}, el('summary', { textContent: executionLine(x) }), executionView(x)));
   $('#commandsList').replaceChildren(
     data.commands.length ? el('ol', { className: 'claims' }, ...data.commands.map(item)) : el('p', { className: 'muted', textContent: t('commands.none') }),
     studio.run ? '' : el('p', { className: 'muted', textContent: t('commands.noRun') }), note);
@@ -2657,6 +2680,18 @@ async function loadCommands() {
 }
 
 const number = v => typeof v === 'number' ? (Math.abs(v) >= 100 ? v.toFixed(1) : v.toPrecision(4)) : v;
+
+// One line for the history: command, when, success, and against the baseline the main numbers.
+function executionLine(x) {
+  const cmp = x.comparison?.baseline ? x.comparison : null;
+  const pct = s => s.change_pct == null ? '?' : `${s.change_pct > 0 ? '+' : ''}${s.change_pct}%`;
+  const stats = Object.entries(cmp?.stats ?? {}).map(([name, s]) => `${name} ${pct(s)}${s.ranges_overlap ? ` (${t('executions.noiseShort')})` : ''}`);
+  const outputs = Object.values(cmp?.outputs ?? {});
+  return [x.name, x.started, t('executions.okShort', { ok: x.summary.succeeded, attempted: x.summary.attempted }),
+    x.change ? t('executions.changeShort', { turn: x.change.turn }) : t('executions.baselineShort'), ...stats,
+    outputs.length ? (outputs.every(v => v === 'same') ? t('executions.sameShort') : t('executions.differentShort')) : null]
+    .filter(Boolean).join(' · ');
+}
 
 // One execution: what ran where, its numbers, and how a change compares with its baseline.
 function executionView(x) {
