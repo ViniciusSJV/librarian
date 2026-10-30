@@ -172,6 +172,9 @@ pub struct LoopFinding {
     pub direct: Vec<String>,
     /// Operations reached through calls written inside the loop.
     pub through_calls: Vec<Chain>,
+    /// Loops of other declarations reached through calls written inside the loop: a loop in
+    /// a loop through a chain.
+    pub loops_through_calls: Vec<LoopChain>,
     /// Names called more than once inside the loop, with the lines.
     pub repeated_calls: Vec<Repeated>,
     /// Calls inside the loop not followed because their name matches several declarations.
@@ -185,6 +188,16 @@ pub struct Chain {
     pub steps: Vec<Step>,
     /// Whether the operation is also inside a loop of its own declaration: a loop in a loop.
     pub inner_loop: bool,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+pub struct LoopChain {
+    pub occurrence: String,
+    pub head: String,
+    pub path: String,
+    pub line: usize,
+    pub end_line: usize,
+    pub steps: Vec<Step>,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
@@ -371,14 +384,26 @@ pub fn inventory(catalog: &Catalog, project: &RuleSet) -> Result<Inventory> {
         })
         .collect();
 
-    // Loops by declaration, to tell whether an occurrence is inside one.
+    // Loops by declaration, to tell whether an occurrence is inside one. A loop's iterable
+    // (`for x in f()`, `[g(x) for x in f()]`) runs once: what is written there does not repeat.
     let mut loops_of: BTreeMap<&str, Vec<&v2::Edge>> = BTreeMap::new();
+    let mut iterable_of: BTreeMap<&str, &Evidence> = BTreeMap::new();
     for (symbol, edges) in &index.observed {
-        for e in edges.iter().filter(|e| index.kind(&e.to) == "loop") {
-            loops_of.entry(symbol).or_default().push(e);
+        let loops: Vec<&v2::Edge> = edges.iter().filter(|e| index.kind(&e.to) == "loop").copied().collect();
+        for iterable in edges.iter().filter(|e| index.kind(&e.to) == "loop_iterable") {
+            // Its loop is the innermost one that contains it.
+            if let Some(owner) = loops.iter().filter(|l| inside(&l.evidence, &iterable.evidence)).min_by_key(|l| l.evidence.end_byte - l.evidence.start_byte) {
+                iterable_of.insert(&owner.to, &iterable.evidence);
+            }
+        }
+        if !loops.is_empty() {
+            loops_of.insert(symbol, loops);
         }
     }
-    let in_loop = |symbol: &str, evidence: &Evidence| loops_of.get(symbol).into_iter().flatten().any(|l| inside(&l.evidence, evidence) && l.evidence != *evidence);
+    let repeats = |l: &v2::Edge, evidence: &Evidence| {
+        inside(&l.evidence, evidence) && l.evidence != *evidence && !iterable_of.get(l.to.as_str()).is_some_and(|it| inside(it, evidence))
+    };
+    let in_loop = |symbol: &str, evidence: &Evidence| loops_of.get(symbol).into_iter().flatten().any(|l| repeats(l, evidence));
 
     let mut operations = vec![];
     let mut counts = vec![0usize; rules.len()];
@@ -498,12 +523,12 @@ pub fn inventory(catalog: &Catalog, project: &RuleSet) -> Result<Inventory> {
         }
         let calls = calls_of(symbol);
         for l in symbol_loops {
-            let (start, end) = (l.evidence.start_byte, l.evidence.end_byte);
-            let nesting = symbol_loops.iter().filter(|o| o.to != l.to && inside(&o.evidence, &l.evidence)).count();
-            let inner_loops = symbol_loops.iter().filter(|o| o.to != l.to && inside(&l.evidence, &o.evidence)).count();
-            let direct: Vec<String> = by_symbol.get(symbol).into_iter().flatten().filter(|o| start <= o.evidence.start_byte && o.evidence.end_byte <= end).map(|o| o.id.clone()).collect();
-            let inner_calls: Vec<&&v2::Edge> = calls.iter().filter(|c| inside(&l.evidence, &c.evidence)).collect();
+            let nesting = symbol_loops.iter().filter(|o| o.to != l.to && repeats(o, &l.evidence)).count();
+            let inner_loops = symbol_loops.iter().filter(|o| o.to != l.to && repeats(l, &o.evidence)).count();
+            let direct: Vec<String> = by_symbol.get(symbol).into_iter().flatten().filter(|o| repeats(l, &o.evidence)).map(|o| o.id.clone()).collect();
+            let inner_calls: Vec<&&v2::Edge> = calls.iter().filter(|c| repeats(l, &c.evidence)).collect();
             let mut through_calls = vec![];
+            let mut loops_through_calls: Vec<LoopChain> = vec![];
             let mut unfollowed = vec![];
             let mut repeated: BTreeMap<String, Vec<usize>> = BTreeMap::new();
             for call in &inner_calls {
@@ -513,7 +538,9 @@ pub fn inventory(catalog: &Catalog, project: &RuleSet) -> Result<Inventory> {
                 match follow(symbol, &call.to) {
                     Ok((to, resolution)) => {
                         let first = step(&index, symbol, &to, call, resolution);
-                        through_calls.extend(reach(&index, &by_symbol, &follow, &calls_of, first, &in_loop));
+                        let (chains, reached) = reach(&index, &by_symbol, &loops_of, &follow, &calls_of, first, &in_loop);
+                        through_calls.extend(chains);
+                        loops_through_calls.extend(reached);
                     }
                     Err(candidates) if candidates > 1 => unfollowed.push(Unfollowed { text: short(index.label(&call.to)), line: call.evidence.start_line, candidates }),
                     Err(_) => {}
@@ -523,6 +550,8 @@ pub fn inventory(catalog: &Catalog, project: &RuleSet) -> Result<Inventory> {
             let mut seen = BTreeSet::new();
             through_calls.sort_by_key(|c: &Chain| c.steps.len());
             through_calls.retain(|c| seen.insert(c.operation.clone()));
+            loops_through_calls.sort_by_key(|c| c.steps.len());
+            loops_through_calls.retain(|c| seen.insert(c.occurrence.clone()));
             let repeated_calls: Vec<Repeated> = repeated
                 .into_iter()
                 .filter(|(_, lines)| lines.len() > 1)
@@ -531,7 +560,7 @@ pub fn inventory(catalog: &Catalog, project: &RuleSet) -> Result<Inventory> {
                     Repeated { name, lines }
                 })
                 .collect();
-            if direct.is_empty() && through_calls.is_empty() && inner_loops == 0 {
+            if direct.is_empty() && through_calls.is_empty() && loops_through_calls.is_empty() && inner_loops == 0 {
                 loops_without_operations += 1;
                 continue;
             }
@@ -547,6 +576,7 @@ pub fn inventory(catalog: &Catalog, project: &RuleSet) -> Result<Inventory> {
                 inner_loops,
                 direct,
                 through_calls,
+                loops_through_calls,
                 repeated_calls,
                 unfollowed,
             });
@@ -642,6 +672,10 @@ pub fn summary(inventory: &Inventory) -> String {
                 .collect();
             let _ = writeln!(out, "  pela cadeia: {path} → {}{}", reached.join("; "), if inner { "  [em laço lá também]" } else { "" });
         }
+        for c in &l.loops_through_calls {
+            let path: Vec<String> = c.steps.iter().map(|s| format!("{} ({}:{})", s.to_name, s.path, s.line)).collect();
+            let _ = writeln!(out, "  laço pela cadeia: {} → {} {}:{}–{}", path.join(" → "), line(&c.head), c.path, c.line, c.end_line);
+        }
         for r in &l.repeated_calls {
             let _ = writeln!(out, "  repetida: {} × {} (linhas {})", r.name, r.lines.len(), r.lines.iter().map(usize::to_string).collect::<Vec<_>>().join(", "));
         }
@@ -664,17 +698,18 @@ fn step(index: &Index, from: &str, to: &str, call: &v2::Edge, resolution: &str) 
     }
 }
 
-/// Every operation reachable from a first call, breadth first, up to MAX_CHAIN calls, with the
-/// steps that lead to it. A declaration is entered once.
+/// Every operation and every loop reachable from a first call, breadth first, up to MAX_CHAIN
+/// calls, with the steps that lead to each. A declaration is entered once.
 fn reach<'g>(
     index: &Index<'g>,
     by_symbol: &BTreeMap<&str, Vec<&Operation>>,
+    loops_of: &BTreeMap<&str, Vec<&'g v2::Edge>>,
     follow: &dyn Fn(&str, &str) -> std::result::Result<(String, &'static str), usize>,
     calls_of: &dyn Fn(&str) -> Vec<&'g v2::Edge>,
     first: Step,
     in_loop: &dyn Fn(&str, &Evidence) -> bool,
-) -> Vec<Chain> {
-    let mut found = vec![];
+) -> (Vec<Chain>, Vec<LoopChain>) {
+    let (mut found, mut loops) = (vec![], vec![]);
     let mut visited = BTreeSet::from([first.from.clone()]);
     let mut queue = VecDeque::from([vec![first]]);
     while let Some(steps) = queue.pop_front() {
@@ -684,6 +719,16 @@ fn reach<'g>(
         }
         for op in by_symbol.get(here.as_str()).into_iter().flatten() {
             found.push(Chain { operation: op.id.clone(), steps: steps.clone(), inner_loop: in_loop(&here, &op.evidence) });
+        }
+        for l in loops_of.get(here.as_str()).into_iter().flatten() {
+            loops.push(LoopChain {
+                occurrence: l.to.clone(),
+                head: short(index.label(&l.to)),
+                path: l.evidence.path.clone(),
+                line: l.evidence.start_line,
+                end_line: l.evidence.end_line,
+                steps: steps.clone(),
+            });
         }
         if steps.len() >= MAX_CHAIN {
             continue;
@@ -698,5 +743,5 @@ fn reach<'g>(
             }
         }
     }
-    found
+    (found, loops)
 }

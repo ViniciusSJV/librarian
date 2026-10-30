@@ -61,8 +61,16 @@ def plan(session, day):
     for a in addresses:
         for b in addresses:
             total += distance(a, b) + distance(b, a)
-        _seen[a] = zone_of(a)
+        _seen[a] = zone_of(a) or heavy(addresses)
     return total, deliveries[0].weight
+
+
+def heavy(addresses):
+    return sum(1 for x in addresses if x)
+
+
+def weights(session, day):
+    return [d.weight for d in list_for_day(session, day)]
 ";
 
 const RUST: &str = "pub struct P {
@@ -191,6 +199,9 @@ fn loops_show_what_they_hold_directly_and_through_calls() {
     assert_eq!(ops(&outer.direct), ["_seen"]);
     let reached: Vec<String> = outer.through_calls.iter().map(|c| format!("{} -> {}", c.steps.iter().map(|s| s.to_name.as_str()).collect::<Vec<_>>().join(" -> "), ops(&[c.operation.clone()])[0])).collect();
     assert_eq!(reached, ["distance -> sqrt", "zone_of -> address.area"]);
+    // A loop of another declaration, reached through a call: a loop in a loop through a chain.
+    let through: Vec<String> = outer.loops_through_calls.iter().map(|c| format!("{} -> {}", c.steps[0].to_name, c.head)).collect();
+    assert_eq!(through, ["heavy -> 1 for x in addresses if x"]);
     let inner = looped("for b in addresses");
     assert_eq!((inner.nesting, inner.inner_loops), (1, 0));
     assert_eq!(inner.repeated_calls.len(), 1);
@@ -198,7 +209,10 @@ fn loops_show_what_they_hold_directly_and_through_calls() {
 
     // Rust: a method call in a loop is a direct operation.
     assert_eq!(ops(&looped("for p in points").direct), ["p.x.sqrt()"]);
-    assert_eq!(found.loops_without_operations, 0);
+    // The loop inside heavy holds no operation: by itself it is only counted. So does the one
+    // in weights: its iterable, list_for_day(...), runs once, before the loop.
+    assert_eq!(found.loops_without_operations, 2);
+    assert!(!found.loops.iter().any(|l| l.symbol_name == "weights"));
 
     // The text summary names each place as path:line.
     let text = inventory::summary(&found);

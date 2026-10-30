@@ -212,6 +212,13 @@ impl<'a> Walker<'a> {
         false
     }
 
+    /// v5: the iterable of a comprehension's first `for`.
+    fn iterable(&mut self, generators: &[ast::Comprehension]) {
+        if let Some(first) = generators.first() {
+            self.push("loop_iterable", first.iter.range(), None);
+        }
+    }
+
     /// v5: a loop or `with` block, labelled by its head and spanning its body.
     fn block(&mut self, kind: &'static str, range: TextRange, head_end: TextRange) {
         let (start, end) = self.span(range);
@@ -406,10 +413,12 @@ impl Visitor for Walker<'_> {
         self.visit_expr(*node.value);
     }
 
+    // The iterable of a `for` runs once, before the loop: it is its own occurrence.
     fn visit_stmt_for(&mut self, node: ast::StmtFor) {
         self.binding(&node.target);
         if self.v5 {
             self.block("loop", node.range, node.iter.range());
+            self.push("loop_iterable", node.iter.range(), None);
         }
         self.generic_visit_stmt_for(node);
     }
@@ -418,6 +427,7 @@ impl Visitor for Walker<'_> {
         self.binding(&node.target);
         if self.v5 {
             self.block("loop", node.range, node.iter.range());
+            self.push("loop_iterable", node.iter.range(), None);
         }
         self.generic_visit_stmt_async_for(node);
     }
@@ -443,10 +453,12 @@ impl Visitor for Walker<'_> {
         self.generic_visit_stmt_async_with(node);
     }
 
-    // A comprehension is a loop written as an expression; its whole text is its label.
+    // A comprehension is a loop written as an expression; its whole text is its label. The
+    // iterable of its first `for` runs once, outside the loop.
     fn visit_expr_list_comp(&mut self, node: ast::ExprListComp) {
         if self.v5 {
             self.block("loop", node.range, node.range);
+            self.iterable(&node.generators);
         }
         self.generic_visit_expr_list_comp(node);
     }
@@ -454,6 +466,7 @@ impl Visitor for Walker<'_> {
     fn visit_expr_set_comp(&mut self, node: ast::ExprSetComp) {
         if self.v5 {
             self.block("loop", node.range, node.range);
+            self.iterable(&node.generators);
         }
         self.generic_visit_expr_set_comp(node);
     }
@@ -461,6 +474,7 @@ impl Visitor for Walker<'_> {
     fn visit_expr_dict_comp(&mut self, node: ast::ExprDictComp) {
         if self.v5 {
             self.block("loop", node.range, node.range);
+            self.iterable(&node.generators);
         }
         self.generic_visit_expr_dict_comp(node);
     }
@@ -468,6 +482,7 @@ impl Visitor for Walker<'_> {
     fn visit_expr_generator_exp(&mut self, node: ast::ExprGeneratorExp) {
         if self.v5 {
             self.block("loop", node.range, node.range);
+            self.iterable(&node.generators);
         }
         self.generic_visit_expr_generator_exp(node);
     }

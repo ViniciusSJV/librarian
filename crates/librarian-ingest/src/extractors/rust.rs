@@ -436,6 +436,8 @@ impl<'ast> Visit<'ast> for Occurrences {
     fn visit_expr_for_loop(&mut self, value: &'ast syn::ExprForLoop) {
         if self.v5 {
             self.block("loop", value.span(), value.expr.span());
+            // The iterated expression runs once, before the loop.
+            self.push("loop_iterable", value.expr.span(), None);
         }
         visit::visit_expr_for_loop(self, value);
     }
