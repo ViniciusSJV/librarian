@@ -89,7 +89,8 @@
   body.studio #chat { display: flex; }
   #chatHeader { padding: 16px 16px 4px; }
   #turns { flex: 1; min-height: 0; overflow: auto; padding: 0 16px 16px; }
-  #composer { padding: 12px 16px 16px; border-top: 1px solid var(--border); background: var(--surface-2); }
+  /* The composer never takes more than half the panel: the answers keep the other half. */
+  #composer { max-height: 50%; overflow-y: auto; padding: 12px 16px 16px; border-top: 1px solid var(--border); background: var(--surface-2); }
   textarea, select, input[type=text], input[type=number] { width: 100%; padding: 7px 9px; border: 1px solid var(--border); border-radius: 8px;
     background: var(--surface-1); color: var(--text-primary); font: inherit; }
   textarea { resize: vertical; }
@@ -829,7 +830,7 @@ const STRINGS = {
   'path.askTitle': ['Perguntar sobre o caminho', 'Ask about the path'],
   'path.askMessage': ['Uma pergunta para cada um dos {n} pontos seguidos (sem testes e sem homônimos não escolhidos), cada uma só com o trecho daquele ponto. Com um LLM escolhido, elas são enviadas uma depois da outra.\n\n{list}',
     'One question for each of the {n} followed points (no tests, no unchosen homonyms), each with only that point\'s snippet. With an LLM chosen, they are sent one after the other.\n\n{list}'],
-  'path.askDefault': ['Onde este trecho faz cálculos para cada raio ou pixel?', 'Where does this snippet compute something for each ray or pixel?'],
+  'path.askDefault': ['O que este trecho faz, e em que linha?', 'What does this snippet do, and on which line?'],
   'path.askOk': ['Perguntar ({n})', 'Ask ({n})'],
   'path.sending': ['Enviando {index} de {total}: {name}…', 'Sending {index} of {total}: {name}…'],
   'path.sent': ['{total} perguntas do caminho enviadas.', '{total} path questions sent.'],
@@ -2758,9 +2759,10 @@ async function loadCommands() {
       el('div', { className: 'row', style: 'margin-top: 4px; gap: 6px' }, c.approved ? null : approve, runIt));
   };
   studio.commands = data.commands;
-  // The Ruler keeps the history: one line per execution, opened on demand. The result of a
+  // The Ruler keeps the history: one line per execution, the latest one open. The result of a
   // run with a change also shows under the change itself, in the Conversation.
-  const execution = x => el('li', {}, el('details', {}, el('summary', { textContent: executionLine(x) }), executionView(x)));
+  const latest = executions.reduce((a, x) => (!a || x.started > a.started ? x : a), null);
+  const execution = x => el('li', {}, el('details', { open: x === latest }, el('summary', { textContent: executionLine(x) }), executionView(x)));
   $('#commandsList').replaceChildren(
     data.commands.length ? el('ol', { className: 'claims' }, ...data.commands.map(item)) : el('p', { className: 'muted', textContent: t('commands.none') }),
     studio.run ? '' : el('p', { className: 'muted', textContent: t('commands.noRun') }), note);
@@ -2897,7 +2899,8 @@ async function drawPath() {
       return;
     }
     if (!data.links.length) {
-      const old = !String(state.graph?.derived_from ?? '').endsWith('-v2');
+      // Uses are recorded from the v3 profile on (base graph -v2); the v4 profile derives from -v3.
+      const old = !/-v[23]$/.test(String(state.graph?.derived_from ?? ''));
       note.textContent = old ? t('path.oldGraph') : t(calls ? 'path.callsNone' : 'path.none');
       return;
     }
