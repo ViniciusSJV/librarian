@@ -6,13 +6,17 @@ use rustpython_ast::{self as ast, text_size::TextRange, Ranged, Visitor};
 use rustpython_parser::Parse;
 
 /// `g6` adds fields, attribute accesses, and calls and bases as candidates (profile v3).
-/// Without it, records and occurrences are exactly those of the v2 adapter.
+/// `v5` adds module variables, names used as values or written, keyword arguments, loops and
+/// `with` blocks (profile v5).
+/// Without them, records and occurrences are exactly those of the v2 adapter.
 pub(crate) struct Python {
     g6: bool,
+    v5: bool,
 }
 
-pub(crate) static PYTHON: Python = Python { g6: false };
-pub(crate) static PYTHON_V3: Python = Python { g6: true };
+pub(crate) static PYTHON: Python = Python { g6: false, v5: false };
+pub(crate) static PYTHON_V3: Python = Python { g6: true, v5: false };
+pub(crate) static PYTHON_V5: Python = Python { g6: true, v5: true };
 
 impl Extractor for Python {
     fn extract(&self, source: &Source, bytes: &[u8]) -> Extraction {
@@ -33,7 +37,7 @@ impl Extractor for Python {
             Ok(parsed) => parsed,
             Err(error) => return failure("python_parse_error", error.to_string()),
         };
-        let mut walker = Walker::new(self.g6, Some(source), bytes, offset);
+        let mut walker = Walker::new(self, Some(source), bytes, offset);
         for stmt in suite {
             walker.visit_stmt(stmt);
         }
@@ -51,7 +55,7 @@ impl Extractor for Python {
         let Ok((suite, offset)) = parse(text) else {
             return vec![];
         };
-        let mut walker = Walker::new(self.g6, None, bytes, offset);
+        let mut walker = Walker::new(self, None, bytes, offset);
         for stmt in suite {
             walker.visit_stmt(stmt);
         }
@@ -63,6 +67,13 @@ impl Extractor for Python {
     }
 
     fn candidate_kinds_for(&self, occurrence: &str) -> &'static [&'static str] {
+        match (self.v5, occurrence) {
+            // A module variable can name a type (`SessionDep = Annotated[...]`).
+            (true, "type_reference") => return &["class", "variable"],
+            (true, "name_reference" | "name_write") => return &["variable", "function", "class"],
+            (true, "keyword_argument") => return &["field"],
+            _ => {}
+        }
         match (self.g6, occurrence) {
             // Calling a class constructs it, so classes are candidates of plain calls too.
             (true, "call_observed") => &["function", "method", "class"],
@@ -84,6 +95,23 @@ impl Extractor for Python {
 
     fn call_kinds(&self) -> &'static [&'static str] {
         &["call_observed", "method_call_observed"]
+    }
+
+    fn matched_only(&self) -> &'static [&'static str] {
+        if self.v5 {
+            &["name_reference", "name_write", "keyword_argument"]
+        } else {
+            &[]
+        }
+    }
+
+    /// A name that is not local is the module's own, when the module declares it.
+    fn file_scoped(&self) -> &'static [&'static str] {
+        if self.v5 {
+            &["name_reference", "name_write"]
+        } else {
+            &[]
+        }
     }
 }
 
@@ -109,6 +137,7 @@ fn parse(text: &str) -> Result<(ast::Suite, usize), rustpython_parser::ParseErro
 /// One pass collects declarations (when a source is given) and occurrences.
 struct Walker<'a> {
     g6: bool,
+    v5: bool,
     source: Option<&'a Source>,
     bytes: &'a [u8],
     offset: usize,
@@ -119,11 +148,91 @@ struct Walker<'a> {
     found: Vec<Occurrence>,
     /// Fields already declared, by qualified name: a field is declared once per class.
     fields: std::collections::BTreeSet<String>,
+    /// v5: names bound in each enclosing function (and lambda), and those it declares `global`
+    /// or `nonlocal`. A local name is never a use of a module declaration.
+    locals: Vec<Bound>,
+}
+
+/// Names a function binds anywhere in its body, Python's rule for what is local to it.
+#[derive(Default)]
+struct Bound {
+    local: std::collections::BTreeSet<String>,
+    global: std::collections::BTreeSet<String>,
 }
 
 impl<'a> Walker<'a> {
-    fn new(g6: bool, source: Option<&'a Source>, bytes: &'a [u8], offset: usize) -> Self {
-        Self { g6, source, bytes, offset, scope: vec![], symbols: vec![], chunks: vec![], found: vec![], fields: Default::default() }
+    fn new(python: &Python, source: Option<&'a Source>, bytes: &'a [u8], offset: usize) -> Self {
+        Self { g6: python.g6, v5: python.v5, source, bytes, offset, scope: vec![], symbols: vec![], chunks: vec![], found: vec![],
+            fields: Default::default(), locals: vec![] }
+    }
+
+    fn is_local(&self, name: &str) -> bool {
+        self.locals.iter().any(|b| b.local.contains(name))
+    }
+
+    /// v5: a name read as a value (`Depends(get_db)`, `with _lock:`), unless it is local.
+    fn reference(&mut self, name: &ast::ExprName) {
+        if !self.is_local(&name.id) {
+            self.push("name_reference", name.range, Some(name.id.to_string()));
+        }
+    }
+
+    /// v5: an assignment target that writes a module name: the name itself when the function
+    /// declares it `global`, or the container it indexes (`_cache[key] = v`). Returns whether
+    /// the target was handled; otherwise it is visited as before.
+    fn write(&mut self, target: &ast::Expr) -> bool {
+        match target {
+            ast::Expr::Name(n) if self.locals.last().is_some_and(|b| b.global.contains(n.id.as_str())) => {
+                self.push("name_write", n.range, Some(n.id.to_string()));
+                true
+            }
+            ast::Expr::Subscript(s) => match s.value.as_ref() {
+                ast::Expr::Name(n) if !self.is_local(&n.id) => {
+                    self.push("name_write", n.range, Some(n.id.to_string()));
+                    self.visit_expr(*s.slice.clone());
+                    true
+                }
+                _ => false,
+            },
+            _ => false,
+        }
+    }
+
+    /// v5: a name assigned at module level is a module variable, declared by its first
+    /// assignment. Returns whether the target declares one.
+    fn module_variable(&mut self, target: &ast::Expr, statement: TextRange) -> bool {
+        let ast::Expr::Name(n) = target else { return false };
+        if !self.v5 || !self.scope.is_empty() {
+            return false;
+        }
+        if self.fields.insert(n.id.to_string()) {
+            self.declare_in(&[], "variable", &n.id, statement, &[]);
+            return true;
+        }
+        false
+    }
+
+    /// v5: a loop or `with` block, labelled by its head and spanning its body.
+    fn block(&mut self, kind: &'static str, range: TextRange, head_end: TextRange) {
+        let (start, end) = self.span(range);
+        let (_, label_end) = self.span(head_end);
+        self.found.push(Occurrence { kind, start, end, candidate: None, label_end: Some(label_end) });
+    }
+
+    /// The names a function body binds: parameters, assignment and loop targets, `with ... as`,
+    /// `except ... as`, imports and nested definitions. Nested bodies are their own scopes.
+    fn bound(arguments: &ast::Arguments, body: &[ast::Stmt]) -> Bound {
+        let mut binder = Binder::default();
+        let params = arguments.posonlyargs.iter().chain(&arguments.args).chain(&arguments.kwonlyargs).map(|a| &a.def);
+        for arg in params.chain(arguments.vararg.as_deref()).chain(arguments.kwarg.as_deref()) {
+            binder.0.local.insert(arg.arg.to_string());
+        }
+        for stmt in body {
+            binder.visit_stmt(stmt.clone());
+        }
+        let Binder(mut bound) = binder;
+        bound.local.retain(|n| !bound.global.contains(n));
+        bound
     }
 
     fn span(&self, range: TextRange) -> (usize, usize) {
@@ -205,7 +314,7 @@ impl<'a> Walker<'a> {
 
     fn push(&mut self, kind: &'static str, range: TextRange, candidate: Option<String>) {
         let (start, end) = self.span(range);
-        self.found.push(Occurrence { kind, start, end, candidate });
+        self.found.push(Occurrence { kind, start, end, candidate, label_end: None });
     }
 
     /// Names written in an annotation or base list; candidates, never resolved types.
@@ -251,15 +360,116 @@ impl Visitor for Walker<'_> {
     fn visit_stmt_function_def(&mut self, node: ast::StmtFunctionDef) {
         self.function(&node.name, node.range, &node.decorator_list, node.returns.as_deref());
         self.scope.push((node.name.to_string(), false));
+        if self.v5 {
+            self.locals.push(Self::bound(&node.args, &node.body));
+        }
         self.generic_visit_stmt_function_def(node);
+        if self.v5 {
+            self.locals.pop();
+        }
         self.scope.pop();
     }
 
     fn visit_stmt_async_function_def(&mut self, node: ast::StmtAsyncFunctionDef) {
         self.function(&node.name, node.range, &node.decorator_list, node.returns.as_deref());
         self.scope.push((node.name.to_string(), false));
+        if self.v5 {
+            self.locals.push(Self::bound(&node.args, &node.body));
+        }
         self.generic_visit_stmt_async_function_def(node);
+        if self.v5 {
+            self.locals.pop();
+        }
         self.scope.pop();
+    }
+
+    fn visit_expr_lambda(&mut self, node: ast::ExprLambda) {
+        if !self.v5 {
+            return self.generic_visit_expr_lambda(node);
+        }
+        self.locals.push(Self::bound(&node.args, &[]));
+        self.visit_expr(*node.body);
+        self.locals.pop();
+    }
+
+    fn visit_expr_name(&mut self, node: ast::ExprName) {
+        // Stores are bindings or `write`s, seen from their statement.
+        if self.v5 && matches!(node.ctx, ast::ExprContext::Load) {
+            self.reference(&node);
+        }
+    }
+
+    fn visit_stmt_aug_assign(&mut self, node: ast::StmtAugAssign) {
+        if !self.v5 || !self.write(&node.target) {
+            self.visit_expr(*node.target);
+        }
+        self.visit_expr(*node.value);
+    }
+
+    fn visit_stmt_for(&mut self, node: ast::StmtFor) {
+        self.binding(&node.target);
+        if self.v5 {
+            self.block("loop", node.range, node.iter.range());
+        }
+        self.generic_visit_stmt_for(node);
+    }
+
+    fn visit_stmt_async_for(&mut self, node: ast::StmtAsyncFor) {
+        self.binding(&node.target);
+        if self.v5 {
+            self.block("loop", node.range, node.iter.range());
+        }
+        self.generic_visit_stmt_async_for(node);
+    }
+
+    fn visit_stmt_while(&mut self, node: ast::StmtWhile) {
+        if self.v5 {
+            self.block("loop", node.range, node.test.range());
+        }
+        self.generic_visit_stmt_while(node);
+    }
+
+    fn visit_stmt_with(&mut self, node: ast::StmtWith) {
+        if let (true, Some(last)) = (self.v5, node.items.last()) {
+            self.block("with_block", node.range, last.optional_vars.as_deref().unwrap_or(&last.context_expr).range());
+        }
+        self.generic_visit_stmt_with(node);
+    }
+
+    fn visit_stmt_async_with(&mut self, node: ast::StmtAsyncWith) {
+        if let (true, Some(last)) = (self.v5, node.items.last()) {
+            self.block("with_block", node.range, last.optional_vars.as_deref().unwrap_or(&last.context_expr).range());
+        }
+        self.generic_visit_stmt_async_with(node);
+    }
+
+    // A comprehension is a loop written as an expression; its whole text is its label.
+    fn visit_expr_list_comp(&mut self, node: ast::ExprListComp) {
+        if self.v5 {
+            self.block("loop", node.range, node.range);
+        }
+        self.generic_visit_expr_list_comp(node);
+    }
+
+    fn visit_expr_set_comp(&mut self, node: ast::ExprSetComp) {
+        if self.v5 {
+            self.block("loop", node.range, node.range);
+        }
+        self.generic_visit_expr_set_comp(node);
+    }
+
+    fn visit_expr_dict_comp(&mut self, node: ast::ExprDictComp) {
+        if self.v5 {
+            self.block("loop", node.range, node.range);
+        }
+        self.generic_visit_expr_dict_comp(node);
+    }
+
+    fn visit_expr_generator_exp(&mut self, node: ast::ExprGeneratorExp) {
+        if self.v5 {
+            self.block("loop", node.range, node.range);
+        }
+        self.generic_visit_expr_generator_exp(node);
     }
 
     fn visit_stmt_class_def(&mut self, node: ast::StmtClassDef) {
@@ -287,7 +497,7 @@ impl Visitor for Walker<'_> {
         let several = node.targets.len() > 1;
         for target in node.targets {
             let range = if several { target.range() } else { node.range };
-            if !self.field(&target, range) {
+            if !self.field(&target, range) && !self.module_variable(&target, range) && !(self.v5 && self.write(&target)) {
                 self.visit_expr(target);
             }
         }
@@ -301,7 +511,7 @@ impl Visitor for Walker<'_> {
             return self.generic_visit_stmt_ann_assign(node);
         }
         // The annotation is already a type reference; only target and value are visited.
-        if !self.field(&node.target, node.range) {
+        if !self.field(&node.target, node.range) && !self.module_variable(&node.target, node.range) && !(self.v5 && self.write(&node.target)) {
             self.visit_expr(*node.target);
         }
         if let Some(value) = node.value {
@@ -314,11 +524,6 @@ impl Visitor for Walker<'_> {
             self.push("attribute_access", node.range, Some(node.attr.to_string()));
         }
         self.generic_visit_expr_attribute(node);
-    }
-
-    fn visit_stmt_for(&mut self, node: ast::StmtFor) {
-        self.binding(&node.target);
-        self.generic_visit_stmt_for(node);
     }
 
     fn visit_expr_call(&mut self, node: ast::ExprCall) {
@@ -343,7 +548,10 @@ impl Visitor for Walker<'_> {
                     _ => None,
                 };
                 self.push("call_observed", func.range(), name);
-                self.visit_expr(func);
+                // v5: a called name is the call; it is not also a name used as a value.
+                if !(self.v5 && matches!(func, ast::Expr::Name(_))) {
+                    self.visit_expr(func);
+                }
             }
         }
         node.args.into_iter().for_each(|a| self.visit_expr(a));
@@ -371,6 +579,10 @@ impl Visitor for Walker<'_> {
     }
 
     fn visit_keyword(&mut self, node: ast::Keyword) {
+        // v5: `User(email=...)` fills a field named `email`, by the written name.
+        if let (true, Some(arg)) = (self.v5, &node.arg) {
+            self.push("keyword_argument", node.range, Some(arg.to_string()));
+        }
         self.visit_expr(node.value);
     }
 
@@ -395,6 +607,70 @@ impl Visitor for Walker<'_> {
         self.visit_expr(node.iter);
         for condition in node.ifs {
             self.visit_expr(condition);
+        }
+    }
+}
+
+/// Collects what a function body binds (see `Walker::bound`). Nested functions, classes and
+/// lambdas bind only their own name here; their bodies are scopes of their own.
+#[derive(Default)]
+struct Binder(Bound);
+
+impl Visitor for Binder {
+    fn visit_stmt_function_def(&mut self, node: ast::StmtFunctionDef) {
+        self.0.local.insert(node.name.to_string());
+    }
+
+    fn visit_stmt_async_function_def(&mut self, node: ast::StmtAsyncFunctionDef) {
+        self.0.local.insert(node.name.to_string());
+    }
+
+    fn visit_stmt_class_def(&mut self, node: ast::StmtClassDef) {
+        self.0.local.insert(node.name.to_string());
+    }
+
+    fn visit_stmt_global(&mut self, node: ast::StmtGlobal) {
+        self.0.global.extend(node.names.iter().map(|n| n.to_string()));
+    }
+
+    fn visit_stmt_nonlocal(&mut self, node: ast::StmtNonlocal) {
+        self.0.global.extend(node.names.iter().map(|n| n.to_string()));
+    }
+
+    fn visit_expr_lambda(&mut self, _node: ast::ExprLambda) {}
+
+    fn visit_expr_name(&mut self, node: ast::ExprName) {
+        if !matches!(node.ctx, ast::ExprContext::Load) {
+            self.0.local.insert(node.id.to_string());
+        }
+    }
+
+    fn visit_alias(&mut self, node: ast::Alias) {
+        // `import a.b` binds `a`; `import a.b as c` and `from a import b as c` bind `c`.
+        let name = node.asname.as_ref().map_or_else(|| node.name.split('.').next().unwrap_or_default().to_owned(), |a| a.to_string());
+        self.0.local.insert(name);
+    }
+
+    fn visit_excepthandler_except_handler(&mut self, node: ast::ExceptHandlerExceptHandler) {
+        if let Some(name) = &node.name {
+            self.0.local.insert(name.to_string());
+        }
+        self.generic_visit_excepthandler_except_handler(node);
+    }
+
+    fn visit_withitem(&mut self, node: ast::WithItem) {
+        if let Some(target) = node.optional_vars {
+            self.visit_expr(*target);
+        }
+    }
+
+    fn visit_comprehension(&mut self, node: ast::Comprehension) {
+        self.visit_expr(node.target);
+    }
+
+    fn visit_match_case(&mut self, node: ast::MatchCase) {
+        for stmt in node.body {
+            self.visit_stmt(stmt);
         }
     }
 }

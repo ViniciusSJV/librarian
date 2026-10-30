@@ -114,7 +114,11 @@ impl Graph {
             };
             for found in extractor.observe(&catalog.snapshots[&source.id]) {
                 let kinds = extractor.candidate_kinds_for(found.kind);
-                graph.occurrence(catalog, &source.id, found, kinds, catalog.registry.max_candidates);
+                let scope = Scope {
+                    matched_only: extractor.matched_only().contains(&found.kind),
+                    file_scoped: extractor.file_scoped().contains(&found.kind),
+                };
+                graph.occurrence(catalog, &source.id, found, kinds, catalog.registry.max_candidates, scope);
             }
         }
         graph.edges.sort_by(|a, b| {
@@ -245,6 +249,14 @@ fn evidence(catalog: &Catalog, source_id: &str, start: usize, end: usize) -> Evi
     }
 }
 
+/// How an occurrence kind's written name is matched (v5).
+struct Scope {
+    /// Kept only when the name matches a declaration.
+    matched_only: bool,
+    /// The same file's top-level declaration, when there is one, is the only candidate.
+    file_scoped: bool,
+}
+
 impl Graph {
     /// Attaches an extractor occurrence to its innermost declaration, with byte evidence.
     fn occurrence(
@@ -254,14 +266,37 @@ impl Graph {
         found: Occurrence,
         candidate_kinds: &[&str],
         max_candidates: Option<usize>,
+        scope: Scope,
     ) {
         let Occurrence {
             kind,
             start,
             end,
             candidate,
+            label_end,
         } = found;
         if start >= end {
+            return;
+        }
+        // Name matches are navigational candidates, including ambiguities. Never a resolved call/type.
+        // Equal names in other languages are not candidates: kinds are only comparable within one.
+        let language = &catalog.sources[source_id].language;
+        let matches: Vec<_> = candidate.as_ref().map_or_else(Vec::new, |name| {
+            catalog
+                .symbols_named(name)
+                .into_iter()
+                .filter(|s| candidate_kinds.contains(&s.kind.as_str()))
+                .filter(|s| catalog.sources[&s.source_id].language == *language)
+                .collect()
+        });
+        // A top-level declaration of the same file is what a module-scoped name means there.
+        let top_level_here = |s: &&crate::Symbol| s.source_id == source_id && s.qualified_name == s.name;
+        let matches = if scope.file_scoped && matches.iter().any(top_level_here) {
+            matches.into_iter().filter(top_level_here).collect()
+        } else {
+            matches
+        };
+        if scope.matched_only && matches.is_empty() {
             return;
         }
         let owner = catalog
@@ -278,8 +313,9 @@ impl Graph {
             });
         let Some(owner) = owner else { return };
         let id = format!("{source_id}:occurrence:{kind}:{start}:{end}");
+        let label_end = label_end.map_or(end, |e| e.clamp(start + 1, end));
         let label =
-            String::from_utf8_lossy(&catalog.snapshots[source_id][start..end]).into_owned();
+            String::from_utf8_lossy(&catalog.snapshots[source_id][start..label_end]).into_owned();
         self.node(id.clone(), kind, label);
         let proof = evidence(catalog, source_id, start, end);
         self.edges.push(Edge {
@@ -289,16 +325,7 @@ impl Graph {
             resolution: "syntax_only".into(),
             evidence: proof.clone(),
         });
-        // Name matches are navigational candidates, including ambiguities. Never a resolved call/type.
-        // Equal names in other languages are not candidates: kinds are only comparable within one.
-        let language = &catalog.sources[source_id].language;
-        if let Some(name) = candidate {
-            let matches: Vec<_> = catalog
-                .symbols_named(&name)
-                .into_iter()
-                .filter(|s| candidate_kinds.contains(&s.kind.as_str()))
-                .filter(|s| catalog.sources[&s.source_id].language == *language)
-                .collect();
+        if candidate.is_some() {
             // Too many homonyms is noise, not navigation: the count is kept, no edge is drawn.
             if max_candidates.is_some_and(|max| matches.len() > max) {
                 self.nodes.get_mut(&id).expect("node just added").ambiguous_candidates = Some(matches.len());

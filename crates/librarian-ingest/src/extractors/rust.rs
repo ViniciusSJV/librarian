@@ -10,15 +10,18 @@ use syn::{
 
 /// `g6` adds named struct fields, field accesses and call candidates (profile v3).
 /// `g6d` adds struct literals, field writes and the type written in an impl (profile v4).
+/// `v5` adds enum variants, names used as values, struct patterns and loops (profile v5).
 /// Without them, records and occurrences are exactly those of the frozen v1 adapter.
 pub(crate) struct Rust {
     g6: bool,
     g6d: bool,
+    v5: bool,
 }
 
-pub(crate) static RUST: Rust = Rust { g6: false, g6d: false };
-pub(crate) static RUST_V3: Rust = Rust { g6: true, g6d: false };
-pub(crate) static RUST_V4: Rust = Rust { g6: true, g6d: true };
+pub(crate) static RUST: Rust = Rust { g6: false, g6d: false, v5: false };
+pub(crate) static RUST_V3: Rust = Rust { g6: true, g6d: false, v5: false };
+pub(crate) static RUST_V4: Rust = Rust { g6: true, g6d: true, v5: false };
+pub(crate) static RUST_V5: Rust = Rust { g6: true, g6d: true, v5: true };
 
 impl Extractor for Rust {
     fn extract(&self, source: &Source, bytes: &[u8]) -> Extraction {
@@ -41,6 +44,7 @@ impl Extractor for Rust {
         };
         let mut visitor = Declarations {
             g6: self.g6,
+            v5: self.v5,
             source,
             bytes,
             offset,
@@ -66,9 +70,11 @@ impl Extractor for Rust {
         let mut observer = Occurrences {
             g6: self.g6,
             g6d: self.g6d,
+            v5: self.v5,
             offset,
             found: vec![],
             impl_type: None,
+            locals: vec![],
         };
         observer.visit_file(&tree);
         observer.found
@@ -79,6 +85,15 @@ impl Extractor for Rust {
     }
 
     fn candidate_kinds_for(&self, occurrence: &str) -> &'static [&'static str] {
+        match (self.v5, occurrence) {
+            // A tuple variant or tuple struct is built by a call (`Shape::Sphere(r)`).
+            (true, "call_observed") => return &["function", "method", "trait_method", "variant", "struct"],
+            (true, "name_reference") => return &["const", "static", "variant", "function", "method", "struct"],
+            (true, "struct_literal") => return &["struct", "enum", "union", "type", "variant"],
+            (true, "struct_pattern") => return &["struct", "union", "variant"],
+            (true, "field_pattern") => return &["field"],
+            _ => {}
+        }
         match (self.g6, occurrence) {
             (true, "call_observed" | "method_call_observed") => &["function", "method", "trait_method"],
             (true, "attribute_access" | "field_assign" | "field_init") => &["field"],
@@ -97,6 +112,14 @@ impl Extractor for Rust {
 
     fn call_kinds(&self) -> &'static [&'static str] {
         &["call_observed", "method_call_observed"]
+    }
+
+    fn matched_only(&self) -> &'static [&'static str] {
+        if self.v5 {
+            &["name_reference", "struct_pattern", "field_pattern"]
+        } else {
+            &[]
+        }
     }
 }
 
@@ -122,6 +145,7 @@ fn parse(text: &str) -> syn::Result<(syn::File, usize)> {
 
 struct Declarations<'a> {
     g6: bool,
+    v5: bool,
     source: &'a Source,
     bytes: &'a [u8],
     offset: usize,
@@ -200,6 +224,12 @@ impl<'ast> Visit<'ast> for Declarations<'_> {
                     }
                 }
             }
+            // v5: each variant is a declaration of its enum (`Shape::Sphere`).
+            if let (true, syn::Item::Enum(e)) = (self.v5, item) {
+                for variant in &e.variants {
+                    self.add("variant", variant.ident.to_string(), variant.span(), &variant.attrs);
+                }
+            }
             visit::visit_item(self, item);
             self.scope.pop();
         } else {
@@ -228,11 +258,28 @@ impl<'ast> Visit<'ast> for Declarations<'_> {
 struct Occurrences {
     g6: bool,
     g6d: bool,
+    v5: bool,
     offset: usize,
     found: Vec<Occurrence>,
     /// Span of the type written in the impl being visited: it is `impl_self_type`, not also a
     /// type reference.
     impl_type: Option<std::ops::Range<usize>>,
+    /// v5: names bound in each enclosing function (parameters, `let`, patterns, closures). A
+    /// one-segment path with one of these names is a local, not a use of a declaration.
+    locals: Vec<std::collections::BTreeSet<String>>,
+}
+
+/// Every name a pattern binds inside a function, closures included.
+#[derive(Default)]
+struct Bindings(std::collections::BTreeSet<String>);
+
+impl<'ast> Visit<'ast> for Bindings {
+    fn visit_pat_ident(&mut self, value: &'ast syn::PatIdent) {
+        self.0.insert(value.ident.to_string());
+        visit::visit_pat_ident(self, value);
+    }
+    // A nested item is its own scope.
+    fn visit_item(&mut self, _value: &'ast syn::Item) {}
 }
 
 impl Occurrences {
@@ -253,7 +300,30 @@ impl Occurrences {
             start: range.start + self.offset,
             end: range.end + self.offset,
             candidate,
+            label_end: None,
         });
+    }
+
+    /// v5: a loop spans its body; its label is its head, up to `head`.
+    fn block(&mut self, kind: &'static str, span: Span, head: Span) {
+        let range = span.byte_range();
+        self.found.push(Occurrence {
+            kind,
+            start: range.start + self.offset,
+            end: range.end + self.offset,
+            candidate: None,
+            label_end: Some(head.byte_range().end + self.offset),
+        });
+    }
+
+    /// v5: visits a function with the names it binds as its locals.
+    fn scoped(&mut self, bindings: Bindings, visit: impl FnOnce(&mut Self)) {
+        if !self.v5 {
+            return visit(self);
+        }
+        self.locals.push(bindings.0);
+        visit(self);
+        self.locals.pop();
     }
 }
 
@@ -321,7 +391,86 @@ impl<'ast> Visit<'ast> for Occurrences {
             _ => None,
         };
         self.push("call_observed", value.func.span(), name);
+        // v5: a called path is the call; it is not also a name used as a value.
+        if self.v5 && matches!(value.func.as_ref(), syn::Expr::Path(_)) {
+            return value.args.iter().for_each(|a| self.visit_expr(a));
+        }
         visit::visit_expr_call(self, value);
+    }
+    fn visit_expr_path(&mut self, value: &'ast syn::ExprPath) {
+        // v5: a path used as a value (`MAX_DEPTH`, `Shape::Sphere`, `Self::helper`) or matched
+        // in a pattern, by its last segment. A one-segment local is not a use.
+        if self.v5 {
+            let segments = &value.path.segments;
+            if let Some(last) = segments.last() {
+                let name = last.ident.to_string();
+                let local = segments.len() == 1 && (name == "self" || self.locals.iter().any(|l| l.contains(&name)));
+                if !local {
+                    self.push("name_reference", value.span(), Some(name));
+                }
+            }
+        }
+        visit::visit_expr_path(self, value);
+    }
+    fn visit_pat_struct(&mut self, value: &'ast syn::PatStruct) {
+        // v5: `Camera { transform, .. }` takes the written type apart; each named field it
+        // reads is a `field_pattern`.
+        if self.v5 {
+            let name = value.path.segments.last().map(|s| s.ident.to_string());
+            self.push("struct_pattern", value.span(), name);
+            for field in &value.fields {
+                if let syn::Member::Named(ident) = &field.member {
+                    self.push("field_pattern", ident.span(), Some(ident.to_string()));
+                }
+            }
+        }
+        visit::visit_pat_struct(self, value);
+    }
+    fn visit_pat_tuple_struct(&mut self, value: &'ast syn::PatTupleStruct) {
+        if self.v5 {
+            let name = value.path.segments.last().map(|s| s.ident.to_string());
+            self.push("struct_pattern", value.span(), name);
+        }
+        visit::visit_pat_tuple_struct(self, value);
+    }
+    fn visit_expr_for_loop(&mut self, value: &'ast syn::ExprForLoop) {
+        if self.v5 {
+            self.block("loop", value.span(), value.expr.span());
+        }
+        visit::visit_expr_for_loop(self, value);
+    }
+    fn visit_expr_while(&mut self, value: &'ast syn::ExprWhile) {
+        if self.v5 {
+            self.block("loop", value.span(), value.cond.span());
+        }
+        visit::visit_expr_while(self, value);
+    }
+    fn visit_expr_loop(&mut self, value: &'ast syn::ExprLoop) {
+        if self.v5 {
+            self.block("loop", value.span(), value.loop_token.span());
+        }
+        visit::visit_expr_loop(self, value);
+    }
+    fn visit_item_fn(&mut self, value: &'ast syn::ItemFn) {
+        let mut bindings = Bindings::default();
+        if self.v5 {
+            bindings.visit_item_fn(value);
+        }
+        self.scoped(bindings, |s| visit::visit_item_fn(s, value));
+    }
+    fn visit_impl_item_fn(&mut self, value: &'ast syn::ImplItemFn) {
+        let mut bindings = Bindings::default();
+        if self.v5 {
+            bindings.visit_impl_item_fn(value);
+        }
+        self.scoped(bindings, |s| visit::visit_impl_item_fn(s, value));
+    }
+    fn visit_trait_item_fn(&mut self, value: &'ast syn::TraitItemFn) {
+        let mut bindings = Bindings::default();
+        if self.v5 {
+            bindings.visit_trait_item_fn(value);
+        }
+        self.scoped(bindings, |s| visit::visit_trait_item_fn(s, value));
     }
     fn visit_expr_method_call(&mut self, value: &'ast syn::ExprMethodCall) {
         // Keep receiver and arguments; no receiver type is inferred.

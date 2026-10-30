@@ -27,10 +27,13 @@ pub const EXTRACTOR_V2: &str =
 /// G6: fields as symbols, attribute accesses, and calls and bases as name candidates.
 pub const EXTRACTOR_V3: &str =
     "librarian-ingest/0.3.0;syn/3.0.5;rustpython-parser/0.4.0;rust-structural-v2;python-structural-v2";
-/// Current profile (G6d): v3 plus, in Rust, struct literals, field writes and impl self types.
-/// The Python adapter is the v3 one.
+/// G6d: v3 plus, in Rust, struct literals, field writes and impl self types. The Python adapter
+/// is the v3 one.
 pub const EXTRACTOR_V4: &str =
     "librarian-ingest/0.4.0;syn/3.0.5;rustpython-parser/0.4.0;rust-structural-v3;python-structural-v2";
+/// Current profile: v4 plus names used as values, module variables, variants, patterns and loops.
+pub const EXTRACTOR_V5: &str =
+    "librarian-ingest/0.5.0;syn/3.0.5;rustpython-parser/0.4.0;rust-structural-v4;python-structural-v3";
 const RECORDS: [&str; 4] = [
     "sources.jsonl",
     "symbols.jsonl",

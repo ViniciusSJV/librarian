@@ -847,6 +847,11 @@ const STRINGS = {
   'use.method_call_observed': ['chama', 'calls'],
   'use.base_class': ['herda de', 'inherits from'],
   'use.type_reference': ['cita o tipo', 'cites the type'],
+  'use.name_reference': ['usa o nome', 'uses the name'],
+  'use.name_write': ['escreve', 'writes'],
+  'use.keyword_argument': ['preenche pelo nome', 'fills by name'],
+  'use.struct_pattern': ['desmonta', 'takes apart'],
+  'use.field_pattern': ['lê ao desmontar', 'reads when taking apart'],
 
   // conversation and composer
   'chat.title': ['Conversa', 'Conversation'],
@@ -2899,8 +2904,8 @@ async function drawPath() {
       return;
     }
     if (!data.links.length) {
-      // Uses are recorded from the v3 profile on (base graph -v2); the v4 profile derives from -v3.
-      const old = !/-v[23]$/.test(String(state.graph?.derived_from ?? ''));
+      // Uses are recorded from the v3 profile on (base graph -v2); v4 derives from -v3, v5 from -v4.
+      const old = !/-v[234]$/.test(String(state.graph?.derived_from ?? ''));
       note.textContent = old ? t('path.oldGraph') : t(calls ? 'path.callsNone' : 'path.none');
       return;
     }

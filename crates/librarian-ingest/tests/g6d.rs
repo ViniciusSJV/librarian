@@ -131,7 +131,7 @@ fn symbol_id(catalog: &Catalog, qualified: &str, kind: &str) -> String {
 #[test]
 fn literals_writes_and_impl_types_are_occurrences() {
     let project = Project::new();
-    let catalog = project.edition("v4", None);
+    let catalog = project.edition("v4", Some(EXTRACTOR_V4));
     assert_eq!(catalog.manifest().extractor, EXTRACTOR_V4);
     let graph = Graph::build(&catalog);
     assert_eq!(graph.version, "rust-python-syntax-graph-v3");
@@ -197,7 +197,7 @@ fn prepare_value(catalog: &Catalog, request: Value) -> Result<prepare::Prepared,
 #[test]
 fn owner_context_brings_the_type_and_the_writers_of_read_fields() {
     let project = Project::new();
-    let catalog = project.edition("v4", None);
+    let catalog = project.edition("v4", Some(EXTRACTOR_V4));
     let prepared = prepare_value(&catalog, chain("ray", 32, "src/camera.rs", true)).unwrap();
     let search: Value = serde_json::from_slice(&prepared.search).unwrap();
     let names: Vec<&str> = search["hits"].as_array().unwrap().iter().map(|h| h["name"].as_str().unwrap()).collect();
@@ -252,7 +252,7 @@ fn owner_context_brings_the_type_and_the_writers_of_read_fields() {
 #[test]
 fn owner_context_in_python_is_the_enclosing_class() {
     let project = Project::new();
-    let catalog = project.edition("v4", None);
+    let catalog = project.edition("v4", Some(EXTRACTOR_V4));
     let prepared = prepare_value(&catalog, chain("point", 9, "pkg/shapes.py", true)).unwrap();
     let search: Value = serde_json::from_slice(&prepared.search).unwrap();
     let names: Vec<&str> = search["hits"].as_array().unwrap().iter().map(|h| h["name"].as_str().unwrap()).collect();
@@ -269,7 +269,7 @@ fn owner_context_is_refused_where_it_cannot_be_told() {
     let old = project.edition("v3", Some(EXTRACTOR_V3));
     assert!(prepare_value(&old, chain("ray", 32, "src/camera.rs", true)).err().unwrap().contains("v4"));
     // Only a chain step carries it.
-    let catalog = project.edition("v4", None);
+    let catalog = project.edition("v4", Some(EXTRACTOR_V4));
     let mut lexical = chain("ray", 32, "src/camera.rs", true);
     lexical.as_object_mut().unwrap().remove("targets");
     assert!(prepare_value(&catalog, lexical).err().unwrap().contains("only by a chain"));
@@ -283,7 +283,7 @@ fn owner_context_is_refused_where_it_cannot_be_told() {
 #[test]
 fn callees_bring_what_the_target_calls_without_ambiguity() {
     let project = Project::new();
-    let catalog = project.edition("v4", None);
+    let catalog = project.edition("v4", Some(EXTRACTOR_V4));
     let mut request = chain("ray", 32, "src/camera.rs", true);
     request["callees"] = json!(true);
     let prepared = prepare_value(&catalog, request.clone()).unwrap();
