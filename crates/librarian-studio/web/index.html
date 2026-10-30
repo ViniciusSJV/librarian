@@ -1086,6 +1086,30 @@ const STRINGS = {
   'inventory.calls': ['chama: ', 'calls: '],
   'inventory.calledBy': ['chamada por: ', 'called by: '],
   'inventory.none': ['Nenhuma operação achada pelas regras.', 'No operation found by the rules.'],
+  'inventory.loopChain': ['laço pela cadeia', 'loop through calls'],
+  'investigate.button': ['Investigar', 'Investigate'],
+  'help.investigate': ['Prepara uma pergunta sobre este achado: o bibliotecário escolhe a evidência (a declaração do laço ou da operação, cada passo da cadeia e o campo que a regra casou), diz por que cada item entrou e propõe uma pergunta no campo abaixo, no modo Localizar. Você confere, desmarca o que não quiser, edita a pergunta e pergunta. Nada é enviado antes disso.',
+    'Prepares a question about this finding: the librarian picks the evidence (the loop\x27s or the operation\x27s declaration, each step of the chain and the field the rule matched), says why each item is there and proposes a question in the field below, in Locate mode. You check it, untick what you do not want, edit the question and ask. Nothing is sent before that.'],
+  'investigate.title': ['Investigação do inventário', 'Investigation from the inventory'],
+  'investigate.cancel': ['Cancelar', 'Cancel'],
+  'investigate.ticked': ['{n} de {total} declarações na evidência', '{n} of {total} declarations in the evidence'],
+  'investigate.empty': ['Marque ao menos uma declaração para a evidência.', 'Tick at least one declaration for the evidence.'],
+  'investigate.loopSummary': ['laço {head} de {symbol} ({where})', 'loop {head} of {symbol} ({where})'],
+  'investigate.opSummary': ['{text} em {symbol} ({where})', '{text} in {symbol} ({where})'],
+  'investigate.turnTag': ['do inventário: {summary}', 'from the inventory: {summary}'],
+  'investigate.calledAt': ['chamada na linha {line}', 'called on line {line}'],
+  'investigate.direct': ['no próprio laço: {op}', 'in the loop itself: {op}'],
+  'investigate.chain': ['pela cadeia {steps} → {op}', 'through {steps} → {op}'],
+  'investigate.loopChain': ['pela cadeia {steps} → o laço {head} ({where})', 'through {steps} → the loop {head} ({where})'],
+  'investigate.loopQuestion': ['O laço {head} de {symbol} ({where}) repete o que está dentro dele a cada volta. O inventário encontrou, pela estrutura do código:\n{found}\nSiga cada chamada nas declarações entregues e diga, citando as linhas, o que roda uma vez por volta do laço e o que roda uma vez só.',
+    'The loop {head} of {symbol} ({where}) repeats what is inside it on every pass. The inventory found, from the structure of the code:\n{found}\nFollow each call in the delivered declarations and say, citing the lines, what runs once per pass of the loop and what runs only once.'],
+  'investigate.opQuestion': ['O que {text} faz em {symbol} ({where})? Diga, citando as linhas, o que ela lê ou escreve e em que condições roda.',
+    'What does {text} do in {symbol} ({where})? Say, citing the lines, what it reads or writes and under which conditions it runs.'],
+  'investigate.reason.loop': ['tem o laço da linha {line}', 'holds the loop on line {line}'],
+  'investigate.reason.operation': ['tem a operação da linha {line} ({rule})', 'holds the operation on line {line} ({rule})'],
+  'investigate.reason.step': ['chamada por {from} na linha {line}', 'called by {from} on line {line}'],
+  'investigate.reason.matched': ['casou com a regra {rule} (linha {line})', 'matched rule {rule} (line {line})'],
+  'composer.askInvestigation': ['Perguntar com a evidência ({n}) · {target}', 'Ask with the evidence ({n}) · {target}'],
   'inventory.noRun': ['Gere o grafo para montar o inventário.', 'Generate the graph to build the inventory.'],
   'tab.ruler': ['Régua', 'Ruler'],
   'tab.facts': ['Acervo', 'Facts'],
@@ -1934,6 +1958,7 @@ async function loadRun(id) {
   studio.run = id;
   // Gathered declarations belong to one edition's graph.
   gathered = [];
+  investigation = null;
   renderGathered();
   resetInventory();
   $('#runs').value = id;
@@ -2065,7 +2090,8 @@ function refreshComposer() {
   if (provider === 'ollama' && !$('#modelfile').value && studio.modelfiles.length) $('#modelfile').value = studio.modelfiles[0].name;
   const mf = studio.modelfiles.find(m => m.name === $('#modelfile').value);
   const target = choiceLabel(composerChoice());
-  $('#ask').textContent = gathered.length ? t('composer.askGathered', { n: gathered.length, target })
+  $('#ask').textContent = investigation ? t('composer.askInvestigation', { n: investigation.ticked.size, target })
+    : gathered.length ? t('composer.askGathered', { n: gathered.length, target })
     : provider === 'manual' ? t('composer.askManual') : t('composer.askSend', { target });
   $('#modelfileSummary').textContent = mf ? modelfileSummary(mf.content, provider) : (provider === 'claude-cli' ? t('composer.defaultSystem') : '');
   const llm = studio.status.llm;
@@ -2095,9 +2121,18 @@ async function ask() {
     // The question uses the saved settings; save what is on screen so nothing is forgotten.
     await saveSettings();
     say($('#chatNote'), t('chat.preparing'));
-    const turn = gathered.length
+    // An investigation asks over exactly the ticked items, in the order proposed.
+    const investigated = investigation && {
+      nodes: investigation.items.map(i => i.id).filter(id => investigation.ticked.has(id)),
+      origin: { inventory: investigation.target, kind: investigation.kind, summary: findingSummary(investigation) },
+    };
+    if (investigated && !investigated.nodes.length) throw new Error(t('investigate.empty'));
+    const turn = investigated
+      ? await api('POST', '/api/gathered-question', { key: studio.project.key, run: studio.run, question, nodes: investigated.nodes, with_facts: gatherFacts, origin: investigated.origin })
+      : gathered.length
       ? await api('POST', '/api/gathered-question', { key: studio.project.key, run: studio.run, question, nodes: gathered, with_facts: gatherFacts })
       : await api('POST', '/api/ask', { key: studio.project.key, run: studio.run, question });
+    if (investigated) { investigation = null; renderGathered(); }
     studio.turns.push(turn);
     $('#question').value = '';
     activate(turn.id);
@@ -2150,8 +2185,79 @@ function toggleGathered(id) {
   renderGathered();
   inspect();
 }
+// An investigation from the inventory: the finding, the evidence the librarian proposes (each
+// item with why, all ticked) and a proposed question in the composer. Asking sends exactly the
+// ticked items, and the question records the finding it came from.
+let investigation = null;
+async function investigate(target, button) {
+  await busy([button], $('#inventoryNote'), async () => {
+    const data = await api('POST', '/api/inventory/investigate', { key: studio.project.key, run: studio.run, target });
+    investigation = { ...data, ticked: new Set(data.items.map(i => i.id)) };
+    gathered = [];
+    gatheredFolded = false;
+    setMode('locate');
+    $('#question').value = proposedQuestion(data);
+    renderGathered();
+    $('#question').focus();
+  });
+}
+const oneLine = text => text.split(/\s+/).join(' ');
+function findingSummary(data) {
+  const f = data.finding;
+  return data.kind === 'loop' ? t('investigate.loopSummary', { head: oneLine(f.head).slice(0, 80), symbol: f.symbol_name, where: `${f.path}:${f.line}` })
+    : t('investigate.opSummary', { text: oneLine(f.text).slice(0, 80), symbol: f.symbol_name, where: `${f.path}:${f.line}` });
+}
+// What the inventory found, as lines a model can follow: each chain to its operation, each
+// operation written in the loop itself, each loop reached through calls.
+function findingLines(data) {
+  const f = data.finding;
+  if (data.kind !== 'loop') return [];
+  const ops = new Map(data.operations.map(o => [o.id, o]));
+  const op = o => `${oneLine(o.text).slice(0, 80)} (${o.path}:${o.line}, ${o.operation})`;
+  const steps = c => c.steps.map(s => `${s.to_name} (${t('investigate.calledAt', { line: s.line })})`).join(' → ');
+  return [
+    ...f.direct.map(id => t('investigate.direct', { op: op(ops.get(id)) })),
+    ...f.through_calls.map(c => t('investigate.chain', { steps: steps(c), op: op(ops.get(c.operation)) })),
+    ...f.loops_through_calls.map(c => t('investigate.loopChain', { steps: steps(c), head: oneLine(c.head).slice(0, 60), where: `${c.path}:${c.line}` })),
+  ];
+}
+function proposedQuestion(data) {
+  const f = data.finding;
+  return data.kind === 'loop'
+    ? t('investigate.loopQuestion', { head: oneLine(f.head).slice(0, 100), symbol: f.symbol_name, where: `${f.path}:${f.line}`, found: findingLines(data).map(l => `- ${l}`).join('\n') })
+    : t('investigate.opQuestion', { text: oneLine(f.text).slice(0, 100), symbol: f.symbol_name, where: `${f.path}:${f.line}` });
+}
+function reasonOf(r) {
+  return { loop: () => t('investigate.reason.loop', { line: r.line }), operation: () => t('investigate.reason.operation', { rule: r.rule, line: r.line }),
+    step: () => t('investigate.reason.step', { from: r.from, line: r.line }), matched: () => t('investigate.reason.matched', { rule: r.rule, line: r.line }) }[r.code]?.() ?? r.code;
+}
+function investigationView() {
+  const rows = investigation.items.map(item => el('label', { className: 'item' },
+    el('input', { type: 'checkbox', checked: investigation.ticked.has(item.id),
+      onchange: event => { event.target.checked ? investigation.ticked.add(item.id) : investigation.ticked.delete(item.id); renderGathered(); } }),
+    el('span', {}, el('span', { className: 'mono', textContent: item.name }), ` · ${item.path}:${item.start_line}–${item.end_line}`,
+      el('div', { className: 'why', textContent: item.reasons.map(reasonOf).join(' · ') }))));
+  return el('div', {},
+    el('div', { className: 'row', style: 'gap: 4px' },
+      el('strong', { textContent: t('investigate.title') }), helpButton(t('help.investigate')),
+      // Folded, the card keeps only the finding, so the question has the room.
+      el('button', { className: 'link', style: 'margin-left: auto', textContent: t(gatheredFolded ? 'gather.unfold' : 'gather.fold'),
+        onclick: () => { gatheredFolded = !gatheredFolded; renderGathered(); } }),
+      el('button', { className: 'link', textContent: t('investigate.cancel'),
+        onclick: () => { investigation = null; gatheredFolded = false; $('#question').value = ''; renderGathered(); } })),
+    el('div', { style: 'font-size: 12px', textContent: `${findingSummary(investigation)} · ${t('investigate.ticked', { n: investigation.ticked.size, total: investigation.items.length })}` }),
+    gatheredFolded ? '' : el('div', { id: 'suggestion' }, ...rows,
+      investigation.truncated ? el('div', { className: 'muted', textContent: t('envelope.truncated', { n: 16 }) }) : null));
+}
+
 function renderGathered() {
   const box = $('#gathered');
+  if (investigation) {
+    box.hidden = false;
+    refreshComposer();
+    box.replaceChildren(investigationView());
+    return;
+  }
   box.hidden = !gathered.length;
   refreshComposer();
   // An emptied envelope starts over open, so the next one shows its actions.
@@ -2219,6 +2325,7 @@ function suggestionView() {
 function gatheredTurnView(g) {
   const facts = g.reviewed_facts?.length ?? 0;
   return el('div', { className: 'muted', style: 'margin-top: 6px' },
+    g.origin ? el('span', { className: 'tag', style: 'margin-right: 4px', textContent: t('investigate.turnTag', { summary: g.origin.summary }) }) : null,
     el('span', { className: 'tag', textContent: t('gather.turnTag', { n: g.nodes.length }) }),
     facts ? el('span', { className: 'tag', style: 'margin-left: 4px', textContent: t('gather.turnFacts', { n: facts }) }) : null,
     helpButton(t('help.gatheredTurn')));
@@ -2804,8 +2911,10 @@ function renderInventory() {
       : el('a', { href: '#', className: 'mono', textContent: label, onclick: ev => { ev.preventDefault(); selectNode(i, true); } });
   };
   const where = (path, line, end) => el('span', { className: 'muted mono', textContent: ` ${path}:${line}${end && end !== line ? `–${end}` : ''} ` });
+  const investigateButton = target => el('button', { className: 'link', textContent: t('investigate.button'), title: t('help.investigate'),
+    onclick: event => investigate(target, event.target) });
   const opLine = (o, prefix) => el('div', { style: 'font-size: 12px' },
-    prefix ? `${prefix}: ` : '', el('span', { className: 'tag', textContent: o.operation }), where(o.path, o.line),
+    prefix ? `${prefix}: ` : investigateButton(o.id), el('span', { className: 'tag', textContent: o.operation }), where(o.path, o.line),
     el('code', { textContent: flat(o.text).slice(0, 120) }), el('span', { className: 'muted', textContent: ` · ${o.rule}` }),
     o.in_loop ? el('span', { className: 'tag', style: 'margin-left: 4px', textContent: t('inventory.inLoop') }) : null);
   // The operations a chain reaches in one declaration are one line, as in the terminal.
@@ -2839,11 +2948,14 @@ function renderInventory() {
       project: inv.rules.filter(r => r.source === 'project').length, profile: inventory.profile }) }),
     el('h3', { textContent: `${t('inventory.loops')} (${loops.length})` }),
     loops.length ? el('ol', { className: 'claims' }, ...loops.map(l => el('li', {},
-      goTo(l.symbol, l.symbol_name), where(l.path, l.line, l.end_line), el('code', { textContent: flat(l.head).slice(0, 100) }),
+      investigateButton(l.occurrence), goTo(l.symbol, l.symbol_name), where(l.path, l.line, l.end_line), el('code', { textContent: flat(l.head).slice(0, 100) }),
       l.nesting ? el('span', { className: 'tag', style: 'margin-left: 4px', textContent: t('inventory.nesting', { n: l.nesting }) }) : null,
       l.inner_loops ? el('span', { className: 'tag', style: 'margin-left: 4px', textContent: t('inventory.inner', { n: l.inner_loops }) }) : null,
       ...l.direct.filter(kept).map(id => opLine(ops.get(id), t('inventory.direct'))),
       ...chainLines(l.through_calls),
+      ...l.loops_through_calls.map(c => el('div', { style: 'font-size: 12px' }, `${t('inventory.loopChain')}: `,
+        ...c.steps.flatMap((s, k) => [k ? ' → ' : '', goTo(s.to, s.to_name), where(s.path, s.line)]), ' → ',
+        el('code', { textContent: flat(c.head).slice(0, 80) }), where(c.path, c.line, c.end_line))),
       ...l.repeated_calls.map(r => el('div', { className: 'muted', style: 'font-size: 12px', textContent: t('inventory.repeated', { name: r.name, n: r.lines.length, lines: r.lines.join(', ') }) })),
       ...l.unfollowed.map(u => el('div', { className: 'muted', style: 'font-size: 12px', textContent: t('inventory.unfollowed', { text: flat(u.text).slice(0, 80), line: u.line, n: u.candidates }) })))))
       : el('p', { className: 'muted', textContent: t('inventory.none') }),

@@ -321,7 +321,8 @@ impl Store {
     /// the order gathered), with nothing searched and nothing added; the step says so. P5: the
     /// envelope may hold file heads (`header:<path>`), and, with `with_facts`, the question also
     /// carries the current reviewed facts about the gathered declarations.
-    pub fn ask_gathered(&self, key: &str, run: &str, question: &str, nodes: &[String], with_facts: bool) -> Result<Value> {
+    /// An investigation from the inventory records its `origin` (the finding it came from).
+    pub fn ask_gathered(&self, key: &str, run: &str, question: &str, nodes: &[String], with_facts: bool, origin: Option<Value>) -> Result<Value> {
         if nodes.is_empty() || nodes.len() > MAX_GATHERED {
             return Err(format!("Junte de 1 a {MAX_GATHERED} declarações").into());
         }
@@ -337,7 +338,10 @@ impl Store {
             return Err("Junte ao menos uma declaração além dos topos de arquivo".into());
         }
         let reviewed = if with_facts { self.reviewed_about(key, run, &targets)? } else { vec![] };
-        let gathered = json!({ "nodes": nodes, "with_facts": with_facts, "reviewed_facts": reviewed.iter().map(|f| &f.id).collect::<Vec<_>>() });
+        let mut gathered = json!({ "nodes": nodes, "with_facts": with_facts, "reviewed_facts": reviewed.iter().map(|f| &f.id).collect::<Vec<_>>() });
+        if let Some(origin) = origin {
+            gathered["origin"] = origin;
+        }
         let mut request = request(&settings, question, Some(targets), reviewed, false);
         request.gathered = true;
         request.headers = headers;
@@ -367,6 +371,11 @@ impl Store {
     /// Steps 2 and 3: the operation inventory of a run's edition, with the built-in rules and
     /// those of the profile's `inventory`, read from the file at each use like its commands.
     pub fn inventory(&self, key: &str, run: &str) -> Result<Value> {
+        let (found, profile, _) = self.inventory_of(key, run)?;
+        Ok(json!({ "profile": display(&profile), "inventory": found }))
+    }
+
+    fn inventory_of(&self, key: &str, run: &str) -> Result<(inventory::Inventory, PathBuf, Catalog)> {
         let root = PathBuf::from(self.settings(key)?.root);
         let profile = root.join(PROFILE);
         let rules: inventory::RuleSet = match fs::read(&profile).ok().map(|b| serde_json::from_slice::<Value>(&b)).transpose()? {
@@ -375,7 +384,70 @@ impl Store {
         };
         let catalog = Catalog::load(&self.edition(key, run)?)?;
         let found = inventory::inventory(&catalog, &rules)?;
-        Ok(json!({ "profile": display(&profile), "inventory": found }))
+        Ok((found, profile, catalog))
+    }
+
+    /// An investigation from the inventory: for a loop (its occurrence id) or an operation
+    /// (`op:...`), the declarations the evidence should hold, each with why, in the order a
+    /// reader follows them: the loop's declaration, each step of each chain, the field a
+    /// relationship rule matched, the declarations of loops reached. The question itself is
+    /// written by the page; nothing is asked here.
+    pub fn investigate(&self, key: &str, run: &str, target: &str) -> Result<Value> {
+        let (found, _, catalog) = self.inventory_of(key, run)?;
+        let ops: std::collections::BTreeMap<&str, &inventory::Operation> = found.operations.iter().map(|o| (o.id.as_str(), o)).collect();
+        let mut items: Vec<(String, Vec<Value>)> = vec![];
+        let mut add = |id: &str, reason: Value| match items.iter_mut().find(|(i, _)| i == id) {
+            Some((_, reasons)) => reasons.push(reason),
+            None => items.push((id.to_owned(), vec![reason])),
+        };
+        let (kind, finding) = if let Some(op) = ops.get(target) {
+            add(&op.symbol, json!({ "code": "operation", "rule": op.rule, "line": op.line, "text": op.text }));
+            for field in &op.through {
+                add(field, json!({ "code": "matched", "rule": op.rule, "line": op.line }));
+            }
+            ("operation", serde_json::to_value(op)?)
+        } else {
+            let l = found.loops.iter().find(|l| l.occurrence == target).ok_or("Achado desconhecido: monte o inventário de novo")?;
+            add(&l.symbol, json!({ "code": "loop", "line": l.line, "head": l.head }));
+            for id in &l.direct {
+                for field in &ops[id.as_str()].through {
+                    add(field, json!({ "code": "matched", "rule": ops[id.as_str()].rule, "line": ops[id.as_str()].line }));
+                }
+            }
+            let steps = l.through_calls.iter().map(|c| (&c.steps, Some(c.operation.as_str()))).chain(l.loops_through_calls.iter().map(|c| (&c.steps, None)));
+            for (chain, operation) in steps {
+                for s in chain.iter() {
+                    let from = catalog.symbols().get(&s.from).map_or_else(|| s.from.clone(), |x| x.qualified_name.clone());
+                    add(&s.to, json!({ "code": "step", "from": from, "line": s.line, "path": s.path }));
+                }
+                for field in operation.map(|o| &ops[o].through).into_iter().flatten() {
+                    let op = ops[operation.expect("an operation")];
+                    add(field, json!({ "code": "matched", "rule": op.rule, "line": op.line }));
+                }
+            }
+            ("loop", serde_json::to_value(l)?)
+        };
+        // A reason repeated (the same step from two chains) is said once.
+        let truncated = items.len() > MAX_GATHERED;
+        let items: Vec<Value> = items
+            .into_iter()
+            .take(MAX_GATHERED)
+            .map(|(id, mut reasons)| {
+                reasons.dedup();
+                let symbol = &catalog.symbols()[&id];
+                let chunk = &catalog.chunks()[&symbol.chunk_id];
+                json!({ "id": id, "name": symbol.qualified_name, "kind": symbol.kind, "path": catalog.sources()[&symbol.source_id].path,
+                    "start_line": chunk.start_line, "end_line": chunk.end_line, "reasons": reasons })
+            })
+            .collect();
+        let reached: Vec<&inventory::Operation> = match kind {
+            "loop" => {
+                let l = found.loops.iter().find(|l| l.occurrence == target).expect("found above");
+                l.direct.iter().map(String::as_str).chain(l.through_calls.iter().map(|c| c.operation.as_str())).map(|id| ops[id]).collect()
+            }
+            _ => vec![ops[target]],
+        };
+        Ok(json!({ "target": target, "kind": kind, "finding": finding, "operations": reached, "items": items, "truncated": truncated }))
     }
 
     /// The current reviewed facts about these declarations, as a question carries them.
@@ -1499,7 +1571,7 @@ mod tests {
         assert!(store.ask_path(&key, &run, "x", &["symbol:nada".into()], &nodes[0], &chosen).is_err());
 
         // Gathered: one question with every declaration the person gathered, in that order.
-        let gathered = store.ask_gathered(&key, &run, "Como guardar o valor?", &[nodes[1].clone(), nodes[0].clone()], false).unwrap();
+        let gathered = store.ask_gathered(&key, &run, "Como guardar o valor?", &[nodes[1].clone(), nodes[0].clone()], false, None).unwrap();
         assert_eq!(gathered["prepare_error"], Value::Null, "{}", gathered["prepare_error"]);
         assert_eq!(gathered["search"]["status"], "gathered");
         assert!(gathered["search"]["limits"][0].as_str().unwrap().starts_with("Gathered step"));
@@ -1508,7 +1580,7 @@ mod tests {
         assert_eq!(gathered["gathered"]["nodes"], json!([nodes[1], nodes[0]]));
         assert_eq!(gathered["request"]["gathered"], true);
         assert_eq!(gathered["request"].get("picked"), None);
-        assert!(store.ask_gathered(&key, &run, "x", &[], false).is_err());
+        assert!(store.ask_gathered(&key, &run, "x", &[], false, None).is_err());
 
         // P5: the suggested envelope lists each declaration with why, and the facts about it.
         let suggested = store.suggest_envelope(&key, &run, &[nodes[0].clone()]).unwrap();
@@ -1516,8 +1588,8 @@ mod tests {
         assert_eq!(suggested["items"][0]["reasons"][0]["code"], "chosen");
         assert!(suggested["items"].as_array().unwrap().iter().all(|i| i["facts"].is_array()));
         // A file head needs a declaration beside it, and lines before the file's first declaration.
-        assert!(store.ask_gathered(&key, &run, "x", &["header:src/lib.rs".into()], false).is_err());
-        let headless = store.ask_gathered(&key, &run, "x", &[nodes[0].clone(), "header:src/lib.rs".into()], true).unwrap();
+        assert!(store.ask_gathered(&key, &run, "x", &["header:src/lib.rs".into()], false, None).is_err());
+        let headless = store.ask_gathered(&key, &run, "x", &[nodes[0].clone(), "header:src/lib.rs".into()], true, None).unwrap();
         assert!(headless["prepare_error"].as_str().unwrap().contains("no lines before"));
         assert_eq!(headless["gathered"]["with_facts"], true);
     }
@@ -1739,6 +1811,38 @@ mod tests {
         // A rule the inventory cannot read is refused with the profile's name.
         fs::write(root.join(PROFILE), json!({ "inventory": { "rules": [{ "id": "x", "operation": "x", "match": "guess" }] } }).to_string()).unwrap();
         assert!(store.inventory(&key, &run).unwrap_err().to_string().contains("inventory inválido"));
+    }
+
+    #[test]
+    fn an_investigation_from_the_inventory_proposes_the_evidence_and_records_its_origin() {
+        let scratch = project();
+        let root = scratch.0.join("project");
+        fs::write(root.join("src/scan.rs"), "fn norm(v: f64) -> f64 {\n    v.sqrt()\n}\n\npub fn scan(xs: &[f64]) -> f64 {\n    let mut t = 0.0;\n    for x in xs {\n        t += norm(*x);\n    }\n    t\n}\n").unwrap();
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let key = store.open(&display(&root)).unwrap()["key"].as_str().unwrap().to_owned();
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        let found = store.inventory(&key, &run).unwrap();
+        let looped = found["inventory"]["loops"].as_array().unwrap().iter().find(|l| l["symbol_name"] == "scan").unwrap().clone();
+
+        // The loop's declaration first, then each step of the chain, each with why.
+        let proposed = store.investigate(&key, &run, looped["occurrence"].as_str().unwrap()).unwrap();
+        assert_eq!(proposed["kind"], "loop");
+        let items = proposed["items"].as_array().unwrap();
+        assert_eq!(items.iter().map(|i| i["name"].as_str().unwrap()).collect::<Vec<_>>(), ["scan", "norm"]);
+        assert_eq!(items[0]["reasons"][0]["code"], "loop");
+        assert_eq!((items[1]["reasons"][0]["code"].as_str(), items[1]["reasons"][0]["from"].as_str()), (Some("step"), Some("scan")));
+        assert_eq!(proposed["operations"][0]["text"], "v.sqrt()");
+        // An operation alone brings its own declaration.
+        let op = proposed["operations"][0]["id"].as_str().unwrap();
+        assert_eq!(store.investigate(&key, &run, op).unwrap()["items"][0]["name"], "norm");
+        assert!(store.investigate(&key, &run, "nada").is_err());
+
+        // The question over that evidence records where it came from.
+        let nodes: Vec<String> = items.iter().map(|i| i["id"].as_str().unwrap().to_owned()).collect();
+        let origin = json!({ "inventory": looped["occurrence"], "summary": "laço de scan" });
+        let turn = store.ask_gathered(&key, &run, "O que acontece a cada volta?", &nodes, false, Some(origin.clone())).unwrap();
+        assert_eq!(turn["prepare_error"], Value::Null, "{}", turn["prepare_error"]);
+        assert_eq!(turn["gathered"]["origin"], origin);
     }
 
     #[test]

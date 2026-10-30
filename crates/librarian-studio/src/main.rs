@@ -142,7 +142,8 @@ fn route(app: &App, req: &Request) -> Result<Response> {
             let body = req.json()?;
             let nodes: Vec<String> = serde_json::from_value(body["nodes"].clone())?;
             let with_facts = body["with_facts"].as_bool().unwrap_or(false);
-            ok(store.ask_gathered(&field(&body, "key")?, &field(&body, "run")?, &field(&body, "question")?, &nodes, with_facts)?)
+            let origin = body.get("origin").filter(|o| !o.is_null()).cloned();
+            ok(store.ask_gathered(&field(&body, "key")?, &field(&body, "run")?, &field(&body, "question")?, &nodes, with_facts, origin)?)
         }
         ("POST", "/api/envelope/suggest") => {
             // P5: what a change to the chosen declarations is likely to need in view, with why.
@@ -151,6 +152,11 @@ fn route(app: &App, req: &Request) -> Result<Response> {
             ok(store.suggest_envelope(&field(&body, "key")?, &field(&body, "run")?, &nodes)?)
         }
         ("GET", "/api/inventory") => ok(store.inventory(param("key")?, param("run")?)?),
+        ("POST", "/api/inventory/investigate") => {
+            // From a finding of the inventory: the evidence the librarian proposes, each with why.
+            let body = req.json()?;
+            ok(store.investigate(&field(&body, "key")?, &field(&body, "run")?, &field(&body, "target")?)?)
+        }
         ("GET", "/api/graph") => Ok(Response {
             status: 200,
             content_type: "application/json; charset=utf-8",
