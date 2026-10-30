@@ -158,8 +158,15 @@
   #askMessage { white-space: pre-wrap; word-break: break-word; }
   /* Tabs: one step of the method at a time (studio only; the file viewer shows every panel). */
   #tabs { display: none; gap: 2px; margin-top: 12px; padding: 3px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-0); }
-  body.studio #tabs { display: flex; }
-  #tabs button { flex: 1; padding: 6px 2px; border: 0; border-radius: 7px; background: transparent; color: var(--text-secondary); font-size: 12px; }
+  /* With counts the tabs may not fit the panel: they wrap to a second row, never get cut. */
+  body.studio #tabs { display: flex; flex-wrap: wrap; }
+  #tabs button { flex: 1 0 auto; white-space: nowrap; padding: 6px 6px; border: 0; border-radius: 7px; background: transparent; color: var(--text-secondary); font-size: 12px; }
+  /* Inventory: one compact row per finding, the detail opens on demand. */
+  #inventoryList details.finding { margin: 2px 0; }
+  #inventoryList details.finding > summary { cursor: pointer; list-style: none; }
+  #inventoryList details.finding > summary::-webkit-details-marker { display: none; }
+  #inventoryList .counts { color: var(--text-secondary); font-size: 12px; }
+  button.investigate { padding: 1px 8px; margin-right: 6px; font-size: 12px; }
   #tabs button[aria-selected="true"] { background: var(--surface-2); color: var(--text-primary); font-weight: 600; box-shadow: 0 1px 2px rgb(0 0 0 / .1); }
   #tabs .count { margin-left: 3px; color: var(--text-muted); font-size: 11px; font-weight: 400; }
   body:not(.studio) .studio-only { display: none; }
@@ -319,6 +326,8 @@
           <select id="inventoryFilter" style="width: auto" hidden></select>
           <span id="inventoryNote" class="muted"></span>
         </div>
+        <input id="inventorySearch" type="search" style="margin-top: 6px" data-i18n-placeholder="inventory.search" hidden>
+        <div id="inventoryTerms" class="muted" style="font-size: 12px"></div>
         <div id="inventoryList"></div>
       </section>
     </div>
@@ -1087,6 +1096,14 @@ const STRINGS = {
   'inventory.calledBy': ['chamada por: ', 'called by: '],
   'inventory.none': ['Nenhuma operação achada pelas regras.', 'No operation found by the rules.'],
   'inventory.loopChain': ['laço pela cadeia', 'loop through calls'],
+  'inventory.search': ['Buscar no inventário (usa o léxico): relatório, motorista, history…', 'Search the inventory (uses the lexicon): report, driver, history…'],
+  'inventory.terms': ['Busca: {terms}', 'Search: {terms}'],
+  'inventory.noSynonym': ['{word} (sem sinônimo no léxico)', '{word} (no synonym in the lexicon)'],
+  'inventory.countChains': ['{n} operação(ões) pela cadeia', '{n} operation(s) through calls'],
+  'inventory.countDirect': ['{n} no próprio laço', '{n} in the loop itself'],
+  'inventory.countLoops': ['{n} laço(s) pela cadeia', '{n} loop(s) through calls'],
+  'inventory.countRepeated': ['{n} nome(s) chamado(s) mais de uma vez', '{n} name(s) called more than once'],
+  'inventory.countOps': ['{n} operação(ões): {kinds}', '{n} operation(s): {kinds}'],
   'investigate.button': ['Investigar', 'Investigate'],
   'help.investigate': ['Prepara uma pergunta sobre este achado: o bibliotecário escolhe a evidência (a declaração do laço ou da operação, cada passo da cadeia e o campo que a regra casou), diz por que cada item entrou e propõe uma pergunta no campo abaixo, no modo Localizar. Você confere, desmarca o que não quiser, edita a pergunta e pergunta. Nada é enviado antes disso.',
     'Prepares a question about this finding: the librarian picks the evidence (the loop\x27s or the operation\x27s declaration, each step of the chain and the field the rule matched), says why each item is there and proposes a question in the field below, in Locate mode. You check it, untick what you do not want, edit the question and ask. Nothing is sent before that.'],
@@ -2886,6 +2903,8 @@ function resetInventory() {
   inventory = null;
   $('#inventoryCount').textContent = '';
   $('#inventoryFilter').hidden = true;
+  $('#inventorySearch').hidden = true;
+  $('#inventoryTerms').replaceChildren();
   $('#inventoryList').replaceChildren();
   $('#inventoryBuild').disabled = !studio.project || !studio.run;
   say($('#inventoryNote'), studio.project && !studio.run ? t('inventory.noRun') : '');
@@ -2897,9 +2916,24 @@ $('#inventoryBuild').addEventListener('click', () => busy([$('#inventoryBuild')]
   const kinds = [...new Set(inventory.inventory.operations.map(o => o.operation))].sort();
   $('#inventoryFilter').replaceChildren(el('option', { value: '', textContent: t('inventory.all') }), ...kinds.map(k => el('option', { value: k, textContent: k })));
   $('#inventoryFilter').hidden = !kinds.length;
+  $('#inventorySearch').hidden = false;
   renderInventory();
 }));
 $('#inventoryFilter').addEventListener('change', () => renderInventory());
+$('#inventorySearch').addEventListener('input', () => renderInventory());
+
+// The inventory search goes through the project's lexicon, as a question does: each word,
+// without accents and stop words, also matches the names of its synonym group (relatório →
+// report). Every word must match, by itself or by a synonym.
+const fold = text => text.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+function inventoryTerms(text) {
+  const lexicon = studio.project?.settings?.lexicon ?? { groups: [], stop_words: [] };
+  const stop = new Set(lexicon.stop_words.map(fold));
+  return fold(text).split(/[^\p{L}\p{N}_]+/u).filter(w => w && !stop.has(w)).map(word => {
+    const group = lexicon.groups.find(g => g.some(m => fold(m) === word));
+    return { word, any: [...new Set([word, ...(group ?? []).map(fold)])] };
+  });
+}
 
 function renderInventory() {
   const box = $('#inventoryList');
@@ -2916,8 +2950,9 @@ function renderInventory() {
       : el('a', { href: '#', className: 'mono', textContent: label, onclick: ev => { ev.preventDefault(); selectNode(i, true); } });
   };
   const where = (path, line, end) => el('span', { className: 'muted mono', textContent: ` ${path}:${line}${end && end !== line ? `–${end}` : ''} ` });
-  const investigateButton = target => el('button', { className: 'link', textContent: t('investigate.button'), title: t('help.investigate'),
-    onclick: event => investigate(target, event.target) });
+  // Inside a row's summary a click would also open the row: the button only investigates.
+  const investigateButton = target => el('button', { className: 'primary investigate', textContent: t('investigate.button'), title: t('help.investigate'),
+    onclick: event => { event.preventDefault(); investigate(target, event.target); } });
   const opLine = (o, prefix) => el('div', { style: 'font-size: 12px' },
     prefix ? `${prefix}: ` : investigateButton(o.id), el('span', { className: 'tag', textContent: o.operation }), where(o.path, o.line),
     el('code', { textContent: flat(o.text).slice(0, 120) }), el('span', { className: 'muted', textContent: ` · ${o.rule}` }),
@@ -2940,11 +2975,26 @@ function renderInventory() {
         g.inner ? el('span', { className: 'tag', style: 'margin-left: 4px', textContent: t('inventory.innerLoop') }) : null);
     });
   };
-  const loops = inv.loops.filter(l => !only || l.direct.some(kept) || l.through_calls.some(c => kept(c.operation)));
-  const symbols = inv.symbols.filter(s => s.operations.some(kept));
   const names = new Map(inv.symbols.map(s => [s.symbol, s.name]));
+  // The words a finding is searched by: names, paths and written texts, steps included.
+  const terms = inventoryTerms($('#inventorySearch').value);
+  const found = words => { const hay = fold(words.join(' ')); return terms.every(term => term.any.some(w => hay.includes(w))); };
+  const opWords = id => { const o = ops.get(id); return o ? [o.text, o.symbol_name, o.path, o.operation] : []; };
+  const loopWords = l => [l.symbol_name, l.path, l.head, ...l.direct.flatMap(opWords), ...l.through_calls.flatMap(c => [...c.steps.map(s => s.to_name), ...opWords(c.operation)]),
+    ...l.loops_through_calls.flatMap(c => [c.head, ...c.steps.map(s => s.to_name)])];
+  const loops = inv.loops.filter(l => (!only || l.direct.some(kept) || l.through_calls.some(c => kept(c.operation))) && found(loopWords(l)));
+  const symbols = inv.symbols.filter(s => s.operations.some(kept) && found([s.name, s.path, ...s.operations.flatMap(opWords), ...s.calls.map(c => names.get(c) ?? '')]));
+  $('#inventoryTerms').replaceChildren(...(terms.length ? [t('inventory.terms', { terms: terms.map(term => term.any.length > 1 ? `${term.word} → ${term.any.slice(1).join(', ')}` : t('inventory.noSynonym', { word: term.word })).join(' · ') })] : []));
   const related = (label, ids) => ids.length ? el('div', { className: 'muted', style: 'font-size: 12px' }, label,
     ...ids.flatMap((id, k) => [k ? ', ' : '', goTo(id, names.get(id) ?? id)])) : null;
+  // One compact row per finding: what it is and how much it holds; the lines open on demand.
+  const counts = l => [
+    l.through_calls.length ? t('inventory.countChains', { n: new Set(l.through_calls.filter(c => kept(c.operation)).map(c => c.operation)).size }) : '',
+    l.direct.filter(kept).length ? t('inventory.countDirect', { n: l.direct.filter(kept).length }) : '',
+    l.loops_through_calls.length ? t('inventory.countLoops', { n: l.loops_through_calls.length }) : '',
+    l.repeated_calls.length ? t('inventory.countRepeated', { n: l.repeated_calls.length }) : '',
+  ].filter(Boolean).join(' · ');
+  const row = (summary, ...detail) => el('li', {}, el('details', { className: 'finding' }, el('summary', {}, ...summary), ...detail));
   $('#inventoryCount').textContent = `(${inv.operations.length})`;
   box.replaceChildren(
     el('p', { className: 'muted', textContent: t('inventory.summary', { ops: inv.operations.length, symbols: inv.symbols.length, loops: inv.loops.length,
@@ -2952,10 +3002,11 @@ function renderInventory() {
     el('p', { className: 'muted', style: 'font-size: 12px', textContent: t('inventory.rules', { builtin: inv.rules.filter(r => r.source === 'builtin').length,
       project: inv.rules.filter(r => r.source === 'project').length, profile: inventory.profile }) }),
     el('h3', { textContent: `${t('inventory.loops')} (${loops.length})` }),
-    loops.length ? el('ol', { className: 'claims' }, ...loops.map(l => el('li', {},
+    loops.length ? el('ol', { className: 'claims' }, ...loops.map(l => row([
       investigateButton(l.occurrence), goTo(l.symbol, l.symbol_name), where(l.path, l.line, l.end_line), el('code', { textContent: flat(l.head).slice(0, 100) }),
       l.nesting ? el('span', { className: 'tag', style: 'margin-left: 4px', textContent: t('inventory.nesting', { n: l.nesting }) }) : null,
       l.inner_loops ? el('span', { className: 'tag', style: 'margin-left: 4px', textContent: t('inventory.inner', { n: l.inner_loops }) }) : null,
+      el('div', { className: 'counts', textContent: counts(l) })],
       ...l.direct.filter(kept).map(id => opLine(ops.get(id), t('inventory.direct'))),
       ...chainLines(l.through_calls),
       ...l.loops_through_calls.map(c => el('div', { style: 'font-size: 12px' }, `${t('inventory.loopChain')}: `,
@@ -2964,12 +3015,15 @@ function renderInventory() {
       ...l.repeated_calls.map(r => el('div', { className: 'muted', style: 'font-size: 12px', textContent: t('inventory.repeated', { name: r.name, n: r.lines.length, lines: r.lines.join(', ') }) })),
       ...l.unfollowed.map(u => el('div', { className: 'muted', style: 'font-size: 12px', textContent: t('inventory.unfollowed', { text: flat(u.text).slice(0, 80), line: u.line, n: u.candidates }) })))))
       : el('p', { className: 'muted', textContent: t('inventory.none') }),
-    el('h3', { textContent: `${t('inventory.symbols')} (${symbols.length})` }),
-    symbols.length ? el('ol', { className: 'claims' }, ...symbols.map(s => el('li', {},
+    // The loops are where to start; the operations by declaration open on demand (or with a search).
+    el('details', { open: terms.length > 0 }, el('summary', { style: 'cursor: pointer' }, el('h3', { style: 'display: inline', textContent: `${t('inventory.symbols')} (${symbols.length})` })),
+    symbols.length ? el('ol', { className: 'claims' }, ...symbols.map(s => row([
       goTo(s.symbol, s.name), where(s.path, s.line),
+      el('div', { className: 'counts', textContent: t('inventory.countOps', { n: s.operations.filter(kept).length,
+        kinds: [...new Set(s.operations.filter(kept).map(id => ops.get(id).operation))].join(', ') }) })],
       ...s.operations.filter(kept).map(id => opLine(ops.get(id))),
       related(t('inventory.calls'), s.calls), related(t('inventory.calledBy'), s.called_by))))
-      : el('p', { className: 'muted', textContent: t('inventory.none') }),
+      : el('p', { className: 'muted', textContent: t('inventory.none') })),
     el('p', { className: 'muted', style: 'font-size: 11px', textContent: inv.limits.join(' ') }));
 }
 
