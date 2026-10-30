@@ -1101,8 +1101,9 @@ const STRINGS = {
   'investigate.direct': ['no próprio laço: {op}', 'in the loop itself: {op}'],
   'investigate.chain': ['pela cadeia {steps} → {op}', 'through {steps} → {op}'],
   'investigate.loopChain': ['pela cadeia {steps} → o laço {head} ({where})', 'through {steps} → the loop {head} ({where})'],
-  'investigate.loopQuestion': ['O laço {head} de {symbol} ({where}) repete o que está dentro dele a cada volta. O inventário encontrou, pela estrutura do código:\n{found}\nSiga cada chamada nas declarações entregues e diga, citando as linhas, o que roda uma vez por volta do laço e o que roda uma vez só.',
-    'The loop {head} of {symbol} ({where}) repeats what is inside it on every pass. The inventory found, from the structure of the code:\n{found}\nFollow each call in the delivered declarations and say, citing the lines, what runs once per pass of the loop and what runs only once.'],
+  'investigate.loopQuestion': ['O que acontece a cada volta do laço {head} de {symbol} ({where})? Siga cada chamada feita dentro dele nas declarações entregues e diga, citando as linhas, o que roda uma vez por volta do laço e o que roda uma vez só.',
+    'What happens on each pass of the loop {head} of {symbol} ({where})? Follow each call made inside it in the delivered declarations and say, citing the lines, what runs once per pass of the loop and what runs only once.'],
+  'investigate.found': ['O que o inventário achou (para você conferir; não vai na pergunta):', 'What the inventory found (for you to check; not sent in the question):'],
   'investigate.opQuestion': ['O que {text} faz em {symbol} ({where})? Diga, citando as linhas, o que ela lê ou escreve e em que condições roda.',
     'What does {text} do in {symbol} ({where})? Say, citing the lines, what it reads or writes and under which conditions it runs.'],
   'investigate.reason.loop': ['tem o laço da linha {line}', 'holds the loop on line {line}'],
@@ -2207,8 +2208,10 @@ function findingSummary(data) {
   return data.kind === 'loop' ? t('investigate.loopSummary', { head: oneLine(f.head).slice(0, 80), symbol: f.symbol_name, where: `${f.path}:${f.line}` })
     : t('investigate.opSummary', { text: oneLine(f.text).slice(0, 80), symbol: f.symbol_name, where: `${f.path}:${f.line}` });
 }
-// What the inventory found, as lines a model can follow: each chain to its operation, each
-// operation written in the loop itself, each loop reached through calls.
+// What the inventory found, as lines for the person: each chain to its operation, each
+// operation written in the loop itself, each loop reached through calls. They stay out of
+// the question: in the rehearsal, a model given this list repeated it (qwen) or kept to it
+// and missed what it did not name (Haiku).
 function findingLines(data) {
   const f = data.finding;
   if (data.kind !== 'loop') return [];
@@ -2224,7 +2227,7 @@ function findingLines(data) {
 function proposedQuestion(data) {
   const f = data.finding;
   return data.kind === 'loop'
-    ? t('investigate.loopQuestion', { head: oneLine(f.head).slice(0, 100), symbol: f.symbol_name, where: `${f.path}:${f.line}`, found: findingLines(data).map(l => `- ${l}`).join('\n') })
+    ? t('investigate.loopQuestion', { head: oneLine(f.head).slice(0, 100), symbol: f.symbol_name, where: `${f.path}:${f.line}` })
     : t('investigate.opQuestion', { text: oneLine(f.text).slice(0, 100), symbol: f.symbol_name, where: `${f.path}:${f.line}` });
 }
 function reasonOf(r) {
@@ -2246,6 +2249,8 @@ function investigationView() {
       el('button', { className: 'link', textContent: t('investigate.cancel'),
         onclick: () => { investigation = null; gatheredFolded = false; $('#question').value = ''; renderGathered(); } })),
     el('div', { style: 'font-size: 12px', textContent: `${findingSummary(investigation)} · ${t('investigate.ticked', { n: investigation.ticked.size, total: investigation.items.length })}` }),
+    gatheredFolded || investigation.kind !== 'loop' ? '' : el('div', { className: 'muted', style: 'font-size: 12px; margin-top: 4px' },
+      t('investigate.found'), el('ul', { style: 'margin: 2px 0 0 16px; padding: 0' }, ...findingLines(investigation).map(l => el('li', { textContent: l })))),
     gatheredFolded ? '' : el('div', { id: 'suggestion' }, ...rows,
       investigation.truncated ? el('div', { className: 'muted', textContent: t('envelope.truncated', { n: 16 }) }) : null));
 }
