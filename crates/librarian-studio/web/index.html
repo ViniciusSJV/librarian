@@ -183,6 +183,10 @@
   .chip.env { display: inline-flex; gap: 2px; align-items: center; padding: 1px 2px 1px 8px; font-size: 12px; }
   .chip.env button, button.link { padding: 0 5px; border: 0; background: transparent; color: var(--text-secondary); }
   button.link { text-decoration: underline; font-size: 12px; }
+  /* Suggested envelope: one row per item, with why it is suggested. */
+  #suggestion { margin-top: 8px; max-height: 320px; overflow: auto; border-top: 1px solid var(--border, #444); padding-top: 6px; }
+  #suggestion label.item { display: flex; gap: 6px; align-items: flex-start; font-size: 12px; margin: 3px 0; }
+  #suggestion .why { color: var(--text-secondary); }
   /* Legend: a small panel in the map corner. */
   #legendHud { position: absolute; left: 12px; bottom: 12px; max-width: 290px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 8px;
     background: color-mix(in srgb, var(--surface-1) 92%, transparent); }
@@ -768,10 +772,36 @@ const STRINGS = {
   'gather.title': ['Declarações juntadas ({n})', 'Gathered declarations ({n})'],
   'gather.ask': ['Perguntar com estas declarações', 'Ask with these declarations'],
   'gather.clear': ['Limpar', 'Clear'],
+  'gather.fold': ['Recolher', 'Collapse'],
+  'gather.unfold': ['Mostrar', 'Expand'],
   'gather.askTitle': ['Pergunta sobre as declarações juntadas', 'Question about the gathered declarations'],
   'gather.askMessage': ['Uma pergunta só, com estas {n} declarações como evidência, nesta ordem:\n{list}', 'One question, with these {n} declarations as evidence, in this order:\n{list}'],
   'gather.turnTag': ['juntadas ({n})', 'gathered ({n})'],
-  'help.gatheredTurn': ['Esta pergunta foi montada à mão: as declarações foram juntadas uma a uma por você, sem busca e sem nada acrescentado.', 'This question was built by hand: you gathered the declarations one by one, with no search and nothing added.'],
+  'gather.turnFacts': ['com {n} fato(s) aprovado(s)', 'with {n} reviewed fact(s)'],
+  'gather.header': ['topo de {path}', 'head of {path}'],
+  'gather.withFacts': ['Levar os fatos aprovados sobre estas declarações', 'Carry the reviewed facts about these declarations'],
+  'help.gatherFacts': ['Ligado, a pergunta leva também os fatos vigentes do acervo sobre as declarações do envelope, como na cadeia: eles orientam a resposta, mas não podem ser citados.',
+    'On, the question also carries the current reviewed facts about the envelope\'s declarations, as a chain step does: they guide the answer but cannot be cited.'],
+  'envelope.suggest': ['Sugerir envelope', 'Suggest envelope'],
+  'help.envelopeSuggest': ['O bibliotecário sugere o que uma mudança nestas declarações provavelmente precisa ver: o tipo dono e quem escreve os campos que elas leem, o que elas chamam e o tipo que isso devolve, quem as chama, os tipos que elas escrevem e o topo do arquivo, onde ficam os imports. Cada item vem com o motivo e a linha. É tudo pelo nome escrito: o que não está escrito pelo nome não aparece, e homônimos e testes ficam de fora. Você marca o que entra.',
+    'The librarian suggests what a change to these declarations is likely to need in view: the owner type and whoever writes the fields they read, what they call and the type that returns, who calls them, the types they write and the head of the file, where imports live. Each item comes with why and the line. All by written names: what is not written by name does not show, and homonyms and tests are left out. You tick what goes in.'],
+  'envelope.title': ['Sugestão ({n})', 'Suggestion ({n})'],
+  'envelope.use': ['Juntar os marcados', 'Gather the ticked ones'],
+  'envelope.close': ['Fechar', 'Close'],
+  'envelope.truncated': ['Mais itens ficaram de fora (limite de {n}).', 'More items were left out (limit of {n}).'],
+  'envelope.headerName': ['topo do arquivo', 'head of the file'],
+  'envelope.facts': ['{n} fato(s)', '{n} fact(s)'],
+  'why.chosen': ['no envelope', 'in the envelope'],
+  'why.owner_type': ['tipo dono de {t}; campos que ele lê: {fields}', 'owner type of {t}; fields it reads: {fields}'],
+  'why.field_writer': ['escreve {fields}, que {t} lê ({lines})', 'writes {fields}, which {t} reads ({lines})'],
+  'why.called': ['{t} chama ({lines})', '{t} calls it ({lines})'],
+  'why.return_type': ['tipo que {t} devolve ({lines})', 'type {t} returns ({lines})'],
+  'why.called_owner': ['tipo de {t}, que é chamado', 'type of {t}, which is called'],
+  'why.caller': ['chama {t} ({lines})', 'calls {t} ({lines})'],
+  'why.type_reference': ['{t} escreve este tipo ({lines})', '{t} writes this type ({lines})'],
+  'why.header': ['topo do arquivo de {t}: imports', 'head of the file of {t}: imports'],
+  'why.lines': ['linha {lines}', 'line {lines}'],
+  'help.gatheredTurn': ['Esta pergunta foi montada no envelope: cada declaração entrou porque você a juntou, à mão ou marcando a sugestão do bibliotecário. Nada foi buscado nem acrescentado depois.', 'This question was built in the envelope: each declaration is there because you gathered it, by hand or by ticking the librarian\x27s suggestion. Nothing was searched or added afterwards.'],
   'help.calls': ['Abre a vista Caminho a partir deste ponto, para a frente: o que ele chama e o que esses chamam, em camadas. Uma chamada com homônimos fica tracejada e o caminho para ali; clique nela para escolher o candidato certo e seguir.',
     'Opens the Path view from this point, forward: what it calls and what those call, in layers. A call with homonyms is dashed and the path stops there; click it to choose the right candidate and go on.'],
   'help.pathCalls': ['O que este ponto chama, em camadas da esquerda para a direita, pelo nome escrito em cada chamada. Linha cheia: a chamada foi seguida porque o nome só combina com uma declaração, porque é uma chamada do próprio receptor (self.f()) e só um homônimo está na mesma classe ou impl, ou porque você escolheu. Linha tracejada: o nome combina com vários homônimos e o caminho para ali até você escolher qual seguir. É um mapa pelo nome, sem compilador: não prova que aquela chamada acontece nem quantas vezes.',
@@ -2023,7 +2053,7 @@ async function ask() {
     await saveSettings();
     say($('#chatNote'), t('chat.preparing'));
     const turn = gathered.length
-      ? await api('POST', '/api/gathered-question', { key: studio.project.key, run: studio.run, question, nodes: gathered })
+      ? await api('POST', '/api/gathered-question', { key: studio.project.key, run: studio.run, question, nodes: gathered, with_facts: gatherFacts })
       : await api('POST', '/api/ask', { key: studio.project.key, run: studio.run, question });
     studio.turns.push(turn);
     $('#question').value = '';
@@ -2065,6 +2095,13 @@ async function resendTurn(turn, button) {
 // P4: the envelope, declarations gathered one by one for a single question; reset with the run.
 // It lives over the composer: with an envelope, the composer asks over exactly these declarations.
 let gathered = [];
+// P5: whether the gathered question carries the reviewed facts, and the open suggestion.
+let gatherFacts = false, suggestion = null;
+// The envelope can be folded to its title line, so it does not take the answers' room.
+let gatheredFolded = false;
+const HEADER = 'header:';
+const envelopeLabel = id => id.startsWith(HEADER) ? t('gather.header', { path: id.slice(HEADER.length) })
+  : (state.nodes[state.index.get(id)]?.label ?? id);
 function toggleGathered(id) {
   gathered = gathered.includes(id) ? gathered.filter(g => g !== id) : [...gathered, id];
   renderGathered();
@@ -2074,20 +2111,73 @@ function renderGathered() {
   const box = $('#gathered');
   box.hidden = !gathered.length;
   refreshComposer();
-  if (!gathered.length) { box.replaceChildren(); return; }
-  const label = id => state.nodes[state.index.get(id)]?.label ?? id;
+  // An emptied envelope starts over open, so the next one shows its actions.
+  if (!gathered.length) { suggestion = null; gatheredFolded = false; box.replaceChildren(); return; }
+  const declarations = gathered.filter(id => !id.startsWith(HEADER));
+  const suggest = el('button', { textContent: t('envelope.suggest'), disabled: !declarations.length, onclick: event => suggestEnvelope(event.target) });
+  const facts = el('input', { type: 'checkbox', checked: gatherFacts, onchange: event => { gatherFacts = event.target.checked; } });
+  const head = el('div', { className: 'row', style: 'gap: 4px' },
+    el('strong', { textContent: t('gather.title', { n: gathered.length }) }), helpButton(t('help.gather')),
+    el('button', { className: 'link', style: 'margin-left: auto', textContent: t(gatheredFolded ? 'gather.unfold' : 'gather.fold'),
+      onclick: () => { gatheredFolded = !gatheredFolded; renderGathered(); } }),
+    el('button', { className: 'link', textContent: t('gather.clear'), onclick: () => { gathered = []; renderGathered(); inspect(); } }));
+  if (gatheredFolded) { box.replaceChildren(head); return; }
   box.replaceChildren(
-    el('div', { className: 'row', style: 'gap: 4px' },
-      el('strong', { textContent: t('gather.title', { n: gathered.length }) }), helpButton(t('help.gather')),
-      el('button', { className: 'link', style: 'margin-left: auto', textContent: t('gather.clear'), onclick: () => { gathered = []; renderGathered(); inspect(); } })),
-    el('div', {}, ...gathered.map(id => el('span', { className: 'chip env', title: label(id) },
-      el('span', { className: 'mono', textContent: label(id).replace(/^impl (.+ for )?/, '') }),
+    head,
+    el('div', {}, ...gathered.map(id => el('span', { className: 'chip env', title: envelopeLabel(id) },
+      el('span', { className: 'mono', textContent: envelopeLabel(id).replace(/^impl (.+ for )?/, '') }),
       el('button', { textContent: '×', title: t('gather.remove'), onclick: () => toggleGathered(id) })))),
+    el('div', { className: 'row', style: 'gap: 6px; margin-top: 6px' }, suggest, helpButton(t('help.envelopeSuggest')),
+      el('label', { className: 'check', style: 'margin: 0' }, facts, el('span', { textContent: t('gather.withFacts') })), helpButton(t('help.gatherFacts'))),
+    // replaceChildren writes a null as text, unlike el(): the closed suggestion is left out.
+    ...(suggestion ? [suggestionView()] : []),
     el('div', { className: 'muted', style: 'font-size: 12px', textContent: t('gather.hint') }));
 }
+// The declarations in the envelope are the seeds; the suggestion lists every item with why.
+async function suggestEnvelope(button) {
+  const nodes = gathered.filter(id => !id.startsWith(HEADER));
+  await busy([button], $('#chatNote'), async () => {
+    suggestion = await api('POST', '/api/envelope/suggest', { key: studio.project.key, run: studio.run, nodes });
+    suggestion.ticked = new Set(suggestion.items.map(i => i.id));
+    gatheredFolded = false;
+    renderGathered();
+  });
+}
+function reasonText(r) {
+  const vars = { t: r.for_target.replace(/^impl (.+ for )?/, ''), fields: r.fields?.length ? r.fields.join(', ') : '—',
+    lines: r.lines?.length ? t('why.lines', { lines: r.lines.join(', ') }) : '' };
+  return t('why.' + r.code, vars).replace(/ \(\)$/, '');
+}
+function suggestionView() {
+  const rows = suggestion.items.map(item => {
+    const box = el('input', { type: 'checkbox', checked: suggestion.ticked.has(item.id),
+      onchange: event => event.target.checked ? suggestion.ticked.add(item.id) : suggestion.ticked.delete(item.id) });
+    const name = item.kind === 'header' ? t('envelope.headerName') : item.name.replace(/^impl (.+ for )?/, '');
+    return el('label', { className: 'item' }, box,
+      el('span', {},
+        el('span', { className: 'mono', textContent: name }), ` · ${item.path}:${item.start_line}–${item.end_line}`,
+        item.facts?.length ? el('span', { className: 'tag', style: 'margin-left: 4px', textContent: t('envelope.facts', { n: item.facts.length }) }) : null,
+        el('div', { className: 'why', textContent: item.reasons.map(reasonText).join(' · ') })));
+  });
+  return el('div', { id: 'suggestion' },
+    el('div', { className: 'row', style: 'gap: 6px' }, el('strong', { textContent: t('envelope.title', { n: suggestion.items.length }) }),
+      el('button', { style: 'margin-left: auto', textContent: t('envelope.use'), onclick: () => {
+        // The envelope's order: what was there first, then the ticked suggestions in their order.
+        const ticked = suggestion.items.map(i => i.id).filter(id => suggestion.ticked.has(id));
+        gathered = [...gathered.filter(id => ticked.includes(id)), ...ticked.filter(id => !gathered.includes(id))];
+        suggestion = null;
+        renderGathered();
+        inspect();
+      } }),
+      el('button', { className: 'link', textContent: t('envelope.close'), onclick: () => { suggestion = null; renderGathered(); } })),
+    ...rows,
+    suggestion.truncated ? el('div', { className: 'muted', textContent: t('envelope.truncated', { n: 12 }) }) : null);
+}
 function gatheredTurnView(g) {
+  const facts = g.reviewed_facts?.length ?? 0;
   return el('div', { className: 'muted', style: 'margin-top: 6px' },
     el('span', { className: 'tag', textContent: t('gather.turnTag', { n: g.nodes.length }) }),
+    facts ? el('span', { className: 'tag', style: 'margin-left: 4px', textContent: t('gather.turnFacts', { n: facts }) }) : null,
     helpButton(t('help.gatheredTurn')));
 }
 

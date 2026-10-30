@@ -64,6 +64,11 @@ pub struct Request {
     /// the report says so. Absent, the request is the same as before.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub gathered: bool,
+    /// Gathered step (P5): the heads of these files (the lines before the first declaration,
+    /// where imports live) as evidence after the declarations. Absent, the request is the same
+    /// as before.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub headers: Vec<String>,
 }
 
 /// A declaration as a checked claim locates it.
@@ -203,6 +208,33 @@ pub fn prepare(catalog: &Catalog, request: &Request) -> Result<Prepared> {
             "end_line": chunk.end_line,
         }));
     }
+    // A file's head is a range of lines, not a declaration: it follows the declarations.
+    if !request.headers.is_empty() && !request.gathered {
+        return Err("File heads are carried only by a gathered step".into());
+    }
+    for (n, path) in request.headers.iter().enumerate() {
+        if request.headers[..n].contains(path) {
+            return Err(format!("{path}: head listed twice").into());
+        }
+        let (start, end) = crate::envelope::header(catalog, path).ok_or_else(|| format!("{path}: no lines before its first declaration"))?;
+        let source = catalog.source_by_path(path).ok_or_else(|| format!("{path}: not in the edition"))?;
+        let source_key = match sources.iter().find(|(_, s)| s.id == source.id) {
+            Some((key, _)) => key.clone(),
+            None => {
+                let key = format!("S{}", sources.len() + 1);
+                sources.push((key.clone(), source));
+                key
+            }
+        };
+        facts.push(json!({
+            "id": format!("E{}", chosen + n + 1),
+            "statement": format!("Topo de {path}, linhas {start}–{end}: as linhas antes da primeira declaração do arquivo (imports e definições do módulo)."),
+            "authorship": format!("{profile}: registro estrutural da edition verificada"),
+            "source_id": source_key,
+            "line": start,
+            "end_line": end,
+        }));
+    }
     for fact in &request.reviewed_facts {
         let inside = report.hits.iter().take(chosen).any(|h| {
             h.path == fact.path && h.start_line <= fact.line && fact.end_line <= h.end_line
@@ -275,6 +307,12 @@ pub fn prepare(catalog: &Catalog, request: &Request) -> Result<Prepared> {
                 .into(),
         );
     }
+    if !request.headers.is_empty() {
+        unknowns.push(
+            "Topos de arquivo são faixas de linhas antes da primeira declaração, não declarações: servem para ver e mudar imports."
+                .into(),
+        );
+    }
     if !catalog.diagnostics.is_empty() {
         unknowns.push(format!(
             "Edition com {} diagnósticos: extração incompleta em algumas fontes.",
@@ -287,7 +325,7 @@ pub fn prepare(catalog: &Catalog, request: &Request) -> Result<Prepared> {
         "sources": sources,
         "facts": facts,
     }))?;
-    let mut fact_ids: Vec<String> = (1..=chosen).map(|i| format!("E{i}")).collect();
+    let mut fact_ids: Vec<String> = (1..=chosen + request.headers.len()).map(|i| format!("E{i}")).collect();
     fact_ids.extend(request.reviewed_facts.iter().map(|f| f.id.clone()));
     let fact_ids: Vec<&str> = fact_ids.iter().map(String::as_str).collect();
     let format = if request.numbered_lines {

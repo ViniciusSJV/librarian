@@ -229,6 +229,20 @@ pub fn owner_context(catalog: &Catalog, graph: &Graph, targets: &[String]) -> Re
     Ok(context)
 }
 
+/// P5: the owner type of a method, by its container (the container itself, or the only type its
+/// written name matches), with where that name is written. None for other declarations.
+pub fn owner_type(catalog: &Catalog, graph: &Graph, method: &str) -> Option<(String, Vec<Evidence>)> {
+    if !catalog.registry.owner_context {
+        return None;
+    }
+    let symbol = catalog.symbols.get(method)?;
+    let syntax = catalog.registry.owner_syntax(&catalog.sources[&symbol.source_id].language)?;
+    if !syntax.method_kinds.contains(&symbol.kind.as_str()) {
+        return None;
+    }
+    owner_by_container(catalog, &Index::new(graph), syntax, method).map(|o| (o.id, o.evidence))
+}
+
 fn add(context: &mut OwnerContext, seen: &mut BTreeSet<String>, catalog: &Catalog, mut added: Added) {
     if !seen.insert(added.symbol_id.clone()) {
         return;

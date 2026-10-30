@@ -3,6 +3,7 @@
 //! runs/<run>/turns/<NN>/{question.json, search.json, prepare-request.json, prepared/, claims/, sends/}.
 use librarian_llm_engine::claims::{self, compare::compare, Claim, Policy};
 use librarian_ingest::{
+    envelope,
     graph::v2,
     hash,
     prepare::{self, Request, ReviewedFact, Target},
@@ -317,17 +318,64 @@ impl Store {
     }
 
     /// P4: one question whose evidence is the declarations the person gathered one by one (in
-    /// the order gathered), with nothing searched and nothing added; the step says so.
-    pub fn ask_gathered(&self, key: &str, run: &str, question: &str, nodes: &[String]) -> Result<Value> {
+    /// the order gathered), with nothing searched and nothing added; the step says so. P5: the
+    /// envelope may hold file heads (`header:<path>`), and, with `with_facts`, the question also
+    /// carries the current reviewed facts about the gathered declarations.
+    pub fn ask_gathered(&self, key: &str, run: &str, question: &str, nodes: &[String], with_facts: bool) -> Result<Value> {
         if nodes.is_empty() || nodes.len() > MAX_GATHERED {
             return Err(format!("Junte de 1 a {MAX_GATHERED} declarações").into());
         }
         let settings = self.settings(key)?;
         let catalog = Catalog::load(&self.edition(key, run)?)?;
-        let targets = nodes.iter().map(|id| target_of(&catalog, catalog.symbols(), id)).collect::<Result<Vec<_>>>()?;
-        let mut request = request(&settings, question, Some(targets), vec![], false);
+        let headers: Vec<String> = nodes.iter().filter_map(|id| id.strip_prefix(envelope::HEADER_PREFIX).map(str::to_owned)).collect();
+        let targets = nodes
+            .iter()
+            .filter(|id| !id.starts_with(envelope::HEADER_PREFIX))
+            .map(|id| target_of(&catalog, catalog.symbols(), id))
+            .collect::<Result<Vec<_>>>()?;
+        if targets.is_empty() {
+            return Err("Junte ao menos uma declaração além dos topos de arquivo".into());
+        }
+        let reviewed = if with_facts { self.reviewed_about(key, run, &targets)? } else { vec![] };
+        let gathered = json!({ "nodes": nodes, "with_facts": with_facts, "reviewed_facts": reviewed.iter().map(|f| &f.id).collect::<Vec<_>>() });
+        let mut request = request(&settings, question, Some(targets), reviewed, false);
         request.gathered = true;
-        self.new_turn(key, run, &settings, &catalog, question, None, request, Some(("gathered", json!({ "nodes": nodes }))))
+        request.headers = headers;
+        self.new_turn(key, run, &settings, &catalog, question, None, request, Some(("gathered", gathered)))
+    }
+
+    /// P5: the envelope suggested for the chosen declarations, each item with why it is there,
+    /// and the current reviewed facts about each declaration.
+    pub fn suggest_envelope(&self, key: &str, run: &str, nodes: &[String]) -> Result<Value> {
+        let catalog = Catalog::load(&self.edition(key, run)?)?;
+        let suggestion = envelope::suggest(&catalog, nodes)?;
+        let facts = self.facts(key, run)?;
+        let current: Vec<&Value> = facts["facts"].as_array().into_iter().flatten().filter(|f| f["status"] == "current").collect();
+        let mut out = serde_json::to_value(&suggestion)?;
+        for (item, value) in suggestion.items.iter().zip(out["items"].as_array_mut().into_iter().flatten()) {
+            let line = (!item.id.starts_with(envelope::HEADER_PREFIX)).then(|| target_of(&catalog, catalog.symbols(), &item.id)).transpose()?;
+            let ids: Vec<&Value> = current
+                .iter()
+                .filter(|f| line.as_ref().is_some_and(|t| f["path"] == t.path && f["symbol_name"] == t.symbol_name && f["declaration_line"] == t.declaration_line))
+                .map(|f| &f["id"])
+                .collect();
+            value["facts"] = json!(ids);
+        }
+        Ok(out)
+    }
+
+    /// The current reviewed facts about these declarations, as a question carries them.
+    fn reviewed_about(&self, key: &str, run: &str, targets: &[Target]) -> Result<Vec<ReviewedFact>> {
+        let facts = self.facts(key, run)?;
+        Ok(facts["facts"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter(|f| f["status"] == "current")
+            .filter(|f| targets.iter().any(|t| f["path"] == t.path && f["symbol_name"] == t.symbol_name && f["declaration_line"] == t.declaration_line))
+            .map(|f| serde_json::from_value(json!({ "id": f["id"], "statement": f["statement"], "authorship": f["authorship"],
+                "path": f["path"], "line": f["line"], "end_line": f["end_line"], "citations": f["citations"] })))
+            .collect::<std::result::Result<_, _>>()?)
     }
 
     /// Chain step: a new question whose evidence is the declarations located by the answers to
@@ -372,16 +420,7 @@ impl Store {
         if targets.is_empty() {
             return Err(format!("Nenhuma resposta da pergunta {from} passa na conferência mecânica com location; nada para continuar").into());
         }
-        let facts = self.facts(key, run)?;
-        let reviewed: Vec<ReviewedFact> = facts["facts"]
-            .as_array()
-            .into_iter()
-            .flatten()
-            .filter(|f| f["status"] == "current")
-            .filter(|f| targets.iter().any(|t| f["path"] == t.path && f["symbol_name"] == t.symbol_name && f["declaration_line"] == t.declaration_line))
-            .map(|f| serde_json::from_value(json!({ "id": f["id"], "statement": f["statement"], "authorship": f["authorship"],
-                "path": f["path"], "line": f["line"], "end_line": f["end_line"], "citations": f["citations"] })))
-            .collect::<std::result::Result<_, _>>()?;
+        let reviewed = self.reviewed_about(key, run, &targets)?;
         // G6d: on editions that record impl types and field writes, a method target also brings
         // its owner type and the declarations that write the fields it reads.
         let owner_context = catalog.owner_context();
@@ -759,6 +798,7 @@ fn request(settings: &Settings, question: &str, targets: Option<Vec<Target>>, re
         // recorded question keeps its request as it was written, so its bytes still verify.
         callees: owner_context,
         gathered: false,
+        headers: vec![],
     }
 }
 
@@ -1443,7 +1483,7 @@ mod tests {
         assert!(store.ask_path(&key, &run, "x", &["symbol:nada".into()], &nodes[0], &chosen).is_err());
 
         // Gathered: one question with every declaration the person gathered, in that order.
-        let gathered = store.ask_gathered(&key, &run, "Como guardar o valor?", &[nodes[1].clone(), nodes[0].clone()]).unwrap();
+        let gathered = store.ask_gathered(&key, &run, "Como guardar o valor?", &[nodes[1].clone(), nodes[0].clone()], false).unwrap();
         assert_eq!(gathered["prepare_error"], Value::Null, "{}", gathered["prepare_error"]);
         assert_eq!(gathered["search"]["status"], "gathered");
         assert!(gathered["search"]["limits"][0].as_str().unwrap().starts_with("Gathered step"));
@@ -1452,7 +1492,18 @@ mod tests {
         assert_eq!(gathered["gathered"]["nodes"], json!([nodes[1], nodes[0]]));
         assert_eq!(gathered["request"]["gathered"], true);
         assert_eq!(gathered["request"].get("picked"), None);
-        assert!(store.ask_gathered(&key, &run, "x", &[]).is_err());
+        assert!(store.ask_gathered(&key, &run, "x", &[], false).is_err());
+
+        // P5: the suggested envelope lists each declaration with why, and the facts about it.
+        let suggested = store.suggest_envelope(&key, &run, &[nodes[0].clone()]).unwrap();
+        assert_eq!(suggested["items"][0]["id"], json!(nodes[0]));
+        assert_eq!(suggested["items"][0]["reasons"][0]["code"], "chosen");
+        assert!(suggested["items"].as_array().unwrap().iter().all(|i| i["facts"].is_array()));
+        // A file head needs a declaration beside it, and lines before the file's first declaration.
+        assert!(store.ask_gathered(&key, &run, "x", &["header:src/lib.rs".into()], false).is_err());
+        let headless = store.ask_gathered(&key, &run, "x", &[nodes[0].clone(), "header:src/lib.rs".into()], true).unwrap();
+        assert!(headless["prepare_error"].as_str().unwrap().contains("no lines before"));
+        assert_eq!(headless["gathered"]["with_facts"], true);
     }
 
     #[test]

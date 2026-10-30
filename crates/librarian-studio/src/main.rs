@@ -141,7 +141,14 @@ fn route(app: &App, req: &Request) -> Result<Response> {
             // P4: one question over the declarations the person gathered one by one.
             let body = req.json()?;
             let nodes: Vec<String> = serde_json::from_value(body["nodes"].clone())?;
-            ok(store.ask_gathered(&field(&body, "key")?, &field(&body, "run")?, &field(&body, "question")?, &nodes)?)
+            let with_facts = body["with_facts"].as_bool().unwrap_or(false);
+            ok(store.ask_gathered(&field(&body, "key")?, &field(&body, "run")?, &field(&body, "question")?, &nodes, with_facts)?)
+        }
+        ("POST", "/api/envelope/suggest") => {
+            // P5: what a change to the chosen declarations is likely to need in view, with why.
+            let body = req.json()?;
+            let nodes: Vec<String> = serde_json::from_value(body["nodes"].clone())?;
+            ok(store.suggest_envelope(&field(&body, "key")?, &field(&body, "run")?, &nodes)?)
         }
         ("GET", "/api/graph") => Ok(Response {
             status: 200,
