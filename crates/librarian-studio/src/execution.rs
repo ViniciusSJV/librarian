@@ -229,6 +229,11 @@ impl Store {
                 return Err(format!("git worktree falhou: {}", String::from_utf8_lossy(&output.stderr).trim()).into());
             }
         }
+        // The project may be a folder inside its repository (`backend/`): the copy is the whole
+        // worktree, and the project is the same folder in it. Sources and diffs are relative to it.
+        let prefix = git(root, &["rev-parse", "--show-prefix"])?;
+        let prefix = String::from_utf8_lossy(&prefix.stdout).trim().trim_end_matches('/').to_owned();
+        let project = if prefix.is_empty() { dir.clone() } else { dir.join(&prefix) };
         // The applied diff is kept beside the copy; a copy holds one change, applied once.
         let mut touched = vec![];
         if let Some((_, diff)) = change {
@@ -239,7 +244,17 @@ impl Store {
                 Ok(_) => return Err("Esta cópia já tem outra mudança aplicada".into()),
                 Err(_) => {
                     fs::write(&applied, diff)?;
-                    let output = git(&dir, &["apply", "--whitespace=nowarn", &display(&applied)])?;
+                    let directory = format!("--directory={prefix}");
+                    // Context never leaves an evidence block, so a change on a block's last line
+                    // has none after it; --unidiff-zero keeps git from reading that as the end
+                    // of the file. The context lines that are there still have to match.
+                    let mut args = vec!["apply", "--whitespace=nowarn", "--unidiff-zero"];
+                    if !prefix.is_empty() {
+                        args.push(&directory);
+                    }
+                    let applied_path = display(&applied);
+                    args.push(&applied_path);
+                    let output = git(&dir, &args)?;
                     if !output.status.success() {
                         let _ = fs::remove_file(&applied);
                         let _ = git(root, &["worktree", "remove", "--force", &display(&dir)]);
@@ -252,7 +267,7 @@ impl Store {
         // (`core.autocrlf`); such a file is the same text, and is counted apart, not hidden.
         let (mut differ, mut line_endings) = (vec![], vec![]);
         for s in catalog.sources().values().filter(|s| !touched.contains(&s.path)) {
-            let copied = fs::read(dir.join(&s.path)).ok();
+            let copied = fs::read(project.join(&s.path)).ok();
             if copied.as_deref().is_some_and(|b| hash(b) == s.sha256) {
                 continue;
             }
@@ -266,7 +281,7 @@ impl Store {
             return Err(format!("A cópia no commit {} difere da edition em {} arquivo(s), por exemplo {}; a edition foi gerada com mudanças sem commit. Faça commit e gere o grafo de novo.",
                 &head[..head.len().min(12)], differ.len(), differ.iter().take(3).copied().collect::<Vec<_>>().join(", ")).into());
         }
-        Ok(Copy { dir, head, verified: catalog.sources().len() - touched.len(), line_endings, touched })
+        Ok(Copy { dir: project, head, verified: catalog.sources().len() - touched.len(), line_endings, touched })
     }
 }
 
@@ -330,6 +345,7 @@ fn lf(bytes: &[u8]) -> Vec<u8> {
 }
 
 struct Copy {
+    /// The project's folder inside the copy, where the command runs.
     dir: PathBuf,
     /// Sources whose copy differs from the edition only in line endings.
     line_endings: Vec<String>,

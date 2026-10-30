@@ -1398,7 +1398,7 @@ mod tests {
         // The exported file is one `git apply` accepts against the project, when git is here.
         let send = store.turn_dir(&key, &run, "01").unwrap().join("sends");
         let file = fs::read_dir(&send).unwrap().filter_map(|e| e.ok()).map(|e| e.path().join("patch-H1.diff")).find(|p| p.exists()).unwrap();
-        if let Ok(out) = std::process::Command::new("git").arg("apply").arg("--check").arg(&file).current_dir(scratch.0.join("project")).output() {
+        if let Ok(out) = std::process::Command::new("git").args(["apply", "--check", "--unidiff-zero"]).arg(&file).current_dir(scratch.0.join("project")).output() {
             assert!(out.status.success(), "git apply --check: {}", String::from_utf8_lossy(&out.stderr));
         }
         // The choice is recorded with the question: editing it afterwards is refused.
@@ -1701,6 +1701,56 @@ mod tests {
         fs::write(root.join(PROFILE), outside.to_string()).unwrap();
         assert!(refusal(store.commands(&key)).contains("fora da cópia"));
         let _ = fs::remove_dir_all(Path::new(done["copy"].as_str().unwrap()).parent().unwrap());
+    }
+
+    #[test]
+    fn a_project_in_a_folder_of_its_repository_runs_in_the_same_folder_of_the_copy() {
+        // The repository is one level up: the project is its `project/` folder, as a `backend/`.
+        let scratch = project();
+        let root = scratch.0.join("project");
+        let git = |args: &[&str]| {
+            let out = std::process::Command::new("git").arg("-C").arg(&scratch.0)
+                .args(["-c", "user.name=t", "-c", "user.email=t@t"]).args(args).output().unwrap();
+            assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
+        };
+        let profile = json!({ "project_root": ".", "commands": { "probe": {
+            "argv": ["git", "log", "-1", "--format=tformat:librarian-measure answer=42 units"] } } });
+        fs::write(root.join(PROFILE), profile.to_string()).unwrap();
+        git(&["init", "-q"]);
+        git(&["config", "core.autocrlf", "false"]);
+        git(&["add", "project"]);
+        git(&["commit", "-q", "-m", "x"]);
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let key = store.open(&display(&root)).unwrap()["key"].as_str().unwrap().to_owned();
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        let sha = store.commands(&key).unwrap()["commands"][0]["sha256"].as_str().unwrap().to_owned();
+        store.approve_command(&key, "probe", &sha).unwrap();
+
+        let done = store.execute(&key, &run, "probe", None).unwrap();
+        assert_eq!(done["summary"]["succeeded"], 1, "{:#}", done["runs"]);
+        let copy = Path::new(done["copy"].as_str().unwrap()).to_path_buf();
+        assert_eq!(copy.file_name().unwrap(), "project");
+        assert!(copy.join("src/lib.rs").is_file());
+
+        // The change's paths are relative to the project, and land in the same folder of the copy.
+        let mut settings = store.settings(&key).unwrap();
+        settings.lexicon.groups = vec![vec!["raios".into(), "ray".into()], vec!["direcao".into(), "direction".into()]];
+        (settings.allow_hypothesis, settings.allow_patch) = (true, true);
+        store.save_settings(&key, &settings).unwrap();
+        let turn = store.ask(&key, &run, "Onde a câmera calcula a direção dos raios?").unwrap()["id"].as_str().unwrap().to_owned();
+        let answer = json!({"schema_version": 1, "claims": [{
+            "id": "H1", "kind": "HYPOTHESIS", "text": "Triplicar no lugar de dobrar.",
+            "citations": [{"evidence_id": "E1", "path": "src/lib.rs", "start_line": 5, "end_line": 5, "quote": "        let direction = x * 2.0;"}],
+            "premises": [], "verification_plan": "Medir antes e depois.", "location": null,
+            "edits": [{"path": "src/lib.rs", "op": "replace", "start_line": 5, "end_line": 5, "new_lines": ["        let direction = x * 3.0;"]}]}]});
+        let sent = record_answer(&store, &key, &run, &turn, "manual", &answer.to_string()).unwrap();
+        let send = Path::new(sent["directory"].as_str().unwrap()).file_name().unwrap().to_string_lossy().into_owned();
+        let change = crate::execution::ChangeRef { turn, send, claim: "H1".into() };
+        let changed = store.execute(&key, &run, "probe", Some(&change)).unwrap();
+        assert_eq!(changed["summary"]["succeeded"], 1, "{:#}", changed["runs"]);
+        let changed_copy = Path::new(changed["copy"].as_str().unwrap()).to_path_buf();
+        assert!(fs::read_to_string(changed_copy.join("src/lib.rs")).unwrap().contains("x * 3.0"));
+        let _ = fs::remove_dir_all(copy.parent().unwrap().parent().unwrap());
     }
 
     #[test]
