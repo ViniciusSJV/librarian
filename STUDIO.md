@@ -30,6 +30,18 @@ O servidor só aceita conexões da própria máquina (`127.0.0.1`).
 
 ## Usar, passo a passo
 
+A tela tem três colunas. A da esquerda segue as etapas do método, em abas: **Projeto**
+(abrir, gerar o grafo e as configurações das perguntas), **Léxico**, **Régua** (os comandos
+do projeto e as execuções), **Acervo** (os fatos aprovados) e **Mapa** (encontrar, inspeção
+e busca sobreposta). No meio fica o grafo, com a legenda recolhida no canto. À direita fica a
+**Conversa**, com as perguntas e o campo de pergunta. Clicar num nó do grafo abre a aba
+**Mapa**.
+
+Cada ação que chama um LLM escolhe quem responde no próprio lugar: ao lado de **Sugerir
+léxico**, no campo de pergunta e nos diálogos de **Continuar em cadeia**, **Enviar…** e
+das perguntas do caminho. Cada tipo de ação lembra a última escolha. Os "?" de títulos
+ficam sempre visíveis; os de dentro aparecem ao passar o mouse na linha.
+
 ### 1. Abrir o projeto
 
 O studio analisa projetos **Rust** e **Python**, inclusive os mistos. Digite a pasta no
@@ -49,14 +61,17 @@ marcadas como `Cargo` ou `Python` (`pyproject.toml`, `setup.py`, `setup.cfg` ou
 
 **Limpar**, ao lado de **Abrir**, fecha o projeto e zera a tela: grafo, conversa e caminho. Ele não apaga nada em `.studio`; reabrindo a pasta, os grafos e as perguntas voltam.
 
-As configurações ficam em **Léxico, busca e instruções**. Editadas ali, valem para as
-próximas perguntas e são guardadas no `.studio` (o `librarian.json` do projeto não muda).
+O léxico fica na aba **Léxico**, com **Salvar léxico**. Busca, formato da resposta e
+instruções ficam em **Configurações das perguntas**, na aba **Projeto**. Editadas ali, valem
+para as próximas perguntas e são guardadas no `.studio` (o `librarian.json` do projeto não
+muda). Hipótese e mudança proposta seguem o modo da pergunta (veja Perguntar), e os critérios
+prévios ficam no campo de pergunta, no modo **Melhorar**.
 
-**Sugerir léxico com o LLM** (depois de gerar o grafo):
+**Sugerir léxico com o LLM** (na aba **Léxico**, depois de gerar o grafo):
 
 1. O Librarian tira da edition, sem LLM, os 80 termos mais frequentes nos nomes do código.
-2. O LLM escolhido na Conversa propõe até 40 grupos de palavras em português. No Ollama,
-   o studio usa o Modelfile `lexico` sozinho, a menos que outro `lexico-…` esteja escolhido. Se o nome
+2. O LLM escolhido ao lado do botão (de início, Ollama com o Modelfile `lexico`) propõe até
+   40 grupos de palavras em português. Se o nome
    do Modelfile termina em `-en` (por exemplo `lexico-deepseek-en`), o pedido vai em inglês e pede
    palavras em inglês. Com **Nenhum**, o pedido aparece para copiar, e a resposta de
    qualquer LLM pode ser colada em **Conferir resposta**.
@@ -90,10 +105,10 @@ Grafos gerados antes ficam no seletor ao lado.
 O que o grafo mostra:
 
 - **Nós:** fonte (octaedro), símbolo (esfera) e ocorrência (tetraedro). Formato e cor
-  identificam a categoria; a legenda traz as contagens e serve de filtro.
+  identificam a categoria; a legenda, no canto do grafo, traz as contagens e serve de filtro.
 - **Arestas:** `declares`, `contains`, `observes` e `name_candidate` (tracejada, não
   resolvida), cada uma com filtro próprio.
-- **Inspeção:** clique num nó para ver categoria, kind, linguagem, ID e relações. Clique
+- **Inspeção** (aba **Mapa**): clique num nó para ver categoria, kind, linguagem, ID e relações. Clique
   numa relação ou numa aresta para ver **qual evidência autorizou a ligação**: arquivo,
   linhas, bytes e hashes.
 - **Encontrar** por rótulo, kind ou ID. `F` enquadra, `Esc` limpa e o botão ◐ alterna o tema.
@@ -103,10 +118,19 @@ muda entre aberturas. Os destaques usam somente IDs, então homônimos não se c
 
 ### 3. Perguntar
 
-Escolha o **LLM** no painel, escreva a pergunta e clique no botão abaixo (ou Ctrl+Enter).
-Há um botão só, e ele segue o LLM escolhido: com **Nenhum** vira **Perguntar (sem
-enviar)** e só mostra a query; com Ollama ou Claude vira **Perguntar e enviar** e já
-envia.
+No campo de pergunta, escolha o modo, escreva a pergunta e clique no botão abaixo (ou
+Ctrl+Enter):
+
+- **Localizar** pede só fatos: onde o código faz algo, com a linha e o trecho copiado.
+- **Melhorar** também aceita uma hipótese com uma mudança proposta (liga **permitir
+  HYPOTHESIS** e **patch**) e mostra os **critérios prévios**, gravados com a pergunta antes
+  da resposta.
+
+Cada modo lembra quem responde (LLM e Modelfile), escolhido logo abaixo da pergunta. O
+botão diz o que vai acontecer: com **Nenhum**, **Perguntar (sem enviar)** só mostra a
+query; com Ollama ou Claude, **Perguntar · Ollama · verificavel**, por exemplo, já envia.
+Com declarações no envelope (veja Pergunta com declarações juntadas), o botão vira
+**Perguntar com o envelope (N)**.
 
 1. Os **critérios prévios** do projeto são gravados com a pergunta, antes de existir query
    ou resposta, e o hash deles fica no registro.
@@ -122,13 +146,19 @@ envia.
 
 Se o léxico não alcançar nada ou a edition tiver diagnósticos, a busca continua visível
 e a recusa do `prepare` aparece na pergunta. Clicar numa pergunta antiga a acende de novo.
-**Apagar**, no bloco, remove a pergunta, a query e as respostas, inclusive os arquivos
-em `.studio`, depois de confirmar.
+Cada bloco começa com um resumo: o veredito da última resposta, quem respondeu, os fatos
+aprovados e o custo. A evidência fica recolhida quando passa de três declarações, e as
+respostas anteriores ficam recolhidas sob a última. Uma pergunta já respondida e validada
+(com um fato aprovado a partir dela) aparece recolhida: só a pergunta e o resumo. A seta ao
+lado da pergunta abre e recolhe, e a pergunta ativa fica sempre aberta. **Apagar**, atrás do **⋯** no fim do
+bloco, remove a pergunta, a query e as respostas, inclusive os arquivos em `.studio`,
+depois de confirmar.
 
 ### 4. Enviar ao LLM, ou só ver
 
-Cada pergunta tem o botão **Enviar**, que usa o LLM escolhido no momento. Serve para
-reenviar a mesma query a outro LLM ou com outro Modelfile. A query é conferida de novo
+Cada pergunta tem o botão **Enviar…** (ou **Enviar de novo…**, depois da primeira
+resposta), que abre um diálogo para escolher quem responde. Serve para reenviar a mesma
+query a outro LLM ou com outro Modelfile. A query é conferida de novo
 contra a edition imediatamente antes de cada envio.
 
 Cada envio grava o **vínculo** com o que foi conferido (`link` no `send.json`): o hash da
@@ -157,7 +187,7 @@ de novo.
 
 ### Formato da resposta: claims ou prosa
 
-Em **Léxico, busca e instruções**, o campo **Formato da resposta** vale por projeto e fica
+Em **Configurações das perguntas**, o campo **Formato da resposta** vale por projeto e fica
 gravado em cada pergunta no momento em que ela é feita. Trocar depois não muda as
 perguntas antigas. Projetos novos começam em **claims**; os abertos antes desta opção
 continuam em **prosa**.
@@ -180,8 +210,9 @@ Como a query de claims é montada:
 - **Limites:** os `unknowns` do dossiê vão em `evidence.limits`.
 - **Instruções:** as fixas do checker valem sempre. As do projeto vão à parte, em
   `project_instructions`, e não podem relaxar as fixas.
-- **Política:** **permitir INFERENCE** e **permitir HYPOTHESIS** vêm desligadas. Com elas
-  desligadas, o checker recusa essas categorias mesmo que a pergunta as peça.
+- **Política:** **permitir INFERENCE** vem desligada (em **Configurações das perguntas**), e
+  **permitir HYPOTHESIS** segue o modo: desligada em **Localizar**, ligada em **Melhorar**.
+  Desligadas, o checker recusa essas categorias mesmo que a pergunta as peça.
 
 Antes de cada envio, `claims/context.json` e `claims/query.json` são derivados de novo do
 bundle e comparados byte a byte; qualquer diferença recusa o envio.
@@ -203,8 +234,8 @@ Depois do envio, a resposta passa pela **conferência mecânica**:
 - a operação aponta um trecho da função, não a função inteira (`precise_location`):
   começar na linha da declaração, ou cobrir todo o corpo, é recusado, exceto em funções
   ou corpos de uma linha. Também vale só para as perguntas novas.
-- com **Claims: permitir patch numa HYPOTHESIS** (opção do projeto, gravada com cada
-  pergunta, junto com **permitir HYPOTHESIS**), uma hipótese pode trazer a mudança
+- com **Claims: permitir patch numa HYPOTHESIS** (ligada no modo **Melhorar** e gravada com
+  cada pergunta, junto com **permitir HYPOTHESIS**), uma hipótese pode trazer a mudança
   proposta como **edições de linhas** (`edits`: troque as linhas X–Y por estas, insira
   depois da linha Z). As edições precisam ficar dentro das linhas entregues, citar cada
   linha que trocam e não se sobrepor. O studio monta o diff, mostra em **Mudança
@@ -251,7 +282,7 @@ recusada na mecânica ou um envio sem vínculo mostram o motivo no lugar do bot�
 já promovido mostra **Aprovado como fato F<n>** e **Revogar**: revogar registra a recusa
 e marca o fato como revogado, sem apagá-lo. Aprovar de novo cria outro número.
 
-O **Acervo de fatos** (no bloco do projeto) lista os fatos e os reconfere contra a
+O **Acervo de fatos** (aba **Acervo**) lista os fatos e os reconfere contra a
 edition da execução escolhida: **vigente** quando cada trecho citado continua igual, no
 mesmo arquivo e nas mesmas linhas; **desatualizado** quando não (o fato não é apagado nem
 procurado em outra linha); **revogado** quando você recusou depois. Vigente confere o
@@ -260,9 +291,8 @@ texto, não o sentido. Os fatos entram nas perguntas só pela cadeia (abaixo).
 ### Continuar em cadeia
 
 Uma pergunta em claims com ao menos uma resposta aprovada na mecânica ganha o botão
-**Continuar em cadeia**. Escolha antes o LLM e o Modelfile da próxima etapa (por exemplo,
-`analista` para achar a função e outro Modelfile para a etapa seguinte), clique e escreva a
-próxima pergunta. O studio cria uma pergunta nova e a envia como as outras:
+**Continuar em cadeia**. O diálogo pede a próxima pergunta, o modo (de início, **Melhorar**)
+e quem responde nesta etapa (por exemplo, Ollama com `performance-qwen`). O studio cria uma pergunta nova e a envia como as outras:
 
 - **Evidência:** as declarações (`location`) dos FACT das respostas que passam **de novo**
   na conferência mecânica, contra a pergunta conferida agora. Não há busca: o `prepare`
@@ -379,7 +409,7 @@ as escolhas. **Só chamadas seguidas** esconde as tracejadas.
 
 ### Execução (comandos do projeto)
 
-O painel **Execução**, abaixo do acervo, lista os comandos que o próprio projeto declara no
+A aba **Régua** lista os comandos que o próprio projeto declara no
 `librarian.json`, em `commands` (veja o [perfil](#perfil-do-projeto-librarianjson)). O
 Librarian não sabe o que um comando faz nem qual ferramenta ele chama: guarda a lista de
 argumentos, o código de saída, o tempo de cada repetição e a saída inteira.
@@ -404,6 +434,12 @@ informa os próprios números, sem o Librarian conhecer o formato de uma ferrame
 medição. Para cada arquivo em `outputs`, o resultado mostra o sha256 depois de cada
 repetição: um hash só quer dizer o mesmo conteúdo em todas.
 
+As execuções desta edition ficam na aba **Régua** como histórico, uma linha cada: comando,
+horário, repetições com sucesso, se foi linha de base ou a mudança de qual pergunta, a
+variação de cada número contra a linha de base (com "ruído" quando as faixas se sobrepõem)
+e se os arquivos gerados são os mesmos. Clicar na linha abre o detalhe. O resultado de
+**Rodar «comando» com esta mudança** aparece também embaixo da própria mudança, na conversa.
+
 Um tempo medido vale para aquela máquina, com o que mais estiver rodando nela. Ele não
 prova a causa de uma diferença.
 
@@ -425,9 +461,10 @@ uma primeira comparação deu −4%, que intercalada virou −1%, dentro da vari
 
 ### Pergunta com declarações juntadas
 
-No inspetor, **Juntar à pergunta** acrescenta a declaração selecionada a uma lista, que
-aparece acima dele. **Perguntar com estas declarações** cria uma pergunta só, com todas
-como evidência, na ordem em que foram juntadas: nada é buscado e nada é acrescentado (nem
+Na inspeção (aba **Mapa**), **Juntar à pergunta** põe a declaração selecionada no
+**envelope**, que aparece acima do campo de pergunta, com um × em cada declaração. Com o
+envelope cheio, o botão vira **Perguntar com o envelope (N)** e cria uma pergunta só, com
+todas como evidência, na ordem em que foram juntadas: nada é buscado e nada é acrescentado (nem
 o contexto do dono). A pergunta mostra a faixa **juntadas (N)**, e o `search.json` diz
 "Gathered step". Até 16 declarações.
 
@@ -436,6 +473,34 @@ Serve para uma mudança que o grafo não liga pelo nome: guardar a inversa de ca
 que calcula a inversa, do `transform` do `Object` e da struct `Matrix`. Faltando `default`
 e `Matrix`, a mudança não compilou; com elas, passou nos 210 testes do renderer, com a
 imagem idêntica e o render cerca de 30% mais rápido.
+
+**Sugerir envelope.** Com ao menos uma declaração no envelope, o botão **Sugerir envelope**
+lista o que uma mudança nelas provavelmente precisa ver, cada item com o motivo e a linha onde
+a ligação está escrita:
+
+| Motivo | O que entra |
+| --- | --- |
+| tipo dono | o tipo de um método, e os campos dele que o método lê |
+| escreve o campo | quem escreve esses campos (`self.campo = …` ou um literal do tipo) |
+| chama | o que a declaração chama, quando o nome aponta uma declaração só |
+| tipo devolvido / tipo de | o tipo que a chamada devolve, e o tipo dono do método chamado |
+| chama a declaração | quem a chama, sem homônimos e sem testes |
+| escreve o tipo | os tipos escritos nela (assinatura, anotações), quando o nome aponta um só |
+| topo do arquivo | as linhas antes da primeira declaração do arquivo, onde ficam os imports |
+
+Tudo vem marcado; você desmarca o que não quer e clica em **Juntar os marcados**. No máximo 12
+sugestões além das escolhidas. É tudo pelo nome escrito: o que não está escrito pelo nome não
+aparece (um `Depends(get_db)` não é uma chamada de `get_db`), e homônimos ficam de fora.
+
+O **topo do arquivo** é uma faixa de linhas, não uma declaração: entra como ficha só na pergunta
+juntada, e a mudança proposta pode editar essas linhas (por exemplo, acrescentar um import). Sem
+ele, um import faltando só aparece quando os testes quebram. **Levar os fatos aprovados**, no
+envelope, faz a pergunta levar os fatos vigentes do acervo sobre as declarações juntadas, como a
+cadeia faz.
+
+No renderer de antes da mudança, a sugestão a partir de `intersect_world` e do método do trait
+que calcula a inversa traz `World::default` (escreve `objects`, que `intersect_world` lê) e
+`Matrix` (o tipo do `inverse` que é chamado): as duas peças que faltaram.
 
 ### 5. Modelfiles
 
@@ -571,8 +636,10 @@ Para começar do zero, apague a pasta do projeto em `.studio/projects/`.
 - **Contexto do Ollama:** o Ollama corta, sem erro, a entrada que passa do `num_ctx` do Modelfile, e o envio ainda termina como `completed`. O studio estima o tamanho da query em tokens (bytes ÷ 3,5, mostrado em "O que é enviado ao LLM") e pede confirmação antes de enviar uma query maior que 3/4 do `num_ctx`. Depois do envio, compara o que o Ollama processou (`prompt_eval_count`) com o tamanho da query e marca a resposta em vermelho como "Entrada possivelmente truncada". Um prefixo em cache também reduz a contagem, por isso é uma suspeita, não uma prova. O `analista` usa `num_ctx` 16384; com `hits` maior, reduza `hits` ou aumente o contexto.
 - Um envio dura até 300 s e bloqueia só a própria requisição.
 - O status do Ollama é lido quando a página abre; recarregue a página depois de iniciá-lo.
-- A conferência do formato claims é só mecânica. A avaliação semântica continua manual, e
-  nada é promovido a Fact pelo studio (fase L, passo 4). O `strict_text` não vê uma
+- A conferência do formato claims é só mecânica. A avaliação semântica continua manual:
+  um item só vira fato pela sua aprovação, com nota (veja "Revisar e promover a fato"). A
+  autoria do fato é sempre "revisão humana no Librarian Studio", mesmo quando quem revisou
+  foi outro modelo. O `strict_text` não vê uma
   paráfrase sem número de linha nem crase, e não confere se há uma só afirmação por
   claim.
 - A linha da declaração de um símbolo ainda é achada no texto, não pelo parser. Linhas
