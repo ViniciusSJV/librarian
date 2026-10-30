@@ -217,6 +217,86 @@ fn loops_show_what_they_hold_directly_and_through_calls() {
     // The text summary names each place as path:line.
     let text = inventory::summary(&found);
     assert!(text.contains("pela cadeia: zone_of (app/service.py:29) → database app/service.py:15  address.area"), "{text}");
+    // heavy walks `addresses`, and the outer loop passes it the same list at every turn (3b).
+    let whole = outer.loops_through_calls[0].whole_each_turn.as_ref().unwrap();
+    assert_eq!((whole.parameter.as_str(), whole.argument.as_str()), ("addresses", "addresses"));
+    assert!(text.contains("[percorre addresses inteira a cada volta: recebe addresses]"), "{text}");
+}
+
+// Steps 3b and 3c (profile v6): what changes from one turn to the next, and `in` on a list.
+const REPORT: &str = "def name_of(people, key):
+    for p in people:
+        if p == key:
+            return p
+
+
+class Book:
+    def find(self, people, key):
+        return [p for p in people if p == key]
+
+    def pick(self, people):
+        return [p for p in people]
+
+
+def walk(xs):
+    return [x for x in xs]
+
+
+def report(rows, people, planned, book):
+    routed = [r for r in planned]
+    again = [1]
+    again = set(again)
+    for row in rows:
+        name_of(row.people, row)
+        name_of(people, row)
+        book.pick(people)
+        book.find(key=row, people=people)
+        mine = list(people)
+        walk(mine)
+        if row in routed:
+            pass
+        if row not in planned:
+            pass
+        if row in again:
+            pass
+";
+
+#[test]
+fn a_whole_collection_each_turn_and_a_search_in_a_list_are_marked() {
+    let n = NEXT.fetch_add(1, Ordering::Relaxed);
+    let dir = std::env::temp_dir().join(format!("librarian-inventory-v6-{}-{n}", std::process::id()));
+    let _ = fs::remove_dir_all(&dir);
+    fs::create_dir_all(dir.join("app")).unwrap();
+    fs::write(dir.join("app/report.py"), REPORT).unwrap();
+    let config = Config { project: "report".into(), inputs: vec!["app".into()] };
+    generate(&dir, &config, &dir.join("edition")).unwrap();
+    let catalog = Catalog::load(&dir.join("edition")).unwrap();
+    let found = inventory::inventory(&catalog, &RuleSet::default()).unwrap();
+    let _ = fs::remove_dir_all(&dir);
+
+    // 3c: only `routed` is a list the function binds and nothing else; `planned` is a parameter
+    // and `again` is rebound to a set.
+    let scans: Vec<String> = found.operations.iter().filter(|o| o.operation == "list_scan").map(|o| format!("{} {} {:?}", o.line, o.text, o.bound_lines)).collect();
+    assert_eq!(scans, ["30 row in routed [20]"]);
+    let looped = found.loops.iter().find(|l| l.head == "for row in rows").unwrap();
+    assert_eq!(looped.direct.len(), 1);
+
+    // 3b: by position, by position on a method (`self` takes no argument) and by keyword; not
+    // when the argument is bound inside the loop (`mine`). `name_of` is reached twice: the call
+    // that changes each turn (`row.people`, line 24) is not the one kept, the one at line 25 is.
+    let marks: Vec<String> = looped
+        .loops_through_calls
+        .iter()
+        .map(|c| format!("{} {} {}", c.steps[0].line, c.head, c.whole_each_turn.as_ref().map_or("-".into(), |w| format!("{}={}", w.parameter, w.argument))))
+        .collect();
+    assert_eq!(marks, [
+        "25 for p in people people=people",
+        "26 [p for p in people] people=people",
+        "27 [p for p in people if p == key] people=people",
+        "29 [x for x in xs] -",
+    ]);
+    let summary = inventory::summary(&found);
+    assert!(summary.contains("direto: list_scan app/report.py:30  row in routed  (lista atribuída na linha 20)"), "{summary}");
 }
 
 #[test]

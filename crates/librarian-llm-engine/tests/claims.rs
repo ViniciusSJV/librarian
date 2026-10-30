@@ -489,6 +489,34 @@ fn strict_text_rejects_lines_and_code_the_claim_does_not_cite() {
 }
 
 #[test]
+fn strict_text_rejects_a_line_that_does_not_hold_the_code_the_sentence_names() {
+    // The qwen answer of the 30/10 rehearsal: the whole loop is cited (44–57), so line 46 is
+    // covered, but `zone_of` is on line 51, not on line 46.
+    let excerpt = "def daily_report(\n    for delivery in deliveries:\n        address = address_of(delivery)\n        rows.append(\n            zone=zone_of(address),\n            driver_name=driver_name(drivers, delivery.driver_id),\n        )";
+    let c: Context = serde_json::from_value(json!({
+        "schema_version": 1, "policy": {"allow_inference": false, "allow_hypothesis": false}, "strict_text": true,
+        "evidence": [{"id": "E", "path": "app/report.py", "start_line": 43, "end_line": 49, "excerpt": excerpt,
+            "symbols": [{"name": "daily_report", "declaration_line": 43, "name_column": 5, "end_line": 49}]}]
+    }))
+    .unwrap();
+    let claim = |text: &str| json!({"schema_version": 1, "claims": [{"id": "C1", "kind": "FACT", "text": text,
+        "citations": [{"evidence_id": "E", "path": "app/report.py", "start_line": 43, "end_line": 49,
+            "quote": excerpt}], "premises": [], "verification_plan": null}]});
+    let rejected = |text: &str| codes(&c, &claim(text)) == ["text_line_lacks_named_code"];
+    assert!(rejected("Em seguida, zone_of é chamada para obter a zona (app/report.py:46)."));
+    assert!(rejected("A linha 46 chama `driver_name`."));
+    // Passing: the named code is on the line, or on one of the sentence's lines.
+    assert!(codes(&c, &claim("Na linha 47, zone_of(address) lê a zona.")).is_empty());
+    assert!(codes(&c, &claim("A linha 45 chama address_of, dentro do laço da linha 44.")).is_empty());
+    // Not judged: the subject on other lines, plain words that are also names, no line at all.
+    assert!(codes(&c, &claim("daily_report percorre as entregas nas linhas 44 a 46.")).is_empty());
+    assert!(codes(&c, &claim("Na linha 46, cada address vira uma linha do relatório.")).is_empty());
+    assert!(codes(&c, &claim("zone_of é chamada a cada volta.")).is_empty());
+    // A sentence is judged on its own: the next one's line does not vouch for this one.
+    assert!(rejected("A linha 47 chama zone_of. A linha 46 chama driver_name."));
+}
+
+#[test]
 fn precise_location_refuses_the_whole_function_as_the_operation() {
     // The sphere case: the answer named the function and called all of it the operation.
     let (mut c, mut r) = located();

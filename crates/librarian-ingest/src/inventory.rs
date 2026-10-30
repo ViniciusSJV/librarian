@@ -52,6 +52,9 @@ pub enum Matcher {
     FieldDeclaredWith { calls: Vec<String> },
     /// A write of a module name (`global x; x = ...`, `x[k] = v`).
     ModuleWrite {},
+    /// `x in name` where the declaration binds `name` only to lists (`name = [...]`), never
+    /// as a parameter or otherwise: each test walks the list (profile v6).
+    ListMembership {},
 }
 
 /// Generic rules by language: what a name says in any project. Database rules depend on the
@@ -79,7 +82,9 @@ const BUILTIN: &str = r#"{ "rules": [
   { "id": "lock.rust", "operation": "lock", "description": "Toma uma trava",
     "match": "call", "names": ["lock"], "language": "rust" },
   { "id": "state.module_write", "operation": "state", "description": "Escreve um nome do módulo",
-    "match": "module_write" }
+    "match": "module_write" },
+  { "id": "collection.list_membership", "operation": "list_scan", "description": "Procura com in numa lista: percorre a lista",
+    "match": "list_membership", "language": "python" }
 ] }"#;
 
 pub fn builtin() -> RuleSet {
@@ -135,6 +140,9 @@ pub struct Operation {
     /// For a field or module rule: the declarations the written name matched, all candidates.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub through: Vec<String>,
+    /// For a list rule: the lines where the declaration binds the searched name to a list.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub bound_lines: Vec<usize>,
     /// Whether it is inside a loop of its own declaration.
     pub in_loop: bool,
     pub evidence: Evidence,
@@ -198,6 +206,19 @@ pub struct LoopChain {
     pub line: usize,
     pub end_line: usize,
     pub steps: Vec<Step>,
+    /// The reached loop iterates a parameter, and the call inside the outer loop passes it
+    /// something that does not change from one turn to the next: the whole collection is
+    /// walked again at every turn (step 3b; one call away only).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub whole_each_turn: Option<WholeEachTurn>,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+pub struct WholeEachTurn {
+    /// The parameter the reached loop iterates.
+    pub parameter: String,
+    /// What the call passes for it, as written.
+    pub argument: String,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
@@ -231,6 +252,8 @@ const LIMITS: &[&str] = &[
     "Cadeias seguem só chamadas sem homônimos (únicas ou do próprio receptor), até 4 chamadas; as outras são listadas em unfollowed.",
     "Receptores não são resolvidos: `session` é o nome escrito antes da chamada, não o tipo do objeto.",
     "Um campo achado por field_declared_with casa pelo nome com todos os campos homônimos que a regra marcou (through).",
+    "\"Percorre inteira a cada volta\" só olha uma chamada de distância: o laço alcançado itera um parâmetro, e o argumento escrito não usa nada atribuído dentro do laço de fora. Não sabe o tamanho da coleção.",
+    "Busca em lista (list_membership) exige que a função atribua o nome só a listas escritas como lista ([...], compreensão, list(), sorted()); uma lista que chega como parâmetro ou por outra chamada não é vista.",
 ];
 
 /// Indexes over the v2 graph, built once.
@@ -343,7 +366,7 @@ pub fn check(rules: &RuleSet, builtin: &RuleSet) -> Result<()> {
         let empty = match &rule.matcher {
             Matcher::Call { names, .. } => names.is_empty(),
             Matcher::FieldDeclaredWith { calls } => calls.is_empty(),
-            Matcher::ModuleWrite {} => false,
+            Matcher::ModuleWrite {} | Matcher::ListMembership {} => false,
         };
         if empty {
             return Err(format!("Rule {} matches no name", rule.id).into());
@@ -387,13 +410,13 @@ pub fn inventory(catalog: &Catalog, project: &RuleSet) -> Result<Inventory> {
     // Loops by declaration, to tell whether an occurrence is inside one. A loop's iterable
     // (`for x in f()`, `[g(x) for x in f()]`) runs once: what is written there does not repeat.
     let mut loops_of: BTreeMap<&str, Vec<&v2::Edge>> = BTreeMap::new();
-    let mut iterable_of: BTreeMap<&str, &Evidence> = BTreeMap::new();
+    let mut iterable_of: BTreeMap<&str, &v2::Edge> = BTreeMap::new();
     for (symbol, edges) in &index.observed {
         let loops: Vec<&v2::Edge> = edges.iter().filter(|e| index.kind(&e.to) == "loop").copied().collect();
         for iterable in edges.iter().filter(|e| index.kind(&e.to) == "loop_iterable") {
             // Its loop is the innermost one that contains it.
             if let Some(owner) = loops.iter().filter(|l| inside(&l.evidence, &iterable.evidence)).min_by_key(|l| l.evidence.end_byte - l.evidence.start_byte) {
-                iterable_of.insert(&owner.to, &iterable.evidence);
+                iterable_of.insert(&owner.to, iterable);
             }
         }
         if !loops.is_empty() {
@@ -401,7 +424,13 @@ pub fn inventory(catalog: &Catalog, project: &RuleSet) -> Result<Inventory> {
         }
     }
     let repeats = |l: &v2::Edge, evidence: &Evidence| {
-        inside(&l.evidence, evidence) && l.evidence != *evidence && !iterable_of.get(l.to.as_str()).is_some_and(|it| inside(it, evidence))
+        inside(&l.evidence, evidence) && l.evidence != *evidence && !iterable_of.get(l.to.as_str()).is_some_and(|it| inside(&it.evidence, evidence))
+    };
+    // Occurrences of one kind in a declaration, in the order written.
+    let owned = |symbol: &str, kinds: &[&str]| -> Vec<&v2::Edge> {
+        let mut found: Vec<&v2::Edge> = index.observed.get(symbol).into_iter().flatten().filter(|e| kinds.contains(&index.kind(&e.to))).copied().collect();
+        found.sort_by_key(|e| e.evidence.start_byte);
+        found
     };
     let in_loop = |symbol: &str, evidence: &Evidence| loops_of.get(symbol).into_iter().flatten().any(|l| repeats(l, evidence));
 
@@ -425,7 +454,19 @@ pub fn inventory(catalog: &Catalog, project: &RuleSet) -> Result<Inventory> {
                 if rule.language.as_deref().is_some_and(|l| l != language) {
                     continue;
                 }
+                let mut bound_lines = vec![];
                 let through: Option<Vec<String>> = match &rule.matcher {
+                    Matcher::ListMembership {} if kind == "membership" => {
+                        // The searched name is the one after `in`; the extractor records only a plain name there.
+                        let name = trailing_ident(text.trim_end());
+                        let named = |kinds: &[&str]| -> Vec<&v2::Edge> { owned(symbol, kinds).into_iter().filter(|e| Some(index.label(&e.to)) == name).collect() };
+                        let lists = named(&["list_binding"]);
+                        // Every binding of the name is one of its list bindings, and it is no parameter.
+                        let only_lists = named(&["local_binding"]).iter().all(|b| lists.iter().any(|l| l.evidence.start_byte == b.evidence.start_byte))
+                            && named(&["parameter", "keyword_parameter"]).is_empty();
+                        bound_lines = lists.iter().map(|l| l.evidence.start_line).collect();
+                        (!lists.is_empty() && only_lists).then(Vec::new)
+                    }
                     Matcher::Call { names, receivers } => parts.as_ref().and_then(|(receiver, name)| {
                         (names.contains(name) && (receivers.is_empty() || receivers.contains(receiver))).then(Vec::new)
                     }),
@@ -458,6 +499,7 @@ pub fn inventory(catalog: &Catalog, project: &RuleSet) -> Result<Inventory> {
                     occurrence: occurrence.to_owned(),
                     occurrence_kind: kind.to_owned(),
                     through,
+                    bound_lines,
                     in_loop: in_loop(symbol, &edge.evidence),
                     evidence: edge.evidence.clone(),
                 });
@@ -538,7 +580,28 @@ pub fn inventory(catalog: &Catalog, project: &RuleSet) -> Result<Inventory> {
                 match follow(symbol, &call.to) {
                     Ok((to, resolution)) => {
                         let first = step(&index, symbol, &to, call, resolution);
-                        let (chains, reached) = reach(&index, &by_symbol, &loops_of, &follow, &calls_of, first, &in_loop);
+                        let (chains, mut reached) = reach(&index, &by_symbol, &loops_of, &follow, &calls_of, first, &in_loop);
+                        // Step 3b, one call away: the reached loop walks a parameter, and what the call
+                        // passes for it does not change from one turn of this loop to the next.
+                        let changing: BTreeSet<&str> = owned(symbol, &["local_binding"]).into_iter().filter(|b| repeats(l, &b.evidence)).map(|b| index.label(&b.to)).collect();
+                        let arguments = arguments(catalog, call, index.label(&call.to));
+                        for r in reached.iter_mut().filter(|r| r.steps.len() == 1) {
+                            let Some(iterable) = iterable_of.get(r.occurrence.as_str()).map(|it| index.label(&it.to).trim()) else { continue };
+                            let parameters = owned(&to, &["parameter", "keyword_parameter"]);
+                            let Some(at) = parameters.iter().position(|p| index.label(&p.to) == iterable) else { continue };
+                            let positional = index.kind(&parameters[at].to) == "parameter";
+                            // A method called on a receiver fills `self` (or `cls`) without an argument.
+                            let skip = usize::from(call_parts(index.label(&call.to)).is_some_and(|(receiver, _)| !receiver.is_empty())
+                                && parameters.first().is_some_and(|p| matches!(index.label(&p.to), "self" | "cls")));
+                            let argument = arguments.iter().find(|(name, _)| name.as_deref() == Some(iterable)).or_else(|| {
+                                positional.then(|| at.checked_sub(skip)).flatten().and_then(|k| arguments.iter().filter(|(name, _)| name.is_none()).nth(k))
+                            });
+                            if let Some((_, argument)) = argument {
+                                if !names_in(argument).iter().any(|n| changing.contains(n)) {
+                                    r.whole_each_turn = Some(WholeEachTurn { parameter: iterable.to_owned(), argument: short(argument) });
+                                }
+                            }
+                        }
                         through_calls.extend(chains);
                         loops_through_calls.extend(reached);
                     }
@@ -550,7 +613,8 @@ pub fn inventory(catalog: &Catalog, project: &RuleSet) -> Result<Inventory> {
             let mut seen = BTreeSet::new();
             through_calls.sort_by_key(|c: &Chain| c.steps.len());
             through_calls.retain(|c| seen.insert(c.operation.clone()));
-            loops_through_calls.sort_by_key(|c| c.steps.len());
+            // A call site that walks the whole collection each turn wins over one that does not.
+            loops_through_calls.sort_by_key(|c| (c.steps.len(), c.whole_each_turn.is_none()));
             loops_through_calls.retain(|c| seen.insert(c.occurrence.clone()));
             let repeated_calls: Vec<Repeated> = repeated
                 .into_iter()
@@ -645,7 +709,10 @@ pub fn summary(inventory: &Inventory) -> String {
             });
         for id in &l.direct {
             let o = ops[id.as_str()];
-            let _ = writeln!(out, "  direto: {} {}:{}  {}", o.operation, o.path, o.line, line(&o.text));
+            let bound = if o.bound_lines.is_empty() { String::new() } else {
+                format!("  (lista atribuída na linha {})", o.bound_lines.iter().map(usize::to_string).collect::<Vec<_>>().join(", "))
+            };
+            let _ = writeln!(out, "  direto: {} {}:{}  {}{bound}", o.operation, o.path, o.line, line(&o.text));
         }
         // The operations a chain reaches in one declaration are one line: the chain, then each
         // kind of operation with how many and where.
@@ -674,7 +741,8 @@ pub fn summary(inventory: &Inventory) -> String {
         }
         for c in &l.loops_through_calls {
             let path: Vec<String> = c.steps.iter().map(|s| format!("{} ({}:{})", s.to_name, s.path, s.line)).collect();
-            let _ = writeln!(out, "  laço pela cadeia: {} → {} {}:{}–{}", path.join(" → "), line(&c.head), c.path, c.line, c.end_line);
+            let whole = c.whole_each_turn.as_ref().map_or(String::new(), |w| format!("  [percorre {} inteira a cada volta: recebe {}]", w.parameter, line(&w.argument)));
+            let _ = writeln!(out, "  laço pela cadeia: {} → {} {}:{}–{}{whole}", path.join(" → "), line(&c.head), c.path, c.line, c.end_line);
         }
         for r in &l.repeated_calls {
             let _ = writeln!(out, "  repetida: {} × {} (linhas {})", r.name, r.lines.len(), r.lines.iter().map(usize::to_string).collect::<Vec<_>>().join(", "));
@@ -684,6 +752,63 @@ pub fn summary(inventory: &Inventory) -> String {
         }
     }
     out
+}
+
+/// The arguments of a call, as written: `(Some(name), value)` for `name=value`, `(None, value)`
+/// by position. A method call's text has them; a plain call's text is the name only, so they
+/// are read from the preserved source right after it. Empty when there are none or no `(`.
+fn arguments(catalog: &Catalog, call: &v2::Edge, text: &str) -> Vec<(Option<String>, String)> {
+    let inner = if text.trim_end().ends_with(')') {
+        let text = text.trim_end();
+        matching_open(text, '(', ')').map(|open| text[open + 1..text.len() - 1].to_owned())
+    } else {
+        let bytes = &catalog.snapshots[&call.evidence.source_id];
+        let rest = String::from_utf8_lossy(&bytes[call.evidence.end_byte..]);
+        let rest = rest.trim_start();
+        rest.strip_prefix('(').and_then(|after| {
+            let mut depth = 1usize;
+            let close = after.char_indices().find(|(_, c)| {
+                match c {
+                    '(' | '[' | '{' => depth += 1,
+                    ')' | ']' | '}' => depth -= 1,
+                    _ => {}
+                }
+                depth == 0
+            })?;
+            Some(after[..close.0].to_owned())
+        })
+    };
+    let Some(inner) = inner else { return vec![] };
+    let mut parts = vec![];
+    let (mut depth, mut start) = (0i32, 0);
+    for (i, c) in inner.char_indices() {
+        match c {
+            '(' | '[' | '{' => depth += 1,
+            ')' | ']' | '}' => depth -= 1,
+            ',' if depth == 0 => {
+                parts.push(&inner[start..i]);
+                start = i + 1;
+            }
+            _ => {}
+        }
+    }
+    parts.push(&inner[start..]);
+    parts
+        .into_iter()
+        .map(str::trim)
+        .filter(|p| !p.is_empty())
+        .map(|p| match p.split_once('=') {
+            Some((name, value)) if !value.starts_with('=') && !name.ends_with(['!', '<', '>']) && names_in(name) == [name.trim()] => {
+                (Some(name.trim().to_owned()), value.trim().to_owned())
+            }
+            _ => (None, p.to_owned()),
+        })
+        .collect()
+}
+
+/// The names written in an expression, attributes included (`a.b` gives `a` and `b`).
+fn names_in(text: &str) -> Vec<&str> {
+    text.split(|c: char| !(c.is_alphanumeric() || c == '_')).filter(|w| w.starts_with(|c: char| c.is_alphabetic() || c == '_')).collect()
 }
 
 fn step(index: &Index, from: &str, to: &str, call: &v2::Edge, resolution: &str) -> Step {
@@ -728,6 +853,7 @@ fn reach<'g>(
                 line: l.evidence.start_line,
                 end_line: l.evidence.end_line,
                 steps: steps.clone(),
+                whole_each_turn: None,
             });
         }
         if steps.len() >= MAX_CHAIN {

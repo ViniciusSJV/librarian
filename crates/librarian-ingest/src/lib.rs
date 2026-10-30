@@ -32,9 +32,12 @@ pub const EXTRACTOR_V3: &str =
 /// is the v3 one.
 pub const EXTRACTOR_V4: &str =
     "librarian-ingest/0.4.0;syn/3.0.5;rustpython-parser/0.4.0;rust-structural-v3;python-structural-v2";
-/// Current profile: v4 plus names used as values, module variables, variants, patterns and loops.
+/// v4 plus names used as values, module variables, variants, patterns and loops.
 pub const EXTRACTOR_V5: &str =
     "librarian-ingest/0.5.0;syn/3.0.5;rustpython-parser/0.4.0;rust-structural-v4;python-structural-v3";
+/// Current profile: v5 plus, in Python, parameters, membership tests and names bound to a list.
+pub const EXTRACTOR_V6: &str =
+    "librarian-ingest/0.6.0;syn/3.0.5;rustpython-parser/0.4.0;rust-structural-v4;python-structural-v4";
 const RECORDS: [&str; 4] = [
     "sources.jsonl",
     "symbols.jsonl",

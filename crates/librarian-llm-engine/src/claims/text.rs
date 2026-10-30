@@ -1,9 +1,11 @@
 //! Opt-in rules over a claim's `text` (`strict_text`): line numbers and backticked code it states
-//! must be covered by the claim's own citations. Mechanical and partial: a paraphrase without
-//! numbers or backticks passes unseen, and meaning is still not checked.
+//! must be covered by the claim's own citations, and a sentence naming code and a line must name
+//! code on that line. Mechanical and partial: a paraphrase without numbers or backticks passes
+//! unseen, and meaning is still not checked.
 use super::{Claim, Context};
+use std::collections::HashSet;
 
-pub(super) const INSTRUCTION: &str = "Com strict_text=true, o text só pode afirmar o que as citações do próprio claim mostram: todo número de linha escrito no text (\"linha 88\", \"linhas 84–86\", \"arquivo.rs:88\") precisa estar dentro de uma citação do claim, e todo trecho entre crases precisa aparecer literalmente nas linhas citadas (\"...\" pode abreviar o meio de um trecho). Para afirmar algo sobre outra linha, cite-a ou crie outro claim.";
+pub(super) const INSTRUCTION: &str = "Com strict_text=true, o text só pode afirmar o que as citações do próprio claim mostram: todo número de linha escrito no text (\"linha 88\", \"linhas 84–86\", \"arquivo.rs:88\") precisa estar dentro de uma citação do claim, uma frase que nomeia código e uma linha precisa nomear código que está naquela linha, e todo trecho entre crases precisa aparecer literalmente nas linhas citadas (\"...\" pode abreviar o meio de um trecho). Para afirmar algo sobre outra linha, cite-a ou crie outro claim.";
 
 /// Ranges longer than this are not expanded; they count as uncited.
 const MAX_RANGE: usize = 10_000;
@@ -39,7 +41,97 @@ pub(super) fn check(context: &Context, claim: &Claim) -> Vec<&'static str> {
     if uncited_code {
         issues.push("text_quotes_uncited_code");
     }
+    if !uncited_line && misplaced_name(context, claim) {
+        issues.push("text_line_lacks_named_code");
+    }
     issues
+}
+
+/// A sentence names code (identifiers that occur in the cited lines) and lines, and none of
+/// those identifiers is on any of those lines: "zone_of is called (daily_report.py:46)" when line 46 is
+/// `rows.append(`. Sentences naming no cited identifier are not judged.
+fn misplaced_name(context: &Context, claim: &Claim) -> bool {
+    let source = |n: usize| {
+        claim.citations.iter().filter(|c| c.start_line <= n && n <= c.end_line).find_map(|c| {
+            let e = context.evidence.iter().find(|e| e.id == c.evidence_id)?;
+            e.excerpt.lines().nth(n.checked_sub(e.start_line)?)
+        })
+    };
+    // The declarations the claim talks about are its subject: "save talks to the database on
+    // lines 7, 9 and 10" names `save`, which is on none of them. A subject alone does not make a
+    // sentence judged, but it still matches its own declaration line.
+    let subjects: HashSet<&str> = claim
+        .citations
+        .iter()
+        .filter_map(|c| context.evidence.iter().find(|e| e.id == c.evidence_id))
+        .flat_map(|e| e.symbols.iter().map(|s| s.name.as_str()))
+        .chain(claim.location.as_ref().map(|l| l.symbol_name.as_str()))
+        .collect();
+    let cited: HashSet<&str> = claim
+        .citations
+        .iter()
+        .flat_map(|c| (c.start_line..=c.end_line).take(MAX_RANGE).filter_map(source))
+        .flat_map(identifiers)
+        .collect();
+    // File names are places, not code: `daily_report.py:46` does not name `daily_report`. The
+    // stand-in still reads as a file name, so `:46` stays a line mention.
+    let mut text = claim.text.clone();
+    for c in &claim.citations {
+        text = text.replace(&c.path, "f.f");
+        if let Some(base) = c.path.rsplit('/').next() {
+            text = text.replace(base, "f.f");
+        }
+    }
+    // Any one of the sentence's lines may carry the names: "rows is created on line 43, before the
+    // loop on line 44" names line 44 only as a landmark.
+    sentences(&text).into_iter().any(|sentence| {
+        let named: HashSet<&str> = code_names(sentence).into_iter().filter(|n| cited.contains(n)).collect();
+        let lines = mentioned_lines(sentence);
+        named.iter().any(|n| !subjects.contains(n))
+            && !lines.is_empty()
+            && !lines.into_iter().any(|(start, end)| {
+                (start..=end).take(MAX_RANGE).filter_map(source).any(|line| identifiers(line).iter().any(|n| named.contains(n)))
+            })
+    })
+}
+
+/// Identifiers of at least three characters: shorter ones (`a`, `de`, `x`) match prose too often.
+fn identifiers(text: &str) -> Vec<&str> {
+    text.split(|c: char| !(c.is_alphanumeric() || c == '_'))
+        .filter(|w| w.chars().count() >= 3 && !w.starts_with(|c: char| c.is_ascii_digit()))
+        .collect()
+}
+
+/// Identifiers a sentence writes as code: inside backticks, joined by `.` or `::`, called with
+/// `(`, or shaped like code (`zone_of`, `colorAt`). Plain words that happen to be names in the
+/// source ("the canvas", "each pixel") are prose.
+fn code_names(sentence: &str) -> Vec<&str> {
+    sentence
+        .split_whitespace()
+        .flat_map(|chunk| {
+            let core = chunk.trim_matches(|c: char| !(c.is_alphanumeric() || c == '_'));
+            let joined = chunk.contains('`') || core.contains('.') || core.contains("::") || chunk.trim_start_matches('(').contains('(');
+            identifiers(core).into_iter().filter(move |id| {
+                joined || id.contains('_') || id.chars().skip(1).any(char::is_uppercase)
+            })
+        })
+        .collect()
+}
+
+/// Split after `.`, `!`, `?` or `;` followed by a space or the end, and at line breaks.
+fn sentences(text: &str) -> Vec<&str> {
+    let mut parts = vec![];
+    let mut start = 0;
+    let chars: Vec<(usize, char)> = text.char_indices().collect();
+    for (k, &(at, c)) in chars.iter().enumerate() {
+        let next = chars.get(k + 1).map(|&(_, n)| n);
+        if c == '\n' || (".!?;".contains(c) && next.is_none_or(char::is_whitespace)) {
+            parts.push(&text[start..at]);
+            start = at + c.len_utf8();
+        }
+    }
+    parts.push(&text[start..]);
+    parts
 }
 
 /// Whitespace runs collapsed to one space, so line breaks and indentation do not matter.

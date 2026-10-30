@@ -400,18 +400,45 @@ fn once(command: &Command, cwd: &Path, out: &Path, index: usize) -> Result<Value
     }))
 }
 
-/// `librarian-measure name=value [unit]` lines, in order; any other line is the program's own.
+/// `librarian-measure name=value [unit] [at=path:line]` lines, in order; any other line is the
+/// program's own. `at` is where in the code the project says the number comes from (the line
+/// that ran those queries, say); the Librarian keeps it as written and never checks it.
 fn measures(text: &str) -> Vec<Value> {
     text.lines()
         .filter_map(|line| {
             let mut words = line.trim().strip_prefix(MEASURE)?.split_whitespace();
             let (name, value) = words.next()?.split_once('=')?;
             let value: f64 = value.parse().ok().filter(|v: &f64| v.is_finite())?;
-            let unit = words.next();
+            let (at, rest): (Vec<&str>, Vec<&str>) = words.partition(|w| w.starts_with("at="));
+            let at = match at.as_slice() {
+                [] => None,
+                [one] => Some(origin(&one[3..])?),
+                _ => return None,
+            };
+            let unit = rest.first();
             let valid = !name.is_empty() && name.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'.');
-            valid.then(|| json!({ "name": name, "value": value, "unit": unit }))
+            valid.then(|| match at {
+                Some(at) => json!({ "name": name, "value": value, "unit": unit, "at": at }),
+                None => json!({ "name": name, "value": value, "unit": unit }),
+            })
         })
         .collect()
+}
+
+/// `path:line` with a relative path and a line number; anything else makes the line invalid.
+fn origin(at: &str) -> Option<&str> {
+    let (path, line) = at.rsplit_once(':')?;
+    let relative = !path.is_empty() && !path.starts_with(['/', '\\']) && !path.contains(':') && !path.split(['/', '\\']).any(|p| p == "..");
+    (relative && line.parse::<usize>().is_ok_and(|n| n > 0)).then_some(at)
+}
+
+/// The key of a measure's series: its name, and where it comes from when the line says so.
+fn series_key(measure: &Value) -> String {
+    let name = measure["name"].as_str().unwrap_or_default();
+    match measure["at"].as_str() {
+        Some(at) => format!("{name}@{at}"),
+        None => name.to_owned(),
+    }
 }
 
 fn tail(text: &str) -> String {
@@ -422,19 +449,26 @@ fn tail(text: &str) -> String {
 /// Wall time and each measure over the repetitions that finished with exit code 0.
 fn summary(runs: &[Value]) -> Value {
     let ok: Vec<&Value> = runs.iter().filter(|r| r["exit_code"] == 0 && r["timed_out"] == false).collect();
-    let mut series: BTreeMap<String, (Vec<f64>, Value)> = BTreeMap::new();
-    series.insert("wall_ms".into(), (ok.iter().filter_map(|r| r["wall_ms"].as_f64()).collect(), json!("ms")));
+    // A measure with `at` is its own series, `name@path:line`, and keeps both parts.
+    let mut series: BTreeMap<String, (Vec<f64>, Value, Value)> = BTreeMap::new();
+    series.insert("wall_ms".into(), (ok.iter().filter_map(|r| r["wall_ms"].as_f64()).collect(), json!("ms"), Value::Null));
     for run in &ok {
         for m in run["measures"].as_array().into_iter().flatten() {
-            let entry = series.entry(m["name"].as_str().unwrap_or_default().to_owned()).or_insert((vec![], m["unit"].clone()));
+            let origin = if m["at"].is_string() { json!({ "name": m["name"], "at": m["at"] }) } else { Value::Null };
+            let entry = series.entry(series_key(m)).or_insert((vec![], m["unit"].clone(), origin));
             entry.0.extend(m["value"].as_f64());
         }
     }
-    let stats: serde_json::Map<String, Value> = series.into_iter().filter(|(_, (v, _))| !v.is_empty()).map(|(name, (mut values, unit))| {
+    let stats: serde_json::Map<String, Value> = series.into_iter().filter(|(_, (v, _, _))| !v.is_empty()).map(|(key, (mut values, unit, origin))| {
         values.sort_by(f64::total_cmp);
         let n = values.len();
         let median = if n % 2 == 1 { values[n / 2] } else { (values[n / 2 - 1] + values[n / 2]) / 2.0 };
-        (name, json!({ "n": n, "median": median, "min": values[0], "max": values[n - 1], "unit": unit }))
+        let mut stat = json!({ "n": n, "median": median, "min": values[0], "max": values[n - 1], "unit": unit });
+        if !origin.is_null() {
+            stat["measure"] = origin["name"].clone();
+            stat["at"] = origin["at"].clone();
+        }
+        (key, stat)
     }).collect();
     // Each output's distinct hashes over the successful repetitions: one means the same bytes.
     let mut outputs: BTreeMap<String, Vec<Value>> = BTreeMap::new();
@@ -467,6 +501,27 @@ mod tests {
     fn measure_lines_are_read_and_everything_else_ignored() {
         let text = "warming up\nlibrarian-measure render_ms=812.5 ms\n  librarian-measure rays=4096\nlibrarian-measure bad\nlibrarian-measure x=NaN\nmedian_ns=5\n";
         assert_eq!(measures(text), vec![json!({"name": "render_ms", "value": 812.5, "unit": "ms"}), json!({"name": "rays", "value": 4096.0, "unit": null})]);
+    }
+
+    #[test]
+    fn a_measure_may_say_where_in_the_code_it_comes_from() {
+        let text = "librarian-measure q=400 at=app/repositories/attempts.py:15\nlibrarian-measure t=3 ms at=src/a.rs:9\n\
+            librarian-measure q=1 at=/etc/x.py:1\nlibrarian-measure q=1 at=../x.py:1\nlibrarian-measure q=1 at=a.py:x\nlibrarian-measure q=1 at=a.py:1 at=b.py:2\n";
+        assert_eq!(measures(text), vec![
+            json!({"name": "q", "value": 400.0, "unit": null, "at": "app/repositories/attempts.py:15"}),
+            json!({"name": "t", "value": 3.0, "unit": "ms", "at": "src/a.rs:9"}),
+        ]);
+        // Each origin is its own series, next to the total of the same name.
+        let runs = [
+            json!({"exit_code": 0, "timed_out": false, "wall_ms": 1.0, "measures": [{"name": "q", "value": 805.0, "unit": null},
+                {"name": "q", "value": 400.0, "unit": null, "at": "app/a.py:15"}, {"name": "q", "value": 200.0, "unit": null, "at": "app/b.py:26"}]}),
+            json!({"exit_code": 0, "timed_out": false, "wall_ms": 1.0, "measures": [{"name": "q", "value": 805.0, "unit": null},
+                {"name": "q", "value": 400.0, "unit": null, "at": "app/a.py:15"}]}),
+        ];
+        let s = summary(&runs);
+        assert_eq!(s["stats"]["q"]["median"], 805.0);
+        assert_eq!(s["stats"]["q@app/a.py:15"], json!({"n": 2, "median": 400.0, "min": 400.0, "max": 400.0, "unit": null, "measure": "q", "at": "app/a.py:15"}));
+        assert_eq!(s["stats"]["q@app/b.py:26"]["n"], 1);
     }
 
     #[test]

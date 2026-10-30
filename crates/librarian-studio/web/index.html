@@ -62,6 +62,8 @@
   .list li { padding: 5px 6px; border-radius: 6px; cursor: pointer; }
   .list li:hover { background: var(--surface-1); }
   .tag { display: inline-block; padding: 0 6px; border: 1px solid var(--border); border-radius: 999px; font-size: 11px; color: var(--text-secondary); }
+  /* A number the project measured at this line: another source than the graph. */
+  .tag.measured { border-style: dashed; color: var(--text-primary); }
   .error { color: var(--danger); }
   .hud { position: absolute; padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px;
     background: color-mix(in srgb, var(--surface-1) 88%, transparent); pointer-events: none; }
@@ -1096,6 +1098,14 @@ const STRINGS = {
   'inventory.calledBy': ['chamada por: ', 'called by: '],
   'inventory.none': ['Nenhuma operação achada pelas regras.', 'No operation found by the rules.'],
   'inventory.loopChain': ['laço pela cadeia', 'loop through calls'],
+  'inventory.wholeEachTurn': ['percorre {parameter} inteira a cada volta (recebe {argument})', 'walks all of {parameter} every turn (gets {argument})'],
+  'inventory.boundList': ['lista atribuída na linha {lines}', 'list assigned on line {lines}'],
+  'inventory.measured': ['medido: {measure} {median} {unit} ({command})', 'measured: {measure} {median} {unit} ({command})'],
+  'inventory.measuredHelp': ['Número que o próprio projeto contou nesta linha (librarian-measure com at=), na última execução sem mudança deste comando. É da linha: soma todos os caminhos que chegam a ela. Fica ao lado da operação; não diz que ela é a causa.',
+    'A number the project itself counted at this line (librarian-measure with at=), in the latest run of this command without a change. It is the line\x27s: it adds up every path that reaches it. It sits next to the operation; it does not say the operation is the cause.'],
+  'inventory.measuredSummary': ['Medida por origem: {n} linha(s) contadas pelo projeto, {matched} com operação do inventário.', 'Measure by origin: {n} line(s) counted by the project, {matched} with an inventory operation.'],
+  'inventory.measuredLoose': ['Sem operação do inventário:', 'Without an inventory operation:'],
+  'inventory.countWhole':['{n} percorre(m) a coleção inteira a cada volta', '{n} walk(s) a whole collection every turn'],
   'inventory.search': ['Buscar no inventário (usa o léxico): relatório, motorista, history…', 'Search the inventory (uses the lexicon): report, driver, history…'],
   'inventory.terms': ['Busca: {terms}', 'Search: {terms}'],
   'inventory.noSynonym': ['{word} (sem sinônimo no léxico)', '{word} (no synonym in the lexicon)'],
@@ -2233,12 +2243,13 @@ function findingLines(data) {
   const f = data.finding;
   if (data.kind !== 'loop') return [];
   const ops = new Map(data.operations.map(o => [o.id, o]));
-  const op = o => `${oneLine(o.text).slice(0, 80)} (${o.path}:${o.line}, ${o.operation})`;
+  const op = o => `${oneLine(o.text).slice(0, 80)} (${o.path}:${o.line}, ${o.operation}${o.bound_lines?.length ? `; ${t('inventory.boundList', { lines: o.bound_lines.join(', ') })}` : ''})`;
   const steps = c => c.steps.map(s => `${s.to_name} (${t('investigate.calledAt', { line: s.line })})`).join(' → ');
+  const whole = c => c.whole_each_turn ? `: ${t('inventory.wholeEachTurn', c.whole_each_turn)}` : '';
   return [
     ...f.direct.map(id => t('investigate.direct', { op: op(ops.get(id)) })),
     ...f.through_calls.map(c => t('investigate.chain', { steps: steps(c), op: op(ops.get(c.operation)) })),
-    ...f.loops_through_calls.map(c => t('investigate.loopChain', { steps: steps(c), head: oneLine(c.head).slice(0, 60), where: `${c.path}:${c.line}` })),
+    ...f.loops_through_calls.map(c => t('investigate.loopChain', { steps: steps(c), head: oneLine(c.head).slice(0, 60), where: `${c.path}:${c.line}` }) + whole(c)),
   ];
 }
 function proposedQuestion(data) {
@@ -2911,7 +2922,12 @@ function resetInventory() {
 }
 $('#inventoryBuild').addEventListener('click', () => busy([$('#inventoryBuild')], $('#inventoryNote'), async () => {
   say($('#inventoryNote'), t('inventory.building'));
-  inventory = await api('GET', `/api/inventory?${query({ key: studio.project.key, run: studio.run })}`);
+  const [built, executions] = await Promise.all([
+    api('GET', `/api/inventory?${query({ key: studio.project.key, run: studio.run })}`),
+    api('GET', `/api/executions?${query({ key: studio.project.key, run: studio.run })}`),
+  ]);
+  inventory = built;
+  inventory.measured = measuredOrigins(executions);
   say($('#inventoryNote'), '');
   const kinds = [...new Set(inventory.inventory.operations.map(o => o.operation))].sort();
   $('#inventoryFilter').replaceChildren(el('option', { value: '', textContent: t('inventory.all') }), ...kinds.map(k => el('option', { value: k, textContent: k })));
@@ -2919,6 +2935,22 @@ $('#inventoryBuild').addEventListener('click', () => busy([$('#inventoryBuild')]
   $('#inventorySearch').hidden = false;
   renderInventory();
 }));
+// Measures that say where in the code they come from (`at=path:line`), from the latest run
+// without a change of each command: what the project counted at a line, put next to the
+// operation the inventory found there. Two sources meet at a line; neither proves a cause.
+function measuredOrigins(executions) {
+  const latest = new Map();
+  for (const x of executions.filter(x => !x.change)) {
+    if (!latest.has(x.name) || x.started > latest.get(x.name).started) latest.set(x.name, x);
+  }
+  const at = new Map();
+  for (const x of latest.values()) {
+    for (const s of Object.values(x.summary.stats).filter(s => s.at)) {
+      at.set(s.at, [...(at.get(s.at) ?? []), { command: x.name, measure: s.measure, median: s.median, unit: s.unit, n: s.n }]);
+    }
+  }
+  return at;
+}
 $('#inventoryFilter').addEventListener('change', () => renderInventory());
 $('#inventorySearch').addEventListener('input', () => renderInventory());
 
@@ -2953,10 +2985,16 @@ function renderInventory() {
   // Inside a row's summary a click would also open the row: the button only investigates.
   const investigateButton = target => el('button', { className: 'primary investigate', textContent: t('investigate.button'), title: t('help.investigate'),
     onclick: event => { event.preventDefault(); investigate(target, event.target); } });
+  // What a measure with `at=` counted at an operation's line.
+  const measured = inventory.measured ?? new Map();
+  const measuredTags = o => (measured.get(`${o.path}:${o.line}`) ?? []).map(m => el('span', { className: 'tag measured', style: 'margin-left: 4px',
+    title: t('inventory.measuredHelp'), textContent: t('inventory.measured', { measure: m.measure, median: Number.isInteger(m.median) ? m.median : number(m.median), unit: m.unit ?? '', command: m.command }) }));
   const opLine = (o, prefix) => el('div', { style: 'font-size: 12px' },
     prefix ? `${prefix}: ` : investigateButton(o.id), el('span', { className: 'tag', textContent: o.operation }), where(o.path, o.line),
     el('code', { textContent: flat(o.text).slice(0, 120) }), el('span', { className: 'muted', textContent: ` · ${o.rule}` }),
-    o.in_loop ? el('span', { className: 'tag', style: 'margin-left: 4px', textContent: t('inventory.inLoop') }) : null);
+    o.bound_lines?.length ? el('span', { className: 'muted', textContent: ` · ${t('inventory.boundList', { lines: o.bound_lines.join(', ') })}` }) : null,
+    o.in_loop ? el('span', { className: 'tag', style: 'margin-left: 4px', textContent: t('inventory.inLoop') }) : null,
+    ...measuredTags(o));
   // The operations a chain reaches in one declaration are one line, as in the terminal.
   const chainLines = chains => {
     const groups = [];
@@ -2971,7 +3009,8 @@ function renderInventory() {
       return el('div', { style: 'font-size: 12px' }, `${t('inventory.chain')}: `,
         ...g.steps.flatMap((s, k) => [k ? ' → ' : '', goTo(s.to, s.to_name), where(s.path, s.line)]), ' → ',
         ...byKind.flatMap(([kind, found], k) => [k ? '; ' : '', el('span', { className: 'tag', textContent: found.length > 1 ? `${kind} ×${found.length}` : kind }),
-          where(found[0].path, found[0].line, found.at(-1).line), found.length === 1 ? el('code', { textContent: flat(found[0].text).slice(0, 80) }) : '']),
+          where(found[0].path, found[0].line, found.at(-1).line), found.length === 1 ? el('code', { textContent: flat(found[0].text).slice(0, 80) }) : '',
+          ...found.flatMap(measuredTags)]),
         g.inner ? el('span', { className: 'tag', style: 'margin-left: 4px', textContent: t('inventory.innerLoop') }) : null);
     });
   };
@@ -2992,15 +3031,27 @@ function renderInventory() {
     l.through_calls.length ? t('inventory.countChains', { n: new Set(l.through_calls.filter(c => kept(c.operation)).map(c => c.operation)).size }) : '',
     l.direct.filter(kept).length ? t('inventory.countDirect', { n: l.direct.filter(kept).length }) : '',
     l.loops_through_calls.length ? t('inventory.countLoops', { n: l.loops_through_calls.length }) : '',
+    l.loops_through_calls.some(c => c.whole_each_turn) ? t('inventory.countWhole', { n: l.loops_through_calls.filter(c => c.whole_each_turn).length }) : '',
     l.repeated_calls.length ? t('inventory.countRepeated', { n: l.repeated_calls.length }) : '',
   ].filter(Boolean).join(' · ');
   const row = (summary, ...detail) => el('li', {}, el('details', { className: 'finding' }, el('summary', {}, ...summary), ...detail));
+  // The lines a measure named, and which of them hold no operation of the inventory: those
+  // numbers are shown here only, never next to a guess.
+  function measuredSummary() {
+    if (!measured.size) return null;
+    const lines = new Set(inv.operations.map(o => `${o.path}:${o.line}`));
+    const loose = [...measured.keys()].filter(at => !lines.has(at));
+    return el('p', { className: 'muted', style: 'font-size: 12px' }, t('inventory.measuredSummary', { n: measured.size, matched: measured.size - loose.length }),
+      loose.length ? ` ${t('inventory.measuredLoose')}` : '',
+      ...loose.map(at => el('div', { className: 'mono', textContent: `${at}: ${measured.get(at).map(m => `${m.measure} ${Number.isInteger(m.median) ? m.median : number(m.median)}`).join(', ')}` })));
+  }
   $('#inventoryCount').textContent = `(${inv.operations.length})`;
   box.replaceChildren(
     el('p', { className: 'muted', textContent: t('inventory.summary', { ops: inv.operations.length, symbols: inv.symbols.length, loops: inv.loops.length,
       without: inv.loops_without_operations, unmatched: inv.calls_unmatched }) }),
     el('p', { className: 'muted', style: 'font-size: 12px', textContent: t('inventory.rules', { builtin: inv.rules.filter(r => r.source === 'builtin').length,
       project: inv.rules.filter(r => r.source === 'project').length, profile: inventory.profile }) }),
+    measuredSummary(),
     el('h3', { textContent: `${t('inventory.loops')} (${loops.length})` }),
     loops.length ? el('ol', { className: 'claims' }, ...loops.map(l => row([
       investigateButton(l.occurrence), goTo(l.symbol, l.symbol_name), where(l.path, l.line, l.end_line), el('code', { textContent: flat(l.head).slice(0, 100) }),
@@ -3011,7 +3062,8 @@ function renderInventory() {
       ...chainLines(l.through_calls),
       ...l.loops_through_calls.map(c => el('div', { style: 'font-size: 12px' }, `${t('inventory.loopChain')}: `,
         ...c.steps.flatMap((s, k) => [k ? ' → ' : '', goTo(s.to, s.to_name), where(s.path, s.line)]), ' → ',
-        el('code', { textContent: flat(c.head).slice(0, 80) }), where(c.path, c.line, c.end_line))),
+        el('code', { textContent: flat(c.head).slice(0, 80) }), where(c.path, c.line, c.end_line),
+        c.whole_each_turn ? el('span', { className: 'tag', style: 'margin-left: 4px', textContent: t('inventory.wholeEachTurn', c.whole_each_turn) }) : null)),
       ...l.repeated_calls.map(r => el('div', { className: 'muted', style: 'font-size: 12px', textContent: t('inventory.repeated', { name: r.name, n: r.lines.length, lines: r.lines.join(', ') }) })),
       ...l.unfollowed.map(u => el('div', { className: 'muted', style: 'font-size: 12px', textContent: t('inventory.unfollowed', { text: flat(u.text).slice(0, 80), line: u.line, n: u.candidates }) })))))
       : el('p', { className: 'muted', textContent: t('inventory.none') }),
@@ -3201,8 +3253,8 @@ async function drawPath() {
       return;
     }
     if (!data.links.length) {
-      // Uses are recorded from the v3 profile on (base graph -v2); v4 derives from -v3, v5 from -v4.
-      const old = !/-v[234]$/.test(String(state.graph?.derived_from ?? ''));
+      // Uses are recorded from the v3 profile on (base graph -v2); v4 derives from -v3, v5 from -v4, v6 from -v5.
+      const old = !/-v[2345]$/.test(String(state.graph?.derived_from ?? ''));
       note.textContent = old ? t('path.oldGraph') : t(calls ? 'path.callsNone' : 'path.none');
       return;
     }

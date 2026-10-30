@@ -7,16 +7,19 @@ use rustpython_parser::Parse;
 
 /// `g6` adds fields, attribute accesses, and calls and bases as candidates (profile v3).
 /// `v5` adds module variables, names used as values or written, keyword arguments, loops and
-/// `with` blocks (profile v5).
+/// `with` blocks (profile v5). `v6` adds parameters, `x in name` comparisons and names bound to
+/// a list in a function (profile v6).
 /// Without them, records and occurrences are exactly those of the v2 adapter.
 pub(crate) struct Python {
     g6: bool,
     v5: bool,
+    v6: bool,
 }
 
-pub(crate) static PYTHON: Python = Python { g6: false, v5: false };
-pub(crate) static PYTHON_V3: Python = Python { g6: true, v5: false };
-pub(crate) static PYTHON_V5: Python = Python { g6: true, v5: true };
+pub(crate) static PYTHON: Python = Python { g6: false, v5: false, v6: false };
+pub(crate) static PYTHON_V3: Python = Python { g6: true, v5: false, v6: false };
+pub(crate) static PYTHON_V5: Python = Python { g6: true, v5: true, v6: false };
+pub(crate) static PYTHON_V6: Python = Python { g6: true, v5: true, v6: true };
 
 impl Extractor for Python {
     fn extract(&self, source: &Source, bytes: &[u8]) -> Extraction {
@@ -138,6 +141,7 @@ fn parse(text: &str) -> Result<(ast::Suite, usize), rustpython_parser::ParseErro
 struct Walker<'a> {
     g6: bool,
     v5: bool,
+    v6: bool,
     source: Option<&'a Source>,
     bytes: &'a [u8],
     offset: usize,
@@ -162,7 +166,7 @@ struct Bound {
 
 impl<'a> Walker<'a> {
     fn new(python: &Python, source: Option<&'a Source>, bytes: &'a [u8], offset: usize) -> Self {
-        Self { g6: python.g6, v5: python.v5, source, bytes, offset, scope: vec![], symbols: vec![], chunks: vec![], found: vec![],
+        Self { g6: python.g6, v5: python.v5, v6: python.v6, source, bytes, offset, scope: vec![], symbols: vec![], chunks: vec![], found: vec![],
             fields: Default::default(), locals: vec![] }
     }
 
@@ -361,6 +365,32 @@ impl<'a> Walker<'a> {
             _ => {}
         }
     }
+
+    /// v6: a function's parameters in order, labelled by the name: `parameter` when a call may
+    /// fill it by position, `keyword_parameter` after `*` or `*args`. `*args` and `**kwargs`
+    /// themselves are not recorded.
+    fn parameters(&mut self, arguments: &ast::Arguments) {
+        let positional = arguments.posonlyargs.iter().chain(&arguments.args).map(|a| ("parameter", &a.def));
+        let keyword = arguments.kwonlyargs.iter().map(|a| ("keyword_parameter", &a.def));
+        for (kind, arg) in positional.chain(keyword) {
+            let (start, end) = self.span(arg.range);
+            self.found.push(Occurrence { kind, start, end, candidate: None, label_end: Some(start + arg.arg.len()) });
+        }
+    }
+
+    /// v6: a plain name bound to a list inside a function (`x = [...]`, a list comprehension,
+    /// `list(...)` or `sorted(...)`). Searching it with `in` walks the list.
+    fn list_binding(&mut self, target: &ast::Expr, value: &ast::Expr) {
+        let ast::Expr::Name(n) = target else { return };
+        let is_list = match value {
+            ast::Expr::List(_) | ast::Expr::ListComp(_) => true,
+            ast::Expr::Call(c) => matches!(c.func.as_ref(), ast::Expr::Name(f) if matches!(f.id.as_str(), "list" | "sorted")),
+            _ => false,
+        };
+        if self.v6 && is_list && !self.locals.is_empty() {
+            self.push("list_binding", n.range, None);
+        }
+    }
 }
 
 impl Visitor for Walker<'_> {
@@ -369,6 +399,9 @@ impl Visitor for Walker<'_> {
         self.scope.push((node.name.to_string(), false));
         if self.v5 {
             self.locals.push(Self::bound(&node.args, &node.body));
+        }
+        if self.v6 {
+            self.parameters(&node.args);
         }
         self.generic_visit_stmt_function_def(node);
         if self.v5 {
@@ -382,6 +415,9 @@ impl Visitor for Walker<'_> {
         self.scope.push((node.name.to_string(), false));
         if self.v5 {
             self.locals.push(Self::bound(&node.args, &node.body));
+        }
+        if self.v6 {
+            self.parameters(&node.args);
         }
         self.generic_visit_stmt_async_function_def(node);
         if self.v5 {
@@ -504,6 +540,7 @@ impl Visitor for Walker<'_> {
 
     fn visit_stmt_assign(&mut self, node: ast::StmtAssign) {
         node.targets.iter().for_each(|t| self.binding(t));
+        node.targets.iter().for_each(|t| self.list_binding(t, &node.value));
         if !self.g6 {
             return self.generic_visit_stmt_assign(node);
         }
@@ -521,6 +558,9 @@ impl Visitor for Walker<'_> {
 
     fn visit_stmt_ann_assign(&mut self, node: ast::StmtAnnAssign) {
         self.binding(&node.target);
+        if let Some(value) = &node.value {
+            self.list_binding(&node.target, value);
+        }
         self.annotation(&node.annotation);
         if !self.g6 {
             return self.generic_visit_stmt_ann_assign(node);
@@ -532,6 +572,17 @@ impl Visitor for Walker<'_> {
         if let Some(value) = node.value {
             self.visit_expr(*value);
         }
+    }
+
+    // v6: `x in name` and `x not in name`, a membership test on a plain name. Whether that walks
+    // a list is the inventory's question, from how the name is bound.
+    fn visit_expr_compare(&mut self, node: ast::ExprCompare) {
+        let membership = matches!(node.ops.as_slice(), [ast::CmpOp::In | ast::CmpOp::NotIn])
+            && matches!(node.comparators.as_slice(), [ast::Expr::Name(_)]);
+        if self.v6 && membership {
+            self.push("membership", node.range, None);
+        }
+        self.generic_visit_expr_compare(node);
     }
 
     fn visit_expr_attribute(&mut self, node: ast::ExprAttribute) {

@@ -169,7 +169,7 @@ fn users(graph: &v2::Graph, seed: &str, depth: usize) -> Vec<String> {
 #[test]
 fn python_module_names_are_declared_and_their_uses_seen() {
     let project = Project::new();
-    let catalog = project.edition("v5", None);
+    let catalog = project.edition("v5", Some(EXTRACTOR_V5));
     assert_eq!(catalog.manifest().extractor, EXTRACTOR_V5);
     let mut variables: Vec<&str> = catalog.symbols().values().filter(|s| s.kind == "variable").map(|s| s.name.as_str()).collect();
     variables.sort();
@@ -199,7 +199,7 @@ fn python_module_names_are_declared_and_their_uses_seen() {
 #[test]
 fn loops_and_with_blocks_span_their_bodies_and_are_labelled_by_their_heads() {
     let project = Project::new();
-    let catalog = project.edition("v5", None);
+    let catalog = project.edition("v5", Some(EXTRACTOR_V5));
     let graph = Graph::build(&catalog);
     assert_eq!(graph.version, "rust-python-syntax-graph-v4");
     assert_eq!(labels(&graph, "loop"), [
@@ -220,7 +220,7 @@ fn loops_and_with_blocks_span_their_bodies_and_are_labelled_by_their_heads() {
 #[test]
 fn rust_variants_values_and_patterns_are_uses() {
     let project = Project::new();
-    let catalog = project.edition("v5", None);
+    let catalog = project.edition("v5", Some(EXTRACTOR_V5));
     let graph = v2::Graph::build(&catalog);
     assert_eq!(users(&graph, &id(&catalog, "MAX", "const"), 1), ["run@1 via name_reference"]);
     // A tuple variant is matched in a pattern and built by a call; a unit variant by its path.
@@ -249,6 +249,6 @@ fn the_v4_profile_is_still_reproduced_without_the_new_records() {
         assert!(labels(&graph, kind).is_empty(), "{kind}");
     }
     graph.verify(&catalog).unwrap();
-    let current = project.edition("v5", None);
+    let current = project.edition("v5", Some(EXTRACTOR_V5));
     v2::Graph::build(&current).verify(&current).unwrap();
 }
