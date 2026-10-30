@@ -81,6 +81,19 @@ pub fn run(args: &[String]) -> Result<i32> {
             }
             Ok(code)
         }
+        Some("investigate") if args.get(1).map(String::as_str) == Some("inventory") && (3..=5).contains(&args.len()) => {
+            let catalog = Catalog::load(Path::new(&args[2]))?;
+            let rules = match args.get(3) {
+                Some(path) if path != "-" => serde_json::from_slice(&fs::read(path)?)?,
+                _ => crate::inventory::RuleSet::default(),
+            };
+            let inventory = crate::inventory::inventory(&catalog, &rules)?;
+            if let Some(file) = args.get(4) {
+                crate::write_new(Path::new(file), &serde_json::to_vec_pretty(&inventory)?)?;
+            }
+            print!("{}", crate::inventory::summary(&inventory));
+            Ok(if catalog.diagnostics().is_empty() { 0 } else { 2 })
+        }
         Some("show") if args.len() == 3 => {
             let catalog = Catalog::load(Path::new(&args[1]))?;
             let symbols = catalog.symbols_named(&args[2]);
@@ -94,6 +107,6 @@ pub fn run(args: &[String]) -> Result<i32> {
             }
             Ok(0)
         }
-        _ => Err("Usage: generate <project-root> <config.json> <new-edition> | verify <edition> [current-project-root] | show <edition> <symbol-name> | search <edition> <question> [lexicon.json|-] [top] [depth] | graph <edition> <new-file.json> [v1|v2] | verify-graph <edition> <graph.json> | prepare <edition> <request.json> <new-dir> | verify-prepared <edition> <dir>".into()),
+        _ => Err("Usage: generate <project-root> <config.json> <new-edition> | verify <edition> [current-project-root] | show <edition> <symbol-name> | search <edition> <question> [lexicon.json|-] [top] [depth] | graph <edition> <new-file.json> [v1|v2] | verify-graph <edition> <graph.json> | prepare <edition> <request.json> <new-dir> | verify-prepared <edition> <dir> | investigate inventory <edition> [rules.json|-] [new-file.json]".into()),
     }
 }

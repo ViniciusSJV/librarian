@@ -150,6 +150,7 @@ fn route(app: &App, req: &Request) -> Result<Response> {
             let nodes: Vec<String> = serde_json::from_value(body["nodes"].clone())?;
             ok(store.suggest_envelope(&field(&body, "key")?, &field(&body, "run")?, &nodes)?)
         }
+        ("GET", "/api/inventory") => ok(store.inventory(param("key")?, param("run")?)?),
         ("GET", "/api/graph") => Ok(Response {
             status: 200,
             content_type: "application/json; charset=utf-8",

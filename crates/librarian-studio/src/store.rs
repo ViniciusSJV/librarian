@@ -3,7 +3,7 @@
 //! runs/<run>/turns/<NN>/{question.json, search.json, prepare-request.json, prepared/, claims/, sends/}.
 use librarian_llm_engine::claims::{self, compare::compare, Claim, Policy};
 use librarian_ingest::{
-    envelope,
+    envelope, inventory,
     graph::v2,
     hash,
     prepare::{self, Request, ReviewedFact, Target},
@@ -364,6 +364,20 @@ impl Store {
         Ok(out)
     }
 
+    /// Steps 2 and 3: the operation inventory of a run's edition, with the built-in rules and
+    /// those of the profile's `inventory`, read from the file at each use like its commands.
+    pub fn inventory(&self, key: &str, run: &str) -> Result<Value> {
+        let root = PathBuf::from(self.settings(key)?.root);
+        let profile = root.join(PROFILE);
+        let rules: inventory::RuleSet = match fs::read(&profile).ok().map(|b| serde_json::from_slice::<Value>(&b)).transpose()? {
+            Some(p) if p.get("inventory").is_some() => serde_json::from_value(p["inventory"].clone()).map_err(|e| format!("{PROFILE}: inventory inválido: {e}"))?,
+            _ => inventory::RuleSet::default(),
+        };
+        let catalog = Catalog::load(&self.edition(key, run)?)?;
+        let found = inventory::inventory(&catalog, &rules)?;
+        Ok(json!({ "profile": display(&profile), "inventory": found }))
+    }
+
     /// The current reviewed facts about these declarations, as a question carries them.
     fn reviewed_about(&self, key: &str, run: &str, targets: &[Target]) -> Result<Vec<ReviewedFact>> {
         let facts = self.facts(key, run)?;
@@ -658,10 +672,12 @@ impl Store {
             "answer": { "format": settings.answer_format, "allow_inference": settings.allow_inference,
                 "allow_hypothesis": settings.allow_hypothesis, "allow_patch": settings.allow_patch },
         });
-        // Commands are written by hand in the profile and approved one by one; the studio
-        // never writes them, so an export keeps them exactly as they are.
-        if let Some(commands) = existing.get("commands") {
-            profile["commands"] = commands.clone();
+        // Commands and inventory rules are written by hand in the profile (commands approved
+        // one by one); the studio never writes them, so an export keeps them exactly as they are.
+        for kept in ["commands", "inventory"] {
+            if let Some(value) = existing.get(kept) {
+                profile[kept] = value.clone();
+            }
         }
         let mut files: Vec<(String, Vec<u8>)> = vec![];
         let pretty = |v: &Value| -> Result<Vec<u8>> {
@@ -1701,6 +1717,28 @@ mod tests {
         fs::write(root.join(PROFILE), outside.to_string()).unwrap();
         assert!(refusal(store.commands(&key)).contains("fora da cópia"));
         let _ = fs::remove_dir_all(Path::new(done["copy"].as_str().unwrap()).parent().unwrap());
+    }
+
+    #[test]
+    fn the_inventory_reads_the_profile_rules_at_each_use() {
+        let scratch = project();
+        let root = scratch.0.join("project");
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let key = store.open(&display(&root)).unwrap()["key"].as_str().unwrap().to_owned();
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        let sources = |v: &Value| -> Vec<String> { v["inventory"]["rules"].as_array().unwrap().iter().map(|r| r["source"].as_str().unwrap().to_owned()).collect() };
+
+        // Without `inventory` in the profile, only the built-in rules apply.
+        let plain = store.inventory(&key, &run).unwrap();
+        assert!(sources(&plain).iter().all(|s| s == "builtin"));
+        assert_eq!(plain["inventory"]["version"], "operation-inventory-v1");
+        // The profile is read again at each use: a rule written now applies now.
+        fs::write(root.join(PROFILE), json!({ "inventory": { "rules": [
+            { "id": "project.double", "operation": "math", "match": "call", "names": ["direction"] }] } }).to_string()).unwrap();
+        assert!(sources(&store.inventory(&key, &run).unwrap()).contains(&"project".to_owned()));
+        // A rule the inventory cannot read is refused with the profile's name.
+        fs::write(root.join(PROFILE), json!({ "inventory": { "rules": [{ "id": "x", "operation": "x", "match": "guess" }] } }).to_string()).unwrap();
+        assert!(store.inventory(&key, &run).unwrap_err().to_string().contains("inventory inválido"));
     }
 
     #[test]

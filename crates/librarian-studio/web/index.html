@@ -235,6 +235,7 @@
     <nav id="tabs" role="tablist">
       <button type="button" role="tab" data-tab="project" data-i18n="tab.project"></button>
       <button type="button" role="tab" data-tab="lexicon" data-i18n="tab.lexicon"></button>
+      <button type="button" role="tab" data-tab="inventory"><span data-i18n="tab.inventory"></span><span id="inventoryCount" class="count"></span></button>
       <button type="button" role="tab" data-tab="ruler"><span data-i18n="tab.ruler"></span><span id="commandsCount" class="count"></span></button>
       <button type="button" role="tab" data-tab="facts"><span data-i18n="tab.facts"></span><span id="factsCount" class="count"></span></button>
       <button type="button" role="tab" data-tab="map" data-i18n="tab.map"></button>
@@ -307,6 +308,18 @@
           <div class="row" style="margin-top: 6px"><button id="checkLexicon" data-i18n="lexicon.check"></button></div>
         </div>
         <div id="lexiconProposal" hidden></div>
+      </section>
+    </div>
+
+    <div class="tabpanel studio-only" data-panel="inventory">
+      <section class="card">
+        <h2><span data-i18n="inventory.title"></span><button type="button" class="help" data-help-key="help.inventory">?</button></h2>
+        <div class="row" style="gap: 6px">
+          <button type="button" id="inventoryBuild" class="primary" data-i18n="inventory.build" disabled></button>
+          <select id="inventoryFilter" style="width: auto" hidden></select>
+          <span id="inventoryNote" class="muted"></span>
+        </div>
+        <div id="inventoryList"></div>
       </section>
     </div>
 
@@ -1051,6 +1064,29 @@ const STRINGS = {
   'mf.saved': ['Salvo em modelfiles/{name}.Modelfile.', 'Saved to modelfiles/{name}.Modelfile.'],
   'tab.project': ['Projeto', 'Project'],
   'tab.lexicon': ['Léxico', 'Lexicon'],
+  'tab.inventory': ['Investigar', 'Investigate'],
+  'inventory.title': ['Inventário de operações', 'Operation inventory'],
+  'help.inventory': ['O bibliotecário percorre o grafo atrás de lugares onde vale a pena perguntar: acesso ao banco, leitura de relação carregada sob demanda, matemática, arquivo, rede, trava, escrita no estado do módulo. Cada operação vem com a regra que a achou e a linha. Os laços mostram o que têm dentro, direto ou pela cadeia de chamadas sem homônimos. Nada disso diz que algo é lento: estar dentro de um laço é estrutura; quantas vezes roda e quanto tempo leva, só a Régua mede. As regras do projeto ficam no librarian.json, em "inventory".',
+    'The librarian walks the graph for places worth asking about: database access, lazy relationship reads, math, files, network, locks, writes to module state. Each operation comes with the rule that found it and the line. Loops show what they hold, directly or through a chain of calls without homonyms. None of this says anything is slow: being inside a loop is structure; how often it runs and how long it takes, only the Ruler measures. The project\'s rules live in librarian.json, under "inventory".'],
+  'inventory.build': ['Montar inventário', 'Build inventory'],
+  'inventory.building': ['Percorrendo o grafo…', 'Walking the graph…'],
+  'inventory.all': ['Todas as operações', 'All operations'],
+  'inventory.summary': ['{ops} operações em {symbols} declarações; {loops} laços com operação ({without} sem); {unmatched} chamadas que nenhuma regra cobre.', '{ops} operations in {symbols} declarations; {loops} loops with an operation ({without} without); {unmatched} calls no rule covers.'],
+  'inventory.rules': ['Regras: {builtin} do bibliotecário, {project} do projeto ({profile}).', 'Rules: {builtin} from the librarian, {project} from the project ({profile}).'],
+  'inventory.loops': ['Laços', 'Loops'],
+  'inventory.symbols': ['Operações por declaração', 'Operations by declaration'],
+  'inventory.nesting': ['dentro de {n} laço(s)', 'inside {n} loop(s)'],
+  'inventory.inner': ['{n} laço(s) dentro', '{n} loop(s) inside'],
+  'inventory.direct': ['direto', 'directly'],
+  'inventory.chain': ['pela cadeia', 'through calls'],
+  'inventory.innerLoop': ['em laço lá também', 'in a loop there too'],
+  'inventory.repeated': ['{name} chamada {n} vezes (linhas {lines})', '{name} called {n} times (lines {lines})'],
+  'inventory.unfollowed': ['não seguida: {text} (linha {line}, {n} homônimos)', 'not followed: {text} (line {line}, {n} homonyms)'],
+  'inventory.inLoop': ['em laço', 'in a loop'],
+  'inventory.calls': ['chama: ', 'calls: '],
+  'inventory.calledBy': ['chamada por: ', 'called by: '],
+  'inventory.none': ['Nenhuma operação achada pelas regras.', 'No operation found by the rules.'],
+  'inventory.noRun': ['Gere o grafo para montar o inventário.', 'Generate the graph to build the inventory.'],
   'tab.ruler': ['Régua', 'Ruler'],
   'tab.facts': ['Acervo', 'Facts'],
   'tab.map': ['Mapa', 'Map'],
@@ -1811,7 +1847,7 @@ async function openProject() {
     renderProject();
     const runs = studio.project.runs;
     if (runs.length) await loadRun(runs[0].id);
-    else { studio.run = null; studio.turns = []; renderTurns(); loadFacts(); say($('#runNote'), t('project.noRunsYet')); }
+    else { studio.run = null; studio.turns = []; renderTurns(); resetInventory(); loadFacts(); say($('#runNote'), t('project.noRunsYet')); }
   });
 }
 
@@ -1899,6 +1935,7 @@ async function loadRun(id) {
   // Gathered declarations belong to one edition's graph.
   gathered = [];
   renderGathered();
+  resetInventory();
   $('#runs').value = id;
   status(t('status.loading'));
   showGraph(await api('GET', `/api/graph?${query({ key: studio.project.key, run: id })}`));
@@ -2728,6 +2765,95 @@ async function loadFacts() {
       : el('p', { className: 'muted', textContent: t('facts.empty') }),
     el('p', { className: 'muted', style: 'font-size: 11px', textContent: serverText(data.limits) }));
   await loadCommands();
+}
+
+// Steps 2 and 3: the operation inventory of the open run, built on demand (a large project
+// takes seconds) and dropped when the run changes.
+let inventory = null;
+function resetInventory() {
+  inventory = null;
+  $('#inventoryCount').textContent = '';
+  $('#inventoryFilter').hidden = true;
+  $('#inventoryList').replaceChildren();
+  $('#inventoryBuild').disabled = !studio.project || !studio.run;
+  say($('#inventoryNote'), studio.project && !studio.run ? t('inventory.noRun') : '');
+}
+$('#inventoryBuild').addEventListener('click', () => busy([$('#inventoryBuild')], $('#inventoryNote'), async () => {
+  say($('#inventoryNote'), t('inventory.building'));
+  inventory = await api('GET', `/api/inventory?${query({ key: studio.project.key, run: studio.run })}`);
+  say($('#inventoryNote'), '');
+  const kinds = [...new Set(inventory.inventory.operations.map(o => o.operation))].sort();
+  $('#inventoryFilter').replaceChildren(el('option', { value: '', textContent: t('inventory.all') }), ...kinds.map(k => el('option', { value: k, textContent: k })));
+  $('#inventoryFilter').hidden = !kinds.length;
+  renderInventory();
+}));
+$('#inventoryFilter').addEventListener('change', () => renderInventory());
+
+function renderInventory() {
+  const box = $('#inventoryList');
+  if (!inventory) return box.replaceChildren();
+  const inv = inventory.inventory;
+  const only = $('#inventoryFilter').value;
+  const ops = new Map(inv.operations.map(o => [o.id, o]));
+  const kept = id => !only || ops.get(id)?.operation === only;
+  const flat = text => text.split(/\s+/).join(' ');
+  // A declaration's name leads to it on the map.
+  const goTo = (id, label) => {
+    const i = state.index.get(id);
+    return i == null ? el('span', { className: 'mono', textContent: label })
+      : el('a', { href: '#', className: 'mono', textContent: label, onclick: ev => { ev.preventDefault(); selectNode(i, true); } });
+  };
+  const where = (path, line, end) => el('span', { className: 'muted mono', textContent: ` ${path}:${line}${end && end !== line ? `–${end}` : ''} ` });
+  const opLine = (o, prefix) => el('div', { style: 'font-size: 12px' },
+    prefix ? `${prefix}: ` : '', el('span', { className: 'tag', textContent: o.operation }), where(o.path, o.line),
+    el('code', { textContent: flat(o.text).slice(0, 120) }), el('span', { className: 'muted', textContent: ` · ${o.rule}` }),
+    o.in_loop ? el('span', { className: 'tag', style: 'margin-left: 4px', textContent: t('inventory.inLoop') }) : null);
+  // The operations a chain reaches in one declaration are one line, as in the terminal.
+  const chainLines = chains => {
+    const groups = [];
+    for (const c of chains.filter(c => kept(c.operation))) {
+      const key = c.steps.map(s => `${s.to}@${s.line}`).join('>');
+      const group = groups.find(g => g.key === key) ?? (groups.push({ key, steps: c.steps, ops: [], inner: false }), groups.at(-1));
+      group.ops.push(ops.get(c.operation));
+      group.inner ||= c.inner_loop;
+    }
+    return groups.map(g => {
+      const byKind = Object.entries(Object.groupBy(g.ops, o => o.operation));
+      return el('div', { style: 'font-size: 12px' }, `${t('inventory.chain')}: `,
+        ...g.steps.flatMap((s, k) => [k ? ' → ' : '', goTo(s.to, s.to_name), where(s.path, s.line)]), ' → ',
+        ...byKind.flatMap(([kind, found], k) => [k ? '; ' : '', el('span', { className: 'tag', textContent: found.length > 1 ? `${kind} ×${found.length}` : kind }),
+          where(found[0].path, found[0].line, found.at(-1).line), found.length === 1 ? el('code', { textContent: flat(found[0].text).slice(0, 80) }) : '']),
+        g.inner ? el('span', { className: 'tag', style: 'margin-left: 4px', textContent: t('inventory.innerLoop') }) : null);
+    });
+  };
+  const loops = inv.loops.filter(l => !only || l.direct.some(kept) || l.through_calls.some(c => kept(c.operation)));
+  const symbols = inv.symbols.filter(s => s.operations.some(kept));
+  const names = new Map(inv.symbols.map(s => [s.symbol, s.name]));
+  const related = (label, ids) => ids.length ? el('div', { className: 'muted', style: 'font-size: 12px' }, label,
+    ...ids.flatMap((id, k) => [k ? ', ' : '', goTo(id, names.get(id) ?? id)])) : null;
+  $('#inventoryCount').textContent = `(${inv.operations.length})`;
+  box.replaceChildren(
+    el('p', { className: 'muted', textContent: t('inventory.summary', { ops: inv.operations.length, symbols: inv.symbols.length, loops: inv.loops.length,
+      without: inv.loops_without_operations, unmatched: inv.calls_unmatched }) }),
+    el('p', { className: 'muted', style: 'font-size: 12px', textContent: t('inventory.rules', { builtin: inv.rules.filter(r => r.source === 'builtin').length,
+      project: inv.rules.filter(r => r.source === 'project').length, profile: inventory.profile }) }),
+    el('h3', { textContent: `${t('inventory.loops')} (${loops.length})` }),
+    loops.length ? el('ol', { className: 'claims' }, ...loops.map(l => el('li', {},
+      goTo(l.symbol, l.symbol_name), where(l.path, l.line, l.end_line), el('code', { textContent: flat(l.head).slice(0, 100) }),
+      l.nesting ? el('span', { className: 'tag', style: 'margin-left: 4px', textContent: t('inventory.nesting', { n: l.nesting }) }) : null,
+      l.inner_loops ? el('span', { className: 'tag', style: 'margin-left: 4px', textContent: t('inventory.inner', { n: l.inner_loops }) }) : null,
+      ...l.direct.filter(kept).map(id => opLine(ops.get(id), t('inventory.direct'))),
+      ...chainLines(l.through_calls),
+      ...l.repeated_calls.map(r => el('div', { className: 'muted', style: 'font-size: 12px', textContent: t('inventory.repeated', { name: r.name, n: r.lines.length, lines: r.lines.join(', ') }) })),
+      ...l.unfollowed.map(u => el('div', { className: 'muted', style: 'font-size: 12px', textContent: t('inventory.unfollowed', { text: flat(u.text).slice(0, 80), line: u.line, n: u.candidates }) })))))
+      : el('p', { className: 'muted', textContent: t('inventory.none') }),
+    el('h3', { textContent: `${t('inventory.symbols')} (${symbols.length})` }),
+    symbols.length ? el('ol', { className: 'claims' }, ...symbols.map(s => el('li', {},
+      goTo(s.symbol, s.name), where(s.path, s.line),
+      ...s.operations.filter(kept).map(id => opLine(ops.get(id))),
+      related(t('inventory.calls'), s.calls), related(t('inventory.calledBy'), s.called_by))))
+      : el('p', { className: 'muted', textContent: t('inventory.none') }),
+    el('p', { className: 'muted', style: 'font-size: 11px', textContent: inv.limits.join(' ') }));
 }
 
 // P2: the profile's commands, approved one exact version at a time, and what each run recorded.
