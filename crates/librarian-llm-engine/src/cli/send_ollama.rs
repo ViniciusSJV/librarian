@@ -15,6 +15,7 @@ fn run() -> Result<bool> {
         model: args[3].clone(),
         timeout_ms: args[4].parse()?,
         max_bytes: args[5].parse()?,
+        structured_output: true,
     };
     let state = attempt(Path::new(&args[1]), Path::new(&args[7]), &args[6], &config)?;
     println!(
@@ -82,6 +83,7 @@ mod tests {
             model: "modelo-configurado".into(),
             timeout_ms: 2000,
             max_bytes: 4096,
+            structured_output: true,
         }
     }
     fn server(

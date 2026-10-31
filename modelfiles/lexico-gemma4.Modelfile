@@ -1,10 +1,10 @@
 # Biblioteca de Modelfiles do Librarian, fora dos crates: modelo, parâmetros e SYSTEM são escolha de quem pergunta.
-# Propõe grupos de sinônimos para o léxico de busca; a proposta é conferida pelo Librarian e aprovada pelo usuário.
-FROM qwen2.5-coder:14b
+# Propõe grupos de sinônimos para o léxico de busca; a proposta é conferida pelo Librarian e aprovada pelo usuário. Modelo: gemma4:12b.
+FROM gemma4:12b
 PARAMETER temperature 0
 PARAMETER seed 42
-PARAMETER num_ctx 10240
-PARAMETER num_predict 4096
+PARAMETER num_ctx 32768
+PARAMETER num_predict 12288
 
 SYSTEM """
 Você propõe vocabulário de busca para um projeto de código, em português.

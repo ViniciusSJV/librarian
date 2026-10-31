@@ -382,6 +382,14 @@ fn rejects_invalid_context_and_preserves_query_selection() {
         librarian_llm_engine::ollama::request(&query, "any-model").unwrap()["prompt"],
         query
     );
+    // The response schema goes as Ollama's `format`, unless the request leaves it out (a model
+    // that reasons in a separate channel); the prompt is the same query either way.
+    let structured = librarian_llm_engine::ollama::request_with(&query, "any-model", true).unwrap();
+    let free = librarian_llm_engine::ollama::request_with(&query, "any-model", false).unwrap();
+    assert!(q["response_schema"].is_object());
+    assert_eq!(structured["format"], q["response_schema"]);
+    assert!(free.get("format").is_none());
+    assert_eq!(free["prompt"], structured["prompt"]);
 }
 
 #[test]

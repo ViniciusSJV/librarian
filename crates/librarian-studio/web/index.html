@@ -2015,8 +2015,8 @@ const providerLabel = id => (id === 'manual' ? t('provider.short.manual') : { ol
 // ---- LLM choice next to each action. Each kind of action remembers its own LLM and Modelfile:
 // the lexicon suggestion, locating, improving, chaining and sending a question again.
 const DEFAULT_MODELFILES = {
-  lexicon: ['lexico'], locate: ['verificavel'], improve: ['performance-qwen', 'performance'],
-  chain: ['performance-qwen', 'performance'], resend: ['verificavel'],
+  lexicon: ['lexico-qwen3coder'], locate: ['verificavel-qwen3coder'], improve: ['performance-qwen3coder'],
+  chain: ['performance-qwen3coder'], resend: ['verificavel-qwen3coder'],
 };
 const implementedProviders = () => studio.status.llm.providers.filter(p => p.implemented).map(p => p.id);
 function defaultProvider() {

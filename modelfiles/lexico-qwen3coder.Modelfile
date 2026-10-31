@@ -1,7 +1,10 @@
 # Biblioteca de Modelfiles do Librarian, fora dos crates: modelo, parâmetros e SYSTEM são escolha de quem pergunta.
-# lexico para o Claude, SYSTEM em português: propõe grupos de sinônimos para o léxico, com palavras em português. No Claude só o SYSTEM vale; FROM e PARAMETER não se aplicam.
-# FROM claude existe só porque o studio exige uma linha FROM: com o Ollama, este Modelfile falha no ollama create.
-FROM claude
+# Propõe grupos de sinônimos para o léxico de busca; a proposta é conferida pelo Librarian e aprovada pelo usuário. Modelo: qwen3-coder:30b.
+FROM qwen3-coder:30b
+PARAMETER temperature 0
+PARAMETER seed 42
+PARAMETER num_ctx 32768
+PARAMETER num_predict 12288
 
 SYSTEM """
 Você propõe vocabulário de busca para um projeto de código, em português.

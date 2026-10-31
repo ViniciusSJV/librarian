@@ -3,6 +3,13 @@ pub mod client;
 use serde_json::{json, Value};
 
 pub fn request(query: &str, model: &str) -> Result<Value, String> {
+    request_with(query, model, true)
+}
+
+/// `structured` false leaves the response schema out of the request (no `format`): a model that
+/// reasons in a separate channel can answer nothing when the schema constrains its output. The
+/// local checker validates the answer either way.
+pub fn request_with(query: &str, model: &str, structured: bool) -> Result<Value, String> {
     if model.trim().is_empty() {
         return Err("Modelo deve ser explícito".into());
     }
@@ -21,7 +28,7 @@ pub fn request(query: &str, model: &str) -> Result<Value, String> {
         return Err("Consulta deve conter question, evidence e instructions válidos".into());
     }
     let mut body = json!({"model": model, "prompt": query, "stream": false});
-    if let Some(schema) = value.get("response_schema") {
+    if let Some(schema) = value.get("response_schema").filter(|_| structured) {
         if !schema.is_object() || schema["type"] != "object" {
             return Err("response_schema deve ser um JSON Schema de objeto".into());
         }

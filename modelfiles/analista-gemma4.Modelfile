@@ -1,7 +1,10 @@
 # Biblioteca de Modelfiles do Librarian, fora dos crates: modelo, parâmetros e SYSTEM são escolha de quem pergunta.
-# analista para o Claude, SYSTEM em português: explica só as evidências selecionadas. No Claude só o SYSTEM vale; FROM e PARAMETER não se aplicam.
-# FROM claude existe só porque o studio exige uma linha FROM: com o Ollama, este Modelfile falha no ollama create.
-FROM claude
+# analista: explica somente as evidências selecionadas (FACT, LACUNA; inferência e hipótese só quando pedidas). Modelo: gemma4:12b.
+FROM gemma4:12b
+PARAMETER temperature 0
+PARAMETER seed 42
+PARAMETER num_ctx 32768
+PARAMETER num_predict 4096
 
 SYSTEM """
 Você explica somente as evidências selecionadas, em português.

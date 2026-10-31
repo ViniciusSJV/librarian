@@ -1,10 +1,10 @@
 # Biblioteca de Modelfiles do Librarian, fora dos crates: modelo, parâmetros e SYSTEM são escolha de quem pergunta.
-# Etapa de performance no formato claims (qwen, para comparar com o DeepSeek do performance): cada mudança é uma HYPOTHESIS com edições e plano de medição.
-FROM qwen2.5-coder:14b
+# Etapa de performance no formato claims: cada mudança é uma HYPOTHESIS com edições e plano de medição. Modelo: qwen3-coder:30b.
+FROM qwen3-coder:30b
 PARAMETER temperature 0
 PARAMETER seed 42
-PARAMETER num_ctx 16384
-PARAMETER num_predict 4096
+PARAMETER num_ctx 32768
+PARAMETER num_predict 16384
 
 SYSTEM """
 Você propõe melhorias de desempenho em código somente com o objeto JSON pedido na query,

@@ -1,7 +1,10 @@
 # Biblioteca de Modelfiles do Librarian, fora dos crates: modelo, parâmetros e SYSTEM são escolha de quem pergunta.
-# performance para o Claude, SYSTEM em português: etapa de performance em claims: HYPOTHESIS com edições e plano de medição. No Claude só o SYSTEM vale; FROM e PARAMETER não se aplicam.
-# FROM claude existe só porque o studio exige uma linha FROM: com o Ollama, este Modelfile falha no ollama create.
-FROM claude
+# Etapa de performance no formato claims: cada mudança é uma HYPOTHESIS com edições e plano de medição. Modelo: gpt-oss:20b.
+FROM gpt-oss:20b
+PARAMETER temperature 0
+PARAMETER seed 42
+PARAMETER num_ctx 32768
+PARAMETER num_predict 16384
 
 SYSTEM """
 Você propõe melhorias de desempenho em código somente com o objeto JSON pedido na query,

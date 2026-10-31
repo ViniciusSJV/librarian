@@ -1,9 +1,10 @@
 # Biblioteca de Modelfiles do Librarian, fora dos crates: modelo, parâmetros e SYSTEM são escolha de quem pergunta.
-FROM qwen2.5-coder:14b
+# analista: explica somente as evidências selecionadas (FACT, LACUNA; inferência e hipótese só quando pedidas). Modelo: qwen3-coder:30b.
+FROM qwen3-coder:30b
 PARAMETER temperature 0
 PARAMETER seed 42
-PARAMETER num_ctx 16384
-PARAMETER num_predict 1024
+PARAMETER num_ctx 32768
+PARAMETER num_predict 4096
 
 SYSTEM """
 Você explica somente as evidências selecionadas, em português.

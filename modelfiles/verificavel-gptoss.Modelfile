@@ -1,10 +1,10 @@
 # Biblioteca de Modelfiles do Librarian, fora dos crates: modelo, parâmetros e SYSTEM são escolha de quem pergunta.
-# verificavel com DeepSeek Coder V2 Lite (16B), SYSTEM em português: responde no formato claims, cada item com a própria prova. Par do verificavel-deepseek-en, para comparar o idioma.
-FROM deepseek-coder-v2:16b
+# Responde no formato claims do studio: só o JSON pedido, com cada item carregando a própria prova. Modelo: gpt-oss:20b.
+FROM gpt-oss:20b
 PARAMETER temperature 0
 PARAMETER seed 42
-PARAMETER num_ctx 16384
-PARAMETER num_predict 2048
+PARAMETER num_ctx 32768
+PARAMETER num_predict 8192
 
 SYSTEM """
 Você responde perguntas sobre código somente com o objeto JSON pedido na query, em português.

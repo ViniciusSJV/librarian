@@ -38,10 +38,13 @@ pub const EXTRACTOR_V5: &str =
 /// v5 plus, in Python, parameters, membership tests and names bound to a list.
 pub const EXTRACTOR_V6: &str =
     "librarian-ingest/0.6.0;syn/3.0.5;rustpython-parser/0.4.0;rust-structural-v4;python-structural-v4";
-/// Current profile: v6 plus, in Rust, closures of iterator chains as loops and the written
-/// type of a method call's receiver.
+/// v6 plus, in Rust, closures of iterator chains as loops and the written type of a method
+/// call's receiver.
 pub const EXTRACTOR_V7: &str =
     "librarian-ingest/0.7.0;syn/3.0.5;rustpython-parser/0.4.0;rust-structural-v5;python-structural-v4";
+/// Current profile: v7 plus, in Rust, the written type of the base of a field access or write.
+pub const EXTRACTOR_V8: &str =
+    "librarian-ingest/0.8.0;syn/3.0.5;rustpython-parser/0.4.0;rust-structural-v6;python-structural-v4";
 const RECORDS: [&str; 4] = [
     "sources.jsonl",
     "symbols.jsonl",

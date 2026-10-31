@@ -353,6 +353,21 @@ pub fn call_parts(text: &str) -> Option<(String, String)> {
     Some((receiver.to_owned(), name.to_owned()))
 }
 
+/// Bytes of a method call's receiver, from the call's text: `self.transform.inverse()` -> the
+/// length of `self.transform`. None without a receiver.
+fn receiver_len(text: &str) -> Option<usize> {
+    let mut head = text.trim_end();
+    if head.ends_with(')') {
+        head = &head[..matching_open(head, '(', ')')?];
+    }
+    if head.ends_with('>') {
+        head = head[..matching_open(head, '<', '>')?].trim_end_matches("::");
+    }
+    let name = trailing_ident(head)?;
+    let receiver = head[..head.len() - name.len()].trim_end().strip_suffix('.')?.trim_end();
+    (!receiver.is_empty()).then_some(receiver.len())
+}
+
 fn matching_open(text: &str, open: char, close: char) -> Option<usize> {
     let mut depth = 0usize;
     for (i, c) in text.char_indices().rev() {
@@ -573,10 +588,13 @@ pub fn inventory(catalog: &Catalog, project: &RuleSet) -> Result<Inventory> {
             methods_by_name.entry(node.label.rsplit("::").next().unwrap_or_default()).or_default().push(id);
         }
     }
-    let mut receiver_types: BTreeMap<(&str, usize), &str> = BTreeMap::new();
+    // Several receivers can start where a call starts (`self` and `self.transform` in
+    // `self.transform.inverse()`, `x` in `x.f().g()`): the call's receiver is the one that
+    // ends where the call's written receiver ends.
+    let mut receiver_types: BTreeMap<(&str, usize), Vec<(usize, &str)>> = BTreeMap::new();
     for edges in index.observed.values() {
         for e in edges.iter().filter(|e| index.kind(&e.to) == "receiver_type") {
-            receiver_types.insert((e.evidence.path.as_str(), e.evidence.start_byte), &e.to);
+            receiver_types.entry((e.evidence.path.as_str(), e.evidence.start_byte)).or_default().push((e.evidence.end_byte, &e.to));
         }
     }
     let call_evidence: BTreeMap<&str, &Evidence> = index.observed.values().flatten().map(|e| (e.to.as_str(), &e.evidence)).collect();
@@ -592,7 +610,13 @@ pub fn inventory(catalog: &Catalog, project: &RuleSet) -> Result<Inventory> {
             return if receiver.starts_with(|c: char| c.is_uppercase()) { vec![receiver] } else { vec![] };
         }
         let Some(evidence) = call_evidence.get(occurrence) else { return vec![] };
-        let Some(written) = receiver_types.get(&(evidence.path.as_str(), evidence.start_byte)) else { return vec![] };
+        let Some(end) = receiver_len(text).map(|n| evidence.start_byte + n) else { return vec![] };
+        let Some(written) = receiver_types
+            .get(&(evidence.path.as_str(), evidence.start_byte))
+            .and_then(|found| found.iter().find(|(e, _)| *e == end).map(|(_, id)| *id))
+        else {
+            return vec![];
+        };
         let mut names: Vec<String> = index.candidates.get(written).into_iter().flatten().map(|t| last_segment(index.label(t))).collect();
         names.sort();
         names.dedup();

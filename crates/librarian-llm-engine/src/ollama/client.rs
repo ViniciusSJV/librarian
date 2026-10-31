@@ -1,5 +1,5 @@
 //! Transporte de consulta histórica ou exportada; não reconfere evidências.
-use super::request;
+use super::request_with;
 use reqwest::{blocking::Client, redirect::Policy, Url};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
@@ -17,6 +17,8 @@ pub struct Config {
     pub model: String,
     pub timeout_ms: u64,
     pub max_bytes: usize,
+    /// Sends the query's response_schema as Ollama's `format` (see ollama::request_with).
+    pub structured_output: bool,
 }
 impl Config {
     pub fn validate(&self) -> Result<Url> {
@@ -146,7 +148,7 @@ pub fn attempt_linked(
                 return Err("Consulta mudou após conferência; nenhum envio realizado".into());
             }
         }
-        let body = request(std::str::from_utf8(&query)?, &config.model)?;
+        let body = request_with(std::str::from_utf8(&query)?, &config.model, config.structured_output)?;
         Ok((url, query, serde_json::to_vec_pretty(&body)?))
     })();
     let (url, query, body) = match prepared {
@@ -165,7 +167,7 @@ pub fn attempt_linked(
     let mut record = json!({"format_version":1,"request_id":id,"endpoint":url.as_str(),
         "requested_model":config.model,"timeout_ms":config.timeout_ms,"max_response_bytes":config.max_bytes,
         "query_source_path":query_path.to_string_lossy(),"query_sha256":hash(&query),"query_bytes":query.len(),
-        "request_sha256":hash(&body),"request_bytes":body.len(),"explicit_options":{},
+        "request_sha256":hash(&body),"request_bytes":body.len(),"explicit_options":{},"structured_output":config.structured_output,
         "evidence_rechecked":false,"dossier_origin":null,"selection":null,"semantic_evaluation":"pending",
         "files":{"query":"query.json","request":"request.json","response":"response.bin","text":null},
         "http_status":null,"diagnostic":null,"response_body_complete":false});

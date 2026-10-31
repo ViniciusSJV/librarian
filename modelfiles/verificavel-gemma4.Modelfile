@@ -1,7 +1,10 @@
 # Biblioteca de Modelfiles do Librarian, fora dos crates: modelo, parâmetros e SYSTEM são escolha de quem pergunta.
-# verificavel para o Claude, SYSTEM em português: responde no formato claims, cada item com a própria prova. No Claude só o SYSTEM vale; FROM e PARAMETER não se aplicam.
-# FROM claude existe só porque o studio exige uma linha FROM: com o Ollama, este Modelfile falha no ollama create.
-FROM claude
+# Responde no formato claims do studio: só o JSON pedido, com cada item carregando a própria prova. Modelo: gemma4:12b.
+FROM gemma4:12b
+PARAMETER temperature 0
+PARAMETER seed 42
+PARAMETER num_ctx 32768
+PARAMETER num_predict 8192
 
 SYSTEM """
 Você responde perguntas sobre código somente com o objeto JSON pedido na query, em português.

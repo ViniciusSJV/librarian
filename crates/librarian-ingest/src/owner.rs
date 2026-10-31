@@ -40,7 +40,8 @@ pub struct Added {
     pub for_target: String,
     /// `container` (the declaration that contains the target is its owner), `container_name`
     /// (the type named by the target's container), `receiver_in_owner` (`<receiver>.f = ...` in
-    /// another method of the owner), `owner_literal` (a literal of the owner type), or, for a
+    /// another method of the owner), `receiver_type` (`x.f = ...` where the type of `x` is written
+    /// and is the owner), `owner_literal` (a literal of the owner type), or, for a
     /// called declaration, `unique` or `receiver` as the call traversal resolved it.
     pub resolution: String,
     /// Owner type: the fields the target reads. Writer: the read fields it writes.
@@ -74,11 +75,13 @@ struct Index<'g> {
     owned: BTreeMap<&'g str, Vec<usize>>,
     occurrences: Vec<Occurrence<'g>>,
     candidates: BTreeMap<&'g str, Vec<&'g str>>,
+    /// receiver_type occurrences by (path, start, end): the written type of a receiver.
+    receiver_types: BTreeMap<(&'g str, usize, usize), &'g str>,
 }
 
 impl<'g> Index<'g> {
     fn new(graph: &'g Graph) -> Self {
-        let mut index = Index { parent: BTreeMap::new(), owned: BTreeMap::new(), occurrences: vec![], candidates: BTreeMap::new() };
+        let mut index = Index { parent: BTreeMap::new(), owned: BTreeMap::new(), occurrences: vec![], candidates: BTreeMap::new(), receiver_types: BTreeMap::new() };
         for e in &graph.edges {
             match e.resolution.as_str() {
                 "structural" if e.kind == "contains" => {
@@ -86,6 +89,9 @@ impl<'g> Index<'g> {
                 }
                 "syntax_only" => {
                     let node = &graph.nodes[&e.to];
+                    if node.kind == "receiver_type" {
+                        index.receiver_types.insert((e.evidence.path.as_str(), e.evidence.start_byte, e.evidence.end_byte), &e.to);
+                    }
                     index.owned.entry(&e.from).or_default().push(index.occurrences.len());
                     index.occurrences.push(Occurrence {
                         id: &e.to,
@@ -160,7 +166,18 @@ pub fn owner_context(catalog: &Catalog, graph: &Graph, targets: &[String]) -> Re
                 if !read.contains(field) {
                     continue;
                 }
-                if receiver.trim() != syntax.receiver {
+                // Another receiver whose type is written (`group.transform = ..` after `let mut
+                // group = Groups::from(..)`): a write of the owner's field when it names the owner.
+                let typed = index.receiver_types.get(&(o.evidence.path.as_str(), o.evidence.start_byte, o.evidence.start_byte + receiver.len()))
+                    .is_some_and(|t| index.candidates.get(t).is_some_and(|c| c.contains(&owner.id.as_str())));
+                if receiver.trim() == syntax.receiver {
+                    if !owner_by_container(catalog, &index, syntax, o.owner).is_some_and(|t| t.id == owner.id) {
+                        continue;
+                    }
+                    (field, "receiver_in_owner")
+                } else if typed {
+                    (field, "receiver_type")
+                } else {
                     // Another receiver: its type is unknown. Listed when the name may be the
                     // owner's field (a candidate edge reaches it, or there were too many).
                     let edges = index.candidates.get(o.id);
@@ -176,10 +193,6 @@ pub fn owner_context(catalog: &Catalog, graph: &Graph, targets: &[String]) -> Re
                     }
                     continue;
                 }
-                if !owner_by_container(catalog, &index, syntax, o.owner).is_some_and(|t| t.id == owner.id) {
-                    continue;
-                }
-                (field, "receiver_in_owner")
             } else if let Some((literal_kind, _, own_type)) = syntax.literal.filter(|l| l.1 == o.kind) {
                 if !read.contains(o.label) {
                     continue;

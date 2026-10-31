@@ -1,10 +1,7 @@
 # Biblioteca de Modelfiles do Librarian, fora dos crates: modelo, parâmetros e SYSTEM são escolha de quem pergunta.
-# performance com DeepSeek Coder V2 Lite (16B), SYSTEM em português: etapa de performance em claims: HYPOTHESIS com edições e plano de medição. Par do performance-deepseek-en, para comparar o idioma.
-FROM deepseek-coder-v2:16b
-PARAMETER temperature 0
-PARAMETER seed 42
-PARAMETER num_ctx 16384
-PARAMETER num_predict 4096
+# performance para o Claude, SYSTEM em português (o padrão; a versão em inglês é performance-claude-en): etapa de performance em claims: HYPOTHESIS com edições e plano de medição. No Claude só o SYSTEM vale; FROM e PARAMETER não se aplicam.
+# FROM claude existe só porque o studio exige uma linha FROM: com o Ollama, este Modelfile falha no ollama create.
+FROM claude
 
 SYSTEM """
 Você propõe melhorias de desempenho em código somente com o objeto JSON pedido na query,

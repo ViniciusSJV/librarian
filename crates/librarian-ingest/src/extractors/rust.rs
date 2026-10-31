@@ -13,19 +13,22 @@ use syn::{
 /// `v5` adds enum variants, names used as values, struct patterns and loops (profile v5).
 /// `v6` adds closures of iterator chains as loops and the written type of a method call's
 /// receiver (profile v7).
+/// `v7` adds the written type of a field access's or write's base (`group.transform = ..`) (profile v8).
 /// Without them, records and occurrences are exactly those of the frozen v1 adapter.
 pub(crate) struct Rust {
     g6: bool,
     g6d: bool,
     v5: bool,
     v6: bool,
+    v7: bool,
 }
 
-pub(crate) static RUST: Rust = Rust { g6: false, g6d: false, v5: false, v6: false };
-pub(crate) static RUST_V3: Rust = Rust { g6: true, g6d: false, v5: false, v6: false };
-pub(crate) static RUST_V4: Rust = Rust { g6: true, g6d: true, v5: false, v6: false };
-pub(crate) static RUST_V5: Rust = Rust { g6: true, g6d: true, v5: true, v6: false };
-pub(crate) static RUST_V6: Rust = Rust { g6: true, g6d: true, v5: true, v6: true };
+pub(crate) static RUST: Rust = Rust { g6: false, g6d: false, v5: false, v6: false, v7: false };
+pub(crate) static RUST_V3: Rust = Rust { g6: true, g6d: false, v5: false, v6: false, v7: false };
+pub(crate) static RUST_V4: Rust = Rust { g6: true, g6d: true, v5: false, v6: false, v7: false };
+pub(crate) static RUST_V5: Rust = Rust { g6: true, g6d: true, v5: true, v6: false, v7: false };
+pub(crate) static RUST_V6: Rust = Rust { g6: true, g6d: true, v5: true, v6: true, v7: false };
+pub(crate) static RUST_V7: Rust = Rust { g6: true, g6d: true, v5: true, v6: true, v7: true };
 
 impl Extractor for Rust {
     fn extract(&self, source: &Source, bytes: &[u8]) -> Extraction {
@@ -80,6 +83,7 @@ impl Extractor for Rust {
             g6d: self.g6d,
             v5: self.v5,
             v6: self.v6,
+            v7: self.v7,
             offset,
             found: vec![],
             impl_type: None,
@@ -275,6 +279,7 @@ struct Occurrences {
     g6d: bool,
     v5: bool,
     v6: bool,
+    v7: bool,
     offset: usize,
     found: Vec<Occurrence>,
     /// Span of the type written in the impl being visited: it is `impl_self_type`, not also a
@@ -302,6 +307,8 @@ struct Shapes {
     fields: BTreeMap<String, BTreeMap<String, (Option<String>, Option<String>)>>,
     /// (enum, variant) -> the type of its only field.
     variants: BTreeMap<(String, String), String>,
+    /// v7: free function -> the type its signature returns.
+    returns: BTreeMap<String, String>,
 }
 
 impl<'ast> Visit<'ast> for Shapes {
@@ -312,6 +319,14 @@ impl<'ast> Visit<'ast> for Shapes {
                 fields.insert(ident.to_string(), (type_name(&field.ty), element_name(&field.ty)));
             }
         }
+    }
+    fn visit_item_fn(&mut self, value: &'ast syn::ItemFn) {
+        if let syn::ReturnType::Type(_, ty) = &value.sig.output {
+            if let Some(name) = type_name(ty) {
+                self.returns.insert(value.sig.ident.to_string(), name);
+            }
+        }
+        visit::visit_item_fn(self, value);
     }
     fn visit_item_enum(&mut self, value: &'ast syn::ItemEnum) {
         for variant in &value.variants {
@@ -410,8 +425,19 @@ impl Occurrences {
         let syn::Expr::Field(field) = target else { return false };
         let syn::Member::Named(ident) = &field.member else { return false };
         self.push("field_assign", field.span(), Some(ident.to_string()));
+        self.base_type(&field.base);
         self.visit_expr(&field.base);
         true
+    }
+
+    /// v7: the written type of the base of a field access or write (`group` in
+    /// `group.transform = ..`), as a receiver_type spanning the base.
+    fn base_type(&mut self, base: &syn::Expr) {
+        if self.v7 {
+            if let Some(ty) = self.type_of(base) {
+                self.push("receiver_type", base.span(), Some(ty));
+            }
+        }
     }
 
     fn push(&mut self, kind: &'static str, span: Span, candidate: Option<String>) {
@@ -499,6 +525,10 @@ impl Occurrences {
             syn::Expr::Call(call) => {
                 let syn::Expr::Path(p) = call.func.as_ref() else { return None };
                 let segments = &p.path.segments;
+                // v7: `f(..)` of a free function of this file, by the type its signature returns.
+                if let (true, 1) = (self.v7, segments.len()) {
+                    return self.shapes.returns.get(&segments[0].ident.to_string()).cloned();
+                }
                 let owner = segments.iter().rev().nth(1)?.ident.to_string();
                 if owner == "Self" {
                     return self.impl_name.clone();
@@ -746,6 +776,7 @@ impl<'ast> Visit<'ast> for Occurrences {
     fn visit_expr_field(&mut self, value: &'ast syn::ExprField) {
         if let (true, syn::Member::Named(ident)) = (self.g6, &value.member) {
             self.push("attribute_access", value.span(), Some(ident.to_string()));
+            self.base_type(&value.base);
         }
         visit::visit_expr_field(self, value);
     }

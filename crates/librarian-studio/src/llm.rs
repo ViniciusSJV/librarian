@@ -55,6 +55,15 @@ fn ollama_models() -> Result<Vec<String>> {
     Ok(models.iter().filter_map(|m| m["name"].as_str().map(str::to_owned)).collect())
 }
 
+/// Whether Ollama says the model reasons in a separate channel (`thinking` among its
+/// capabilities). Such a model can answer nothing when the response schema constrains its
+/// output, so the schema is not sent; the claims checker validates the answer anyway.
+fn ollama_thinks(model: &str) -> Result<bool> {
+    let client = reqwest::blocking::Client::builder().timeout(Duration::from_millis(5000)).no_proxy().build()?;
+    let shown: Value = serde_json::from_slice(&client.post(format!("{OLLAMA}/api/show")).header("content-type", "application/json").body(json!({ "model": model }).to_string()).send()?.bytes()?)?;
+    Ok(shown["capabilities"].as_array().is_some_and(|c| c.iter().any(|x| x == "thinking")))
+}
+
 pub struct Send<'a> {
     pub query: &'a Path,
     pub dir: &'a Path,
@@ -129,11 +138,13 @@ fn send_ollama(request: &Send) -> Result<Value> {
     if !create.status.success() {
         return Err(format!("ollama create falhou: {}", String::from_utf8_lossy(&log).trim()).into());
     }
+    let thinks = ollama_thinks(&model)?;
     let config = Config {
         endpoint: format!("{OLLAMA}/api/generate"),
         model: model.clone(),
         timeout_ms: TIMEOUT_MS,
         max_bytes: MAX_RESPONSE_BYTES,
+        structured_output: !thinks,
     };
     let attempt = request.dir.join("attempt");
     let id = format!("STUDIO_{}", now_ms());
@@ -159,6 +170,8 @@ fn send_ollama(request: &Send) -> Result<Value> {
         "query_sha256": result["query_sha256"],
         "response_sha256": result["response_sha256"],
         "input": input,
+        // A model that reasons gets no response schema (see ollama_thinks).
+        "structured_output": !thinks,
     }))
 }
 
@@ -428,7 +441,7 @@ mod tests {
         let query = dir.join("query.json");
         std::fs::write(&query, "{\"question\":\"q\",\"evidence\":{},\"instructions\":[\"Cite E1.\"]}\n").unwrap();
         // Port 9 is closed: a send that gets past the link fails in the transport and reaches no model.
-        let config = Config { endpoint: "http://127.0.0.1:9/api/generate".into(), model: "m".into(), timeout_ms: 500, max_bytes: 1_024 };
+        let config = Config { endpoint: "http://127.0.0.1:9/api/generate".into(), model: "m".into(), timeout_ms: 500, max_bytes: 1_024, structured_output: true };
         let read = |attempt: &str| -> Value { serde_json::from_slice(&std::fs::read(dir.join(attempt).join("result.json")).unwrap()).unwrap() };
         let changed = json!({ "query_sha256": client::hash(b"outra query"), "dossier_origin": "edition:x", "selection": {} });
         assert_eq!(client::attempt_linked(&query, &dir.join("a"), "T", &config, Some(&changed)).unwrap(), "input_rejected");
@@ -445,9 +458,22 @@ mod tests {
     }
 
     #[test]
-    fn library_modelfile_has_a_system() {
-        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../modelfiles/analista.Modelfile");
-        let text = std::fs::read_to_string(path).unwrap();
-        assert!(modelfile_system(&text).unwrap().starts_with("Você explica somente"));
+    fn library_modelfiles_have_a_system_and_a_standard_name() {
+        // `<task>-<model>`, SYSTEM in Portuguese; `<task>-<model>-en`, the same in English.
+        let dir = concat!(env!("CARGO_MANIFEST_DIR"), "/../../modelfiles");
+        let (tasks, models) = (["analista", "lexico", "verificavel", "performance"], ["qwen3coder", "gemma4", "gptoss", "claude"]);
+        let mut seen = 0;
+        for entry in std::fs::read_dir(dir).unwrap() {
+            let name = entry.unwrap().file_name().into_string().unwrap();
+            let Some(stem) = name.strip_suffix(".Modelfile") else { continue };
+            let parts: Vec<&str> = stem.trim_end_matches("-en").split('-').collect();
+            assert!(matches!(parts.as_slice(), [t, m] if tasks.contains(t) && models.contains(m)), "{name}");
+            let text = std::fs::read_to_string(std::path::Path::new(dir).join(&name)).unwrap();
+            assert!(modelfile_system(&text).is_some_and(|s| !s.is_empty()), "{name}");
+            seen += 1;
+        }
+        assert_eq!(seen, tasks.len() * models.len() + 4, "every task with every model, and the Claude ones in English");
+        let analista = std::fs::read_to_string(format!("{dir}/analista-qwen3coder.Modelfile")).unwrap();
+        assert!(modelfile_system(&analista).unwrap().starts_with("Você explica somente"));
     }
 }
