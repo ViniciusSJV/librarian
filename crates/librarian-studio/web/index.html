@@ -340,6 +340,17 @@
         <div id="commandsList"></div>
         <div id="executionsList"></div>
       </section>
+      <section class="card">
+        <h2><span data-i18n="mutation.title"></span><button type="button" class="help" data-help-key="help.mutation">?</button></h2>
+        <div class="row" style="gap: 6px; flex-wrap: wrap">
+          <input id="mutationUnit" list="mutationUnits" data-i18n-placeholder="mutation.unit" style="flex: 1; min-width: 220px">
+          <datalist id="mutationUnits"></datalist>
+          <select id="mutationCommand"></select>
+          <button type="button" id="mutationRun" class="primary" data-i18n="mutation.run"></button>
+        </div>
+        <div id="mutationNote" class="muted"></div>
+        <div id="mutationList"></div>
+      </section>
     </div>
 
     <div class="tabpanel studio-only" data-panel="facts">
@@ -536,6 +547,30 @@ const STRINGS = {
 
   // facts
   'commands.title': ['Régua: comandos do projeto', 'Ruler: project commands'],
+  'mutation.title': ['Testes por trecho: quebrar de propósito', 'Tests per piece: break it on purpose'],
+  'help.mutation': ['O Librarian quebra uma declaração de propósito, uma troca escrita por vez (um operador, floor/ceil, um literal), e roda o comando de testes em cada versão quebrada, numa cópia só. As versões com que os testes continuam passando sobrevivem: a declaração estaria errada e nenhum teste perceberia. Para elas, Perguntar ao LLM leva a pergunta pronta ("um teste que passe hoje e falhe com estas mudanças") e a evidência sugerida (a declaração e o módulo de testes do arquivo). Na resposta, Conferir teste confere sem opinião: só acrescenta linhas, acrescenta um #[test] que chama a declaração, passa no código atual e falha com cada sobrevivente. Um sobrevivente pode ser equivalente (calcula o mesmo, como x + y e x − y na paridade): nenhum teste o mata, e isso não é lacuna.',
+    'The Librarian breaks a declaration on purpose, one written change at a time (an operator, floor/ceil, a literal), and runs the test command on each broken version, in one copy. The versions the tests still pass with survive: the declaration would be wrong and no test would notice. For them, Ask the LLM brings the ready question ("a test that passes now and fails with these changes") and the suggested evidence (the declaration and its file\'s test module). On the answer, Check test checks without opinion: it only adds lines, adds a #[test] that calls the declaration, passes on the current code and fails with each survivor. A survivor may be equivalent (it computes the same, like x + y and x − y in parity): no test kills it, and that is no gap.'],
+  'mutation.unit': ['declaração (por exemplo impl Incuse for Ring::color_at)', 'declaration (e.g. impl Incuse for Ring::color_at)'],
+  'mutation.run': ['Quebrar de propósito', 'Break it on purpose'],
+  'mutation.unknown': ['Escolha uma declaração da lista.', 'Pick a declaration from the list.'],
+  'mutation.noCommand': ['Aprove um comando de testes acima.', 'Approve a test command above.'],
+  'mutation.running': ['Rodando os testes em cada versão quebrada…', 'Running the tests on each broken version…'],
+  'mutation.summary': ['{unit} · {n} versões quebradas · {survivors} sobrevivem · comando {command}', '{unit} · {n} broken versions · {survivors} survive · command {command}'],
+  'mutation.line': ['linha {line}', 'line {line}'],
+  'mutation.killedByNew': ['o teste novo mata', 'the new test kills it'],
+  'mutation.stillAlive': ['continua vivo (pode ser equivalente)', 'still alive (may be equivalent)'],
+  'mutation.survived': ['sobrevive', 'survives'],
+  'mutation.killed': ['os testes percebem', 'the tests notice'],
+  'mutation.notApplied': ['não aplicou', 'not applied'],
+  'mutation.ask': ['Perguntar ao LLM', 'Ask the LLM'],
+  'mutation.asked': ['A pergunta e a evidência estão na conversa: escolha o LLM (um Modelfile teste-…) e pergunte.', 'The question and the evidence are in the chat: pick the LLM (a teste-… Modelfile) and ask.'],
+  'mutation.turnTag': ['mutação: {summary}', 'mutation: {summary}'],
+  'mutation.check': ['Conferir teste (mutação)', 'Check test (mutation)'],
+  'mutation.checking': ['Rodando os testes com o teste novo, e com ele em cada sobrevivente…', 'Running the tests with the new test, and with it on each survivor…'],
+  'mutation.verdict.passed': ['aprovado: o teste passa hoje e mata todos os sobreviventes', 'passed: the test passes now and kills every survivor'],
+  'mutation.verdict.partial': ['parcial: passa hoje e mata {killed} de {survivors}', 'partial: passes now and kills {killed} of {survivors}'],
+  'mutation.verdict.refused': ['recusado', 'refused'],
+  'mutation.checks': ['só acrescenta: {adds} · testes novos: {tests} · chama {unit}: {calls} · passa hoje: {passes}', 'only adds: {adds} · new tests: {tests} · calls {unit}: {calls} · passes now: {passes}'],
   'help.commands': ['Comandos que o próprio projeto declara no librarian.json, em "commands": a lista de argumentos (sem shell), o tempo máximo e quantas repetições. O Librarian não sabe o que cada comando faz. Ele roda numa cópia do projeto no commit da edition (um git worktree na pasta temporária do sistema, ou em LIBRARIAN_COPIES, fora de qualquer outro projeto), conferida contra as impressões digitais da edition, nunca na sua pasta. Cada comando só roda depois que você aprova aquela versão exata; mudar o comando no perfil pede aprovação de novo. Ele guarda o tempo de cada repetição, o código de saída, a saída inteira e as linhas "librarian-measure nome=valor unidade" que o projeto imprimir.',
     'Commands the project itself declares in librarian.json, under "commands": the argument list (no shell), the time limit and how many repetitions. The Librarian does not know what each command does. It runs in a copy of the project at the edition\'s commit (a git worktree in the system temporary folder, or in LIBRARIAN_COPIES, outside any other project), checked against the edition\'s fingerprints, never in your folder. Each command runs only after you approve that exact version; changing the command in the profile asks for approval again. It keeps each repetition\'s time, exit code, whole output and the "librarian-measure name=value unit" lines the project prints.'],
   'commands.none': ['O librarian.json do projeto não declara commands.', 'The project\'s librarian.json declares no commands.'],
@@ -2155,11 +2190,13 @@ async function ask() {
     // The question uses the saved settings; save what is on screen so nothing is forgotten.
     await saveSettings();
     say($('#chatNote'), t('chat.preparing'));
-    // An investigation asks over exactly the ticked items, in the order proposed.
-    const investigated = investigation && {
+    // An investigation asks over exactly the ticked items, in the order proposed; a mutation's
+    // survivors, over the declaration and its test module.
+    const investigated = mutationAsk ?? (investigation && {
       nodes: investigation.items.map(i => i.id).filter(id => investigation.ticked.has(id)),
       origin: { inventory: investigation.target, kind: investigation.kind, summary: findingSummary(investigation) },
-    };
+    });
+    mutationAsk = null;
     if (investigated && !investigated.nodes.length) throw new Error(t('investigate.empty'));
     const turn = investigated
       ? await api('POST', '/api/gathered-question', { key: studio.project.key, run: studio.run, question, nodes: investigated.nodes, with_facts: gatherFacts, origin: investigated.origin })
@@ -2364,7 +2401,7 @@ function suggestionView() {
 function gatheredTurnView(g) {
   const facts = g.reviewed_facts?.length ?? 0;
   return el('div', { className: 'muted', style: 'margin-top: 6px' },
-    g.origin ? el('span', { className: 'tag', style: 'margin-right: 4px', textContent: t('investigate.turnTag', { summary: g.origin.summary }) }) : null,
+    g.origin ? el('span', { className: 'tag', style: 'margin-right: 4px', textContent: t(g.origin.kind === 'mutation' ? 'mutation.turnTag' : 'investigate.turnTag', { summary: g.origin.summary }) }) : null,
     el('span', { className: 'tag', textContent: t('gather.turnTag', { n: g.nodes.length }) }),
     facts ? el('span', { className: 'tag', style: 'margin-left: 4px', textContent: t('gather.turnFacts', { n: facts }) }) : null,
     helpButton(t('help.gatheredTurn')));
@@ -2793,7 +2830,8 @@ function editsView(k, diff, s, turn) {
     el('pre', { textContent: diff }),
     file ? el('div', { className: 'muted mono', textContent: t('edits.apply', { file }) }) : null,
     helpButton(t('help.edits')),
-    s && turn ? runWithChange(k, s, turn) : null);
+    s && turn ? runWithChange(k, s, turn) : null,
+    s && turn ? mutationCheck(k, s, turn) : null);
 }
 
 // P4: the approved commands, each run in a copy with this claim's diff applied.
@@ -3148,6 +3186,86 @@ async function loadCommands() {
   $('#executionsList').replaceChildren(
     executions.length ? el('div', {}, el('strong', { textContent: t('executions.title') }), el('ol', { className: 'claims' }, ...executions.map(execution))) : '',
     el('p', { className: 'muted', style: 'font-size: 11px', textContent: serverText(data.limits) }));
+  await loadMutations();
+}
+
+// ---- R3: tests per piece, checked by mutation.
+// The declarations of the graph, by label, for the picker; the approved commands to run.
+let mutationAsk = null;
+function fillMutationPicker() {
+  const ids = new Map();
+  for (const n of state.nodes ?? []) {
+    if (n.category === 'symbol' && ['method', 'function', 'trait_method'].includes(n.kind) && !ids.has(n.label)) ids.set(n.label, n.id);
+  }
+  $('#mutationUnits').replaceChildren(...[...ids.keys()].sort().map(label => el('option', { value: label })));
+  $('#mutationUnit').dataset.ids = JSON.stringify(Object.fromEntries(ids));
+  const approved = (studio.commands ?? []).filter(c => c.approved).map(c => c.name);
+  const select = $('#mutationCommand'), current = select.value;
+  select.replaceChildren(...approved.map(name => el('option', { value: name, textContent: name })));
+  if (approved.includes(current)) select.value = current;
+  else if (approved.includes('testes')) select.value = 'testes';
+}
+
+async function loadMutations() {
+  fillMutationPicker();
+  if (!studio.project || !studio.run) { $('#mutationList').replaceChildren(); return; }
+  const records = await api('GET', `/api/mutations?${query({ key: studio.project.key, run: studio.run })}`);
+  $('#mutationList').replaceChildren(...records.slice().reverse().map((r, k) => mutationView(r, k === 0)));
+}
+
+function mutationView(r, open) {
+  const unit = r.unit.name;
+  const rows = r.mutants.map(m => el('div', { className: 'mono', style: 'font-size: 12px', title: `${m.mutant.before.trim()}\n→ ${m.mutant.after.trim()}` },
+    `${m.mutant.id} · ${t('mutation.line', { line: m.mutant.line })} · ${m.mutant.operator} · `,
+    m.result.applied === false ? t('mutation.notApplied')
+      : el('span', { className: m.survived ? 'verdict failed' : 'verdict passed', textContent: m.survived ? t('mutation.survived') : t('mutation.killed') })));
+  const ask = el('button', { className: 'primary', textContent: t('mutation.ask') });
+  ask.addEventListener('click', () => {
+    // The composer asks it: the person picks the LLM there, as for any question.
+    mutationAsk = { nodes: r.nodes, origin: { kind: 'mutation', mutation: r.id, summary: `${unit} (${r.survivors.join(', ')})` } };
+    $('#question').value = r.question;
+    say($('#mutationNote'), t('mutation.asked'));
+    $('#question').focus();
+  });
+  return el('details', { open, style: 'margin-top: 8px' },
+    el('summary', { textContent: t('mutation.summary', { unit, n: r.mutants.length, survivors: r.survivors.length, command: r.command }) }),
+    el('div', { style: 'margin: 6px 0' }, ...rows),
+    r.question ? el('div', {}, el('pre', { className: 'mono', style: 'white-space: pre-wrap; font-size: 12px', textContent: r.question }), ask) : null,
+    el('p', { className: 'muted', style: 'font-size: 11px', textContent: (r.limits ?? []).join(' ') }));
+}
+
+$('#mutationRun').addEventListener('click', () => busy([$('#mutationRun')], $('#mutationNote'), async () => {
+  const ids = JSON.parse($('#mutationUnit').dataset.ids ?? '{}');
+  const symbol = ids[$('#mutationUnit').value.trim()];
+  if (!symbol) throw new Error(t('mutation.unknown'));
+  const command = $('#mutationCommand').value;
+  if (!command) throw new Error(t('mutation.noCommand'));
+  say($('#mutationNote'), t('mutation.running'));
+  await api('POST', '/api/mutation/run', { key: studio.project.key, run: studio.run, symbol, command });
+  say($('#mutationNote'), '');
+  await loadMutations();
+}));
+
+// On an answer to a mutation question: the test checked against the survivors.
+function mutationCheck(k, s, turn) {
+  const origin = turn.gathered?.origin;
+  if (origin?.kind !== 'mutation') return null;
+  const note = el('div', { className: 'muted' });
+  const b = el('button', { className: 'primary', textContent: t('mutation.check') });
+  b.addEventListener('click', () => busy([b], note, async () => {
+    say(note, t('mutation.checking'));
+    const r = await api('POST', '/api/mutation/check', { key: studio.project.key, run: studio.run, mutation: origin.mutation,
+      change: { turn: turn.id, send: s.id, claim: k.id } });
+    const c = r.checks;
+    const verdict = t(`mutation.verdict.${r.verdict}`, { killed: c.killed ?? 0, survivors: c.survivors ?? 0 });
+    note.replaceChildren(
+      el('div', {}, el('span', { className: r.verdict === 'refused' ? 'verdict failed' : 'verdict passed', textContent: verdict })),
+      el('div', { textContent: t('mutation.checks', { adds: c.only_adds ? '✓' : '✗', tests: (c.adds_tests ?? []).join(', ') || '—',
+        unit: c.unit_name, calls: c.calls_unit ? '✓' : '✗', passes: c.passes_now ? (c.passes_now.ok ? '✓' : '✗') : '—' }) }),
+      ...(c.mutants ?? []).map(m => el('div', { className: 'mono', textContent: `${m.mutant}: ${m.killed ? t('mutation.killedByNew') : t('mutation.stillAlive')}` })));
+    await loadCommands();
+  }));
+  return el('div', { style: 'margin-top: 6px' }, b, note);
 }
 
 const number = v => typeof v === 'number' ? (Math.abs(v) >= 100 ? v.toFixed(1) : v.toPrecision(4)) : v;
