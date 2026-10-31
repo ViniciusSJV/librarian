@@ -146,6 +146,24 @@ O `text` de cada claim só pode afirmar o que as citações do próprio claim mo
   citadas. A comparação usa as linhas da fonte, não o `quote` da resposta, e
   ignora diferenças de espaços. `...` ou `…` dentro do trecho pulam qualquer texto,
   na ordem. O path e o id da evidência citada são aceitos entre crases.
+- **`text_line_lacks_named_code`**: uma frase nomeia código e linhas, e nenhuma
+  dessas linhas tem nenhum dos nomes. Conta como código o que a frase escreve
+  como código (entre crases, com `.` ou `::`, chamado com `(`, com `_` ou em
+  camelCase) e que aparece nas linhas citadas; palavras comuns que também são nomes
+  ("o canvas", "cada pixel") são prosa. O nome da declaração de que o claim fala
+  (o símbolo da evidência ou da localização) vale como acerto na sua linha, mas
+  sozinho não faz a frase ser julgada: "save grava nas linhas 7, 9 e 10" passa.
+  Basta uma das linhas da frase ter um dos nomes ("cria rows na linha 43, antes do
+  laço da linha 44" passa). Só vale quando as linhas já estão citadas.
+
+Exemplo real da última regra: no ensaio de 30/10 (logistica-api), o qwen citou o
+laço inteiro (44–57) e escreveu que `zone_of`, `driver_name` e `history_of` são
+chamadas em `daily_report.py:46`, que é `rows.append(`. A faixa cobria a linha 46,
+então a resposta passava; agora é recusada. Conferida contra as 395 respostas
+gravadas no studio, a regra recusou só três que antes passavam ou falhavam por outro
+motivo, as três com a linha errada: essa do qwen, a "linha 74" do especular no
+renderer e "a cor de cada pixel na linha 92, chamando `ray_from_pixel` e
+`color_at`" (são as linhas 97 e 98).
 
 Exemplo real ([fixture](tests/fixtures/camera-studio-sonnet.txt)): o Sonnet citou as
 linhas 75 e 84–86, mas escreveu "o raio é construído na linha 88 com
@@ -153,7 +171,8 @@ linhas 75 e 84–86, mas escreveu "o raio é construído na linha 88 com
 basta para passar.
 
 Limites: uma paráfrase sem número e sem crase ("o raio é construído depois") passa
-sem ser vista. A regra também não confere se há uma só afirmação por claim. Ela
+sem ser vista. Uma frase com duas afirmações e duas linhas passa se uma delas
+estiver certa. A regra também não confere se há uma só afirmação por claim. Ela
 reduz o que o texto pode afirmar sem prova; não confere o sentido.
 
 ### Perfil `precise_location`

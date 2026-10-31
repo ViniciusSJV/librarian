@@ -302,7 +302,7 @@ e quem responde nesta etapa (por exemplo, Ollama com `performance-qwen`). O stud
   como fichas F (autoria "revisão humana no Librarian Studio"), com os trechos conferidos
   contra a edition. No formato claims, eles aparecem em `evidence.reviewed_facts`, com a
   instrução de que orientam a resposta, mas não são citáveis.
-- **Contexto do dono** (grafo gerado no perfil v4): quando a declaração é um método, entram
+- **Contexto do dono** (grafo gerado no perfil v4, v5 ou v6): quando a declaração é um método, entram
   também o tipo dono (a struct com o nome do `impl`, ou a classe que contém o método em
   Python) e os métodos que escrevem os campos que esse método lê (por `self.campo = …` ou
   por um literal do tipo, como `Self { campo: .. }`). Assim uma etapa de performance vê
@@ -366,21 +366,35 @@ diante, até a **profundidade** escolhida (padrão 2).
   **só usos sem homônimos** tira as linhas tracejadas.
 - Há um teto de 120 pontos; acima dele, a vista avisa.
 
-Exige um grafo gerado com o perfil v3 ou v4 (desde a G6). No v4, também aparecem quem
+Exige um grafo gerado com o perfil v3 ou posterior (desde a G6). No v4, também aparecem quem
 constrói o tipo (`Camera { .. }`), quem preenche ou escreve um campo (`self.transform = …`)
-e o `impl` que implementa o tipo. É um mapa de candidatos pelo nome
-escrito, não um grafo de chamadas resolvido.
+e o `impl` que implementa o tipo. A partir do v5 (o atual é o v6), também aparecem:
+
+- **nomes usados como valor:** `Depends(get_db)`, `with _lock:`, `let f = helper;`,
+  `MAX_DEPTH`, `Shape::Plane` (**usa o nome**);
+- **variáveis de módulo** em Python, como declarações: `SessionDep`, `settings`, `_cache`.
+  Uma anotação que cita uma delas (`session: SessionDep`) é uso dela, então
+  `get_db` ← `SessionDep` ← as rotas;
+- **escritas de um nome do módulo:** `global contador; contador += 1` e `_cache[k] = v`
+  (**escreve**). Uma chamada que muda o objeto (`_cache.update(...)`) conta como leitura;
+- **argumentos nomeados:** `Delivery(day=3)` preenche o campo `day` (**preenche pelo nome**);
+- em Rust, **variantes de enum** como declarações, e **padrões**: `let Camera { transform } = c`
+  (**desmonta** e **lê ao desmontar**), `Shape::Sphere(r) =>`.
+
+Um nome simples só conta quando não é local da função (parâmetro, atribuição, padrão) e
+casa com uma declaração. Em Python, ele liga à declaração do próprio arquivo quando ela
+existe, como no escopo de módulo; senão, a todos os homônimos. É um mapa de candidatos pelo
+nome escrito, não um grafo de chamadas resolvido.
 
 **Quando não aparece nada, ou aparece menos do que existe:**
 
-- o grafo é anterior à G6: gere de novo;
+- o grafo é anterior à G6: gere de novo (para os usos do v5, gere no v5);
 - o nome tem mais de 8 homônimos (`new`, `get`, `__init__`): nenhuma ligação é desenhada,
   e a inspeção da ocorrência mostra a contagem;
 - os filtros esconderam os usos (a vista avisa quantos);
 - o uso está escrito numa forma que ainda não é registrada: em Rust, dentro de macros
-  (`assert_eq!`, `println!`), em padrões, e usos de constantes e variantes de enum (os
-  literais, como `Vehicle { placa: x }`, só a partir do perfil v4); em Python, argumentos
-  nomeados (`User(email=...)`) e `getattr`;
+  (`assert_eq!`, `println!`); em Python, `getattr`, nomes em texto e o `import` (o nome
+  importado não é seguido até o arquivo de origem);
 - o nome não aparece escrito em outro lugar, ou só em outra linguagem.
 
 **Ausência na vista não prova que ninguém usa.**
@@ -396,7 +410,7 @@ Uma chamada só é **seguida** (linha cheia) quando o nome escrito aponta uma de
 
 - **única:** só existe uma declaração com esse nome;
 - **receptor:** é chamada do próprio receptor (`self.shade_hit(...)`) e só um dos homônimos
-  está na mesma classe ou `impl` de quem chama (exige o perfil v4);
+  está na mesma classe ou `impl` de quem chama (exige o perfil v4 ou posterior);
 - **escolhida:** você escolheu.
 
 Se o nome combina com vários homônimos (`world.color_at(...)` combina com sete `color_at`),
@@ -433,6 +447,13 @@ O resultado mostra a mediana, o mínimo e o máximo do tempo de parede e de cada
 informa os próprios números, sem o Librarian conhecer o formato de uma ferramenta de
 medição. Para cada arquivo em `outputs`, o resultado mostra o sha256 depois de cada
 repetição: um hash só quer dizer o mesmo conteúdo em todas.
+
+Uma linha pode dizer de onde no código o número vem, com `at=caminho:linha` (caminho
+relativo à raiz do projeto): `librarian-measure queries_per_report=400 at=app/repositories/attempts.py:15`.
+Cada origem vira uma série própria (`queries_per_report@app/repositories/attempts.py:15`), ao
+lado do total, e a aba **Investigar** põe o número ao lado da operação daquela linha. Quem conta
+é o projeto (no logistica-api, a API anota em cada consulta a linha mais interna do app na
+pilha); o Librarian guarda o `at` como foi escrito, sem conferir.
 
 As execuções desta edition ficam na aba **Régua** como histórico, uma linha cada: comando,
 horário, repetições com sucesso, se foi linha de base ou a mudança de qual pergunta, a
@@ -502,6 +523,62 @@ No renderer de antes da mudança, a sugestão a partir de `intersect_world` e do
 que calcula a inversa traz `World::default` (escreve `objects`, que `intersect_world` lê) e
 `Matrix` (o tipo do `inverse` que é chamado): as duas peças que faltaram.
 
+### Investigar (inventário de operações)
+
+Na aba **Investigar**, **Montar inventário** percorre o grafo da execução aberta atrás de
+lugares onde vale a pena perguntar. O bibliotecário não diz que algo é lento: ele aponta
+características verificáveis no código, cada uma achada por uma regra declarada.
+
+- **Operações:** acesso ao banco, leitura de relação carregada sob demanda, matemática,
+  arquivo, rede, `sleep`, processo externo, trava, escrita num nome do módulo. Cada uma vem
+  com a regra que a achou, o arquivo e a linha, o texto escrito e a marca **em laço** quando
+  está dentro de um laço da própria declaração.
+- **Operações por declaração:** quem tem operações, quem essas chamam e por quem são
+  chamadas (só chamadas sem homônimos).
+- **Laços:** o que cada laço tem dentro, **direto** ou **pela cadeia** de chamadas sem
+  homônimos (até 4), com cada passo e a linha da chamada. Por exemplo, no logistica-api:
+  `plan_route` → laço da linha 58 → `zone_of` (linha 74) → `address.area`, uma relação.
+  Também mostra laços dentro do laço, nomes chamados mais de uma vez e as chamadas não
+  seguidas porque o nome tem homônimos.
+- **Percorre inteira a cada volta:** um laço alcançado por uma chamada feita dentro do laço
+  (a uma chamada de distância) que itera um parâmetro, quando o argumento escrito na chamada
+  não usa nada atribuído dentro do laço de fora. No logistica-api: `driver_indicators`
+  (`daily_report.py:69`, uma vez por motorista) percorre `deliveries` inteira na linha 12, e
+  `driver_name` (linha 52, uma vez por entrega) percorre `drivers` inteira.
+- **Busca em lista** (`list_scan`): `x in nome` quando a função atribui `nome` só a listas
+  (`[...]`, compreensão, `list()`, `sorted()`), com a linha da atribuição. No logistica-api:
+  `delivery.id in routed` na linha 54, lista da linha 36, dentro do laço da linha 44.
+- **Medido:** quando a última execução sem mudança de um comando trouxe medidas com `at=`
+  (veja a [Régua](#execução-comandos-do-projeto)), cada operação daquela linha mostra o número
+  ao lado, com borda tracejada: no relatório diário, 200 em `delivery.address`, 200 em
+  `address.area` e 400 em `session.exec` do histórico. O número é da linha, somando todos os
+  caminhos que chegam nela, e não diz que a operação é a causa. As linhas medidas que não
+  têm operação do inventário aparecem listadas no topo.
+- O filtro escolhe um tipo de operação; o nome de uma declaração leva ao mapa.
+
+As regras genéricas são do bibliotecário. As do projeto ficam no `librarian.json`, em
+`inventory`, lidas a cada uso:
+
+```json
+"inventory": { "rules": [
+  { "id": "db.session", "operation": "database", "match": "call",
+    "names": ["exec", "get", "add", "commit"], "receivers": ["session"] },
+  { "id": "db.relationship", "operation": "database", "match": "field_declared_with",
+    "calls": ["Relationship"] }
+] }
+```
+
+- `call`: uma chamada com um destes nomes. Com `receivers`, o nome escrito logo antes
+  (`session` em `self.session.exec(...)`) precisa ser um deles; `""` quer dizer sem
+  receptor (`open(...)`).
+- `field_declared_with`: a leitura ou escrita de um campo cuja declaração chama um destes
+  nomes.
+- `module_write`: a escrita de um nome do módulo (já é uma regra do bibliotecário).
+
+O que nenhuma regra cobre fica fora e é contado. Estar dentro de um laço é estrutura: quantas
+vezes o laço roda e quanto tempo a operação leva, só a Régua mede. O mesmo inventário sai na
+linha de comando: `librarian_ingest investigate inventory <edition> [regras.json|-] [saida.json]`.
+
 ### 5. Modelfiles
 
 O seletor **Modelfile** mostra o resumo do escolhido (FROM, PARAMETER, SYSTEM).
@@ -548,6 +625,7 @@ studio lê o arquivo ao abrir a pasta pela primeira vez. Exemplo real:
 | `answer.format` | `claims` ou `prose`; sem o campo, um projeto novo começa em `claims` |
 | `answer.allow_inference`, `answer.allow_hypothesis` | Política do formato claims (padrão `false`) |
 | `commands` | Comandos que o painel **Execução** roda numa cópia do projeto, depois da sua aprovação: `argv` (programa e argumentos, sem shell), `timeout_s` (padrão 600, até 3600), `repeat` (padrão 1, até 20) e `outputs` (arquivos gerados, relativos à cópia, com o sha256 guardado). O studio lê os comandos do arquivo a cada uso e nunca os escreve; **Exportar perfil** mantém os que já estão lá |
+| `inventory` | Regras do projeto para o inventário de operações (aba **Investigar**): `rules`, cada uma com `id`, `operation`, `match` (`call`, `field_declared_with` ou `module_write`) e os nomes. O studio lê o arquivo a cada uso e nunca o escreve; **Exportar perfil** mantém as regras |
 
 Instruções e critérios entram nos bytes da query e dos hashes. Marque-os `-text` no
 `.gitattributes` do projeto.
