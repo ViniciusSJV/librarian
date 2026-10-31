@@ -55,13 +55,15 @@ fn ollama_models() -> Result<Vec<String>> {
     Ok(models.iter().filter_map(|m| m["name"].as_str().map(str::to_owned)).collect())
 }
 
-/// Whether Ollama says the model reasons in a separate channel (`thinking` among its
-/// capabilities). Such a model can answer nothing when the response schema constrains its
-/// output, so the schema is not sent; the claims checker validates the answer anyway.
-fn ollama_thinks(model: &str) -> Result<bool> {
-    let client = reqwest::blocking::Client::builder().timeout(Duration::from_millis(5000)).no_proxy().build()?;
-    let shown: Value = serde_json::from_slice(&client.post(format!("{OLLAMA}/api/show")).header("content-type", "application/json").body(json!({ "model": model }).to_string()).send()?.bytes()?)?;
-    Ok(shown["capabilities"].as_array().is_some_and(|c| c.iter().any(|x| x == "thinking")))
+/// Whether the Modelfile asks to send the response schema as Ollama's `format` (the default),
+/// by a Librarian comment line `# librarian: structured-output off`. Some models that reason in
+/// a separate channel (gpt-oss) answer nothing with the schema; others (gemma4) reason without
+/// end without it. The claims checker validates the answer either way.
+fn structured_output(modelfile: &str) -> bool {
+    !modelfile.lines().any(|line| {
+        let words: Vec<&str> = line.trim().trim_start_matches('#').split_whitespace().collect();
+        words.starts_with(&["librarian:", "structured-output", "off"])
+    })
 }
 
 pub struct Send<'a> {
@@ -138,13 +140,13 @@ fn send_ollama(request: &Send) -> Result<Value> {
     if !create.status.success() {
         return Err(format!("ollama create falhou: {}", String::from_utf8_lossy(&log).trim()).into());
     }
-    let thinks = ollama_thinks(&model)?;
+    let structured = structured_output(&fs::read_to_string(&requested)?);
     let config = Config {
         endpoint: format!("{OLLAMA}/api/generate"),
         model: model.clone(),
         timeout_ms: TIMEOUT_MS,
         max_bytes: MAX_RESPONSE_BYTES,
-        structured_output: !thinks,
+        structured_output: structured,
     };
     let attempt = request.dir.join("attempt");
     let id = format!("STUDIO_{}", now_ms());
@@ -170,8 +172,8 @@ fn send_ollama(request: &Send) -> Result<Value> {
         "query_sha256": result["query_sha256"],
         "response_sha256": result["response_sha256"],
         "input": input,
-        // A model that reasons gets no response schema (see ollama_thinks).
-        "structured_output": !thinks,
+        // Without the response schema when the Modelfile says so (see structured_output).
+        "structured_output": structured,
     }))
 }
 
@@ -458,10 +460,20 @@ mod tests {
     }
 
     #[test]
+    fn a_modelfile_may_turn_the_response_schema_off() {
+        assert!(super::structured_output("FROM gemma4:12b
+SYSTEM \"\"\"x\"\"\""));
+        assert!(!super::structured_output("# librarian: structured-output off (por quê)
+FROM gpt-oss:20b"));
+        let gptoss = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../modelfiles/teste-gptoss.Modelfile")).unwrap();
+        assert!(!super::structured_output(&gptoss));
+    }
+
+    #[test]
     fn library_modelfiles_have_a_system_and_a_standard_name() {
         // `<task>-<model>`, SYSTEM in Portuguese; `<task>-<model>-en`, the same in English.
         let dir = concat!(env!("CARGO_MANIFEST_DIR"), "/../../modelfiles");
-        let (tasks, models) = (["analista", "lexico", "verificavel", "performance"], ["qwen3coder", "gemma4", "gptoss", "claude"]);
+        let (tasks, models) = (["analista", "lexico", "verificavel", "performance", "teste"], ["qwen3coder", "gemma4", "gptoss", "claude"]);
         let mut seen = 0;
         for entry in std::fs::read_dir(dir).unwrap() {
             let name = entry.unwrap().file_name().into_string().unwrap();
@@ -472,7 +484,7 @@ mod tests {
             assert!(modelfile_system(&text).is_some_and(|s| !s.is_empty()), "{name}");
             seen += 1;
         }
-        assert_eq!(seen, tasks.len() * models.len() + 4, "every task with every model, and the Claude ones in English");
+        assert_eq!(seen, tasks.len() * models.len() + 4, "every task with every model, and four Claude ones in English");
         let analista = std::fs::read_to_string(format!("{dir}/analista-qwen3coder.Modelfile")).unwrap();
         assert!(modelfile_system(&analista).unwrap().starts_with("Você explica somente"));
     }

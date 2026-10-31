@@ -7,6 +7,7 @@ mod facts;
 mod http;
 mod lexicon;
 mod llm;
+mod mutation;
 mod store;
 
 use http::{Request, Response};
@@ -207,6 +208,17 @@ fn route(app: &App, req: &Request) -> Result<Response> {
             ok(store.execute(&field(&body, "key")?, &field(&body, "run")?, &field(&body, "name")?, change.as_ref())?)
         }
         ("GET", "/api/executions") => ok(json!(store.executions(param("key")?, param("run")?)?)),
+        // R3: break a unit on purpose and see which tests notice; then check a proposed test.
+        ("POST", "/api/mutation/run") => {
+            let body = req.json()?;
+            ok(store.mutation_run(&field(&body, "key")?, &field(&body, "run")?, &field(&body, "symbol")?, &field(&body, "command")?)?)
+        }
+        ("GET", "/api/mutations") => ok(json!(store.mutations(param("key")?, param("run")?)?)),
+        ("POST", "/api/mutation/check") => {
+            let body = req.json()?;
+            let change: execution::ChangeRef = serde_json::from_value(body["change"].clone())?;
+            ok(store.mutation_check(&field(&body, "key")?, &field(&body, "run")?, &field(&body, "mutation")?, &change)?)
+        }
         ("DELETE", "/api/turn") => {
             let body = req.json()?;
             ok(store.delete_turn(&field(&body, "key")?, &field(&body, "run")?, &field(&body, "turn")?)?)

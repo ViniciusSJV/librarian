@@ -1,5 +1,6 @@
 # Biblioteca de Modelfiles do Librarian, fora dos crates: modelo, parâmetros e SYSTEM são escolha de quem pergunta.
 # Etapa de performance no formato claims: cada mudança é uma HYPOTHESIS com edições e plano de medição. Modelo: gpt-oss:20b.
+# librarian: structured-output off (o gpt-oss responde vazio quando o schema vai como format)
 FROM gpt-oss:20b
 PARAMETER temperature 0
 PARAMETER seed 42

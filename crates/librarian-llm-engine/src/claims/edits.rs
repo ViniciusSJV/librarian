@@ -197,7 +197,17 @@ pub fn diff(context: &Context, claim: &Claim) -> Option<String> {
                 let new_count = hunk.iter().filter(|e| e.0 != '-').count();
                 let new_start = old_start as isize + shift;
                 out.push_str(&format!("@@ -{old_start},{old_count} +{new_start},{new_count} @@\n"));
-                hunk.iter().for_each(|(marker, text, _)| out.push_str(&format!("{marker}{text}\n")));
+                // At the end of a file with no final line break, the last old line and the
+                // last new line each say so.
+                let at_end = block.ends_file && hi == entries.len() - 1;
+                let last_old = entries.iter().rposition(|e| e.0 != '+');
+                let last_new = entries.iter().rposition(|e| e.0 != '-');
+                for (i, (marker, text, _)) in hunk.iter().enumerate() {
+                    out.push_str(&format!("{marker}{text}\n"));
+                    if at_end && (Some(lo + i) == last_old || Some(lo + i) == last_new) {
+                        out.push_str("\\ No newline at end of file\n");
+                    }
+                }
                 shift += new_count as isize - old_count as isize;
             }
         }

@@ -28,6 +28,10 @@ pub struct Evidence {
     pub excerpt: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub symbols: Vec<Symbol>,
+    /// The excerpt's last line is the file's last line, with no line break after it: a diff
+    /// that reaches it says so (`\ No newline at end of file`), or it does not apply.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub ends_file: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

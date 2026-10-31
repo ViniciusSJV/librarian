@@ -57,7 +57,9 @@ pub fn context(catalog: &Catalog, query: &Value, policy: Policy, project_instruc
         }
         let end = start + lines.len() - 1;
         let symbols = symbols(catalog, &path, start, &lines);
-        items.push(Evidence { id, path, start_line: start, end_line: end, excerpt: lines.join("\n"), symbols });
+        // The window reaches the last line of a file that has no line break after it.
+        let ends_file = catalog.source_bytes(&path).is_some_and(|b| !b.is_empty() && !b.ends_with(b"\n") && b.split(|c| *c == b'\n').count() == end);
+        items.push(Evidence { id, path, start_line: start, end_line: end, excerpt: lines.join("\n"), symbols, ends_file });
     }
     let mut limits: Vec<String> = vec![];
     for unknown in selections.iter().flat_map(|s| s["evidence_unknowns"].as_array().into_iter().flatten()) {

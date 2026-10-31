@@ -649,6 +649,18 @@ fn editing() -> (Context, Value) {
 }
 
 #[test]
+fn a_diff_reaching_the_end_of_a_file_without_a_final_line_break_says_so() {
+    let (mut c, r) = editing();
+    // E2 (lines 10-12) is the end of src/a.rs, and the file has no line break after `}`.
+    c.evidence[1].ends_file = true;
+    let response: claims::Response = serde_json::from_value(r).unwrap();
+    let diff = claims::edits_diff(&c, &response.claims[0]).unwrap();
+    assert!(diff.ends_with("@@ -10,3 +11,3 @@\n     fn ray(&self) -> f64 {\n-        1.0 / self.m\n+        self.inv\n     }\n\\ No newline at end of file\n"), "{diff}");
+    // The first block is not the end of the file: no marker there.
+    assert_eq!(diff.matches("No newline").count(), 1);
+}
+
+#[test]
 fn edits_are_checked_against_the_evidence_and_derive_a_diff() {
     let (c, r) = editing();
     let report = claims::check(&c, &r.to_string()).unwrap();

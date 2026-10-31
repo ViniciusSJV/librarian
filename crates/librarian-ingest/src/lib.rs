@@ -565,6 +565,11 @@ impl Catalog {
     pub fn chunk(&self, id: &str) -> Option<&Chunk> {
         self.chunks.get(id)
     }
+    /// The preserved bytes of a whole source, by its path.
+    pub fn source_bytes(&self, path: &str) -> Option<&[u8]> {
+        let source = self.source_by_path(path)?;
+        self.snapshots.get(&source.id).map(Vec::as_slice)
+    }
     pub fn excerpt(&self, chunk_id: &str) -> Option<&[u8]> {
         let c = self.chunks.get(chunk_id)?;
         self.snapshots
