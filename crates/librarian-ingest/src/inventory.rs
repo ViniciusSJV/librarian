@@ -13,7 +13,7 @@ use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
 pub const VERSION: &str = "operation-inventory-v1";
 /// How many calls a chain from a loop follows to reach an operation.
-pub const MAX_CHAIN: usize = 4;
+pub const MAX_CHAIN: usize = 6;
 
 /// Rules of one project, or the built-in ones. Each finds operations by written names only.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -229,7 +229,9 @@ pub struct Step {
     pub text: String,
     pub path: String,
     pub line: usize,
-    /// unique or receiver, as in "what does it call?".
+    /// unique or receiver, as in "what does it call?"; with several homonyms, type (the
+    /// receiver's written type), trait_default (the default of a trait that type implements) or
+    /// trait (a candidate: one of the implementations of one trait's method).
     pub resolution: String,
 }
 
@@ -249,8 +251,8 @@ pub struct Unfollowed {
 const LIMITS: &[&str] = &[
     "Operações são achadas por regras declaradas sobre nomes escritos; o que nenhuma regra cobre fica fora e é contado (calls_unmatched).",
     "Uma operação dentro de um laço é estrutura: não diz quantas vezes o laço roda, nem quanto tempo a operação leva. Isso exige medição.",
-    "Cadeias seguem só chamadas sem homônimos (únicas ou do próprio receptor), até 4 chamadas; as outras são listadas em unfollowed.",
-    "Receptores não são resolvidos: `session` é o nome escrito antes da chamada, não o tipo do objeto.",
+    "Cadeias seguem chamadas sem homônimos (únicas ou do próprio receptor) e, em Rust, com homônimos: pelo tipo escrito do receptor (type), pelo método padrão de um trait que esse tipo implementa (trait_default) ou, sem tipo escrito, por todas as implementações quando todos os homônimos são do mesmo trait (trait, candidatas). Até 6 chamadas; uma declaração entra uma vez por chamada que a alcança, e uma cadeia não volta a uma declaração dela. As outras são listadas em unfollowed.",
+    "Receptores não são resolvidos por inferência: em Python, `session` é o nome escrito antes da chamada; em Rust, o tipo vale só quando está escrito (anotação, self no impl, T::f, campo ou variante declarados no mesmo arquivo).",
     "Um campo achado por field_declared_with casa pelo nome com todos os campos homônimos que a regra marcou (through).",
     "\"Percorre inteira a cada volta\" só olha uma chamada de distância: o laço alcançado itera um parâmetro, e o argumento escrito não usa nada atribuído dentro do laço de fora. Não sabe o tamanho da coleção.",
     "Busca em lista (list_membership) exige que a função atribua o nome só a listas escritas como lista ([...], compreensão, list(), sorted()); uma lista que chega como parâmetro ou por outra chamada não é vista.",
@@ -297,6 +299,24 @@ impl<'g> Index<'g> {
     }
 }
 
+/// A written path's last segment without generic arguments or references: `ops::Mul` ->
+/// `Mul`, `Matrix<4>` -> `Matrix`, `&'a Sphere` -> `Sphere`.
+fn last_segment(text: &str) -> String {
+    let text = text.split('<').next().unwrap_or_default();
+    let last = text.rsplit("::").next().unwrap_or_default();
+    last.rsplit(|c: char| c.is_whitespace() || c == '&').next().unwrap_or_default().to_owned()
+}
+
+/// The type and the trait of a Rust impl's name: `impl Intersectable for Sphere` ->
+/// (`Sphere`, `Intersectable`), `impl Matrix<4>` -> (`Matrix`, none).
+fn impl_parts(label: &str) -> (Option<String>, Option<String>) {
+    let Some(rest) = label.strip_prefix("impl ") else { return (None, None) };
+    match rest.split_once(" for ") {
+        Some((tr, ty)) => (Some(last_segment(ty)), Some(last_segment(tr))),
+        None => (Some(last_segment(rest)), None),
+    }
+}
+
 /// The written name of a call and the name written just before it, from the call's text:
 /// `self.session.exec(s)` -> (`session`, `exec`), `File::open` -> (`File`, `open`),
 /// `open` -> (``, `open`). None when the text ends in no name.
@@ -339,6 +359,18 @@ fn matching_open(text: &str, open: char, close: char) -> Option<usize> {
 fn trailing_ident(text: &str) -> Option<&str> {
     let start = text.char_indices().rev().take_while(|(_, c)| c.is_alphanumeric() || *c == '_').last().map(|(i, _)| i)?;
     Some(&text[start..])
+}
+
+/// A step for the terminal: `name (path:line)`, and how it was followed when not by a unique
+/// name (`[tipo]`, `[padrão do trait]`, `[uma das implementações]`).
+fn step_text(s: &Step) -> String {
+    let how = match s.resolution.as_str() {
+        "type" => " [tipo]",
+        "trait_default" => " [padrão do trait]",
+        "trait" => " [uma das implementações]",
+        _ => "",
+    };
+    format!("{}{how} ({}:{})", s.to_name, s.path, s.line)
 }
 
 fn short(text: &str) -> String {
@@ -511,18 +543,95 @@ pub fn inventory(catalog: &Catalog, project: &RuleSet) -> Result<Inventory> {
     }
     operations.sort_by(|a, b| (&a.path, a.evidence.start_byte, &a.rule).cmp(&(&b.path, b.evidence.start_byte, &b.rule)));
 
-    // Calls followed without homonyms, the rule of "what does it call?".
+    // Calls followed without homonyms, the rule of "what does it call?"; then, with several,
+    // by the receiver's written type, or to every implementation of one trait's method.
     let container = |id: &str| index.parent.get(id).copied();
-    let follow = |symbol: &str, occurrence: &str| -> std::result::Result<(String, &'static str), usize> {
+    // The type and the trait an impl or trait names, by their last segments.
+    let owner_of = |method: &str| -> Option<(Option<String>, Option<String>)> {
+        let owner = container(method)?;
+        match index.kind(owner) {
+            "impl" => Some(impl_parts(index.label(owner))),
+            "trait" => Some((None, Some(last_segment(index.label(owner))))),
+            _ => None,
+        }
+    };
+    let mut methods_by_name: BTreeMap<&str, Vec<&str>> = BTreeMap::new();
+    for (id, node) in &graph.nodes {
+        if node.category == "symbol" && matches!(node.kind.as_str(), "method" | "trait_method") {
+            methods_by_name.entry(node.label.rsplit("::").next().unwrap_or_default()).or_default().push(id);
+        }
+    }
+    let mut receiver_types: BTreeMap<(&str, usize), &str> = BTreeMap::new();
+    for edges in index.observed.values() {
+        for e in edges.iter().filter(|e| index.kind(&e.to) == "receiver_type") {
+            receiver_types.insert((e.evidence.path.as_str(), e.evidence.start_byte), &e.to);
+        }
+    }
+    let call_evidence: BTreeMap<&str, &Evidence> = index.observed.values().flatten().map(|e| (e.to.as_str(), &e.evidence)).collect();
+    // The written type of the receiver: `T::f` and `Self::f` by their path, `x.f()` by the
+    // receiver_type the extractor recorded where the call starts.
+    let receiver_type = |symbol: &str, occurrence: &str| -> Vec<String> {
+        let text = index.label(occurrence);
+        if index.kind(occurrence) == "call_observed" {
+            let Some((receiver, _)) = call_parts(text) else { return vec![] };
+            if receiver == "Self" {
+                return container(symbol).filter(|c| index.kind(c) == "impl").and_then(|c| impl_parts(index.label(c)).0).into_iter().collect();
+            }
+            return if receiver.starts_with(|c: char| c.is_uppercase()) { vec![receiver] } else { vec![] };
+        }
+        let Some(evidence) = call_evidence.get(occurrence) else { return vec![] };
+        let Some(written) = receiver_types.get(&(evidence.path.as_str(), evidence.start_byte)) else { return vec![] };
+        let mut names: Vec<String> = index.candidates.get(written).into_iter().flatten().map(|t| last_segment(index.label(t))).collect();
+        names.sort();
+        names.dedup();
+        names
+    };
+    let follow = |symbol: &str, occurrence: &str| -> std::result::Result<Vec<(String, &'static str)>, usize> {
         let edges = index.candidates.get(occurrence).cloned().unwrap_or_default();
         if edges.len() == 1 {
-            return Ok((edges[0].to_owned(), "unique"));
+            return Ok(vec![(edges[0].to_owned(), "unique")]);
         }
         let receiver = syntax.languages.get(&graph.nodes[symbol].language).and_then(|(_, r)| *r);
         let own = receiver.is_some_and(|r| index.label(occurrence).starts_with(&format!("{r}.")));
         let same: Vec<&&str> = edges.iter().filter(|e| container(e) == container(symbol)).collect();
-        if own && same.len() == 1 {
-            return Ok((same[0].to_string(), "receiver"));
+        if own && same.len() == 1 && index.kind(same[0]) != "trait_method" {
+            return Ok(vec![(same[0].to_string(), "receiver")]);
+        }
+        let name = call_parts(index.label(occurrence)).map(|(_, n)| n).unwrap_or_default();
+        let methods = methods_by_name.get(name.as_str()).cloned().unwrap_or_default();
+        let types = receiver_type(symbol, occurrence);
+        if !types.is_empty() {
+            // The type's own method; else the default of a trait the type implements.
+            let own: Vec<(String, &'static str)> = methods
+                .iter()
+                .filter(|m| owner_of(m).is_some_and(|(t, _)| t.is_some_and(|t| types.contains(&t))))
+                .map(|m| (m.to_string(), "type"))
+                .collect();
+            if !own.is_empty() {
+                return Ok(own);
+            }
+            let traits: BTreeSet<String> = graph
+                .nodes
+                .values()
+                .filter(|n| n.category == "symbol" && n.kind == "impl")
+                .filter_map(|n| match impl_parts(&n.label) {
+                    (Some(t), Some(tr)) if types.contains(&t) => Some(tr),
+                    _ => None,
+                })
+                .collect();
+            let defaults: Vec<(String, &'static str)> = methods
+                .iter()
+                .filter(|m| index.kind(m) == "trait_method" && owner_of(m).is_some_and(|(_, tr)| tr.is_some_and(|tr| traits.contains(&tr))))
+                .map(|m| (m.to_string(), "trait_default"))
+                .collect();
+            if !defaults.is_empty() {
+                return Ok(defaults);
+            }
+        }
+        // Every candidate belongs to the same trait: its implementations, all of them.
+        let traits: BTreeSet<Option<String>> = edges.iter().map(|e| owner_of(e).and_then(|(_, tr)| tr)).collect();
+        if edges.len() > 1 && traits.len() == 1 && traits.iter().all(Option::is_some) {
+            return Ok(edges.iter().map(|e| (e.to_string(), "trait")).collect());
         }
         Err(edges.len())
     };
@@ -543,6 +652,7 @@ pub fn inventory(catalog: &Catalog, project: &RuleSet) -> Result<Inventory> {
             let mut calls: Vec<String> = calls_of(symbol)
                 .iter()
                 .filter_map(|e| follow(symbol, &e.to).ok())
+                .flatten()
                 .map(|(to, _)| to)
                 .filter(|to| by_symbol.contains_key(to.as_str()) && to != symbol)
                 .collect();
@@ -578,7 +688,7 @@ pub fn inventory(catalog: &Catalog, project: &RuleSet) -> Result<Inventory> {
                     repeated.entry(name).or_default().push(call.evidence.start_line);
                 }
                 match follow(symbol, &call.to) {
-                    Ok((to, resolution)) => {
+                    Ok(targets) => for (to, resolution) in targets {
                         let first = step(&index, symbol, &to, call, resolution);
                         let (chains, mut reached) = reach(&index, &by_symbol, &loops_of, &follow, &calls_of, first, &in_loop);
                         // Step 3b, one call away: the reached loop walks a parameter, and what the call
@@ -609,13 +719,19 @@ pub fn inventory(catalog: &Catalog, project: &RuleSet) -> Result<Inventory> {
                     Err(_) => {}
                 }
             }
-            // One chain per operation: the shortest, then the first written.
+            // One chain per operation and per call that enters its declaration from another
+            // one (a call written in this loop counts once): the shortest, then the first written.
+            let entered = |steps: &[Step]| match steps {
+                [_] => None,
+                [.., last] => Some((last.path.clone(), last.line)),
+                [] => None,
+            };
             let mut seen = BTreeSet::new();
             through_calls.sort_by_key(|c: &Chain| c.steps.len());
-            through_calls.retain(|c| seen.insert(c.operation.clone()));
+            through_calls.retain(|c| seen.insert((c.operation.clone(), entered(&c.steps))));
             // A call site that walks the whole collection each turn wins over one that does not.
             loops_through_calls.sort_by_key(|c| (c.steps.len(), c.whole_each_turn.is_none()));
-            loops_through_calls.retain(|c| seen.insert(c.occurrence.clone()));
+            loops_through_calls.retain(|c| seen.insert((c.occurrence.clone(), entered(&c.steps))));
             let repeated_calls: Vec<Repeated> = repeated
                 .into_iter()
                 .filter(|(_, lines)| lines.len() > 1)
@@ -719,7 +835,7 @@ pub fn summary(inventory: &Inventory) -> String {
         let mut chains: Vec<(String, BTreeMap<&str, Vec<&Operation>>, bool)> = vec![];
         for c in &l.through_calls {
             let o = ops[c.operation.as_str()];
-            let path: Vec<String> = c.steps.iter().map(|s| format!("{} ({}:{})", s.to_name, s.path, s.line)).collect();
+            let path: Vec<String> = c.steps.iter().map(step_text).collect();
             let path = path.join(" → ");
             match chains.iter_mut().find(|(p, _, _)| *p == path) {
                 Some((_, kinds, inner)) => {
@@ -740,7 +856,7 @@ pub fn summary(inventory: &Inventory) -> String {
             let _ = writeln!(out, "  pela cadeia: {path} → {}{}", reached.join("; "), if inner { "  [em laço lá também]" } else { "" });
         }
         for c in &l.loops_through_calls {
-            let path: Vec<String> = c.steps.iter().map(|s| format!("{} ({}:{})", s.to_name, s.path, s.line)).collect();
+            let path: Vec<String> = c.steps.iter().map(step_text).collect();
             let whole = c.whole_each_turn.as_ref().map_or(String::new(), |w| format!("  [percorre {} inteira a cada volta: recebe {}]", w.parameter, line(&w.argument)));
             let _ = writeln!(out, "  laço pela cadeia: {} → {} {}:{}–{}{whole}", path.join(" → "), line(&c.head), c.path, c.line, c.end_line);
         }
@@ -824,22 +940,26 @@ fn step(index: &Index, from: &str, to: &str, call: &v2::Edge, resolution: &str) 
 }
 
 /// Every operation and every loop reachable from a first call, breadth first, up to MAX_CHAIN
-/// calls, with the steps that lead to each. A declaration is entered once.
+/// calls, with the steps that lead to each. A declaration is entered once by each call that
+/// enters it (the call site matters for cost: the same loop reached from a cold and a hot place
+/// are two findings), and never again within the same chain.
 fn reach<'g>(
     index: &Index<'g>,
     by_symbol: &BTreeMap<&str, Vec<&Operation>>,
     loops_of: &BTreeMap<&str, Vec<&'g v2::Edge>>,
-    follow: &dyn Fn(&str, &str) -> std::result::Result<(String, &'static str), usize>,
+    follow: &dyn Fn(&str, &str) -> std::result::Result<Vec<(String, &'static str)>, usize>,
     calls_of: &dyn Fn(&str) -> Vec<&'g v2::Edge>,
     first: Step,
     in_loop: &dyn Fn(&str, &Evidence) -> bool,
 ) -> (Vec<Chain>, Vec<LoopChain>) {
     let (mut found, mut loops) = (vec![], vec![]);
-    let mut visited = BTreeSet::from([first.from.clone()]);
+    let entry = |s: &Step| (s.to.clone(), s.path.clone(), s.line, s.text.clone());
+    let mut visited = BTreeSet::new();
     let mut queue = VecDeque::from([vec![first]]);
     while let Some(steps) = queue.pop_front() {
-        let here = steps.last().expect("a chain has a step").to.clone();
-        if !visited.insert(here.clone()) {
+        let last = steps.last().expect("a chain has a step");
+        let here = last.to.clone();
+        if !visited.insert(entry(last)) {
             continue;
         }
         for op in by_symbol.get(here.as_str()).into_iter().flatten() {
@@ -860,10 +980,12 @@ fn reach<'g>(
             continue;
         }
         for call in calls_of(&here) {
-            if let Ok((to, resolution)) = follow(&here, &call.to) {
-                if !visited.contains(&to) {
+            for (to, resolution) in follow(&here, &call.to).unwrap_or_default() {
+                let in_chain = steps[0].from == to || steps.iter().any(|s| s.to == to);
+                let next_step = step(index, &here, &to, call, resolution);
+                if !in_chain && !visited.contains(&entry(&next_step)) {
                     let mut next = steps.clone();
-                    next.push(step(index, &here, &to, call, resolution));
+                    next.push(next_step);
                     queue.push_back(next);
                 }
             }

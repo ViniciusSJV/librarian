@@ -11,17 +11,21 @@ use syn::{
 /// `g6` adds named struct fields, field accesses and call candidates (profile v3).
 /// `g6d` adds struct literals, field writes and the type written in an impl (profile v4).
 /// `v5` adds enum variants, names used as values, struct patterns and loops (profile v5).
+/// `v6` adds closures of iterator chains as loops and the written type of a method call's
+/// receiver (profile v7).
 /// Without them, records and occurrences are exactly those of the frozen v1 adapter.
 pub(crate) struct Rust {
     g6: bool,
     g6d: bool,
     v5: bool,
+    v6: bool,
 }
 
-pub(crate) static RUST: Rust = Rust { g6: false, g6d: false, v5: false };
-pub(crate) static RUST_V3: Rust = Rust { g6: true, g6d: false, v5: false };
-pub(crate) static RUST_V4: Rust = Rust { g6: true, g6d: true, v5: false };
-pub(crate) static RUST_V5: Rust = Rust { g6: true, g6d: true, v5: true };
+pub(crate) static RUST: Rust = Rust { g6: false, g6d: false, v5: false, v6: false };
+pub(crate) static RUST_V3: Rust = Rust { g6: true, g6d: false, v5: false, v6: false };
+pub(crate) static RUST_V4: Rust = Rust { g6: true, g6d: true, v5: false, v6: false };
+pub(crate) static RUST_V5: Rust = Rust { g6: true, g6d: true, v5: true, v6: false };
+pub(crate) static RUST_V6: Rust = Rust { g6: true, g6d: true, v5: true, v6: true };
 
 impl Extractor for Rust {
     fn extract(&self, source: &Source, bytes: &[u8]) -> Extraction {
@@ -67,14 +71,22 @@ impl Extractor for Rust {
         let Ok((tree, offset)) = parse(text) else {
             return vec![];
         };
+        let mut shapes = Shapes::default();
+        if self.v6 {
+            shapes.visit_file(&tree);
+        }
         let mut observer = Occurrences {
             g6: self.g6,
             g6d: self.g6d,
             v5: self.v5,
+            v6: self.v6,
             offset,
             found: vec![],
             impl_type: None,
             locals: vec![],
+            shapes,
+            impl_name: None,
+            types: vec![],
         };
         observer.visit_file(&tree);
         observer.found
@@ -85,6 +97,9 @@ impl Extractor for Rust {
     }
 
     fn candidate_kinds_for(&self, occurrence: &str) -> &'static [&'static str] {
+        if self.v6 && occurrence == "receiver_type" {
+            return &["struct", "enum", "union", "type", "trait"];
+        }
         match (self.v5, occurrence) {
             // A tuple variant or tuple struct is built by a call (`Shape::Sphere(r)`).
             (true, "call_observed") => return &["function", "method", "trait_method", "variant", "struct"],
@@ -259,6 +274,7 @@ struct Occurrences {
     g6: bool,
     g6d: bool,
     v5: bool,
+    v6: bool,
     offset: usize,
     found: Vec<Occurrence>,
     /// Span of the type written in the impl being visited: it is `impl_self_type`, not also a
@@ -267,6 +283,111 @@ struct Occurrences {
     /// v5: names bound in each enclosing function (parameters, `let`, patterns, closures). A
     /// one-segment path with one of these names is a local, not a use of a declaration.
     locals: Vec<std::collections::BTreeSet<String>>,
+    /// v6: field and variant types declared in this file.
+    shapes: Shapes,
+    /// v6: the type written in the impl being visited, by its last segment.
+    impl_name: Option<String>,
+    /// v6: names with a written type in each enclosing function. A later binding of the same
+    /// name replaces the earlier one; blocks are not scopes.
+    types: Vec<BTreeMap<String, String>>,
+}
+
+use std::collections::BTreeMap;
+
+/// v6: the types a file declares for struct fields and tuple variants, read before the
+/// occurrences. Only this file: a struct declared elsewhere has no known fields.
+#[derive(Default)]
+struct Shapes {
+    /// struct -> field -> (type, element type of a collection).
+    fields: BTreeMap<String, BTreeMap<String, (Option<String>, Option<String>)>>,
+    /// (enum, variant) -> the type of its only field.
+    variants: BTreeMap<(String, String), String>,
+}
+
+impl<'ast> Visit<'ast> for Shapes {
+    fn visit_item_struct(&mut self, value: &'ast syn::ItemStruct) {
+        let fields = self.fields.entry(value.ident.to_string()).or_default();
+        for field in &value.fields {
+            if let Some(ident) = &field.ident {
+                fields.insert(ident.to_string(), (type_name(&field.ty), element_name(&field.ty)));
+            }
+        }
+    }
+    fn visit_item_enum(&mut self, value: &'ast syn::ItemEnum) {
+        for variant in &value.variants {
+            if let syn::Fields::Unnamed(fields) = &variant.fields {
+                if let (1, Some(ty)) = (fields.unnamed.len(), fields.unnamed.first().and_then(|f| type_name(&f.ty))) {
+                    self.variants.insert((value.ident.to_string(), variant.ident.to_string()), ty);
+                }
+            }
+        }
+    }
+}
+
+/// The written type by its last segment, references and parentheses dropped: `&mut
+/// Matrix<4>` -> `Matrix`. None for tuples, slices, functions and the like.
+fn type_name(ty: &syn::Type) -> Option<String> {
+    match ty {
+        syn::Type::Reference(r) => type_name(&r.elem),
+        syn::Type::Paren(p) => type_name(&p.elem),
+        syn::Type::Group(g) => type_name(&g.elem),
+        syn::Type::Path(p) => p.path.segments.last().map(|s| s.ident.to_string()),
+        _ => None,
+    }
+}
+
+/// The element type of a written collection: `Vec<Object>`, `[Object; 4]`, `&[Object]` ->
+/// `Object`.
+fn element_name(ty: &syn::Type) -> Option<String> {
+    match ty {
+        syn::Type::Reference(r) => element_name(&r.elem),
+        syn::Type::Paren(p) => element_name(&p.elem),
+        syn::Type::Array(a) => type_name(&a.elem),
+        syn::Type::Slice(s) => type_name(&s.elem),
+        syn::Type::Path(p) => {
+            let last = p.path.segments.last()?;
+            if !matches!(last.ident.to_string().as_str(), "Vec" | "VecDeque" | "LinkedList" | "BTreeSet" | "HashSet" | "BinaryHeap") {
+                return None;
+            }
+            let syn::PathArguments::AngleBracketed(args) = &last.arguments else { return None };
+            match args.args.first()? {
+                syn::GenericArgument::Type(t) => type_name(t),
+                _ => None,
+            }
+        }
+        _ => None,
+    }
+}
+
+/// Methods that start or adapt an iterator; a chain of them, down to one of these or a range,
+/// is an iterator.
+const ITERATOR_SOURCES: &[&str] = &[
+    "iter", "iter_mut", "into_iter", "par_iter", "par_iter_mut", "into_par_iter", "par_bridge", "chars", "bytes",
+    "char_indices", "lines", "split_whitespace", "windows", "chunks", "chunks_exact", "keys", "values", "values_mut", "drain",
+];
+const ITERATOR_ADAPTERS: &[&str] = &[
+    "enumerate", "zip", "rev", "step_by", "skip", "take", "chain", "cycle", "flatten", "peekable", "copied", "cloned",
+    "map", "filter", "filter_map", "flat_map", "inspect", "take_while", "skip_while", "scan", "cartesian_product",
+];
+/// Methods whose closure runs once per element of the iterator they are called on.
+const ITERATOR_BODIES: &[&str] = &[
+    "for_each", "map", "filter", "filter_map", "flat_map", "fold", "any", "all", "find", "find_map", "position",
+    "try_for_each", "for_each_with", "for_each_init", "map_with", "map_init", "inspect", "take_while", "skip_while",
+    "max_by_key", "min_by_key", "max_by", "min_by", "partition", "scan", "reduce",
+];
+
+/// Whether an expression is, as written, an iterator: a chain of sources and adapters that
+/// ends in a source or a range. `opt.map(..)` is not; `(0..n).map(..)` and `v.iter().map(..)` are.
+fn is_iterator(expr: &syn::Expr) -> bool {
+    match expr {
+        syn::Expr::Range(_) => true,
+        syn::Expr::Paren(p) => is_iterator(&p.expr),
+        syn::Expr::MethodCall(m) => {
+            let name = m.method.to_string();
+            ITERATOR_SOURCES.contains(&name.as_str()) || (ITERATOR_ADAPTERS.contains(&name.as_str()) && is_iterator(&m.receiver))
+        }
+        _ => false,
+    }
 }
 
 /// Every name a pattern binds inside a function, closures included.
@@ -316,14 +437,97 @@ impl Occurrences {
         });
     }
 
-    /// v5: visits a function with the names it binds as its locals.
-    fn scoped(&mut self, bindings: Bindings, visit: impl FnOnce(&mut Self)) {
+    /// v5: visits a function with the names it binds as its locals. v6: and with the types
+    /// written for its parameters.
+    fn scoped(&mut self, bindings: Bindings, sig: &syn::Signature, visit: impl FnOnce(&mut Self)) {
         if !self.v5 {
             return visit(self);
         }
         self.locals.push(bindings.0);
+        if self.v6 {
+            let mut types = BTreeMap::new();
+            for input in &sig.inputs {
+                if let syn::FnArg::Typed(typed) = input {
+                    if let (syn::Pat::Ident(ident), Some(ty)) = (typed.pat.as_ref(), self.written(&typed.ty)) {
+                        types.insert(ident.ident.to_string(), ty);
+                    }
+                }
+            }
+            self.types.push(types);
+        }
         visit(self);
+        if self.v6 {
+            self.types.pop();
+        }
         self.locals.pop();
+    }
+
+    /// v6: a written type by its last segment, `Self` read as the impl's type.
+    fn written(&self, ty: &syn::Type) -> Option<String> {
+        type_name(ty).and_then(|t| if t == "Self" { self.impl_name.clone() } else { Some(t) })
+    }
+
+    fn bind(&mut self, name: String, ty: String) {
+        if let Some(types) = self.types.last_mut() {
+            types.insert(name, ty);
+        }
+    }
+
+    /// v6: the field of the impl's type that `self.f` names, as declared in this file.
+    fn own_field(&self, expr: &syn::Expr) -> Option<&(Option<String>, Option<String>)> {
+        let syn::Expr::Field(field) = expr else { return None };
+        let (syn::Expr::Path(base), syn::Member::Named(ident)) = (field.base.as_ref(), &field.member) else { return None };
+        if !base.path.is_ident("self") {
+            return None;
+        }
+        self.shapes.fields.get(self.impl_name.as_ref()?)?.get(&ident.to_string())
+    }
+
+    /// v6: the type of an expression when it is written where the expression is: `self` in
+    /// an impl, a name with a written type, `self.f` with a field declared in this file,
+    /// `T::f(..)` and `T { .. }`.
+    fn type_of(&self, expr: &syn::Expr) -> Option<String> {
+        match expr {
+            syn::Expr::Paren(p) => self.type_of(&p.expr),
+            syn::Expr::Reference(r) => self.type_of(&r.expr),
+            syn::Expr::Path(p) if p.path.is_ident("self") => self.impl_name.clone(),
+            syn::Expr::Path(p) => {
+                let name = p.path.get_ident()?.to_string();
+                self.types.last()?.get(&name).cloned()
+            }
+            syn::Expr::Field(_) => self.own_field(expr)?.0.clone(),
+            syn::Expr::Call(call) => {
+                let syn::Expr::Path(p) = call.func.as_ref() else { return None };
+                let segments = &p.path.segments;
+                let owner = segments.iter().rev().nth(1)?.ident.to_string();
+                if owner == "Self" {
+                    return self.impl_name.clone();
+                }
+                owner.starts_with(|c: char| c.is_uppercase()).then_some(owner)
+            }
+            syn::Expr::Struct(s) => {
+                let name = s.path.segments.last()?.ident.to_string();
+                if name == "Self" { self.impl_name.clone() } else { Some(name) }
+            }
+            _ => None,
+        }
+    }
+
+    /// v6: the element type of what a `for` walks, when it is a field of the impl's type
+    /// declared in this file as a collection: `&self.objects`, `self.objects.iter()`,
+    /// `self.objects.iter().enumerate()` (then the second name of the pattern).
+    fn element_of(&self, expr: &syn::Expr) -> Option<(String, bool)> {
+        match expr {
+            syn::Expr::Paren(p) => self.element_of(&p.expr),
+            syn::Expr::Reference(r) => self.element_of(&r.expr),
+            syn::Expr::MethodCall(m) => match m.method.to_string().as_str() {
+                "iter" | "iter_mut" | "into_iter" => self.element_of(&m.receiver),
+                "enumerate" => self.element_of(&m.receiver).filter(|(_, e)| !e).map(|(t, _)| (t, true)),
+                _ => None,
+            },
+            syn::Expr::Field(_) => self.own_field(expr)?.1.clone().map(|t| (t, false)),
+            _ => None,
+        }
     }
 }
 
@@ -346,8 +550,19 @@ impl<'ast> Visit<'ast> for Occurrences {
                 self.impl_type = Some(path.span().byte_range());
             }
         }
+        let outer = self.impl_name.take();
+        if self.v6 {
+            self.impl_name = type_name(&value.self_ty);
+        }
         visit::visit_item_impl(self, value);
         self.impl_type = None;
+        self.impl_name = outer;
+    }
+    fn visit_item_trait(&mut self, value: &'ast syn::ItemTrait) {
+        // A trait's default method has no written type for `self`.
+        let outer = self.impl_name.take();
+        visit::visit_item_trait(self, value);
+        self.impl_name = outer;
     }
     fn visit_expr_struct(&mut self, value: &'ast syn::ExprStruct) {
         // G6d: `Camera { transform, .. }` constructs the written type, and each named field it
@@ -431,6 +646,18 @@ impl<'ast> Visit<'ast> for Occurrences {
             let name = value.path.segments.last().map(|s| s.ident.to_string());
             self.push("struct_pattern", value.span(), name);
         }
+        // v6: `Object::Sphere(ref sphere)` binds `sphere` to the variant's field type, when
+        // the enum is declared in this file.
+        if let (true, 1, Some(syn::Pat::Ident(ident))) = (self.v6, value.elems.len(), value.elems.first()) {
+            let segments = &value.path.segments;
+            if let (Some(variant), Some(owner)) = (segments.last(), segments.iter().rev().nth(1)) {
+                let owner = owner.ident.to_string();
+                let owner = if owner == "Self" { self.impl_name.clone() } else { Some(owner) };
+                if let Some(ty) = owner.and_then(|o| self.shapes.variants.get(&(o, variant.ident.to_string())).cloned()) {
+                    self.bind(ident.ident.to_string(), ty);
+                }
+            }
+        }
         visit::visit_pat_tuple_struct(self, value);
     }
     fn visit_expr_for_loop(&mut self, value: &'ast syn::ExprForLoop) {
@@ -438,6 +665,21 @@ impl<'ast> Visit<'ast> for Occurrences {
             self.block("loop", value.span(), value.expr.span());
             // The iterated expression runs once, before the loop.
             self.push("loop_iterable", value.expr.span(), None);
+        }
+        if self.v6 {
+            if let Some((ty, enumerated)) = self.element_of(&value.expr) {
+                let name = match (value.pat.as_ref(), enumerated) {
+                    (syn::Pat::Ident(ident), false) => Some(&ident.ident),
+                    (syn::Pat::Tuple(tuple), true) if tuple.elems.len() == 2 => match &tuple.elems[1] {
+                        syn::Pat::Ident(ident) => Some(&ident.ident),
+                        _ => None,
+                    },
+                    _ => None,
+                };
+                if let Some(name) = name {
+                    self.bind(name.to_string(), ty);
+                }
+            }
         }
         visit::visit_expr_for_loop(self, value);
     }
@@ -458,26 +700,47 @@ impl<'ast> Visit<'ast> for Occurrences {
         if self.v5 {
             bindings.visit_item_fn(value);
         }
-        self.scoped(bindings, |s| visit::visit_item_fn(s, value));
+        self.scoped(bindings, &value.sig, |s| visit::visit_item_fn(s, value));
     }
     fn visit_impl_item_fn(&mut self, value: &'ast syn::ImplItemFn) {
         let mut bindings = Bindings::default();
         if self.v5 {
             bindings.visit_impl_item_fn(value);
         }
-        self.scoped(bindings, |s| visit::visit_impl_item_fn(s, value));
+        self.scoped(bindings, &value.sig, |s| visit::visit_impl_item_fn(s, value));
     }
     fn visit_trait_item_fn(&mut self, value: &'ast syn::TraitItemFn) {
         let mut bindings = Bindings::default();
         if self.v5 {
             bindings.visit_trait_item_fn(value);
         }
-        self.scoped(bindings, |s| visit::visit_trait_item_fn(s, value));
+        self.scoped(bindings, &value.sig, |s| visit::visit_trait_item_fn(s, value));
     }
     fn visit_expr_method_call(&mut self, value: &'ast syn::ExprMethodCall) {
         // Keep receiver and arguments; no receiver type is inferred.
         let name = self.g6.then(|| value.method.to_string());
         self.push("method_call_observed", value.span(), name);
+        if self.v6 {
+            // The receiver's type only when it is written (see type_of); never inferred.
+            if let Some(ty) = self.type_of(&value.receiver) {
+                self.push("receiver_type", value.receiver.span(), Some(ty));
+            }
+            // A closure run once per element: a loop from the method's name to the closure's
+            // end, labelled up to its parameters (`for_each(|(x, y)|`).
+            if ITERATOR_BODIES.contains(&value.method.to_string().as_str()) && is_iterator(&value.receiver) {
+                for argument in &value.args {
+                    if let syn::Expr::Closure(closure) = argument {
+                        self.found.push(Occurrence {
+                            kind: "loop",
+                            start: value.method.span().byte_range().start + self.offset,
+                            end: closure.span().byte_range().end + self.offset,
+                            candidate: None,
+                            label_end: Some(closure.inputs_end.span().byte_range().end + self.offset),
+                        });
+                    }
+                }
+            }
+        }
         visit::visit_expr_method_call(self, value);
     }
     fn visit_expr_field(&mut self, value: &'ast syn::ExprField) {
@@ -489,5 +752,15 @@ impl<'ast> Visit<'ast> for Occurrences {
     fn visit_local(&mut self, value: &'ast syn::Local) {
         self.push("local_binding", value.pat.span(), None);
         visit::visit_local(self, value);
+        // v6: after the value, so `let x = x.f()` reads the earlier `x`.
+        if self.v6 {
+            let (pat, written) = match &value.pat {
+                syn::Pat::Type(typed) => (typed.pat.as_ref(), self.written(&typed.ty)),
+                pat => (pat, value.init.as_ref().and_then(|i| self.type_of(&i.expr))),
+            };
+            if let (syn::Pat::Ident(ident), Some(ty)) = (pat, written) {
+                self.bind(ident.ident.to_string(), ty);
+            }
+        }
     }
 }

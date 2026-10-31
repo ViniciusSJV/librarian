@@ -1099,6 +1099,12 @@ const STRINGS = {
   'inventory.none': ['Nenhuma operação achada pelas regras.', 'No operation found by the rules.'],
   'inventory.loopChain': ['laço pela cadeia', 'loop through calls'],
   'inventory.wholeEachTurn': ['percorre {parameter} inteira a cada volta (recebe {argument})', 'walks all of {parameter} every turn (gets {argument})'],
+  'inventory.step.type': ['pelo tipo', 'by type'],
+  'inventory.step.type.help': ['Seguida pelo tipo escrito do receptor (parâmetro anotado, self no impl, campo, padrão do enum).', 'Followed by the receiver\'s written type (annotated parameter, self in the impl, field, enum pattern).'],
+  'inventory.step.trait_default': ['padrão do trait', 'trait default'],
+  'inventory.step.trait_default.help': ['O tipo escrito não tem o método; segue o método padrão de um trait que o tipo implementa.', 'The written type lacks the method; follows the default of a trait the type implements.'],
+  'inventory.step.trait': ['uma das implementações', 'one of the implementations'],
+  'inventory.step.trait.help': ['Candidata: o tipo do receptor não está escrito e todos os homônimos implementam o mesmo trait; cada implementação é seguida.', 'Candidate: the receiver\'s type is not written and every homonym implements the same trait; each implementation is followed.'],
   'inventory.boundList': ['lista atribuída na linha {lines}', 'list assigned on line {lines}'],
   'inventory.measured': ['medido: {measure} {median} {unit} ({command})', 'measured: {measure} {median} {unit} ({command})'],
   'inventory.measuredHelp': ['Número que o próprio projeto contou nesta linha (librarian-measure com at=), na última execução sem mudança deste comando. É da linha: soma todos os caminhos que chegam a ela. Fica ao lado da operação; não diz que ela é a causa.',
@@ -2995,6 +3001,11 @@ function renderInventory() {
     o.bound_lines?.length ? el('span', { className: 'muted', textContent: ` · ${t('inventory.boundList', { lines: o.bound_lines.join(', ') })}` }) : null,
     o.in_loop ? el('span', { className: 'tag', style: 'margin-left: 4px', textContent: t('inventory.inLoop') }) : null,
     ...measuredTags(o));
+  // A step and, when it was not followed by a unique name, how it was followed.
+  const stepParts = (s, k) => [k ? ' → ' : '', goTo(s.to, s.to_name),
+    ['type', 'trait_default', 'trait'].includes(s.resolution)
+      ? el('span', { className: 'muted', style: 'font-size: 11px', title: t(`inventory.step.${s.resolution}.help`), textContent: ` (${t(`inventory.step.${s.resolution}`)})` }) : null,
+    where(s.path, s.line)];
   // The operations a chain reaches in one declaration are one line, as in the terminal.
   const chainLines = chains => {
     const groups = [];
@@ -3007,7 +3018,7 @@ function renderInventory() {
     return groups.map(g => {
       const byKind = Object.entries(Object.groupBy(g.ops, o => o.operation));
       return el('div', { style: 'font-size: 12px' }, `${t('inventory.chain')}: `,
-        ...g.steps.flatMap((s, k) => [k ? ' → ' : '', goTo(s.to, s.to_name), where(s.path, s.line)]), ' → ',
+        ...g.steps.flatMap(stepParts), ' → ',
         ...byKind.flatMap(([kind, found], k) => [k ? '; ' : '', el('span', { className: 'tag', textContent: found.length > 1 ? `${kind} ×${found.length}` : kind }),
           where(found[0].path, found[0].line, found.at(-1).line), found.length === 1 ? el('code', { textContent: flat(found[0].text).slice(0, 80) }) : '',
           ...found.flatMap(measuredTags)]),
@@ -3061,7 +3072,7 @@ function renderInventory() {
       ...l.direct.filter(kept).map(id => opLine(ops.get(id), t('inventory.direct'))),
       ...chainLines(l.through_calls),
       ...l.loops_through_calls.map(c => el('div', { style: 'font-size: 12px' }, `${t('inventory.loopChain')}: `,
-        ...c.steps.flatMap((s, k) => [k ? ' → ' : '', goTo(s.to, s.to_name), where(s.path, s.line)]), ' → ',
+        ...c.steps.flatMap(stepParts), ' → ',
         el('code', { textContent: flat(c.head).slice(0, 80) }), where(c.path, c.line, c.end_line),
         c.whole_each_turn ? el('span', { className: 'tag', style: 'margin-left: 4px', textContent: t('inventory.wholeEachTurn', c.whole_each_turn) }) : null)),
       ...l.repeated_calls.map(r => el('div', { className: 'muted', style: 'font-size: 12px', textContent: t('inventory.repeated', { name: r.name, n: r.lines.length, lines: r.lines.join(', ') }) })),
