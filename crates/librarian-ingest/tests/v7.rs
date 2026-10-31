@@ -214,6 +214,13 @@ fn the_inventory_follows_homonyms_by_written_type_trait_default_and_trait_implem
 
     let children = find(&found, "for child in &self.children");
     assert_eq!(children.loops_through_calls.iter().map(|c| chain(&c.steps)).collect::<Vec<_>>(), ["Shape::hit (trait_default) > impl Matrix::inverse (unique)"]);
+
+    // Every declaration a chain names has its lines, so a measure taken inside one (a count at
+    // the start of its body) can be put next to it.
+    let place = |name: &str| found.declarations.iter().find(|d| d.name == name).map(|d| (d.path.as_str(), d.line, d.end_line));
+    assert_eq!(place("impl Matrix::inverse"), Some(("src/scene.rs", 6, 12)));
+    assert_eq!(place("Shape::hit"), Some(("src/scene.rs", 18, 21)));
+    assert_eq!(place("render"), Some(("src/scene.rs", 81, 88)));
 }
 
 #[test]

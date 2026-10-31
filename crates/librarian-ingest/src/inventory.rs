@@ -108,7 +108,19 @@ pub struct Inventory {
     pub loops_without_operations: usize,
     /// Calls that no rule matched: outside the inventory, counted.
     pub calls_unmatched: usize,
+    /// Where each declaration named above is (with operations, with loops or a step of a
+    /// chain), so that a measure taken at a line can be put next to the declaration that holds it.
+    pub declarations: Vec<Place>,
     pub limits: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+pub struct Place {
+    pub symbol: String,
+    pub name: String,
+    pub path: String,
+    pub line: usize,
+    pub end_line: usize,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
@@ -764,6 +776,22 @@ pub fn inventory(catalog: &Catalog, project: &RuleSet) -> Result<Inventory> {
     }
     loops.sort_by(|a, b| (&a.path, a.line, &a.occurrence).cmp(&(&b.path, b.line, &b.occurrence)));
 
+    let named: BTreeSet<&str> = symbols
+        .iter()
+        .map(|s| s.symbol.as_str())
+        .chain(loops.iter().flat_map(|l| {
+            let steps = l.through_calls.iter().flat_map(|c| &c.steps).chain(l.loops_through_calls.iter().flat_map(|c| &c.steps));
+            std::iter::once(l.symbol.as_str()).chain(steps.map(|s| s.to.as_str()))
+        }))
+        .collect();
+    let declarations: Vec<Place> = named
+        .into_iter()
+        .filter_map(|s| {
+            let evidence = index.declared.get(s)?;
+            Some(Place { symbol: s.to_owned(), name: index.label(s).to_owned(), path: evidence.path.clone(), line: evidence.start_line, end_line: evidence.end_line })
+        })
+        .collect();
+
     Ok(Inventory {
         version: VERSION.into(),
         profile: catalog.manifest().extractor.clone(),
@@ -785,6 +813,7 @@ pub fn inventory(catalog: &Catalog, project: &RuleSet) -> Result<Inventory> {
         loops,
         loops_without_operations,
         calls_unmatched,
+        declarations,
         limits: LIMITS.iter().map(|l| l.to_string()).collect(),
     })
 }

@@ -1109,8 +1109,8 @@ const STRINGS = {
   'inventory.measured': ['medido: {measure} {median} {unit} ({command})', 'measured: {measure} {median} {unit} ({command})'],
   'inventory.measuredHelp': ['Número que o próprio projeto contou nesta linha (librarian-measure com at=), na última execução sem mudança deste comando. É da linha: soma todos os caminhos que chegam a ela. Fica ao lado da operação; não diz que ela é a causa.',
     'A number the project itself counted at this line (librarian-measure with at=), in the latest run of this command without a change. It is the line\x27s: it adds up every path that reaches it. It sits next to the operation; it does not say the operation is the cause.'],
-  'inventory.measuredSummary': ['Medida por origem: {n} linha(s) contadas pelo projeto, {matched} com operação do inventário.', 'Measure by origin: {n} line(s) counted by the project, {matched} with an inventory operation.'],
-  'inventory.measuredLoose': ['Sem operação do inventário:', 'Without an inventory operation:'],
+  'inventory.measuredSummary': ['Medida por origem: {n} linha(s) contadas pelo projeto, {matched} com operação do inventário, {inside} dentro de uma declaração dele (a etiqueta fica ao lado do nome).', 'Measure by origin: {n} line(s) counted by the project, {matched} with an inventory operation, {inside} inside one of its declarations (the tag goes next to the name).'],
+  'inventory.measuredLoose': ['Sem operação nem declaração do inventário:', 'Without an inventory operation or declaration:'],
   'inventory.countWhole':['{n} percorre(m) a coleção inteira a cada volta', '{n} walk(s) a whole collection every turn'],
   'inventory.search': ['Buscar no inventário (usa o léxico): relatório, motorista, history…', 'Search the inventory (uses the lexicon): report, driver, history…'],
   'inventory.terms': ['Busca: {terms}', 'Search: {terms}'],
@@ -2993,8 +2993,21 @@ function renderInventory() {
     onclick: event => { event.preventDefault(); investigate(target, event.target); } });
   // What a measure with `at=` counted at an operation's line.
   const measured = inventory.measured ?? new Map();
-  const measuredTags = o => (measured.get(`${o.path}:${o.line}`) ?? []).map(m => el('span', { className: 'tag measured', style: 'margin-left: 4px',
-    title: t('inventory.measuredHelp'), textContent: t('inventory.measured', { measure: m.measure, median: Number.isInteger(m.median) ? m.median : number(m.median), unit: m.unit ?? '', command: m.command }) }));
+  const measuredTag = m => el('span', { className: 'tag measured', style: 'margin-left: 4px',
+    title: t('inventory.measuredHelp'), textContent: t('inventory.measured', { measure: m.measure, median: Number.isInteger(m.median) ? m.median : number(m.median), unit: m.unit ?? '', command: m.command }) });
+  const measuredTags = o => (measured.get(`${o.path}:${o.line}`) ?? []).map(measuredTag);
+  // A line measured inside a declaration (a count at the start of a function's body) goes next
+  // to the innermost declaration of the inventory that holds it; a line with an operation keeps
+  // its tag on the operation only.
+  const inDeclaration = new Map();
+  const operationLines = new Set(inv.operations.map(o => `${o.path}:${o.line}`));
+  for (const [at, found] of [...measured].filter(([at]) => !operationLines.has(at))) {
+    const [path, line] = [at.slice(0, at.lastIndexOf(':')), Number(at.slice(at.lastIndexOf(':') + 1))];
+    const holder = (inv.declarations ?? []).filter(d => d.path === path && d.line <= line && line <= d.end_line)
+      .sort((a, b) => (a.end_line - a.line) - (b.end_line - b.line))[0];
+    if (holder) inDeclaration.set(holder.symbol, [...(inDeclaration.get(holder.symbol) ?? []), ...found.map(m => ({ ...m, at }))]);
+  }
+  const declarationTags = symbol => (inDeclaration.get(symbol) ?? []).map(m => el('span', { title: m.at }, measuredTag(m)));
   const opLine = (o, prefix) => el('div', { style: 'font-size: 12px' },
     prefix ? `${prefix}: ` : investigateButton(o.id), el('span', { className: 'tag', textContent: o.operation }), where(o.path, o.line),
     el('code', { textContent: flat(o.text).slice(0, 120) }), el('span', { className: 'muted', textContent: ` · ${o.rule}` }),
@@ -3002,7 +3015,7 @@ function renderInventory() {
     o.in_loop ? el('span', { className: 'tag', style: 'margin-left: 4px', textContent: t('inventory.inLoop') }) : null,
     ...measuredTags(o));
   // A step and, when it was not followed by a unique name, how it was followed.
-  const stepParts = (s, k) => [k ? ' → ' : '', goTo(s.to, s.to_name),
+  const stepParts = (s, k) => [k ? ' → ' : '', goTo(s.to, s.to_name), ...declarationTags(s.to),
     ['type', 'trait_default', 'trait'].includes(s.resolution)
       ? el('span', { className: 'muted', style: 'font-size: 11px', title: t(`inventory.step.${s.resolution}.help`), textContent: ` (${t(`inventory.step.${s.resolution}`)})` }) : null,
     where(s.path, s.line)];
@@ -3051,8 +3064,9 @@ function renderInventory() {
   function measuredSummary() {
     if (!measured.size) return null;
     const lines = new Set(inv.operations.map(o => `${o.path}:${o.line}`));
-    const loose = [...measured.keys()].filter(at => !lines.has(at));
-    return el('p', { className: 'muted', style: 'font-size: 12px' }, t('inventory.measuredSummary', { n: measured.size, matched: measured.size - loose.length }),
+    const inside = [...inDeclaration.values()].flat().map(m => m.at);
+    const loose = [...measured.keys()].filter(at => !lines.has(at) && !inside.includes(at));
+    return el('p', { className: 'muted', style: 'font-size: 12px' }, t('inventory.measuredSummary', { n: measured.size, matched: [...measured.keys()].filter(at => lines.has(at)).length, inside: new Set(inside).size }),
       loose.length ? ` ${t('inventory.measuredLoose')}` : '',
       ...loose.map(at => el('div', { className: 'mono', textContent: `${at}: ${measured.get(at).map(m => `${m.measure} ${Number.isInteger(m.median) ? m.median : number(m.median)}`).join(', ')}` })));
   }
@@ -3065,7 +3079,7 @@ function renderInventory() {
     measuredSummary(),
     el('h3', { textContent: `${t('inventory.loops')} (${loops.length})` }),
     loops.length ? el('ol', { className: 'claims' }, ...loops.map(l => row([
-      investigateButton(l.occurrence), goTo(l.symbol, l.symbol_name), where(l.path, l.line, l.end_line), el('code', { textContent: flat(l.head).slice(0, 100) }),
+      investigateButton(l.occurrence), goTo(l.symbol, l.symbol_name), ...declarationTags(l.symbol), where(l.path, l.line, l.end_line), el('code', { textContent: flat(l.head).slice(0, 100) }),
       l.nesting ? el('span', { className: 'tag', style: 'margin-left: 4px', textContent: t('inventory.nesting', { n: l.nesting }) }) : null,
       l.inner_loops ? el('span', { className: 'tag', style: 'margin-left: 4px', textContent: t('inventory.inner', { n: l.inner_loops }) }) : null,
       el('div', { className: 'counts', textContent: counts(l) })],
