@@ -44,8 +44,15 @@ impl Store {
                 return Err("Escreva na nota por que o item é verdadeiro; a aprovação fica registrada com ela".into());
             }
             let link = gates(verified, &send_dir, &claim)?;
-            let location = claim.location.as_ref().ok_or("Portão 1: FACT sem location")?;
             let id = format!("F{}", self.facts_log(key)?.iter().filter(|e| e["event"] == "promoted").count() + 1);
+            if matches!(claim.kind, Kind::Hypothesis) {
+                let fact = self.change_fact(key, run, turn, send, &send_dir, &claim, &id, &link, &claim_sha256, &response_sha256, note, &review["reviewed"])?;
+                review["fact_id"] = json!(id);
+                append(&send_dir.join(REVIEWS), &review)?;
+                append(&self.project_dir(key)?.join(FACTS), &fact)?;
+                return Ok(review);
+            }
+            let location = claim.location.as_ref().ok_or("Portão 1: FACT sem location")?;
             let mut fact = json!({
                 "format_version": 1, "event": "promoted", "id": id, "kind": "FACT",
                 "statement": claim.text, "authorship": AUTHORSHIP,
@@ -89,6 +96,13 @@ impl Store {
                 let revoked = log.iter().rev().find(|e| e["event"] == "revoked" && e["id"] == fact["id"]);
                 let (status, reason) = match revoked {
                     Some(r) => ("revoked", Some(format!("Revogado em {}: {}", r["reviewed"].as_str().unwrap_or("?"), r["note"].as_str().unwrap_or("")))),
+                    // A change is applied when every line it adds is in the edition's file; until then it is
+                    // proposed while the code it cites is unchanged.
+                    None if fact["kind"] == "CHANGE" => match (applied(&catalog, fact["diff"].as_str().unwrap_or_default()), recheck(&catalog, &fact["citations"])) {
+                        (true, _) => ("applied", None),
+                        (false, Ok(())) => ("proposed", None),
+                        (false, Err(reason)) => ("stale", Some(reason)),
+                    },
                     None => match recheck(&catalog, &fact["citations"]) {
                         Ok(()) => ("current", None),
                         Err(reason) => ("stale", Some(reason)),
@@ -114,6 +128,45 @@ impl Store {
         Value::Object(latest)
     }
 
+    /// Step 6: an approved change. Besides gates 1 and 2, its derived diff ran through the
+    /// Ruler: at least one execution of the run with this change succeeded. The fact keeps the
+    /// diff, every execution with this change (and how it compares with its baseline), the
+    /// mutation checks of the change, and who proposed it (provider, Modelfile, cost, tokens).
+    #[allow(clippy::too_many_arguments)]
+    fn change_fact(&self, key: &str, run: &str, turn: &str, send: &str, send_dir: &Path, claim: &Claim, id: &str, link: &Value,
+        claim_sha256: &str, response_sha256: &str, note: &str, reviewed: &Value) -> Result<Value> {
+        let check: Value = serde_json::from_slice(&fs::read(send_dir.join("check.json"))?)?;
+        let diff = check["diffs"][&claim.id].as_str().ok_or("Portão 1: HYPOTHESIS sem mudança derivada (edits que passaram)")?;
+        let same = |c: &Value| c["turn"] == turn && c["send"] == send && c["claim"] == claim.id.as_str();
+        let executions: Vec<Value> = self.executions(key, run)?.into_iter().filter(|x| same(&x["change"])).map(|x| json!({
+            "id": x["id"], "name": x["name"], "argv": x["argv"], "succeeded": x["summary"]["succeeded"], "attempted": x["summary"]["attempted"],
+            "outputs": x["summary"]["outputs"], "comparison": x["comparison"], "started": x["started"] })).collect();
+        if !executions.iter().any(|x| x["succeeded"].as_u64() > Some(0)) {
+            return Err("Portão 3: rode na Régua ao menos um comando com esta mudança, com sucesso, antes de aprovar".into());
+        }
+        let mutation_checks: Vec<Value> = fs::read_dir(self.run_dir(key, run)?.join("mutations")).into_iter().flatten().flatten()
+            .filter_map(|m| fs::read(m.path().join(format!("check-{turn}-{send}-{}.json", claim.id))).ok())
+            .filter_map(|b| serde_json::from_slice::<Value>(&b).ok())
+            .map(|c| json!({ "mutation": c["mutation"], "verdict": c["verdict"], "killed": c["checks"]["killed"], "survivors": c["checks"]["survivors"] }))
+            .collect();
+        let sent: Value = serde_json::from_slice(&fs::read(send_dir.join("send.json"))?)?;
+        Ok(json!({
+            "format_version": 1, "event": "promoted", "id": id, "kind": "CHANGE",
+            "statement": claim.text, "authorship": AUTHORSHIP,
+            "proposed_by": { "provider": sent["provider"], "model": sent["model"], "modelfile": sent["modelfile"],
+                "cost_usd": sent["cost_usd"], "models_used": sent["models_used"], "elapsed_ms": sent["elapsed_ms"] },
+            "diff": diff, "diff_sha256": hash(diff.as_bytes()), "files": diff_files(diff),
+            "citations": claim.citations.iter().map(|c| json!({ "path": c.path, "start_line": c.start_line,
+                "end_line": c.end_line, "quote": c.quote })).collect::<Vec<_>>(),
+            "verification_plan": claim.verification_plan,
+            "executions": executions, "mutation_checks": mutation_checks,
+            "edition": link["dossier_origin"], "run": run, "turn": turn, "send": send, "claim_id": claim.id,
+            "claim_sha256": claim_sha256, "response_sha256": response_sha256, "link": link,
+            "note": note, "reviewed": reviewed,
+            "gates": ["mechanical_passed", "link_verified", "executed_with_change", "human_review"],
+        }))
+    }
+
     fn facts_log(&self, key: &str) -> Result<Vec<Value>> {
         read_jsonl(&self.project_dir(key)?.join(FACTS))
     }
@@ -130,8 +183,9 @@ impl Store {
 /// hash, and the preserved answer, resolved as the check reads it, passes the mechanical check
 /// against the verified context.
 fn gates(verified: Result<Verified>, send_dir: &Path, claim: &Claim) -> Result<Value> {
-    if !matches!(claim.kind, Kind::Fact) {
-        return Err("Só FACT vira fato; LACUNA, INFERENCE e HYPOTHESIS não são promovidos".into());
+    // A FACT, or a HYPOTHESIS that carries a change (its execution is gate 3, in change_fact).
+    if !matches!(claim.kind, Kind::Fact | Kind::Hypothesis) {
+        return Err("Só FACT, ou HYPOTHESIS com mudança, vira fato; LACUNA e INFERENCE não são promovidos".into());
     }
     let summary: Value = serde_json::from_slice(&fs::read(send_dir.join("send.json"))?)?;
     let link = summary["link"].clone();
@@ -192,6 +246,31 @@ fn recheck(catalog: &Catalog, citations: &Value) -> std::result::Result<(), Stri
             citation["quote"].as_str().unwrap_or_default())?;
     }
     Ok(())
+}
+
+/// Paths a unified diff writes, from its `+++ b/` headers.
+fn diff_files(diff: &str) -> Vec<String> {
+    diff.lines().filter_map(|l| l.strip_prefix("+++ b/")).map(|p| p.trim().to_owned()).collect()
+}
+
+/// Whether every non-empty line the diff adds is a line of its file in the edition.
+fn applied(catalog: &Catalog, diff: &str) -> bool {
+    let mut file: Option<Vec<String>> = None;
+    let mut any = false;
+    for line in diff.lines() {
+        if let Some(path) = line.strip_prefix("+++ b/") {
+            file = catalog.source_bytes(path.trim()).map(|b| String::from_utf8_lossy(b).lines().map(|l| l.trim_end().to_owned()).collect());
+        } else if let Some(added) = line.strip_prefix('+').filter(|_| !line.starts_with("+++")) {
+            if added.trim().is_empty() {
+                continue;
+            }
+            any = true;
+            if !file.as_ref().is_some_and(|f| f.iter().any(|l| l == added.trim_end())) {
+                return false;
+            }
+        }
+    }
+    any
 }
 
 fn read_jsonl(path: &Path) -> Result<Vec<Value>> {

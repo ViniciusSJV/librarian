@@ -612,6 +612,11 @@ const STRINGS = {
     'The librarian\'s card file with what you have already approved. An item only gets in after passing four gates: the mechanical check (redone on the spot), the link to the checked folder, your approval with a note, and the record of origin. With each new catalog, the librarian goes back to the shelf and checks whether the cited pages are still the same: current when they match, stale when the text changed. It checks the text, not the meaning. Current cards go along when you continue in a chain, about the chapters the previous step pointed to; an ordinary question does not consult the card file.'],
   'facts.current': ['vigente', 'current'],
   'facts.stale': ['desatualizado', 'stale'],
+  'facts.applied': ['mudança aplicada', 'change applied'],
+  'facts.proposed': ['mudança aprovada, ainda não aplicada', 'change approved, not applied yet'],
+  'facts.change': ['proposta por {model} ({provider}, {cost}) · arquivos {files}', 'proposed by {model} ({provider}, {cost}) · files {files}'],
+  'facts.noCost': ['sem custo registrado', 'no cost recorded'],
+  'facts.mutation': ['conferência por mutação: {verdict}, mata {killed} de {survivors}', 'mutation check: {verdict}, kills {killed} of {survivors}'],
   'facts.revoked': ['revogado', 'revoked'],
   'facts.where': ['{symbol} (declaração {line}) · {location}', '{symbol} (declaration {line}) · {location}'],
   'facts.note': ['Nota: {note}', 'Note: {note}'],
@@ -1057,6 +1062,8 @@ const STRINGS = {
   'help.edits': ['O modelo disse quais linhas trocar e o que inserir; o bibliotecário conferiu que essas linhas existem, estão citadas e não se sobrepõem, e montou o diff. Encaixar não prova que compila nem que ficou mais rápido: aplique numa branch, rode os testes e meça antes e depois.',
     'The model said which lines to replace and what to insert; the librarian checked that those lines exist, are cited and do not overlap, and built the diff. Fitting does not prove it compiles or got faster: apply it on a branch, run the tests and measure before and after.'],
   'review.approve': ['Aprovar como fato', 'Approve as fact'],
+  'review.approveChange': ['Aprovar a mudança como fato', 'Approve the change as fact'],
+  'review.approveChange.title': ['Registra a mudança no acervo com o diff, quem propôs, o custo e as execuções da Régua com ela. Exige ao menos uma execução com sucesso desta mudança.', 'Records the change in the collection with its diff, who proposed it, the cost and the Ruler runs with it. Needs at least one successful run of this change.'],
   'review.approve.title': ['O servidor refaz a conferência mecânica e o vínculo antes de promover', 'The server redoes the mechanical check and the link before promoting'],
   'review.revoke': ['Revogar', 'Revoke'],
   'review.revoke.title': ['Registra a recusa e marca o fato como revogado', 'Records the rejection and marks the fact as revoked'],
@@ -2896,7 +2903,9 @@ function checkView(c, s, turn) {
 // rechecks the gates; rejection records the decision and revokes an earlier promotion.
 function reviewView(k, passed, s, turn) {
   const r = s.reviews?.[k.id];
-  const promotable = k.kind === 'FACT' && passed && s.link;
+  // A FACT, or a HYPOTHESIS whose edits derived a change (it also needs a Ruler run with it).
+  const change = k.kind === 'HYPOTHESIS' && Boolean(s.check?.diffs?.[k.id]);
+  const promotable = (k.kind === 'FACT' || change) && passed && s.link;
   const decide = async (approved, button) => {
     // The item's own text heads the dialog, so the note is written looking at what it judges.
     const note = await modal(approved
@@ -2923,7 +2932,7 @@ function reviewView(k, passed, s, turn) {
     textContent: r.decision === 'approved' ? t('review.approved', { id: r.fact_id })
       : t('review.rejected', { revoked: r.revoked ? t('review.revokedFact', { id: r.revoked }) : '' }) }) : null;
   const buttons = [
-    promotable && r?.decision !== 'approved' ? button(t('review.approve'), true, t('review.approve.title')) : null,
+    promotable && r?.decision !== 'approved' ? button(t(change ? 'review.approveChange' : 'review.approve'), true, t(change ? 'review.approveChange.title' : 'review.approve.title')) : null,
     r?.decision === 'approved' ? button(t('review.revoke'), false, t('review.revoke.title')) : !r ? button(t('review.reject'), false, t('review.reject.title')) : null,
   ].filter(Boolean);
   if (!verdict && !buttons.length) return null;
@@ -2935,14 +2944,21 @@ function reviewView(k, passed, s, turn) {
 async function loadFacts() {
   if (!studio.project || !studio.run) { $('#factsList').replaceChildren(); $('#factsCount').textContent = ''; return loadCommands(); }
   const data = await api('GET', `/api/facts?${query({ key: studio.project.key, run: studio.run })}`);
-  const classes = { current: 'verdict passed', stale: 'error', revoked: 'muted' };
+  const classes = { current: 'verdict passed', applied: 'verdict passed', proposed: 'muted', stale: 'error', revoked: 'muted' };
+  // A change: who proposed it, at what cost, and the runs that backed it.
+  const changeLines = f => f.kind !== 'CHANGE' ? [] : [
+    el('div', { className: 'muted mono', textContent: t('facts.change', { model: f.proposed_by?.modelfile ?? f.proposed_by?.model ?? '?', provider: f.proposed_by?.provider ?? '?',
+      cost: f.proposed_by?.cost_usd != null ? `US$ ${Number(f.proposed_by.cost_usd).toFixed(3)}` : t('facts.noCost'), files: (f.files ?? []).join(', ') }) }),
+    ...(f.executions ?? []).map(x => el('div', { className: 'muted mono', style: 'font-size: 11px', textContent: `${x.name} · ${x.succeeded}/${x.attempted} · ${Object.entries(x.comparison?.stats ?? {}).filter(([, v]) => v.change_pct != null && v.change_pct !== 0).map(([n, v]) => `${n} ${v.change_pct > 0 ? '+' : ''}${v.change_pct}%`).slice(0, 6).join(', ')}${Object.values(x.comparison?.outputs ?? {}).length ? ` · ${Object.values(x.comparison.outputs).every(o => o === 'same') ? t('executions.sameShort') : t('executions.differentShort')}` : ''}` })),
+    ...(f.mutation_checks ?? []).map(m => el('div', { className: 'muted mono', style: 'font-size: 11px', textContent: t('facts.mutation', { verdict: m.verdict, killed: m.killed ?? 0, survivors: m.survivors ?? 0 }) }))];
   const active = data.facts.filter(f => f.status !== 'revoked').length;
   $('#factsCount').textContent = `(${active})`;
   $('#factsList').replaceChildren(
     data.facts.length ? el('ol', { className: 'claims' }, ...data.facts.map(f => el('li', {},
       el('span', { className: 'tag', textContent: f.id }), ' ', el('span', { className: classes[f.status], textContent: t(`facts.${f.status}`) }), ' ', f.statement,
-      el('div', { className: 'muted mono', textContent: t('facts.where', { symbol: f.symbol_name, line: f.declaration_line,
+      f.kind === 'CHANGE' ? null : el('div', { className: 'muted mono', textContent: t('facts.where', { symbol: f.symbol_name, line: f.declaration_line,
         location: `${f.path}:${f.line}${f.end_line !== f.line ? `–${f.end_line}` : ''}` }) }),
+      ...changeLines(f),
       f.status_reason ? el('div', { className: f.status === 'stale' ? 'error' : 'muted', textContent: serverText(f.status_reason) }) : null,
       el('div', { className: 'muted', textContent: t('facts.note', { note: f.note }) }),
       el('div', { className: 'muted', style: 'font-size: 11px', textContent: t('facts.origin', { reviewed: f.reviewed, run: f.run, turn: f.turn, send: f.send, claim: f.claim_id }) }))))
