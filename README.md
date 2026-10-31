@@ -1,181 +1,113 @@
 <p align="center">
-  <img src="docs/img/capa.png" alt="Librarian — condensar fatos a partir de vapores de nuances" width="100%">
+  <img src="docs/img/cover-en.png" alt="Librarian: the model only reads what matters" width="100%">
 </p>
 
-# Librarian
+<h1 align="center">Librarian</h1>
 
-**Um bibliotecário para a era dos modelos de linguagem.** O Librarian organiza as
-fontes de um projeto, preserva seus bytes, relaciona o que está escrito, prepara
-consultas conferidas e mostra de onde veio cada afirmação.
+<p align="center">
+  <em>Condense fact from the vapor of nuance. — Neal Stephenson, <a href="https://en.wikipedia.org/wiki/Snow_Crash">Snow Crash</a></em>
+</p>
 
-O objetivo é **condensar fatos a partir de vapores de nuances**. Código, perguntas
-e respostas de modelos são vapor. Fato é só aquilo que tem fonte, linha e hash
-verificáveis, e que passou por avaliação explícita.
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-111111?style=flat-square" alt="License: Apache-2.0"></a>
+  <img src="https://img.shields.io/badge/rust-stable-111111?style=flat-square" alt="Rust">
+  <img src="https://img.shields.io/badge/analyzes-Rust%20%C2%B7%20Python-111111?style=flat-square" alt="Analyzes Rust and Python">
+  <img src="https://img.shields.io/badge/LLM-local%20first-111111?style=flat-square" alt="Local-first LLM">
+</p>
 
-## Motivação
+<p align="center">
+  <strong>English</strong> · <a href="README.pt-BR.md">Português</a>
+</p>
 
-A inspiração vem do Bibliotecário de *Snow Crash*, de Neal Stephenson: um assistente
-que ajuda a encontrar e relacionar informações sem perder o caminho até as fontes.
-Uma resposta convincente não substitui uma verificação, e uma informação não deve
-perder a origem ao ser usada numa conversa.
+---
 
-## Princípios
+Librarian reads a codebase the way a librarian reads a collection: it keeps the sources byte for
+byte, relates what is written, and finds where it is worth asking. A language model only sees
+the evidence that matters for the question, and nothing it says becomes a fact until a mechanical
+gate and a person agree.
 
-> **Graph Engine → testa sem explicar.**
-> **LLM Engine → explica sem interpretar.**
+## One change, end to end
 
-- Evidência não é conclusão. Toda aresta responde: *qual evidência autorizou esta ligação?*
-- Hash comprova consistência, não autenticidade. Código descreve um procedimento, não prova execução.
-- Referência sintática, candidato por nome e resolução comprovada são coisas distintas.
-- Mais contexto não implica mais certeza. `completed` é transporte, não aprovação.
-- Nenhuma resposta de modelo vira fato automaticamente.
-- O Librarian não conhece o domínio dos projetos que o consomem.
+A Rust ray tracer rendering two teapots (6,320 triangles each, glass and mirror).
 
-## Como funciona
+| Step | Who | Result |
+| --- | --- | --- |
+| Find where the work repeats | Librarian, from the syntax graph | the pixel loop reaches `Matrix::inverse` through the BVH and every triangle |
+| Measure it | the project counts, Librarian reads | **597,067** matrix inversions in a 64×64 frame, ~98 per ray |
+| Pick the evidence | Librarian, suggested envelope | 14 declarations, including the 2 functions that write the transform later |
+| Propose a change | Claude, **17k input tokens, US$ 0.10** | cache the inverse where the transform is set |
+| Gate | 208 tests, image hash, counts, timing | same image, **233,487** inversions (−61%), 10.8 → 8.3 ms |
+
+The model never read the whole project (232 KB of Rust): it got the 18% that mattered. Local
+models (qwen3-coder 30B, gemma4 12B, gpt-oss 20B) were asked the same question first; their
+answers compiled and passed the tests, but changed the image or broke the answer contract, and
+the gate refused them.
+
+## How it works
 
 ```mermaid
 flowchart LR
-    P[Projeto analisado<br/>librarian.json: fontes, léxico,<br/>instruções, critérios] --> I
-    subgraph GE[Graph Engine — testa sem explicar]
-        I[ingest<br/>edition verificada] --> G[grafo sintático<br/>com evidência]
-        I --> S[busca lexical]
-        G --> S
-        S --> Q[prepare<br/>PreparedQuery conferido]
-    end
-    subgraph LE[LLM Engine — explica sem interpretar]
-        Q --> O[Ollama ou Claude CLI<br/>request e resposta preservados]
-    end
-    O --> A[avaliação<br/>separada]
-    G --> V[Librarian Studio<br/>grafo, perguntas e conversa]
+    S[Sources] --> E[Edition<br/>bytes and hashes]
+    E --> G[Syntax graph<br/>every edge has evidence]
+    G --> I[Inventory<br/>loops, calls, operations]
+    M[Measures<br/>by line] --> I
+    I --> V[Envelope<br/>only what matters]
+    V --> L[LLM<br/>local or Claude]
+    L --> C[Mechanical gate<br/>claims, tests, image, measures]
+    C --> F[Fact<br/>after human review]
 ```
 
-| Componente | Papel |
-| --- | --- |
-| [`librarian-ingest`](crates/librarian-ingest/README.md) | Edition verificável de fontes (snapshots, símbolos, trechos e hashes), extractors por linguagem, grafo sintático (`syntax-graph-v2`), busca lexical e a ponte `prepare` até o `PreparedQuery` |
-| [`librarian-graph-engine`](crates/librarian-graph-engine/WORKFLOW-V0.1.md) | Dossiês: conferência de fontes e fichas, seleção, contexto por linhas e bundle com registro de origem |
-| [`librarian-core`](crates/librarian-core/src/lib.rs) | Contratos de fontes, fichas (inclusive de intervalo) e dossiês |
-| [`librarian-llm-engine`](crates/librarian-llm-engine/README.md) | Preparação e transporte Ollama preservados; [contrato de afirmações](crates/librarian-llm-engine/CLAIMS.md) com checker mecânico |
-| [`librarian-studio`](crates/librarian-studio/README.md) | Servidor local e página web: projeto, grafo 3D, perguntas e envio a LLMs ([como usar](STUDIO.md)) |
-| [`modelfiles`](modelfiles/README.md) | Biblioteca de Modelfiles, fora dos crates, editável no studio |
+- **Graph Engine** tests without explaining. **LLM Engine** explains without interpreting.
+- Evidence is not a conclusion: a written name is a candidate, not a resolved call.
+- A hash proves consistency, not authenticity. `completed` is transport, not approval.
+- No model answer becomes a fact on its own.
 
-## Começar
+## Quick start
 
-Requisitos: Rust/Cargo (o Librarian é escrito em Rust e analisa projetos Rust e Python); para enviar consultas, [Ollama](https://ollama.com) e/ou o
-Claude Code.
-
-**Pela página:** dê duplo clique em `STUDIO.cmd` e abra <http://127.0.0.1:8765/>. Escolha
-a pasta de um projeto Rust ou Python, gere o grafo, pergunte e envie ao LLM. Como iniciar e como
-funciona: [STUDIO.md](STUDIO.md).
+Requirements: Rust (stable). To send questions: [Ollama](https://ollama.com) and/or Claude Code.
 
 ```sh
 cargo test --workspace --locked
 ```
 
-**Edition, grafo e busca** de qualquer projeto Rust ou Python (destinos novos):
+On Windows, double-click `STUDIO.cmd` and open <http://127.0.0.1:8765/>. Pick a Rust or Python
+project, generate the graph, open **Investigar** to see the inventory, ask, and send.
+
+Local models used by the bundled [Modelfiles](modelfiles/README.md):
 
 ```sh
-cargo run --locked -p librarian-ingest --bin librarian_ingest -- generate ../meu-projeto sources-config.json ./edition-nova
-cargo run --locked -p librarian-ingest --bin librarian_ingest -- graph ./edition-nova ./graph-v2.json v2
-cargo run --locked -p librarian-ingest --bin librarian_ingest -- search ./edition-nova "onde a câmera calcula a direção" - 5 2
+ollama pull qwen3-coder:30b
+ollama pull gemma4:12b
+ollama pull gpt-oss:20b
 ```
 
-A trilha completa pela CLI (prepare, verify-prepared e envio) está no [WORKFLOW](WORKFLOW.md).
+The same path from the command line:
 
-### Usar em outro projeto
+```sh
+cargo run --locked -p librarian-ingest --bin librarian_ingest -- generate ../my-project sources.json ./edition
+cargo run --locked -p librarian-ingest --bin librarian_ingest -- investigate inventory ./edition
+```
 
-O projeto não depende do Librarian. Basta abrir a pasta no studio; opcionalmente, ela
-traz um perfil `librarian.json` com fontes, léxico, instruções e critérios. O formato está
-no [STUDIO.md](STUDIO.md#perfil-do-projeto-librarianjson), e o
-[renderer](https://github.com/ViniciusSJV/renderer) é o exemplo de referência. Hoje há
-extractors de Rust e Python; outras linguagens entram somente por novos extractors, sem mudar
-grafo, busca ou dossiês.
+## What's inside
 
-## Librarian Studio
-
-<p align="center">
-  <img src="docs/img/studio.png" alt="Librarian Studio com o grafo do renderer aceso por uma pergunta e a conversa ao lado" width="100%">
-</p>
-
-Dê duplo clique em `STUDIO.cmd` e abra <http://127.0.0.1:8765/>. O fluxo é:
-
-1. escolher a pasta de um projeto Rust ou Python e gerar o grafo;
-2. perguntar e ver os termos que o léxico tocou acenderem no grafo;
-3. enviar a query conferida ao Ollama, com o Modelfile escolhido, ou ao Claude Code
-   CLI, ou só mostrar o que seria enviado.
-
-No grafo, fontes, símbolos e ocorrências aparecem com formas e cores próprias. Clicar
-numa aresta mostra **a evidência que autorizou a ligação**: arquivo, linhas, bytes e
-hashes. Os destaques usam somente IDs. As respostas ficam na conversa, com o transporte
-registrado e a avaliação pendente. Os detalhes estão no [STUDIO.md](STUDIO.md).
-
-## Estado atual
-
-- **Graph Engine para Rust e Python.**
-  - Edition v1 congelada com goldens.
-  - Grafo e busca sem conhecimento de linguagem, com testes de fronteira.
-  - Contrato neutro `syntax-graph-v2`.
-  - Dossiês decididos pela natureza declarada da fonte (`content`).
-  - Ponte busca → `PreparedQuery` em Rust, com `verify-prepared` byte a byte.
-  - Python entrou só por extractor e pelo perfil v2 (G5), testado com o TheAlgorithms/Python (1.608 arquivos).
-  - Perfil v3 (G6): campos são símbolos, e acessos, chamadas e heranças viram candidatos
-    pelo nome. O studio mostra **Onde é usado?** na vista Caminho, em camadas.
-  - Perfil v4 (G6d): em Rust, literais de struct, escritas de campo e o tipo do `impl`.
-    Na cadeia, um método leva junto o tipo dono e quem escreve os campos que ele lê.
-- **LLM Engine:** o transporte funciona e preserva tudo. A explicação **ainda não está
-  aprovada**. Com o contexto numerado (fase L, passo 1), a resposta da câmera cita a
-  linha 86 do arquivo, onde antes citava "linha 11", a posição no trecho. Foi uma
-  execução só; ela não mede tendência e não houve avaliação semântica. As séries de
-  afirmações seguem reprovadas pelo checker. Veja os [experimentos](experiments/).
-  No studio, o formato **claims** (fase L, passo 2) confere cada resposta mecanicamente.
-  Na pergunta da câmera, o Claude Haiku passou e o qwen 14B foi recusado por não citar a
-  declaração da função, com o mesmo conteúdo. Uma execução de cada, sem avaliação
-  semântica.
-- **Fatos revisados (L4):** um FACT conferido vira fato do acervo do projeto só com a
-  sua aprovação e depois de passar de novo pela conferência mecânica e pelo vínculo. Os
-  fatos são reconferidos por texto a cada execução.
-- **Cadeia:** uma pergunta pode continuar outra. Passam adiante só as declarações
-  apontadas pelas respostas aprovadas na mecânica, com as linhas tiradas de novo da
-  edition, e os fatos vigentes do acervo sobre elas. O texto das respostas não passa.
-- **Ainda não existem:** captura de performance e outras linguagens além de Rust e
-  Python.
-
-## Roteiro
-
-1. **Limites do LLM Engine:** contexto com linhas numeradas, studio usando afirmações e
-   checker, comparação de respostas de modelos diferentes por conteúdo, vínculo do
-   bundle conferido em cada envio, portões até o acervo de fatos revisados e cadeia entre
-   perguntas, patch conferido e Modelfile `performance` (feitos). Faltam o Modelfile
-   `impacto` com a evidência do "Onde é usado?" (G6d) e a captura de benchmark.
-2. **Impacto (G6):** campos e chamadas como candidatos no grafo e "Onde é usado?" no
-   studio (feitos). Falta o relatório de impacto ("o que pode quebrar se este campo
-   mudar?") com Modelfile próprio, em que o modelo só aponta riscos como hipótese, com
-   plano de verificação.
-3. **Performance com evidência:** captura multiplataforma de benchmark antes e depois,
-   para que "ficou mais rápido" seja medido, não afirmado; Modelfile próprio de performance.
-4. **Alteração de código assistida:** o modelo propõe um patch citando evidências e o
-   relatório de impacto; testes e benchmark decidem.
-5. **Outras linguagens e IaC** (Java, TypeScript/Angular e infraestrutura como código, como Terraform), apenas por extractors, como o Python. No IaC, as referências por endereço (`aws_s3_bucket.logs.id`, `var.region`) tornam o relatório de impacto ainda mais útil.
-
-O diagnóstico e as etapas concluídas estão no [plano](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md).
-
-## Documentação
-
-| Documento | Conteúdo |
+| Crate | Role |
 | --- | --- |
-| [STUDIO](STUDIO.md) | Como iniciar a página, como ela funciona, perfil e dados |
-| [WORKFLOW](WORKFLOW.md) | A mesma trilha pela CLI e a fronteira atual |
-| [TESTME](TESTME.md) | Passos da trilha em resumo |
-| [SEARCH](crates/librarian-ingest/SEARCH.md) | Busca, grafo, contrato v2 e `prepare` |
-| [CLAIMS](crates/librarian-llm-engine/CLAIMS.md) | Contrato experimental de afirmações |
-| [WORKFLOW-V0.1](crates/librarian-graph-engine/WORKFLOW-V0.1.md) | Referência formal de dossiês e `PreparedQuery` |
-| [V0.1](V0.1.md) | Critérios e auditoria da versão 0.1 |
-| [Exemplo maintenance](examples/maintenance/README.md) | Dossiê manual fictício, sem LLM |
-| [HISTORICO](HISTORICO.md) | Aulas, experimentos e ferramentas de quando o Librarian vivia no renderer |
+| [`librarian-ingest`](crates/librarian-ingest/README.md) | Verifiable edition of the sources, Rust and Python extractors, syntax graph, operation inventory, suggested envelope |
+| [`librarian-llm-engine`](crates/librarian-llm-engine/README.md) | Preserved transport (Ollama, Claude CLI) and the [claims contract](crates/librarian-llm-engine/CLAIMS.md) with its mechanical checker |
+| [`librarian-studio`](crates/librarian-studio/README.md) | Local web app: graph, inventory, questions, measured runs in a copy of the project |
+| [`librarian-graph-engine`](crates/librarian-graph-engine/WORKFLOW-V0.1.md) | Dossiers, selection and prepared queries |
+| [`modelfiles`](modelfiles/README.md) | `<task>-<model>` Modelfiles, editable in the studio |
 
-## Limites
+Documentation is in Portuguese: [Studio](STUDIO.md) · [Workflow](WORKFLOW.md) ·
+[Plan](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md) · [History](HISTORICO.md).
 
-- Uma referência válida não comprova a verdade da afirmação.
-- Hashes conferem bytes; não autenticam autoria nem execução.
-- Não há resolução de tipos ou chamadas por compilador, banco de grafos nem embeddings.
-- Respostas de LLM não são promovidas automaticamente a fatos: a promoção exige a
-  aprovação de uma pessoa, item por item.
+## Limits
+
+- A valid citation does not prove the claim is true.
+- No compiler resolution, no embeddings: names are matched as written, types only when written.
+- A structural finding says where the work is, not what it costs. Measures say that.
+- Promotion to fact needs a person, item by item.
+
+## License
+
+[Apache License 2.0](LICENSE).

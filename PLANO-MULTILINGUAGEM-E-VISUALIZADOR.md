@@ -995,3 +995,21 @@ Renderer (release, 0,35 s):
 - Efeito nos projetos Python (só a regra das cadeias muda): no logistica-api, as quatro chamadas a `haversine_km` do `two_opt` aparecem cada uma com sua linha; no TheAlgorithms, +4% de linhas, 4,4 s.
 
 Limites: o tipo vale só quando escrito; a resolução por campo e por variante não atravessa arquivos; uma ligação nova de um nome substitui a anterior na função inteira (blocos não são escopo); `trait` é candidata, não prova qual implementação roda. A estrutura diz onde está o trabalho repetido, não quanto custa: é o R2 (contagem de chamadas) e o R4 (bancada).
+
+### R2, segunda parte — contagem de chamadas (31/10/2026)
+
+Renderer `b7ab925`: feature `librarian-count` (sem ela, nada é gerado: mesmo tempo e mesma imagem). `count!()` conta as passagens por uma linha e `report()` imprime `librarian-measure calls=N at=src/arquivo.rs:linha`; o `librarian_measure_mesh` zera antes do render e imprime no fim. Contadores nas funções que o R1 mostrou no caminho do render; comando `medir-contagem` no perfil. Librarian `7126664`: o inventário exporta onde fica cada declaração que ele nomeia, e o studio põe uma linha medida sem operação ao lado da declaração mais interna que a contém.
+
+Teapots a 64×64 (contagens iguais nas duas repetições, mesma imagem `b986c80c…`):
+
+| Linha | Função | Chamadas | Por raio |
+|---|---|---|---|
+| `world.rs:110` | `color_at` (raios) | 6.098 | 1 |
+| `world.rs:46` / `:93` | `shade_hit` / `is_shadowed` | 5.924 | ~1 |
+| `groups.rs:87` / `bounds.rs:60` | `Groups::intersect` / `Bounds::intersects` (nós da BVH) | 363.580 | ~60 |
+| `object.rs:30` / `triangle.rs:32` | `intersect` padrão do trait / `Triangle::local_intersect` | 212.761 | ~35 |
+| `matrix.rs:194` | `Matrix<4>::inverse` | **597.067** | **~98** |
+
+As inversas: 363.580 nos nós da BVH (`groups.rs:88`) + 212.761 nos triângulos (`object.rs:31`) + ~20.700 no resto. As cadeias mostram onde: o `normal_at` do trait, duas por acerto (`object.rs:36` e `:38`), e o padrão xadrez, duas por ponto sombreado (`patterns.rs:14` e `:15`). Todas de transformações que não mudam durante o render. Primeiro alvo do R5.
+
+Limite: a contagem é da linha, soma todos os caminhos que chegam a ela; a repartição por chamador acima é conta feita com as outras contagens, não medida.

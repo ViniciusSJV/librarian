@@ -1,0 +1,147 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Librarian cover</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;600&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1735px; height: 907px; overflow: hidden; background: #0b1020; }
+  canvas { position: absolute; left: 0; top: 0; }
+  .t { position: absolute; white-space: nowrap; color: #f4f6fb; }
+  .debug .r { position: absolute; outline: 1px solid #ff00ff; }
+  .mono { font-family: "JetBrains Mono", monospace; }
+  .sans { font-family: Inter, sans-serif; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1735" height="907"></canvas>
+<div id="layer"></div>
+<script>
+// Areas whose text is painted over with the colours around them, then written again.
+// [x, y, w, h] in image pixels.
+const AREAS = {
+  tag:     [146, 70, 500, 36],
+  title:   [62, 150, 630, 166, null, 14],
+  // The descenders of the old title (q, p) below the panel line.
+  q:       [174, 313, 26, 12],
+  p:       [428, 313, 26, 12],
+  sub:     [84, 334, 590, 72],
+  rows:    [64, 576, 620, 117],
+  quote:   [60, 824, 740, 34],
+  c1:      [1130, 151, 340, 54, [1450, 192]],
+  c2:      [1341, 354, 358, 55, [1690, 398]],
+  c3:      [1043, 706, 316, 46, [1300, 716]],
+  c4:      [1451, 804, 206, 47, [1645, 812]],
+};
+const T = {
+  en: {
+    tag: '<b>LIBRARIAN</b>&nbsp;&nbsp;·&nbsp;&nbsp;EVIDENCE BEFORE ANSWERS',
+    title1: 'The model only reads', title2: 'what matters.',
+    sub1: 'The librarian finds, measures and hands over', sub2: 'the evidence. The gate decides.',
+    rows: [['onde', 'where does the render repeat work?', '597,067 inversions / frame'],
+           ['', 'what must the model see?', '14 declarations · 17k tokens'],
+           ['', 'did it hold?', '208 tests · same image · −61%']],
+    last: 'facts checked in the code · with origin',
+    quote: '“Condense fact from the vapor of nuance.”',
+    c1a: 'Groups::intersect · hot path', c1b: 'one inversion per BVH node, per ray',
+    c2a: 'Matrix::inverse · 597k → 233k', c2b: 'cached where the transform is set',
+    c3a: 'obj.rs · load_bvh', c3b: 'writes the transform later · in the envelope',
+    c4a: 'same image', c4b: '208 tests · 10.8 → 8.3 ms',
+  },
+  pt: { quote: '“Condensar fatos a partir de vapores de nuances.”' },
+};
+const params = new URLSearchParams(location.search);
+const lang = params.get('lang') ?? 'en';
+const debug = params.has('debug');
+
+const img = new Image();
+img.src = 'base.png';
+img.onload = () => {
+  const c = document.getElementById('c').getContext('2d');
+  c.drawImage(img, 0, 0);
+  if (debug) {
+    document.body.classList.add('debug');
+    for (const [name, [x, y, w, h]] of Object.entries(AREAS)) {
+      const r = document.createElement('div');
+      r.className = 'r'; Object.assign(r.style, { left: x + 'px', top: y + 'px', width: w + 'px', height: h + 'px' });
+      document.body.append(r);
+    }
+    document.title = 'ready';
+    return;
+  }
+  const names = lang === 'pt' ? ['quote'] : Object.keys(AREAS);
+  for (const name of names) patch(c, AREAS[name]);
+  write(lang);
+  document.title = 'ready';
+};
+
+// Fills an area by interpolating, row by row, between the colours just left and right of it,
+// blended with those just above and below: smooth backgrounds come back without the text.
+function patch(c, [x, y, w, h, fill, leftPad]) {
+  const pad = 3, band = 4;
+  const src = c.getImageData(0, 0, 1735, 907).data;
+  // Inside a framed box, its flat colour from an empty spot: the frame would tint the edges.
+  if (fill) {
+    const spot = [0, 0, 0]; let n = 0;
+    for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { const i = ((fill[1] + dy) * 1735 + fill[0] + dx) * 4; for (let k = 0; k < 3; k++) spot[k] += src[i + k]; n++; }
+    c.fillStyle = `rgb(${spot.map(v => Math.round(v / n)).join(",")})`;
+    c.fillRect(x, y, w, h);
+    return;
+  }
+  const at = (px, py) => { px = Math.max(0, Math.min(1734, px)); py = Math.max(0, Math.min(906, py)); const i = (py * 1735 + px) * 4; return [src[i], src[i + 1], src[i + 2]]; };
+  const avg = pts => { const s = [0, 0, 0]; for (const p of pts) for (let k = 0; k < 3; k++) s[k] += p[k]; return s.map(v => v / pts.length); };
+  const out = c.createImageData(w, h);
+  for (let j = 0; j < h; j++) {
+    const left = avg([...Array(band)].map((_, k) => at(x - (leftPad ?? pad) - k, y + j)));
+    const right = avg([...Array(band)].map((_, k) => at(x + w + pad + k, y + j)));
+    for (let i = 0; i < w; i++) {
+      const u = i / (w - 1), v = j / (h - 1);
+      const top = avg([...Array(band)].map((_, k) => at(x + i, y - pad - k)));
+      const bottom = avg([...Array(band)].map((_, k) => at(x + i, y + h + pad + k)));
+      const horiz = left.map((l, k) => l * (1 - u) + right[k] * u);
+      const vert = top.map((t, k) => t * (1 - v) + bottom[k] * v);
+      const o = (j * w + i) * 4;
+      for (let k = 0; k < 3; k++) out.data[o + k] = Math.round((horiz[k] + vert[k]) / 2 + (Math.random() - .5) * 2);
+      out.data[o + 3] = 255;
+    }
+  }
+  c.putImageData(out, x, y);
+}
+
+function put(html, style) {
+  const e = document.createElement('div');
+  e.className = 't'; e.innerHTML = html; Object.assign(e.style, style);
+  document.getElementById('layer').append(e);
+}
+
+function write(lang) {
+  const t = T[lang];
+  const quote = (text) => put(`${text} <span style="font-style:normal;font-weight:600;color:#e8ecf5">— Neal Stephenson, Snow Crash</span>`,
+    { left: '68px', top: '829px', font: 'italic 19px Inter, sans-serif', color: '#c9d0e0' });
+  quote(t.quote);
+  if (lang === 'pt') return;
+  put(t.tag, { left: '155px', top: '78px', font: '500 15px Inter, sans-serif', letterSpacing: '.18em', color: '#e9ecf4' });
+  put(t.title1, { left: '68px', top: '168px', font: '700 56px Poppins, sans-serif', letterSpacing: '-.01em', color: '#ffffff' });
+  put(t.title2, { left: '68px', top: '240px', font: '700 56px Poppins, sans-serif', letterSpacing: '-.01em', color: '#f7a821' });
+  put(t.sub1, { left: '91px', top: '341px', font: '400 21px Inter, sans-serif', color: '#e9ecf4' });
+  put(t.sub2, { left: '91px', top: '372px', font: '400 21px Inter, sans-serif', color: '#e9ecf4' });
+  t.rows.forEach(([, q, a], k) => {
+    const top = 581 + k * 28.7 + 'px';
+    put(`<span style="color:#f5a524">&gt;</span>&nbsp; ${q}`, { left: '70px', top, font: '400 15.5px "JetBrains Mono", monospace', color: '#e9ecf4' });
+    put(a, { right: (1735 - 676) + 'px', top, font: '400 15.5px "JetBrains Mono", monospace', color: '#5ee0f0' });
+  });
+  put(`↳&nbsp; <span style="color:#34d399">${t.last}</span>`, { left: '70px', top: '667px', font: '400 15.5px "JetBrains Mono", monospace', color: '#e9ecf4' });
+  const call = (x, y, a, b, color) => {
+    put(a, { left: x + 'px', top: y + 'px', font: '600 15.5px "JetBrains Mono", monospace', color });
+    put(b, { left: x + 'px', top: y + 25 + 'px', font: '400 14.5px Inter, sans-serif', color: '#eef1f7' });
+  };
+  call(1137, 154, t.c1a, t.c1b, '#ff6b6b');
+  call(1348, 357, t.c2a, t.c2b, '#f7b733');
+  call(1048, 707, t.c3a, t.c3b, '#c7d2fe');
+  put(`${t.c4a} <span style="color:#34d399">✓</span>`, { left: '1458px', top: '806px', font: '600 15.5px "JetBrains Mono", monospace', color: '#ffffff' });
+  put(t.c4b, { left: '1458px', top: '831px', font: '400 14.5px Inter, sans-serif', color: '#eef1f7' });
+}
+</script>
+</body>
+</html>

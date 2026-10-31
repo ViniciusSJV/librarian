@@ -10,7 +10,7 @@
    - E1 = `impl Camera::ray_from_pixel`, aceso no grafo;
    - critérios prévios gravados com hash;
    - query com `{"number": 86, "text": "        let direction = (pixel - origin).normalize();"}`.
-5. Com **Nenhum**, veja e copie a query. Com **Ollama** e o Modelfile `analista`, ou com o
+5. Com **Nenhum**, veja e copie a query. Com **Ollama** e o Modelfile `analista-qwen3coder`, ou com o
    **Claude Code CLI**, envie e leia a resposta. Avalie contra os critérios; `completed`
    não é aprovação.
 

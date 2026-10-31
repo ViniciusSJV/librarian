@@ -70,9 +70,9 @@ prévios ficam no campo de pergunta, no modo **Melhorar**.
 **Sugerir léxico com o LLM** (na aba **Léxico**, depois de gerar o grafo):
 
 1. O Librarian tira da edition, sem LLM, os 80 termos mais frequentes nos nomes do código.
-2. O LLM escolhido ao lado do botão (de início, Ollama com o Modelfile `lexico`) propõe até
+2. O LLM escolhido ao lado do botão (de início, Ollama com o Modelfile `lexico-qwen3coder`) propõe até
    40 grupos de palavras em português. Se o nome
-   do Modelfile termina em `-en` (por exemplo `lexico-deepseek-en`), o pedido vai em inglês e pede
+   do Modelfile termina em `-en` (por exemplo `lexico-claude-en`), o pedido vai em inglês e pede
    palavras em inglês. Com **Nenhum**, o pedido aparece para copiar, e a resposta de
    qualquer LLM pode ser colada em **Conferir resposta**.
 3. O pedido leva também as palavras das perguntas do projeto que não tocaram nenhum resultado
@@ -128,7 +128,7 @@ Ctrl+Enter):
 
 Cada modo lembra quem responde (LLM e Modelfile), escolhido logo abaixo da pergunta. O
 botão diz o que vai acontecer: com **Nenhum**, **Perguntar (sem enviar)** só mostra a
-query; com Ollama ou Claude, **Perguntar · Ollama · verificavel**, por exemplo, já envia.
+query; com Ollama ou Claude, **Perguntar · Ollama · verificavel-qwen3coder**, por exemplo, já envia.
 Com declarações no envelope (veja Pergunta com declarações juntadas), o botão vira
 **Perguntar com o envelope (N)**.
 
@@ -242,7 +242,7 @@ Depois do envio, a resposta passa pela **conferência mecânica**:
   proposta** e grava `patch-<id>.diff` na pasta do envio, para você aplicar com
   `git apply` numa branch do projeto. O studio nunca aplica nada, e encaixar não prova que
   compila nem que ficou mais rápido. É a etapa de performance da cadeia, com os Modelfiles
-  `performance` (DeepSeek) e `performance-qwen`. As perguntas feitas antes desta mudança
+  `performance-<modelo>` (por exemplo `performance-qwen3coder`). As perguntas feitas antes desta mudança
   continuam com o diff unificado (`patch`), conferido como antes.
 
 A resposta mostra **Mecânica: aprovada** ou **recusada**, com os problemas por claim (cada um com uma frase simples e um **?** que explica), e a
@@ -292,7 +292,7 @@ texto, não o sentido. Os fatos entram nas perguntas só pela cadeia (abaixo).
 
 Uma pergunta em claims com ao menos uma resposta aprovada na mecânica ganha o botão
 **Continuar em cadeia**. O diálogo pede a próxima pergunta, o modo (de início, **Melhorar**)
-e quem responde nesta etapa (por exemplo, Ollama com `performance-qwen`). O studio cria uma pergunta nova e a envia como as outras:
+e quem responde nesta etapa (por exemplo, Ollama com `performance-qwen3coder`). O studio cria uma pergunta nova e a envia como as outras:
 
 - **Evidência:** as declarações (`location`) dos FACT das respostas que passam **de novo**
   na conferência mecânica, contra a pergunta conferida agora. Não há busca: o `prepare`
@@ -583,7 +583,8 @@ linha de comando: `librarian_ingest investigate inventory <edition> [regras.json
 
 O seletor **Modelfile** mostra o resumo do escolhido (FROM, PARAMETER, SYSTEM).
 **Editar** abre o conteúdo para alterar e salvar; **Novo…** cria outro (por exemplo,
-`performance` ou `cenas`). Eles ficam na biblioteca [`modelfiles/`](modelfiles/README.md)
+`performance-gemma4` ou `cenas`). Eles ficam na biblioteca [`modelfiles/`](modelfiles/README.md),
+com nomes `<tarefa>-<modelo>` (SYSTEM em português) e `<tarefa>-<modelo>-en` (em inglês),
 e dá para usar um diferente em cada pergunta.
 
 ## Perfil do projeto (`librarian.json`)
@@ -723,8 +724,8 @@ Para começar do zero, apague a pasta do projeto em `.studio/projects/`.
 - A linha da declaração de um símbolo ainda é achada no texto, não pelo parser. Linhas
   de atributo, comentário e decorator são puladas; um nome repetido numa linha de código
   antes da declaração (raro) ainda seria tomado por ela.
-- Para o formato claims, use o Modelfile `verificavel`; o `analista` foi escrito para
-  prosa. Com o qwen 14B, nenhum dos dois fez o modelo citar a declaração em cada item.
+- Para o formato claims, use um `verificavel-<modelo>`; o `analista-<modelo>` foi escrito para
+  prosa. Com o qwen2.5-coder 14B (removido em 31/10/2026), nenhum dos dois fez o modelo citar a declaração em cada item.
 - Aberta com duplo clique (`file://`), a página só visualiza um `graph-v2.json` escolhido
   em **Abrir arquivos**, sem projeto nem conversa. Para inspeção automatizada, `#debug`
   expõe `window.viewerDebug`.
