@@ -421,7 +421,7 @@ O viewer ainda lê só o formato antigo; usar a v2 nele é a etapa 5A.
 
 ### G3 — resultado (19/10/2026)
 
-Antes da mudança, as exportações de dossiês v0.1 foram congeladas em `crates/librarian-graph-engine/tests/fixtures/legacy-v0.1` (commit 3f17e4a): `rust_source`, `test_run` com e sem `execution`, texto comum e conferência de captura.
+Antes da mudança, as exportações de dossiês v0.1 foram congeladas em `crates/librarian-graph-engine/tests/fixtures/legacy-v0.1` (commit c1dd24f): `rust_source`, `test_run` com e sem `execution`, texto comum e conferência de captura.
 
 Mudanças:
 
@@ -601,7 +601,7 @@ Mudanças:
 Verificação:
 
 - testes: extração de cerca (aceitas e recusadas, `check` estrito), `limits` e `project_instructions` só quando presentes, a ordem das instruções fixas preservada; no studio, uma pergunta em claims com símbolo e coluna, resposta cercada aprovada, quote errado recusado, contexto adulterado recusado e pergunta em prosa sem conferência. Workspace com 111 aprovados e 1 ignorado; nenhum aviso novo do clippy;
-- renderer real (`428220e`), pergunta "Onde a câmera calcula a direção dos raios?", em `claims`:
+- renderer real (`8487126`), pergunta "Onde a câmera calcula a direção dos raios?", em `claims`:
   - Ollama com `analista` (qwen2.5-coder 14B): `ray_from_pixel`, linha 86 e quote corretos, mas **recusado** por `location_declaration_not_cited` (não citou a linha 75);
   - Claude Haiku: **aprovado**, com dois claims que citam a declaração e a operação. Custou US$ 0,0029;
   - uma execução de cada; a avaliação semântica não foi feita.
@@ -864,7 +864,7 @@ Relação com a G6: as referências por endereço tornam o relatório de impacto
 
 Ideia central (do usuário): antes de automatizar as perguntas, automatizar a descoberta dos lugares onde vale a pena perguntar. O grafo não diz que algo é lento; ele aponta características verificáveis no código. "Consulta ao banco dentro de um laço" é estrutura; "é o gargalo" exige medição.
 
-Feito antes deste roteiro: envelope sugerido (`b0a5030`), Régua com projeto numa pasta do repositório e `--unidiff-zero` (`01db71a`), ajustes do studio (`edaf0ea`).
+Feito antes deste roteiro: envelope sugerido (`cdb7eb0`), Régua com projeto numa pasta do repositório e `--unidiff-zero` (`278ee5b`), ajustes do studio (`ae49e6f`).
 
 1. **O grafo vê mais usos.** Python: `Depends(x)` como uso de `x`, argumentos nomeados, `import` ligado ao símbolo. Estado de módulo: quem lê e quem escreve uma variável global; `with lock:` e `.acquire()`. Rust: padrões, constantes, `static`, variantes de enum. Os extractors passam a registrar **laços** (`for`, `while`, `loop`, compreensões), que hoje não existem no grafo. Perfil novo, os anteriores continuam lidos. Aceitação: no logistica-api, `get_db` mostra as rotas que o usam, e um cache de módulo mostra quem lê e quem escreve.
 2. **Inventário de operações** (`librarian investigate inventory`). Artefato novo, derivado da edition e do grafo e ligado a eles por hash, sem extractor, grafo ou modelo novos. Cada registro: tipo de operação, arquivo e linhas, símbolo responsável, evidência estrutural (a ocorrência que casou), regra que a identificou e relações com outras operações (quem a chama, o que ela chama). As regras são declaradas, não adivinhadas: as genéricas por linguagem (I/O de arquivo, rede, `math`) e as do projeto no `librarian.json` (por exemplo, `session.exec`, `session.get` e `select` como acesso ao banco). O que nenhuma regra cobre fica fora e é contado. No studio, uma aba com o catálogo e navegação até o código. Aceitação: no logistica-api, `zone_of`, `address_of` e `list_for_day` como acesso ao banco, `haversine` como cálculo, cada um com a regra e a linha.
@@ -888,7 +888,7 @@ A **fase R** (31/10/2026, seção própria no fim) aplica as etapas 2 a 7 ao ren
 
 ### Etapa 1 — resultado (30/10/2026)
 
-Commit `1f93bdb`. **Perfil v5** (`librarian-ingest/0.5.0;…;rust-structural-v4;python-structural-v3`, grafo `rust-python-syntax-graph-v4`), o novo atual. v1–v4 continuam lidos e reproduzíveis.
+Commit `4fe8a58`. **Perfil v5** (`librarian-ingest/0.5.0;…;rust-structural-v4;python-structural-v3`, grafo `rust-python-syntax-graph-v4`), o novo atual. v1–v4 continuam lidos e reproduzíveis.
 
 - **Contrato do extractor:** a ocorrência ganha `label_end` (um bloco cobre o corpo, mas o rótulo é só o cabeçalho), e o extractor declara `matched_only` (tipos guardados só quando o nome casa com uma declaração) e `file_scoped` (o nome liga à declaração de topo do mesmo arquivo quando ela existe). O construtor do grafo aplica as duas regras sem nomear linguagem.
 - **Python:** variáveis de módulo (`variable`, pela primeira atribuição); `name_reference` (nome lido como valor, fora os locais da função: parâmetros, atribuições, laços, `with … as`, `except … as`, imports, definições aninhadas, menos o que é `global`/`nonlocal`); `name_write` (`global x; x = …` e `x[k] = v`); `keyword_argument` (candidato a campo); `type_reference` também casa com variáveis (`session: SessionDep`); um nome chamado é só `call_observed`, não também `name_reference`.
@@ -908,7 +908,7 @@ Limites: tudo continua pelo nome escrito. O `import` não é seguido: um nome im
 
 ### Etapas 2 e 3 — resultado (30/10/2026)
 
-Commit `b106d40`. Um artefato novo, `operation-inventory-v1`, derivado da edition e do grafo (leva o `catalog_sha256`), sem extractor, grafo ou modelo novos (`librarian-ingest::inventory`).
+Commit `d1f8ab0`. Um artefato novo, `operation-inventory-v1`, derivado da edition e do grafo (leva o `catalog_sha256`), sem extractor, grafo ou modelo novos (`librarian-ingest::inventory`).
 
 - **Regras declaradas**, três formas: `call` (nome escrito da chamada e, opcional, o nome escrito logo antes, o receptor; `""` é sem receptor e `()` é um receptor que é resultado de chamada), `field_declared_with` (leitura ou escrita de um campo cuja declaração chama um destes nomes, como `Relationship`) e `module_write`. As do bibliotecário, por linguagem: matemática, arquivo, rede, `sleep`, processo, trava e estado do módulo. As de banco dependem das bibliotecas e ficam no projeto (`librarian.json` → `inventory`, ou um arquivo na linha de comando). Ids repetidos ou iguais aos embutidos, e regras sem nome, são recusados.
 - **Registro de cada operação:** tipo, regra, declaração, arquivo e linhas, texto escrito, ocorrência, evidência (bytes e hashes), os campos ou nomes que a regra casou (`through`) e se está em laço da própria declaração. **Relações:** entre as declarações com operação, quem chama quem, só por chamadas sem homônimos (a regra de "O que ele chama?").
@@ -952,7 +952,7 @@ Objetivo (do usuário): um ray tracer em Rust muito mais rápido antes do capít
 
 Usa as etapas gerais do roteiro de 30/10: inventário (2, 3), Régua por origem (4), perguntas geradas (5), o ciclo que vira fato (6) e o tipo do receptor (7).
 
-Base: `master` do renderer, que agora junta as duas melhorias (`6d56e6c`, inversa de cada objeto no `World`; `91a7875`, inversa na câmera; merge `2d37afe`, 206 testes passando), e o `teapot.obj` de Utah (3.644 vértices, 6.320 faces, `c467967`) ao lado do `suzanne.obj`. Grupos, triângulos, OBJ e uma BVH já existem (`groups.rs`, `triangle.rs`, `cap15`); falta só o CSG.
+Base: `master` do renderer, que agora junta as duas melhorias (`fd19c0f`, inversa de cada objeto no `World`; `308169a`, inversa na câmera; merge `7775e55`, 206 testes passando), e o `teapot.obj` de Utah (3.644 vértices, 6.320 faces, `7f3b9a6`) ao lado do `suzanne.obj`. Grupos, triângulos, OBJ e uma BVH já existem (`groups.rs`, `triangle.rs`, `cap15`); falta só o CSG.
 
 1. **R1 — Mapa de unidades e cobertura** (determinístico). Cada função com operação do inventário (matemática, trava, alocação) e cada função alcançada pelo render (`render` → `color_at` → `intersect_world` → `intersect`/`normal_at`/`lighting`/`pattern_at`), com os `#[test]` que a chamam, direto ou pela cadeia, e as que não têm teste. Junto, a **etapa 7 no Rust**: o tipo do receptor quando está escrito (`self` num `impl`, `let x = Tipo::new(...)`, parâmetro anotado) e o `match` de um enum que despacha cada variante para o mesmo método (`Object`, `Patterns`). Sem isso, as cadeias do render param nos homônimos (`local_intersect`, `normal_at`, `pattern_at` existem em vários tipos). Aceitação: a cadeia de `render` chega a `Sphere::local_intersect`, `Triangle::local_intersect` e `Checkers::pattern_at` com a força da ligação (resolvida, candidata); a lista de funções sem teste próprio.
 2. **R2 — Medida no renderer.** Um comando `medir-malha` no `librarian.json`: o teapot com a BVH a 64×64, cinco repetições, hash da imagem. O renderer conta **chamadas por função** num render e imprime cada contagem com `at=src/arquivo.rs:linha` (a medida por origem da etapa 4); a contagem é exata e se repete, o tempo tem faixa. Quem conta é o projeto, o Librarian só lê e cruza. Aceitação: a aba Investigar mostra, ao lado das operações do caminho do render, quantas vezes cada uma rodou no frame do teapot.
@@ -967,7 +967,7 @@ Limites conhecidos de saída: a cobertura por teste é por chamada escrita, não
 
 ### R2, primeira parte — linha de base do teapot (31/10/2026)
 
-Renderer `26e72c4`: o carregador OBJ e a BVH saem do `cap15` para o módulo `obj`; o binário `librarian_measure_mesh` e o comando `medir-malha` (teapot, 64×64, 5 repetições, hash da imagem). 208 testes passando.
+Renderer `bbf66ba`: o carregador OBJ e a BVH saem do `cap15` para o módulo `obj`; o binário `librarian_measure_mesh` e o comando `medir-malha` (teapot, 64×64, 5 repetições, hash da imagem). 208 testes passando.
 
 - **Com a BVH:** render de 4,1 a 4,7 ms a 64×64, carga do OBJ e montagem da BVH 29 ms; 1,6 s a 1920×1080.
 - **Sem a BVH** (o grupo inteiro de 6.320 triângulos): 111 ms a 64×64, perto de um minuto a 1080p. A imagem é a mesma (hash `93febf29…`).
@@ -976,11 +976,11 @@ Leitura: o render inviável é a malha sem BVH, ou em resolução alta com mater
 
 ### Cena da medida — dois teapots (31/10/2026)
 
-Renderer `1710a45`: o `medir-malha` passa a ser a cena pedida, um teapot de vidro (com Fresnel: o `shade_hit` usa `schlick` quando o material reflete e transmite) e um teapot espelho ao lado, cada um na sua BVH, sobre o xadrez e diante de uma parede. Render de 10,7 a 10,9 ms a 64×64 e 244 ms a 400×300; carga das duas BVH, 57 a 64 ms. Observado na imagem: o vidro faz sombra cheia (o `is_shadowed` trata todo objeto como opaco).
+Renderer `6ca08c7`: o `medir-malha` passa a ser a cena pedida, um teapot de vidro (com Fresnel: o `shade_hit` usa `schlick` quando o material reflete e transmite) e um teapot espelho ao lado, cada um na sua BVH, sobre o xadrez e diante de uma parede. Render de 10,7 a 10,9 ms a 64×64 e 244 ms a 400×300; carga das duas BVH, 57 a 64 ms. Observado na imagem: o vidro faz sombra cheia (o `is_shadowed` trata todo objeto como opaco).
 
 ### R1 — resultado (31/10/2026)
 
-Commit `953029a`. **Perfil v7** (`librarian-ingest/0.7.0;…;rust-structural-v5;python-structural-v4`, mesmo grafo `-v5`), o novo atual; v1–v6 continuam lidos.
+Commit `502a33a`. **Perfil v7** (`librarian-ingest/0.7.0;…;rust-structural-v5;python-structural-v4`, mesmo grafo `-v5`), o novo atual; v1–v6 continuam lidos.
 
 - **Laços de closure (Rust):** um closure passado a `for_each`, `map`, `fold`, `position` e afins é laço quando a cadeia à esquerda é um iterador escrito (`iter()`, `par_bridge()`, um intervalo e adaptadores). `values.first().map(..)` não é. O rótulo vai do nome do método aos parâmetros (`for_each(|(x, y)|`).
 - **Tipo escrito do receptor (`receiver_type`):** `self` no `impl`, parâmetro ou `let` anotado, `let x = T::f(..)` ou `T { .. }`, `self.campo` e `for x in &self.campo` (elemento de `Vec<T>`, `[T; N]`), o padrão `Enum::Variante(ref x)`; campos e variantes só quando declarados no mesmo arquivo.

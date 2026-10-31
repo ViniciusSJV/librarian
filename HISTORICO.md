@@ -25,11 +25,11 @@ não o comportamento atual.
 
 Neste repositório, a extração do LLM Engine a partir do renderer (27/09/2026), com testes,
 conferência da query preservada por SHA-256 e limites, está registrada no
-[README do crate em `06600f1`](https://github.com/ViniciusSJV/librarian/blob/06600f1/crates/librarian-llm-engine/README.md#extração-e-continuidade).
+[README do crate em `8b3994b`](https://github.com/ViniciusSJV/librarian/blob/8b3994b/crates/librarian-llm-engine/README.md#extração-e-continuidade).
 
 Em 20/10/2026 o PLAYME (`tools/playme/PLAYME.ps1` e os atalhos `PLAYME.cmd`/`PLAYME.ps1`
 do renderer) foi substituído pelo [Librarian Studio](STUDIO.md). O último commit com ele é
-o [`ac2bf36`](https://github.com/ViniciusSJV/librarian/tree/ac2bf36/tools/playme); as
+o [`41f447e`](https://github.com/ViniciusSJV/librarian/tree/41f447e/tools/playme); as
 execuções antigas ficaram em `ai/consultas/` do renderer, fora do Git.
 
 O caminho atual está no [STUDIO](STUDIO.md) e no [WORKFLOW](WORKFLOW.md), e o roteiro de evolução no
