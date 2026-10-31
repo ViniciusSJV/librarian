@@ -277,8 +277,13 @@ passar por quatro portões, refeitos no momento da aprovação:
    linhas, trechos citados, autoria "revisão humana no Librarian Studio" e origem
    (edition, execução, pergunta, envio, item, hashes do item e da resposta, vínculo).
 
-Só FACT é promovido; LACUNA, INFERENCE e HYPOTHESIS nunca viram fato. Uma resposta
-recusada na mecânica ou um envio sem vínculo mostram o motivo no lugar do botão. Um item
+Uma HYPOTHESIS com mudança derivada (edições que passaram) tem **Aprovar a mudança como
+fato**, com um portão a mais: a mudança precisa ter rodado na Régua (**Rodar … com esta
+mudança**) com sucesso pelo menos uma vez. O fato, do tipo **CHANGE**, guarda o diff e os
+arquivos, quem propôs (provedor, Modelfile, custo em US$ e modelos que o CLI informou), cada
+execução com a mudança e a comparação com a linha de base, e as conferências por mutação
+desse item. LACUNA e INFERENCE nunca viram fato. Uma resposta recusada na mecânica ou um
+envio sem vínculo mostram o motivo no lugar do botão. Um item
 já promovido mostra **Aprovado como fato F<n>** e **Revogar**: revogar registra a recusa
 e marca o fato como revogado, sem apagá-lo. Aprovar de novo cria outro número.
 
@@ -286,7 +291,10 @@ O **Acervo de fatos** (aba **Acervo**) lista os fatos e os reconfere contra a
 edition da execução escolhida: **vigente** quando cada trecho citado continua igual, no
 mesmo arquivo e nas mesmas linhas; **desatualizado** quando não (o fato não é apagado nem
 procurado em outra linha); **revogado** quando você recusou depois. Vigente confere o
-texto, não o sentido. Os fatos entram nas perguntas só pela cadeia (abaixo).
+texto, não o sentido. Um fato de mudança é **mudança aplicada** quando todas as linhas que
+ela acrescenta estão nos arquivos da edition, **mudança aprovada, ainda não aplicada**
+enquanto o código citado continua igual, e **desatualizado** quando o código mudou de outro
+jeito. Os fatos entram nas perguntas só pela cadeia (abaixo).
 
 ### Continuar em cadeia
 
@@ -480,6 +488,36 @@ Faixas separadas não provam a causa, e faixas sobrepostas não provam que não 
 Para comparar sem a deriva da máquina, alterne linha de base e mudança, como no teste real:
 uma primeira comparação deu −4%, que intercalada virou −1%, dentro da variação.
 
+As cópias são feitas com os arquivos como o repositório os guarda, sem a conversão de fim
+de linha do `core.autocrlf`: os diffs são escritos com as linhas da edition e precisam
+encaixar.
+
+### Testes por trecho (quebrar de propósito)
+
+Na aba **Régua**, a seção **Testes por trecho** responde se os testes do projeto realmente
+testam uma declaração:
+
+1. Escolha a declaração (o campo sugere os métodos e funções do grafo) e o comando de testes
+   aprovado, e clique **Quebrar de propósito**. O Librarian troca uma coisa escrita por vez
+   no corpo da declaração: um operador (`+` por `-`, `<` por `<=`, `==` por `!=`…),
+   `floor()` por `ceil()`, ou um literal (`2.` por `3.`), até 12 versões. Roda o comando em
+   cada versão, numa cópia só (aplica, roda, desfaz), e mostra quais **sobrevivem**: os
+   testes continuam passando com a declaração quebrada.
+2. Para os sobreviventes, **Perguntar ao LLM** põe na conversa a pergunta pronta ("um teste
+   que passe com o código atual e falhe com estas mudanças") e a evidência: a declaração e o
+   módulo de testes do arquivo. Escolha quem responde (os Modelfiles `teste-<modelo>`) e
+   pergunte. A resposta é uma HYPOTHESIS com uma inserção depois do último teste.
+3. Na resposta, **Conferir teste (mutação)** confere sem opinião: a mudança **só acrescenta**
+   linhas, acrescenta um `#[test]` que **chama a declaração** pelo nome, o comando **passa**
+   com ela, e, com ela, cada sobrevivente faz o comando falhar nomeando o teste novo. O
+   veredito é aprovado (mata todos), parcial (mata alguns) ou recusado.
+
+Um sobrevivente pode ser **equivalente**: calcula o mesmo que o original (no xadrez,
+`x + y + z` e `x - y + z` têm a mesma paridade). Nenhum teste o mata, e isso não é lacuna;
+o veredito fica parcial. Um mutante que não compila conta como morto pelos testes. Que o
+teste novo matou um mutante é lido no texto da saída (o comando falhou e a saída nomeia a
+função de teste).
+
 ### Pergunta com declarações juntadas
 
 Na inspeção (aba **Mapa**), **Juntar à pergunta** põe a declaração selecionada no
@@ -670,7 +708,8 @@ flowchart TD
    **O grafo e os demais resultados não entram na query.**
 4. No Ollama, o Modelfile vale por `ollama create`; editar o arquivo sozinho não aplica
    nada. No Claude, só o `SYSTEM` vale.
-5. Nenhuma resposta, hipótese ou relação candidata vira fato do acervo.
+5. Nenhuma resposta, hipótese ou relação candidata vira fato do acervo sozinha: só com a
+   sua aprovação, e uma mudança só depois de rodar na Régua.
 
 ## Onde ficam os dados
 

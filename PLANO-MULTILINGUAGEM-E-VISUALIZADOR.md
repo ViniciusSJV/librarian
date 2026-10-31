@@ -1013,3 +1013,54 @@ Teapots a 64×64 (contagens iguais nas duas repetições, mesma imagem `b986c80c
 As inversas: 363.580 nos nós da BVH (`groups.rs:88`) + 212.761 nos triângulos (`object.rs:31`) + ~20.700 no resto. As cadeias mostram onde: o `normal_at` do trait, duas por acerto (`object.rs:36` e `:38`), e o padrão xadrez, duas por ponto sombreado (`patterns.rs:14` e `:15`). Todas de transformações que não mudam durante o render. Primeiro alvo do R5.
 
 Limite: a contagem é da linha, soma todos os caminhos que chegam a ela; a repartição por chamador acima é conta feita com as outras contagens, não medida.
+
+### R3 — resultado do piloto (31/10/2026)
+
+Commits `bc808ce` e `45b280d`. O R3 ficou mais forte que "escreva um teste": o Librarian quebra a declaração de propósito, e o alvo do modelo é uma lacuna medida.
+
+- **Mutantes** (`mutation.rs` no studio): trocas escritas no corpo da declaração (operadores, `floor`/`ceil`, literal + 1), até 12, rodadas com o comando de testes do projeto numa cópia só (aplica, roda, desfaz; compila incrementalmente, cerca de 2 s por mutante no renderer). Sobreviventes viram a pergunta e a evidência sugerida (a declaração e o módulo de testes).
+- **Conferência do teste proposto:** só acrescenta linhas, acrescenta `#[test]` que chama a declaração, passa no código atual, e com ele cada sobrevivente faz os testes falharem nomeando o teste novo. Veredito aprovado, parcial ou recusado.
+- **Studio:** seção Testes por trecho na Régua e o botão Conferir teste (mutação) na resposta. Modelfiles `teste-<modelo>`.
+- **Correções que o piloto pediu:** cópias da Régua sem conversão CRLF; o diff derivado escreve `\ No newline at end of file` quando a evidência termina o arquivo; o schema do Ollama sai por diretiva no Modelfile (`# librarian: structured-output off`, só no gpt-oss).
+
+Patterns do renderer (`color_at` de Stripe, LinearGradient, Ring e Checkers): 17 mutantes, 4 sobreviventes.
+
+| Unidade | Sobreviventes | qwen3-coder 30B | gemma4 12B | gpt-oss 20B | Claude |
+|---|---|---|---|---|---|
+| Ring | `% 2.` → `% 3.` | não passa hoje (valor esperado errado) | não passa hoje | fora do formato | **aprovado** (mata 1 de 1) |
+| Checkers | dois `+` → `-` (equivalentes) e `% 2.` → `% 3.` | **parcial: mata o `% 3`** | repetiu um teste existente (não compila) | fora do formato | parcial: mata o `% 3` |
+
+No xadrez, o modelo local empatou com o Claude: os dois mataram a única lacuna real; os dois `+` → `-` são equivalentes pela paridade. No anel, só o Claude acertou o valor esperado. O Claude respondeu em 10 a 16 s por pergunta.
+
+Limites: mutantes são trocas escritas, não todas as maneiras de errar; a equivalência não é provada, só explicada; a morte pelo teste novo é lida no texto da saída.
+
+### Passos 2 e 3 do ensaio — tempo por função e segunda rodada do R5 (31/10/2026)
+
+Na branch `librarian-ensaio` do renderer (sem push; a `master` fica para o vídeo).
+
+- **Tempo por função** (`b2d703b`): o `count!()` mede também o tempo inclusivo de cada função contada (`cpu_ms`, somado das threads; numa recursão, só a chamada mais externa). Teapots a 64×64: `color_at` 741 ms, `Groups::intersect` 714, `shade_hit` 652, `is_shadowed` 293, `intersect` do trait 200, **`Matrix::inverse` 124**, `Bounds::intersects` 12, **`Triangle::local_intersect` 8**. O render invertia matrizes 15 vezes mais tempo do que testava triângulos. A medição infla os totais; a ordem é o que vale.
+- **Rodada 1 reaplicada** (`0290d09`): 597.067 → 233.487 inversões, mesma imagem.
+- **Rodada 2** (`ab0387d`), sobre as 212.761 inversões do `intersect` padrão do trait:
+  1. Com o envelope sugerido, o Claude respondeu **LACUNA**: a evidência não mostrava onde guardar a inversa. Os locais propuseram sem os construtores na evidência e foram recusados.
+  2. Com `Triangle` juntado à mão: o Claude passou nos testes e na imagem, mas **as inversões não caíram** (sobrescreveu o `intersect` do `Triangle`, que não é chamado: os filhos do grupo são `Object`). O portão recusou pelas contagens.
+  3. Com o `impl Intersectable for Object` e o caminho do inventário na pergunta (`child: Object` → padrão do trait): **233.487 → 20.726 inversões** (−91%), mesma imagem, 208 testes. Os locais: o qwen3-coder não compilou ou errou o formato; o gemma4 errou o formato.
+- **Acumulado** (master → ensaio): inversões 597.067 → 20.726 (−96,5%); render a 400×300 de **250 ms para ~96 ms** (2,6×), mesma imagem (`f90d345d2c09`).
+
+Lacuna do Librarian que a rodada mostrou: para um método padrão de trait, o envelope sugerido não traz as implementações nem o tipo por onde a chamada passa, que o inventário já conhece. A pessoa completou duas vezes.
+
+### Passo 4 — mudança aprovada vira fato, e os custos por modelo (31/10/2026)
+
+Commit `5b0ebf8` (etapa 6 do roteiro de 30/10). Uma HYPOTHESIS com mudança derivada pode ser aprovada como fato do tipo **CHANGE**, com um portão a mais que o FACT: a mudança rodou na Régua com sucesso ao menos uma vez. O fato guarda o diff, os arquivos, quem propôs (provedor, Modelfile, custo, modelos), cada execução com a mudança e a comparação com a linha de base, e as conferências por mutação. No acervo: **aplicada** (as linhas que a mudança acrescenta estão na edition), **proposta** (o código citado não mudou) ou **desatualizada**. Ensaio: a rodada 2 do R5 virou F1, proposta na edition da rodada 1 e aplicada na da rodada 2, com as inversões em −91,1%.
+
+Custo de cada envio ao Claude (o `total_cost_usd` do Claude CLI; com assinatura, é o preço de API equivalente):
+
+| Pergunta | Haiku | Sonnet | Resultado (igual nos dois) |
+|---|---|---|---|
+| Otimização, rodada 1 (inversa do grupo) | US$ 0,010 | US$ 0,102 | 597.067 → 233.487 inversões, mesma imagem |
+| Otimização, rodada 2, tentativa 3 | US$ 0,011 | US$ 0,111 | 233.487 → 20.726 inversões, mesma imagem |
+| Teste do anel | US$ 0,007 | US$ 0,084 | aprovado |
+| Teste do xadrez | US$ 0,008 | US$ 0,086 | parcial (o `% 3`; os outros dois são equivalentes) |
+
+Com o envelope e o portão do Librarian, o Haiku fez o mesmo que o Sonnet por um décimo do custo. Render dos teapots a 2048×1080: 6,2 s na `master` → 2,0 s com as duas rodadas, mesma imagem (`6805550f…`).
+
+Renderer `02a21f8` (`master`): a medição de tempo por função entrou na `master`, para o vídeo partir dela; as rodadas ficam para serem refeitas no vídeo. Branch `cena-video` (`dec254c`, local): smooth triangles e a correção da normal de triângulos em grupo (a normal ignorava a transformação do grupo), para a cena de abertura; vão entrar pelo processo depois do vídeo.
