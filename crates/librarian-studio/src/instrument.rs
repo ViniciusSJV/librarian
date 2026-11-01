@@ -218,11 +218,19 @@ pub fn hotspots(catalog: &Catalog, execution: &Value) -> Value {
         out.sort_by_key(|c| c["line"].as_u64());
         row["calls_out"] = json!(out);
     }
+    // Declarations without a body (a trait's signature): a call reaches one of its impls, never them.
+    let bodiless: Vec<&str> = catalog.symbols().values().filter(|s| KINDS.contains(&s.kind.as_str()))
+        .filter(|s| catalog.chunk(&s.chunk_id).zip(catalog.sources().get(&s.source_id).and_then(|src| catalog.source_bytes(&src.path)))
+            .is_some_and(|(c, bytes)| body_brace(&bytes[c.start_byte..c.end_byte.min(bytes.len())]).is_none()))
+        .map(|s| s.id.as_str()).collect();
     let plain: serde_json::Map<String, Value> = stats.as_object().into_iter().flatten()
         .filter(|(_, s)| s["at"].is_null()).map(|(k, s)| (k.clone(), s["median"].clone())).collect();
     json!({
         "execution": execution["id"], "started": execution["started"], "command": execution["name"],
         "functions": execution["instrumentation"]["functions"].as_array().map_or(0, |f| f.len()),
+        // Every function that got the count: one of them missing from `rows` did not run.
+        "counted": execution["instrumentation"]["functions"].as_array().into_iter().flatten().filter_map(|f| f["symbol"].as_str()).collect::<Vec<_>>(),
+        "bodiless": bodiless,
         "skipped": execution["instrumentation"]["skipped"], "measures": plain, "rows": rows,
         "limits": ["A contagem é exata; o tempo é inclusivo (conta o que a função chama), somado das threads e inflado pela própria contagem: a ordem é o que vale.",
             "Cada linha é onde o corpo da função abre (ou o contador que o projeto já tinha nela).",

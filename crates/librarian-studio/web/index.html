@@ -160,6 +160,9 @@
   #pathCanvas .edge.ambiguous { stroke-dasharray: 5 4; }
   #pathCanvas .edge:hover { stroke: var(--text-primary); stroke-width: 2.4; }
   #pathCanvas marker path { fill: var(--text-secondary); }
+  #pathCanvas .node.idle { opacity: .45; }
+  #pathCanvas .node .count { fill: var(--text-secondary); font-size: 11px; }
+  #pathCanvas .line-no { fill: var(--text-muted); font-size: 10px; pointer-events: none; }
   #pathDetail { position: absolute; right: 14px; bottom: 14px; max-width: 460px; max-height: 45%; overflow: auto; padding: 10px 12px;
     border: 1px solid var(--border); border-radius: 8px; background: var(--surface-2); box-shadow: 0 6px 24px rgb(0 0 0 / .18); }
   dialog { width: min(720px, calc(100vw - 32px)); max-height: calc(100vh - 32px); padding: 16px; border: 1px solid var(--border);
@@ -437,6 +440,7 @@
         <strong id="pathTitle" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0"></strong>
         <button type="button" class="help" id="pathHelp" data-help-key="help.path">?</button>
         <label class="check" style="margin: 0 0 0 auto"><input id="pathNoTests" type="checkbox" checked><span><span data-i18n="path.noTests"></span><button type="button" class="help" data-help-key="help.pathNoTests">?</button></span></label>
+        <label class="check" style="margin: 0" id="pathRanRow" hidden><input id="pathRan" type="checkbox" checked><span><span data-i18n="path.ran"></span><button type="button" class="help" data-help-key="help.pathRan">?</button></span></label>
         <label class="check" style="margin: 0"><input id="pathSolid" type="checkbox"><span><span id="pathSolidText" data-i18n="path.solid"></span><button type="button" class="help" id="pathSolidHelp" data-help-key="help.pathSolid">?</button></span></label>
         <label class="row" style="flex-wrap: nowrap"><span data-i18n="path.depth"></span>
           <select id="pathDepth"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></label>
@@ -907,6 +911,11 @@ const STRINGS = {
   'path.resolution.unique': ['seguida: o nome só combina com esta declaração', 'followed: the name matches only this declaration'],
   'path.resolution.receiver': ['seguida: chamada do próprio receptor, e só este homônimo está na mesma classe ou impl', 'followed: the receiver\'s own call, and only this homonym is in the same class or impl'],
   'path.resolution.chosen': ['seguida: escolhida por você', 'followed: chosen by you'],
+  'path.resolution.measured': ['seguida: dos homônimos, só este rodou no Medir tudo', 'followed: of the homonyms, only this one ran in Measure everything'],
+  'path.ran': ['só o que rodou', 'only what ran'],
+  'help.pathRan': ['Usa o último Medir tudo. Esconde as funções que foram contadas e não rodaram nenhuma vez. Quando um nome combina com vários homônimos e só um deles rodou, segue por ele, como se você o tivesse escolhido. As caixas mostram quantas vezes cada função rodou e quanto tempo levou, com a cor de azul (pouco) a vermelho (muito).', 'Uses the latest Measure everything. Hides the functions that were counted and never ran. When a name matches several homonyms and only one of them ran, follows it, as if you had chosen it. The boxes show how many times each function ran and how long it took, colored from blue (little) to red (a lot).'],
+  'path.notRan': ['não rodou', 'did not run'],
+  'path.measuredCount': [' {n} homônimo(s) resolvido(s) pela medição.', ' {n} homonym(s) resolved by the measure.'],
   'path.resolution.homonym': ['não seguida: o nome combina com {n} declarações; esta é uma delas', 'not followed: the name matches {n} declarations; this is one of them'],
   'path.choose': ['Seguir por este', 'Follow this one'],
   'path.unchoose': ['Desfazer escolha', 'Undo choice'],
@@ -3421,14 +3430,16 @@ function buildCity() {
   showCity();
 }
 
+// Time as color, the same in the city and in the path: blue (little) to amber to red (a lot).
 const COLD = new THREE.Color(0x4a78c2), WARM = new THREE.Color(0xe8a33a), HOT = new THREE.Color(0xd6453d);
+const heatColor = (heat, into = new THREE.Color()) => into.copy(heat < .5 ? COLD : WARM).lerp(heat < .5 ? WARM : HOT, heat < .5 ? heat * 2 : heat * 2 - 1);
 function paintCity() {
   const selected = state.selectedNode == null ? null : state.nodes[state.selectedNode]?.id;
   const chosen = selected && city.at.get(selected);
   // With a function chosen, it and the functions it calls or is called by keep their color.
   const linked = new Set(chosen ? city.arcs.filter(a => a.from === chosen || a.to === chosen).flatMap(a => [a.from, a.to]) : []);
   city.list.forEach((b, k) => {
-    tmp.copy(b.heat < .5 ? COLD : WARM).lerp(b.heat < .5 ? WARM : HOT, b.heat < .5 ? b.heat * 2 : b.heat * 2 - 1);
+    heatColor(b.heat, tmp);
     if (chosen && b !== chosen && !linked.has(b)) tmp.lerp(palette.surface, .75);
     city.buildings.setColorAt(k, tmp);
   });
@@ -3851,12 +3862,14 @@ let pathSeed = null, pathMode = 'used';
 // P1b: the homonym the person chose for each ambiguous call (occurrence → symbol), and the
 // points of the drawn path a question can be asked about.
 let pathChosen = {}, pathTargets = [];
+// The homonyms the latest "Medir tudo" settled: of the candidates of a call, only one ran.
+let pathMeasured = {};
 
 /// `fresh` starts a new exploration; a double click on a node keeps the choices made so far.
 async function openPath(id, mode = pathMode, fresh = true) {
   pathSeed = id;
   pathMode = mode;
-  if (fresh) pathChosen = {};
+  if (fresh) { pathChosen = {}; pathMeasured = {}; }
   $('#pathView').hidden = false;
   await drawPath();
 }
@@ -3868,6 +3881,40 @@ const farEnd = l => callsMode() ? l.to : l.from;
 // Dashed: a use whose name matches homonyms, or a call left unresolved among homonyms.
 const dashed = l => callsMode() ? l.resolution === 'homonym' : l.candidates > 1;
 
+// What the latest "Medir tudo" says of a function: how often it ran and for how long, that it
+// was counted and never ran, or nothing (not counted). Built once per measure.
+let hotIndex = null;
+function measure() {
+  if (!hot?.rows?.length) return null;
+  if (hotIndex?.hot !== hot) {
+    const rows = new Map();
+    for (const r of hot.rows) if (r.symbol && !(rows.get(r.symbol)?.calls >= r.calls)) rows.set(r.symbol, r);
+    hotIndex = { hot, rows, counted: new Set(hot.counted ?? []), bodiless: new Set(hot.bodiless ?? []),
+      maxMs: Math.max(1, ...hot.rows.map(r => r.cpu_ms ?? 0)) };
+  }
+  return hotIndex;
+}
+const measuredOn = () => !!measure() && $('#pathRan').checked;
+const ran = id => measure()?.rows.get(id)?.calls > 0;
+const idle = id => !!measure() && !ran(id) && (measure().counted.has(id) || measure().bodiless.has(id));
+
+// Calls with homonyms where exactly one candidate ran and every other one was counted and did
+// not run, or has no body: that one is the call. Choices the person made stay theirs.
+function measuredPicks(data) {
+  const byOccurrence = new Map();
+  for (const l of data.links) {
+    if (l.resolution !== 'homonym' || pathChosen[l.occurrence] || pathMeasured[l.occurrence]) continue;
+    if (!byOccurrence.has(l.occurrence)) byOccurrence.set(l.occurrence, []);
+    byOccurrence.get(l.occurrence).push(l.to);
+  }
+  const picks = {};
+  for (const [occurrence, candidates] of byOccurrence) {
+    const running = candidates.filter(ran);
+    if (running.length === 1 && candidates.every(c => c === running[0] || idle(c))) picks[occurrence] = running[0];
+  }
+  return picks;
+}
+
 async function drawPath() {
   const note = $('#pathNote'), canvas = $('#pathCanvas'), calls = callsMode();
   $('#pathDetail').hidden = true;
@@ -3878,14 +3925,26 @@ async function drawPath() {
   $('#pathSolidText').textContent = t($('#pathSolidText').dataset.i18n);
   $('#pathSolidHelp').dataset.helpKey = calls ? 'help.pathSolidCalls' : 'help.pathSolid';
   $('#pathResetChoices').hidden = !calls || !Object.keys(pathChosen).length;
+  $('#pathRanRow').hidden = !measure();
   $('#pathAsk').hidden = true;
   note.textContent = t(calls ? 'path.callsSearching' : 'path.searching');
   canvas.replaceChildren();
   try {
-    const request = calls
-      ? api('POST', '/api/calls', { key: studio.project.key, run: studio.run, node: pathSeed, depth: Number($('#pathDepth').value), chosen: pathChosen })
+    const fetchCalls = () => api('POST', '/api/calls', { key: studio.project.key, run: studio.run, node: pathSeed, depth: Number($('#pathDepth').value),
+      chosen: { ...(measuredOn() ? pathMeasured : {}), ...pathChosen } });
+    const request = calls ? fetchCalls()
       : api('GET', `/api/used-by?${query({ key: studio.project.key, run: studio.run, node: pathSeed, depth: $('#pathDepth').value })}`);
-    const [full, elk] = await Promise.all([request, loadElk()]);
+    let [full, elk] = await Promise.all([request, loadElk()]);
+    // Each settled homonym can open calls further on, with homonyms of their own.
+    for (let round = 0; calls && measuredOn() && round < 8; round++) {
+      const picks = measuredPicks(full);
+      if (!Object.keys(picks).length) break;
+      Object.assign(pathMeasured, picks);
+      full = await fetchCalls();
+    }
+    if (calls && measuredOn()) {
+      for (const l of full.links) if (l.resolution === 'chosen' && !pathChosen[l.occurrence] && pathMeasured[l.occurrence] === l.to) l.resolution = 'measured';
+    }
     const data = filterPath(full);
     if (!data.links.length && full.links.length) {
       note.textContent = t(calls ? 'path.callsAllHidden' : 'path.allHidden', { n: full.links.length });
@@ -3911,9 +3970,9 @@ const isTest = n => /(^|[.:])(test|tests_)/i.test(n.label) || /(^|\/)tests?\//.t
 
 // Filters drop links, then every node no longer reachable from the seed.
 function filterPath(data) {
-  const noTests = $('#pathNoTests').checked, solid = $('#pathSolid').checked;
+  const noTests = $('#pathNoTests').checked, solid = $('#pathSolid').checked, onlyRan = measuredOn();
   const byId = new Map(data.nodes.map(n => [n.id, n]));
-  const links = data.links.filter(l => (!solid || !dashed(l))
+  const links = data.links.filter(l => (!solid || !dashed(l)) && (!onlyRan || !idle(farEnd(l)))
     && (!noTests || (!isTest(byId.get(l.from)) && !isTest(byId.get(l.to)))));
   const reached = new Set([data.seed]);
   for (let grew = true; grew;) {
@@ -3926,14 +3985,7 @@ function filterPath(data) {
 
 // Boxes are the enclosing class/impl, or the file; each edge merges the links of one pair.
 function pathGraph(data) {
-  const groups = new Map(), nodeInfo = new Map();
-  for (const n of data.nodes) {
-    const key = `${n.path}|${n.container ?? ''}`;
-    if (!groups.has(key)) groups.set(key, { id: `g${groups.size}`, title: n.container ?? n.path, path: n.path, children: [] });
-    const text = shortName(n.label);
-    nodeInfo.set(n.id, { ...n, text });
-    groups.get(key).children.push({ id: n.id, width: Math.max(80, text.length * 7.4 + 24), height: 30 });
-  }
+  const groups = new Map(), nodeInfo = new Map(), m = measure();
   const edges = new Map();
   for (const link of data.links) {
     // A symbol using its own name (recursion, or a homonym of itself) adds no step to the path.
@@ -3942,16 +3994,32 @@ function pathGraph(data) {
     if (!edges.has(id)) edges.set(id, { id: `e${edges.size}`, near: nearEnd(link), far: farEnd(link), from: link.from, to: link.to, links: [] });
     edges.get(id).links.push(link);
   }
+  // In calls mode, an edge is read by the line of the first call it stands for: the order of the
+  // caller's body, top to bottom.
+  for (const e of edges.values()) e.line = Math.min(...e.links.map(l => l.evidence.start_line));
+  const ordered = [...edges.values()].sort((a, b) => a.line - b.line);
+  const order = new Map([[data.seed, 0]]);
+  for (const e of ordered) if (!order.has(e.far)) order.set(e.far, order.size);
+  for (const n of [...data.nodes].sort((a, b) => (order.get(a.id) ?? 1e9) - (order.get(b.id) ?? 1e9))) {
+    const key = `${n.path}|${n.container ?? ''}`;
+    if (!groups.has(key)) groups.set(key, { id: `g${groups.size}`, title: n.container ?? n.path, path: n.path, children: [] });
+    const row = m?.rows.get(n.id);
+    const text = shortName(n.label);
+    const count = row ? `${intPt(row.calls)} × · ${row.cpu_ms == null ? '—' : `${intPt(Math.round(row.cpu_ms))} ms`}` : idle(n.id) ? t('path.notRan') : null;
+    nodeInfo.set(n.id, { ...n, text, count, heat: row ? Math.log1p(row.cpu_ms ?? 0) / Math.log1p(m.maxMs) : null });
+    groups.get(key).children.push({ id: n.id, width: Math.max(80, text.length * 7.4 + 24, (count?.length ?? 0) * 6.4 + 24), height: count ? 44 : 30 });
+  }
   const graph = {
     id: 'root',
     layoutOptions: { 'elk.algorithm': 'layered', 'elk.direction': 'RIGHT', 'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
-      'elk.layered.spacing.nodeNodeBetweenLayers': '80', 'elk.spacing.nodeNode': '16', 'elk.edgeRouting': 'SPLINES',
-      'elk.layered.mergeEdges': 'true', 'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX',
+      'elk.layered.spacing.nodeNodeBetweenLayers': '90', 'elk.spacing.nodeNode': '16', 'elk.edgeRouting': 'ORTHOGONAL',
+      'elk.layered.spacing.edgeEdgeBetweenLayers': '8', 'elk.layered.considerModelOrder.strategy': 'NODES_AND_EDGES',
+      'elk.layered.mergeEdges': 'false', 'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX',
       // Edges inside one box would otherwise come back relative to that box.
       'elk.json.edgeCoords': 'ROOT' },
     children: [...groups.values()].map(g => ({ id: g.id, width: Math.max(120, g.title.length * 6.6 + 24),
       layoutOptions: { 'elk.padding': '[top=26,left=10,bottom=10,right=10]' }, children: g.children })),
-    edges: [...edges.values()].map(e => ({ id: e.id, sources: [e.near], targets: [e.far] })),
+    edges: ordered.map(e => ({ id: e.id, sources: [e.near], targets: [e.far] })),
   };
   return { graph, groups: { byId: new Map([...groups.values()].map(g => [g.id, g])), nodes: nodeInfo }, edges: new Map([...edges.values()].map(e => [e.id, e])) };
 }
@@ -3974,9 +4042,14 @@ function renderPath(data, layout, groups, edges) {
       svg('text', { x: g.x + 10, y: g.y + 17 }, info.title), title(info.path)));
     for (const n of g.children) {
       const info2 = groups.nodes.get(n.id);
-      const node = svg('g', { class: `node${info2.layer === 0 ? ' seed' : ''}`, 'data-id': n.id },
+      // A measured box carries its count and time, and a left band in the color of its time.
+      const band = info2.heat == null ? null
+        : svg('rect', { x: g.x + n.x, y: g.y + n.y, width: 6, height: n.height, rx: 3, style: `fill: ${heatColor(info2.heat).getStyle()}; stroke: none; pointer-events: none` });
+      const node = svg('g', { class: `node${info2.layer === 0 ? ' seed' : ''}${idle(n.id) ? ' idle' : ''}`, 'data-id': n.id },
         svg('rect', { x: g.x + n.x, y: g.y + n.y, width: n.width, height: n.height, rx: 6 }),
+        band,
         svg('text', { x: g.x + n.x + 12, y: g.y + n.y + 19 }, info2.text),
+        info2.count ? svg('text', { class: 'count', x: g.x + n.x + 12, y: g.y + n.y + 35 }, info2.count) : null,
         title(t(calls ? 'path.callsNodeTitle' : 'path.nodeTitle', { label: info2.label, kind: info2.kind, location: `${info2.path}:${info2.line}` })));
       node.addEventListener('click', () => {
         root.querySelectorAll('.node.selected').forEach(x => x.classList.remove('selected'));
@@ -4001,6 +4074,9 @@ function renderPath(data, layout, groups, edges) {
       title(info.links.map(l => `${l.text.slice(0, 80)} · ${l.evidence.path}:${l.evidence.start_line}`).join('\n')));
     path.addEventListener('click', () => showUse(info, groups.nodes));
     root.append(path);
+    // The line of the call, just before the arrow: read top to bottom, the order of the body.
+    const end = points.at(-1);
+    if (calls) root.append(svg('text', { class: 'line-no', x: end.x - 8, y: end.y - 4, 'text-anchor': 'end' }, `L${info.line}`));
   }
   $('#pathCanvas').replaceChildren(root);
   // The points a path question can ask about: the seed and what was followed to, never a homonym
@@ -4014,6 +4090,8 @@ function renderPath(data, layout, groups, edges) {
   $('#pathNote').textContent = t(calls ? 'path.callsSummary' : 'path.summary', { nodes: data.nodes.length, links: data.links.length, depth: data.depth })
     + (ambiguous ? t(calls ? 'path.callsAmbiguous' : 'path.ambiguous', { n: ambiguous }) : '')
     + (calls && chosen ? t('path.chosenCount', { n: chosen }) : '')
+    + (calls && measuredOn() && data.links.some(l => l.resolution === 'measured')
+      ? t('path.measuredCount', { n: new Set(data.links.filter(l => l.resolution === 'measured').map(l => l.occurrence)).size }) : '')
     + (data.hidden ? t('path.hidden', { n: data.hidden }) : '')
     + (data.truncated ? t('path.truncated', { n: data.max_nodes }) : '')
     + t(calls ? 'path.callsClick' : 'path.clickLine');
@@ -4076,7 +4154,7 @@ async function askPath(button) {
   });
 }
 $('#pathAsk').onclick = () => askPath($('#pathAsk'));
-for (const id of ['#pathDepth', '#pathNoTests', '#pathSolid']) $(id).onchange = () => { if (pathSeed) drawPath(); };
+for (const id of ['#pathDepth', '#pathNoTests', '#pathSolid', '#pathRan']) $(id).onchange = () => { if (pathSeed) drawPath(); };
 
 // ---- help: each "?" explains a part of the page in plain words, on hover or click.
 const helpTip = el('div', { id: 'helpTip', role: 'tooltip', hidden: true });
