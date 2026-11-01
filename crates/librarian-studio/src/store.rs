@@ -418,7 +418,7 @@ impl Store {
         Ok(json!({ "profile": display(&profile), "inventory": found }))
     }
 
-    fn inventory_of(&self, key: &str, run: &str) -> Result<(inventory::Inventory, PathBuf, Catalog)> {
+    pub(crate) fn inventory_of(&self, key: &str, run: &str) -> Result<(inventory::Inventory, PathBuf, Catalog)> {
         let root = PathBuf::from(self.settings(key)?.root);
         let profile = root.join(PROFILE);
         let rules: inventory::RuleSet = match fs::read(&profile).ok().map(|b| serde_json::from_slice::<Value>(&b)).transpose()? {

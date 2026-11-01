@@ -243,7 +243,19 @@ impl Store {
             .find(|x| !x["instrumentation"].is_null() && x["summary"]["succeeded"].as_u64() > Some(0))
             .ok_or("Ainda não há medição de tudo nesta edition: rode Medir tudo")?;
         let catalog = Catalog::load(&self.edition(key, run)?)?;
-        Ok(crate::instrument::hotspots(&catalog, &latest))
+        let mut hot = crate::instrument::hotspots(&catalog, &latest);
+        // What is costly by its kind, not by how often its function runs: an inventory operation
+        // other than arithmetic (a lock, a sleep, I/O) inside a loop of a function that ran.
+        let (found, _, _) = self.inventory_of(key, run)?;
+        let calls: std::collections::BTreeMap<String, f64> = hot["rows"].as_array().into_iter().flatten()
+            .filter_map(|r| Some((r["symbol"].as_str()?.to_owned(), r["calls"].as_f64()?))).collect();
+        let structural: Vec<Value> = found.operations.iter()
+            .filter(|o| o.operation != "math" && o.in_loop && calls.get(&o.symbol).is_some_and(|c| *c > 0.))
+            .map(|o| json!({ "symbol": o.symbol, "name": o.symbol_name, "path": o.path, "line": o.line, "text": o.text.split_whitespace().collect::<Vec<_>>().join(" "),
+                "operation": o.operation, "rule": o.rule, "calls": calls[&o.symbol] }))
+            .collect();
+        hot["structural"] = json!(structural);
+        Ok(hot)
     }
 
     /// Where a hot line's value comes from (values.rs), over the latest "Medir tudo" of `run`.
