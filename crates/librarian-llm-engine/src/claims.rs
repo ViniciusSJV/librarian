@@ -65,6 +65,9 @@ pub struct Context {
     /// A HYPOTHESIS may carry line edits over the evidence; the diff is derived from them.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub allow_edits: bool,
+    /// A LACUNA names what is missing, in backticks, so the missing declarations can be found.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub name_gaps: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -232,6 +235,9 @@ pub fn query(context: &Context, question: &str) -> Result<String, String> {
         query["response_schema"]["properties"]["claims"]["items"]["properties"]["edits"] = edits::schema();
         query["instructions"].as_array_mut().unwrap().push(serde_json::json!(edits::INSTRUCTION));
     }
+    if context.name_gaps {
+        query["instructions"].as_array_mut().unwrap().push(serde_json::json!(GAPS_INSTRUCTION));
+    }
     if !context.reviewed_facts.is_empty() {
         query["evidence"]["reviewed_facts"] = serde_json::json!(context.reviewed_facts);
         query["instructions"].as_array_mut().unwrap().push(serde_json::json!(REVIEWED_INSTRUCTION));
@@ -244,6 +250,8 @@ pub fn query(context: &Context, question: &str) -> Result<String, String> {
     }
     serde_json::to_string_pretty(&query).map_err(|e| e.to_string())
 }
+
+const GAPS_INSTRUCTION: &str = "Uma LACUNA diz o que falta pelo nome escrito no código: escreva entre crases o nome exato de cada tipo, campo ou função que faltou ver (por exemplo `Triangle`, `Triangle::new` ou `transform()`), como aparece nas evidências ou nas chamadas delas.";
 
 const REVIEWED_INSTRUCTION: &str = "evidence.reviewed_facts são afirmações de uma pergunta anterior, revisadas e aprovadas por uma pessoa, sobre estas mesmas linhas. Elas podem orientar a resposta, mas não são citáveis: toda afirmação continua citando as linhas de evidence.items. Não as contradiga sem citar as linhas que mostram o contrário.";
 

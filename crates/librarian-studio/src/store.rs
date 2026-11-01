@@ -348,11 +348,54 @@ impl Store {
         self.new_turn(key, run, &settings, &catalog, question, None, request, Some(("gathered", gathered)))
     }
 
+    /// A trait's default method runs for the types that reach it: for each chosen default, the
+    /// implementation of that trait for every receiver type the inventory's chains reach it by
+    /// (`child.intersect` with `child` in `Vec<Object>` gives `impl Intersectable for Object`).
+    /// Without it, a change to the default cannot see where the type's own data lives. After a
+    /// "Medir tudo", only the calls made from a function that ran in that measure count.
+    fn trait_impls_on_path(&self, key: &str, run: &str, catalog: &Catalog, chosen: &[String], suggestion: &mut envelope::Suggestion) -> Result<()> {
+        let defaults: Vec<&librarian_ingest::Symbol> = chosen.iter().filter_map(|id| catalog.symbols().get(id)).filter(|s| s.kind == "trait_method").collect();
+        if defaults.is_empty() {
+            return Ok(());
+        }
+        let (found, _, _) = self.inventory_of(key, run)?;
+        let steps: Vec<&inventory::Step> = found.loops.iter()
+            .flat_map(|l| l.through_calls.iter().map(|c| &c.steps).chain(l.loops_through_calls.iter().map(|c| &c.steps)))
+            .flatten().collect();
+        let ran: Option<Vec<String>> = self.hotspots(key, run).ok().map(|h| h["rows"].as_array().into_iter().flatten()
+            .filter(|r| r["calls"].as_f64().unwrap_or(0.) > 0.).filter_map(|r| r["symbol"].as_str().map(String::from)).collect());
+        for default in defaults {
+            let Some((trait_name, _)) = default.qualified_name.split_once("::") else { continue };
+            let mut seen = vec![];
+            for step in steps.iter().filter(|s| s.to == default.id && s.resolution == "trait_default" && ran.as_ref().is_none_or(|r| r.contains(&s.from))) {
+                for t in &step.receiver_types {
+                    let label = format!("impl {trait_name} for {t}");
+                    if seen.contains(&label) {
+                        continue;
+                    }
+                    seen.push(label.clone());
+                    let Some(implementation) = catalog.symbols().values().find(|s| s.kind == "impl" && s.qualified_name == label) else { continue };
+                    if suggestion.items.iter().any(|i| i.id == implementation.id) {
+                        continue;
+                    }
+                    let chunk = catalog.chunk(&implementation.chunk_id).ok_or("trecho sumiu da edition")?;
+                    suggestion.items.push(envelope::Item {
+                        id: implementation.id.clone(), path: catalog.sources()[&implementation.source_id].path.clone(), name: label,
+                        kind: "impl".into(), start_line: chunk.start_line, end_line: chunk.end_line,
+                        reasons: vec![envelope::Reason { code: "trait_impl".into(), for_target: default.qualified_name.clone(), fields: vec![t.clone()], lines: vec![step.line] }],
+                    });
+                }
+            }
+        }
+        Ok(())
+    }
+
     /// P5: the envelope suggested for the chosen declarations, each item with why it is there,
     /// and the current reviewed facts about each declaration.
     pub fn suggest_envelope(&self, key: &str, run: &str, nodes: &[String]) -> Result<Value> {
         let catalog = Catalog::load(&self.edition(key, run)?)?;
-        let suggestion = envelope::suggest(&catalog, nodes)?;
+        let mut suggestion = envelope::suggest(&catalog, nodes)?;
+        self.trait_impls_on_path(key, run, &catalog, nodes, &mut suggestion)?;
         let facts = self.facts(key, run)?;
         let current: Vec<&Value> = facts["facts"].as_array().into_iter().flatten().filter(|f| f["status"] == "current").collect();
         let mut out = serde_json::to_value(&suggestion)?;
@@ -746,7 +789,7 @@ impl Store {
         });
         // Commands and inventory rules are written by hand in the profile (commands approved
         // one by one); the studio never writes them, so an export keeps them exactly as they are.
-        for kept in ["commands", "inventory"] {
+        for kept in ["commands", "inventory", "instrument"] {
             if let Some(value) = existing.get(kept) {
                 profile[kept] = value.clone();
             }

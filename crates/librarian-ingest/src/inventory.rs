@@ -245,6 +245,10 @@ pub struct Step {
     /// receiver's written type), trait_default (the default of a trait that type implements) or
     /// trait (a candidate: one of the implementations of one trait's method).
     pub resolution: String,
+    /// With type or trait_default: the receiver's written type that chose the target (`child`
+    /// in `Vec<Object>` gives Object). A trait's default reached this way runs for that type.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub receiver_types: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
@@ -725,8 +729,8 @@ pub fn inventory(catalog: &Catalog, project: &RuleSet) -> Result<Inventory> {
                 }
                 match follow(symbol, &call.to) {
                     Ok(targets) => for (to, resolution) in targets {
-                        let first = step(&index, symbol, &to, call, resolution);
-                        let (chains, mut reached) = reach(&index, &by_symbol, &loops_of, &follow, &calls_of, first, &in_loop);
+                        let first = step(&index, symbol, &to, call, resolution, &receiver_type);
+                        let (chains, mut reached) = reach(&index, &by_symbol, &loops_of, &follow, &calls_of, &receiver_type, first, &in_loop);
                         // Step 3b, one call away: the reached loop walks a parameter, and what the call
                         // passes for it does not change from one turn of this loop to the next.
                         let changing: BTreeSet<&str> = owned(symbol, &["local_binding"]).into_iter().filter(|b| repeats(l, &b.evidence)).map(|b| index.label(&b.to)).collect();
@@ -980,7 +984,7 @@ fn names_in(text: &str) -> Vec<&str> {
     text.split(|c: char| !(c.is_alphanumeric() || c == '_')).filter(|w| w.starts_with(|c: char| c.is_alphabetic() || c == '_')).collect()
 }
 
-fn step(index: &Index, from: &str, to: &str, call: &v2::Edge, resolution: &str) -> Step {
+fn step(index: &Index, from: &str, to: &str, call: &v2::Edge, resolution: &str, types: &dyn Fn(&str, &str) -> Vec<String>) -> Step {
     Step {
         from: from.to_owned(),
         to: to.to_owned(),
@@ -989,6 +993,7 @@ fn step(index: &Index, from: &str, to: &str, call: &v2::Edge, resolution: &str) 
         path: call.evidence.path.clone(),
         line: call.evidence.start_line,
         resolution: resolution.into(),
+        receiver_types: if matches!(resolution, "type" | "trait_default") { types(from, &call.to) } else { vec![] },
     }
 }
 
@@ -1002,6 +1007,7 @@ fn reach<'g>(
     loops_of: &BTreeMap<&str, Vec<&'g v2::Edge>>,
     follow: &dyn Fn(&str, &str) -> std::result::Result<Vec<(String, &'static str)>, usize>,
     calls_of: &dyn Fn(&str) -> Vec<&'g v2::Edge>,
+    types: &dyn Fn(&str, &str) -> Vec<String>,
     first: Step,
     in_loop: &dyn Fn(&str, &Evidence) -> bool,
 ) -> (Vec<Chain>, Vec<LoopChain>) {
@@ -1035,7 +1041,7 @@ fn reach<'g>(
         for call in calls_of(&here) {
             for (to, resolution) in follow(&here, &call.to).unwrap_or_default() {
                 let in_chain = steps[0].from == to || steps.iter().any(|s| s.to == to);
-                let next_step = step(index, &here, &to, call, resolution);
+                let next_step = step(index, &here, &to, call, resolution, types);
                 if !in_chain && !visited.contains(&entry(&next_step)) {
                     let mut next = steps.clone();
                     next.push(next_step);

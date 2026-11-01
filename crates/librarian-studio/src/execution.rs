@@ -81,6 +81,15 @@ impl Command {
     }
 }
 
+/// The profile's `instrument`, as written there now.
+pub(crate) fn instrument_of(root: &Path) -> Result<crate::instrument::Instrument> {
+    let profile: Value = serde_json::from_slice(&fs::read(root.join(PROFILE)).map_err(|_| format!("Sem {PROFILE} no projeto"))?)?;
+    let found = profile.get("instrument").ok_or_else(|| format!("{PROFILE} não tem instrument (a instrução que conta uma passagem por uma função)"))?;
+    let instrument: crate::instrument::Instrument = serde_json::from_value(found.clone()).map_err(|e| format!("{PROFILE}: instrument inválido: {e}"))?;
+    instrument.check()?;
+    Ok(instrument)
+}
+
 /// The commands of the profile in `root`, as written there now.
 fn declared(root: &Path) -> Result<BTreeMap<String, Command>> {
     let Ok(bytes) = fs::read(root.join(PROFILE)) else { return Ok(BTreeMap::new()) };
@@ -148,7 +157,8 @@ impl Store {
         let _one = RUNNING.lock().map_err(|_| "Uma execução anterior falhou no meio; reinicie o studio")?;
         let edition = self.edition(key, run)?;
         let catalog = Catalog::load(&edition)?;
-        let copy = self.copy(key, run, &root, &edition, &catalog, change.zip(diff.as_deref()), None)?;
+        let suffix = change.map(ChangeRef::folder);
+        let copy = self.copy(key, run, &root, &edition, &catalog, suffix.as_deref().zip(diff.as_deref()), None)?;
         let (id, dir) = crate::store::reserve(&self.run_dir(key, run)?.join("executions"), &format!("{:02}-{name}", self.executions(key, run)?.len() + 1))?;
         let started = stamp();
         let mut runs = vec![];
@@ -173,7 +183,8 @@ impl Store {
             record["change"] = json!({ "turn": c.turn, "send": c.send, "claim": c.claim,
                 "diff_sha256": hash(diff.as_bytes()), "files": copy.touched });
             let baseline = self.executions(key, run)?.into_iter().rev()
-                .find(|x| x["name"] == name && x["command_sha256"] == sha256.as_str() && x["change"].is_null() && x["summary"]["succeeded"].as_u64() > Some(0));
+                .find(|x| x["name"] == name && x["command_sha256"] == sha256.as_str() && x["change"].is_null()
+                    && x["instrumentation"].is_null() && x["summary"]["succeeded"].as_u64() > Some(0));
             record["comparison"] = match baseline {
                 Some(b) => compare(&b, &record),
                 None => json!({ "baseline": null, "note": "Sem linha de base: rode o mesmo comando sem mudança nesta edition para comparar." }),
@@ -181,6 +192,58 @@ impl Store {
         }
         fs::write(dir.join("execution.json"), serde_json::to_vec_pretty(&record)?)?;
         Ok(record)
+    }
+
+    /// "Medir tudo": the approved command of the profile's `instrument`, run in a copy where the
+    /// Librarian put the project's counting statement at the start of every function body. The
+    /// record keeps the diff and the functions; it is never a baseline for a change.
+    pub fn execute_instrumented(&self, key: &str, run: &str) -> Result<Value> {
+        let root = PathBuf::from(self.settings(key)?.root);
+        let instrument = instrument_of(&root)?;
+        let name = instrument.command.as_str();
+        let command = declared(&root)?.remove(name).ok_or_else(|| format!("Comando não declarado em {PROFILE}: {name}"))?;
+        let sha256 = command.sha256(name);
+        let approval = self.approvals(key)?.into_iter().rev().find(|a| a["name"] == name && a["sha256"] == sha256.as_str())
+            .ok_or("Comando sem aprovação para esta versão; aprove-o antes de rodar")?;
+        let _one = RUNNING.lock().map_err(|_| "Uma execução anterior falhou no meio; reinicie o studio")?;
+        let edition = self.edition(key, run)?;
+        let catalog = Catalog::load(&edition)?;
+        let plan = crate::instrument::plan(&catalog, &instrument)?;
+        let copy = self.copy(key, run, &root, &edition, &catalog, Some(("medir-tudo", &plan.diff)), None)?;
+        let (id, dir) = crate::store::reserve(&self.run_dir(key, run)?.join("executions"), &format!("{:02}-{name}-tudo", self.executions(key, run)?.len() + 1))?;
+        fs::write(dir.join("instrument.diff"), &plan.diff)?;
+        let started = stamp();
+        let mut runs = vec![];
+        for index in 1..=command.repeat {
+            let one = once(&command, &copy.dir, &dir, index)?;
+            let failed = one["exit_code"] != 0 || one["timed_out"] == true;
+            runs.push(one);
+            if failed {
+                break;
+            }
+        }
+        let record = json!({
+            "format_version": 1, "id": id, "name": name, "argv": command.argv, "timeout_s": command.timeout_s,
+            "repeat": command.repeat, "outputs": command.outputs, "command_sha256": sha256, "approved": approval["approved"],
+            "edition": format!("edition:{}", hash(&serde_json::to_vec(catalog.manifest())?)),
+            "git_head": copy.head, "copy": display(&copy.dir), "sources_verified": copy.verified,
+            "sources_line_endings_only": copy.line_endings,
+            "machine": machine(), "started": started, "finished": stamp(),
+            "runs": runs, "summary": summary(&runs), "limits": LIMITS,
+            "instrumentation": { "statement": instrument.statement, "functions": plan.functions, "skipped": plan.skipped,
+                "diff_sha256": hash(plan.diff.as_bytes()), "files": copy.touched },
+        });
+        fs::write(dir.join("execution.json"), serde_json::to_vec_pretty(&record)?)?;
+        Ok(record)
+    }
+
+    /// "Onde pesa": the latest successful "Medir tudo" of `run`, as a ranking.
+    pub fn hotspots(&self, key: &str, run: &str) -> Result<Value> {
+        let latest = self.executions(key, run)?.into_iter().rev()
+            .find(|x| !x["instrumentation"].is_null() && x["summary"]["succeeded"].as_u64() > Some(0))
+            .ok_or("Ainda não há medição de tudo nesta edition: rode Medir tudo")?;
+        let catalog = Catalog::load(&self.edition(key, run)?)?;
+        Ok(crate::instrument::hotspots(&catalog, &latest))
     }
 
     /// Executions recorded for `run`, oldest first; each carries its folder name as `id`.
@@ -212,7 +275,8 @@ impl Store {
         let _one = RUNNING.lock().map_err(|_| "Uma execução anterior falhou no meio; reinicie o studio")?;
         let edition = self.edition(key, run)?;
         let catalog = Catalog::load(&edition)?;
-        let copy = self.copy(key, run, &root, &edition, &catalog, change.zip(diff.as_deref()), Some("mutants"))?;
+        let suffix = change.map(ChangeRef::folder);
+        let copy = self.copy(key, run, &root, &edition, &catalog, suffix.as_deref().zip(diff.as_deref()), Some("mutants"))?;
         let git = |args: &[&str]| Process::new("git").arg("-C").arg(&copy.worktree).args(args).output()
             .map_err(|e| format!("git não foi encontrado: {e}"));
         let directory = format!("--directory={}", copy.prefix);
@@ -270,11 +334,11 @@ impl Store {
     /// The copy of the project at the edition's commit, made once per run (and once per change)
     /// and checked against the edition: every source the edition read must be there with the
     /// same bytes, except the files the change touches.
-    fn copy(&self, key: &str, run: &str, root: &Path, edition: &Path, catalog: &Catalog, change: Option<(&ChangeRef, &str)>, label: Option<&str>) -> Result<Copy> {
+    fn copy(&self, key: &str, run: &str, root: &Path, edition: &Path, catalog: &Catalog, change: Option<(&str, &str)>, label: Option<&str>) -> Result<Copy> {
         let head = catalog.manifest().git.head.clone()
             .ok_or("A edition não tem commit (o projeto não é um repositório git); não há cópia para rodar")?;
         let folder = match change {
-            Some((c, _)) => format!("{run}--{}-{}-{}", c.turn, c.send, c.claim),
+            Some((suffix, _)) => format!("{run}--{suffix}"),
             None => run.to_owned(),
         };
         let folder = match label { Some(l) => format!("{folder}--{l}"), None => folder };
@@ -355,6 +419,12 @@ pub struct ChangeRef {
     pub turn: String,
     pub send: String,
     pub claim: String,
+}
+
+impl ChangeRef {
+    fn folder(&self) -> String {
+        format!("{}-{}-{}", self.turn, self.send, self.claim)
+    }
 }
 
 /// Paths a unified diff writes, from its `+++ b/` headers.

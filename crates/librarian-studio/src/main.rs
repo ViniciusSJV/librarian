@@ -5,6 +5,8 @@ mod claims;
 mod execution;
 mod facts;
 mod http;
+mod instrument;
+mod ladder;
 mod lexicon;
 mod llm;
 mod mutation;
@@ -170,6 +172,7 @@ fn route(app: &App, req: &Request) -> Result<Response> {
             ok(store.ask(&field(&body, "key")?, &field(&body, "run")?, &question)?)
         }
         ("POST", "/api/send") => send(store, &req.json()?),
+        ("POST", "/api/ladder") => ok(ladder(store, &req.json()?)?),
         ("POST", "/api/paste") => {
             let body = req.json()?;
             let (key, run, turn) = (field(&body, "key")?, field(&body, "run")?, field(&body, "turn")?);
@@ -209,10 +212,15 @@ fn route(app: &App, req: &Request) -> Result<Response> {
         }
         ("GET", "/api/executions") => ok(json!(store.executions(param("key")?, param("run")?)?)),
         // R3: break a unit on purpose and see which tests notice; then check a proposed test.
+        ("POST", "/api/instrument/run") => {
+            let body = req.json()?;
+            ok(store.execute_instrumented(&field(&body, "key")?, &field(&body, "run")?)?)
+        }
         ("POST", "/api/mutation/run") => {
             let body = req.json()?;
             ok(store.mutation_run(&field(&body, "key")?, &field(&body, "run")?, &field(&body, "symbol")?, &field(&body, "command")?)?)
         }
+        ("GET", "/api/hotspots") => ok(store.hotspots(param("key")?, param("run")?)?),
         ("GET", "/api/mutations") => ok(json!(store.mutations(param("key")?, param("run")?)?)),
         ("POST", "/api/mutation/check") => {
             let body = req.json()?;
@@ -271,6 +279,14 @@ fn graph(app: &App, key: &str, run: &str) -> Result<Arc<v2::Graph>> {
 
 /// Re-verifies the question immediately before every send; the send records the link (L3).
 fn send(store: &Store, body: &Value) -> Result<Response> {
+    let provider = body["provider"].as_str().unwrap_or("");
+    if !provider.is_empty() && !implemented(provider) {
+        return Ok(Response::error(501, format!("Provedor sem envio implementado: {provider}")));
+    }
+    Ok(Response::json(200, &send_value(store, body)?))
+}
+
+fn send_value(store: &Store, body: &Value) -> Result<Value> {
     let get = |name: &str| body[name].as_str();
     let (Some(key), Some(run), Some(turn), Some(provider)) =
         (get("key"), get("run"), get("turn"), get("provider"))
@@ -278,7 +294,7 @@ fn send(store: &Store, body: &Value) -> Result<Response> {
         return Err("Informe key, run, turn e provider".into());
     };
     if !implemented(provider) {
-        return Ok(Response::error(501, format!("Provedor sem envio implementado: {provider}")));
+        return Err(format!("Provedor sem envio implementado: {provider}").into());
     }
     let verified = store.verify_for_send(key, run, turn)?;
     let choice = choice(store, body)?;
@@ -291,7 +307,103 @@ fn send(store: &Store, body: &Value) -> Result<Response> {
         summary["check"] = claims::check(context, &destination, text)?;
         std::fs::write(destination.join("send.json"), serde_json::to_vec_pretty(&summary)?)?;
     }
-    Ok(Response::json(200, &summary))
+    Ok(summary)
+}
+
+/// The ladder (see ladder.rs): `models` in order, the gate's commands, and how many times a
+/// LACUNA may gather what it asks for. Baselines missing for a gate command are run first.
+fn ladder(store: &Store, body: &Value) -> Result<Value> {
+    let field = |name: &str| -> Result<String> { body[name].as_str().map(str::to_owned).ok_or_else(|| format!("Informe {name}").into()) };
+    let (key, run, question) = (field("key")?, field("run")?, field("question")?);
+    let mut nodes: Vec<String> = serde_json::from_value(body["nodes"].clone())?;
+    let models: Vec<Value> = serde_json::from_value(body["models"].clone())?;
+    let gate: Vec<String> = serde_json::from_value(body["gate"].clone())?;
+    let rounds = body["lacuna_rounds"].as_u64().unwrap_or(1);
+    // A refused answer gets this many new tries from the same model, with why it was refused.
+    let retries = body["retries"].as_u64().unwrap_or(1);
+    let with_facts = body["with_facts"].as_bool().unwrap_or(false);
+    let origin = body.get("origin").filter(|o| !o.is_null()).cloned();
+    if models.is_empty() || gate.is_empty() {
+        return Err("A escada precisa de ao menos um modelo e um comando no portão".into());
+    }
+    let mut steps = vec![];
+    let executions = store.executions(&key, &run)?;
+    for name in &gate {
+        let has = executions.iter().any(|x| x["name"] == name.as_str() && x["change"].is_null() && x["instrumentation"].is_null()
+            && x["summary"]["succeeded"].as_u64() > Some(0));
+        if !has {
+            let x = store.execute(&key, &run, name, None)?;
+            steps.push(json!({ "outcome": "baseline", "execution": x["id"], "name": name }));
+        }
+    }
+    let catalog = librarian_ingest::Catalog::load(&store.edition(&key, &run)?)?;
+    let mut turn = store.ask_gathered(&key, &run, &question, &nodes, with_facts, origin.clone())?["id"].as_str().ok_or("pergunta sem id")?.to_owned();
+    for model in &models {
+        let (mut asked, mut tried) = (0, 0);
+        let mut current = question.clone();
+        loop {
+            let mut request = model.clone();
+            for (k, v) in [("key", &key), ("run", &run), ("turn", &turn)] {
+                request[k] = json!(v);
+            }
+            let summary = match send_value(store, &request) {
+                Ok(s) => s,
+                Err(e) => {
+                    steps.push(ladder::step(model, &turn, "", "provider_failed", json!(e.to_string())));
+                    break;
+                }
+            };
+            let send = summary["directory"].as_str().and_then(|d| std::path::Path::new(d).file_name()).map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
+            let (usable, lacunas, codes) = ladder::outcome(&summary);
+            if let Some(claim) = usable {
+                let change = execution::ChangeRef { turn: turn.clone(), send: send.clone(), claim: claim.clone() };
+                let runs: Vec<Value> = gate.iter().map(|name| store.execute(&key, &run, name, Some(&change))
+                    .unwrap_or_else(|e| json!({ "name": name, "refused": e.to_string() }))).collect();
+                let (passed, why) = ladder::verdict(&runs);
+                steps.push(ladder::step(model, &turn, &send, if passed { "passed" } else { "refused_by_gate" },
+                    json!({ "claim": claim, "cost_usd": summary["cost_usd"], "executions": runs.iter().map(|x| &x["id"]).collect::<Vec<_>>(), "why": why })));
+                if passed {
+                    return Ok(json!({ "passed": true, "turn": turn, "send": send, "claim": claim, "nodes": nodes, "steps": steps }));
+                }
+                if tried < retries {
+                    tried += 1;
+                    current = format!("{question} Uma proposta anterior foi recusada pelo portão: {}.", why.join("; "));
+                    turn = store.ask_gathered(&key, &run, &current, &nodes, with_facts, origin.clone())?["id"].as_str().ok_or("pergunta sem id")?.to_owned();
+                    continue;
+                }
+                break;
+            }
+            if !lacunas.is_empty() && asked < rounds {
+                let names: Vec<String> = lacunas.iter().flat_map(|t| ladder::lacuna_names(t)).collect();
+                let ran: Vec<String> = store.hotspots(&key, &run).ok().map(|h| h["rows"].as_array().into_iter().flatten()
+                    .filter(|r| r["calls"].as_f64().unwrap_or(0.) > 0.).filter_map(|r| r["name"].as_str().map(String::from)).collect()).unwrap_or_default();
+                // A gathered question holds at most 16 declarations: the LACUNA fills what is left.
+                let room = 16usize.saturating_sub(nodes.len()).min(10);
+                let added = ladder::resolve(&catalog, &names, &nodes, &ran, room);
+                steps.push(ladder::step(model, &turn, &send, "lacuna", json!({ "cost_usd": summary["cost_usd"], "text": lacunas, "names": names,
+                    "gathered": added.iter().map(|(id, n)| json!({ "symbol": id, "name": catalog.symbols().get(id).map(|s| &s.qualified_name), "for": n })).collect::<Vec<_>>() })));
+                if added.is_empty() {
+                    break;
+                }
+                nodes.extend(added.into_iter().map(|(id, _)| id));
+                turn = store.ask_gathered(&key, &run, &current, &nodes, with_facts, origin.clone())?["id"].as_str().ok_or("pergunta sem id")?.to_owned();
+                asked += 1;
+                continue;
+            }
+            steps.push(ladder::step(model, &turn, &send, if lacunas.is_empty() { "refused" } else { "lacuna" },
+                json!({ "cost_usd": summary["cost_usd"], "issues": codes, "text": lacunas })));
+            // A cloud model whose answer the check refused tries again, told which rules failed;
+            // the local one is not retried (it is the free first step, not the one that must pass).
+            if lacunas.is_empty() && tried < retries && model["provider"] != "ollama" {
+                tried += 1;
+                current = format!("{question} Uma resposta anterior foi recusada na conferência mecânica: {}.", codes.join(", "));
+                turn = store.ask_gathered(&key, &run, &current, &nodes, with_facts, origin.clone())?["id"].as_str().ok_or("pergunta sem id")?.to_owned();
+                continue;
+            }
+            break;
+        }
+    }
+    Ok(json!({ "passed": false, "turn": turn, "nodes": nodes, "steps": steps }))
 }
 
 /// Providers that actually send; "manual" and the listed-but-pending ones do not.

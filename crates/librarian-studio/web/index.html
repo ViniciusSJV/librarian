@@ -64,6 +64,9 @@
   .tag { display: inline-block; padding: 0 6px; border: 1px solid var(--border); border-radius: 999px; font-size: 11px; color: var(--text-secondary); }
   /* A number the project measured at this line: another source than the graph. */
   .tag.measured { border-style: dashed; color: var(--text-primary); }
+  /* "Onde pesa": the separation the Librarian proposes, and the ladder's record. */
+  .hot-sep { border: 1px dashed var(--border); border-radius: 8px; padding: 8px; margin: 6px 0; }
+  #ladderLog { margin-top: 6px; } #ladderLog details { border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px; margin-top: 4px; }
   .error { color: var(--danger); }
   .hud { position: absolute; padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px;
     background: color-mix(in srgb, var(--surface-1) 88%, transparent); pointer-events: none; }
@@ -321,6 +324,14 @@
     </div>
 
     <div class="tabpanel studio-only" data-panel="inventory">
+      <section class="card" id="hotCard">
+        <h2><span data-i18n="hot.title"></span><button type="button" class="help" data-help-key="help.hot">?</button></h2>
+        <div class="row" style="gap: 6px">
+          <button type="button" id="hotMeasure" class="primary" data-i18n="hot.measure" disabled></button>
+          <span id="hotNote" class="muted"></span>
+        </div>
+        <div id="hotList"></div>
+      </section>
       <section class="card">
         <h2><span data-i18n="inventory.title"></span><button type="button" class="help" data-help-key="help.inventory">?</button></h2>
         <div class="row" style="gap: 6px">
@@ -456,10 +467,12 @@
         <button type="button" class="help" data-help-key="help.llm">?</button>
       </div>
       <span id="modelfileSummary" class="muted mono"></span>
+      <label class="check" id="ladderRow" hidden><input type="checkbox" id="ladderOn"> <span data-i18n="ladder.on"></span><button type="button" class="help" data-help-key="help.ladder">?</button></label>
       <div class="row" style="margin-top: 8px">
         <button id="ask" class="primary" data-i18n="composer.ask" disabled></button>
       </div>
       <p id="llmNote" class="muted" style="margin-bottom: 0"></p>
+      <div id="ladderLog" hidden></div>
     </div>
   </aside>
 </div>
@@ -1118,6 +1131,47 @@ const STRINGS = {
   'tab.project': ['Projeto', 'Project'],
   'tab.lexicon': ['Léxico', 'Lexicon'],
   'tab.inventory': ['Investigar', 'Investigate'],
+  'hot.title': ["Onde pesa","Where the time goes"],
+  'hot.measure': ["Medir tudo","Measure everything"],
+  'hot.measuring': ["Contando cada função numa cópia…","Counting every function in a copy…"],
+  'hot.summary': ["{n} funções contadas pelo Librarian · {rows} linhas com contagem · execução {execution}","{n} functions counted by the Librarian · {rows} counted lines · run {execution}"],
+  'hot.hottest': ["A mais pesada entre as que rodam mais de {n} vezes:","The heaviest among those that run more than {n} times:"],
+  'hot.calls': ["{n} vezes","{n} times"],
+  'hot.callers': ["Quem chama:","Called by:"],
+  'hot.askFacts': ["Separar para o qwen ({n} perguntas)","Separate for qwen ({n} questions)"],
+  'hot.approveAll': ["Aprovar em lote","Approve as a batch"],
+  'hot.noFrequent': ["Nenhuma função roda mais de {n} vezes nesta medida.","No function runs more than {n} times in this measure."],
+  'hot.ranking': ["Mais tempo, contado pelo projeto","Most time, counted by the project"],
+  'hot.optimize': ["Otimizar","Optimize"],
+  'hot.asking': ["Pergunta {k} de {n} ao qwen: {name}…","Question {k} of {n} to qwen: {name}…"],
+  'hot.asked': ["{n} perguntas enviadas ao qwen. Confira as respostas na conversa e aprove uma a uma ou em lote.","{n} questions sent to qwen. Check the answers in the conversation and approve them one by one or as a batch."],
+  'hot.factQuestion': ["Em {name}, a linha {line} faz `{text}`. {name} roda {calls} vezes num frame e {target} roda {targetCalls} vezes (contagem do Medir tudo). O que a linha {line} calcula a cada chamada de {name}, e de que valores depende? Cite a linha {line}.","In {name}, line {line} does `{text}`. {name} runs {calls} times in a frame and {target} runs {targetCalls} times (Measure everything). What does line {line} compute on each call of {name}, and on which values does it depend? Cite line {line}."],
+  'hot.nothingToApprove': ["Nenhum fato novo passou na conferência mecânica.","No new fact passed the mechanical check."],
+  'hot.approveTitle': ["Aprovar {n} fato(s) de uma vez","Approve {n} fact(s) at once"],
+  'hot.approved': ["{n} fato(s) aprovado(s) com a mesma nota.","{n} fact(s) approved with the same note."],
+  'hot.optimizeQuestion': ["No render medido, a contagem do Librarian (Medir tudo) mostra: {name} roda {calls} vezes num frame{called}. Proponha uma mudança que faça {name} trabalhar menos a cada chamada, sem mudar a imagem nem o comportamento dos testes.","In the measured render, the Librarian's count (Measure everything) shows: {name} runs {calls} times in a frame{called}. Propose a change that makes {name} do less work on each call, without changing the image or the tests' behavior."],
+  'hot.optimizeCalled': ["; o que ela chama e mais pesa: {list}","; what it calls that weighs the most: {list}"],
+  'hot.turnTag': ["onde pesa: {summary}","where the time goes: {summary}"],
+  'help.hot': ["O projeto diz como contar uma passagem por uma função (instrument no librarian.json); o Librarian põe essa instrução no começo de cada função, numa cópia, e roda o comando aprovado. A contagem é exata; o tempo é inclusivo e inflado pela contagem: a ordem é o que vale.","The project says how to count a pass through a function (instrument in librarian.json); the Librarian puts that statement at the start of every function, in a copy, and runs the approved command. Counts are exact; time is inclusive and inflated by the counting: the order is what counts."],
+  'help.hotSeparate': ["Para cada função que chama a mais pesada, a linha que a chama vira uma pergunta pequena ao qwen, só com aquela declaração. As respostas são fatos conferidos mecanicamente; você aprova um a um ou em lote.","For each function that calls the heaviest one, the line that calls it becomes a small question to qwen, with that declaration only. Answers are mechanically checked facts; you approve them one by one or as a batch."],
+  'help.hotOptimize': ["Monta o envelope sugerido para esta função, com os fatos aprovados, e uma pergunta só com o que foi contado; a escada fica marcada. Você confere e pergunta.","Builds the suggested envelope for this function, with the reviewed facts, and a question made only of what was counted; the ladder is ticked. You check and ask."],
+  'composer.askLadder': ['Perguntar pela escada ({n}) · qwen → Claude Haiku', 'Ask through the ladder ({n}) · qwen → Claude Haiku'],
+  'ladder.on': ["Escada: qwen, depois Claude Haiku se o portão recusar","Ladder: qwen, then Claude Haiku if the gate refuses"],
+  'help.ladder': ["A mesma pergunta vai primeiro ao qwen (local). Uma mudança passa no portão quando os comandos aprovados rodam com ela, as saídas ficam iguais, alguma contagem cai e nenhuma sobe. Recusada, vai ao Claude Haiku. Uma LACUNA junta ao envelope o que ela diz faltar e pergunta de novo ao mesmo modelo.","The same question goes first to qwen (local). A change passes the gate when the approved commands run with it, outputs stay the same, some count drops and none grows. Refused, it goes to Claude Haiku. A LACUNA gathers into the envelope what it says is missing and asks the same model again."],
+  'ladder.noGate': ["Aprove ao menos um comando na Régua: ele é o portão.","Approve at least one command in the Ruler: it is the gate."],
+  'ladder.running': ["Escada em andamento; portão: {gate}. As respostas aparecem na conversa.","Ladder running; gate: {gate}. Answers show in the conversation."],
+  'ladder.passed': ["passou no portão","passed the gate"],
+  'ladder.refused_by_gate': ["recusada no portão","refused by the gate"],
+  'ladder.refused': ["recusada na conferência","refused by the check"],
+  'ladder.lacuna': ["LACUNA","LACUNA"],
+  'ladder.provider_failed': ["falha no envio","send failed"],
+  'ladder.baseline': ["linha de base","baseline"],
+  'ladder.turn': ["pergunta {turn}","question {turn}"],
+  'ladder.gathered': ["juntou: {list}","gathered: {list}"],
+  'ladder.passedTitle': ["Escada: mudança aprovada no portão","Ladder: change passed the gate"],
+  'ladder.failedTitle': ["Escada: nenhuma mudança passou","Ladder: no change passed"],
+  'ladder.cost': ["nuvem US$ {cost}","cloud US$ {cost}"],
+  'ladder.turnTag': ["escada: {summary}","ladder: {summary}"],
   'inventory.title': ['Inventário de operações', 'Operation inventory'],
   'help.inventory': ['O bibliotecário percorre o grafo atrás de lugares onde vale a pena perguntar: acesso ao banco, leitura de relação carregada sob demanda, matemática, arquivo, rede, trava, escrita no estado do módulo. Cada operação vem com a regra que a achou e a linha. Os laços mostram o que têm dentro, direto ou pela cadeia de chamadas sem homônimos. Nada disso diz que algo é lento: estar dentro de um laço é estrutura; quantas vezes roda e quanto tempo leva, só a Régua mede. As regras do projeto ficam no librarian.json, em "inventory".',
     'The librarian walks the graph for places worth asking about: database access, lazy relationship reads, math, files, network, locks, writes to module state. Each operation comes with the rule that found it and the line. Loops show what they hold, directly or through a chain of calls without homonyms. None of this says anything is slow: being inside a loop is structure; how often it runs and how long it takes, only the Ruler measures. The project\'s rules live in librarian.json, under "inventory".'],
@@ -2114,6 +2168,7 @@ function applyMode() {
   $('#allowHypothesis').checked = mode === 'improve';
   $('#allowPatch').checked = mode === 'improve';
   $('#criteriaBox').hidden = mode !== 'improve';
+  $('#ladderRow').hidden = mode !== 'improve';
   const lines = $('#criteria').value.split('\n').filter(l => l.trim()).length;
   $('#criteriaCount').textContent = lines ? t('mode.criteriaLines', { n: lines }) : t('mode.criteriaNone');
   for (const b of document.querySelectorAll('#modeSeg [data-mode]')) b.setAttribute('aria-pressed', String(b.dataset.mode === mode));
@@ -2166,7 +2221,9 @@ function refreshComposer() {
   if (provider === 'ollama' && !$('#modelfile').value && studio.modelfiles.length) $('#modelfile').value = studio.modelfiles[0].name;
   const mf = studio.modelfiles.find(m => m.name === $('#modelfile').value);
   const target = choiceLabel(composerChoice());
-  $('#ask').textContent = investigation ? t('composer.askInvestigation', { n: investigation.ticked.size, target })
+  const ladder = mode === 'improve' && $('#ladderOn')?.checked && gathered.length && !investigation;
+  $('#ask').textContent = ladder ? t('composer.askLadder', { n: gathered.length })
+    : investigation ? t('composer.askInvestigation', { n: investigation.ticked.size, target })
     : gathered.length ? t('composer.askGathered', { n: gathered.length, target })
     : provider === 'manual' ? t('composer.askManual') : t('composer.askSend', { target });
   $('#modelfileSummary').textContent = mf ? modelfileSummary(mf.content, provider) : (provider === 'claude-cli' ? t('composer.defaultSystem') : '');
@@ -2192,6 +2249,9 @@ function modelfileSummary(content, provider) {
 async function ask() {
   const question = $('#question').value.trim();
   if (!question || !studio.run) return;
+  if (mode === 'improve' && $('#ladderOn').checked && gathered.length && !investigation && !mutationAsk) {
+    return busy([$('#ask')], $('#llmNote'), async () => { await saveSettings(); await askLadder(question); });
+  }
   const choice = composerChoice();
   await busy([$('#ask')], $('#llmNote'), async () => {
     // The question uses the saved settings; save what is on screen so nothing is forgotten.
@@ -2408,7 +2468,7 @@ function suggestionView() {
 function gatheredTurnView(g) {
   const facts = g.reviewed_facts?.length ?? 0;
   return el('div', { className: 'muted', style: 'margin-top: 6px' },
-    g.origin ? el('span', { className: 'tag', style: 'margin-right: 4px', textContent: t(g.origin.kind === 'mutation' ? 'mutation.turnTag' : 'investigate.turnTag', { summary: g.origin.summary }) }) : null,
+    g.origin ? el('span', { className: 'tag', style: 'margin-right: 4px', textContent: t({ mutation: 'mutation.turnTag', hot: 'hot.turnTag', ladder: 'ladder.turnTag' }[g.origin.kind] ?? 'investigate.turnTag', { summary: g.origin.summary }) }) : null,
     el('span', { className: 'tag', textContent: t('gather.turnTag', { n: g.nodes.length }) }),
     facts ? el('span', { className: 'tag', style: 'margin-left: 4px', textContent: t('gather.turnFacts', { n: facts }) }) : null,
     helpButton(t('help.gatheredTurn')));
@@ -2971,6 +3031,7 @@ async function loadFacts() {
 // takes seconds) and dropped when the run changes.
 let inventory = null;
 function resetInventory() {
+  resetHot();
   inventory = null;
   $('#inventoryCount').textContent = '';
   $('#inventoryFilter').hidden = true;
@@ -3011,6 +3072,183 @@ function measuredOrigins(executions) {
   }
   return at;
 }
+
+// ---- "Onde pesa": the Librarian counts every function itself (the project only says how to
+// count, in the profile's `instrument`), ranks them, and separates what goes to the light model
+// (one small question per written line) from what goes up the ladder (a change).
+let hot = null, hotTurns = [];
+const FREQUENT = 1e6;
+const LADDER_MODELS = [{ provider: 'ollama', modelfile: 'performance-qwen3coder' }, { provider: 'claude-cli', modelfile: 'performance-claude', claude_model: 'haiku' }];
+const FACT_MODEL = { provider: 'ollama', modelfile: 'verificavel-qwen3coder' };
+const intPt = v => Number(v).toLocaleString(LANG === 'pt' ? 'pt-BR' : 'en-US');
+function resetHot() {
+  hot = null;
+  hotTurns = [];
+  $('#hotMeasure').disabled = !studio.project || !studio.run;
+  $('#hotList').replaceChildren();
+  say($('#hotNote'), '');
+  if (studio.project && studio.run) loadHot().catch(() => {});
+}
+async function loadHot() {
+  hot = await api('GET', `/api/hotspots?${query({ key: studio.project.key, run: studio.run })}`);
+  renderHot();
+}
+$('#hotMeasure').addEventListener('click', () => busy([$('#hotMeasure')], $('#hotNote'), async () => {
+  say($('#hotNote'), t('hot.measuring'));
+  await api('POST', '/api/instrument/run', { key: studio.project.key, run: studio.run });
+  say($('#hotNote'), '');
+  await loadHot();
+  await loadCommands();
+}));
+// The hottest function among the frequent ones, and the callers its calls come from.
+function hotTarget() {
+  const target = hot?.rows.find(r => r.calls >= FREQUENT);
+  if (!target) return null;
+  const callers = (target.callers ?? []).filter(c => c.calls >= target.calls * 0.05);
+  const row = id => hot.rows.find(r => r.symbol === id);
+  // In each caller, the lines that call it: one small question each.
+  const lines = callers.flatMap(c => (row(c.symbol)?.calls_out ?? []).filter(k => k.targets.some(x => x.symbol === target.symbol))
+    .map(k => ({ caller: row(c.symbol), line: k.line, text: k.text })));
+  return { target, callers, lines };
+}
+function renderHot() {
+  const box = $('#hotList');
+  if (!hot) return box.replaceChildren();
+  const goTo = (id, label) => {
+    const i = state.index.get(id);
+    return i == null ? el('span', { className: 'mono', textContent: label ?? '?' })
+      : el('a', { href: '#', className: 'mono', textContent: label, onclick: ev => { ev.preventDefault(); selectNode(i, true); } });
+  };
+  const ms = v => v == null ? '—' : `${intPt(Math.round(v))} ms`;
+  const sep = hotTarget();
+  const separate = sep ? el('div', { className: 'hot-sep' },
+    el('div', {}, t('hot.hottest', { n: intPt(FREQUENT) }), ' ', goTo(sep.target.symbol, sep.target.name), ` · ${t('hot.calls', { n: intPt(sep.target.calls) })}`),
+    el('div', { className: 'muted', style: 'font-size: 12px' }, t('hot.callers'), ' ',
+      ...sep.callers.flatMap((c, k) => [k ? ', ' : '', goTo(c.symbol, c.name), ` (${intPt(c.calls)})`])),
+    el('div', { className: 'row', style: 'gap: 6px; margin-top: 6px' },
+      el('button', { className: 'primary', textContent: t('hot.askFacts', { n: sep.lines.length }), disabled: !sep.lines.length,
+        onclick: ev => busy([ev.target], $('#hotNote'), () => askHotFacts(sep)) }),
+      el('button', { id: 'hotApprove', textContent: t('hot.approveAll'), hidden: !hotTurns.length, onclick: ev => approveHotFacts(ev.target) }),
+      helpButton(t('help.hotSeparate')))) : el('p', { className: 'muted', textContent: t('hot.noFrequent', { n: intPt(FREQUENT) }) });
+  const row = r => el('li', {}, el('details', { className: 'finding' },
+    el('summary', {}, el('button', { className: 'primary investigate', textContent: t('hot.optimize'), title: t('help.hotOptimize'),
+      onclick: ev => { ev.preventDefault(); busy([ev.target], $('#hotNote'), () => optimize(r)); } }),
+      ' ', r.symbol ? goTo(r.symbol, r.name) : el('span', { className: 'mono', textContent: r.at }),
+      el('span', { className: 'tag measured', style: 'margin-left: 4px', textContent: t('hot.calls', { n: intPt(r.calls) }) }),
+      el('span', { className: 'tag', style: 'margin-left: 4px', textContent: ms(r.cpu_ms) })),
+    (r.callers ?? []).length ? el('div', { className: 'muted', style: 'font-size: 12px' }, t('hot.callers'), ' ',
+      ...r.callers.slice(0, 6).flatMap((c, k) => [k ? ', ' : '', goTo(c.symbol, c.name), ` (${intPt(c.calls)})`])) : null,
+    ...(r.calls_out ?? []).map(k => el('div', { style: 'font-size: 12px' }, el('span', { className: 'muted mono', textContent: `${r.path}:${k.line} ` }), el('code', { textContent: k.text }),
+      ' → ', ...k.targets.flatMap((x, i) => [i ? ', ' : '', goTo(x.symbol, x.name), ` (${intPt(x.calls)})`])))));
+  box.replaceChildren(
+    el('p', { className: 'muted', style: 'font-size: 12px', textContent: t('hot.summary', { n: hot.functions, rows: hot.rows.length, execution: hot.execution }) }),
+    separate,
+    el('h3', { textContent: t('hot.ranking') }),
+    el('ol', { className: 'claims' }, ...hot.rows.slice(0, 20).map(row)),
+    el('p', { className: 'muted', style: 'font-size: 11px', textContent: hot.limits.join(' ') }));
+}
+// One small question per line, to the light model, in Locate mode (facts only).
+async function askHotFacts(sep) {
+  setMode('locate');
+  await saveSettings();
+  hotTurns = [];
+  for (const [k, item] of sep.lines.entries()) {
+    say($('#hotNote'), t('hot.asking', { k: k + 1, n: sep.lines.length, name: item.caller.name }));
+    const question = t('hot.factQuestion', { name: item.caller.name, line: item.line, text: item.text, calls: intPt(item.caller.calls),
+      target: sep.target.name, targetCalls: intPt(sep.target.calls) });
+    const turn = await api('POST', '/api/gathered-question', { key: studio.project.key, run: studio.run, question, nodes: [item.caller.symbol], with_facts: false,
+      origin: { kind: 'hot', summary: `${item.caller.name}:${item.line}` } });
+    studio.turns.push(turn);
+    hotTurns.push(turn.id);
+    renderTurns();
+    await sendTurn(turn, FACT_MODEL);
+  }
+  say($('#hotNote'), t('hot.asked', { n: sep.lines.length }));
+  renderHot();
+}
+// Every FACT of those questions that passed the mechanical check, approved with one note.
+async function approveHotFacts(button) {
+  const turns = (await api('GET', `/api/turns?${query({ key: studio.project.key, run: studio.run })}`)).filter(x => hotTurns.includes(x.id));
+  const passed = turns.flatMap(turn => (turn.sends ?? []).filter(s => s.check?.report?.mechanical_status === 'passed' && s.link)
+    .flatMap(s => (s.check.claims ?? []).filter(c => c.kind === 'FACT' && !s.reviews?.[c.id]).map(c => ({ turn: turn.id, send: s.id, claim: c.id, text: c.text }))));
+  if (!passed.length) return say($('#hotNote'), t('hot.nothingToApprove'));
+  const note = await modal({ title: t('hot.approveTitle', { n: passed.length }), message: passed.map(p => `· ${p.text}`).join('\n'), input: true,
+    placeholder: t('review.approvePlaceholder'), ok: t('review.approve'), required: t('review.approveRequired') });
+  if (note === null) return;
+  await busy([button], $('#hotNote'), async () => {
+    for (const p of passed) {
+      await api('POST', '/api/review', { key: studio.project.key, run: studio.run, turn: p.turn, send: p.send, claim: p.claim, decision: 'approved', note });
+    }
+    studio.turns = await api('GET', `/api/turns?${query({ key: studio.project.key, run: studio.run })}`);
+    renderTurns();
+    await loadFacts();
+    say($('#hotNote'), t('hot.approved', { n: passed.length }));
+  });
+}
+// "Otimizar": the envelope the Librarian suggests for the function, with the reviewed facts,
+// and a question made of what was counted; the ladder is ticked. The person reads and asks.
+async function optimize(r) {
+  const suggestion = await api('POST', '/api/envelope/suggest', { key: studio.project.key, run: studio.run, nodes: [r.symbol] });
+  const row = id => hot.rows.find(x => x.symbol === id);
+  const called = suggestion.items.filter(i => i.reasons.some(x => x.code === 'called')).map(i => row(i.id)).filter(Boolean).sort((a, b) => b.calls - a.calls).slice(0, 3);
+  investigation = null;
+  gathered = suggestion.items.map(i => i.id);
+  gatherFacts = true;
+  suggestion.items.forEach(i => { if (!state.index.has(i.id) && !i.id.startsWith(HEADER)) gathered = gathered.filter(g => g !== i.id); });
+  setMode('improve');
+  $('#ladderOn').checked = true;
+  $('#question').value = t('hot.optimizeQuestion', { name: r.name, calls: intPt(r.calls),
+    called: called.length ? t('hot.optimizeCalled', { list: called.map(c => `${c.name} (${intPt(c.calls)})`).join(', ') }) : '' });
+  renderGathered();
+  $('#question').focus();
+}
+// The ladder from the composer: the light model first, Claude Haiku when the gate refuses; a
+// LACUNA gathers what it names and asks the same model again. Each send shows in the
+// conversation as it is recorded.
+async function askLadder(question) {
+  const gate = (studio.commands ?? []).filter(c => c.approved).map(c => c.name);
+  if (!gate.length) throw new Error(t('ladder.noGate'));
+  const before = new Set(studio.turns.map(x => x.id));
+  const poll = setInterval(async () => {
+    studio.turns = await api('GET', `/api/turns?${query({ key: studio.project.key, run: studio.run })}`).catch(() => studio.turns);
+    renderTurns();
+  }, 4000);
+  try {
+    say($('#llmNote'), t('ladder.running', { gate: gate.join(', ') }));
+    const result = await api('POST', '/api/ladder', { key: studio.project.key, run: studio.run, question, nodes: gathered, with_facts: gatherFacts,
+      gate, models: LADDER_MODELS, lacuna_rounds: 2, origin: { kind: 'ladder', summary: question.slice(0, 80) } });
+    ladderLog.unshift(result);
+    $('#question').value = '';
+    return result;
+  } finally {
+    clearInterval(poll);
+    studio.turns = await api('GET', `/api/turns?${query({ key: studio.project.key, run: studio.run })}`);
+    renderTurns();
+    const fresh = studio.turns.filter(x => !before.has(x.id)).at(-1);
+    if (fresh) activate(fresh.id);
+    await loadCommands();
+    renderLadder();
+  }
+}
+let ladderLog = [];
+function renderLadder() {
+  const box = $('#ladderLog');
+  box.hidden = !ladderLog.length;
+  const costOf = s => s.detail?.cost_usd != null ? ` · US$ ${Number(s.detail.cost_usd).toFixed(3)}` : '';
+  const who = s => s.claude_model ? `Claude ${s.claude_model}` : (s.modelfile ?? s.name ?? '');
+  const line = s => el('div', { style: 'font-size: 12px' },
+    el('span', { className: s.outcome === 'passed' ? 'verdict passed' : s.outcome === 'baseline' ? 'muted' : 'verdict failed', textContent: t(`ladder.${s.outcome}`) }),
+    ` ${who(s)}${s.turn ? ` · ${t('ladder.turn', { turn: s.turn })}` : ''}${costOf(s)}`,
+    s.detail?.why?.length ? el('div', { className: 'muted', textContent: s.detail.why.join(' · ') }) : null,
+    s.detail?.issues?.length ? el('div', { className: 'muted', textContent: s.detail.issues.join(', ') }) : null,
+    s.detail?.gathered?.length ? el('div', { className: 'muted', textContent: t('ladder.gathered', { list: s.detail.gathered.map(g => g.name).join(', ') }) }) : null);
+  box.replaceChildren(...ladderLog.slice(0, 3).map(r => el('details', { open: r === ladderLog[0], className: 'ladder' },
+    el('summary', {}, el('strong', { textContent: r.passed ? t('ladder.passedTitle') : t('ladder.failedTitle') }),
+      ` · ${t('ladder.cost', { cost: r.steps.reduce((a, s) => a + (s.detail?.cost_usd ?? 0), 0).toFixed(3) })}`),
+    ...r.steps.map(line))));
+}
+
+$('#ladderOn').addEventListener('change', () => refreshComposer());
 $('#inventoryFilter').addEventListener('change', () => renderInventory());
 $('#inventorySearch').addEventListener('input', () => renderInventory());
 
