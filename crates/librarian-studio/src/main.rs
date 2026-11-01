@@ -10,6 +10,7 @@ mod ladder;
 mod lexicon;
 mod llm;
 mod mutation;
+mod questions;
 mod store;
 mod values;
 
@@ -224,6 +225,10 @@ fn route(app: &App, req: &Request) -> Result<Response> {
         }
         ("GET", "/api/value-sources") => ok(store.value_sources(param("key")?, param("run")?, param("symbol")?, param("text")?)?),
         ("GET", "/api/hotspots") => ok(store.hotspots(param("key")?, param("run")?)?),
+        ("POST", "/api/performance-question") => {
+            let body = req.json()?;
+            ok(store.performance_question(&field(&body, "key")?, &field(&body, "run")?, &field(&body, "question")?)?)
+        }
         ("GET", "/api/mutations") => ok(json!(store.mutations(param("key")?, param("run")?)?)),
         ("POST", "/api/mutation/check") => {
             let body = req.json()?;

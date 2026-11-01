@@ -339,6 +339,12 @@
           <button type="button" id="hotMeasure" class="primary" data-i18n="hot.measure" disabled></button>
           <span id="hotNote" class="muted"></span>
         </div>
+        <div class="row" style="gap: 6px; margin-top: 8px; flex-wrap: nowrap">
+          <input id="perfQuestion" type="search" data-i18n-placeholder="perf.placeholder" disabled>
+          <button type="button" id="perfAsk" data-i18n="perf.ask" disabled></button>
+          <button type="button" class="help" data-help-key="help.perf">?</button>
+        </div>
+        <div id="perfAnswer"></div>
         <div id="hotList"></div>
       </section>
       <section class="card">
@@ -1267,6 +1273,19 @@ const STRINGS = {
   'lexicon.saved': ['Léxico salvo.', 'Lexicon saved.'],
   'lexicon.suggestTitle': ['Sugerir com um LLM', 'Suggest with an LLM'],
   'legend.title': ['Legenda do mapa', 'Map legend'],
+  'perf.placeholder': ['Pergunte: o render usa todos os núcleos? o que é criado a cada raio?', 'Ask: does the render use every core? what is created on each ray?'],
+  'perf.ask': ['Perguntar', 'Ask'],
+  'help.perf': ['O Librarian reconhece a pergunta por regras sobre as palavras, depois do léxico do projeto (raio → ray), sem modelo nenhum. Responde com os números do último Medir tudo e do inventário, e separa: perguntas pequenas de fato para o modelo leve (qwen) e pedidos de mudança para a escada (qwen, depois Haiku).', 'The Librarian recognizes the question by rules over its words, after the project lexicon (raio → ray), with no model at all. It answers with the numbers of the latest Measure everything and the inventory, and splits: small fact questions for the light model (qwen) and change requests for the ladder (qwen, then Haiku).'],
+  'perf.route': ['Entendi: {intent} (pelas palavras: {words}).', 'Understood: {intent} (from the words: {words}).'],
+  'perf.intent.heavy': ['quais funções pesam', 'which functions weigh'],
+  'perf.intent.where': ['onde otimizar', 'where to optimize'],
+  'perf.intent.optimize': ['otimizar uma função', 'optimize one function'],
+  'perf.intent.cores': ['se o render usa todos os núcleos', 'whether the render uses every core'],
+  'perf.intent.per_unit': ['o que é criado ou ordenado a cada {unit}', 'what is created or sorted on each {unit}'],
+  'perf.toQwen': ['Fichas para o qwen ({n})', 'Facts for the qwen ({n})'],
+  'perf.toLadder': ['Escada', 'Ladder'],
+  'perf.qwen': ['qwen', 'qwen'],
+  'perf.ladder': ['escada', 'ladder'],
   'skills.label': ['Skills:', 'Skills:'],
   'help.skills': ['Uma skill é um texto de instruções sobre como trabalhar (a pasta skills/ ao lado de modelfiles/). A marcada entra no SYSTEM de tudo o que a página envia: perguntas, escada, fichas do Onde pesa e perguntas do caminho, no Ollama e no Claude. O formato de resposta que o Librarian pede continua valendo. Cada resposta mostra as skills que foram junto.', 'A skill is a text of instructions on how to work (the skills/ folder next to modelfiles/). The checked one joins the SYSTEM of everything the page sends: questions, ladder, Where it weighs facts and path questions, on Ollama and on Claude. The answer format the Librarian asks for still holds. Each answer shows the skills that went with it.'],
   'legend.city': ['Cidade (Onde pesa)', 'City (Where it weighs)'],
@@ -3153,6 +3172,9 @@ function resetHot() {
   hotTurns = [];
   buildCity();
   $('#hotMeasure').disabled = !studio.project || !studio.run;
+  $('#perfQuestion').disabled = $('#perfAsk').disabled = !studio.project || !studio.run;
+  perf = null;
+  renderPerf();
   $('#hotList').replaceChildren();
   say($('#hotNote'), '');
   if (studio.project && studio.run) loadHot().catch(() => {});
@@ -3216,6 +3238,57 @@ function renderHot() {
     el('ol', { className: 'claims' }, ...hot.rows.slice(0, 20).map(row)),
     el('p', { className: 'muted', style: 'font-size: 11px', textContent: hot.limits.join(' ') }));
 }
+// A typed performance question: the Librarian's route, its answer from the measure, and the
+// small questions it splits off — facts to the light model, changes to the ladder.
+let perf = null;
+async function askPerf() {
+  perf = await api('POST', '/api/performance-question', { key: studio.project.key, run: studio.run, question: $('#perfQuestion').value.trim() });
+  renderPerf();
+}
+function renderPerf() {
+  const box = $('#perfAnswer');
+  if (!perf) return box.replaceChildren();
+  const r = perf.route;
+  const intent = r.intent ? t(`perf.intent.${r.intent}`, { unit: r.unit?.word ?? '' }) : null;
+  const tag = text => el('span', { className: 'tag', style: 'margin-right: 4px', textContent: text });
+  box.replaceChildren(el('div', { className: 'hot-sep' },
+    intent ? el('div', { className: 'muted', style: 'font-size: 12px', textContent: t('perf.route', { intent, words: r.matched.join(', ') }) }) : null,
+    ...perf.answer.map(a => el('div', { style: 'font-size: 13px; margin-top: 4px', textContent: a })),
+    ...perf.facts.map(f => el('div', { style: 'font-size: 12px; margin-top: 6px' }, tag(t('perf.qwen')), f.text)),
+    ...perf.changes.map(c => el('div', { style: 'font-size: 12px; margin-top: 6px' }, tag(t('perf.ladder')), c.text, ' ',
+      el('button', { textContent: t('perf.toLadder'), onclick: ev => busy([ev.target], $('#hotNote'), async () => {
+        gathered = c.nodes; gatherFacts = true; renderGathered(); setMode('improve');
+        await askLadder(c.text);
+      }) }))),
+    el('div', { className: 'row', style: 'gap: 6px; margin-top: 8px' },
+      perf.facts.length ? el('button', { className: 'primary', textContent: t('perf.toQwen', { n: perf.facts.length }),
+        onclick: ev => busy([ev.target], $('#hotNote'), () => askFacts(perf.facts.map(f => ({ symbol: f.symbol, question: f.text, summary: f.text.slice(0, 60) })))) }) : null,
+      el('button', { id: 'perfApprove', textContent: t('hot.approveAll'), hidden: !hotTurns.length, onclick: ev => approveHotFacts(ev.target) })),
+    el('p', { className: 'muted', style: 'font-size: 11px', textContent: perf.limits.join(' ') })));
+}
+$('#perfAsk').addEventListener('click', () => busy([$('#perfAsk')], $('#hotNote'), askPerf));
+$('#perfQuestion').addEventListener('keydown', ev => { if (ev.key === 'Enter') $('#perfAsk').click(); });
+
+// Each fact question to the light model, one after the other, in Locate mode; their turns can
+// then be approved as a batch.
+async function askFacts(items) {
+  setMode('locate');
+  await saveSettings();
+  hotTurns = [];
+  for (const [k, item] of items.entries()) {
+    say($('#hotNote'), t('hot.asking', { k: k + 1, n: items.length, name: item.summary }));
+    const turn = await api('POST', '/api/gathered-question', { key: studio.project.key, run: studio.run, question: item.question, nodes: [item.symbol],
+      with_facts: false, origin: { kind: 'hot', summary: item.summary } });
+    studio.turns.push(turn);
+    hotTurns.push(turn.id);
+    renderTurns();
+    await sendTurn(turn, FACT_MODEL);
+  }
+  say($('#hotNote'), t('hot.asked', { n: items.length }));
+  renderHot();
+  renderPerf();
+}
+
 // One small question per line, to the light model, in Locate mode (facts only).
 async function askHotFacts(sep) {
   setMode('locate');
@@ -4411,6 +4484,7 @@ function setLang(lang) {
   if (studio.status) { fillProviders(); setModelfiles(studio.modelfiles); renderSkills(); }
   if (studio.project) { renderProjectInfo(); renderRuns(); showRunNote(); loadFacts().catch(console.error); }
   renderGathered();
+  renderPerf();
   if (studio.status) renderTurns();
   if (state.graph) {
     showProvenance();
