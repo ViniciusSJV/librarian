@@ -250,7 +250,7 @@ impl Store {
         let calls: std::collections::BTreeMap<String, f64> = hot["rows"].as_array().into_iter().flatten()
             .filter_map(|r| Some((r["symbol"].as_str()?.to_owned(), r["calls"].as_f64()?))).collect();
         let structural: Vec<Value> = found.operations.iter()
-            .filter(|o| !["math", "create", "sort"].contains(&o.operation.as_str()) && o.in_loop && calls.get(&o.symbol).is_some_and(|c| *c > 0.))
+            .filter(|o| o.operation != "math" && o.in_loop && calls.get(&o.symbol).is_some_and(|c| *c > 0.))
             .map(|o| json!({ "symbol": o.symbol, "name": o.symbol_name, "path": o.path, "line": o.line, "text": o.text.split_whitespace().collect::<Vec<_>>().join(" "),
                 "operation": o.operation, "rule": o.rule, "calls": calls[&o.symbol] }))
             .collect();

@@ -1273,15 +1273,13 @@ const STRINGS = {
   'lexicon.saved': ['Léxico salvo.', 'Lexicon saved.'],
   'lexicon.suggestTitle': ['Sugerir com um LLM', 'Suggest with an LLM'],
   'legend.title': ['Legenda do mapa', 'Map legend'],
-  'perf.placeholder': ['Pergunte: o render usa todos os núcleos? o que é criado a cada raio?', 'Ask: does the render use every core? what is created on each ray?'],
+  'perf.placeholder': ['Pergunte: quais funções pesam? onde otimizar? otimize o Groups::intersect', 'Ask: which functions weigh? where to optimize? optimize Groups::intersect'],
   'perf.ask': ['Perguntar', 'Ask'],
-  'help.perf': ['O Librarian reconhece a pergunta por regras sobre as palavras, depois do léxico do projeto (raio → ray), sem modelo nenhum. Responde com os números do último Medir tudo e do inventário, e separa: perguntas pequenas de fato para o modelo leve (qwen) e pedidos de mudança para a escada (qwen, depois Haiku).', 'The Librarian recognizes the question by rules over its words, after the project lexicon (raio → ray), with no model at all. It answers with the numbers of the latest Measure everything and the inventory, and splits: small fact questions for the light model (qwen) and change requests for the ladder (qwen, then Haiku).'],
+  'help.perf': ['O Librarian reconhece a pergunta por regras sobre as palavras, depois do léxico do projeto, sem modelo nenhum. Responde com os números do último Medir tudo e separa: perguntas pequenas de fato para o modelo leve (qwen) e pedidos de mudança para a escada (qwen, depois Haiku).', 'The Librarian recognizes the question by rules over its words, after the project lexicon, with no model at all. It answers with the numbers of the latest Measure everything and splits: small fact questions for the light model (qwen) and change requests for the ladder (qwen, then Haiku).'],
   'perf.route': ['Entendi: {intent} (pelas palavras: {words}).', 'Understood: {intent} (from the words: {words}).'],
   'perf.intent.heavy': ['quais funções pesam', 'which functions weigh'],
   'perf.intent.where': ['onde otimizar', 'where to optimize'],
   'perf.intent.optimize': ['otimizar uma função', 'optimize one function'],
-  'perf.intent.cores': ['se o render usa todos os núcleos', 'whether the render uses every core'],
-  'perf.intent.per_unit': ['o que é criado ou ordenado a cada {unit}', 'what is created or sorted on each {unit}'],
   'perf.toQwen': ['Fichas para o qwen ({n})', 'Facts for the qwen ({n})'],
   'perf.toLadder': ['Escada', 'Ladder'],
   'perf.qwen': ['qwen', 'qwen'],
@@ -3249,7 +3247,7 @@ function renderPerf() {
   const box = $('#perfAnswer');
   if (!perf) return box.replaceChildren();
   const r = perf.route;
-  const intent = r.intent ? t(`perf.intent.${r.intent}`, { unit: r.unit?.word ?? '' }) : null;
+  const intent = r.intent ? t(`perf.intent.${r.intent}`) : null;
   const tag = text => el('span', { className: 'tag', style: 'margin-right: 4px', textContent: text });
   box.replaceChildren(el('div', { className: 'hot-sep' },
     intent ? el('div', { className: 'muted', style: 'font-size: 12px', textContent: t('perf.route', { intent, words: r.matched.join(', ') }) }) : null,

@@ -1,22 +1,17 @@
 //! "Eu pergunto, o Librarian separa": a question typed about performance is recognized by rules
-//! over its words (after the project's lexicon), answered from the latest "Medir tudo" and the
-//! operation inventory, and split into small questions: facts for the light model, changes for
-//! the ladder. No LLM decides the route; every number in the text comes from the measure.
+//! over its words (after the project's lexicon), answered from the latest "Medir tudo" and split
+//! into small questions: facts for the light model, changes for the ladder. No LLM decides the
+//! route; every number in the text comes from the measure.
 use crate::store::Store;
 use librarian_ingest::{search::{tokens, Lexicon}, Result};
 use serde_json::{json, Value};
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 
 /// The kinds of question, tried in this order; the first whose rule matches wins.
-const INTENTS: [&str; 5] = ["cores", "per_unit", "optimize", "where", "heavy"];
+const INTENTS: [&str; 3] = ["optimize", "where", "heavy"];
 /// A function is "frequent" from this many calls in a frame (as on the page).
 const FREQUENT: f64 = 1e6;
 
-const CORES: &[&str] = &["nucleo", "nucleos", "core", "cores", "thread", "threads", "paralelo", "paralela", "paralelismo", "paralelizar", "parallel", "cpu", "cpus"];
-const EACH: &[&str] = &["cada", "each", "every", "per"];
-const CREATE: &[&str] = &["criado", "criada", "criados", "criadas", "cria", "criar", "crio", "aloca", "alocado", "alocada", "alocacao", "alocar",
-    "created", "creates", "allocated", "allocates", "allocation", "new", "novo", "nova"];
-const SORT: &[&str] = &["ordenado", "ordenada", "ordenados", "ordena", "ordenar", "ordenacao", "sort", "sorted", "sorts"];
 const OPTIMIZE: &[&str] = &["otimize", "otimizar", "otimiza", "otimizacao", "melhore", "acelere", "acelerar", "optimize", "speed"];
 const WHERE: &[&str] = &["onde", "where"];
 const IMPROVE: &[&str] = &["otimizar", "melhorar", "ganhar", "acelerar", "optimize", "improve"];
@@ -37,7 +32,7 @@ fn expand(question: &str, lexicon: &Lexicon) -> Vec<BTreeSet<String>> {
     }).collect()
 }
 
-/// The intent, the words that decided it and, for "a cada X", the unit X with its code terms.
+/// The intent, the words that decided it and the function the question names, if any.
 pub fn route(question: &str, lexicon: &Lexicon, functions: &[String]) -> Value {
     let words = expand(question, lexicon);
     let hit = |list: &[&str]| -> Vec<String> {
@@ -50,26 +45,14 @@ pub fn route(question: &str, lexicon: &Lexicon, functions: &[String]) -> Value {
     let named = functions.iter()
         .filter_map(|f| if writes(f) { Some((2, f)) } else if writes(f.rsplit("::").next().unwrap_or(f)) { Some((1, f)) } else { None })
         .max_by_key(|(score, f)| (*score, f.len())).map(|(_, f)| f.clone());
-    // "a cada raio", "per ray": the word after the marker.
-    let unit = words.iter().position(|w| w.iter().any(|x| EACH.contains(&x.as_str())))
-        .and_then(|i| words.get(i + 1))
-        .map(|w| w.clone());
     for intent in INTENTS {
         let matched: Vec<String> = match intent {
-            "cores" => hit(CORES),
-            "per_unit" => {
-                let (made, sorted) = (hit(CREATE), hit(SORT));
-                if unit.is_none() || (made.is_empty() && sorted.is_empty()) { vec![] } else { [hit(EACH), made, sorted].concat() }
-            }
             "optimize" => if named.is_some() { hit(OPTIMIZE) } else { vec![] },
             "where" => { let (w, i) = (hit(WHERE), hit(IMPROVE)); if w.is_empty() || i.is_empty() { vec![] } else { [w, i].concat() } }
             _ => hit(HEAVY),
         };
         if !matched.is_empty() {
-            let first = |list: &[&str]| words.iter().flatten().any(|x| list.contains(&x.as_str()));
-            return json!({ "intent": intent, "matched": matched, "function": named,
-                "unit": unit.as_ref().map(|u| json!({ "word": tokens(question)[words.iter().position(|w| w == u).unwrap()], "terms": u })),
-                "creates": first(CREATE), "sorts": first(SORT) });
+            return json!({ "intent": intent, "matched": matched, "function": named });
         }
     }
     json!({ "intent": null, "matched": [], "function": named })
@@ -154,99 +137,10 @@ impl Store {
                     int(calls(target)),
                     if callers.is_empty() { String::new() } else { format!(", chamada principalmente por {}", callers.iter().map(|c| short(c["name"].as_str().unwrap_or("?"))).collect::<Vec<_>>().join(" e ")) }) }));
             }
-            Some("cores") => {
-                // The wall time of the work the project measures (render_ms, or another *_ms that is
-                // not the whole command), against the busiest function's time summed over threads.
-                let measures = hot["measures"].as_object().cloned().unwrap_or_default();
-                let wall = measures.get("render_ms").or_else(|| measures.iter().find(|(k, _)| k.ends_with("_ms") && *k != "wall_ms").map(|(_, v)| v)).and_then(Value::as_f64);
-                let busiest = rows.iter().max_by(|a, b| ms(a).total_cmp(&ms(b))).copied();
-                let cores = std::thread::available_parallelism().map_or(1, |n| n.get()) as f64;
-                let threads = match (busiest, wall) {
-                    (Some(b), Some(w)) if w > 0. => Some(ms(b) / w),
-                    _ => None,
-                };
-                if let (Some(b), Some(w), Some(t)) = (busiest, wall, threads) {
-                    answer.push(format!("No render medido, {} somou {} ms de tempo nas threads em {} ms de parede: em média {:.1} threads ocupadas, numa máquina de {} núcleos lógicos ({:.0}%).",
-                        short(b["name"].as_str().unwrap_or("?")), int(ms(b)), int(w), t, cores, 100. * t / cores));
-                } else {
-                    answer.push("A medida não traz o tempo de parede do render (render_ms): não dá para comparar com os núcleos.".to_owned());
-                }
-                let waits: Vec<&Value> = hot["structural"].as_array().into_iter().flatten().filter(|o| ["lock", "sleep"].contains(&o["operation"].as_str().unwrap_or(""))).collect();
-                if waits.is_empty() {
-                    answer.push("Nenhuma trava ou espera dentro de laço numa função que rodou.".to_owned());
-                }
-                for o in &waits {
-                    let name = short(o["name"].as_str().unwrap_or("?"));
-                    answer.push(format!("{name}, linha {}: `{}` ({}) dentro de um laço.", o["line"], o["text"].as_str().unwrap_or(""), if o["operation"] == "lock" { "toma uma trava" } else { "espera parada" }));
-                    facts.push(fact(&o["symbol"], format!(
-                        "Em {name}, a linha {} faz `{}` dentro de um laço. O que essa trava protege, quem mais a toma, e o que cada volta do laço faz enquanto a segura? Cite a linha {}.",
-                        o["line"], o["text"].as_str().unwrap_or(""), o["line"])));
-                    changes.push(json!({ "to": "ladder", "symbol": o["symbol"], "nodes": [o["symbol"]], "text": format!(
-                        "O render ocupa em média {} de {} núcleos. Em {name}, a linha {} faz `{}` dentro do laço paralelo. Dá para cada volta guardar o seu resultado sem passar por essa trava, sem mudar a imagem nem o resultado dos testes? Proponha até três mudanças diferentes, uma por HYPOTHESIS.",
-                        threads.map_or("?".into(), |t| format!("{t:.1}")), cores, o["line"], o["text"].as_str().unwrap_or("")) }));
-                }
-            }
-            Some("per_unit") => {
-                let unit = &route["unit"];
-                let word = unit["word"].as_str().unwrap_or("?").to_owned();
-                let terms: Vec<String> = unit["terms"].as_array().into_iter().flatten().filter_map(|t| t.as_str().map(String::from)).collect();
-                // How many units a frame has: the calls of the unit's constructor (Ray::new for raio).
-                let units = rows.iter().filter(|r| {
-                    let t = tokens(r["name"].as_str().unwrap_or(""));
-                    t.last().is_some_and(|l| l == "new") && t.iter().any(|x| terms.contains(x))
-                }).map(|r| calls(r)).fold(0., f64::max);
-                if units > 0. {
-                    answer.push(format!("Um frame medido cria {} {word}s (as chamadas do construtor).", int(units)));
-                }
-                let floor = if units > 0. { units / 4. } else { FREQUENT };
-                let wanted: Vec<&str> = [route["creates"].as_bool() == Some(true), route["sorts"].as_bool() == Some(true)].iter().zip(["create", "sort"])
-                    .filter(|(on, _)| **on).map(|(_, k)| k).collect();
-                let wanted = if wanted.is_empty() { vec!["create", "sort"] } else { wanted };
-                let per: BTreeMap<String, &Value> = rows.iter().filter(|r| calls(r) >= floor).map(|r| (r["symbol"].as_str().unwrap().to_owned(), *r)).collect();
-                let (inventory, _, _) = self.inventory_of(key, run)?;
-                // An operator (ops::Add, ops::Mul...) creates its result by definition: not a finding.
-                let mut found: Vec<(&Value, &librarian_ingest::inventory::Operation)> = inventory.operations.iter()
-                    .filter(|o| wanted.contains(&o.operation.as_str()))
-                    .filter_map(|o| per.get(&o.symbol).map(|r| (*r, o)))
-                    .filter(|(r, _)| !short(r["name"].as_str().unwrap_or("")).starts_with("ops::")).collect();
-                found.sort_by(|a, b| calls(b.0).total_cmp(&calls(a.0)).then(a.1.line.cmp(&b.1.line)));
-                if found.is_empty() {
-                    answer.push(format!("Nas funções que rodam a cada {word}, o inventário não achou nada criado nem ordenado."));
-                }
-                let verb = |o: &librarian_ingest::inventory::Operation| if o.operation == "sort" { "ordena" } else { "cria" };
-                // The same text in the same function, once, with all its lines.
-                let mut grouped: Vec<(&Value, &librarian_ingest::inventory::Operation, Vec<usize>)> = vec![];
-                for (row, o) in &found {
-                    match grouped.iter_mut().find(|(r, g, _)| r["symbol"] == row["symbol"] && g.text == o.text) {
-                        Some(g) => g.2.push(o.line),
-                        None => grouped.push((row, o, vec![o.line])),
-                    }
-                }
-                for (row, o, lines) in grouped.iter().take(10) {
-                    let per_unit = if units > 0. { format!(", {:.1} por {word}", calls(row) / units) } else { String::new() };
-                    let at = if lines.len() == 1 { format!("linha {}", lines[0]) } else { format!("linhas {}", lines.iter().map(|l| l.to_string()).collect::<Vec<_>>().join(", ")) };
-                    answer.push(format!("{} ({at}) {} `{}`: {} vezes num frame{per_unit}.", short(row["name"].as_str().unwrap_or("?")), verb(o),
-                        o.text.split_whitespace().collect::<Vec<_>>().join(" "), int(calls(row))));
-                }
-                // One fact and one change per function, by its first operation: the three that run most.
-                let mut seen = BTreeSet::new();
-                for (row, o) in found.iter().filter(|(r, _)| seen.insert(r["symbol"].as_str().unwrap_or("").to_owned())).take(3) {
-                    let name = short(row["name"].as_str().unwrap_or("?"));
-                    let text = o.text.split_whitespace().collect::<Vec<_>>().join(" ");
-                    facts.push(fact(&row["symbol"], format!(
-                        "{name} roda {} vezes num frame. Na linha {} ele {} `{text}`. O que é {} ali, e quem usa isso depois? Cite a linha {}.",
-                        int(calls(row)), o.line, verb(o), if o.operation == "sort" { "ordenado" } else { "criado" }, o.line)));
-                    changes.push(json!({ "to": "ladder", "symbol": row["symbol"], "nodes": [row["symbol"]], "text": format!(
-                        "A cada {word}, {name} {} `{text}` na linha {} ({} vezes num frame). Dá para não {} isso a cada {word} (reaproveitar, adiar ou pular quando não precisa), sem mudar a imagem nem o resultado dos testes? Proponha até três mudanças diferentes, uma por HYPOTHESIS.",
-                        verb(o), o.line, int(calls(row)), if o.operation == "sort" { "ordenar" } else { "criar" }) }));
-                }
-            }
-            _ => answer.push("Não reconheci a pergunta. Pergunte, por exemplo: quais funções pesam? onde otimizar? o render usa todos os núcleos? o que é criado a cada raio?".to_owned()),
+            _ => answer.push("Não reconheci a pergunta. Pergunte, por exemplo: quais funções pesam? onde otimizar? otimize o Groups::intersect.".to_owned()),
         }
         Ok(json!({ "route": route, "answer": answer, "facts": facts, "changes": changes, "execution": hot["execution"],
-            "limits": ["A rota sai de regras sobre as palavras da pergunta, depois do léxico do projeto; nenhum modelo escolhe.",
-                "O tempo somado das threads conta a espera numa trava como tempo ocupado.",
-                "Criar ou ordenar é achado pelo nome escrito da chamada (new, collect, clone, sort...); macros como vec![] não aparecem."] }))
+            "limits": ["A rota sai de regras sobre as palavras da pergunta, depois do léxico do projeto; nenhum modelo escolhe."] }))
     }
 }
 
@@ -260,12 +154,10 @@ mod tests {
         let lexicon = Lexicon { groups: vec![vec!["raio".into(), "ray".into()]], stop_words: vec![] };
         let functions = vec!["Groups::intersect".to_owned(), "World::color_at".to_owned()];
         let r = |q: &str| route(q, &lexicon, &functions);
-        assert_eq!(r("O render usa todos os núcleos?")["intent"], "cores");
-        let per = r("O que é criado ou ordenado a cada raio?");
-        assert_eq!(per["intent"], "per_unit");
-        assert_eq!(per["unit"]["word"], "raio");
-        assert!(per["unit"]["terms"].as_array().unwrap().contains(&"ray".into()));
         assert_eq!(r("Quais funções pesam?")["intent"], "heavy");
+        // The lexicon widens the words: a synonym of a rule word counts as that word.
+        let slow = Lexicon { groups: vec![vec!["devagar".into(), "lento".into()]], stop_words: vec![] };
+        assert_eq!(route("Qual parte anda devagar?", &slow, &functions)["intent"], "heavy");
         assert_eq!(r("Onde dá para otimizar?")["intent"], "where");
         let named = r("Otimize o Groups::intersect");
         assert_eq!((named["intent"].as_str(), named["function"].as_str()), (Some("optimize"), Some("Groups::intersect")));
