@@ -118,8 +118,10 @@ pub fn verdict(executions: &[Value]) -> (bool, Vec<String>) {
                 why.push(format!("{name}: {file} mudou ({same})"));
             }
         }
-        // A time of the whole run (no `at=`) that drops by a tenth, its ranges apart, also counts.
-        for (_, s) in comparison["stats"].as_object().into_iter().flatten().filter(|(k, _)| !k.contains('@') && k.ends_with("_ms")) {
+        // A time the project measured for the whole run (no `at=`) that drops by a tenth, its
+        // ranges apart, also counts. `wall_ms` is the Régua's own clock of the process (a test
+        // run, a build), not a measure of the change: it does not count.
+        for (_, s) in comparison["stats"].as_object().into_iter().flatten().filter(|(k, _)| !k.contains('@') && k.ends_with("_ms") && *k != "wall_ms") {
             if s["change_pct"].as_f64().unwrap_or(0.) <= -10. && s["ranges_overlap"] == false {
                 dropped = true;
             }
@@ -182,5 +184,8 @@ mod tests {
         let faster = json!({ "name": "medir", "summary": { "succeeded": 5, "attempted": 5 },
             "comparison": { "outputs": { "a.png": "same" }, "stats": { "render_ms": { "change_pct": -30., "ranges_overlap": false } } } });
         assert!(verdict(&[faster]).0);
+        let wall = json!({ "name": "testes", "summary": { "succeeded": 1, "attempted": 1 },
+            "comparison": { "stats": { "wall_ms": { "change_pct": -30., "ranges_overlap": false } } } });
+        assert!(!verdict(&[wall]).0);
     }
 }
