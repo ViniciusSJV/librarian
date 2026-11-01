@@ -109,6 +109,7 @@ fn route(app: &App, req: &Request) -> Result<Response> {
             "data": store::display(&store.dir),
             "llm": llm::status(),
             "modelfiles": store.modelfiles()?,
+            "skills": store.skills()?,
         })),
         ("GET", "/api/browse") => ok(store::browse(req.param("path"))?),
         ("POST", "/api/project") => ok(store.open(&field(&req.json()?, "root")?)?),
@@ -431,5 +432,6 @@ fn choice(store: &Store, body: &Value) -> Result<llm::Choice> {
         modelfile: name.map(|n| store.modelfile_path(n)).transpose()?,
         modelfile_name: name.map(str::to_owned),
         claude_model: body["claude_model"].as_str().map(str::to_owned),
+        skills: body["skills"].as_array().into_iter().flatten().filter_map(Value::as_str).map(|n| store.skill(n)).collect::<Result<_>>()?,
     })
 }

@@ -856,6 +856,37 @@ impl Store {
         Ok(json!(list))
     }
 
+    /// Skills live next to the Modelfiles: skills/<name>/SKILL.md, with a front matter.
+    fn skills_dir(&self) -> PathBuf {
+        self.modelfiles.with_file_name("skills")
+    }
+
+    /// The skills a send can take, by name, with the description of their front matter.
+    pub fn skills(&self) -> Result<Value> {
+        let mut list = vec![];
+        if self.skills_dir().is_dir() {
+            for entry in fs::read_dir(self.skills_dir())? {
+                let dir = entry?.path();
+                let Ok(content) = fs::read_to_string(dir.join("SKILL.md")) else { continue };
+                let (front, _) = split_front_matter(&content);
+                // `description: >` folds the indented lines below it into one.
+                let description = front.split_once("description:").map(|(_, rest)| rest.lines()
+                    .enumerate().take_while(|(i, l)| *i == 0 || l.starts_with(' ')).map(|(_, l)| l.trim().trim_start_matches('>').trim())
+                    .filter(|l| !l.is_empty()).collect::<Vec<_>>().join(" "));
+                list.push(json!({ "name": dir.file_name().unwrap().to_string_lossy(), "description": description }));
+            }
+        }
+        list.sort_by(|a, b| a["name"].as_str().cmp(&b["name"].as_str()));
+        Ok(json!(list))
+    }
+
+    /// A skill's text for the SYSTEM: SKILL.md without its front matter.
+    pub fn skill(&self, name: &str) -> Result<crate::llm::Skill> {
+        let name = safe_id(name)?;
+        let content = fs::read_to_string(self.skills_dir().join(name).join("SKILL.md")).map_err(|_| format!("Skill desconhecida: {name}"))?;
+        Ok(crate::llm::Skill { name: name.to_owned(), text: split_front_matter(&content).1.trim().to_owned() })
+    }
+
     pub fn modelfile_path(&self, name: &str) -> Result<PathBuf> {
         let name = safe_id(name)?;
         let path = self.modelfiles.join(format!("{name}.Modelfile"));
@@ -1083,6 +1114,12 @@ pub(crate) fn reserve(parent: &Path, base: &str) -> Result<(String, PathBuf)> {
         }
     }
     Err("Não foi possível reservar um diretório novo".into())
+}
+
+/// A Markdown file's front matter (between the opening `---` and the next) and the rest.
+fn split_front_matter(content: &str) -> (&str, &str) {
+    content.trim_start().strip_prefix("---").and_then(|rest| rest.split_once("\n---"))
+        .map_or(("", content), |(front, body)| (front, body.split_once('\n').map_or("", |(_, b)| b)))
 }
 
 pub fn safe_id(id: &str) -> Result<&str> {
@@ -1653,13 +1690,13 @@ mod tests {
 
         // Manual: the request is written and returned; nothing is sent.
         let manual = store.suggest_lexicon(&key, &run, "manual", "pt", crate::llm::Choice {
-            modelfile: None, modelfile_name: None, claude_model: None }).unwrap();
+            modelfile: None, modelfile_name: None, claude_model: None, skills: vec![] }).unwrap();
         let query: Value = serde_json::from_str(manual["query"].as_str().unwrap()).unwrap();
         let terms: Vec<_> = query["evidence"]["code_terms"].as_array().unwrap().iter().map(|t| t["term"].clone()).collect();
         assert!(terms.contains(&json!("camera")) && terms.contains(&json!("pixel")));
         assert_eq!(query["evidence"]["missed_terms"], json!([{ "term": "fica", "questions": 1 }, { "term": "hoje", "questions": 1 }]));
         // In English the same code terms go with a request for English words; others are refused.
-        let none = || crate::llm::Choice { modelfile: None, modelfile_name: None, claude_model: None };
+        let none = || crate::llm::Choice { modelfile: None, modelfile_name: None, claude_model: None, skills: vec![] };
         let english = store.suggest_lexicon(&key, &run, "manual", "en", none()).unwrap();
         let english: Value = serde_json::from_str(english["query"].as_str().unwrap()).unwrap();
         assert!(english["question"].as_str().unwrap().contains("English words"));

@@ -477,6 +477,7 @@
         <span id="claudeModelRow"><select id="claudeModel" data-i18n-title="composer.claudeModel"></select></span>
         <span id="modelfileRow" class="row" style="flex-wrap: nowrap; gap: 4px"><select id="modelfile" title="Modelfile"></select><button id="editModelfile" data-i18n="composer.edit"></button></span>
         <button type="button" class="help" data-help-key="help.llm">?</button>
+        <span id="skillsRow" class="row" style="gap: 6px" hidden></span>
       </div>
       <span id="modelfileSummary" class="muted mono"></span>
       <label class="check" id="ladderRow" hidden><input type="checkbox" id="ladderOn"> <span data-i18n="ladder.on"></span><button type="button" class="help" data-help-key="help.ladder">?</button></label>
@@ -1266,6 +1267,8 @@ const STRINGS = {
   'lexicon.saved': ['Léxico salvo.', 'Lexicon saved.'],
   'lexicon.suggestTitle': ['Sugerir com um LLM', 'Suggest with an LLM'],
   'legend.title': ['Legenda do mapa', 'Map legend'],
+  'skills.label': ['Skills:', 'Skills:'],
+  'help.skills': ['Uma skill é um texto de instruções sobre como trabalhar (a pasta skills/ ao lado de modelfiles/). A marcada entra no SYSTEM de tudo o que a página envia: perguntas, escada, fichas do Onde pesa e perguntas do caminho, no Ollama e no Claude. O formato de resposta que o Librarian pede continua valendo. Cada resposta mostra as skills que foram junto.', 'A skill is a text of instructions on how to work (the skills/ folder next to modelfiles/). The checked one joins the SYSTEM of everything the page sends: questions, ladder, Where it weighs facts and path questions, on Ollama and on Claude. The answer format the Librarian asks for still holds. Each answer shows the skills that went with it.'],
   'legend.city': ['Cidade (Onde pesa)', 'City (Where it weighs)'],
   'help.city': ['O último Medir tudo desenhado como uma cidade. Cada arquivo é um bairro, e cada função que rodou é um prédio: a altura é o número de chamadas (em escala log) e a cor é o tempo, de azul (pouco) a vermelho (muito). Um anel vermelho na base marca uma trava, espera ou E/S dentro de laço. Os arcos ligam quem chama a quem é chamado. Desmarque para voltar ao grafo.', 'The latest Measure everything drawn as a city. Each file is a district, and each function that ran is a building: height is the number of calls (log scale) and color is the time, from blue (little) to red (a lot). A red ring at the base marks a lock, wait or I/O inside a loop. Arcs link caller to callee. Uncheck to go back to the graph.'],
   'city.tip': ['{calls} chamadas · {ms}', '{calls} calls · {ms}'],
@@ -2021,6 +2024,7 @@ async function initStudio() {
   $('#projectCard').hidden = false;
   const llm = studio.status.llm;
   fillProviders();
+  renderSkills();
   $('#claudeModel').replaceChildren(...llm.claude_cli.models.map(m => el('option', { value: m, textContent: m })));
   setModelfiles(studio.status.modelfiles);
   // The composer follows the question mode; each mode remembers its own LLM and Modelfile.
@@ -2245,6 +2249,23 @@ function showTab(id) {
   saved.set('tab', id);
 }
 for (const b of document.querySelectorAll('#tabs [data-tab]')) b.addEventListener('click', () => showTab(b.dataset.tab));
+
+// Skills chosen next to the LLM: their text joins the SYSTEM of every send the page makes
+// (composer, ladder, "Onde pesa" facts, path questions). Remembered in this browser.
+function selectedSkills() {
+  try { return JSON.parse(saved.get('skills') ?? '[]').filter(n => studio.status?.skills?.some(s => s.name === n)); } catch { return []; }
+}
+function renderSkills() {
+  const skills = studio.status?.skills ?? [], chosen = new Set(selectedSkills());
+  $('#skillsRow').hidden = !skills.length;
+  $('#skillsRow').replaceChildren(el('span', { className: 'label', textContent: t('skills.label') }),
+    ...skills.map(s => el('label', { className: 'check', style: 'margin: 0', title: s.description ?? '' },
+      el('input', { type: 'checkbox', checked: chosen.has(s.name), onchange: ev => {
+        ev.target.checked ? chosen.add(s.name) : chosen.delete(s.name);
+        saved.set('skills', JSON.stringify([...chosen]));
+      } }), s.name)),
+    helpButton(t('help.skills')));
+}
 
 const composerChoice = () => {
   const provider = $('#provider').value;
@@ -2568,12 +2589,13 @@ async function sendTurn(turn, choice = composerChoice()) {
   }
   // Ollama cuts prompts longer than num_ctx without failing; warn before that happens.
   if (provider === 'ollama' && !(await confirmContext(turn.query, modelfile))) return;
-  turn.pending = choiceLabel(choice);
+  const skills = choice.skills ?? selectedSkills();
+  turn.pending = [choiceLabel(choice), ...skills].join(' + ');
   turn.sendError = null;
   renderTurns();
   try {
     const result = await api('POST', '/api/send', {
-      key: studio.project.key, run: studio.run, turn: turn.id, provider, modelfile, claude_model,
+      key: studio.project.key, run: studio.run, turn: turn.id, provider, modelfile, claude_model, skills,
     });
     (turn.sends ??= []).push(result);
     await refreshSends(turn);
@@ -2779,7 +2801,8 @@ const truncationNote = input => t('reply.truncated', { prompt: input.prompt_toke
   ctx: input.num_ctx != null ? ` (num_ctx ${input.num_ctx})` : '' });
 
 function reply(s, turn) {
-  const meta = [s.state === 'pasted' ? t('reply.pasted') : providerLabel(s.provider), s.modelfile ? `Modelfile ${s.modelfile}` : null, s.model, s.state,
+  const meta = [s.state === 'pasted' ? t('reply.pasted') : providerLabel(s.provider), s.modelfile ? `Modelfile ${s.modelfile}` : null,
+    s.skills?.length ? `+ ${s.skills.map(k => k.name).join(', ')}` : null, s.model, s.state,
     s.cost_usd != null ? `US$ ${Number(s.cost_usd).toFixed(4)}` : null, s.elapsed_ms != null ? `${(s.elapsed_ms / 1000).toFixed(1)} s` : null];
   return el('div', { className: 'bubble reply' },
     el('div', { className: 'muted', textContent: meta.filter(Boolean).join(' · ') }),
@@ -3262,7 +3285,7 @@ async function askLadder(question) {
   try {
     say($('#llmNote'), t('ladder.running', { gate: gate.join(', ') }));
     const result = await api('POST', '/api/ladder', { key: studio.project.key, run: studio.run, question, nodes: gathered, with_facts: gatherFacts,
-      gate, models: LADDER_MODELS, lacuna_rounds: 2, origin: { kind: 'ladder', summary: question.slice(0, 80) } });
+      gate, models: LADDER_MODELS.map(m => ({ ...m, skills: selectedSkills() })), lacuna_rounds: 2, origin: { kind: 'ladder', summary: question.slice(0, 80) } });
     ladderLog.unshift(result);
     $('#question').value = '';
     return result;
@@ -4385,7 +4408,7 @@ function setLang(lang) {
   applyI18n();
   hideHelp();
   applyMode();
-  if (studio.status) { fillProviders(); setModelfiles(studio.modelfiles); }
+  if (studio.status) { fillProviders(); setModelfiles(studio.modelfiles); renderSkills(); }
   if (studio.project) { renderProjectInfo(); renderRuns(); showRunNote(); loadFacts().catch(console.error); }
   renderGathered();
   if (studio.status) renderTurns();

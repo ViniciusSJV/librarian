@@ -76,6 +76,13 @@ pub struct Send<'a> {
     pub criteria_sha256: Option<&'a str>,
     /// Link to the bundle verified before this send; its `query_sha256` must match the query.
     pub link: Option<&'a Value>,
+    pub skills: &'a [Skill],
+}
+
+/// A skill chosen next to the LLM (skills/<name>/SKILL.md): its text joins the SYSTEM.
+pub struct Skill {
+    pub name: String,
+    pub text: String,
 }
 
 /// Provider options chosen on the page, before the query and its destination are known.
@@ -83,6 +90,49 @@ pub struct Choice {
     pub modelfile: Option<PathBuf>,
     pub modelfile_name: Option<String>,
     pub claude_model: Option<String>,
+    pub skills: Vec<Skill>,
+}
+
+/// The SYSTEM with each skill after it. The answer format asked above stays the one that counts:
+/// a skill is about how to work, not about how to reply to the Librarian.
+fn with_skills(system: &str, skills: &[Skill]) -> String {
+    skills.iter().fold(system.to_owned(), |text, s| {
+        format!("{text}\n\n# Skill {} (siga junto com as instruções acima; o formato de resposta pedido acima prevalece)\n\n{}", s.name, s.text)
+    })
+}
+
+/// A Modelfile with its SYSTEM replaced by `system` (the other lines kept as they are).
+fn replace_system(modelfile: &str, system: &str) -> Result<String> {
+    if system.contains("\"\"\"") {
+        return Err("O SYSTEM com as skills não pode conter \"\"\"".into());
+    }
+    let mut kept = String::new();
+    let mut lines = modelfile.lines();
+    while let Some(line) = lines.next() {
+        let rest = line.trim_start();
+        if !rest.to_ascii_uppercase().starts_with("SYSTEM") {
+            kept.push_str(line);
+            kept.push('\n');
+            continue;
+        }
+        // A block SYSTEM """…""" may close on the same line or further down.
+        let after = rest["SYSTEM".len()..].trim_start();
+        if let Some(body) = after.strip_prefix("\"\"\"") {
+            if !body.contains("\"\"\"") {
+                for next in lines.by_ref() {
+                    if next.contains("\"\"\"") {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    Ok(format!("{kept}SYSTEM \"\"\"{system}\"\"\"\n"))
+}
+
+/// What a send records of its skills: the name and the hash of the text that went.
+fn skills_record(skills: &[Skill]) -> Value {
+    json!(skills.iter().map(|s| json!({ "name": s.name, "sha256": client::hash(s.text.as_bytes()) })).collect::<Vec<_>>())
 }
 
 impl Choice {
@@ -95,6 +145,7 @@ impl Choice {
             claude_model: self.claude_model.as_deref(),
             criteria_sha256: None,
             link: None,
+            skills: &self.skills,
         }
     }
 }
@@ -115,6 +166,7 @@ pub fn send(provider: &str, request: Send) -> Result<Value> {
     summary["semantic_evaluation"] = json!("pending");
     summary["criteria_sha256"] = json!(request.criteria_sha256);
     summary["link"] = json!(request.link);
+    summary["skills"] = skills_record(request.skills);
     fs::write(request.dir.join("send.json"), serde_json::to_vec_pretty(&summary)?)?;
     Ok(summary)
 }
@@ -130,6 +182,12 @@ fn send_ollama(request: &Send) -> Result<Value> {
     // Editing a Modelfile does not apply it; the model is materialized from this exact copy.
     let requested = request.dir.join("Modelfile.requested");
     fs::copy(path, &requested)?;
+    // With skills, the copy's SYSTEM carries them; the model is created from that copy.
+    if !request.skills.is_empty() {
+        let text = fs::read_to_string(&requested)?;
+        let system = modelfile_system(&text).ok_or("O Modelfile escolhido não tem SYSTEM")?;
+        fs::write(&requested, replace_system(&text, &with_skills(&system, request.skills))?)?;
+    }
     let model = model_name(name);
     let create = Command::new(&exe)
         .args(["create", &model, "-f"])
@@ -246,6 +304,7 @@ fn send_claude(request: &Send) -> Result<Value> {
         }
         None => CLAUDE_SYSTEM.to_owned(),
     };
+    let system = with_skills(&system, request.skills);
     // No tools, no MCP servers, no session: the model only reads the query it receives.
     let args = [
         "-p", "--output-format", "json", "--model", model, "--tools", "", "--strict-mcp-config",
@@ -402,6 +461,21 @@ mod tests {
         assert_eq!(modelfile_system(line).as_deref(), Some("Responda curto."));
         assert_eq!(modelfile_system("FROM qwen\n"), None);
         assert_eq!(modelfile_system("SYSTEM \"\"\"sem fim"), None);
+    }
+
+    #[test]
+    fn skills_join_the_system_and_replace_it_in_the_modelfile() {
+        use super::{replace_system, with_skills, Skill};
+        let skills = [Skill { name: "ponytail".into(), text: "Seja preguiçoso.".into() }];
+        let system = with_skills("Responda em JSON.", &skills);
+        assert!(system.starts_with("Responda em JSON.") && system.ends_with("Seja preguiçoso."));
+        let block = "FROM qwen\nSYSTEM \"\"\"\nLinha 1.\n\"\"\"\nPARAMETER seed 42\n";
+        let replaced = replace_system(block, &system).unwrap();
+        assert_eq!(modelfile_system(&replaced).as_deref(), Some(system.as_str()));
+        assert!(replaced.contains("PARAMETER seed 42") && !replaced.contains("Linha 1."));
+        let line = replace_system("FROM qwen\nSYSTEM curto\n", "novo").unwrap();
+        assert_eq!(line, "FROM qwen\nSYSTEM \"\"\"novo\"\"\"\n");
+        assert!(replace_system(block, "com \"\"\" dentro").is_err());
     }
 
     #[test]
