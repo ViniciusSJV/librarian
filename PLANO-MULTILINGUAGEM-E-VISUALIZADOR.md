@@ -1064,3 +1064,51 @@ Custo de cada envio ao Claude (o `total_cost_usd` do Claude CLI; com assinatura,
 Com o envelope e o portão do Librarian, o Haiku fez o mesmo que o Sonnet por um décimo do custo. Render dos teapots a 2048×1080: 6,2 s na `master` → 2,0 s com as duas rodadas, mesma imagem (`6805550f…`).
 
 Renderer `02a21f8` (`master`): a medição de tempo por função entrou na `master`, para o vídeo partir dela; as rodadas ficam para serem refeitas no vídeo. Branch `cena-video` (`dec254c`, local): smooth triangles e a correção da normal de triângulos em grupo (a normal ignorava a transformação do grupo), para a cena de abertura; vão entrar pelo processo depois do vídeo.
+
+## Vídeo 11 — a pessoa pergunta, o Librarian mede, separa e sobe a escada (01/11/2026)
+
+O vídeo 10 mostrou o problema: o Librarian ainda dependia de quem conhece o código. A pessoa escolhia onde olhar, montava o envelope, e a pergunta já trazia a solução. Diante de um prompt que lê o projeto sozinho, isso é uma desvantagem enorme. O objetivo desta etapa: a pessoa faz três perguntas em linguagem natural ("quais funções consomem mais tempo?", "onde estão os cálculos que podem ser otimizados?", "otimize esse trecho") e o Librarian faz o mecânico; o qwen (local) responde o que der, o Claude Haiku só o que o qwen não resolver, e o portão decide.
+
+Commits locais, sem push: `0118309`, `0e52c4f`, `c976d79`, `3b51f15`, o das fontes do valor e `b7a853f`.
+
+- **Medir tudo** (`instrument.rs`): o projeto declara a instrução de contagem no perfil (`instrument`); o Librarian a põe depois da chave do corpo de cada função Rust, na mesma linha, numa cópia, e roda o comando aprovado. O registro nunca é linha de base de uma mudança.
+- **Onde pesa** (`/api/hotspots`): cada linha contada com a função (a menor declaração que a contém), chamadas, tempo, **quem chama** (pelo nome, com as chamadas contadas do chamador) e as chamadas escritas no corpo. Mais as **operações estruturais**: operação do inventário que não é matemática, em laço, numa função que rodou.
+- **Fontes do valor** (`values.rs`, `/api/value-sources`): numa linha que lê algo de `self`, quem escreve esse campo (contexto do dono); por um método de trait, nos tipos que mais rodaram pelo trait. O escritor conta mesmo que rode só no carregamento.
+- **Envelope de método padrão de trait:** o passo da cadeia do inventário guarda o tipo do receptor (`receiver_types`); o envelope traz o `impl Trait for T` desse tipo.
+- **Escada** (`ladder.rs`, `/api/ladder`): modelos em ordem; portão com os comandos aprovados (saída igual; contagem −5% ou tempo do projeto −10% com faixas separadas; nenhuma contagem +5%; `wall_ms` não conta); várias HYPOTHESIS por resposta, cada uma pelo portão; LACUNA com nomes entre crases resolvidos no catálogo (tipos que rodaram primeiro, variantes de enum, até 16 declarações); nova tentativa com as propostas recusadas e o motivo. A Régua aplica a mudança de uma proposta que passou sozinha na conferência.
+- **Contrato:** perguntas novas pedem que a LACUNA nomeie o que falta (`name_gaps`); idioma do contrato por projeto (`language`, inglês com `english.rs`); Modelfiles `performance-qwen3coder-en` e `verificavel-qwen3coder-en`.
+- **Studio:** cartão Onde pesa, Separar para o qwen, Aprovar em lote, Otimizar, opção de escada no compositor e o registro da escada.
+
+Renderer (branches locais): `video-11` (`02a21f8` + a cena da Suzanne + comandos da cena + `instrument`; a cena zera a contagem antes do render; `medir-cena-grande` em 512×288), `video-11-cego` (o mesmo código sem contagem, perfil e acervo, para o prompt às cegas) e `video-11-ciclo` (as mudanças aprovadas pelo ciclo).
+
+**Resultados (cena 2048×1080, mesma imagem `a89f4e1d…` em todos, 212 testes):**
+
+| | Tempo em 2K | Custo | Observação |
+|---|---|---|---|
+| `video-11` (base) | 9,3 s | — | |
+| Só o Claude Haiku, prompt "Esse projeto é pesado demais, ache melhorias e implemente." | 2,0 s | US$ 0,28 | 55 passos em 3 min; 7 arquivos: identidade no `inverse`, BVH, mutex da câmera, `normal_at` |
+| Librarian, 3 primeiras rodadas | 3,0 s | US$ 0,056 | quase todo o ganho |
+| Librarian, ciclo longo + rodada só nos que falharam | 2,6 s | ~US$ 0,34 | 22 fatos do qwen; mudanças: `inverse`, `Groups::intersect` (inversa guardada), `Matrix<4>::minor`, `Intersectable::intersect` (pula a identidade), câmera (`into_par_iter`, −11% medido sozinho) |
+
+O que se aprendeu:
+- O qwen acerta fichas quando a pergunta é uma linha só (todas passaram); falha nas mudanças (formato, compilação). Em inglês passou mais na conferência, mas nenhuma mudança dele passou no portão: fica o português.
+- O que fechou a distância para o prompt foi dar ao Haiku o que ele descobria lendo: o valor do campo (a transformação é identidade) como ficha, e várias propostas por chamada.
+- Onde ainda perde: o portão em 128×72 não vê custos que crescem com a resolução (a trava da câmera); "função chamada muitas vezes" não enxerga alocação e ordenação por raio (as listas da BVH); cada recusa custa, e depois de três rodadas o retorno cai e o custo passa o do prompt.
+- O portão aprovou a câmera pelo `wall_ms` dos testes (corrigido em `b7a853f`); medida sozinha em 2K, a mudança vale (2,84 → 2,53 s).
+
+Próximos passos, decididos:
+1. Remover os testes por trecho (R3, mutação): não ajudaram a otimizar.
+2. Perguntas de quem conhece o fluxo, não o código: "o render usa todos os núcleos?" (CPU somado ÷ tempo de parede ÷ núcleos; travas em laço) e "o que é criado ou ordenado a cada raio?" (regras de alocação e ordenação no inventário).
+3. Reconhecer as perguntas digitadas (regras e léxico) e escrever as perguntas derivadas em linguagem natural; orçamento por ciclo.
+4. ~~Lado do prompt mais justo~~ feito; veja abaixo.
+5. Vídeo 11 com o código das mudanças legível na tela (no vídeo 10 os diffs ficaram cortados).
+
+**Lado do prompt, A/B (01/11):** o mesmo clone às cegas e o mesmo portão, Claude Haiku.
+
+| Versão | 2K | Custo | Passos |
+|---|---|---|---|
+| A: "Esse projeto é pesado demais, ache melhorias e implemente." | 2,0 s | US$ 0,28 | 55 em 3 min |
+| B: as três perguntas num texto natural | 1,9 s | US$ 0,84 | 127 em 9 min |
+| C: B com o [Ponytail](https://github.com/DietrichGebert/ponytail) (o SKILL.md no prompt de sistema, sem instalar o plugin) | 1,9 s | US$ 0,28 | 62 em 5 min |
+
+As perguntas sozinhas deixaram o Claude mais minucioso e três vezes mais caro; o Ponytail trouxe o custo de volta sem perder resultado. O vídeo 11 usa a versão C.

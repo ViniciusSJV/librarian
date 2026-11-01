@@ -617,6 +617,63 @@ O que nenhuma regra cobre fica fora e é contado. Estar dentro de um laço é es
 vezes o laço roda e quanto tempo a operação leva, só a Régua mede. O mesmo inventário sai na
 linha de comando: `librarian_ingest investigate inventory <edition> [regras.json|-] [saida.json]`.
 
+### Onde pesa (Medir tudo)
+
+O cartão **Onde pesa**, no topo da aba **Investigar**, responde "quais funções consomem mais
+tempo?" sem que ninguém precise saber onde olhar. O projeto diz só *como* contar uma passagem
+por uma função, numa linha do perfil (`instrument`, veja o [perfil](#perfil-do-projeto-librarianjson)).
+O Librarian decide *onde*.
+
+- **Medir tudo** põe essa instrução logo depois da chave que abre o corpo de cada função Rust
+  da edition, na mesma linha, numa cópia (a sua pasta não muda), e roda o comando aprovado
+  de `instrument.command`. Ficam de fora os testes, as `const fn`, as funções sem corpo, as
+  que já contam e os caminhos em `instrument.skip`. Como nenhuma linha muda de lugar, cada
+  `at=` aponta para a função. No renderer, 236 funções contadas num frame de 128×72.
+- O **ranking** lista cada linha contada com a função, as chamadas e o tempo (inclusivo,
+  somado das threads e inflado pela própria contagem: a ordem é o que vale; a contagem é
+  exata). Cada linha mostra **quem chama** (pelo nome escrito, com as chamadas contadas de
+  cada chamador) e as chamadas escritas no corpo que levam a funções contadas.
+- **Operações estruturais:** uma operação do inventário que não é conta matemática (trava,
+  espera, E/S) dentro de um laço de uma função que rodou na medida. Ela é cara pelo tipo,
+  não pela frequência: a `canvas_mutex.lock()` do laço de pixels da câmera.
+- **Separar para o qwen:** a função mais pesada entre as que rodam mais de um milhão de vezes
+  e os chamadores de onde vêm as chamadas. Para cada linha de um chamador que chama essa
+  função, uma pergunta pequena ao qwen, só com aquela declaração ("o que a linha 88 calcula a
+  cada chamada, e de que valores depende?"). Para cada valor lido de `self` nessa linha, o
+  Librarian segue quem escreve o campo (o contexto do dono; por um método de trait, nos tipos
+  que mais rodaram por ele) e pergunta que valor ele recebe: foi assim que apareceu
+  "`Triangle::new` cria a transformação como `Matrix::identity()`".
+- **Aprovar em lote:** os FACTs dessas perguntas que passaram na conferência mecânica,
+  aprovados de uma vez com uma nota; um a um continua na conversa.
+- **Otimizar** monta o envelope sugerido da função (com os fatos aprovados), uma pergunta só
+  com o que foi contado, sem a solução, e marca a escada.
+
+O envelope de um método padrão de trait também traz o `impl Trait for T` do tipo que a cadeia
+do inventário percorre até ele (`child.intersect` com `child` em `Vec<Object>` traz
+`impl Intersectable for Object`); depois de um Medir tudo, só os tipos cujo chamador rodou.
+
+### Escada (qwen, depois Claude Haiku)
+
+No modo **Melhorar**, com um envelope juntado, a opção **Escada** manda a mesma pergunta
+primeiro ao qwen (local) e, se nada passar, ao Claude Haiku. Cada mudança proposta passa pelo
+**portão**: os comandos aprovados rodam com ela, e ela passa quando todos têm sucesso, toda
+saída é igual à da linha de base, alguma contagem cai 5% ou mais (ou um tempo medido pelo
+projeto cai 10% com as faixas separadas; o `wall_ms` da Régua não conta) e nenhuma contagem
+sobe 5%. Linhas de base que faltam são rodadas antes.
+
+- A resposta pode trazer até três mudanças (uma HYPOTHESIS cada); o portão confere cada uma
+  até uma passar. Uma mudança vale por si: os próprios edits geraram o diff, nenhum problema
+  a cita e nenhum problema é da resposta inteira.
+- Uma **LACUNA** precisa dizer entre crases o que falta. O Librarian procura esses nomes no
+  catálogo (tipos primeiro, só os que rodaram na medida; um enum traz os tipos das variantes
+  que rodaram), junta ao envelope (até 16 declarações) e pergunta de novo ao mesmo modelo.
+- Uma recusa ganha uma nova tentativa, com as propostas recusadas e o porquê na pergunta.
+- O registro da escada fica abaixo do compositor: cada passo, quem respondeu, o custo e o
+  motivo de cada recusa. Cada envio fica na conversa como qualquer outro.
+
+A escada é o que a pessoa faria à mão; ela não julga sentido. O que passou continua uma
+HYPOTHESIS até alguém aprovar a mudança como fato.
+
 ### 5. Modelfiles
 
 O seletor **Modelfile** mostra o resumo do escolhido (FROM, PARAMETER, SYSTEM).
@@ -665,6 +722,11 @@ studio lê o arquivo ao abrir a pasta pela primeira vez. Exemplo real:
 | `answer.allow_inference`, `answer.allow_hypothesis` | Política do formato claims (padrão `false`) |
 | `commands` | Comandos que o painel **Execução** roda numa cópia do projeto, depois da sua aprovação: `argv` (programa e argumentos, sem shell), `timeout_s` (padrão 600, até 3600), `repeat` (padrão 1, até 20) e `outputs` (arquivos gerados, relativos à cópia, com o sha256 guardado). O studio lê os comandos do arquivo a cada uso e nunca os escreve; **Exportar perfil** mantém os que já estão lá |
 | `inventory` | Regras do projeto para o inventário de operações (aba **Investigar**): `rules`, cada uma com `id`, `operation`, `match` (`call`, `field_declared_with` ou `module_write`) e os nomes. O studio lê o arquivo a cada uso e nunca o escreve; **Exportar perfil** mantém as regras |
+| `instrument` | Como o projeto conta uma passagem por uma função, para o **Medir tudo**: `statement` (uma instrução de uma linha, terminada em `;`, como `crate::count!();`), `command` (o comando aprovado que imprime as contagens com `at=`) e `skip` (prefixos de caminho deixados de fora, como `src/bin/`). Lido a cada uso; **Exportar perfil** mantém |
+
+O idioma do contrato de claims fica nas configurações do projeto no studio (`language`:
+`en` para inglês; vazio é português) e é gravado com cada pergunta; ainda não tem controle na
+tela.
 
 Instruções e critérios entram nos bytes da query e dos hashes. Marque-os `-text` no
 `.gitattributes` do projeto.
