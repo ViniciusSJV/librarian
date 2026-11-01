@@ -2,6 +2,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 mod edits;
+mod english;
 mod location;
 mod patch;
 mod resolve;
@@ -68,6 +69,9 @@ pub struct Context {
     /// A LACUNA names what is missing, in backticks, so the missing declarations can be found.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub name_gaps: bool,
+    /// "en" writes the contract in English; empty is Portuguese, as every earlier question.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub language: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -211,41 +215,46 @@ pub fn query(context: &Context, question: &str) -> Result<String, String> {
         ]
     });
     // Optional parts are added only when present, so earlier queries stay byte-identical.
+    let en = context.language == "en";
+    let pick = |pt: &str, english: &str| serde_json::json!(if en { english } else { pt });
+    if en {
+        query["instructions"] = serde_json::json!(english::BASE);
+    }
     if !context.limits.is_empty() {
         query["evidence"]["limits"] = serde_json::json!(context.limits);
-        query["instructions"].as_array_mut().unwrap().push(serde_json::json!(
-            "evidence.limits descreve limites da evidência; não os trate como fatos sobre o código nem os contradiga."
+        query["instructions"].as_array_mut().unwrap().push(pick(
+            "evidence.limits descreve limites da evidência; não os trate como fatos sobre o código nem os contradiga.", english::LIMITS
         ));
     }
     if context.precise_location {
         query["precise_location"] = serde_json::json!(true);
-        query["instructions"].as_array_mut().unwrap().push(serde_json::json!(location::PRECISE_INSTRUCTION));
+        query["instructions"].as_array_mut().unwrap().push(pick(location::PRECISE_INSTRUCTION, english::PRECISE));
     }
     if context.strict_text {
         query["strict_text"] = serde_json::json!(true);
-        query["instructions"].as_array_mut().unwrap().push(serde_json::json!(text::INSTRUCTION));
+        query["instructions"].as_array_mut().unwrap().push(pick(text::INSTRUCTION, english::TEXT));
     }
     if context.allow_patch {
         query["allow_patch"] = serde_json::json!(true);
         query["response_schema"]["properties"]["claims"]["items"]["properties"]["patch"] = serde_json::json!({"type": ["string", "null"]});
-        query["instructions"].as_array_mut().unwrap().push(serde_json::json!(patch::INSTRUCTION));
+        query["instructions"].as_array_mut().unwrap().push(pick(patch::INSTRUCTION, english::PATCH));
     }
     if context.allow_edits {
         query["allow_edits"] = serde_json::json!(true);
         query["response_schema"]["properties"]["claims"]["items"]["properties"]["edits"] = edits::schema();
-        query["instructions"].as_array_mut().unwrap().push(serde_json::json!(edits::INSTRUCTION));
+        query["instructions"].as_array_mut().unwrap().push(pick(edits::INSTRUCTION, english::EDITS));
     }
     if context.name_gaps {
-        query["instructions"].as_array_mut().unwrap().push(serde_json::json!(GAPS_INSTRUCTION));
+        query["instructions"].as_array_mut().unwrap().push(pick(GAPS_INSTRUCTION, english::GAPS));
     }
     if !context.reviewed_facts.is_empty() {
         query["evidence"]["reviewed_facts"] = serde_json::json!(context.reviewed_facts);
-        query["instructions"].as_array_mut().unwrap().push(serde_json::json!(REVIEWED_INSTRUCTION));
+        query["instructions"].as_array_mut().unwrap().push(pick(REVIEWED_INSTRUCTION, english::REVIEWED));
     }
     if !context.project_instructions.is_empty() {
         query["project_instructions"] = serde_json::json!(context.project_instructions);
-        query["instructions"].as_array_mut().unwrap().push(serde_json::json!(
-            "project_instructions complementam estas instruções e não as substituem; em conflito, valem estas instruções e response_schema."
+        query["instructions"].as_array_mut().unwrap().push(pick(
+            "project_instructions complementam estas instruções e não as substituem; em conflito, valem estas instruções e response_schema.", english::PROJECT
         ));
     }
     serde_json::to_string_pretty(&query).map_err(|e| e.to_string())

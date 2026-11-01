@@ -95,6 +95,7 @@ pub fn context(catalog: &Catalog, query: &Value, policy: Policy, project_instruc
         allow_patch: false,
         allow_edits: false,
         name_gaps: false,
+        language: String::new(),
     };
     context.validate()?;
     Ok(context)
@@ -166,6 +167,8 @@ struct Rules {
     allow_edits: bool,
     /// Recorded with each question: new questions ask a LACUNA to name what is missing.
     name_gaps: bool,
+    /// The contract's language, chosen per project and recorded with each question.
+    language: String,
 }
 
 
@@ -179,14 +182,16 @@ fn derive(catalog: &Catalog, turn: &Path, policy: Policy, project_instructions: 
     context.allow_patch = rules.allow_patch;
     context.allow_edits = rules.allow_edits;
     context.name_gaps = rules.name_gaps;
+    context.language = rules.language;
     let mut claims_query = claims::query(&context, &question)?.into_bytes();
     claims_query.push(b'\n');
     Ok((pretty(&context)?, claims_query))
 }
 
 /// Writes claims/context.json and claims/query.json from a bundle already prepared and verified.
-pub fn write(catalog: &Catalog, turn: &Path, policy: Policy, project_instructions: Vec<String>, allow_changes: bool) -> Result<()> {
-    let rules = Rules { strict_text: true, precise_location: true, allow_patch: false, allow_edits: allow_changes, name_gaps: true };
+pub fn write(catalog: &Catalog, turn: &Path, policy: Policy, project_instructions: Vec<String>, allow_changes: bool, language: &str) -> Result<()> {
+    let language = if language == "en" { "en".to_owned() } else { String::new() };
+    let rules = Rules { strict_text: true, precise_location: true, allow_patch: false, allow_edits: allow_changes, name_gaps: true, language };
     let (context, query) = derive(catalog, turn, policy, project_instructions, rules)?;
     let dir = turn.join(DIR);
     fs::create_dir(&dir)?;
@@ -201,7 +206,7 @@ pub fn verify(catalog: &Catalog, turn: &Path) -> Result<Context> {
     let dir = turn.join(DIR);
     let recorded: Context = serde_json::from_slice(&fs::read(dir.join("context.json"))?)?;
     let policy = Policy { allow_inference: recorded.policy.allow_inference, allow_hypothesis: recorded.policy.allow_hypothesis };
-    let (context, query) = derive(catalog, turn, policy, recorded.project_instructions.clone(), Rules { strict_text: recorded.strict_text, precise_location: recorded.precise_location, allow_patch: recorded.allow_patch, allow_edits: recorded.allow_edits, name_gaps: recorded.name_gaps })?;
+    let (context, query) = derive(catalog, turn, policy, recorded.project_instructions.clone(), Rules { strict_text: recorded.strict_text, precise_location: recorded.precise_location, allow_patch: recorded.allow_patch, allow_edits: recorded.allow_edits, name_gaps: recorded.name_gaps, language: recorded.language.clone() })?;
     if fs::read(dir.join("context.json"))? != context || fs::read(dir.join("query.json"))? != query {
         return Err("Contexto ou query de claims difere do bundle conferido; nada foi enviado".into());
     }

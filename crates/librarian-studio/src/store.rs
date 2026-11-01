@@ -52,6 +52,9 @@ pub struct Settings {
     /// Fixed with each question. Projects saved before this field keep `prose`.
     #[serde(default)]
     pub answer_format: AnswerFormat,
+    /// The language of the claims contract: "en" for English; empty or "pt" for Portuguese.
+    #[serde(default)]
+    pub language: String,
     /// Claims policy; INFERENCE and HYPOTHESIS are refused by the checker unless allowed here.
     #[serde(default)]
     pub allow_inference: bool,
@@ -605,7 +608,7 @@ impl Store {
             (AnswerFormat::Claims, None) => {
                 let policy = Policy { allow_inference: settings.allow_inference, allow_hypothesis: settings.allow_hypothesis };
                 let instructions = settings.instructions.clone().unwrap_or_default();
-                crate::claims::write(catalog, &dir, policy, instructions, settings.allow_patch).err().map(|e| e.to_string())
+                crate::claims::write(catalog, &dir, policy, instructions, settings.allow_patch, &settings.language).err().map(|e| e.to_string())
             }
             _ => None,
         };
@@ -1023,6 +1026,7 @@ fn initial_settings(name: &str, root: &str) -> Result<Settings> {
         imported_from: None,
         // New projects ask for checkable claims; `prose` is one setting away.
         answer_format: AnswerFormat::Claims,
+        language: String::new(),
         allow_inference: false,
         allow_hypothesis: false,
         allow_patch: false,
