@@ -1,6 +1,6 @@
 //! Where a hot line's value comes from. A line that calls the heaviest function on something it
 //! reads from `self` (\`self.transform.inverse()\`, \`self.transform().inverse()\`) depends on a
-//! field; the declarations that write that field, among those that ran in the measure, are the
+//! field; the declarations that write that field (constructors included, which run while loading) are the
 //! next small questions: what value does the field get there? A field read through a method
 //! (\`self.transform()\`) is followed into the implementations of that method that ran.
 use librarian_ingest::{graph::Graph, owner, Catalog, Result};
@@ -24,12 +24,14 @@ fn self_reads(text: &str) -> Vec<(String, bool)> {
     found
 }
 
-/// The writes of the fields `targets` read, by declarations that ran (`ran`: symbol ids), each
+/// The writes of the fields `targets` read, each
 /// with the line of the write and its text.
-fn writers(catalog: &Catalog, graph: &Graph, targets: &[String], field: Option<&str>, ran: &BTreeSet<String>, through: &str) -> Result<Vec<Value>> {
+fn writers(catalog: &Catalog, graph: &Graph, targets: &[String], field: Option<&str>, through: &str) -> Result<Vec<Value>> {
     let context = owner::owner_context(catalog, graph, targets)?;
     let mut out = vec![];
-    for added in context.added.iter().filter(|a| a.reason == "field_writer" && ran.contains(&a.symbol_id)) {
+    // Writers count whether or not they ran in the measure: a constructor runs while loading,
+    // before what the measure counts, and is exactly where the value comes from.
+    for added in context.added.iter().filter(|a| a.reason == "field_writer") {
         let fields: Vec<&String> = added.fields.iter().filter(|f| field.is_none_or(|w| w == f.as_str())).collect();
         if fields.is_empty() {
             continue;
@@ -49,14 +51,13 @@ fn line_of(catalog: &Catalog, path: &str, line: usize) -> String {
 }
 
 /// For the call written at `line` in `caller`: the writes of the fields it reads from `self`.
-/// `rows` are the measure's hotspots (only what ran is followed).
+/// `rows` are the measure's hotspots: they choose the types a trait method is followed into.
 pub fn sources(catalog: &Catalog, rows: &[Value], caller: &str, text: &str) -> Result<Value> {
-    let ran: BTreeSet<String> = rows.iter().filter(|r| r["calls"].as_f64().unwrap_or(0.) > 0.).filter_map(|r| r["symbol"].as_str().map(String::from)).collect();
     let graph = Graph::build(catalog);
     let mut found = vec![];
     for (name, method) in self_reads(text) {
         if !method {
-            found.extend(writers(catalog, &graph, &[caller.to_owned()], Some(&name), &ran, &name)?);
+            found.extend(writers(catalog, &graph, &[caller.to_owned()], Some(&name), &name)?);
             continue;
         }
         // A method of the caller's trait: the types that ran through that trait the most (the
@@ -78,7 +79,7 @@ pub fn sources(catalog: &Catalog, rows: &[Value], caller: &str, text: &str) -> R
         for (t, _) in types.into_iter().take(3) {
             let label = format!("impl {tr} for {t}::{name}");
             let Some(own) = catalog.symbols().values().find(|s| s.qualified_name == label) else { continue };
-            found.extend(writers(catalog, &graph, &[own.id.clone()], None, &ran, &label)?);
+            found.extend(writers(catalog, &graph, &[own.id.clone()], None, &label)?);
         }
     }
     let mut seen = BTreeSet::new();
