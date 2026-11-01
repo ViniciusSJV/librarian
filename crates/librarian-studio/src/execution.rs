@@ -246,6 +246,14 @@ impl Store {
         Ok(crate::instrument::hotspots(&catalog, &latest))
     }
 
+    /// Where a hot line's value comes from (values.rs), over the latest "Medir tudo" of `run`.
+    pub fn value_sources(&self, key: &str, run: &str, symbol: &str, text: &str) -> Result<Value> {
+        let hot = self.hotspots(key, run)?;
+        let catalog = Catalog::load(&self.edition(key, run)?)?;
+        let rows: Vec<Value> = hot["rows"].as_array().cloned().unwrap_or_default();
+        crate::values::sources(&catalog, &rows, symbol, text)
+    }
+
     /// Executions recorded for `run`, oldest first; each carries its folder name as `id`.
     pub fn executions(&self, key: &str, run: &str) -> Result<Vec<Value>> {
         let dir = self.run_dir(key, run)?.join("executions");
@@ -325,7 +333,11 @@ impl Store {
     pub(crate) fn diff(&self, key: &str, run: &str, change: &ChangeRef) -> Result<String> {
         let send = self.turn_dir(key, run, &change.turn)?.join("sends").join(crate::store::safe_id(&change.send)?);
         let check: Value = serde_json::from_slice(&fs::read(send.join("check.json")).map_err(|_| "Envio sem conferência de claims")?)?;
-        if check["report"]["mechanical_status"] != "passed" {
+        // The whole answer passed, or at least this change: its own edits derived a diff, no
+        // issue names it, and no issue is about the whole answer.
+        let issues: Vec<&Value> = check["report"]["issues"].as_array().into_iter().flatten().collect();
+        let own_ok = !issues.iter().any(|i| i["claim_id"].is_null() || i["claim_id"] == change.claim.as_str());
+        if check["report"]["mechanical_status"] != "passed" && !own_ok {
             return Err("A resposta não passou na conferência mecânica; a mudança não é aplicada".into());
         }
         Ok(check["diffs"][&change.claim].as_str().ok_or_else(|| format!("{} não tem mudança derivada", change.claim))?.to_owned())

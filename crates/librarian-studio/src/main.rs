@@ -11,6 +11,7 @@ mod lexicon;
 mod llm;
 mod mutation;
 mod store;
+mod values;
 
 use http::{Request, Response};
 use librarian_ingest::graph::v2;
@@ -220,6 +221,7 @@ fn route(app: &App, req: &Request) -> Result<Response> {
             let body = req.json()?;
             ok(store.mutation_run(&field(&body, "key")?, &field(&body, "run")?, &field(&body, "symbol")?, &field(&body, "command")?)?)
         }
+        ("GET", "/api/value-sources") => ok(store.value_sources(param("key")?, param("run")?, param("symbol")?, param("text")?)?),
         ("GET", "/api/hotspots") => ok(store.hotspots(param("key")?, param("run")?)?),
         ("GET", "/api/mutations") => ok(json!(store.mutations(param("key")?, param("run")?)?)),
         ("POST", "/api/mutation/check") => {
@@ -355,19 +357,29 @@ fn ladder(store: &Store, body: &Value) -> Result<Value> {
             };
             let send = summary["directory"].as_str().and_then(|d| std::path::Path::new(d).file_name()).map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
             let (usable, lacunas, codes) = ladder::outcome(&summary);
-            if let Some(claim) = usable {
-                let change = execution::ChangeRef { turn: turn.clone(), send: send.clone(), claim: claim.clone() };
-                let runs: Vec<Value> = gate.iter().map(|name| store.execute(&key, &run, name, Some(&change))
-                    .unwrap_or_else(|e| json!({ "name": name, "refused": e.to_string() }))).collect();
-                let (passed, why) = ladder::verdict(&runs);
-                steps.push(ladder::step(model, &turn, &send, if passed { "passed" } else { "refused_by_gate" },
-                    json!({ "claim": claim, "cost_usd": summary["cost_usd"], "executions": runs.iter().map(|x| &x["id"]).collect::<Vec<_>>(), "why": why })));
-                if passed {
-                    return Ok(json!({ "passed": true, "turn": turn, "send": send, "claim": claim, "nodes": nodes, "steps": steps }));
+            if !usable.is_empty() {
+                // Each proposed change through the gate, in the answer's order, until one passes;
+                // the cost of the send is counted once, on its first change.
+                let mut refused = vec![];
+                for (k, claim) in usable.iter().enumerate() {
+                    let change = execution::ChangeRef { turn: turn.clone(), send: send.clone(), claim: claim.clone() };
+                    let runs: Vec<Value> = gate.iter().map(|name| store.execute(&key, &run, name, Some(&change))
+                        .unwrap_or_else(|e| json!({ "name": name, "refused": e.to_string() }))).collect();
+                    let (passed, why) = ladder::verdict(&runs);
+                    let cost = if k == 0 { summary["cost_usd"].clone() } else { Value::Null };
+                    steps.push(ladder::step(model, &turn, &send, if passed { "passed" } else { "refused_by_gate" },
+                        json!({ "claim": claim, "cost_usd": cost, "executions": runs.iter().map(|x| &x["id"]).collect::<Vec<_>>(), "why": why })));
+                    if passed {
+                        return Ok(json!({ "passed": true, "turn": turn, "send": send, "claim": claim, "nodes": nodes, "steps": steps }));
+                    }
+                    let proposed = summary["check"]["claims"].as_array().into_iter().flatten().find(|c| c["id"] == claim.as_str())
+                        .and_then(|c| c["text"].as_str()).unwrap_or("").trim_end_matches('.').to_owned();
+                    refused.push(format!("{proposed}: {}", why.join("; ")));
                 }
                 if tried < retries {
                     tried += 1;
-                    current = format!("{question} Uma proposta anterior foi recusada pelo portão: {}.", why.join("; "));
+                    // What was proposed, so the next try does not repeat it.
+                    current = format!("{question} Propostas anteriores recusadas pelo portão: {}. Proponha outras mudanças.", refused.join(" | "));
                     turn = store.ask_gathered(&key, &run, &current, &nodes, with_facts, origin.clone())?["id"].as_str().ok_or("pergunta sem id")?.to_owned();
                     continue;
                 }

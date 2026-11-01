@@ -139,15 +139,15 @@ pub fn verdict(executions: &[Value]) -> (bool, Vec<String>) {
     (why.is_empty(), why)
 }
 
-/// A send's usable change (its first HYPOTHESIS with a derived diff and no issue of its own),
-/// or its LACUNA texts.
-pub fn outcome(summary: &Value) -> (Option<String>, Vec<String>, Vec<String>) {
+/// A send's usable changes (each HYPOTHESIS with a derived diff, no issue of its own and no
+/// issue of the whole answer), its LACUNA texts and its issue codes.
+pub fn outcome(summary: &Value) -> (Vec<String>, Vec<String>, Vec<String>) {
     let check = &summary["check"];
     let issues: Vec<&Value> = check["report"]["issues"].as_array().into_iter().flatten().collect();
-    let passed = check["report"]["mechanical_status"] == "passed";
+    let general = issues.iter().any(|i| i["claim_id"].is_null());
     let claims: Vec<&Value> = check["claims"].as_array().into_iter().flatten().collect();
-    let usable = claims.iter().find(|c| passed && c["kind"] == "HYPOTHESIS" && check["diffs"][c["id"].as_str().unwrap_or("")].is_string()
-        && !issues.iter().any(|i| i["claim_id"] == c["id"])).and_then(|c| c["id"].as_str().map(String::from));
+    let usable = claims.iter().filter(|c| !general && c["kind"] == "HYPOTHESIS" && check["diffs"][c["id"].as_str().unwrap_or("")].is_string()
+        && !issues.iter().any(|i| i["claim_id"] == c["id"])).filter_map(|c| c["id"].as_str().map(String::from)).collect();
     let lacunas = claims.iter().filter(|c| c["kind"] == "LACUNA").filter_map(|c| c["text"].as_str().map(String::from)).collect();
     let codes = issues.iter().filter_map(|i| i["code"].as_str().map(String::from)).collect();
     (usable, lacunas, codes)
