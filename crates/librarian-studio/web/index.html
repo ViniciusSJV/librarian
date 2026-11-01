@@ -77,6 +77,12 @@
     border-radius: 999px; background: color-mix(in srgb, var(--surface-1) 85%, transparent); color: var(--text-primary);
     font-size: 11px; white-space: nowrap; }
   .hit-label.fact { border-width: 2px; font-weight: 700; }
+  #cityLabels { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+  .city-label { position: absolute; transform: translate(-50%, -130%); padding: 1px 7px; border: 1px solid var(--border);
+    border-radius: 999px; background: color-mix(in srgb, var(--surface-1) 85%, transparent); color: var(--text-primary);
+    font-size: 11px; white-space: nowrap; }
+  .district-label { position: absolute; transform: translate(0, 4px); color: var(--text-secondary); font-size: 11px;
+    font-family: ui-monospace, monospace; white-space: nowrap; }
   #drop { position: absolute; inset: 0; display: none; place-items: center; font-size: 16px;
     background: color-mix(in srgb, var(--surface-0) 80%, transparent); border: 2px dashed var(--text-muted); }
   [hidden] { display: none !important; }
@@ -410,10 +416,12 @@
     <canvas id="scene"></canvas>
     <div id="status" class="hud" data-i18n="status.open"></div>
     <div id="labels"></div>
+    <div id="cityLabels"></div>
     <div id="tooltip" class="hud"></div>
     <div id="drop" data-i18n="drop"></div>
     <details id="legendHud" class="legend">
       <summary data-i18n="legend.title"></summary>
+      <label id="cityToggleRow" hidden><input id="cityToggle" type="checkbox" checked><span data-i18n="legend.city"></span><button type="button" class="help" data-help-key="help.city">?</button></label>
       <h2><span data-i18n="legend.nodes"></span><button type="button" class="help" data-help-key="help.nodes">?</button></h2>
       <label><input type="checkbox" data-category="source" checked><span class="swatch source"></span><span data-i18n="legend.source"></span><button type="button" class="help" data-help-key="help.source">?</button><span class="count" data-count="source">0</span></label>
       <label><input type="checkbox" data-category="symbol" checked><span class="swatch symbol"></span><span data-i18n="legend.symbol"></span><button type="button" class="help" data-help-key="help.symbol">?</button><span class="count" data-count="symbol">0</span></label>
@@ -1249,6 +1257,11 @@ const STRINGS = {
   'lexicon.saved': ['Léxico salvo.', 'Lexicon saved.'],
   'lexicon.suggestTitle': ['Sugerir com um LLM', 'Suggest with an LLM'],
   'legend.title': ['Legenda do mapa', 'Map legend'],
+  'legend.city': ['Cidade (Onde pesa)', 'City (Where it weighs)'],
+  'help.city': ['O último Medir tudo desenhado como uma cidade. Cada arquivo é um bairro, e cada função que rodou é um prédio: a altura é o número de chamadas (em escala log) e a cor é o tempo, de azul (pouco) a vermelho (muito). Um anel vermelho na base marca uma trava, espera ou E/S dentro de laço. Os arcos ligam quem chama a quem é chamado. Desmarque para voltar ao grafo.', 'The latest Measure everything drawn as a city. Each file is a district, and each function that ran is a building: height is the number of calls (log scale) and color is the time, from blue (little) to red (a lot). A red ring at the base marks a lock, wait or I/O inside a loop. Arcs link caller to callee. Uncheck to go back to the graph.'],
+  'city.tip': ['{calls} chamadas · {ms}', '{calls} calls · {ms}'],
+  'city.status': ['{functions} funções que rodaram em {districts} arquivos · arraste para girar, clique num prédio para ver quem ele chama', '{functions} functions that ran in {districts} files · drag to rotate, click a building to see what it calls'],
+  'city.ring': ['trava, espera ou E/S em laço', 'lock, wait or I/O in a loop'],
   'mode.aria': ['Modo da pergunta', 'Question mode'],
   'mode.label': ['Modo', 'Mode'],
   'mode.locate': ['Localizar', 'Locate'],
@@ -1375,6 +1388,9 @@ scene.add(new THREE.HemisphereLight(0xffffff, 0x666666, 2.2));
 const sun = new THREE.DirectionalLight(0xffffff, 1.2);
 sun.position.set(1, 2, 3);
 scene.add(sun);
+// The graph and the city ("Onde pesa") are two layers; one is shown at a time.
+const graphGroup = new THREE.Group(), cityGroup = new THREE.Group();
+scene.add(graphGroup, cityGroup);
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2(9, 9);
 const GEOMETRY = {
@@ -1463,8 +1479,8 @@ async function loadFiles(fileList) {
 
 /// Removes the graph from the scene and resets every view of it to the empty page.
 function clearGraph() {
-  for (const mesh of Object.values(state.meshes)) { scene.remove(mesh); mesh.dispose(); }
-  for (const line of Object.values(state.lines)) { scene.remove(line); line.geometry.dispose(); line.material.dispose(); }
+  for (const mesh of Object.values(state.meshes)) { graphGroup.remove(mesh); mesh.dispose(); }
+  for (const line of Object.values(state.lines)) { graphGroup.remove(line); line.geometry.dispose(); line.material.dispose(); }
   Object.assign(state, { graph: null, nodes: [], edges: [], index: new Map(), out: [], inn: [],
     sim: null, simNodes: [], layoutTicks: 0, meshes: {}, slot: [], lines: {},
     selectedNode: null, selectedEdge: null, matches: new Set(), overlay: null, overlaySource: null });
@@ -1553,8 +1569,8 @@ function attachSearch(search, request) {
 
 // ---------------------------------------------------------------- render objects
 function buildScene() {
-  for (const mesh of Object.values(state.meshes)) { scene.remove(mesh); mesh.dispose(); }
-  for (const line of Object.values(state.lines)) { scene.remove(line); line.geometry.dispose(); line.material.dispose(); }
+  for (const mesh of Object.values(state.meshes)) { graphGroup.remove(mesh); mesh.dispose(); }
+  for (const line of Object.values(state.lines)) { graphGroup.remove(line); line.geometry.dispose(); line.material.dispose(); }
   state.meshes = {}; state.lines = {}; state.slot = new Array(state.nodes.length);
   for (const c of CATEGORIES) {
     const list = state.nodes.flatMap((n, i) => n.category === c ? [i] : []);
@@ -1562,7 +1578,7 @@ function buildScene() {
     mesh.count = list.length;
     mesh.userData = { list };
     list.forEach((i, k) => { state.slot[i] = [c, k]; mesh.setColorAt(k, palette[c]); });
-    scene.add(mesh);
+    graphGroup.add(mesh);
     state.meshes[c] = mesh;
   }
   for (const kind of EDGE_KINDS) {
@@ -1575,7 +1591,7 @@ function buildScene() {
       : new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: kind === 'observes' ? .55 : .8 });
     const line = new THREE.LineSegments(geometry, material);
     line.userData = { list };
-    scene.add(line);
+    graphGroup.add(line);
     state.lines[kind] = line;
   }
 }
@@ -1705,11 +1721,13 @@ function repaint() {
     line.geometry.attributes.color.needsUpdate = true;
   }
   updatePositions();
+  if (city) paintCity();
 }
 
 // ---------------------------------------------------------------- camera
 let flight = null;
 function fit() {
+  if (cityOn()) return fitCity();
   if (!state.simNodes.length) return;
   const box = new THREE.Box3();
   for (const p of state.simNodes) {
@@ -1719,13 +1737,15 @@ function fit() {
   const sphere = box.getBoundingSphere(new THREE.Sphere());
   flyTo(sphere.center, Math.max(120, sphere.radius * 2.4));
 }
-function flyTo(target, distance) {
-  const dir = camera.position.clone().sub(controls.target).normalize();
+function flyTo(target, distance, from = null) {
+  const dir = (from ?? camera.position.clone().sub(controls.target)).normalize();
   flight = { from: controls.target.clone(), to: target.clone(), camFrom: camera.position.clone(),
     camTo: target.clone().add(dir.multiplyScalar(distance)), start: performance.now() };
 }
 function focusNode(i) {
   userMoved = true; // an explicit focus wins over the automatic framing of the layout
+  const building = cityOn() && city.at.get(state.nodes[i].id);
+  if (building) return flyTo(building.roof, 160);
   const p = state.simNodes[i];
   flyTo(new THREE.Vector3(p.x, p.y, p.z), 160);
 }
@@ -1805,6 +1825,10 @@ function inspect() {
 // ---------------------------------------------------------------- picking
 function pick(withEdges) {
   raycaster.setFromCamera(pointer, camera);
+  if (cityOn()) {
+    const hit = raycaster.intersectObject(city.buildings, false)[0];
+    return hit ? { building: city.list[hit.instanceId] } : null;
+  }
   const meshes = CATEGORIES.filter(c => state.visibleCategory.has(c)).map(c => state.meshes[c]).filter(Boolean);
   const hit = raycaster.intersectObjects(meshes, false)[0];
   if (hit) return { node: hit.object.userData.list[hit.instanceId] };
@@ -1830,8 +1854,16 @@ function hover() {
   const found = pick(false), tip = $('#tooltip');
   canvas.style.cursor = found ? 'pointer' : '';
   if (!found) { tip.style.display = 'none'; return; }
-  const n = state.nodes[found.node];
-  tip.replaceChildren(el('strong', { textContent: n.label.slice(0, 120) }), el('div', { className: 'muted', textContent: `${n.category} · ${n.kind} · ${n.language}` }));
+  if (found.building) {
+    const b = found.building;
+    tip.replaceChildren(el('strong', { textContent: b.row.name }),
+      el('div', { textContent: t('city.tip', { calls: intPt(b.row.calls), ms: b.row.cpu_ms == null ? '—' : `${intPt(Math.round(b.row.cpu_ms))} ms` }) }),
+      ...(b.ring ? [el('div', { className: 'error', textContent: t('city.ring') })] : []),
+      el('div', { className: 'muted mono', textContent: `${b.row.path}:${b.row.start_line ?? ''}` }));
+  } else {
+    const n = state.nodes[found.node];
+    tip.replaceChildren(el('strong', { textContent: n.label.slice(0, 120) }), el('div', { className: 'muted', textContent: `${n.category} · ${n.kind} · ${n.language}` }));
+  }
   tip.style.display = 'block';
   tip.style.left = `${Math.min(lastMove.x + 14, viewport.clientWidth - 300)}px`;
   tip.style.top = `${lastMove.y + 14}px`;
@@ -1841,7 +1873,10 @@ canvas.addEventListener('pointerdown', ev => { downAt = [ev.clientX, ev.clientY]
 canvas.addEventListener('click', ev => {
   if (!state.graph || (downAt && Math.hypot(ev.clientX - downAt[0], ev.clientY - downAt[1]) > 4)) return;
   const found = pick(true);
-  if (found?.node != null) selectNode(found.node);
+  if (found?.building) {
+    const i = state.index.get(found.building.row.symbol);
+    if (i != null) selectNode(i);
+  } else if (found?.node != null) selectNode(found.node);
   else if (found?.edge != null) selectEdge(found.edge);
 });
 
@@ -3084,6 +3119,7 @@ const intPt = v => Number(v).toLocaleString(LANG === 'pt' ? 'pt-BR' : 'en-US');
 function resetHot() {
   hot = null;
   hotTurns = [];
+  buildCity();
   $('#hotMeasure').disabled = !studio.project || !studio.run;
   $('#hotList').replaceChildren();
   say($('#hotNote'), '');
@@ -3112,6 +3148,7 @@ function hotTarget() {
   return { target, callers, lines };
 }
 function renderHot() {
+  buildCity();
   const box = $('#hotList');
   if (!hot) return box.replaceChildren();
   const goTo = (id, label) => {
@@ -3247,6 +3284,211 @@ function renderLadder() {
       ` · ${t('ladder.cost', { cost: r.steps.reduce((a, s) => a + (s.detail?.cost_usd ?? 0), 0).toFixed(3) })}`),
     ...r.steps.map(line))));
 }
+
+// ---- "Onde pesa" as a city: each file a district on a grid, each function that ran a building
+// (height by calls on a log scale, color by time), a red ring where a lock, wait or I/O sits in a
+// loop, and arcs from caller to callee. Fixed positions from the measure, no forces.
+const CITY = { lot: 10, gap: 5, street: 30, floor: 1.5 }, SEGMENTS = 16;
+let city = null;
+const cityOn = () => !!city && $('#cityToggle').checked;
+$('#cityToggle').checked = saved.get('city') !== 'off';
+
+function clearCity() {
+  cityGroup.traverse(o => { if (o !== cityGroup) { o.geometry?.dispose(); o.material?.dispose(); } });
+  cityGroup.clear();
+  city = null;
+  $('#cityLabels').replaceChildren();
+}
+
+function buildCity() {
+  clearCity();
+  // One building per function: the row with the most calls when a function has several.
+  const bySymbol = new Map();
+  for (const r of hot?.rows ?? []) {
+    if (!r.symbol || !(r.calls > 0)) continue;
+    if (!(bySymbol.get(r.symbol)?.calls >= r.calls)) bySymbol.set(r.symbol, r);
+  }
+  $('#cityToggleRow').hidden = !bySymbol.size;
+  if (!bySymbol.size) return showCity();
+  const ringed = new Set((hot.structural ?? []).map(o => o.symbol));
+  const files = new Map();
+  for (const r of bySymbol.values()) {
+    if (!files.has(r.path)) files.set(r.path, { path: r.path, rows: [], calls: 0 });
+    const f = files.get(r.path);
+    f.rows.push(r);
+    f.calls += r.calls;
+  }
+  // Districts heaviest first, packed in shelves about as wide as the city is deep.
+  const { lot, gap, street, floor } = CITY, step = lot + gap;
+  const districts = [...files.values()].sort((a, b) => b.calls - a.calls);
+  for (const d of districts) {
+    d.rows.sort((a, b) => b.calls - a.calls);
+    d.cols = Math.ceil(Math.sqrt(d.rows.length));
+    d.w = d.cols * step + gap;
+    d.d = Math.ceil(d.rows.length / d.cols) * step + gap;
+  }
+  const area = districts.reduce((a, d) => a + (d.w + street) * (d.d + street), 0);
+  const width = Math.max(districts[0].w, Math.sqrt(area) * 1.1);
+  let x = 0, z = 0, shelf = 0;
+  for (const d of districts) {
+    if (x > 0 && x + d.w > width) { x = 0; z += shelf + street; shelf = 0; }
+    Object.assign(d, { x, z });
+    x += d.w + street;
+    shelf = Math.max(shelf, d.d);
+  }
+  const box = new THREE.Box3();
+  for (const d of districts) box.expandByPoint(new THREE.Vector3(d.x, 0, d.z)).expandByPoint(new THREE.Vector3(d.x + d.w, 0, d.z + d.d));
+  const center = box.getCenter(new THREE.Vector3());
+
+  const maxMs = Math.max(1, ...[...bySymbol.values()].map(r => r.cpu_ms ?? 0));
+  const list = [], at = new Map();
+  for (const d of districts) {
+    d.rows.forEach((row, k) => {
+      const height = 3 + 12 * Math.log10(1 + row.calls);
+      const px = d.x + gap + (k % d.cols) * step + lot / 2 - center.x, pz = d.z + gap + Math.floor(k / d.cols) * step + lot / 2 - center.z;
+      const b = { row, height, heat: Math.log1p(row.cpu_ms ?? 0) / Math.log1p(maxMs), ring: ringed.has(row.symbol),
+        base: new THREE.Vector3(px, floor, pz), roof: new THREE.Vector3(px, floor + height, pz) };
+      list.push(b);
+      at.set(row.symbol, b);
+    });
+  }
+
+  const material = () => new THREE.MeshStandardMaterial({ roughness: .6, metalness: .05 });
+  const unit = new THREE.BoxGeometry(1, 1, 1).translate(0, .5, 0);
+  const floors = new THREE.InstancedMesh(unit, material(), districts.length);
+  districts.forEach((d, k) => {
+    dummy.position.set(d.x + d.w / 2 - center.x, 0, d.z + d.d / 2 - center.z);
+    dummy.scale.set(d.w, floor, d.d);
+    dummy.updateMatrix();
+    floors.setMatrixAt(k, dummy.matrix);
+  });
+  const buildings = new THREE.InstancedMesh(unit.clone(), material(), list.length);
+  list.forEach((b, k) => {
+    dummy.position.copy(b.base);
+    dummy.scale.set(lot, b.height, lot);
+    dummy.updateMatrix();
+    buildings.setMatrixAt(k, dummy.matrix);
+  });
+  const ringList = list.filter(b => b.ring);
+  const rings = new THREE.InstancedMesh(new THREE.TorusGeometry(lot * .82, .9, 6, 28).rotateX(Math.PI / 2),
+    new THREE.MeshBasicMaterial({ color: 0xd6453d }), Math.max(1, ringList.length));
+  rings.count = ringList.length;
+  ringList.forEach((b, k) => {
+    dummy.position.copy(b.base).setY(floor + .9);
+    dummy.scale.setScalar(1);
+    dummy.updateMatrix();
+    rings.setMatrixAt(k, dummy.matrix);
+  });
+
+  // Arcs: each written call between two functions that ran, once per pair, raised by their distance.
+  const pairs = new Map();
+  for (const b of list) {
+    for (const k of b.row.calls_out ?? []) {
+      for (const target of k.targets) {
+        const to = at.get(target.symbol);
+        if (to && to !== b && !pairs.has(`${b.row.symbol}→${target.symbol}`)) pairs.set(`${b.row.symbol}→${target.symbol}`, { from: b, to });
+      }
+    }
+  }
+  const arcs = [...pairs.values()];
+  const positions = new Float32Array(arcs.length * SEGMENTS * 6);
+  const curve = new THREE.QuadraticBezierCurve3(), mid = new THREE.Vector3();
+  arcs.forEach((a, j) => {
+    mid.lerpVectors(a.from.roof, a.to.roof, .5);
+    mid.y = Math.max(a.from.roof.y, a.to.roof.y) + a.from.roof.distanceTo(a.to.roof) * .35;
+    curve.v0.copy(a.from.roof); curve.v1.copy(mid); curve.v2.copy(a.to.roof);
+    const points = curve.getPoints(SEGMENTS);
+    for (let s = 0; s < SEGMENTS; s++) {
+      positions.set([points[s].x, points[s].y, points[s].z, points[s + 1].x, points[s + 1].y, points[s + 1].z], (j * SEGMENTS + s) * 6);
+    }
+  });
+  const arcGeometry = new THREE.BufferGeometry();
+  arcGeometry.setAttribute('position', new THREE.BufferAttribute(positions.slice(), 3));
+  arcGeometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(positions.length), 3));
+  const arcLines = new THREE.LineSegments(arcGeometry, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: .7 }));
+  cityGroup.add(floors, buildings, rings, arcLines);
+
+  // Labels: every district by its file, and the heaviest buildings by name.
+  const top = new Set([...list].sort((a, b) => (b.row.cpu_ms ?? 0) - (a.row.cpu_ms ?? 0)).slice(0, 8));
+  const labels = [
+    ...districts.map(d => ({ at: new THREE.Vector3(d.x - center.x, floor, d.z + d.d - center.z),
+      node: el('div', { className: 'district-label', textContent: d.path.split('/').slice(-2).join('/') }) })),
+    ...[...top].map(b => ({ at: b.roof, node: el('div', { className: 'city-label', textContent: shortName(b.row.name ?? '') }) })),
+  ];
+  $('#cityLabels').replaceChildren(...labels.map(l => l.node));
+  city = { list, at, arcs, arcPoints: positions, floors, buildings, arcLines, labels, districts: districts.length, bounds: box.translate(center.negate()) };
+  paintCity();
+  showCity();
+}
+
+const COLD = new THREE.Color(0x4a78c2), WARM = new THREE.Color(0xe8a33a), HOT = new THREE.Color(0xd6453d);
+function paintCity() {
+  const selected = state.selectedNode == null ? null : state.nodes[state.selectedNode]?.id;
+  const chosen = selected && city.at.get(selected);
+  // With a function chosen, it and the functions it calls or is called by keep their color.
+  const linked = new Set(chosen ? city.arcs.filter(a => a.from === chosen || a.to === chosen).flatMap(a => [a.from, a.to]) : []);
+  city.list.forEach((b, k) => {
+    tmp.copy(b.heat < .5 ? COLD : WARM).lerp(b.heat < .5 ? WARM : HOT, b.heat < .5 ? b.heat * 2 : b.heat * 2 - 1);
+    if (chosen && b !== chosen && !linked.has(b)) tmp.lerp(palette.surface, .75);
+    city.buildings.setColorAt(k, tmp);
+  });
+  city.buildings.instanceColor.needsUpdate = true;
+  city.floors.material.color.copy(palette.edge).lerp(palette.surface, .55);
+  // Arcs only for the chosen function: all of them at once are a tangle. The others collapse to
+  // their first point, so nothing of them is drawn.
+  const { color, position } = city.arcLines.geometry.attributes;
+  const span = SEGMENTS * 6;
+  city.arcs.forEach((a, j) => {
+    const lit = chosen && (a.from === chosen || a.to === chosen);
+    const from = city.arcPoints.subarray(j * span, (j + 1) * span);
+    if (lit) position.array.set(from, j * span);
+    else for (let s = 0; s < span; s += 3) position.array.set(from.subarray(0, 3), j * span + s);
+    for (let s = 0; s < SEGMENTS * 2; s++) color.array.set([palette.focus.r, palette.focus.g, palette.focus.b], (j * SEGMENTS * 2 + s) * 3);
+  });
+  color.needsUpdate = true;
+  position.needsUpdate = true;
+  city.arcLines.visible = !!chosen;
+}
+
+function showCity() {
+  const on = cityOn();
+  cityGroup.visible = on;
+  graphGroup.visible = !on;
+  $('#cityLabels').style.display = on ? '' : 'none';
+  if (on) {
+    status(t('city.status', { functions: city.list.length, districts: city.districts }));
+    fitCity();
+  } else if (state.graph) {
+    if (layoutDone()) status(t('status.ready', { nodes: state.nodes.length, edges: state.edges.length }));
+    fit();
+  }
+}
+
+function fitCity() {
+  const sphere = city.bounds.getBoundingSphere(new THREE.Sphere());
+  // Seen from above at an angle, like a map, unless the person already turned the camera.
+  flyTo(sphere.center, Math.max(160, sphere.radius * 1.9), userMoved ? null : new THREE.Vector3(.35, 1, .9));
+}
+
+function placeCityLabels() {
+  if (!cityOn()) return;
+  const w = viewport.clientWidth, h = viewport.clientHeight;
+  for (const l of city.labels) {
+    projected.copy(l.at).project(camera);
+    const visible = projected.z < 1 && Math.abs(projected.x) <= 1.05 && Math.abs(projected.y) <= 1.05;
+    l.node.style.display = visible ? '' : 'none';
+    if (visible) {
+      l.node.style.left = `${(projected.x + 1) / 2 * w}px`;
+      l.node.style.top = `${(1 - projected.y) / 2 * h}px`;
+    }
+  }
+}
+
+$('#cityToggle').addEventListener('change', ev => {
+  saved.set('city', ev.target.checked ? 'on' : 'off');
+  $('#tooltip').style.display = 'none';
+  showCity();
+});
 
 $('#ladderOn').addEventListener('change', () => refreshComposer());
 $('#inventoryFilter').addEventListener('change', () => renderInventory());
@@ -4073,7 +4315,8 @@ function setLang(lang) {
     showProvenance();
     if (state.overlaySource) attachSearch(...state.overlaySource);
     if ($('#query').value) showMatches();
-    if (layoutDone()) status(t('status.ready', { nodes: state.nodes.length, edges: state.edges.length }));
+    if (cityOn()) status(t('city.status', { functions: city.list.length, districts: city.districts }));
+    else if (layoutDone()) status(t('status.ready', { nodes: state.nodes.length, edges: state.edges.length }));
   } else if (studio.status) status(t('status.openAny'));
   inspect();
   if (studio.browsing && $('#browseDialog').open) renderBrowse();
@@ -4091,7 +4334,8 @@ if (location.hash === '#debug') window.viewerDebug = { state, camera, controls, 
 // Result labels follow their nodes on screen; hidden behind the camera or when the overlay is off.
 const projected = new THREE.Vector3();
 function placeLabels() {
-  const shown = state.overlayOn && state.overlay;
+  placeCityLabels();
+  const shown = state.overlayOn && state.overlay && !cityOn();
   $('#labels').style.display = shown ? '' : 'none';
   if (!shown) return;
   const w = viewport.clientWidth, h = viewport.clientHeight;
@@ -4117,9 +4361,9 @@ renderer.setAnimationLoop(() => {
     while (performance.now() - start < FRAME_BUDGET_MS && state.layoutTicks < MAX_TICKS);
     updatePositions();
     if (!userMoved && !flight && state.layoutTicks % 30 < 3) fit();
-    status(t('status.layout', { pct: Math.round(100 * state.layoutTicks / MAX_TICKS), nodes: state.nodes.length, edges: state.edges.length }));
+    if (!cityOn()) status(t('status.layout', { pct: Math.round(100 * state.layoutTicks / MAX_TICKS), nodes: state.nodes.length, edges: state.edges.length }));
     if (layoutDone()) {
-      status(t('status.ready', { nodes: state.nodes.length, edges: state.edges.length }));
+      if (!cityOn()) status(t('status.ready', { nodes: state.nodes.length, edges: state.edges.length }));
       if (!userMoved) fit();
     }
   }
