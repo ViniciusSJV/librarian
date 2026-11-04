@@ -206,7 +206,8 @@ continuam em **prosa**.
 Como a query de claims é montada:
 
 - **Evidência:** as janelas de contexto do bundle conferido, com o mesmo texto que a prosa
-  mostraria. Uma ficha só vira a evidência `E1`; várias viram os blocos `CTX_1`, `CTX_2`…
+  mostraria. Nas perguntas novas, o texto vai uma vez só, em `evidence.line_map`; as gravadas antes
+  continuam como foram feitas. Uma ficha só vira a evidência `E1`; várias viram os blocos `CTX_1`, `CTX_2`…
 - **Símbolos:** as declarações da edition cujo trecho cabe na janela. A linha da
   declaração é a primeira linha de código do trecho em que o nome aparece como
   identificador inteiro; atributos (`#[...]`), comentários e decorators (`@...`) são

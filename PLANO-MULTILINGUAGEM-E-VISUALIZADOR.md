@@ -1180,17 +1180,60 @@ A escada parava na primeira proposta aprovada, e 39 propostas ficaram sem testar
 - **O custo fica.** Tirar esse papel melhora `r1` (mudança grande em 6 de 8, contra 2 de 7) e piora `r3` (4 de 8 aprovadas, contra 8 de 8). Um caso a favor e outro contra não justificam uma regra; ajustar a ordem aos três casos seria sob medida para eles.
 - **O ruído é grande.** O mesmo envelope de `r3` deu 4 de 6 na medição anterior e 8 de 8 nesta. Diferenças de um ou dois envios não querem dizer nada aqui.
 
+### Envelope novo: compacta ligada, notas desligadas
+
+Cada mudança medida separadamente, contra a seleção com a escada corrigida: 8 envios por caso, 48 no total, US$ 0,39, 50 min.
+
+| Variante | Aprovadas (r1, r2, r3) | Total | Com a mudança grande (r1, r2, r3) | Ganho mediano no tempo (r1, r2, r3) | Query |
+|---|---|---|---|---|---|
+| Base | 7/8, 8/8, 8/8 | 23/24 | 2/7, 6/8, 8/8 | 27%, 40%, 24% | 44–48 KB |
+| Compacta | 8/8, 8/8, 8/8 | 24/24 | 0/8, 5/8, 8/8 | 29%, 42%, 23% | 38–42 KB |
+| Notas | 8/8, 8/8, 5/8 | 21/24 | 0/8, 2/8, 5/5 | 26%, 15%, 25% | 49–53 KB |
+
+- **A query compacta fica ligada** para as perguntas novas: a query cai cerca de 13% e o ganho mediano não muda. A mudança grande caiu de 2/7 para 0/8 em `r1`, o que pode ser ruído; fica para acompanhar.
+- **As notas ficam desligadas: pioraram.** Em `r2`, a mudança grande caiu de 6/8 para 2/8 e o ganho mediano, de 40% para 15%. Em `r3`, as aprovações caíram de 8/8 para 5/8. **Dar ao modelo o papel de cada fonte, as lacunas e o comportamento, tudo junto, atrapalhou nesses casos.** Isso vai contra a expectativa do plano original para a etapa 7. O código fica, sem efeito, porque a tela não as manda. Falta saber qual parte atrapalha: como foi medido o conjunto, não dá para culpar uma parte. Só volta a ser testado em partes e menor.
+
+### Caso sem resposta conhecida: `Intersectable::intersect`
+
+A rodada 5 da gravação, que não aprovou nenhuma mudança. Com a escada corrigida, o Haiku e a query compacta, sem medir quanto cada coisa contribuiu:
+
+| Variante | Aprovadas | Recusadas no portão | Sem proposta | Ganho mediano |
+|---|---|---|---|---|
+| Gravado | 10/16 | 2 | 4 | 26% |
+| Nova | 8/16 | 4 | 4 | 26% |
+| Nova, trocando `Bounds::intersects` por `inverse` | 6/16 | 5 | 5 | 25% |
+| Nova com `impl Intersectable for Object`, 9,6 KB | 5/8 | 3 | 0 | 24% |
+
+- **Empate, sem mudança de regra.** Nos primeiros 8 envios a nova deu 2/8 e o gravado 6/8, o que parecia uma piora e sugeria a causa `inverse`. Nos 8 seguintes deu 6/8 e 4/8. A troca por `inverse` também não ajudou. **Com 8 envios, uma diferença de 2/8 para 6/8 ainda pode ser ruído:** nenhuma regra deve mudar por menos que isso repetido.
+- **Incluir a origem cortada eliminou as respostas sem proposta,** 0 de 8 contra 4 de 16, mas a aprovação não mudou de forma clara, e o envelope quase dobra. Não justifica deixar a origem passar do limite.
+- **Até aqui, a seleção nova não aprova mais que o envelope gravado, em nenhum caso.** O que ela trouxe é a seleção automática, sem depender de escolha manual, query menor e o registro do que ficou de fora. O ganho maior medido veio da escada.
+
+### Python com LLM: a seleção automática não quebra, e o portão não vê memória
+
+`logistica-api` no commit `cd15515`, sem o Medir tudo, com um banco temporário e linhas de base novas; 3 envios por variante e caso, 18 no total, US$ 0,08, 50 min. Nos casos de Python, o envelope gravado foi escolhido à mão.
+
+| Caso | Gravado | Nova | O que a medição mostrou |
+|---|---|---|---|
+| Memória (`lru_cache`) | 0/3 | 1/3 | memória −77% em todas as 5 propostas testadas |
+| N+1 | 3/3 | 3/3 | consultas por rota −49%, rota cerca de −34% |
+| `async` na rota | 3/3 | 3/3 | rota cerca de −39%, leitura cerca de −65% |
+
+- **A seleção automática chegou ao mesmo resultado que a escolha à mão,** sem nenhuma declaração editada de fora. Com 3 envios, isso só mostra que ela não quebra em Python.
+- **O portão não vê memória:** ele recusou 4 das 5 mudanças do caso de memória, todas com −77%, porque nem contagem nem tempo caíram. A aprovada passou só por uma queda de tempo.
+- **O portão também não vê subidas fora do que mede:** nos casos de N+1 e `async`, ele aprovou com a memória subindo de 16% a 22%. Num caso de memória, a leitura subiu 38% sem efeito no veredito, embora o portão a tenha recusado por outro motivo. E `queries_per_plan`, sem `at=`, não conta como contagem.
+
 ### O que falta, em ordem
 
-1. **Envelope novo (etapa 7), em medição:** o código está pronto e desligado: as notas (papel de cada fonte, lacunas, comportamento) só vão ao modelo quando a pergunta as traz, e a tela ainda não as manda; a query compacta, sem o `excerpt` repetido, depende de `compact_items`, desligado por padrão. Cada uma é medida separadamente; só liga a que não piorar. As medições ainda não entram nas notas, fora a contagem de chamadas.
-2. **Investigar o qwen nas mudanças,** conforme a seção abaixo.
-3. **Um caso difícil no gabarito e Python com LLM:** até agora a seleção só empatou em aprovações, e nos casos atuais a mudança grande já é conhecida. Falta um caso em que o envelope antigo falhava, como o `Intersectable::intersect` do vídeo 11 (3 de 8), e rodar os casos do `logistica-api` com o modelo. Isso decide onde investir nos itens seguintes.
-4. **Comportamento, a segunda parte:** condições de execução, caminhos alternativos e invariantes exigem o extractor registrar `if`, `match` e asserções, com perfil e grafo novos. Chamadas dentro de macros também não são vistas.
-5. **Buscar fontes quando a lacuna for importante,** antes de enviar. Por exemplo, `impl Intersectable for Object` fica de fora por orçamento em dois casos: decidir se a origem pode passar do limite.
-6. **Identidade de homônimos:** resolver além da medição, pelo tipo do receptor, principalmente em Python, onde o Medir tudo não conta.
-7. **Medições na seleção:** hoje entra só a contagem de chamadas; faltam o tempo e os benchmarks.
-8. **Etapa 5, só se o gabarito mostrar que faltam fatos:** perguntas por tema (entrada, estado, dependências, execução, repetição, efeitos), cascata qwen → Haiku e novos estados de fato. O Claude nunca transforma um fato inconclusivo em comprovado.
-9. **Etapas 1 a 4:** validar a configuração, instrumentar outras linguagens, reconhecer melhor as intenções e tornar configuráveis os critérios do alvo.
+**Proposta, a validar:** com o que foi medido, a prioridade passa a ser o portão, que mostrou falhas concretas, e não mais fontes, porque nenhum caso mostrou falta de informação.
+
+1. **Portão com as medidas do projeto:** o projeto declara o que cada medida significa e em que direção melhora (memória, consultas sem `at=`), e uma subida relevante fora do alvo aparece na decisão.
+2. **Testar as notas em partes,** se aparecer um caso em que falte informação ao modelo. Hoje não há esse sinal.
+3. **Comportamento, a segunda parte:** condições de execução, caminhos alternativos e invariantes exigem o extractor registrar `if`, `match` e asserções, com perfil e grafo novos. Chamadas dentro de macros também não são vistas.
+4. **Buscar fontes quando a lacuna for importante,** antes de enviar. Por exemplo, `impl Intersectable for Object` fica de fora por orçamento em dois casos: decidir se a origem pode passar do limite.
+5. **Identidade de homônimos:** resolver além da medição, pelo tipo do receptor, principalmente em Python, onde o Medir tudo não conta.
+6. **Medições na seleção:** hoje entra só a contagem de chamadas; faltam o tempo e os benchmarks.
+7. **Etapa 5, só se o gabarito mostrar que faltam fatos:** perguntas por tema (entrada, estado, dependências, execução, repetição, efeitos), cascata qwen → Haiku e novos estados de fato. O Claude nunca transforma um fato inconclusivo em comprovado.
+8. **Etapas 1 a 4:** validar a configuração, instrumentar outras linguagens, reconhecer melhor as intenções e tornar configuráveis os critérios do alvo.
 
 ### O qwen nas mudanças (decidido em 04/11/2026)
 
@@ -1210,6 +1253,6 @@ Nos 8 envios de mudança da gravação do vídeo 12, das 24 propostas só 1 saiu
 **Investigação, depois da medição do envelope novo e sem custo de nuvem:**
 
 1. ~~Remover `location` de uma HYPOTHESIS antes de conferir.~~ Descartado sem escrever código: o `location` é a única recusa de só 1 das 24 propostas. Nas outras 22 recusadas, a edição ou a citação também falha: `edits_unbalanced`, `edits_rewrite_not_whole_declaration`, `edits_no_change`, `edits_malformed` ou `quote_mismatch`. O problema é editar código nesse formato.
-2. Pedir menos: uma mudança só, em vez de três, e só `replace` em poucas linhas, com um Modelfile próprio. Roda depois da medição do envelope, porque o modelo local ocupa a máquina.
+2. ~~Pedir menos: uma mudança só e só `replace` em poucas linhas, com um Modelfile próprio.~~ Testado nos 3 casos, 8 envios por caso, com temperatura 0,3, porque com temperatura 0 e semente fixa ele tende a repetir a resposta: **0 de 24, e nenhuma proposta chegou ao portão.** O tempo caiu de cerca de 75 s para cerca de 15 s por resposta, mas todas as 24 trazem `location` numa HYPOTHESIS, apesar de o SYSTEM pedir `null`, e 19 delas também erram a edição ou a citação. Só em 5 o `location` é a única recusa.
 
-**Critério para voltar:** nos 3 casos do gabarito, com 8 envios por caso, ao menos 1 proposta passa no portão em cada caso, e o ganho compensa o tempo gasto. Se não, ele fica fora até o fine-tune.
+**Critério para voltar:** nos 3 casos do gabarito, com 8 envios por caso, ao menos 1 proposta passa no portão em cada caso, e o ganho compensa o tempo gasto. **Não atingido: o qwen fica fora das mudanças até o fine-tune,** e o Modelfile do teste não entra na biblioteca. Remover o `location` não mudaria isso: em `r1` nenhuma proposta seria salva.
