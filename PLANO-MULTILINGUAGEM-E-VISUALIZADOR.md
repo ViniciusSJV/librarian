@@ -1450,9 +1450,45 @@ Análise dos 516 envios gravados desta frente, em 7 casos (`r1`, `r2`, `r3`, `r5
 
 **Próximo passo, decidido em 04/11/2026:** teste só em `r5`, 16 envios por variante e cerca de US$ 0,25, comparando a seleção de hoje com a troca de `Bounds::intersects` (1.174 B, sem nenhuma citação nas lacunas) e da struct `Matrix` (109 B, para ficar em 16 declarações) por `Object` e o trait (1.267 B), com critérios fixados antes. Medida principal: taxa de lacuna. Corrigir os defeitos do mecanismo só depois, porque sem saber o que faz falta não se sabe o que a rodada deve trazer. O que o modelo pede, o que está ausente e o que melhora o resultado quando fornecido são coisas diferentes. Resultados em `.studio/arquivo-copias/lacunas-20261104`, que o Git ignora.
 
+### `Object` e o trait no envelope de `r5` (04/11/2026)
+
+**Resultado: pelo critério fixado antes do primeiro envio, sem conclusão. As lacunas caíram, mas as aprovações e as mudanças grandes não mudaram.**
+
+32 envios ao Haiku, US$ 0,24, 30 min, sem erros, com 16 declarações nas duas variantes, sem notas e sem rodadas de lacuna. O trait e o enum foram aceitos na pergunta normalmente.
+
+| | Hoje | Com `Object` e o trait | p |
+|---|---|---|---|
+| **Terminam em lacuna (medida principal)** | **8/16** | **3/16** | 0,14 |
+| Aprovadas | 7/16 | 8/16 | 1,0 |
+| Mudança grande | 7/16 | 7/16 | 1,0 |
+| Sem proposta aproveitável | 8/16 | 5/16 | 0,47 |
+| Ganho mediano | 17% | 17% | |
+
+- **O critério pedia p < 0,05:** a queda vai na direção esperada e não chega lá. Com 16 envios, não prova que ajuda nem que não ajuda.
+- **A base desta rodada ficou alta:** 8/16, contra 28% de lacuna em 144 envios anteriores do mesmo caso (p = 0,09). O 3/16 da variante não se separa desse histórico (p = 0,56), então parte da queda pode ser só a base ter vindo alta.
+- **Menos lacuna não virou mais mudança:** os envios que deixaram de ser lacuna viraram recusa, não aprovação. Recusas do portão 1 → 3, recusas mecânicas 0 → 2. A aprovação segue perto dos 47% do histórico (p = 1,0).
+- **O modelo continua pedindo:** as 3 lacunas restantes pedem as implementações de `Intersectable` para `Object`, `Sphere` e outros tipos. Dar o que foi pedido só mudou o pedido, o que reforça que citar não é precisar.
+
+**Classificação, depois do teste:** `Object` e o trait continuam em "potencialmente importante", com indício só na taxa de lacuna, sem ganho no que a lacuna deveria destravar. Nenhuma ausência está comprovada. `impl Intersectable for Object` não entrou, e o 0/8 dela segue sem repetição.
+
+**Limites:** a troca foi escolhida olhando as lacunas de `r5`. O teste mede a troca inteira, inclusive a saída de `Bounds::intersects` e `Matrix`. É um só caso.
+
+**O que isto diz sobre o mecanismo:** o que o modelo pede, o que está ausente e o que melhora o resultado seguem separados. Até aqui não há base para desenhar uma busca que traga mais conteúdo, e não há sinal de que resolver lacunas aumente as mudanças aprovadas. A lacuna afeta um caso em sete.
+
+**Decisão de 04/11/2026:**
+
+- **A investigação de lacunas fica suspensa, sem descartar os resultados.** Isso não considera o mecanismo resolvido: só não há evidência suficiente para investir mais nele agora. `Object` e o trait seguem como potencialmente importantes, e nenhuma ausência como comprovada.
+- **Corrigir só os dois defeitos técnicos,** cada um com teste de regressão próprio: `transform` levando a `Incuse::transform` e o trait pedido sendo filtrado. Sem mudar a estratégia de seleção, sem ampliar o envelope e sem heurísticas novas.
+- **Rodada sem espaço:** apenas registrar que não houve espaço. Não abrir vaga, não remover nem substituir nada do envelope. Reconhecer uma necessidade potencial não autoriza retirar outra evidência.
+- **Depois, homônimos,** com a medição separada de se a correção melhora a seleção e as aprovações.
+
+**Regra de método:** não confundir o que o modelo solicita, o que o sistema consegue encontrar e o que efetivamente melhora o resultado. São três dimensões, avaliadas separadamente, porque o Librarian precisa funcionar em Rust, Python e outras linguagens, não só resolver particularidades do renderer.
+
+Propostas e resultados em `.studio/arquivo-copias/trait-20261104`, que o Git ignora.
+
 ### O que falta, em ordem
 
-1. **Busca por lacunas:** a análise sem LLM está feita (acima). Falta o teste em `r5` e decidir o que fazer com o mecanismo de rodadas, que hoje não atua com o envelope cheio.
+1. **Busca por lacunas:** suspensa (acima). Uma busca nova só com evidência de que a informação trazida melhora o resultado.
 2. **Homônimos por identidade:** resolver além da medição, pelo tipo do receptor, principalmente em Python, onde o Medir tudo não conta.
 3. **Cascata qwen → Haiku (etapa 5):** complementar fatos ausentes sem repetir trabalho, só se o gabarito mostrar que faltam fatos. Perguntas por tema (entrada, estado, dependências, execução, repetição, efeitos) e novos estados de fato. O Claude nunca transforma um fato inconclusivo em comprovado.
 
