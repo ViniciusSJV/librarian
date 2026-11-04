@@ -8,8 +8,9 @@ use serde::Deserialize;
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
 
-/// The profile's `instrument`: the statement, the approved command that prints the counts and
-/// path prefixes left out (binaries, the counting module itself).
+/// The profile's `instrument`: the statement, the approved command that prints the counts, path
+/// prefixes left out (binaries, the counting module itself) and the paths a proposed change may
+/// not touch, because they are part of the measure.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Instrument {
@@ -17,6 +18,10 @@ pub struct Instrument {
     pub command: String,
     #[serde(default)]
     pub skip: Vec<String>,
+    /// Read by the gate (execution.rs), which also takes a profile "Medir tudo" could not use.
+    #[serde(default)]
+    #[allow(dead_code)]
+    pub protect: Vec<String>,
 }
 
 impl Instrument {

@@ -1,0 +1,534 @@
+{
+ "origin": "Gravação do vídeo 12, execução 20261104-020643, 11-medir-cena, 12-medir-contagem, 13-testes",
+ "diff": "--- a/src/groups.rs\n+++ b/src/groups.rs\n@@ -88,5 +88,4 @@\n     pub fn intersect(&self, ray: Ray) -> Intersections {\n-        crate::count!();\n         let local_ray = ray.set_transform(self.inverse_transform);\n         if !self.local_bounds.intersects(local_ray) {\n             return Intersections::new(vec![]);\n",
+ "executions": [
+  {
+   "name": "medir-cena",
+   "summary": {
+    "attempted": 5,
+    "succeeded": 5,
+    "stats": {
+     "render_ms": {
+      "max": 26.643,
+      "median": 23.057,
+      "min": 20.819,
+      "n": 5,
+      "unit": "ms"
+     },
+     "wall_ms": {
+      "max": 4251.431,
+      "median": 307.689,
+      "min": 287.098,
+      "n": 5,
+      "unit": "ms"
+     }
+    }
+   },
+   "comparison": {
+    "baseline": "02-medir-cena",
+    "outputs": {
+     "librarian-cena.png": "same"
+    },
+    "stats": {
+     "render_ms": {
+      "baseline_median": 25.26,
+      "change_pct": -8.7,
+      "median": 23.057,
+      "ranges_overlap": true,
+      "unit": "ms"
+     },
+     "wall_ms": {
+      "baseline_median": 287.504,
+      "change_pct": 7,
+      "median": 307.689,
+      "ranges_overlap": true,
+      "unit": "ms"
+     }
+    }
+   },
+   "baseline_stats": {
+    "render_ms": {
+     "max": 26.642,
+     "median": 25.26,
+     "min": 22.6,
+     "n": 5,
+     "unit": "ms"
+    },
+    "wall_ms": {
+     "max": 4255.056,
+     "median": 287.504,
+     "min": 286.952,
+     "n": 5,
+     "unit": "ms"
+    }
+   }
+  },
+  {
+   "name": "medir-contagem",
+   "summary": {
+    "attempted": 2,
+    "succeeded": 2,
+    "stats": {
+     "calls@src/bounds.rs:60": {
+      "at": "src/bounds.rs:60",
+      "max": 2176865,
+      "measure": "calls",
+      "median": 2176865,
+      "min": 2176865,
+      "n": 2,
+      "unit": null
+     },
+     "calls@src/matrix.rs:194": {
+      "at": "src/matrix.rs:194",
+      "max": 1344975,
+      "measure": "calls",
+      "median": 1344975,
+      "min": 1344975,
+      "n": 2,
+      "unit": null
+     },
+     "calls@src/object.rs:30": {
+      "at": "src/object.rs:30",
+      "max": 1240921,
+      "measure": "calls",
+      "median": 1240921,
+      "min": 1240921,
+      "n": 2,
+      "unit": null
+     },
+     "calls@src/triangle.rs:39": {
+      "at": "src/triangle.rs:39",
+      "max": 1240921,
+      "measure": "calls",
+      "median": 1240921,
+      "min": 1240921,
+      "n": 2,
+      "unit": null
+     },
+     "calls@src/world.rs:110": {
+      "at": "src/world.rs:110",
+      "max": 24187,
+      "measure": "calls",
+      "median": 24187,
+      "min": 24187,
+      "n": 2,
+      "unit": null
+     },
+     "calls@src/world.rs:46": {
+      "at": "src/world.rs:46",
+      "max": 22131,
+      "measure": "calls",
+      "median": 22131,
+      "min": 22131,
+      "n": 2,
+      "unit": null
+     },
+     "calls@src/world.rs:93": {
+      "at": "src/world.rs:93",
+      "max": 44262,
+      "measure": "calls",
+      "median": 44262,
+      "min": 44262,
+      "n": 2,
+      "unit": null
+     },
+     "cpu_ms@src/bounds.rs:60": {
+      "at": "src/bounds.rs:60",
+      "max": 74.736,
+      "measure": "cpu_ms",
+      "median": 73.235,
+      "min": 71.734,
+      "n": 2,
+      "unit": "ms"
+     },
+     "cpu_ms@src/matrix.rs:194": {
+      "at": "src/matrix.rs:194",
+      "max": 60.912,
+      "measure": "cpu_ms",
+      "median": 54.649,
+      "min": 48.386,
+      "n": 2,
+      "unit": "ms"
+     },
+     "cpu_ms@src/object.rs:30": {
+      "at": "src/object.rs:30",
+      "max": 1255.254,
+      "measure": "cpu_ms",
+      "median": 1219.021,
+      "min": 1182.788,
+      "n": 2,
+      "unit": "ms"
+     },
+     "cpu_ms@src/triangle.rs:39": {
+      "at": "src/triangle.rs:39",
+      "max": 49.424,
+      "measure": "cpu_ms",
+      "median": 49.076,
+      "min": 48.728,
+      "n": 2,
+      "unit": "ms"
+     },
+     "cpu_ms@src/world.rs:110": {
+      "at": "src/world.rs:110",
+      "max": 2823.857,
+      "measure": "cpu_ms",
+      "median": 2796.6645,
+      "min": 2769.472,
+      "n": 2,
+      "unit": "ms"
+     },
+     "cpu_ms@src/world.rs:46": {
+      "at": "src/world.rs:46",
+      "max": 2679.863,
+      "measure": "cpu_ms",
+      "median": 2654.7659999999996,
+      "min": 2629.669,
+      "n": 2,
+      "unit": "ms"
+     },
+     "cpu_ms@src/world.rs:93": {
+      "at": "src/world.rs:93",
+      "max": 1711.987,
+      "measure": "cpu_ms",
+      "median": 1685.0495,
+      "min": 1658.112,
+      "n": 2,
+      "unit": "ms"
+     },
+     "render_ms": {
+      "max": 127.28,
+      "median": 126.364,
+      "min": 125.448,
+      "n": 2,
+      "unit": "ms"
+     },
+     "wall_ms": {
+      "max": 1540.212,
+      "median": 973.9300000000001,
+      "min": 407.648,
+      "n": 2,
+      "unit": "ms"
+     }
+    }
+   },
+   "comparison": {
+    "baseline": "03-medir-contagem",
+    "outputs": {
+     "librarian-cena-contagem.png": "same"
+    },
+    "stats": {
+     "calls@src/bounds.rs:60": {
+      "baseline_median": 2176865,
+      "change_pct": 0,
+      "median": 2176865,
+      "ranges_overlap": true,
+      "unit": null
+     },
+     "calls@src/matrix.rs:194": {
+      "baseline_median": 1344975,
+      "change_pct": 0,
+      "median": 1344975,
+      "ranges_overlap": true,
+      "unit": null
+     },
+     "calls@src/object.rs:30": {
+      "baseline_median": 1240921,
+      "change_pct": 0,
+      "median": 1240921,
+      "ranges_overlap": true,
+      "unit": null
+     },
+     "calls@src/triangle.rs:39": {
+      "baseline_median": 1240921,
+      "change_pct": 0,
+      "median": 1240921,
+      "ranges_overlap": true,
+      "unit": null
+     },
+     "calls@src/world.rs:110": {
+      "baseline_median": 24187,
+      "change_pct": 0,
+      "median": 24187,
+      "ranges_overlap": true,
+      "unit": null
+     },
+     "calls@src/world.rs:46": {
+      "baseline_median": 22131,
+      "change_pct": 0,
+      "median": 22131,
+      "ranges_overlap": true,
+      "unit": null
+     },
+     "calls@src/world.rs:93": {
+      "baseline_median": 44262,
+      "change_pct": 0,
+      "median": 44262,
+      "ranges_overlap": true,
+      "unit": null
+     },
+     "cpu_ms@src/bounds.rs:60": {
+      "baseline_median": 82.137,
+      "change_pct": -10.8,
+      "median": 73.235,
+      "ranges_overlap": true,
+      "unit": "ms"
+     },
+     "cpu_ms@src/matrix.rs:194": {
+      "baseline_median": 54.693,
+      "change_pct": -0.1,
+      "median": 54.649,
+      "ranges_overlap": true,
+      "unit": "ms"
+     },
+     "cpu_ms@src/object.rs:30": {
+      "baseline_median": 1229.3960000000002,
+      "change_pct": -0.8,
+      "median": 1219.021,
+      "ranges_overlap": true,
+      "unit": "ms"
+     },
+     "cpu_ms@src/triangle.rs:39": {
+      "baseline_median": 54.0705,
+      "change_pct": -9.2,
+      "median": 49.076,
+      "ranges_overlap": true,
+      "unit": "ms"
+     },
+     "cpu_ms@src/world.rs:110": {
+      "baseline_median": 3240.5335,
+      "change_pct": -13.7,
+      "median": 2796.6645,
+      "ranges_overlap": false,
+      "unit": "ms"
+     },
+     "cpu_ms@src/world.rs:46": {
+      "baseline_median": 3073.386,
+      "change_pct": -13.6,
+      "median": 2654.7659999999996,
+      "ranges_overlap": false,
+      "unit": "ms"
+     },
+     "cpu_ms@src/world.rs:93": {
+      "baseline_median": 1976.343,
+      "change_pct": -14.7,
+      "median": 1685.0495,
+      "ranges_overlap": false,
+      "unit": "ms"
+     },
+     "render_ms": {
+      "baseline_median": 148.8095,
+      "change_pct": -15.1,
+      "median": 126.364,
+      "ranges_overlap": false,
+      "unit": "ms"
+     },
+     "wall_ms": {
+      "baseline_median": 1008.678,
+      "change_pct": -3.4,
+      "median": 973.9300000000001,
+      "ranges_overlap": true,
+      "unit": "ms"
+     }
+    }
+   },
+   "baseline_stats": {
+    "calls@src/bounds.rs:60": {
+     "at": "src/bounds.rs:60",
+     "max": 2176865,
+     "measure": "calls",
+     "median": 2176865,
+     "min": 2176865,
+     "n": 2,
+     "unit": null
+    },
+    "calls@src/groups.rs:89": {
+     "at": "src/groups.rs:89",
+     "max": 2176865,
+     "measure": "calls",
+     "median": 2176865,
+     "min": 2176865,
+     "n": 2,
+     "unit": null
+    },
+    "calls@src/matrix.rs:194": {
+     "at": "src/matrix.rs:194",
+     "max": 1344975,
+     "measure": "calls",
+     "median": 1344975,
+     "min": 1344975,
+     "n": 2,
+     "unit": null
+    },
+    "calls@src/object.rs:30": {
+     "at": "src/object.rs:30",
+     "max": 1240921,
+     "measure": "calls",
+     "median": 1240921,
+     "min": 1240921,
+     "n": 2,
+     "unit": null
+    },
+    "calls@src/triangle.rs:39": {
+     "at": "src/triangle.rs:39",
+     "max": 1240921,
+     "measure": "calls",
+     "median": 1240921,
+     "min": 1240921,
+     "n": 2,
+     "unit": null
+    },
+    "calls@src/world.rs:110": {
+     "at": "src/world.rs:110",
+     "max": 24187,
+     "measure": "calls",
+     "median": 24187,
+     "min": 24187,
+     "n": 2,
+     "unit": null
+    },
+    "calls@src/world.rs:46": {
+     "at": "src/world.rs:46",
+     "max": 22131,
+     "measure": "calls",
+     "median": 22131,
+     "min": 22131,
+     "n": 2,
+     "unit": null
+    },
+    "calls@src/world.rs:93": {
+     "at": "src/world.rs:93",
+     "max": 44262,
+     "measure": "calls",
+     "median": 44262,
+     "min": 44262,
+     "n": 2,
+     "unit": null
+    },
+    "cpu_ms@src/bounds.rs:60": {
+     "at": "src/bounds.rs:60",
+     "max": 94.891,
+     "measure": "cpu_ms",
+     "median": 82.137,
+     "min": 69.383,
+     "n": 2,
+     "unit": "ms"
+    },
+    "cpu_ms@src/groups.rs:89": {
+     "at": "src/groups.rs:89",
+     "max": 3064.721,
+     "measure": "cpu_ms",
+     "median": 3049.647,
+     "min": 3034.573,
+     "n": 2,
+     "unit": "ms"
+    },
+    "cpu_ms@src/matrix.rs:194": {
+     "at": "src/matrix.rs:194",
+     "max": 54.885,
+     "measure": "cpu_ms",
+     "median": 54.693,
+     "min": 54.501,
+     "n": 2,
+     "unit": "ms"
+    },
+    "cpu_ms@src/object.rs:30": {
+     "at": "src/object.rs:30",
+     "max": 1232.603,
+     "measure": "cpu_ms",
+     "median": 1229.3960000000002,
+     "min": 1226.189,
+     "n": 2,
+     "unit": "ms"
+    },
+    "cpu_ms@src/triangle.rs:39": {
+     "at": "src/triangle.rs:39",
+     "max": 58.83,
+     "measure": "cpu_ms",
+     "median": 54.070499999999996,
+     "min": 49.311,
+     "n": 2,
+     "unit": "ms"
+    },
+    "cpu_ms@src/world.rs:110": {
+     "at": "src/world.rs:110",
+     "max": 3250.057,
+     "measure": "cpu_ms",
+     "median": 3240.5335,
+     "min": 3231.01,
+     "n": 2,
+     "unit": "ms"
+    },
+    "cpu_ms@src/world.rs:46": {
+     "at": "src/world.rs:46",
+     "max": 3086.955,
+     "measure": "cpu_ms",
+     "median": 3073.386,
+     "min": 3059.817,
+     "n": 2,
+     "unit": "ms"
+    },
+    "cpu_ms@src/world.rs:93": {
+     "at": "src/world.rs:93",
+     "max": 1998.822,
+     "measure": "cpu_ms",
+     "median": 1976.3429999999998,
+     "min": 1953.864,
+     "n": 2,
+     "unit": "ms"
+    },
+    "render_ms": {
+     "max": 148.892,
+     "median": 148.8095,
+     "min": 148.727,
+     "n": 2,
+     "unit": "ms"
+    },
+    "wall_ms": {
+     "max": 1582.896,
+     "median": 1008.678,
+     "min": 434.46,
+     "n": 2,
+     "unit": "ms"
+    }
+   }
+  },
+  {
+   "name": "testes",
+   "summary": {
+    "attempted": 1,
+    "succeeded": 1,
+    "stats": {
+     "wall_ms": {
+      "max": 3436.61,
+      "median": 3436.61,
+      "min": 3436.61,
+      "n": 1,
+      "unit": "ms"
+     }
+    }
+   },
+   "comparison": {
+    "baseline": "04-testes",
+    "outputs": {},
+    "stats": {
+     "wall_ms": {
+      "baseline_median": 3501.528,
+      "change_pct": -1.9,
+      "median": 3436.61,
+      "ranges_overlap": false,
+      "unit": "ms"
+     }
+    }
+   },
+   "baseline_stats": {
+    "wall_ms": {
+     "max": 3501.528,
+     "median": 3501.528,
+     "min": 3501.528,
+     "n": 1,
+     "unit": "ms"
+    }
+   }
+  }
+ ]
+}

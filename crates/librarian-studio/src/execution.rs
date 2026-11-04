@@ -90,6 +90,17 @@ pub(crate) fn instrument_of(root: &Path) -> Result<crate::instrument::Instrument
     Ok(instrument)
 }
 
+/// What the profile says about its own measure, for the gate. No `instrument` is fine: a project
+/// may print its counts its own way, and the statement need not be one "Medir tudo" can place.
+fn measurement_of(root: &Path) -> (Option<String>, Option<String>, Vec<String>) {
+    let profile: Value = fs::read(root.join(PROFILE)).ok().and_then(|b| serde_json::from_slice(&b).ok()).unwrap_or(Value::Null);
+    let text = |field: &str| profile["instrument"][field].as_str().map(str::to_owned);
+    let mut protect: Vec<String> = profile["instrument"]["protect"].as_array().into_iter().flatten()
+        .filter_map(|p| p.as_str().map(str::to_owned)).collect();
+    protect.push(PROFILE.to_owned());
+    (text("statement"), text("command"), protect)
+}
+
 /// The commands of the profile in `root`, as written there now.
 fn declared(root: &Path) -> Result<BTreeMap<String, Command>> {
     let Ok(bytes) = fs::read(root.join(PROFILE)) else { return Ok(BTreeMap::new()) };
@@ -179,16 +190,27 @@ impl Store {
             "machine": machine(), "started": started, "finished": stamp(),
             "runs": runs, "summary": summary(&runs), "limits": LIMITS,
         });
+        let mut baseline_stats = None;
         if let (Some(c), Some(diff)) = (change, &diff) {
             record["change"] = json!({ "turn": c.turn, "send": c.send, "claim": c.claim,
                 "diff_sha256": hash(diff.as_bytes()), "files": copy.touched });
             let baseline = self.executions(key, run)?.into_iter().rev()
                 .find(|x| x["name"] == name && x["command_sha256"] == sha256.as_str() && x["change"].is_null()
                     && x["instrumentation"].is_null() && x["summary"]["succeeded"].as_u64() > Some(0));
+            baseline_stats = baseline.as_ref().map(|b| b["summary"]["stats"].clone());
             record["comparison"] = match baseline {
                 Some(b) => compare(&b, &record),
                 None => json!({ "baseline": null, "note": "Sem linha de base: rode o mesmo comando sem mudança nesta edition para comparar." }),
             };
+        }
+        if let Some(diff) = &diff {
+            let (statement, command, protect) = measurement_of(&root);
+            let holder_start = |path: &str, line: usize| crate::instrument::holder(&catalog, path, line)
+                .and_then(|s| catalog.chunk(&s.chunk_id)).map(|c| c.start_line);
+            crate::ladder::review(&mut record, baseline_stats.as_ref(), diff, statement.as_deref(), &protect, holder_start);
+            if command.as_deref() == Some(name) {
+                record["counts_itself"] = json!(true);
+            }
         }
         fs::write(dir.join("execution.json"), serde_json::to_vec_pretty(&record)?)?;
         Ok(record)

@@ -1,0 +1,552 @@
+{
+ "origin": "Gravação do vídeo 12, execução 20261104-020244, 05-medir-cena, 06-medir-contagem, 07-testes",
+ "diff": "--- a/src/groups.rs\n+++ b/src/groups.rs\n@@ -12,5 +12,6 @@\n     pub children: Vec<Object>,\n     pub subgroups: Vec<Groups>,\n     pub transform: Matrix<4>,\n+    pub inverse_transform: Matrix<4>,\n     pub local_bounds: Bounds,\n }\n@@ -53,6 +54,7 @@\n             children,\n             subgroups: vec![],\n             transform: Matrix::identity(),\n+            inverse_transform: Matrix::identity(),\n             local_bounds,\n         }\n     }\n@@ -76,5 +78,5 @@\n         for subgroup in &subgroups {\n             local_bounds = local_bounds.union(subgroup.bounds());\n         }\n-        Self { children: vec![], subgroups, transform: Matrix::identity(), local_bounds }\n+        Self { children: vec![], subgroups, transform: Matrix::identity(), inverse_transform: Matrix::identity(), local_bounds }\n     }\n@@ -86,6 +88,6 @@\n     pub fn intersect(&self, ray: Ray) -> Intersections {\n         crate::count!();\n-        let local_ray = ray.set_transform(self.transform.inverse());\n+        let local_ray = ray.set_transform(self.inverse_transform);\n         if !self.local_bounds.intersects(local_ray) {\n             return Intersections::new(vec![]);\n         }\n--- a/src/obj.rs\n+++ b/src/obj.rs\n@@ -115,5 +115,6 @@\n     let model = read_to_string(path).expect(\"Error reading model OBJ\");\n     let mut group = Groups::from(parse_obj(&model, material));\n     group.transform = transform;\n+    group.inverse_transform = transform.inverse();\n     group\n }\n@@ -167,5 +168,6 @@\n     let transform = loaded.transform;\n     let mut model = build_bvh(loaded.children);\n     model.transform = transform;\n+    model.inverse_transform = transform.inverse();\n     model\n }\n",
+ "executions": [
+  {
+   "name": "medir-cena",
+   "summary": {
+    "attempted": 5,
+    "succeeded": 5,
+    "stats": {
+     "render_ms": {
+      "max": 25.699,
+      "median": 24.505,
+      "min": 21.561,
+      "n": 5,
+      "unit": "ms"
+     },
+     "wall_ms": {
+      "max": 4334.359,
+      "median": 307.129,
+      "min": 286.66,
+      "n": 5,
+      "unit": "ms"
+     }
+    }
+   },
+   "comparison": {
+    "baseline": "02-medir-cena",
+    "outputs": {
+     "librarian-cena.png": "same"
+    },
+    "stats": {
+     "render_ms": {
+      "baseline_median": 25.705,
+      "change_pct": -4.7,
+      "median": 24.505,
+      "ranges_overlap": true,
+      "unit": "ms"
+     },
+     "wall_ms": {
+      "baseline_median": 292.007,
+      "change_pct": 5.2,
+      "median": 307.129,
+      "ranges_overlap": true,
+      "unit": "ms"
+     }
+    }
+   },
+   "baseline_stats": {
+    "render_ms": {
+     "max": 27.843,
+     "median": 25.705,
+     "min": 22.407,
+     "n": 5,
+     "unit": "ms"
+    },
+    "wall_ms": {
+     "max": 4135.375,
+     "median": 292.007,
+     "min": 287.215,
+     "n": 5,
+     "unit": "ms"
+    }
+   }
+  },
+  {
+   "name": "medir-contagem",
+   "summary": {
+    "attempted": 2,
+    "succeeded": 2,
+    "stats": {
+     "calls@src/bounds.rs:60": {
+      "at": "src/bounds.rs:60",
+      "max": 2176865,
+      "measure": "calls",
+      "median": 2176865,
+      "min": 2176865,
+      "n": 2,
+      "unit": null
+     },
+     "calls@src/groups.rs:89": {
+      "at": "src/groups.rs:89",
+      "max": 2176865,
+      "measure": "calls",
+      "median": 2176865,
+      "min": 2176865,
+      "n": 2,
+      "unit": null
+     },
+     "calls@src/matrix.rs:194": {
+      "at": "src/matrix.rs:194",
+      "max": 1344975,
+      "measure": "calls",
+      "median": 1344975,
+      "min": 1344975,
+      "n": 2,
+      "unit": null
+     },
+     "calls@src/object.rs:30": {
+      "at": "src/object.rs:30",
+      "max": 1240921,
+      "measure": "calls",
+      "median": 1240921,
+      "min": 1240921,
+      "n": 2,
+      "unit": null
+     },
+     "calls@src/triangle.rs:39": {
+      "at": "src/triangle.rs:39",
+      "max": 1240921,
+      "measure": "calls",
+      "median": 1240921,
+      "min": 1240921,
+      "n": 2,
+      "unit": null
+     },
+     "calls@src/world.rs:110": {
+      "at": "src/world.rs:110",
+      "max": 24187,
+      "measure": "calls",
+      "median": 24187,
+      "min": 24187,
+      "n": 2,
+      "unit": null
+     },
+     "calls@src/world.rs:46": {
+      "at": "src/world.rs:46",
+      "max": 22131,
+      "measure": "calls",
+      "median": 22131,
+      "min": 22131,
+      "n": 2,
+      "unit": null
+     },
+     "calls@src/world.rs:93": {
+      "at": "src/world.rs:93",
+      "max": 44262,
+      "measure": "calls",
+      "median": 44262,
+      "min": 44262,
+      "n": 2,
+      "unit": null
+     },
+     "cpu_ms@src/bounds.rs:60": {
+      "at": "src/bounds.rs:60",
+      "max": 74.51,
+      "measure": "cpu_ms",
+      "median": 73.2515,
+      "min": 71.993,
+      "n": 2,
+      "unit": "ms"
+     },
+     "cpu_ms@src/groups.rs:89": {
+      "at": "src/groups.rs:89",
+      "max": 3054.157,
+      "measure": "cpu_ms",
+      "median": 3044.2780000000002,
+      "min": 3034.399,
+      "n": 2,
+      "unit": "ms"
+     },
+     "cpu_ms@src/matrix.rs:194": {
+      "at": "src/matrix.rs:194",
+      "max": 51.825,
+      "measure": "cpu_ms",
+      "median": 51.807,
+      "min": 51.789,
+      "n": 2,
+      "unit": "ms"
+     },
+     "cpu_ms@src/object.rs:30": {
+      "at": "src/object.rs:30",
+      "max": 1230.721,
+      "measure": "cpu_ms",
+      "median": 1220.5465,
+      "min": 1210.372,
+      "n": 2,
+      "unit": "ms"
+     },
+     "cpu_ms@src/triangle.rs:39": {
+      "at": "src/triangle.rs:39",
+      "max": 56.298,
+      "measure": "cpu_ms",
+      "median": 52.5255,
+      "min": 48.753,
+      "n": 2,
+      "unit": "ms"
+     },
+     "cpu_ms@src/world.rs:110": {
+      "at": "src/world.rs:110",
+      "max": 3241.46,
+      "measure": "cpu_ms",
+      "median": 3230.9314999999997,
+      "min": 3220.403,
+      "n": 2,
+      "unit": "ms"
+     },
+     "cpu_ms@src/world.rs:46": {
+      "at": "src/world.rs:46",
+      "max": 3076.752,
+      "measure": "cpu_ms",
+      "median": 3063.9970000000003,
+      "min": 3051.242,
+      "n": 2,
+      "unit": "ms"
+     },
+     "cpu_ms@src/world.rs:93": {
+      "at": "src/world.rs:93",
+      "max": 1946.401,
+      "measure": "cpu_ms",
+      "median": 1919.01,
+      "min": 1891.619,
+      "n": 2,
+      "unit": "ms"
+     },
+     "render_ms": {
+      "max": 145.697,
+      "median": 144.9735,
+      "min": 144.25,
+      "n": 2,
+      "unit": "ms"
+     },
+     "wall_ms": {
+      "max": 1603.373,
+      "median": 1010.6255,
+      "min": 417.878,
+      "n": 2,
+      "unit": "ms"
+     }
+    }
+   },
+   "comparison": {
+    "baseline": "03-medir-contagem",
+    "outputs": {
+     "librarian-cena-contagem.png": "same"
+    },
+    "stats": {
+     "calls@src/bounds.rs:60": {
+      "baseline_median": 2176865,
+      "change_pct": 0,
+      "median": 2176865,
+      "ranges_overlap": true,
+      "unit": null
+     },
+     "calls@src/matrix.rs:194": {
+      "baseline_median": 3521840,
+      "change_pct": -61.8,
+      "median": 1344975,
+      "ranges_overlap": false,
+      "unit": null
+     },
+     "calls@src/object.rs:30": {
+      "baseline_median": 1240921,
+      "change_pct": 0,
+      "median": 1240921,
+      "ranges_overlap": true,
+      "unit": null
+     },
+     "calls@src/triangle.rs:39": {
+      "baseline_median": 1240921,
+      "change_pct": 0,
+      "median": 1240921,
+      "ranges_overlap": true,
+      "unit": null
+     },
+     "calls@src/world.rs:110": {
+      "baseline_median": 24187,
+      "change_pct": 0,
+      "median": 24187,
+      "ranges_overlap": true,
+      "unit": null
+     },
+     "calls@src/world.rs:46": {
+      "baseline_median": 22131,
+      "change_pct": 0,
+      "median": 22131,
+      "ranges_overlap": true,
+      "unit": null
+     },
+     "calls@src/world.rs:93": {
+      "baseline_median": 44262,
+      "change_pct": 0,
+      "median": 44262,
+      "ranges_overlap": true,
+      "unit": null
+     },
+     "cpu_ms@src/bounds.rs:60": {
+      "baseline_median": 72.339,
+      "change_pct": 1.3,
+      "median": 73.2515,
+      "ranges_overlap": true,
+      "unit": "ms"
+     },
+     "cpu_ms@src/matrix.rs:194": {
+      "baseline_median": 124.97,
+      "change_pct": -58.5,
+      "median": 51.807,
+      "ranges_overlap": false,
+      "unit": "ms"
+     },
+     "cpu_ms@src/object.rs:30": {
+      "baseline_median": 1017.1625,
+      "change_pct": 20,
+      "median": 1220.5465,
+      "ranges_overlap": false,
+      "unit": "ms"
+     },
+     "cpu_ms@src/triangle.rs:39": {
+      "baseline_median": 53.424499999999995,
+      "change_pct": -1.7,
+      "median": 52.5255,
+      "ranges_overlap": true,
+      "unit": "ms"
+     },
+     "cpu_ms@src/world.rs:110": {
+      "baseline_median": 4341.651,
+      "change_pct": -25.6,
+      "median": 3230.9314999999997,
+      "ranges_overlap": false,
+      "unit": "ms"
+     },
+     "cpu_ms@src/world.rs:46": {
+      "baseline_median": 4101.9585,
+      "change_pct": -25.3,
+      "median": 3063.9970000000003,
+      "ranges_overlap": false,
+      "unit": "ms"
+     },
+     "cpu_ms@src/world.rs:93": {
+      "baseline_median": 2586.48,
+      "change_pct": -25.8,
+      "median": 1919.01,
+      "ranges_overlap": false,
+      "unit": "ms"
+     },
+     "render_ms": {
+      "baseline_median": 191.7215,
+      "change_pct": -24.4,
+      "median": 144.9735,
+      "ranges_overlap": false,
+      "unit": "ms"
+     },
+     "wall_ms": {
+      "baseline_median": 1041.7995,
+      "change_pct": -3,
+      "median": 1010.6255,
+      "ranges_overlap": true,
+      "unit": "ms"
+     }
+    }
+   },
+   "baseline_stats": {
+    "calls@src/bounds.rs:60": {
+     "at": "src/bounds.rs:60",
+     "max": 2176865,
+     "measure": "calls",
+     "median": 2176865,
+     "min": 2176865,
+     "n": 2,
+     "unit": null
+    },
+    "calls@src/groups.rs:87": {
+     "at": "src/groups.rs:87",
+     "max": 2176865,
+     "measure": "calls",
+     "median": 2176865,
+     "min": 2176865,
+     "n": 2,
+     "unit": null
+    },
+    "calls@src/matrix.rs:194": {
+     "at": "src/matrix.rs:194",
+     "max": 3521840,
+     "measure": "calls",
+     "median": 3521840,
+     "min": 3521840,
+     "n": 2,
+     "unit": null
+    },
+    "calls@src/object.rs:30": {
+     "at": "src/object.rs:30",
+     "max": 1240921,
+     "measure": "calls",
+     "median": 1240921,
+     "min": 1240921,
+     "n": 2,
+     "unit": null
+    },
+    "calls@src/triangle.rs:39": {
+     "at": "src/triangle.rs:39",
+     "max": 1240921,
+     "measure": "calls",
+     "median": 1240921,
+     "min": 1240921,
+     "n": 2,
+     "unit": null
+    },
+    "calls@src/world.rs:110": {
+     "at": "src/world.rs:110",
+     "max": 24187,
+     "measure": "calls",
+     "median": 24187,
+     "min": 24187,
+     "n": 2,
+     "unit": null
+    },
+    "calls@src/world.rs:46": {
+     "at": "src/world.rs:46",
+     "max": 22131,
+     "measure": "calls",
+     "median": 22131,
+     "min": 22131,
+     "n": 2,
+     "unit": null
+    },
+    "calls@src/world.rs:93": {
+     "at": "src/world.rs:93",
+     "max": 44262,
+     "measure": "calls",
+     "median": 44262,
+     "min": 44262,
+     "n": 2,
+     "unit": null
+    },
+    "cpu_ms@src/bounds.rs:60": {
+     "at": "src/bounds.rs:60",
+     "max": 75.085,
+     "measure": "cpu_ms",
+     "median": 72.339,
+     "min": 69.593,
+     "n": 2,
+     "unit": "ms"
+    },
+    "cpu_ms@src/groups.rs:87": {
+     "at": "src/groups.rs:87",
+     "max": 4159.746,
+     "measure": "cpu_ms",
+     "median": 4148.039000000001,
+     "min": 4136.332,
+     "n": 2,
+     "unit": "ms"
+    },
+    "cpu_ms@src/matrix.rs:194": {
+     "at": "src/matrix.rs:194",
+     "max": 125.452,
+     "measure": "cpu_ms",
+     "median": 124.97,
+     "min": 124.488,
+     "n": 2,
+     "unit": "ms"
+    },
+    "cpu_ms@src/object.rs:30": {
+     "at": "src/object.rs:30",
+     "max": 1029.563,
+     "measure": "cpu_ms",
+     "median": 1017.1625,
+     "min": 1004.762,
+     "n": 2,
+     "unit": "ms"
+    },
+    "cpu_ms@src/triangle.rs:39": {
+     "at": "src/triangle.rs:39",
+     "max": 56.363,
+     "measure": "cpu_ms",
+     "median": 53.424499999999995,
+     "min": 50.486,
+     "n": 2,
+     "unit": "ms"
+    },
+    "cpu_ms@src/world.rs:110": {
+     "at": "src/world.rs:110",
+     "max": 4342.424,
+     "measure": "cpu_ms",
+     "median": 4341.651,
+     "min": 4340.878,
+     "n": 2,
+     "unit": "ms"
+    },
+    "cpu_ms@src/world.rs:46": {
+     "at": "src/world.rs:46",
+     "max": 4105.673,
+     "measure": "cpu_ms",
+     "median": 4101.9585,
+     "min": 4098.244,
+     "n": 2,
+     "unit": "ms"
+    },
+    "cpu_ms@src/world.rs:93": {
+     "at": "src/world.rs:93",
+     "max": 2629.623,
+     "measure": "cpu_ms",
+     "median": 2586.48,
+     "min": 2543.337,
+     "n": 2,
+     "unit": "ms"
+    },
+    "render_ms": {
+     "max": 191.912,
+     "median": 191.7215,
+     "min": 191.531,
+     "n": 2,
+     "unit": "ms"
+    },
+    "wall_ms": {
+     "max": 1613.919,
+     "median": 1041.7995,
+     "min": 469.68,
+     "n": 2,
+     "unit": "ms"
+    }
+   }
+  },
+  {
+   "name": "testes",
+   "summary": {
+    "attempted": 1,
+    "succeeded": 1,
+    "stats": {
+     "wall_ms": {
+      "max": 3464.483,
+      "median": 3464.483,
+      "min": 3464.483,
+      "n": 1,
+      "unit": "ms"
+     }
+    }
+   },
+   "comparison": {
+    "baseline": "04-testes",
+    "outputs": {},
+    "stats": {
+     "wall_ms": {
+      "baseline_median": 3513.225,
+      "change_pct": -1.4,
+      "median": 3464.483,
+      "ranges_overlap": false,
+      "unit": "ms"
+     }
+    }
+   },
+   "baseline_stats": {
+    "wall_ms": {
+     "max": 3513.225,
+     "median": 3513.225,
+     "min": 3513.225,
+     "n": 1,
+     "unit": "ms"
+    }
+   }
+  }
+ ]
+}
