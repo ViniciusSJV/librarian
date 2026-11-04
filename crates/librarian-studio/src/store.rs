@@ -55,8 +55,9 @@ pub struct Settings {
     /// The language of the claims contract: "en" for English; empty or "pt" for Portuguese.
     #[serde(default)]
     pub language: String,
-    /// Each excerpt once in the query of a new question, in `evidence.line_map`.
-    #[serde(default)]
+    /// Each excerpt once in the query of a new question, in `evidence.line_map`. On by default,
+    /// also for projects saved before it: a recorded question keeps what it was asked with.
+    #[serde(default = "compact_by_default")]
     pub compact_items: bool,
     /// Claims policy; INFERENCE and HYPOTHESIS are refused by the checker unless allowed here.
     #[serde(default)]
@@ -929,6 +930,10 @@ fn target_of(catalog: &Catalog, symbols: &std::collections::BTreeMap<String, lib
 }
 
 /// The prepare request of a question with the project's settings; a chain step adds targets.
+fn compact_by_default() -> bool {
+    true
+}
+
 fn request(settings: &Settings, question: &str, targets: Option<Vec<Target>>, reviewed_facts: Vec<ReviewedFact>,
     owner_context: bool) -> Request {
     Request {
@@ -1047,7 +1052,7 @@ fn initial_settings(name: &str, root: &str) -> Result<Settings> {
         // New projects ask for checkable claims; `prose` is one setting away.
         answer_format: AnswerFormat::Claims,
         language: String::new(),
-        compact_items: false,
+        compact_items: true,
         allow_inference: false,
         allow_hypothesis: false,
         allow_patch: false,
