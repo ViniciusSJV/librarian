@@ -2042,6 +2042,50 @@ librarian-measure calls=5 at=src/lib.rs:7
     }
 
     #[test]
+    fn a_typed_question_is_answered_from_the_measure_and_the_measure_shows_how_it_counted() {
+        let scratch = project();
+        let root = scratch.0.join("project");
+        // The string holds what the command prints: the count of the function that opens at line 1.
+        fs::write(root.join("src/lib.rs"), "pub fn demo() -> u32 {\n    1\n}\npub const PRINTED: &str = \"\nlibrarian-measure calls=5 at=src/lib.rs:1\n\";\n").unwrap();
+        let profile = json!({ "project_root": ".", "commands": { "contagem": { "argv": ["git", "grep", "-h", "librarian-measure"], "repeat": 1 } },
+            "instrument": { "statement": "crate::count!();", "command": "contagem" } });
+        fs::write(root.join(PROFILE), profile.to_string()).unwrap();
+        let git = |args: &[&str]| {
+            let out = std::process::Command::new("git").arg("-C").arg(&root).args(["-c", "user.name=t", "-c", "user.email=t@t"]).args(args).output().unwrap();
+            assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
+        };
+        git(&["init", "-q"]);
+        git(&["config", "core.autocrlf", "false"]);
+        git(&["add", "."]);
+        git(&["commit", "-q", "-m", "x"]);
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let key = store.open(&display(&root)).unwrap()["key"].as_str().unwrap().to_owned();
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        // Before any measure: a question the rules know asks for it, any other is for the model.
+        let early = store.performance_question(&key, &run, "Quais funções pesam?").unwrap();
+        assert_eq!((early["route"]["intent"].as_str(), early["needs_measure"].as_bool()), (Some("heavy"), Some(true)));
+        let named = store.performance_question(&key, &run, "Otimize o demo").unwrap();
+        assert_eq!((named["route"]["intent"].as_str(), named["needs_measure"].as_bool()), (Some("optimize"), Some(true)));
+        let other = store.performance_question(&key, &run, "Bom dia").unwrap();
+        assert_eq!((other["route"]["intent"].as_str(), other["needs_measure"].as_bool()), (None, Some(false)));
+        assert!(store.measure_detail(&key, &run).is_err());
+        let sha = store.commands(&key).unwrap()["commands"][0]["sha256"].as_str().unwrap().to_owned();
+        store.approve_command(&key, "contagem", &sha).unwrap();
+        let measured = store.execute_instrumented(&key, &run).unwrap();
+        assert_eq!(measured["summary"]["succeeded"], 1, "{:#}", measured["runs"]);
+        // After it: the answer comes from the count.
+        let heavy = store.performance_question(&key, &run, "Quais funções pesam?").unwrap();
+        assert!(heavy["needs_measure"].is_null());
+        assert!(heavy["answer"][0].as_str().unwrap().contains("demo (5 chamadas"), "{heavy:#}");
+        assert_eq!(store.performance_question(&key, &run, "Bom dia").unwrap()["route"]["intent"], Value::Null);
+        // And the page can show what was inserted and what the program printed.
+        let how = store.measure_detail(&key, &run).unwrap();
+        assert_eq!((how["statement"].as_str(), how["functions"].as_u64()), (Some("crate::count!();"), Some(1)));
+        assert!(how["diff"].as_str().unwrap().contains("+pub fn demo() -> u32 { crate::count!();"), "{how:#}");
+        assert!(how["stdout"].as_str().unwrap().contains("librarian-measure calls=5 at=src/lib.rs:1"), "{how:#}");
+    }
+
+    #[test]
     fn stamp_is_sortable_utc() {
         let s = stamp();
         assert_eq!(s.len(), 15);

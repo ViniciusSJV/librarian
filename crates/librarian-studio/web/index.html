@@ -67,6 +67,13 @@
   .tag.measured { border-style: dashed; color: var(--text-primary); }
   /* "Onde pesa": the separation the Librarian proposes, and the ladder's record. */
   .hot-sep { border: 1px dashed var(--border); border-radius: 8px; padding: 8px; margin: 6px 0; }
+  /* How "Medir tudo" counted: the line before and after, and what the program printed. */
+  .count-lines { margin: 4px 0; max-height: 240px; overflow: auto; font-size: 12px; }
+  .count-lines > div { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .count-lines .old { background: rgba(229, 83, 75, .14); }
+  .count-lines .new { background: rgba(46, 160, 67, .14); }
+  .count-lines .picked { background: rgba(210, 153, 34, .25); font-weight: 600; }
+  .count-lines mark { background: rgba(46, 160, 67, .45); color: inherit; font-weight: 600; }
   #ladderLog { margin-top: 6px; } #ladderLog details { border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px; margin-top: 4px; }
   .error { color: var(--danger); }
   .hud { position: absolute; padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px;
@@ -337,12 +344,6 @@
           <button type="button" id="hotMeasure" class="primary" data-i18n="hot.measure" disabled></button>
           <span id="hotNote" class="muted"></span>
         </div>
-        <div class="row" style="gap: 6px; margin-top: 8px; flex-wrap: nowrap">
-          <input id="perfQuestion" type="search" data-i18n-placeholder="perf.placeholder" disabled>
-          <button type="button" id="perfAsk" data-i18n="perf.ask" disabled></button>
-          <button type="button" class="help" data-help-key="help.perf">?</button>
-        </div>
-        <div id="perfAnswer"></div>
         <div id="hotList"></div>
       </section>
       <section class="card">
@@ -903,7 +904,7 @@ const STRINGS = {
   'chat.empty': ['Abra um projeto e gere o grafo para perguntar.', 'Open a project and generate the graph to ask.'],
   'chat.ready': ['Grafo {run}. Cada pergunta passa pelo léxico, acende o grafo e prepara uma query conferida.', 'Graph {run}. Each question goes through the lexicon, lights the graph and prepares a checked query.'],
   'chat.preparing': ['Buscando pelo léxico e preparando a query…', 'Searching through the lexicon and preparing the query…'],
-  'composer.placeholder': ['Pergunte sobre o projeto… (Ctrl+Enter)', 'Ask about the project… (Ctrl+Enter)'],
+  'composer.placeholder': ['Pergunte sobre o projeto: quais funções pesam? onde otimizar? (Ctrl+Enter)', 'Ask about the project: which functions weigh? where to optimize? (Ctrl+Enter)'],
   'help.llm': ['Quem vai ler a pasta e responder. Nenhum: o Studio não chama ninguém; o bibliotecário só prepara a pasta, para você copiar e levar a outro chat (ChatGPT, outro Claude). Depois, cole a resposta na pergunta para conferir. Ollama: um leitor que trabalha na sua máquina, sem custo. Claude: um leitor de fora, pela sua conta, com o custo mostrado em cada resposta.',
     'Who will read the folder and answer. None: the Studio calls no one; the librarian only prepares the folder, for you to copy and take to another chat (ChatGPT, another Claude). Then paste the answer into the question to check it. Ollama: a reader working on your machine, at no cost. Claude: an outside reader, on your account, with the cost shown on each answer.'],
   'composer.claudeModel': ['Modelo do Claude', 'Claude model'],
@@ -1215,17 +1216,25 @@ const STRINGS = {
   'lexicon.saved': ['Léxico salvo.', 'Lexicon saved.'],
   'lexicon.suggestTitle': ['Sugerir com um LLM', 'Suggest with an LLM'],
   'legend.title': ['Legenda do mapa', 'Map legend'],
-  'perf.placeholder': ['Pergunte: quais funções pesam? onde otimizar? otimize o Groups::intersect', 'Ask: which functions weigh? where to optimize? optimize Groups::intersect'],
-  'perf.ask': ['Perguntar', 'Ask'],
   'help.perf': ['O Librarian reconhece a pergunta por regras sobre as palavras, depois do léxico do projeto, sem modelo nenhum. Responde com os números do último Medir tudo e separa: perguntas pequenas de fato para o modelo leve (qwen) e pedidos de mudança para a escada (qwen, depois Haiku).', 'The Librarian recognizes the question by rules over its words, after the project lexicon, with no model at all. It answers with the numbers of the latest Measure everything and splits: small fact questions for the light model (qwen) and change requests for the ladder (qwen, then Haiku).'],
   'perf.route': ['Entendi: {intent} (pelas palavras: {words}).', 'Understood: {intent} (from the words: {words}).'],
   'perf.intent.heavy': ['quais funções pesam', 'which functions weigh'],
   'perf.intent.where': ['onde otimizar', 'where to optimize'],
   'perf.intent.optimize': ['otimizar uma função', 'optimize one function'],
-  'perf.toQwen': ['Fichas para o qwen ({n})', 'Facts for the qwen ({n})'],
-  'perf.toLadder': ['Escada', 'Ladder'],
-  'perf.qwen': ['qwen', 'qwen'],
-  'perf.ladder': ['escada', 'ladder'],
+  'perf.noModel': ['Respondido pela medição, sem nenhum modelo.', 'Answered from the measure, with no model.'],
+  'perf.askModel': ['Perguntar ao modelo mesmo assim', 'Ask the model anyway'],
+  'perf.toQwen': ['Conferir fatos com o modelo local ({n})', 'Check facts with the local model ({n})'],
+  'perf.toLadder': ['Pedir esta mudança', 'Request this change'],
+  'perf.qwen': ['fato', 'fact'],
+  'perf.ladder': ['mudança', 'change'],
+  'how.title': ['Como esta contagem foi feita', 'How this count was made'],
+  'how.pick': ['Ver a função:', 'See the function:'],
+  'how.inserted': ['1. O Librarian pôs um contador no começo de {n} funções, em {files} arquivos, numa cópia. O seu projeto não muda.', '1. The Librarian put a counter at the start of {n} functions, in {files} files, in a copy. Your project does not change.'],
+  'how.ran': ['2. Rodou na cópia, sem nenhum modelo: {command}', '2. It ran in the copy, with no model: {command}'],
+  'how.printed': ['3. O programa imprimiu quantas vezes cada linha rodou. Daqui saem o ranking e a cidade.', '3. The program printed how many times each line ran. The ranking and the city come from here.'],
+  'how.noHunk': ['Esta função já tinha contador no projeto: nada foi inserido nela.', 'This function already had a counter in the project: nothing was inserted in it.'],
+  'how.allDiff': ['Tudo o que foi inserido', 'Everything inserted'],
+  'how.allOut': ['Tudo o que o programa imprimiu', 'Everything the program printed'],
   'skills.label': ['Skills:', 'Skills:'],
   'help.skills': ['Uma skill é um texto de instruções sobre como trabalhar (a pasta skills/ ao lado de modelfiles/). A marcada entra no SYSTEM de tudo o que a página envia: perguntas, escada, fichas do Onde pesa e perguntas do caminho, no Ollama e no Claude. O formato de resposta que o Librarian pede continua valendo. Cada resposta mostra as skills que foram junto.', 'A skill is a text of instructions on how to work (the skills/ folder next to modelfiles/). The checked one joins the SYSTEM of everything the page sends: questions, ladder, Where it weighs facts and path questions, on Ollama and on Claude. The answer format the Librarian asks for still holds. Each answer shows the skills that went with it.'],
   'legend.district': ['Bairro: um arquivo', 'District: a file'],
@@ -2068,12 +2077,17 @@ function modelfileSummary(content, provider) {
 }
 
 // The composer asks a free question, or, with an envelope, a question over the gathered declarations.
+// A free question the rules recognize is answered from the measure; only the others reach a model.
 async function ask() {
   const question = $('#question').value.trim();
   if (!question || !studio.run) return;
   if (mode === 'improve' && $('#ladderOn').checked && gathered.length && !investigation) {
     return busy([$('#ask')], $('#llmNote'), async () => { await saveSettings(); await askLadder(question); });
   }
+  if (!gathered.length && !investigation && await busy([$('#ask')], $('#llmNote'), () => askPerf(question)) !== false) return;
+  return askModel(question);
+}
+async function askModel(question) {
   const choice = composerChoice();
   await busy([$('#ask')], $('#llmNote'), async () => {
     // The question uses the saved settings; save what is on screen so nothing is forgotten.
@@ -2428,7 +2442,9 @@ function activate(id, fly = true) {
 }
 
 function renderTurns() {
-  $('#turns').replaceChildren(...studio.turns.map(renderTurn));
+  // The answers from the measure, each after the turns that existed when it was asked.
+  $('#turns').replaceChildren(...studio.turns.flatMap((turn, k) => [...perfEntries.filter(p => p.at === k).map(perfCard), renderTurn(turn)]),
+    ...perfEntries.filter(p => p.at >= studio.turns.length).map(perfCard));
   refreshComposer();
 }
 
@@ -2904,9 +2920,9 @@ function resetHot() {
   hotTurns = [];
   buildCity();
   $('#hotMeasure').disabled = !studio.project || !studio.run;
-  $('#perfQuestion').disabled = $('#perfAsk').disabled = !studio.project || !studio.run;
-  perf = null;
-  renderPerf();
+  perfEntries = [];
+  perfAsked = null;
+  measureDetail = null;
   $('#hotList').replaceChildren();
   say($('#hotNote'), '');
   if (studio.project && studio.run) loadHot().catch(() => {});
@@ -2918,13 +2934,15 @@ async function loadHot() {
   hot = measure;
   renderHot();
 }
-$('#hotMeasure').addEventListener('click', () => busy([$('#hotMeasure')], $('#hotNote'), async () => {
-  say($('#hotNote'), t('hot.measuring'));
+async function runMeasure(note) {
+  say(note, t('hot.measuring'));
   await api('POST', '/api/instrument/run', { key: studio.project.key, run: studio.run });
-  say($('#hotNote'), '');
+  say(note, '');
+  measureDetail = null;
   await loadHot();
   await loadCommands();
-}));
+}
+$('#hotMeasure').addEventListener('click', () => busy([$('#hotMeasure')], $('#hotNote'), () => runMeasure($('#hotNote'))));
 // The hottest function among the frequent ones, and the callers its calls come from.
 function hotTarget() {
   const target = hot?.rows.find(r => r.calls >= FREQUENT);
@@ -2968,45 +2986,112 @@ function renderHot() {
       ' → ', ...k.targets.flatMap((x, i) => [i ? ', ' : '', goTo(x.symbol, x.name), ` (${intPt(x.calls)})`])))));
   box.replaceChildren(
     el('p', { className: 'muted', style: 'font-size: 12px', textContent: t('hot.summary', { n: hot.functions, rows: hot.rows.length, execution: hot.execution }) }),
+    measureHow(),
     separate,
     el('h3', { textContent: t('hot.ranking') }),
     el('ol', { className: 'claims' }, ...hot.rows.slice(0, 20).map(row)),
     el('p', { className: 'muted', style: 'font-size: 11px', textContent: hot.limits.join(' ') }));
 }
-// A typed performance question: the Librarian's route, its answer from the measure, and the
-// small questions it splits off — facts to the light model, changes to the ladder.
-let perf = null;
-async function askPerf() {
-  perf = await api('POST', '/api/performance-question', { key: studio.project.key, run: studio.run, question: $('#perfQuestion').value.trim() });
-  renderPerf();
+// How the latest "Medir tudo" counted, on one function at a time: the line before and after in
+// the copy, the command, and what the program printed for it.
+let measureDetail = null, measurePicked = null;
+function measureHow() {
+  const body = el('div');
+  const box = el('details', { id: 'measureHow', className: 'hot-sep', ontoggle: () => box.open && busy([], $('#hotNote'), async () => {
+    measureDetail ??= await api('GET', `/api/measure-detail?${query({ key: studio.project.key, run: studio.run })}`);
+    if (measureDetail.execution !== hot.execution) return;
+    const rows = hot.rows.filter(r => r.symbol).slice(0, 40);
+    // Opens on the heaviest function that received the counter: some may already have their own.
+    const shown = () => rows.find(r => r.at === measurePicked) ?? rows.find(r => measureHunk(r).length) ?? rows[0];
+    const lines = el('div');
+    const paint = () => lines.replaceChildren(...measureLines(shown()));
+    const picker = el('select', { id: 'measurePick', onchange: () => { measurePicked = picker.value; paint(); } },
+      ...rows.map(r => el('option', { value: r.at, textContent: r.name })));
+    picker.value = shown().at;
+    paint();
+    body.replaceChildren(el('div', { className: 'row', style: 'gap: 6px; margin: 6px 0' }, t('how.pick'), picker), lines);
+  }) }, el('summary', { textContent: t('how.title') }), body);
+  return box;
 }
-function renderPerf() {
-  const box = $('#perfAnswer');
-  if (!perf) return box.replaceChildren();
+// The file's section of the diff, then its hunk for that line: `@@ -line,1 +line,1 @@`.
+function measureHunk(row) {
+  const line = row.at.slice(row.path.length + 1);
+  const section = measureDetail.diff.split(/^(?=--- a\/)/m).find(s => s.startsWith(`--- a/${row.path}\n`)) ?? '';
+  return section.split(/^(?=@@ )/m).find(s => s.startsWith(`@@ -${line},`))?.split('\n') ?? [];
+}
+function measureLines(row) {
+  const d = measureDetail;
+  const div = (cls, ...kids) => el('div', { className: cls }, ...kids);
+  const hunk = measureHunk(row);
+  const [before, after] = [hunk[1]?.slice(1), hunk[2]?.slice(1)];
+  const at = after?.indexOf(d.statement) ?? -1;
+  const printed = d.stdout.split('\n').map(s => s.trim()).filter(s => s.endsWith(` at=${row.at}`));
+  return [
+    el('p', { style: 'margin: 6px 0 0', textContent: t('how.inserted', { n: intPt(d.functions), files: intPt((d.files ?? []).length) }) }),
+    hunk.length ? el('div', { className: 'count-lines mono' }, div('old', `- ${before}`),
+      at < 0 ? div('new', `+ ${after}`) : div('new', `+ ${after.slice(0, at)}`, el('mark', { textContent: d.statement }), after.slice(at + d.statement.length)))
+      : el('p', { className: 'muted', textContent: t('how.noHunk') }),
+    el('p', { style: 'margin: 6px 0 0', textContent: t('how.ran', { command: d.argv.join(' ') }) }),
+    el('p', { style: 'margin: 6px 0 0', textContent: t('how.printed') }),
+    el('div', { className: 'count-lines mono' }, ...printed.map(s => div('picked', s))),
+    el('details', {}, el('summary', { className: 'muted', textContent: t('how.allOut') }), el('pre', { className: 'count-lines', textContent: d.stdout })),
+    el('details', {}, el('summary', { className: 'muted', textContent: t('how.allDiff') }), el('pre', { className: 'count-lines', textContent: d.diff })),
+  ];
+}
+// A question typed in the composer that the rules recognize: the route, its answer from the
+// measure, and the small questions it splits off — facts to the light model, changes to the
+// ladder. These cards are worked out from the recorded measure and live only on the page.
+let perfEntries = [], perfAsked = null, perfRunning = false;
+async function askPerf(question) {
+  const answer = await api('POST', '/api/performance-question', { key: studio.project.key, run: studio.run, question });
+  if (!answer.route.intent) return false;
+  perfEntries.push({ ...answer, question, at: studio.turns.length });
+  $('#question').value = '';
+  renderTurns();
+  $('#turns').scrollTop = $('#turns').scrollHeight;
+  return true;
+}
+// One action of a card at a time: the ladder redraws the conversation while it runs.
+async function perfAction(action) {
+  perfRunning = true;
+  renderTurns();
+  await busy([], $('#llmNote'), action);
+  perfRunning = false;
+  renderTurns();
+}
+function perfCard(perf) {
   const r = perf.route;
-  const intent = r.intent ? t(`perf.intent.${r.intent}`) : null;
+  const intent = t(`perf.intent.${r.intent}`);
   const tag = text => el('span', { className: 'tag', style: 'margin-right: 4px', textContent: text });
-  box.replaceChildren(el('div', { className: 'hot-sep' },
-    intent ? el('div', { className: 'muted', style: 'font-size: 12px', textContent: t('perf.route', { intent, words: r.matched.join(', ') }) }) : null,
+  const button = (label, action, primary) => el('button', { className: primary ? 'primary' : '', textContent: label, disabled: perfRunning, onclick: () => perfAction(action) });
+  return el('div', { className: 'hot-sep perf-card' },
+    el('strong', { textContent: perf.question }),
+    el('div', { className: 'muted', style: 'font-size: 12px', textContent: t('perf.route', { intent, words: r.matched.join(', ') }) }),
+    perf.needs_measure ? null : el('div', { className: 'muted', style: 'font-size: 12px' }, t('perf.noModel'), helpButton(t('help.perf'))),
     ...perf.answer.map(a => el('div', { style: 'font-size: 13px; margin-top: 4px', textContent: a })),
     ...perf.facts.map(f => el('div', { style: 'font-size: 12px; margin-top: 6px' }, tag(t('perf.qwen')), f.text)),
     ...perf.changes.map(c => el('div', { style: 'font-size: 12px; margin-top: 6px' }, tag(t('perf.ladder')), c.text, ' ',
-      el('button', { textContent: t('perf.toLadder'), onclick: ev => busy([ev.target], $('#hotNote'), async () => {
+      button(t('perf.toLadder'), async () => {
         // The envelope the Librarian suggests for those points, as "Otimizar" does, up to 16.
         const suggestion = await api('POST', '/api/envelope/suggest', { key: studio.project.key, run: studio.run, nodes: c.nodes });
         gathered = [...new Set([...c.nodes, ...suggestion.items.map(i => i.id)])]
           .filter(id => c.nodes.includes(id) || state.index.has(id) || id.startsWith(HEADER)).slice(0, 16);
         gatherFacts = true; renderGathered(); setMode('improve');
-        await askLadder(c.text);
-      }) }))),
+        // The envelope was for this change: the next question typed starts clean.
+        try { await askLadder(c.text); } finally { gathered = []; gatherFacts = false; renderGathered(); }
+      }))),
     el('div', { className: 'row', style: 'gap: 6px; margin-top: 8px' },
-      perf.facts.length ? el('button', { className: 'primary', textContent: t('perf.toQwen', { n: perf.facts.length }),
-        onclick: ev => busy([ev.target], $('#hotNote'), () => askFacts(perf.facts.map(f => ({ symbol: f.symbol, question: f.text, summary: f.text.slice(0, 60) })))) }) : null,
-      el('button', { id: 'perfApprove', textContent: t('hot.approveAll'), hidden: !hotTurns.length, onclick: ev => approveHotFacts(ev.target) })),
-    el('p', { className: 'muted', style: 'font-size: 11px', textContent: perf.limits.join(' ') })));
+      perf.needs_measure ? button(t('hot.measure'), async () => {
+        await runMeasure($('#llmNote'));
+        const answer = await api('POST', '/api/performance-question', { key: studio.project.key, run: studio.run, question: perf.question });
+        delete perf.needs_measure;
+        Object.assign(perf, answer);
+      }, true) : null,
+      perf.facts.length ? button(t('perf.toQwen', { n: perf.facts.length }), () => { perfAsked = perf; return askFacts(perf.facts.map(f => ({ symbol: f.symbol, question: f.text, summary: f.text.slice(0, 60) }))); }, true) : null,
+      perfAsked === perf && hotTurns.length ? el('button', { textContent: t('hot.approveAll'), disabled: perfRunning, onclick: ev => approveHotFacts(ev.target, $('#llmNote')) }) : null,
+      button(t('perf.askModel'), () => askModel(perf.question))),
+    (perf.limits ?? []).length ? el('p', { className: 'muted', style: 'font-size: 11px', textContent: perf.limits.join(' ') }) : null);
 }
-$('#perfAsk').addEventListener('click', () => busy([$('#perfAsk')], $('#hotNote'), askPerf));
-$('#perfQuestion').addEventListener('keydown', ev => { if (ev.key === 'Enter') $('#perfAsk').click(); });
 
 // Each fact question to the light model, one after the other, in Locate mode; their turns can
 // then be approved as a batch.
@@ -3015,7 +3100,7 @@ async function askFacts(items) {
   await saveSettings();
   hotTurns = [];
   for (const [k, item] of items.entries()) {
-    say($('#hotNote'), t('hot.asking', { k: k + 1, n: items.length, name: item.summary }));
+    say($('#llmNote'), t('hot.asking', { k: k + 1, n: items.length, name: item.summary }));
     const turn = await api('POST', '/api/gathered-question', { key: studio.project.key, run: studio.run, question: item.question, nodes: [item.symbol],
       with_facts: false, origin: { kind: 'hot', summary: item.summary } });
     studio.turns.push(turn);
@@ -3023,9 +3108,8 @@ async function askFacts(items) {
     renderTurns();
     await sendTurn(turn, FACT_MODEL);
   }
-  say($('#hotNote'), t('hot.asked', { n: items.length }));
+  say($('#llmNote'), t('hot.asked', { n: items.length }));
   renderHot();
-  renderPerf();
 }
 
 // One small question per line, to the light model, in Locate mode (facts only).
@@ -3033,6 +3117,7 @@ async function askHotFacts(sep) {
   setMode('locate');
   await saveSettings();
   hotTurns = [];
+  perfAsked = null;
   for (const [k, item] of sep.lines.entries()) {
     say($('#hotNote'), t('hot.asking', { k: k + 1, n: sep.lines.length, name: item.caller.name }));
     const question = t('hot.factQuestion', { name: item.caller.name, line: item.line, text: item.text, calls: intPt(item.caller.calls),
@@ -3048,22 +3133,22 @@ async function askHotFacts(sep) {
   renderHot();
 }
 // Every FACT of those questions that passed the mechanical check, approved with one note.
-async function approveHotFacts(button) {
+async function approveHotFacts(button, where = $('#hotNote')) {
   const turns = (await api('GET', `/api/turns?${query({ key: studio.project.key, run: studio.run })}`)).filter(x => hotTurns.includes(x.id));
   const passed = turns.flatMap(turn => (turn.sends ?? []).filter(s => s.check?.report?.mechanical_status === 'passed' && s.link)
     .flatMap(s => (s.check.claims ?? []).filter(c => c.kind === 'FACT' && !s.reviews?.[c.id]).map(c => ({ turn: turn.id, send: s.id, claim: c.id, text: c.text }))));
-  if (!passed.length) return say($('#hotNote'), t('hot.nothingToApprove'));
+  if (!passed.length) return say(where, t('hot.nothingToApprove'));
   const note = await modal({ title: t('hot.approveTitle', { n: passed.length }), message: passed.map(p => `· ${p.text}`).join('\n'), input: true,
     placeholder: t('review.approvePlaceholder'), ok: t('review.approve'), required: t('review.approveRequired') });
   if (note === null) return;
-  await busy([button], $('#hotNote'), async () => {
+  await busy([button], where, async () => {
     for (const p of passed) {
       await api('POST', '/api/review', { key: studio.project.key, run: studio.run, turn: p.turn, send: p.send, claim: p.claim, decision: 'approved', note });
     }
     studio.turns = await api('GET', `/api/turns?${query({ key: studio.project.key, run: studio.run })}`);
     renderTurns();
     await loadFacts();
-    say($('#hotNote'), t('hot.approved', { n: passed.length }));
+    say(where, t('hot.approved', { n: passed.length }));
   });
 }
 // "Otimizar": the envelope the Librarian suggests for the function, with the reviewed facts,
@@ -4152,7 +4237,6 @@ function setLang(lang) {
   if (studio.status) { fillProviders(); setModelfiles(studio.modelfiles); renderSkills(); }
   if (studio.project) { renderProjectInfo(); renderRuns(); showRunNote(); loadFacts().catch(console.error); }
   renderGathered();
-  renderPerf();
   if (studio.status) renderTurns();
   if (state.graph) {
     showProvenance();

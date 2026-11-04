@@ -3,7 +3,7 @@
 //! into small questions: facts for the light model, changes for the ladder. No LLM decides the
 //! route; every number in the text comes from the measure.
 use crate::store::Store;
-use librarian_ingest::{search::{tokens, Lexicon}, Result};
+use librarian_ingest::{search::{tokens, Lexicon}, Catalog, Result};
 use serde_json::{json, Value};
 use std::collections::BTreeSet;
 
@@ -77,11 +77,21 @@ fn short(name: &str) -> &str {
 impl Store {
     /// The typed question, recognized, answered from the latest "Medir tudo" and split into the
     /// small questions the light model and the ladder receive.
+    /// A question the rules do not recognize comes back with no intent: it is for the model. One
+    /// they recognize, before any measure, comes back asking for "Medir tudo".
     pub fn performance_question(&self, key: &str, run: &str, question: &str) -> Result<Value> {
+        let lexicon = self.settings(key)?.lexicon;
+        if self.latest_measure(key, run)?.is_none() {
+            let catalog = Catalog::load(&self.edition(key, run)?)?;
+            let names: Vec<String> = catalog.symbols().values().map(|s| short(&s.qualified_name).to_owned()).collect();
+            let route = route(question, &lexicon, &names);
+            let needs_measure = route["intent"].is_string();
+            return Ok(json!({ "route": route, "needs_measure": needs_measure, "facts": [], "changes": [],
+                "answer": ["Para responder, o Librarian precisa contar antes quantas vezes cada função roda: rode o Medir tudo."] }));
+        }
         let hot = self.hotspots(key, run)?;
         let rows: Vec<&Value> = hot["rows"].as_array().into_iter().flatten().filter(|r| r["symbol"].is_string()).collect();
         let names: Vec<String> = rows.iter().filter_map(|r| r["name"].as_str().map(|n| short(n).to_owned())).collect();
-        let lexicon = self.settings(key)?.lexicon;
         let route = route(question, &lexicon, &names);
         let calls = |r: &Value| r["calls"].as_f64().unwrap_or(0.);
         let ms = |r: &Value| r["cpu_ms"].as_f64().unwrap_or(0.);

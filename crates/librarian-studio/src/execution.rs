@@ -259,11 +259,28 @@ impl Store {
         Ok(record)
     }
 
+    /// The latest successful "Medir tudo" of `run`, if any.
+    pub(crate) fn latest_measure(&self, key: &str, run: &str) -> Result<Option<Value>> {
+        Ok(self.executions(key, run)?.into_iter().rev()
+            .find(|x| !x["instrumentation"].is_null() && x["summary"]["succeeded"].as_u64() > Some(0)))
+    }
+
+    /// How the latest "Medir tudo" was made: what it inserted in the copy and what the program
+    /// printed there, as recorded. Repetitions stop at the first failure, so the first one ran well.
+    pub fn measure_detail(&self, key: &str, run: &str) -> Result<Value> {
+        let latest = self.latest_measure(key, run)?.ok_or("Ainda não há medição de tudo nesta edition: rode Medir tudo")?;
+        let dir = self.run_dir(key, run)?.join("executions").join(latest["id"].as_str().unwrap_or_default());
+        Ok(json!({
+            "execution": latest["id"], "argv": latest["argv"], "statement": latest["instrumentation"]["statement"],
+            "files": latest["instrumentation"]["files"], "functions": latest["instrumentation"]["functions"].as_array().map_or(0, |f| f.len()),
+            "diff": String::from_utf8_lossy(&fs::read(dir.join("instrument.diff"))?),
+            "stdout": String::from_utf8_lossy(&fs::read(dir.join("stdout-1.txt"))?),
+        }))
+    }
+
     /// "Onde pesa": the latest successful "Medir tudo" of `run`, as a ranking.
     pub fn hotspots(&self, key: &str, run: &str) -> Result<Value> {
-        let latest = self.executions(key, run)?.into_iter().rev()
-            .find(|x| !x["instrumentation"].is_null() && x["summary"]["succeeded"].as_u64() > Some(0))
-            .ok_or("Ainda não há medição de tudo nesta edition: rode Medir tudo")?;
+        let latest = self.latest_measure(key, run)?.ok_or("Ainda não há medição de tudo nesta edition: rode Medir tudo")?;
         let catalog = Catalog::load(&self.edition(key, run)?)?;
         let mut hot = crate::instrument::hotspots(&catalog, &latest);
         // What is costly by its kind, not by how often its function runs: an inventory operation

@@ -220,6 +220,7 @@ fn route(app: &App, req: &Request) -> Result<Response> {
         }
         ("GET", "/api/value-sources") => ok(store.value_sources(param("key")?, param("run")?, param("symbol")?, param("text")?)?),
         ("GET", "/api/hotspots") => ok(store.hotspots(param("key")?, param("run")?)?),
+        ("GET", "/api/measure-detail") => ok(store.measure_detail(param("key")?, param("run")?)?),
         ("POST", "/api/performance-question") => {
             let body = req.json()?;
             ok(store.performance_question(&field(&body, "key")?, &field(&body, "run")?, &field(&body, "question")?)?)
