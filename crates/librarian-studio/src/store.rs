@@ -2085,6 +2085,11 @@ librarian-measure memory_mb=100
         let x = store.execute(&key, &run, "medir", Some(&change)).unwrap();
         assert_eq!(x["measures"]["memory_mb"]["better"], "lower", "{x:#}");
         assert_eq!(crate::ladder::verdict(std::slice::from_ref(&x)), (true, vec![]), "{x:#}");
+        // A copy that went away (a cleaned temporary folder) comes back with its change applied,
+        // though the diff beside it stayed: otherwise the baseline would be measured as the change.
+        git(&["worktree", "remove", "--force", x["copy"].as_str().unwrap()]);
+        let again = store.execute(&key, &run, "medir", Some(&change)).unwrap();
+        assert_eq!(again["summary"]["stats"]["memory_mb"]["median"], 20.0, "{again:#}");
         // A declaration the gate could not read stops the run instead of being ignored.
         fs::write(root.join(PROFILE), json!({ "project_root": ".", "commands": profile["commands"], "measures": { "memory_mb": { "better": "menos" } } }).to_string()).unwrap();
         let wrong = store.execute(&key, &run, "medir", Some(&change)).unwrap_err().to_string();

@@ -379,6 +379,8 @@ impl Store {
             fs::create_dir_all(dir.parent().unwrap())?;
             // A copy whose folder was deleted (a cleaned temporary folder) is still registered.
             git(root, &["worktree", "prune"])?;
+            // Its diff may have outlived it, and the new copy has no change applied yet.
+            let _ = fs::remove_file(dir.with_extension("diff"));
             // The files as the repository stores them (no CRLF conversion on checkout): the
             // diffs are written with the edition's lines, and a converted file would not match
             // their context. The source check below already tolerates line endings.
