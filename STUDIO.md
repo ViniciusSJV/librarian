@@ -523,13 +523,41 @@ a ligação está escrita:
 | escreve o campo | quem escreve esses campos (`self.campo = …` ou um literal do tipo) |
 | chama | o que a declaração chama, quando o nome aponta uma declaração só |
 | tipo devolvido / tipo de | o tipo que a chamada devolve, e o tipo dono do método chamado |
-| chama a declaração | quem a chama, sem homônimos e sem testes |
+| chama a declaração | quem a chama, sem homônimos |
 | escreve o tipo | os tipos escritos nela (assinatura, anotações), quando o nome aponta um só |
 | topo do arquivo | as linhas antes da primeira declaração do arquivo, onde ficam os imports |
 
-Tudo vem marcado; você desmarca o que não quer e clica em **Juntar os marcados**. No máximo 12
-sugestões além das escolhidas. É tudo pelo nome escrito: o que não está escrito pelo nome não
-aparece (um `Depends(get_db)` não é uma chamada de `get_db`), e homônimos ficam de fora.
+É tudo pelo nome escrito: o que não está escrito pelo nome não aparece (um `Depends(get_db)` não é
+uma chamada de `get_db`). Uma chamada com homônimos só entra quando o **Medir tudo** viu um deles
+rodar e os outros não.
+
+Dessas candidatas, regras fixas sobre o grafo e a medição escolhem o que vai, sem modelo. Cada uma
+recebe um papel, e os papéis preenchem 6 KB de código, com no máximo 16 declarações, nesta ordem:
+
+| Papel | O que é |
+| --- | --- |
+| alvo | as declarações escolhidas; vão sempre, mesmo passando do limite |
+| origem do valor | o tipo dono, quem escreve os campos lidos e a implementação do trait no caminho, mais o topo do arquivo: é onde um valor calculado pode ser guardado |
+| custo | o que ela chama e rodou na medição, do mais chamado ao menos chamado |
+| caminho | quem a chama, do mais chamado ao menos chamado |
+| apoio | tipos escritos e devolvidos, e o que ela chama quando não há medição |
+| restrição | os testes que a chamam: ficam de fora, porque o portão já os roda |
+
+Uma função que a medição contou e não rodou fica de fora, salvo se for origem do valor: um construtor
+roda antes da parte medida e é justamente onde a mudança guarda o valor. Sem medição, a ordem vem só
+da estrutura, e a tela avisa.
+
+A sugestão vem marcada; você desmarca o que não quer e clica em **Juntar os marcados**. Abaixo dela:
+
+- **Ficaram de fora:** cada item com o motivo (não rodou, teste, não coube no orçamento ou passou de
+  16). Marcar um deles o traz para o envelope.
+- **O que o grafo não resolveu:** chamadas e tipos com homônimos, campos escritos por um receptor de
+  tipo desconhecido, campos lidos sem quem escreva e origens que não couberam.
+- **O que está escrito e precisa ser preservado:** laços, operações do inventário, escritas de campo e
+  testes dos alvos e dos custos. Condições, caminhos alternativos e invariantes ainda não são
+  extraídos, e chamadas dentro de macros não são vistas.
+
+Essas listas ainda não vão ao modelo. A pergunta grava o orçamento, o que ficou de fora e as lacunas.
 
 O **topo do arquivo** é uma faixa de linhas, não uma declaração: entra como ficha só na pergunta
 juntada, e a mudança proposta pode editar essas linhas (por exemplo, acrescentar um import). Sem
@@ -609,6 +637,10 @@ O Librarian decide *onde*.
   de `instrument.command`. Ficam de fora os testes, as `const fn`, as funções sem corpo, as
   que já contam e os caminhos em `instrument.skip`. Como nenhuma linha muda de lugar, cada
   `at=` aponta para a função. No renderer, 236 funções contadas num frame de 128×72.
+- **Como esta contagem foi feita** mostra a medição de uma função por vez: a linha antes e
+  depois na cópia, com o contador destacado, o comando que rodou e o que o programa imprimiu
+  para aquela linha. Abre na função mais pesada que recebeu o contador (uma que já contava não
+  recebe nada, e a tela diz isso) e guarda o diff inteiro e a saída inteira, como foram gravados.
 - O **ranking** lista cada linha contada com a função, as chamadas e o tempo (inclusivo,
   somado das threads e inflado pela própria contagem: a ordem é o que vale; a contagem é
   exata). Cada linha mostra **quem chama** (pelo nome escrito, com as chamadas contadas de
@@ -625,6 +657,14 @@ O Librarian decide *onde*.
   "`Triangle::new` cria a transformação como `Matrix::identity()`".
 - **Aprovar em lote:** os FACTs dessas perguntas que passaram na conferência mecânica,
   aprovados de uma vez com uma nota; um a um continua na conversa.
+- **A mesma pergunta na conversa:** o campo da conversa reconhece "quais funções pesam?",
+  "onde otimizar?" e "otimize o Groups::intersect" por regras sobre as palavras, depois do
+  léxico, sem modelo. A resposta sai da medição, num cartão na própria conversa, com os botões
+  para conferir fatos com o modelo local e para pedir a mudança. Sem medição, o cartão oferece o
+  **Medir tudo**. **Perguntar ao modelo mesmo assim** manda a mesma pergunta a quem está escolhido
+  na conversa, para quando as regras reconheceram uma pergunta que não era sobre isso. Uma
+  pergunta com envelope ou que as regras não reconhecem vai direto ao modelo. O cartão é
+  calculado da medição gravada e não fica salvo: some ao recarregar a página.
 - **Otimizar** monta o envelope sugerido da função (com os fatos aprovados), uma pergunta só
   com o que foi contado, sem a solução, e marca a escada.
 
@@ -641,9 +681,25 @@ saída é igual à da linha de base, alguma contagem cai 5% ou mais (ou um tempo
 projeto cai 10% com as faixas separadas; o `wall_ms` da Régua não conta) e nenhuma contagem
 sobe 5%. Linhas de base que faltam são rodadas antes.
 
-- A resposta pode trazer até três mudanças (uma HYPOTHESIS cada); o portão confere cada uma
-  até uma passar. Uma mudança vale por si: os próprios edits geraram o diff, nenhum problema
-  a cita e nenhum problema é da resposta inteira.
+O que é medido não pode ser o que muda. Isso vale para qualquer linguagem que imprima essas
+medidas, mesmo onde o **Medir tudo** não sabe colocar os contadores:
+
+- **Contagem e tempo são evidências separadas.** Um comando que conta (imprime `calls@`, ou é o
+  `instrument.command`) só prova contagem. O tempo dele inclui os contadores, e um contador a
+  menos deixa a execução mais rápida sem melhorar nada.
+- **Um contador que some é investigado.** Se a série existia na linha de base e não aparece com
+  a mudança, há três casos: o diff apagou o contador (recusa), apagou a função inteira junto
+  (sem recusa e sem contar como queda) ou o contador continua escrito e não foi mais alcançado
+  (a contagem foi a zero, e isso conta como queda). Uma linha que só mudou de lugar não some.
+- **A medição declarada é protegida.** A mudança é recusada se tocar no perfil, em um caminho de
+  `instrument.protect`, ou se adicionar ou apagar a instrução de `instrument.statement`, salvo
+  quando ela sai junto com a função.
+
+- A resposta pode trazer até três mudanças (uma HYPOTHESIS cada); o portão confere todas. Das que
+  passam, fica a de maior ganho: a maior queda de um tempo medido pelo projeto ou, num projeto que
+  só conta, do total das contagens. As outras aparecem no registro como "ganho menor". Uma mudança
+  vale por si: os próprios edits geraram o diff, nenhum problema a cita e nenhum problema é da
+  resposta inteira.
 - Uma **LACUNA** precisa dizer entre crases o que falta. O Librarian procura esses nomes no
   catálogo (tipos primeiro, só os que rodaram na medida; um enum traz os tipos das variantes
   que rodaram), junta ao envelope (até 16 declarações) e pergunta de novo ao mesmo modelo.
@@ -702,7 +758,7 @@ studio lê o arquivo ao abrir a pasta pela primeira vez. Exemplo real:
 | `answer.allow_inference`, `answer.allow_hypothesis` | Política do formato claims (padrão `false`) |
 | `commands` | Comandos que o painel **Execução** roda numa cópia do projeto, depois da sua aprovação: `argv` (programa e argumentos, sem shell), `timeout_s` (padrão 600, até 3600), `repeat` (padrão 1, até 20) e `outputs` (arquivos gerados, relativos à cópia, com o sha256 guardado). O studio lê os comandos do arquivo a cada uso e nunca os escreve; **Exportar perfil** mantém os que já estão lá |
 | `inventory` | Regras do projeto para o inventário de operações (aba **Investigar**): `rules`, cada uma com `id`, `operation`, `match` (`call`, `field_declared_with` ou `module_write`) e os nomes. O studio lê o arquivo a cada uso e nunca o escreve; **Exportar perfil** mantém as regras |
-| `instrument` | Como o projeto conta uma passagem por uma função, para o **Medir tudo**: `statement` (uma instrução de uma linha, terminada em `;`, como `crate::count!();`), `command` (o comando aprovado que imprime as contagens com `at=`) e `skip` (prefixos de caminho deixados de fora, como `src/bin/`). Lido a cada uso; **Exportar perfil** mantém |
+| `instrument` | Como o projeto conta uma passagem por uma função, para o **Medir tudo**: `statement` (uma instrução de uma linha, terminada em `;`, como `crate::count!();`), `command` (o comando aprovado que imprime as contagens com `at=`) `skip` (prefixos de caminho deixados de fora, como `src/bin/`) e `protect` (caminhos que fazem parte da medição, que uma mudança da escada não pode tocar). Lido a cada uso; **Exportar perfil** mantém |
 
 O idioma do contrato de claims fica nas configurações do projeto no studio (`language`:
 `en` para inglês; vazio é português) e é gravado com cada pergunta; ainda não tem controle na

@@ -1112,3 +1112,82 @@ Próximos passos, decididos:
 | C: B com o [Ponytail](https://github.com/DietrichGebert/ponytail) (o SKILL.md no prompt de sistema, sem instalar o plugin) | 1,9 s | US$ 0,28 | 62 em 5 min |
 
 As perguntas sozinhas deixaram o Claude mais minucioso e três vezes mais caro; o Ponytail trouxe o custo de volta sem perder resultado. O vídeo 11 usa a versão C.
+
+## Evidence Builder — escolher as fontes pelo que explicam (04/11/2026)
+
+O problema não parece ser falta de contexto, e sim como as fontes são escolhidas. O grafo responde bem "quais fontes estão relacionadas a esta função?". Falta responder "quais são necessárias para compreendê-la?". Não muda o fluxo de nove etapas e não cria agentes: a seleção continua determinística, e o LLM entra só onde interpretar agrega valor.
+
+**O que os envios da gravação do vídeo 12 mostraram:**
+
+- 11 de 14 envelopes estavam no teto de 16 declarações, e o corte não era registrado.
+- O Haiku citou ou editou de 1 a 6 declarações por envelope (mediana 2). Não citar não prova que a fonte foi inútil.
+- `parse_obj_smooth` ocupava 43% do código no envelope de `inverse`: entrou por chamar `inverse` e não aparece na contagem do render.
+- A rodada 3 editou 6 declarações e só uma tem contagem. **Selecionar só por custo cortaria onde o valor foi guardado.**
+- O código é 7,1 KB de uma query de 33,5 KB; `line_map` (11,9 KB) repete o `excerpt`.
+- O qwen passou em 9 de 10 fatos e em 0 de 8 mudanças, recusadas por forma. Fontes melhores provavelmente não resolvem isso.
+
+**Decisões:** papéis por regras, em vez de pontuação com pesos sem dados para calibrar; limite em bytes, porque 16 itens tratam 65 bytes e 3 KB como iguais; gabarito antes de mexer na seleção; fatos por último.
+
+### Feito (`a979f60`, sem push)
+
+- **Gabarito** (`tests/gabarito.rs`): 6 mudanças que passaram na Régua, 3 do renderer e 3 do `logistica-api`, com a edition, a medição e as declarações editadas de cada uma. Os dados ficam em `.studio/gabarito`, fora do Git; roda com `--ignored`.
+- **Seleção** (`envelope::candidates` e `select`): todas as candidatas são listadas; cada uma recebe o papel de alvo, origem do valor, custo, caminho, apoio ou restrição; os papéis preenchem 6 KB, com no máximo 16 declarações. O que a medição contou e não rodou sai, salvo se for origem de um valor. Teste fica para o portão.
+- **Relatório:** por que cada item ficou de fora, com a opção de marcá-lo de volta na tela. A pergunta grava o orçamento, o que saiu e as lacunas.
+- **Lacunas sem depender do modelo:** chamada e tipo com homônimos, campo escrito por receptor de tipo desconhecido, campo lido sem quem escreva, origem que não coube. Quando a medição viu só um dos homônimos rodar, a chamada é seguida.
+- **Comportamento, a primeira parte:** laços, operações do inventário, escritas de campo e testes dos alvos e dos custos.
+
+Na reprodução sem LLM, todas as declarações editadas continuam no envelope nos 6 casos, e os envelopes de `inverse` caem de 7,2 KB para 5,4 KB. Nos casos de `inverse` a declaração editada é uma só, então eles exigem pouco do seletor; só `r3-groups` testa a origem do valor de verdade.
+
+**Retirar fontes e reenviar** (Haiku e portão, numa cópia dos dados; 63 envios, US$ 0,51, 63 min). Mesma pergunta, envelopes diferentes. Mudanças que passaram no portão, de quantos envios:
+
+| Variante | `r1-inversa` | `r2-inversa` | `r3-groups` | Total |
+|---|---|---|---|---|
+| Gravado | 5/6 | 5/6 | 5/6 | 15/18 |
+| Nova | 6/6 | 5/6 | 4/6 | 15/18 |
+| Sem custo | 3/3 | 3/3 | 3/3 | 9/9 |
+| Sem origem | 3/3 | 2/3 | **0/3** | 5/9 |
+| Só o alvo | 3/3 | 2/3 | **0/3** | 5/9 |
+
+Quantas das aprovadas guardaram a inversa em `Groups` (contagem de `inverse` −62%; as outras só mexem na própria `inverse` ou numa função vizinha, sem queda de contagem acima de 5%):
+
+| Variante | `r1-inversa` | `r2-inversa` | `r3-groups` |
+|---|---|---|---|
+| Gravado | 0/5 | 4/5 | 5/5 |
+| Nova | 0/6 | 4/5 | 4/4 |
+| Sem custo | 2/3 | 2/3 | 3/3 |
+| Sem origem | 0/3 | 0/2 | — |
+| Só o alvo | 0/3 | 0/2 | — |
+
+O que isso mostra:
+
+- **A seleção nova empatou com o envelope gravado,** com custo por envio cerca de 8% menor. Não melhorou a aprovação. Antes da tabela houve uma passada de teste com a nova, fora da conta, que deu 1 de 3, com um erro de compilação de campo privado em `r3-groups`, tipo de falha que não reapareceu nos 6 envios seguintes.
+- **A origem do valor é o que decide.** Sem ela, a mudança grande nunca aparece, em nenhum caso. É o resultado mais forte da medição.
+- **O custo parece atrapalhar.** Sem esse papel, passou 9 de 9, e em `r1` a mudança grande apareceu 2 vezes em 3, contra 0 em 11 nas variantes com ele. Uma hipótese: o corpo de `cofactor` e `determinant` leva o modelo a otimizar a própria `inverse`. São só 3 envios por caso: é uma pista, não uma conclusão.
+- **A escada pode estar aceitando a mudança menor.** Ela para na primeira proposta que passa, então uma mudança pequena encerra a rodada mesmo que a seguinte fosse maior. Falta conferir.
+
+Limites: poucos envios e um só projeto; as variantes rodaram em sequência, com a máquina em uso em parte do tempo, então a contagem é confiável, mas o tempo de render não serve para comparar variantes. Esta medição usa a seleção de antes das lacunas, que ainda não seguia homônimos pela medição. Os casos de Python só passaram pela reprodução sem LLM.
+
+### Escada e papel do custo (`75d8a1a`, sem push)
+
+A escada parava na primeira proposta aprovada, e 39 propostas ficaram sem testar nos envios aprovados da medição acima. Agora ela testa todas as propostas da resposta e fica com a de maior ganho. Nova medição, com a seleção atual e essa escada: 8 envios por caso, 48 no total, US$ 0,39, 51 min.
+
+| Variante | Aprovadas, por caso (r1, r2, r3) | Total | Com a mudança grande (r1, r2, r3) |
+|---|---|---|---|
+| Nova | 7/8, 8/8, 8/8 | 23/24 | 2/7, 6/8, 8/8 |
+| Sem custo | 8/8, 8/8, 4/8 | 20/24 | 6/8, 6/8, 4/4 |
+
+- **A escada corrigida vale a pena.** Com as mesmas respostas, em 11 de 43 aprovações ela escolheu uma proposta melhor que a primeira, como 43% em vez de 15%. Esse é o efeito mais claro, porque não depende de comparar envios diferentes.
+- **O custo fica.** Tirar esse papel melhora `r1` (mudança grande em 6 de 8, contra 2 de 7) e piora `r3` (4 de 8 aprovadas, contra 8 de 8). Um caso a favor e outro contra não justificam uma regra; ajustar a ordem aos três casos seria sob medida para eles.
+- **O ruído é grande.** O mesmo envelope de `r3` deu 4 de 6 na medição anterior e 8 de 8 nesta. Diferenças de um ou dois envios não querem dizer nada aqui.
+
+### O que falta, em ordem
+
+1. **Envelope novo (etapa 7), em medição:** o código está pronto e desligado: as notas (papel de cada fonte, lacunas, comportamento) só vão ao modelo quando a pergunta as traz, e a tela ainda não as manda; a query compacta, sem o `excerpt` repetido, depende de `compact_items`, desligado por padrão. Cada uma é medida separadamente; só liga a que não piorar. As medições ainda não entram nas notas, fora a contagem de chamadas.
+2. **Comportamento, a segunda parte:** condições de execução, caminhos alternativos e invariantes exigem o extractor registrar `if`, `match` e asserções, com perfil e grafo novos. Chamadas dentro de macros também não são vistas.
+3. **Buscar fontes quando a lacuna for importante,** antes de enviar. Por exemplo, `impl Intersectable for Object` fica de fora por orçamento em dois casos: decidir se a origem pode passar do limite.
+4. **Identidade de homônimos:** resolver além da medição, pelo tipo do receptor, principalmente em Python, onde o Medir tudo não conta.
+5. **Medições na seleção:** hoje entra só a contagem de chamadas; faltam o tempo e os benchmarks.
+6. **Etapa 5, só se o gabarito mostrar que faltam fatos:** perguntas por tema (entrada, estado, dependências, execução, repetição, efeitos), cascata qwen → Haiku e novos estados de fato. O Claude nunca transforma um fato inconclusivo em comprovado.
+7. **Etapas 1 a 4:** validar a configuração, instrumentar outras linguagens, reconhecer melhor as intenções e tornar configuráveis os critérios do alvo.
+
+**A decidir:** se o qwen continua tentando primeiro nas mudanças, com 0 de 8 hoje, ou se sai dessa etapa até investigarmos as recusas de forma.
