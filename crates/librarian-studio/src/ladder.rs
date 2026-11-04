@@ -1,6 +1,6 @@
 //! The ladder: one question over an envelope, to the lightest model first and to the next only
 //! when the gate refuses. A change passes when every gate command succeeds with it, every
-//! output is the same as the baseline's, a count or a measured time drops and no count grows. A LACUNA does not
+//! output is the same as the baseline's, a count or a measured number improves and no count grows. A LACUNA does not
 //! climb the ladder: the names it says are missing are looked up in the catalog, gathered, and
 //! the same model is asked again. Nothing here judges meaning; every step is recorded.
 //!
@@ -210,6 +210,47 @@ pub fn review(record: &mut Value, baseline_stats: Option<&Value>, diff: &str, st
     record["measurement_issues"] = json!(measurement_issues(diff, statement, protect, &holder_start));
 }
 
+/// What the project measured for the whole run (no `at=`), with how much each number improved, in
+/// percent: a time gets better when it drops, and the profile's `measures` say the direction of any
+/// other number. `wall_ms` is the Régua's own clock of the process (a test run, a build), not a
+/// measure of the change. A command that counts says nothing here: its numbers include its
+/// counters, and one counter less is faster.
+fn project_numbers(x: &Value) -> Vec<(&String, &Value, f64)> {
+    let counts = |stats: &Value| stats.as_object().into_iter().flatten().any(|(k, _)| k.starts_with("calls@"));
+    if x["counts_itself"] == true || counts(&x["summary"]["stats"]) || counts(&x["comparison"]["stats"]) {
+        return vec![];
+    }
+    x["comparison"]["stats"].as_object().into_iter().flatten().filter(|(k, _)| !k.contains('@') && *k != "wall_ms").filter_map(|(series, s)| {
+        let change = s["change_pct"].as_f64().unwrap_or(0.);
+        match x["measures"][series]["better"].as_str() {
+            Some("higher") => Some((series, s, change)),
+            Some(_) => Some((series, s, -change)),
+            None => series.ends_with("_ms").then_some((series, s, -change)),
+        }
+    }).collect()
+}
+
+/// A number moved by a tenth, its ranges apart: what the repetitions can tell from noise.
+fn moved(s: &Value, improved: f64) -> bool {
+    improved.abs() >= 10. && s["ranges_overlap"] == false
+}
+
+/// What got worse with a change, which the gate does not refuse: a cache may spend memory on
+/// purpose, so this is shown beside the decision, and the person weighs it.
+pub fn worse(executions: &[Value]) -> Vec<String> {
+    let mut found = vec![];
+    for x in executions {
+        let name = x["name"].as_str().unwrap_or("?");
+        for (series, s, improved) in project_numbers(x) {
+            if improved < 0. && moved(s, improved) {
+                let means = x["measures"][series]["means"].as_str().map(|m| format!(" ({m})")).unwrap_or_default();
+                found.push(format!("{name}: {series}{means} piorou {:.0}%", -improved));
+            }
+        }
+    }
+    found
+}
+
 /// The gate over the executions of one change: what passed and, when not, why.
 pub fn verdict(executions: &[Value]) -> (bool, Vec<String>) {
     let mut why = vec![];
@@ -246,16 +287,8 @@ pub fn verdict(executions: &[Value]) -> (bool, Vec<String>) {
                 why.push(format!("{name}: {file} mudou ({same})"));
             }
         }
-        // A time the project measured for the whole run (no `at=`) that drops by a tenth, its
-        // ranges apart, also counts. `wall_ms` is the Régua's own clock of the process (a test
-        // run, a build), not a measure of the change: it does not count. Nor does the time of a
-        // command that counts: it includes its counters, and one counter less is faster.
-        let counts = |stats: &Value| stats.as_object().into_iter().flatten().any(|(k, _)| k.starts_with("calls@"));
-        let counts_itself = x["counts_itself"] == true || counts(&x["summary"]["stats"]) || counts(&comparison["stats"]);
-        for (_, s) in comparison["stats"].as_object().into_iter().flatten().filter(|(k, _)| !counts_itself && !k.contains('@') && k.ends_with("_ms") && *k != "wall_ms") {
-            if s["change_pct"].as_f64().unwrap_or(0.) <= -10. && s["ranges_overlap"] == false {
-                dropped = true;
-            }
+        if project_numbers(x).iter().any(|(_, s, improved)| *improved > 0. && moved(s, *improved)) {
+            dropped = true;
         }
         for (series, s) in comparison["stats"].as_object().into_iter().flatten().filter(|(k, _)| k.starts_with("calls@")) {
             let change = s["change_pct"].as_f64().unwrap_or(0.);
@@ -267,29 +300,26 @@ pub fn verdict(executions: &[Value]) -> (bool, Vec<String>) {
         }
     }
     if why.is_empty() && !dropped {
-        why.push("nem contagem nem tempo caíram".into());
+        let declared = executions.iter().any(|x| x["measures"].as_object().is_some_and(|m| !m.is_empty()));
+        why.push(if declared { "nem contagem, nem tempo, nem medida declarada melhoraram" } else { "nem contagem nem tempo caíram" }.into());
     }
     (why.is_empty(), why)
 }
 
 /// How much a change that passed the gate gained, in percent, to choose among those of one answer:
-/// the largest drop of a time the project measured, which is what the change is for. A command that
-/// counts does not say it, because its time includes its counters; a project that only counts is
-/// compared by the total of its counts. The Régua's own `wall_ms` says nothing about the change.
+/// the largest improvement of a number the project measured, which is what the change is for. A
+/// command that counts does not say it, because its numbers include its counters; a project that
+/// only counts is compared by the total of its counts. The Régua's own `wall_ms` says nothing.
 pub fn gain(executions: &[Value]) -> f64 {
     let mut time: Option<f64> = None;
     let (mut before, mut after) = (0., 0.);
     for x in executions {
-        let stats = &x["comparison"]["stats"];
-        let counts = x["counts_itself"] == true || stats.as_object().into_iter().flatten().any(|(k, _)| k.starts_with("calls@"));
-        for (series, s) in stats.as_object().into_iter().flatten() {
-            if series.starts_with("calls@") {
-                before += s["baseline_median"].as_f64().unwrap_or(0.);
-                after += s["median"].as_f64().unwrap_or(0.);
-            } else if !counts && !series.contains('@') && series.ends_with("_ms") && series != "wall_ms" {
-                let drop = -s["change_pct"].as_f64().unwrap_or(0.);
-                time = Some(time.map_or(drop, |t: f64| t.max(drop)));
-            }
+        for (_, s) in x["comparison"]["stats"].as_object().into_iter().flatten().filter(|(k, _)| k.starts_with("calls@")) {
+            before += s["baseline_median"].as_f64().unwrap_or(0.);
+            after += s["median"].as_f64().unwrap_or(0.);
+        }
+        for (_, _, improved) in project_numbers(x) {
+            time = Some(time.map_or(improved, |t: f64| t.max(improved)));
         }
     }
     time.unwrap_or(if before > 0. { (before - after) / before * 100. } else { 0. })
@@ -455,6 +485,49 @@ mod tests {
         let counting = |after: f64| json!([{ "name": "c", "comparison": { "stats": { "calls@a:1": { "baseline_median": 100., "median": after, "change_pct": after - 100. }, "wall_ms": { "change_pct": -90. } } } }]);
         assert_eq!(gain(counting(40.).as_array().unwrap()), 60.);
         assert_eq!(gain(counting(100.).as_array().unwrap()), 0.);
+    }
+
+    #[test]
+    fn a_measure_the_project_declares_counts_in_its_direction() {
+        let x = |series: &str, change: f64, overlap: bool, better: Option<&str>| {
+            let mut x = json!({ "name": "medir", "summary": { "succeeded": 3, "attempted": 3 },
+                "comparison": { "stats": { series: { "change_pct": change, "ranges_overlap": overlap } } } });
+            if let Some(better) = better {
+                x["measures"] = json!({ series: { "better": better, "means": "o que mede" } });
+            }
+            x
+        };
+        // What Python showed: memory −77% refused because nobody said memory is a measure.
+        assert_eq!(verdict(&[x("memory_end_mb", -77., false, None)]).1, ["nem contagem nem tempo caíram"]);
+        assert!(verdict(&[x("memory_end_mb", -77., false, Some("lower"))]).0);
+        assert!(verdict(&[x("queries_per_plan", -49., false, Some("lower"))]).0);
+        assert_eq!(gain(&[x("memory_end_mb", -77., false, Some("lower"))]), 77.);
+        // The direction is the project's; noise and a small change prove nothing.
+        assert!(verdict(&[x("plans_per_s", 30., false, Some("higher"))]).0);
+        assert!(!verdict(&[x("plans_per_s", -30., false, Some("higher"))]).0);
+        assert_eq!(verdict(&[x("memory_end_mb", -77., true, Some("lower"))]).1, ["nem contagem, nem tempo, nem medida declarada melhoraram"]);
+        assert!(!verdict(&[x("memory_end_mb", -8., false, Some("lower"))]).0);
+        // A number in a command that counts includes its counters.
+        let mut counting = x("memory_end_mb", -77., false, Some("lower"));
+        counting["counts_itself"] = json!(true);
+        assert!(!verdict(std::slice::from_ref(&counting)).0);
+        assert!(worse(std::slice::from_ref(&counting)).is_empty());
+    }
+
+    #[test]
+    fn what_got_worse_is_shown_and_does_not_refuse() {
+        let change = json!({ "name": "medir", "summary": { "succeeded": 3, "attempted": 3 },
+            "measures": { "memory_end_mb": { "better": "lower", "means": "memória no fim" }, "plans_per_s": { "better": "higher" } },
+            "comparison": { "stats": {
+                "plan_p50_ms": { "change_pct": -34., "ranges_overlap": false },
+                "read_p50_ms": { "change_pct": 38., "ranges_overlap": false },
+                "memory_end_mb": { "change_pct": 22., "ranges_overlap": false },
+                "plans_per_s": { "change_pct": -12., "ranges_overlap": false },
+                "memory_start_mb": { "change_pct": 40., "ranges_overlap": false },
+                "plan_p95_ms": { "change_pct": 30., "ranges_overlap": true },
+                "wall_ms": { "change_pct": 90., "ranges_overlap": false } } } });
+        assert_eq!(verdict(std::slice::from_ref(&change)), (true, vec![]));
+        assert_eq!(worse(&[change]), ["medir: memory_end_mb (memória no fim) piorou 22%", "medir: plans_per_s piorou 12%", "medir: read_p50_ms piorou 38%"]);
     }
 
     #[test]

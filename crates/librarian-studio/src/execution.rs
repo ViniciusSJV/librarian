@@ -101,6 +101,34 @@ fn measurement_of(root: &Path) -> (Option<String>, Option<String>, Vec<String>) 
     (text("statement"), text("command"), protect)
 }
 
+/// The profile's `measures`: what a number the project prints means, and which way is better.
+/// Without it, only times and counts tell the gate anything.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct Measure {
+    better: Better,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    means: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+enum Better {
+    Lower,
+    Higher,
+}
+
+fn measures_of(root: &Path) -> Result<BTreeMap<String, Measure>> {
+    let Ok(bytes) = fs::read(root.join(PROFILE)) else { return Ok(BTreeMap::new()) };
+    let profile: Value = serde_json::from_slice(&bytes)?;
+    let Some(found) = profile.get("measures") else { return Ok(BTreeMap::new()) };
+    let measures: BTreeMap<String, Measure> = serde_json::from_value(found.clone()).map_err(|e| format!("{PROFILE}: measures inválido: {e}"))?;
+    if let Some(bad) = measures.keys().find(|k| k.contains('@') || *k == "wall_ms") {
+        return Err(format!("{PROFILE}: measures: {bad} não é uma medida do projeto para a execução inteira").into());
+    }
+    Ok(measures)
+}
+
 /// The commands of the profile in `root`, as written there now.
 fn declared(root: &Path) -> Result<BTreeMap<String, Command>> {
     let Ok(bytes) = fs::read(root.join(PROFILE)) else { return Ok(BTreeMap::new()) };
@@ -208,6 +236,7 @@ impl Store {
             let holder_start = |path: &str, line: usize| crate::instrument::holder(&catalog, path, line)
                 .and_then(|s| catalog.chunk(&s.chunk_id)).map(|c| c.start_line);
             crate::ladder::review(&mut record, baseline_stats.as_ref(), diff, statement.as_deref(), &protect, holder_start);
+            record["measures"] = json!(measures_of(&root)?);
             if command.as_deref() == Some(name) {
                 record["counts_itself"] = json!(true);
             }

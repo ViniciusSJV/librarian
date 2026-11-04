@@ -368,7 +368,7 @@ fn ladder(store: &Store, body: &Value) -> Result<Value> {
                     let cost = if k == 0 { summary["cost_usd"].clone() } else { Value::Null };
                     let gain = ladder::gain(&runs);
                     steps.push(ladder::step(model, &turn, &send, if passed { "passed" } else { "refused_by_gate" },
-                        json!({ "claim": claim, "cost_usd": cost, "executions": runs.iter().map(|x| &x["id"]).collect::<Vec<_>>(), "why": why, "gain_pct": gain })));
+                        json!({ "claim": claim, "cost_usd": cost, "executions": runs.iter().map(|x| &x["id"]).collect::<Vec<_>>(), "why": why, "worse": ladder::worse(&runs), "gain_pct": gain })));
                     if passed {
                         if best.as_ref().is_none_or(|(_, _, g)| gain > *g) {
                             best = Some((steps.len() - 1, claim.clone(), gain));

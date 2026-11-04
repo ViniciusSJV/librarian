@@ -781,7 +781,7 @@ impl Store {
         });
         // Commands and inventory rules are written by hand in the profile (commands approved
         // one by one); the studio never writes them, so an export keeps them exactly as they are.
-        for kept in ["commands", "inventory", "instrument"] {
+        for kept in ["commands", "inventory", "instrument", "measures"] {
             if let Some(value) = existing.get(kept) {
                 profile[kept] = value.clone();
             }
@@ -2034,6 +2034,61 @@ librarian-measure calls=5 at=src/lib.rs:7
         let saved = store.executions(&key, &run).unwrap().into_iter().last().unwrap();
         assert_eq!(saved["measurement_issues"], x["measurement_issues"]);
         assert_eq!(saved["comparison"]["counters"], x["comparison"]["counters"]);
+    }
+
+    #[test]
+    fn a_change_is_judged_by_the_measures_the_profile_declares() {
+        let scratch = project();
+        let root = scratch.0.join("project");
+        fs::write(root.join("src/lib.rs"), "pub struct Camera;
+
+impl Camera {
+    pub fn ray_from_pixel(&self, x: f64) -> f64 {
+        let direction = x * 2.0;
+        let printed = \"
+librarian-measure memory_mb=100
+\";
+        direction + printed.len() as f64
+    }
+}
+").unwrap();
+        let profile = json!({ "project_root": ".", "commands": { "medir": { "argv": ["git", "grep", "-h", "librarian-measure"], "repeat": 1 } },
+            "measures": { "memory_mb": { "better": "lower", "means": "memória no fim" } } });
+        fs::write(root.join(PROFILE), profile.to_string()).unwrap();
+        let git = |args: &[&str]| {
+            let out = std::process::Command::new("git").arg("-C").arg(&root).args(["-c", "user.name=t", "-c", "user.email=t@t"]).args(args).output().unwrap();
+            assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
+        };
+        git(&["init", "-q"]);
+        git(&["config", "core.autocrlf", "false"]);
+        git(&["add", "."]);
+        git(&["commit", "-q", "-m", "x"]);
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let key = store.open(&display(&root)).unwrap()["key"].as_str().unwrap().to_owned();
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        let sha = store.commands(&key).unwrap()["commands"][0]["sha256"].as_str().unwrap().to_owned();
+        store.approve_command(&key, "medir", &sha).unwrap();
+        store.execute(&key, &run, "medir", None).unwrap();
+        let mut settings = store.settings(&key).unwrap();
+        settings.lexicon.groups = vec![vec!["raios".into(), "ray".into()], vec!["direcao".into(), "direction".into()]];
+        (settings.allow_hypothesis, settings.allow_patch) = (true, true);
+        store.save_settings(&key, &settings).unwrap();
+        let turn = store.ask(&key, &run, "Onde a câmera calcula a direção dos raios?").unwrap()["id"].as_str().unwrap().to_owned();
+        let answer = json!({"schema_version": 1, "claims": [{
+            "id": "H1", "kind": "HYPOTHESIS", "text": "Gastar menos memória.",
+            "citations": [{"evidence_id": "E1", "path": "src/lib.rs", "start_line": 7, "end_line": 7, "quote": "librarian-measure memory_mb=100"}],
+            "premises": [], "verification_plan": "Medir antes e depois.", "location": null,
+            "edits": [{"path": "src/lib.rs", "op": "replace", "start_line": 7, "end_line": 7, "new_lines": ["librarian-measure memory_mb=20"]}]}]});
+        let sent = record_answer(&store, &key, &run, &turn, "manual", &answer.to_string()).unwrap();
+        let send = Path::new(sent["directory"].as_str().unwrap()).file_name().unwrap().to_string_lossy().into_owned();
+        let change = crate::execution::ChangeRef { turn, send, claim: "H1".into() };
+        let x = store.execute(&key, &run, "medir", Some(&change)).unwrap();
+        assert_eq!(x["measures"]["memory_mb"]["better"], "lower", "{x:#}");
+        assert_eq!(crate::ladder::verdict(std::slice::from_ref(&x)), (true, vec![]), "{x:#}");
+        // A declaration the gate could not read stops the run instead of being ignored.
+        fs::write(root.join(PROFILE), json!({ "project_root": ".", "commands": profile["commands"], "measures": { "memory_mb": { "better": "menos" } } }).to_string()).unwrap();
+        let wrong = store.execute(&key, &run, "medir", Some(&change)).unwrap_err().to_string();
+        assert!(wrong.contains("measures inválido"), "{wrong}");
     }
 
     #[test]
