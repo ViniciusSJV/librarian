@@ -1160,7 +1160,8 @@ const STRINGS = {
   'ladder.passed': ["passou no portão, a de maior ganho","passed the gate, the largest gain"],
   'ladder.passed_smaller': ["passou no portão, com ganho menor","passed the gate, with a smaller gain"],
   'ladder.refused_by_gate': ["recusada no portão","refused by the gate"],
-  'ladder.worse': ["piorou, sem recusar: {list}","got worse, not refused: {list}"],
+  'ladder.worse': ["A avaliar: {list}","To weigh: {list}"],
+  'ladder.passedWorse': ["com piora a avaliar","with a regression to weigh"],
   'ladder.refused': ["recusada na conferência","refused by the check"],
   'ladder.lacuna': ["LACUNA","LACUNA"],
   'ladder.provider_failed': ["falha no envio","send failed"],
@@ -3267,11 +3268,12 @@ function renderLadder() {
     el('span', { className: s.outcome === 'passed' || s.outcome === 'passed_smaller' ? 'verdict passed' : s.outcome === 'baseline' ? 'muted' : 'verdict failed', textContent: t(`ladder.${s.outcome}`) }),
     ` ${who(s)}${s.turn ? ` · ${t('ladder.turn', { turn: s.turn })}` : ''}${costOf(s)}`,
     s.detail?.why?.length ? el('div', { className: 'muted', textContent: s.detail.why.join(' · ') }) : null,
-    s.detail?.worse?.length ? el('div', { className: 'verdict failed', textContent: t('ladder.worse', { list: s.detail.worse.join(' · ') }) }) : null,
+    s.detail?.worse?.length ? el('div', { className: 'error', textContent: t('ladder.worse', { list: s.detail.worse.join(' · ') }) }) : null,
     s.detail?.issues?.length ? el('div', { className: 'muted', textContent: s.detail.issues.join(', ') }) : null,
     s.detail?.gathered?.length ? el('div', { className: 'muted', textContent: t('ladder.gathered', { list: s.detail.gathered.map(g => g.name).join(', ') }) }) : null);
   box.replaceChildren(...ladderLog.slice(0, 3).map(r => el('details', { open: r === ladderLog[0], className: 'ladder' },
     el('summary', {}, el('strong', { textContent: r.passed ? t('ladder.passedTitle') : t('ladder.failedTitle') }),
+      r.steps.find(s => s.outcome === 'passed')?.detail?.worse?.length ? el('span', { className: 'error', textContent: ` · ${t('ladder.passedWorse')}` }) : null,
       ` · ${t('ladder.cost', { cost: r.steps.reduce((a, s) => a + (s.detail?.cost_usd ?? 0), 0).toFixed(3) })}`),
     ...r.steps.map(line))));
 }
