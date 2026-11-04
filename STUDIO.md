@@ -697,7 +697,8 @@ em `measures`, no perfil, com o que cada um significa e para que lado é melhor:
 Uma medida declarada vale como um tempo: precisa mudar 10% com as faixas separadas, e não vale em
 comando que conta. Um número que piora assim, seja um tempo ou uma medida declarada, **não recusa a
 mudança**, porque um cache pode gastar memória de propósito: aparece em vermelho no registro, ao
-lado da decisão, e quem decide é a pessoa. Uma declaração inválida interrompe a execução, em vez
+lado da decisão e, se for a mudança escolhida, também no título ("com piora a avaliar"), e quem
+decide é a pessoa. Uma declaração inválida interrompe a execução, em vez
 de ser ignorada. O perfil já é protegido: a mudança não pode alterar a própria declaração.
 
 O que é medido não pode ser o que muda. Isso vale para qualquer linguagem que imprima essas

@@ -1240,18 +1240,32 @@ O perfil ganha `measures`: o que cada número significa e para que lado é melho
 - **A aprovação fica mais fácil:** a mudança com `plan_p95_ms` +244% antes era recusada, por outro motivo, e agora passa com o aviso. Quem olha só o "passou" não vê isso.
 - **O ganho mistura unidades:** ele compara a maior melhora em %, então consultas −99% valem mais que uma rota −35%. Nesta reprodução, cada envio teve uma só proposta testada, então a escolha entre propostas não mudou; isso continua sem medir.
 
-Falta declarar as medidas no perfil do `logistica-api`. Os testes de portão usam dados gravados e um projeto de teste, e o aviso na tela não foi visto no navegador.
+As medidas estão declaradas no perfil do `logistica-api`, sem commit naquele projeto. **Ainda não rodou com o modelo:** a reprodução usa propostas gravadas. O aviso foi visto no navegador, nos temas claro e escuro e em tela estreita, com a resposta da escada simulada.
+
+**Defeito encontrado na limpeza e corrigido:** uma cópia apagada cujo `.diff` ficou era recriada sem a mudança, e a linha de base era medida como se fosse a mudança. O teste reproduziu o defeito antes da correção (100 em vez de 20).
+
+**Quatro responsabilidades que não se misturam:**
+
+- **Seleção:** quais informações são necessárias.
+- **Investigação:** quais relações existem entre elas.
+- **Medição:** o que aconteceu na execução.
+- **Decisão:** se a mudança é aceitável diante dos resultados.
+
+As medidas declaradas são um contrato de avaliação: o Librarian conhece o significado de cada uma e apresenta os efeitos, sem saber se memória vale mais que velocidade. Aceitar essa troca continua sendo uma decisão humana.
+
+**O que foi medido são hipóteses, não regras.** O mesmo envelope deu 4/6 e 8/8 em medições diferentes. O objetivo não é fazer o LLM pensar mais, e sim entregar informações melhores, suficientes e verificáveis, para que ele tenha menos espaço para inventar.
 
 ### O que falta, em ordem
 
-1. **Decidir se o portão precisa de um alvo por pergunta,** para o ganho comparar o que a pergunta pediu, e se alguma piora deve recusar (um limite declarado). Só com um caso que mostre a necessidade.
-2. **Testar as notas em partes,** se aparecer um caso em que falte informação ao modelo. Hoje não há esse sinal.
-3. **Comportamento, a segunda parte:** condições de execução, caminhos alternativos e invariantes exigem o extractor registrar `if`, `match` e asserções, com perfil e grafo novos. Chamadas dentro de macros também não são vistas.
-4. **Buscar fontes quando a lacuna for importante,** antes de enviar. Por exemplo, `impl Intersectable for Object` fica de fora por orçamento em dois casos: decidir se a origem pode passar do limite.
-5. **Identidade de homônimos:** resolver além da medição, pelo tipo do receptor, principalmente em Python, onde o Medir tudo não conta.
-6. **Medições na seleção:** hoje entra só a contagem de chamadas; faltam o tempo e os benchmarks.
-7. **Etapa 5, só se o gabarito mostrar que faltam fatos:** perguntas por tema (entrada, estado, dependências, execução, repetição, efeitos), cascata qwen → Haiku e novos estados de fato. O Claude nunca transforma um fato inconclusivo em comprovado.
-8. **Etapas 1 a 4:** validar a configuração, instrumentar outras linguagens, reconhecer melhor as intenções e tornar configuráveis os critérios do alvo.
+1. **Condições, caminhos e invariantes:** completam a compreensão do comportamento e exigem o extractor registrar `if`, `match` e asserções, com perfil e grafo novos. Chamadas dentro de macros também não são vistas. Até aqui nenhum caso mostrou essa falta: a medição precisa comparar com e sem, antes de virar regra.
+2. **Tempo e benchmarks na seleção:** hoje entra só a contagem de chamadas.
+3. **Busca por lacunas,** só quando necessário e antes de enviar. Por exemplo, `impl Intersectable for Object` fica de fora por orçamento em dois casos: decidir se a origem pode passar do limite.
+4. **Homônimos por identidade:** resolver além da medição, pelo tipo do receptor, principalmente em Python, onde o Medir tudo não conta.
+5. **Cascata qwen → Haiku (etapa 5):** complementar fatos ausentes sem repetir trabalho, só se o gabarito mostrar que faltam fatos. Perguntas por tema (entrada, estado, dependências, execução, repetição, efeitos) e novos estados de fato. O Claude nunca transforma um fato inconclusivo em comprovado.
+
+**Separados, sem prioridade até haver evidência de que a seleção atual não fornece os fatos necessários:** as etapas 1 a 4 (validar a configuração, instrumentar outras linguagens, reconhecer melhor as intenções e tornar configuráveis os critérios do alvo).
+
+**Só com um caso que mostre a necessidade:** alvo por pergunta e limite de piora no portão; notas em partes.
 
 ### O qwen nas mudanças (decidido em 04/11/2026)
 
