@@ -1097,7 +1097,7 @@ O que se aprendeu:
 - O portão aprovou a câmera pelo `wall_ms` dos testes (corrigido em `b7a853f`); medida sozinha em 2K, a mudança vale (2,84 → 2,53 s).
 
 Próximos passos, decididos:
-1. Remover os testes por trecho (R3, mutação): não ajudaram a otimizar.
+1. ~~Remover os testes por trecho (R3, mutação): não ajudaram a otimizar.~~ Feito: saíram do studio (`mutation.rs`, rotas, Régua, fato CHANGE) e os Modelfiles `teste-*`. Fatos antigos podem ainda trazer `mutation_checks`; a página ignora esse campo.
 2. Perguntas de quem conhece o fluxo, não o código: "o render usa todos os núcleos?" (CPU somado ÷ tempo de parede ÷ núcleos; travas em laço) e "o que é criado ou ordenado a cada raio?" (regras de alocação e ordenação no inventário).
 3. Reconhecer as perguntas digitadas (regras e léxico) e escrever as perguntas derivadas em linguagem natural; orçamento por ciclo.
 4. ~~Lado do prompt mais justo~~ feito; veja abaixo.

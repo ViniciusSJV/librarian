@@ -9,7 +9,6 @@ mod instrument;
 mod ladder;
 mod lexicon;
 mod llm;
-mod mutation;
 mod questions;
 mod store;
 mod values;
@@ -219,21 +218,11 @@ fn route(app: &App, req: &Request) -> Result<Response> {
             let body = req.json()?;
             ok(store.execute_instrumented(&field(&body, "key")?, &field(&body, "run")?)?)
         }
-        ("POST", "/api/mutation/run") => {
-            let body = req.json()?;
-            ok(store.mutation_run(&field(&body, "key")?, &field(&body, "run")?, &field(&body, "symbol")?, &field(&body, "command")?)?)
-        }
         ("GET", "/api/value-sources") => ok(store.value_sources(param("key")?, param("run")?, param("symbol")?, param("text")?)?),
         ("GET", "/api/hotspots") => ok(store.hotspots(param("key")?, param("run")?)?),
         ("POST", "/api/performance-question") => {
             let body = req.json()?;
             ok(store.performance_question(&field(&body, "key")?, &field(&body, "run")?, &field(&body, "question")?)?)
-        }
-        ("GET", "/api/mutations") => ok(json!(store.mutations(param("key")?, param("run")?)?)),
-        ("POST", "/api/mutation/check") => {
-            let body = req.json()?;
-            let change: execution::ChangeRef = serde_json::from_value(body["change"].clone())?;
-            ok(store.mutation_check(&field(&body, "key")?, &field(&body, "run")?, &field(&body, "mutation")?, &change)?)
         }
         ("DELETE", "/api/turn") => {
             let body = req.json()?;

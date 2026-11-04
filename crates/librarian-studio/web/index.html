@@ -10,7 +10,7 @@
     color-scheme: light;
     --surface-0: #f1f1ee; --surface-1: #fcfcfb; --surface-2: #ffffff; --border: #dcdbd5;
     --text-primary: #0b0b0b; --text-secondary: #52514e; --text-muted: #7a7974;
-    --cat-source: #2a78d6; --cat-symbol: #eb6834; --cat-occurrence: #1baf7a;
+    --cat-symbol: #eb6834; --cat-occurrence: #1baf7a;
     --edge: #a3a29a; --focus: #0b0b0b; --danger: #b42318;
   }
   @media (prefers-color-scheme: dark) {
@@ -18,7 +18,7 @@
       color-scheme: dark;
       --surface-0: #121211; --surface-1: #1a1a19; --surface-2: #232321; --border: #34342f;
       --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #8f8e86;
-      --cat-source: #3987e5; --cat-symbol: #d95926; --cat-occurrence: #199e70;
+      --cat-symbol: #d95926; --cat-occurrence: #199e70;
       --edge: #64635c; --focus: #f0efec; --danger: #f97066;
     }
   }
@@ -26,7 +26,7 @@
     color-scheme: dark;
     --surface-0: #121211; --surface-1: #1a1a19; --surface-2: #232321; --border: #34342f;
     --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #8f8e86;
-    --cat-source: #3987e5; --cat-symbol: #d95926; --cat-occurrence: #199e70;
+    --cat-symbol: #d95926; --cat-occurrence: #199e70;
     --edge: #64635c; --focus: #f0efec; --danger: #f97066;
   }
   * { box-sizing: border-box; }
@@ -50,14 +50,15 @@
   code, .mono { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 12px; word-break: break-all; }
   dl { display: grid; grid-template-columns: 92px 1fr; gap: 4px 8px; margin: 8px 0 0; }
   dt { color: var(--text-muted); } dd { margin: 0; word-break: break-word; }
-  .legend label { display: flex; align-items: center; gap: 8px; margin: 4px 0; cursor: pointer; }
-  .legend .count { margin-left: auto; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
-  .swatch { width: 12px; height: 12px; flex: none; }
-  .swatch.source { background: var(--cat-source); clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
-  .swatch.symbol { background: var(--cat-symbol); border-radius: 50%; }
-  .swatch.occurrence { background: var(--cat-occurrence); clip-path: polygon(50% 0, 100% 100%, 0 100%); }
-  .swatch.line { height: 2px; background: var(--edge); }
-  .swatch.line.dashed { background: repeating-linear-gradient(90deg, var(--edge) 0 3px, transparent 3px 6px); }
+  .legend ul { margin: 8px 0 0; padding: 0; list-style: none; }
+  .legend li { display: flex; align-items: flex-start; gap: 8px; margin: 5px 0; font-size: 12px; line-height: 1.3; }
+  .swatch { width: 14px; height: 14px; flex: none; margin-top: 1px; box-sizing: border-box; }
+  .swatch.district { background: color-mix(in srgb, var(--edge) 45%, var(--surface-0)); border-radius: 2px; }
+  .swatch.building { width: 8px; margin: 1px 3px 0; background: #4a78c2; }
+  .swatch.height { width: 8px; margin: 1px 3px 0; background: linear-gradient(0deg, var(--text-secondary) 45%, transparent 45%); border-bottom: 2px solid var(--text-secondary); }
+  .swatch.heat { background: linear-gradient(90deg, #4a78c2, #e8a33a, #d6453d); border-radius: 2px; }
+  .swatch.ring { border: 2px solid #d6453d; border-radius: 50%; }
+  .swatch.arc { border-top: 2px solid var(--focus); border-radius: 50% 50% 0 0; }
   .list { margin: 6px 0 0; padding: 0; list-style: none; max-height: 260px; overflow: auto; }
   .list li { padding: 5px 6px; border-radius: 6px; cursor: pointer; }
   .list li:hover { background: var(--surface-1); }
@@ -151,8 +152,6 @@
   #pathCanvas { flex: 1; overflow: auto; padding: 8px 14px 14px; }
   #pathCanvas svg { display: block; }
   #pathCanvas text { fill: var(--text-primary); font: 12px system-ui, -apple-system, "Segoe UI", sans-serif; }
-  #pathCanvas .group rect { fill: var(--surface-1); stroke: var(--border); }
-  #pathCanvas .group text { fill: var(--text-secondary); font-size: 11px; }
   #pathCanvas .node rect { fill: var(--surface-2); stroke: var(--edge); cursor: pointer; }
   #pathCanvas .node.seed rect { stroke: var(--cat-symbol); stroke-width: 2; }
   #pathCanvas .node.selected rect { stroke: var(--text-primary); stroke-width: 2; }
@@ -161,7 +160,7 @@
   #pathCanvas .edge:hover { stroke: var(--text-primary); stroke-width: 2.4; }
   #pathCanvas marker path { fill: var(--text-secondary); }
   #pathCanvas .node.idle { opacity: .45; }
-  #pathCanvas .node .count { fill: var(--text-secondary); font-size: 11px; }
+  #pathCanvas .node .count, #pathCanvas .node .where { fill: var(--text-secondary); font-size: 11px; }
   #pathCanvas .line-no { fill: var(--text-muted); font-size: 10px; pointer-events: none; }
   #pathDetail { position: absolute; right: 14px; bottom: 14px; max-width: 460px; max-height: 45%; overflow: auto; padding: 10px 12px;
     border: 1px solid var(--border); border-radius: 8px; background: var(--surface-2); box-shadow: 0 6px 24px rgb(0 0 0 / .18); }
@@ -236,8 +235,7 @@
 <script type="importmap">
 { "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
-  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/",
-  "d3-force-3d": "https://cdn.jsdelivr.net/npm/d3-force-3d@3.0.6/+esm"
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
 } }
 </script>
 </head>
@@ -366,17 +364,6 @@
         <div id="commandsList"></div>
         <div id="executionsList"></div>
       </section>
-      <section class="card">
-        <h2><span data-i18n="mutation.title"></span><button type="button" class="help" data-help-key="help.mutation">?</button></h2>
-        <div class="row" style="gap: 6px; flex-wrap: wrap">
-          <input id="mutationUnit" list="mutationUnits" data-i18n-placeholder="mutation.unit" style="flex: 1; min-width: 220px">
-          <datalist id="mutationUnits"></datalist>
-          <select id="mutationCommand"></select>
-          <button type="button" id="mutationRun" class="primary" data-i18n="mutation.run"></button>
-        </div>
-        <div id="mutationNote" class="muted"></div>
-        <div id="mutationList"></div>
-      </section>
     </div>
 
     <div class="tabpanel studio-only" data-panel="facts">
@@ -430,16 +417,14 @@
     <div id="drop" data-i18n="drop"></div>
     <details id="legendHud" class="legend">
       <summary data-i18n="legend.title"></summary>
-      <label id="cityToggleRow" hidden><input id="cityToggle" type="checkbox" checked><span data-i18n="legend.city"></span><button type="button" class="help" data-help-key="help.city">?</button></label>
-      <h2><span data-i18n="legend.nodes"></span><button type="button" class="help" data-help-key="help.nodes">?</button></h2>
-      <label><input type="checkbox" data-category="source" checked><span class="swatch source"></span><span data-i18n="legend.source"></span><button type="button" class="help" data-help-key="help.source">?</button><span class="count" data-count="source">0</span></label>
-      <label><input type="checkbox" data-category="symbol" checked><span class="swatch symbol"></span><span data-i18n="legend.symbol"></span><button type="button" class="help" data-help-key="help.symbol">?</button><span class="count" data-count="symbol">0</span></label>
-      <label><input type="checkbox" data-category="occurrence" checked><span class="swatch occurrence"></span><span data-i18n="legend.occurrence"></span><button type="button" class="help" data-help-key="help.occurrence">?</button><span class="count" data-count="occurrence">0</span></label>
-      <h2 style="margin-top: 10px"><span data-i18n="legend.edges"></span><button type="button" class="help" data-help-key="help.edges">?</button></h2>
-      <label><input type="checkbox" data-edge="declares" checked><span class="swatch line"></span>declares<button type="button" class="help" data-help-key="help.declares">?</button><span class="count" data-count="declares">0</span></label>
-      <label><input type="checkbox" data-edge="contains" checked><span class="swatch line"></span>contains<button type="button" class="help" data-help-key="help.contains">?</button><span class="count" data-count="contains">0</span></label>
-      <label><input type="checkbox" data-edge="observes" checked><span class="swatch line"></span>observes<button type="button" class="help" data-help-key="help.observes">?</button><span class="count" data-count="observes">0</span></label>
-      <label><input type="checkbox" data-edge="name_candidate" checked><span class="swatch line dashed"></span><span data-i18n="legend.nameCandidate"></span><button type="button" class="help" data-help-key="help.nameCandidate">?</button><span class="count" data-count="name_candidate">0</span></label>
+      <ul>
+        <li><span class="swatch district"></span><span data-i18n="legend.district"></span></li>
+        <li><span class="swatch building"></span><span data-i18n="legend.building"></span></li>
+        <li><span class="swatch height"></span><span data-i18n="legend.height"></span></li>
+        <li><span class="swatch heat"></span><span data-i18n="legend.heat"></span></li>
+        <li><span class="swatch ring"></span><span data-i18n="legend.ring"></span></li>
+        <li><span class="swatch arc"></span><span data-i18n="legend.arc"></span></li>
+      </ul>
     </details>
     <div id="pathView" hidden>
       <div id="pathBar">
@@ -579,30 +564,6 @@ const STRINGS = {
 
   // facts
   'commands.title': ['Régua: comandos do projeto', 'Ruler: project commands'],
-  'mutation.title': ['Testes por trecho: quebrar de propósito', 'Tests per piece: break it on purpose'],
-  'help.mutation': ['O Librarian quebra uma declaração de propósito, uma troca escrita por vez (um operador, floor/ceil, um literal), e roda o comando de testes em cada versão quebrada, numa cópia só. As versões com que os testes continuam passando sobrevivem: a declaração estaria errada e nenhum teste perceberia. Para elas, Perguntar ao LLM leva a pergunta pronta ("um teste que passe hoje e falhe com estas mudanças") e a evidência sugerida (a declaração e o módulo de testes do arquivo). Na resposta, Conferir teste confere sem opinião: só acrescenta linhas, acrescenta um #[test] que chama a declaração, passa no código atual e falha com cada sobrevivente. Um sobrevivente pode ser equivalente (calcula o mesmo, como x + y e x − y na paridade): nenhum teste o mata, e isso não é lacuna.',
-    'The Librarian breaks a declaration on purpose, one written change at a time (an operator, floor/ceil, a literal), and runs the test command on each broken version, in one copy. The versions the tests still pass with survive: the declaration would be wrong and no test would notice. For them, Ask the LLM brings the ready question ("a test that passes now and fails with these changes") and the suggested evidence (the declaration and its file\'s test module). On the answer, Check test checks without opinion: it only adds lines, adds a #[test] that calls the declaration, passes on the current code and fails with each survivor. A survivor may be equivalent (it computes the same, like x + y and x − y in parity): no test kills it, and that is no gap.'],
-  'mutation.unit': ['declaração (por exemplo impl Incuse for Ring::color_at)', 'declaration (e.g. impl Incuse for Ring::color_at)'],
-  'mutation.run': ['Quebrar de propósito', 'Break it on purpose'],
-  'mutation.unknown': ['Escolha uma declaração da lista.', 'Pick a declaration from the list.'],
-  'mutation.noCommand': ['Aprove um comando de testes acima.', 'Approve a test command above.'],
-  'mutation.running': ['Rodando os testes em cada versão quebrada…', 'Running the tests on each broken version…'],
-  'mutation.summary': ['{unit} · {n} versões quebradas · {survivors} sobrevivem · comando {command}', '{unit} · {n} broken versions · {survivors} survive · command {command}'],
-  'mutation.line': ['linha {line}', 'line {line}'],
-  'mutation.killedByNew': ['o teste novo mata', 'the new test kills it'],
-  'mutation.stillAlive': ['continua vivo (pode ser equivalente)', 'still alive (may be equivalent)'],
-  'mutation.survived': ['sobrevive', 'survives'],
-  'mutation.killed': ['os testes percebem', 'the tests notice'],
-  'mutation.notApplied': ['não aplicou', 'not applied'],
-  'mutation.ask': ['Perguntar ao LLM', 'Ask the LLM'],
-  'mutation.asked': ['A pergunta e a evidência estão na conversa: escolha o LLM (um Modelfile teste-…) e pergunte.', 'The question and the evidence are in the chat: pick the LLM (a teste-… Modelfile) and ask.'],
-  'mutation.turnTag': ['mutação: {summary}', 'mutation: {summary}'],
-  'mutation.check': ['Conferir teste (mutação)', 'Check test (mutation)'],
-  'mutation.checking': ['Rodando os testes com o teste novo, e com ele em cada sobrevivente…', 'Running the tests with the new test, and with it on each survivor…'],
-  'mutation.verdict.passed': ['aprovado: o teste passa hoje e mata todos os sobreviventes', 'passed: the test passes now and kills every survivor'],
-  'mutation.verdict.partial': ['parcial: passa hoje e mata {killed} de {survivors}', 'partial: passes now and kills {killed} of {survivors}'],
-  'mutation.verdict.refused': ['recusado', 'refused'],
-  'mutation.checks': ['só acrescenta: {adds} · testes novos: {tests} · chama {unit}: {calls} · passa hoje: {passes}', 'only adds: {adds} · new tests: {tests} · calls {unit}: {calls} · passes now: {passes}'],
   'help.commands': ['Comandos que o próprio projeto declara no librarian.json, em "commands": a lista de argumentos (sem shell), o tempo máximo e quantas repetições. O Librarian não sabe o que cada comando faz. Ele roda numa cópia do projeto no commit da edition (um git worktree na pasta temporária do sistema, ou em LIBRARIAN_COPIES, fora de qualquer outro projeto), conferida contra as impressões digitais da edition, nunca na sua pasta. Cada comando só roda depois que você aprova aquela versão exata; mudar o comando no perfil pede aprovação de novo. Ele guarda o tempo de cada repetição, o código de saída, a saída inteira e as linhas "librarian-measure nome=valor unidade" que o projeto imprimir.',
     'Commands the project itself declares in librarian.json, under "commands": the argument list (no shell), the time limit and how many repetitions. The Librarian does not know what each command does. It runs in a copy of the project at the edition\'s commit (a git worktree in the system temporary folder, or in LIBRARIAN_COPIES, outside any other project), checked against the edition\'s fingerprints, never in your folder. Each command runs only after you approve that exact version; changing the command in the profile asks for approval again. It keeps each repetition\'s time, exit code, whole output and the "librarian-measure name=value unit" lines the project prints.'],
   'commands.none': ['O librarian.json do projeto não declara commands.', 'The project\'s librarian.json declares no commands.'],
@@ -648,7 +609,6 @@ const STRINGS = {
   'facts.proposed': ['mudança aprovada, ainda não aplicada', 'change approved, not applied yet'],
   'facts.change': ['proposta por {model} ({provider}, {cost}) · arquivos {files}', 'proposed by {model} ({provider}, {cost}) · files {files}'],
   'facts.noCost': ['sem custo registrado', 'no cost recorded'],
-  'facts.mutation': ['conferência por mutação: {verdict}, mata {killed} de {survivors}', 'mutation check: {verdict}, kills {killed} of {survivors}'],
   'facts.revoked': ['revogado', 'revoked'],
   'facts.where': ['{symbol} (declaração {line}) · {location}', '{symbol} (declaration {line}) · {location}'],
   'facts.note': ['Nota: {note}', 'Note: {note}'],
@@ -754,22 +714,6 @@ const STRINGS = {
   'files.files': ['Arquivos', 'Files'],
   'files.info': ['Obrigatório: <code>graph-v2.json</code> (<code>librarian_ingest graph &lt;edition&gt; &lt;novo.json&gt; v2</code>). Opcional: <code>search.json</code> e <code>request.json</code> do <code>prepare</code>. Também aceita arrastar e soltar.',
     'Required: <code>graph-v2.json</code> (<code>librarian_ingest graph &lt;edition&gt; &lt;new.json&gt; v2</code>). Optional: <code>search.json</code> and <code>request.json</code> from <code>prepare</code>. Drag and drop also works.'],
-  'legend.nodes': ['Nós', 'Nodes'],
-  'help.nodes': ['A legenda do mapa da biblioteca. Fonte é um livro (arquivo), símbolo é um capítulo com nome (função ou tipo), ocorrência é uma página onde algo é mencionado. Desmarque para esconder um tipo. As linhas são remissões entre fichas; as tracejadas são palpites pelo nome, não remissões confirmadas.',
-    'The legend of the library map. A source is a book (file), a symbol is a named chapter (function or type), an occurrence is a page where something is mentioned. Uncheck to hide a kind. Lines are cross-references between cards; dashed ones are guesses by name, not confirmed cross-references.'],
-  'legend.source': ['Fonte (arquivo)', 'Source (file)'],
-  'help.source': ['Um livro do acervo: cada arquivo de código que foi lido. O número ao lado é quantos livros há no catálogo.', 'A book of the collection: each code file that was read. The number beside it is how many books the catalog has.'],
-  'legend.symbol': ['Símbolo (declaração)', 'Symbol (declaration)'],
-  'help.symbol': ['Um capítulo com nome: cada função, método, tipo ou classe declarada num arquivo. É o que a busca encontra e o que as respostas citam.', 'A named chapter: each function, method, type or class declared in a file. It is what the search finds and what answers cite.'],
-  'legend.occurrence': ['Ocorrência (uso observado)', 'Occurrence (observed use)'],
-  'help.occurrence': ['Uma menção dentro de um capítulo: um lugar onde o código chama uma função ou usa um tipo. O bibliotecário anota que viu o nome ali, mas não afirma para onde ele leva.', 'A mention inside a chapter: a place where the code calls a function or uses a type. The librarian notes seeing the name there, but does not claim where it leads.'],
-  'legend.edges': ['Arestas', 'Edges'],
-  'help.edges': ['As ligações entre os pontos do mapa, como as remissões entre fichas do catálogo. Clique numa ligação para ver a evidência que a autorizou. Desmarque um tipo para escondê-lo.', 'The links between points on the map, like the cross-references between catalog cards. Click a link to see the evidence that authorized it. Uncheck a kind to hide it.'],
-  'help.declares': ['Liga o livro aos capítulos que ele declara: este arquivo declara esta função.', 'Links the book to the chapters it declares: this file declares this function.'],
-  'help.contains': ['Capítulo dentro de capítulo: por exemplo, um método dentro de uma classe ou de um bloco impl.', 'A chapter inside a chapter: for example, a method inside a class or an impl block.'],
-  'help.observes': ['Liga um capítulo às menções que aparecem dentro dele: esta função chama aquilo ou usa aquele tipo.', 'Links a chapter to the mentions that appear inside it: this function calls that or uses that type.'],
-  'legend.nameCandidate': ['name_candidate (não resolvido)', 'name_candidate (unresolved)'],
-  'help.nameCandidate': ['Um palpite pelo nome: a menção tem o mesmo nome de um capítulo, então talvez se refira a ele. Não é confirmado, porque pode haver homônimos; por isso a linha é tracejada.', 'A guess by name: the mention has the same name as a chapter, so it may refer to it. It is not confirmed, because there may be homonyms; that is why the line is dashed.'],
 
   // find, overlay, inspector
   'find.title': ['Encontrar', 'Find'],
@@ -779,17 +723,17 @@ const STRINGS = {
   'find.clear': ['Limpar (Esc)', 'Clear (Esc)'],
   'find.more': ['+{n} outros', '+{n} more'],
   'overlay.title': ['Busca sobreposta', 'Search overlay'],
-  'help.overlay': ['As estantes que a consulta ativa acendeu: os livros encontrados ficam grandes e com nome, os vizinhos ficam visíveis e o resto da biblioteca fica na penumbra.', 'The shelves the active consultation lit: the books found become large and named, the neighbors stay visible and the rest of the library sits in the dark.'],
+  'help.overlay': ['As estantes que a consulta ativa acendeu: os prédios encontrados ficam com nome, os vizinhos mantêm a cor e o resto da cidade fica na penumbra.', 'The shelves the active consultation lit: the buildings found get a name, the neighbors keep their color and the rest of the city stays in the dark.'],
   'overlay.toggle': ['Destacar resultados e vizinhança', 'Highlight results and neighborhood'],
   'overlay.otherCatalog': ['search.json pertence a outro catálogo; destaque recusado.', 'search.json belongs to another catalog; highlight refused.'],
   'overlay.oneFact': ['E1: ficha estrutural enviada ao modelo (request.json).', 'E1: structural card sent to the model (request.json).'],
   'overlay.facts': ['E1…E{n}: fichas estruturais enviadas ao modelo (request.json).', 'E1…E{n}: structural cards sent to the model (request.json).'],
   'overlay.noRequest': ['Sem request.json: não se sabe quais resultados viraram fichas.', 'No request.json: it is unknown which results became cards.'],
-  'overlay.neighborhood': ['Vizinhança: {nodes} nós e {edges} arestas do primeiro resultado, associados por ID.', 'Neighborhood: {nodes} nodes and {edges} edges of the first result, matched by ID.'],
+  'overlay.neighborhood': ['Vizinhança: {nodes} pontos e {edges} ligações do primeiro resultado, associados por ID.', 'Neighborhood: {nodes} points and {edges} links of the first result, matched by ID.'],
   'overlay.missing': ['{n} resultado(s) sem nó correspondente no grafo.', '{n} result(s) with no matching node in the graph.'],
   'inspector.title': ['Inspeção', 'Inspection'],
   'help.inspector': ['A ficha catalográfica do que você clicou: o que é, em que livro e página está e por que existe a remissão.', 'The catalog card of what you clicked: what it is, which book and page it is on, and why the cross-reference exists.'],
-  'inspector.empty': ['Clique em um nó ou em uma aresta.', 'Click a node or an edge.'],
+  'inspector.empty': ['Clique em um prédio.', 'Click a building.'],
   'inspector.noGraph': ['Nenhum grafo aberto.', 'No graph open.'],
   'inspector.usedBy': ['Onde é usado?', 'Where is it used?'],
   'help.usedBy': ['Abre a vista Caminho a partir deste ponto: quem lê, escreve ou chama este nome, e quem usa esses, em camadas. Como um bibliotecário seguindo as remissões de ficha em ficha.', 'Opens the Path view from this point: who reads, writes or calls this name, and who uses those, in layers. Like a librarian following cross-references from card to card.'],
@@ -826,8 +770,6 @@ const STRINGS = {
   'status.reading': ['Lendo grafo…', 'Reading graph…'],
   'status.loading': ['Carregando grafo…', 'Loading graph…'],
   'status.error': ['Erro: {message}', 'Error: {message}'],
-  'status.layout': ['Layout {pct}% · {nodes} nós · {edges} arestas', 'Layout {pct}% · {nodes} nodes · {edges} edges'],
-  'status.ready': ['{nodes} nós · {edges} arestas · arraste para girar, clique para inspecionar', '{nodes} nodes · {edges} edges · drag to rotate, click to inspect'],
   'drop': ['Solte graph-v2.json (e opcionalmente search.json/request.json)', 'Drop graph-v2.json (and optionally search.json/request.json)'],
   'graph.wrongVersion': ['Esperado {expected}, recebido {got}. Gere com: librarian_ingest graph <edition> <novo.json> v2', 'Expected {expected}, got {got}. Generate with: librarian_ingest graph <edition> <new.json> v2'],
   'graph.noVersion': ['sem versão', 'no version'],
@@ -1286,10 +1228,16 @@ const STRINGS = {
   'perf.ladder': ['escada', 'ladder'],
   'skills.label': ['Skills:', 'Skills:'],
   'help.skills': ['Uma skill é um texto de instruções sobre como trabalhar (a pasta skills/ ao lado de modelfiles/). A marcada entra no SYSTEM de tudo o que a página envia: perguntas, escada, fichas do Onde pesa e perguntas do caminho, no Ollama e no Claude. O formato de resposta que o Librarian pede continua valendo. Cada resposta mostra as skills que foram junto.', 'A skill is a text of instructions on how to work (the skills/ folder next to modelfiles/). The checked one joins the SYSTEM of everything the page sends: questions, ladder, Where it weighs facts and path questions, on Ollama and on Claude. The answer format the Librarian asks for still holds. Each answer shows the skills that went with it.'],
-  'legend.city': ['Cidade (Onde pesa)', 'City (Where it weighs)'],
-  'help.city': ['O último Medir tudo desenhado como uma cidade. Cada arquivo é um bairro, e cada função que rodou é um prédio: a altura é o número de chamadas (em escala log) e a cor é o tempo, de azul (pouco) a vermelho (muito). Um anel vermelho na base marca uma trava, espera ou E/S dentro de laço. Os arcos ligam quem chama a quem é chamado. Desmarque para voltar ao grafo.', 'The latest Measure everything drawn as a city. Each file is a district, and each function that ran is a building: height is the number of calls (log scale) and color is the time, from blue (little) to red (a lot). A red ring at the base marks a lock, wait or I/O inside a loop. Arcs link caller to callee. Uncheck to go back to the graph.'],
-  'city.tip': ['{calls} chamadas · {ms}', '{calls} calls · {ms}'],
+  'legend.district': ['Bairro: um arquivo', 'District: a file'],
+  'legend.building': ['Prédio: uma função', 'Building: a function'],
+  'legend.height': ['Altura: quantas vezes rodou (sem medição, o tamanho da função)', 'Height: how many times it ran (without a measure, the size of the function)'],
+  'legend.heat': ['Cor: o tempo, de azul (pouco) a vermelho (muito); sem medição, uma cor só', 'Color: the time, from blue (little) to red (a lot); without a measure, one color'],
+  'legend.ring': ['Anel: trava, espera ou E/S dentro de laço', 'Ring: a lock, wait or I/O inside a loop'],
+  'legend.arc': ['Arco: quem chama e quem é chamado, ao clicar num prédio', 'Arc: caller and callee, when a building is clicked'],
   'city.status': ['{functions} funções que rodaram em {districts} arquivos · arraste para girar, clique num prédio para ver quem ele chama', '{functions} functions that ran in {districts} files · drag to rotate, click a building to see what it calls'],
+  'city.statusPlain': ['{functions} funções em {districts} arquivos · sem medição: altura pelo tamanho · Medir tudo (aba Investigar) mostra o que roda e o que pesa', '{functions} functions in {districts} files · no measure: height by size · Measure everything (Investigate tab) shows what runs and what weighs'],
+  'city.notMeasured': ['{kind} · sem medição', '{kind} · no measure'],
+  'city.tip': ['{calls} chamadas · {ms}', '{calls} calls · {ms}'],
   'city.ring': ['trava, espera ou E/S em laço', 'lock, wait or I/O in a loop'],
   'mode.aria': ['Modo da pergunta', 'Question mode'],
   'mode.label': ['Modo', 'Mode'],
@@ -1387,12 +1335,10 @@ applyI18n();
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { forceSimulation, forceManyBody, forceLink, forceCenter } from 'd3-force-3d';
 
 const VERSION = 'syntax-graph-v2';
 const CATEGORIES = ['source', 'symbol', 'occurrence'];
 const EDGE_KINDS = ['declares', 'contains', 'observes', 'name_candidate'];
-const LINK = { declares: [34, .5], contains: [18, .8], observes: [9, .9], name_candidate: [70, .04] };
 
 const $ = s => document.querySelector(s);
 const el = (tag, props = {}, ...children) => {
@@ -1417,24 +1363,14 @@ scene.add(new THREE.HemisphereLight(0xffffff, 0x666666, 2.2));
 const sun = new THREE.DirectionalLight(0xffffff, 1.2);
 sun.position.set(1, 2, 3);
 scene.add(sun);
-// The graph and the city ("Onde pesa") are two layers; one is shown at a time.
-const graphGroup = new THREE.Group(), cityGroup = new THREE.Group();
-scene.add(graphGroup, cityGroup);
+const cityGroup = new THREE.Group();
+scene.add(cityGroup);
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2(9, 9);
-const GEOMETRY = {
-  source: new THREE.OctahedronGeometry(7),
-  symbol: new THREE.SphereGeometry(3.6, 14, 10),
-  occurrence: new THREE.TetrahedronGeometry(2.6),
-};
-
 let palette;
 function readPalette() {
   const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   palette = {
-    source: new THREE.Color(css('--cat-source')),
-    symbol: new THREE.Color(css('--cat-symbol')),
-    occurrence: new THREE.Color(css('--cat-occurrence')),
     surface: new THREE.Color(css('--surface-0')),
     edge: new THREE.Color(css('--edge')),
     focus: new THREE.Color(css('--focus')),
@@ -1446,9 +1382,6 @@ readPalette();
 // ---------------------------------------------------------------- state
 const state = {
   graph: null, nodes: [], edges: [], index: new Map(), out: [], inn: [],
-  sim: null, simNodes: [], layoutTicks: 0,
-  meshes: {}, slot: [], lines: {},
-  visibleCategory: new Set(CATEGORIES), visibleEdge: new Set(EDGE_KINDS),
   selectedNode: null, selectedEdge: null, matches: new Set(),
   overlay: null, overlayOn: true, overlaySource: null,
 };
@@ -1508,15 +1441,12 @@ async function loadFiles(fileList) {
 
 /// Removes the graph from the scene and resets every view of it to the empty page.
 function clearGraph() {
-  for (const mesh of Object.values(state.meshes)) { graphGroup.remove(mesh); mesh.dispose(); }
-  for (const line of Object.values(state.lines)) { graphGroup.remove(line); line.geometry.dispose(); line.material.dispose(); }
+  clearCity();
   Object.assign(state, { graph: null, nodes: [], edges: [], index: new Map(), out: [], inn: [],
-    sim: null, simNodes: [], layoutTicks: 0, meshes: {}, slot: [], lines: {},
     selectedNode: null, selectedEdge: null, matches: new Set(), overlay: null, overlaySource: null });
   $('#labels').replaceChildren();
   $('#overlayCard').hidden = true;
   $('#provenance').replaceChildren();
-  document.querySelectorAll('[data-count]').forEach(c => { c.textContent = '0'; });
   $('#query').value = '';
   $('#results').replaceChildren();
   for (const id of ['#query', '#fit', '#clear']) $(id).disabled = true;
@@ -1528,9 +1458,9 @@ function clearGraph() {
 function showGraph(graph) {
   ingest(graph);
   $('#overlayCard').hidden = true;
-  buildScene();
   showProvenance();
-  startLayout();
+  userMoved = false;
+  buildCity();
   for (const id of ['#query', '#fit', '#clear']) $(id).disabled = false;
   inspect();
 }
@@ -1540,12 +1470,6 @@ function showProvenance() {
   const rows = [[t('prov.version'), g.version], [t('prov.derived'), g.derived_from], [t('prov.profile'), g.profile],
     [t('prov.catalog'), g.catalog_sha256?.slice(0, 16) + '…'], [t('prov.nodes'), state.nodes.length], [t('prov.edges'), state.edges.length]];
   $('#provenance').replaceChildren(...rows.flatMap(([k, v]) => [el('dt', { textContent: k }), el('dd', { textContent: v ?? t('prov.missing'), className: 'mono' })]));
-  for (const c of CATEGORIES) {
-    document.querySelector(`[data-count="${c}"]`).textContent = state.nodes.filter(n => n.category === c).length;
-  }
-  for (const k of EDGE_KINDS) {
-    document.querySelector(`[data-count="${k}"]`).textContent = state.edges.filter(e => e.kind === k).length;
-  }
 }
 
 // ---------------------------------------------------------------- overlay (exact IDs only)
@@ -1596,175 +1520,16 @@ function attachSearch(search, request) {
   repaint();
 }
 
-// ---------------------------------------------------------------- render objects
-function buildScene() {
-  for (const mesh of Object.values(state.meshes)) { graphGroup.remove(mesh); mesh.dispose(); }
-  for (const line of Object.values(state.lines)) { graphGroup.remove(line); line.geometry.dispose(); line.material.dispose(); }
-  state.meshes = {}; state.lines = {}; state.slot = new Array(state.nodes.length);
-  for (const c of CATEGORIES) {
-    const list = state.nodes.flatMap((n, i) => n.category === c ? [i] : []);
-    const mesh = new THREE.InstancedMesh(GEOMETRY[c], new THREE.MeshStandardMaterial({ roughness: .55, metalness: .05 }), Math.max(1, list.length));
-    mesh.count = list.length;
-    mesh.userData = { list };
-    list.forEach((i, k) => { state.slot[i] = [c, k]; mesh.setColorAt(k, palette[c]); });
-    graphGroup.add(mesh);
-    state.meshes[c] = mesh;
-  }
-  for (const kind of EDGE_KINDS) {
-    const list = state.edges.flatMap((e, k) => e.kind === kind ? [k] : []);
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(list.length * 6), 3));
-    geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(list.length * 6), 3));
-    const material = kind === 'name_candidate'
-      ? new THREE.LineDashedMaterial({ vertexColors: true, dashSize: 4, gapSize: 4, transparent: true, opacity: .8 })
-      : new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: kind === 'observes' ? .55 : .8 });
-    const line = new THREE.LineSegments(geometry, material);
-    line.userData = { list };
-    graphGroup.add(line);
-    state.lines[kind] = line;
-  }
-}
-
-function startLayout() {
-  // Seed each node near the node that reaches it, so the simulation starts close to structure.
-  const n = state.nodes.length;
-  const pos = new Array(n);
-  const sources = state.nodes.flatMap((node, i) => node.category === 'source' ? [i] : []);
-  const radius = 60 * Math.sqrt(Math.max(1, sources.length));
-  sources.forEach((i, k) => {
-    const y = 1 - 2 * (k + .5) / sources.length, r = Math.sqrt(1 - y * y), a = k * 2.399963;
-    pos[i] = [Math.cos(a) * r * radius, y * radius, Math.sin(a) * r * radius];
-  });
-  const queue = [...sources];
-  while (queue.length) {
-    const i = queue.shift();
-    for (const k of state.out[i]) {
-      const target = state.edges[k].t;
-      if (pos[target] || state.edges[k].kind === 'name_candidate') continue;
-      pos[target] = pos[i].map(v => v + (Math.random() - .5) * 30);
-      queue.push(target);
-    }
-  }
-  state.simNodes = state.nodes.map((_, i) => {
-    const [x, y, z] = pos[i] ?? [(Math.random() - .5) * radius, (Math.random() - .5) * radius, (Math.random() - .5) * radius];
-    return { index: i, x, y, z };
-  });
-  const links = state.edges.map(e => ({ source: e.s, target: e.t, kind: e.kind }));
-  state.sim = forceSimulation(state.simNodes, 3)
-    .force('link', forceLink(links).distance(l => LINK[l.kind][0]).strength(l => LINK[l.kind][1]))
-    .force('charge', forceManyBody().strength(-22).theta(.9).distanceMax(500))
-    .force('center', forceCenter())
-    .alphaDecay(.03)
-    .stop();
-  state.layoutTicks = 0;
-  userMoved = false;
-  updatePositions();
-  repaint();
-  fit();
-}
-
 const dummy = new THREE.Object3D();
-function nodeScale(i) {
-  if (state.selectedNode === i) return 1.9;
-  if (state.overlayOn && state.overlay?.nodes.has(i)) return 3.4;
-  if (state.overlayOn && state.overlay?.neighbors.has(i)) return 1.9;
-  if (state.matches.has(i)) return 1.5;
-  return 1;
-}
-
-function updatePositions() {
-  const p = state.simNodes;
-  for (const c of CATEGORIES) {
-    const mesh = state.meshes[c];
-    mesh.userData.list.forEach((i, k) => {
-      dummy.position.set(p[i].x, p[i].y, p[i].z);
-      dummy.scale.setScalar(state.visibleCategory.has(c) ? nodeScale(i) : 0);
-      dummy.updateMatrix();
-      mesh.setMatrixAt(k, dummy.matrix);
-    });
-    mesh.instanceMatrix.needsUpdate = true;
-    mesh.computeBoundingSphere();
-  }
-  for (const kind of EDGE_KINDS) {
-    const line = state.lines[kind];
-    const arr = line.geometry.attributes.position.array;
-    line.userData.list.forEach((k, j) => {
-      const e = state.edges[k];
-      const shown = state.visibleCategory.has(state.nodes[e.s].category) && state.visibleCategory.has(state.nodes[e.t].category);
-      const a = p[e.s], b = shown ? p[e.t] : p[e.s];
-      arr.set([a.x, a.y, a.z, b.x, b.y, b.z], j * 6);
-    });
-    line.geometry.attributes.position.needsUpdate = true;
-    line.geometry.computeBoundingSphere();
-    if (line.material.isLineDashedMaterial) line.computeLineDistances();
-    line.visible = state.visibleEdge.has(kind);
-  }
-}
-
-function focusSets() {
-  if (state.selectedNode != null) {
-    const nodes = new Set([state.selectedNode]), edges = new Set();
-    for (const k of [...state.out[state.selectedNode], ...state.inn[state.selectedNode]]) {
-      edges.add(k); nodes.add(state.edges[k].s); nodes.add(state.edges[k].t);
-    }
-    return { nodes, edges };
-  }
-  if (state.selectedEdge != null) {
-    const e = state.edges[state.selectedEdge];
-    return { nodes: new Set([e.s, e.t]), edges: new Set([state.selectedEdge]) };
-  }
-  if (state.overlayOn && state.overlay) {
-    return { nodes: new Set([...state.overlay.nodes, ...state.overlay.neighbors]), edges: state.overlay.edges };
-  }
-  if (state.matches.size) return { nodes: state.matches, edges: new Set() };
-  return null;
-}
-
 const tmp = new THREE.Color();
 function repaint() {
-  if (!state.graph) return;
-  const focus = focusSets();
-  // A lit question dims everything else almost to the background, so what it reached stands out.
-  const lit = state.overlayOn && state.overlay && state.selectedNode == null && state.selectedEdge == null;
-  const [dimNode, dimEdge] = lit ? [.94, .95] : [.82, .75];
-  for (const c of CATEGORIES) {
-    const mesh = state.meshes[c];
-    mesh.userData.list.forEach((i, k) => {
-      tmp.copy(palette[c]);
-      if (focus && !focus.nodes.has(i)) tmp.lerp(palette.surface, dimNode);
-      mesh.setColorAt(k, tmp);
-    });
-    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-  }
-  for (const kind of EDGE_KINDS) {
-    const line = state.lines[kind];
-    const arr = line.geometry.attributes.color.array;
-    line.userData.list.forEach((k, j) => {
-      if (focus?.edges.has(k)) tmp.copy(palette.focus);
-      else {
-        tmp.copy(palette.edge);
-        if (focus) tmp.lerp(palette.surface, dimEdge);
-      }
-      arr.set([tmp.r, tmp.g, tmp.b, tmp.r, tmp.g, tmp.b], j * 6);
-    });
-    line.geometry.attributes.color.needsUpdate = true;
-  }
-  updatePositions();
   if (city) paintCity();
 }
 
 // ---------------------------------------------------------------- camera
 let flight = null;
 function fit() {
-  if (cityOn()) return fitCity();
-  if (!state.simNodes.length) return;
-  const box = new THREE.Box3();
-  for (const p of state.simNodes) {
-    if (state.visibleCategory.has(state.nodes[p.index].category)) box.expandByPoint(new THREE.Vector3(p.x, p.y, p.z));
-  }
-  if (box.isEmpty()) return;
-  const sphere = box.getBoundingSphere(new THREE.Sphere());
-  flyTo(sphere.center, Math.max(120, sphere.radius * 2.4));
+  if (city) fitCity();
 }
 function flyTo(target, distance, from = null) {
   const dir = (from ?? camera.position.clone().sub(controls.target)).normalize();
@@ -1772,11 +1537,10 @@ function flyTo(target, distance, from = null) {
     camTo: target.clone().add(dir.multiplyScalar(distance)), start: performance.now() };
 }
 function focusNode(i) {
-  userMoved = true; // an explicit focus wins over the automatic framing of the layout
-  const building = cityOn() && city.at.get(state.nodes[i].id);
-  if (building) return flyTo(building.roof, 160);
-  const p = state.simNodes[i];
-  flyTo(new THREE.Vector3(p.x, p.y, p.z), 160);
+  const place = city && placeOf(i);
+  if (!place) return;
+  userMoved = true; // an explicit focus wins over the automatic framing
+  flyTo(place, 160);
 }
 
 // ---------------------------------------------------------------- selection & inspector
@@ -1852,20 +1616,11 @@ function inspect() {
 }
 
 // ---------------------------------------------------------------- picking
-function pick(withEdges) {
+function pick() {
+  if (!city) return null;
   raycaster.setFromCamera(pointer, camera);
-  if (cityOn()) {
-    const hit = raycaster.intersectObject(city.buildings, false)[0];
-    return hit ? { building: city.list[hit.instanceId] } : null;
-  }
-  const meshes = CATEGORIES.filter(c => state.visibleCategory.has(c)).map(c => state.meshes[c]).filter(Boolean);
-  const hit = raycaster.intersectObjects(meshes, false)[0];
-  if (hit) return { node: hit.object.userData.list[hit.instanceId] };
-  if (!withEdges) return null;
-  raycaster.params.Line.threshold = Math.max(.6, camera.position.distanceTo(controls.target) / 400);
-  const lines = EDGE_KINDS.filter(k => state.visibleEdge.has(k)).map(k => state.lines[k]).filter(Boolean);
-  const edge = raycaster.intersectObjects(lines, false)[0];
-  return edge ? { edge: edge.object.userData.list[Math.floor(edge.index / 2)] } : null;
+  const hit = raycaster.intersectObject(city.buildings, false)[0];
+  return hit ? city.list[hit.instanceId] : null;
 }
 
 let hoverQueued = false, lastMove = null;
@@ -1880,19 +1635,15 @@ canvas.addEventListener('pointermove', ev => {
 });
 canvas.addEventListener('pointerleave', () => { $('#tooltip').style.display = 'none'; });
 function hover() {
-  const found = pick(false), tip = $('#tooltip');
-  canvas.style.cursor = found ? 'pointer' : '';
-  if (!found) { tip.style.display = 'none'; return; }
-  if (found.building) {
-    const b = found.building;
-    tip.replaceChildren(el('strong', { textContent: b.row.name }),
-      el('div', { textContent: t('city.tip', { calls: intPt(b.row.calls), ms: b.row.cpu_ms == null ? '—' : `${intPt(Math.round(b.row.cpu_ms))} ms` }) }),
-      ...(b.ring ? [el('div', { className: 'error', textContent: t('city.ring') })] : []),
-      el('div', { className: 'muted mono', textContent: `${b.row.path}:${b.row.start_line ?? ''}` }));
-  } else {
-    const n = state.nodes[found.node];
-    tip.replaceChildren(el('strong', { textContent: n.label.slice(0, 120) }), el('div', { className: 'muted', textContent: `${n.category} · ${n.kind} · ${n.language}` }));
-  }
+  const b = pick(), tip = $('#tooltip');
+  canvas.style.cursor = b ? 'pointer' : '';
+  if (!b) { tip.style.display = 'none'; return; }
+  tip.replaceChildren(el('strong', { textContent: b.name.slice(0, 120) }),
+    el('div', { textContent: b.row
+      ? t('city.tip', { calls: intPt(b.row.calls), ms: b.row.cpu_ms == null ? '—' : `${intPt(Math.round(b.row.cpu_ms))} ms` })
+      : t('city.notMeasured', { kind: state.nodes[state.index.get(b.id)]?.kind ?? '' }) }),
+    ...(b.ring ? [el('div', { className: 'error', textContent: t('city.ring') })] : []),
+    el('div', { className: 'muted mono', textContent: b.row?.start_line ? `${b.path}:${b.row.start_line}` : b.path }));
   tip.style.display = 'block';
   tip.style.left = `${Math.min(lastMove.x + 14, viewport.clientWidth - 300)}px`;
   tip.style.top = `${lastMove.y + 14}px`;
@@ -1901,12 +1652,9 @@ let downAt = null;
 canvas.addEventListener('pointerdown', ev => { downAt = [ev.clientX, ev.clientY]; });
 canvas.addEventListener('click', ev => {
   if (!state.graph || (downAt && Math.hypot(ev.clientX - downAt[0], ev.clientY - downAt[1]) > 4)) return;
-  const found = pick(true);
-  if (found?.building) {
-    const i = state.index.get(found.building.row.symbol);
-    if (i != null) selectNode(i);
-  } else if (found?.node != null) selectNode(found.node);
-  else if (found?.edge != null) selectEdge(found.edge);
+  const b = pick();
+  const i = b && state.index.get(b.id);
+  if (i != null) selectNode(i);
 });
 
 // ---------------------------------------------------------------- controls
@@ -1915,14 +1663,6 @@ $('#files').addEventListener('change', ev => loadFiles(ev.target.files));
 $('#fit').addEventListener('click', fit);
 $('#clear').addEventListener('click', clearSelection);
 $('#overlayToggle').addEventListener('change', ev => { state.overlayOn = ev.target.checked; repaint(); });
-document.querySelectorAll('[data-category]').forEach(cb => cb.addEventListener('change', ev => {
-  ev.target.checked ? state.visibleCategory.add(ev.target.dataset.category) : state.visibleCategory.delete(ev.target.dataset.category);
-  if (state.graph) repaint();
-}));
-document.querySelectorAll('[data-edge]').forEach(cb => cb.addEventListener('change', ev => {
-  ev.target.checked ? state.visibleEdge.add(ev.target.dataset.edge) : state.visibleEdge.delete(ev.target.dataset.edge);
-  if (state.graph) updatePositions();
-}));
 function showMatches() {
   const q = $('#query').value.trim().toLowerCase();
   state.matches = new Set();
@@ -2331,7 +2071,7 @@ function modelfileSummary(content, provider) {
 async function ask() {
   const question = $('#question').value.trim();
   if (!question || !studio.run) return;
-  if (mode === 'improve' && $('#ladderOn').checked && gathered.length && !investigation && !mutationAsk) {
+  if (mode === 'improve' && $('#ladderOn').checked && gathered.length && !investigation) {
     return busy([$('#ask')], $('#llmNote'), async () => { await saveSettings(); await askLadder(question); });
   }
   const choice = composerChoice();
@@ -2339,13 +2079,11 @@ async function ask() {
     // The question uses the saved settings; save what is on screen so nothing is forgotten.
     await saveSettings();
     say($('#chatNote'), t('chat.preparing'));
-    // An investigation asks over exactly the ticked items, in the order proposed; a mutation's
-    // survivors, over the declaration and its test module.
-    const investigated = mutationAsk ?? (investigation && {
+    // An investigation asks over exactly the ticked items, in the order proposed.
+    const investigated = investigation && {
       nodes: investigation.items.map(i => i.id).filter(id => investigation.ticked.has(id)),
       origin: { inventory: investigation.target, kind: investigation.kind, summary: findingSummary(investigation) },
-    });
-    mutationAsk = null;
+    };
     if (investigated && !investigated.nodes.length) throw new Error(t('investigate.empty'));
     const turn = investigated
       ? await api('POST', '/api/gathered-question', { key: studio.project.key, run: studio.run, question, nodes: investigated.nodes, with_facts: gatherFacts, origin: investigated.origin })
@@ -2550,7 +2288,7 @@ function suggestionView() {
 function gatheredTurnView(g) {
   const facts = g.reviewed_facts?.length ?? 0;
   return el('div', { className: 'muted', style: 'margin-top: 6px' },
-    g.origin ? el('span', { className: 'tag', style: 'margin-right: 4px', textContent: t({ mutation: 'mutation.turnTag', hot: 'hot.turnTag', ladder: 'ladder.turnTag' }[g.origin.kind] ?? 'investigate.turnTag', { summary: g.origin.summary }) }) : null,
+    g.origin ? el('span', { className: 'tag', style: 'margin-right: 4px', textContent: t({ hot: 'hot.turnTag', ladder: 'ladder.turnTag' }[g.origin.kind] ?? 'investigate.turnTag', { summary: g.origin.summary }) }) : null,
     el('span', { className: 'tag', textContent: t('gather.turnTag', { n: g.nodes.length }) }),
     facts ? el('span', { className: 'tag', style: 'margin-left: 4px', textContent: t('gather.turnFacts', { n: facts }) }) : null,
     helpButton(t('help.gatheredTurn')));
@@ -2679,11 +2417,9 @@ function activate(id, fly = true) {
   if (turn?.search) {
     attachSearch(turn.search, turn.request);
     // Frame what the lexicon reached: the results and the lit neighborhood.
-    const lit = state.overlay ? [...state.overlay.nodes, ...state.overlay.neighbors] : [];
+    const lit = state.overlay ? [...state.overlay.nodes, ...state.overlay.neighbors].map(i => city && placeOf(i)).filter(Boolean) : [];
     if (lit.length && fly) {
-      const box = new THREE.Box3();
-      for (const i of lit) box.expandByPoint(new THREE.Vector3(state.simNodes[i].x, state.simNodes[i].y, state.simNodes[i].z));
-      const sphere = box.getBoundingSphere(new THREE.Sphere());
+      const sphere = new THREE.Box3().setFromPoints(lit).getBoundingSphere(new THREE.Sphere());
       userMoved = true;
       flyTo(sphere.center, Math.max(160, sphere.radius * 2.6));
     }
@@ -2981,8 +2717,7 @@ function editsView(k, diff, s, turn) {
     el('pre', { textContent: diff }),
     file ? el('div', { className: 'muted mono', textContent: t('edits.apply', { file }) }) : null,
     helpButton(t('help.edits')),
-    s && turn ? runWithChange(k, s, turn) : null,
-    s && turn ? mutationCheck(k, s, turn) : null);
+    s && turn ? runWithChange(k, s, turn) : null);
 }
 
 // P4: the approved commands, each run in a copy with this claim's diff applied.
@@ -3093,8 +2828,7 @@ async function loadFacts() {
   const changeLines = f => f.kind !== 'CHANGE' ? [] : [
     el('div', { className: 'muted mono', textContent: t('facts.change', { model: f.proposed_by?.modelfile ?? f.proposed_by?.model ?? '?', provider: f.proposed_by?.provider ?? '?',
       cost: f.proposed_by?.cost_usd != null ? `US$ ${Number(f.proposed_by.cost_usd).toFixed(3)}` : t('facts.noCost'), files: (f.files ?? []).join(', ') }) }),
-    ...(f.executions ?? []).map(x => el('div', { className: 'muted mono', style: 'font-size: 11px', textContent: `${x.name} · ${x.succeeded}/${x.attempted} · ${Object.entries(x.comparison?.stats ?? {}).filter(([, v]) => v.change_pct != null && v.change_pct !== 0).map(([n, v]) => `${n} ${v.change_pct > 0 ? '+' : ''}${v.change_pct}%`).slice(0, 6).join(', ')}${Object.values(x.comparison?.outputs ?? {}).length ? ` · ${Object.values(x.comparison.outputs).every(o => o === 'same') ? t('executions.sameShort') : t('executions.differentShort')}` : ''}` })),
-    ...(f.mutation_checks ?? []).map(m => el('div', { className: 'muted mono', style: 'font-size: 11px', textContent: t('facts.mutation', { verdict: m.verdict, killed: m.killed ?? 0, survivors: m.survivors ?? 0 }) }))];
+    ...(f.executions ?? []).map(x => el('div', { className: 'muted mono', style: 'font-size: 11px', textContent: `${x.name} · ${x.succeeded}/${x.attempted} · ${Object.entries(x.comparison?.stats ?? {}).filter(([, v]) => v.change_pct != null && v.change_pct !== 0).map(([n, v]) => `${n} ${v.change_pct > 0 ? '+' : ''}${v.change_pct}%`).slice(0, 6).join(', ')}${Object.values(x.comparison?.outputs ?? {}).length ? ` · ${Object.values(x.comparison.outputs).every(o => o === 'same') ? t('executions.sameShort') : t('executions.differentShort')}` : ''}` }))];
   const active = data.facts.filter(f => f.status !== 'revoked').length;
   $('#factsCount').textContent = `(${active})`;
   $('#factsList').replaceChildren(
@@ -3178,7 +2912,10 @@ function resetHot() {
   if (studio.project && studio.run) loadHot().catch(() => {});
 }
 async function loadHot() {
-  hot = await api('GET', `/api/hotspots?${query({ key: studio.project.key, run: studio.run })}`);
+  const run = studio.run;
+  const measure = await api('GET', `/api/hotspots?${query({ key: studio.project.key, run })}`);
+  if (run !== studio.run) return;
+  hot = measure;
   renderHot();
 }
 $('#hotMeasure').addEventListener('click', () => busy([$('#hotMeasure')], $('#hotNote'), async () => {
@@ -3255,7 +2992,11 @@ function renderPerf() {
     ...perf.facts.map(f => el('div', { style: 'font-size: 12px; margin-top: 6px' }, tag(t('perf.qwen')), f.text)),
     ...perf.changes.map(c => el('div', { style: 'font-size: 12px; margin-top: 6px' }, tag(t('perf.ladder')), c.text, ' ',
       el('button', { textContent: t('perf.toLadder'), onclick: ev => busy([ev.target], $('#hotNote'), async () => {
-        gathered = c.nodes; gatherFacts = true; renderGathered(); setMode('improve');
+        // The envelope the Librarian suggests for those points, as "Otimizar" does, up to 16.
+        const suggestion = await api('POST', '/api/envelope/suggest', { key: studio.project.key, run: studio.run, nodes: c.nodes });
+        gathered = [...new Set([...c.nodes, ...suggestion.items.map(i => i.id)])]
+          .filter(id => c.nodes.includes(id) || state.index.has(id) || id.startsWith(HEADER)).slice(0, 16);
+        gatherFacts = true; renderGathered(); setMode('improve');
         await askLadder(c.text);
       }) }))),
     el('div', { className: 'row', style: 'gap: 6px; margin-top: 8px' },
@@ -3348,6 +3089,9 @@ async function optimize(r) {
 async function askLadder(question) {
   const gate = (studio.commands ?? []).filter(c => c.approved).map(c => c.name);
   if (!gate.length) throw new Error(t('ladder.noGate'));
+  // The server reads the policy from the saved settings: Improve mode (hypotheses and changes
+  // allowed) must be saved before the ladder, or every model is told not to propose a change.
+  await saveSettings();
   const before = new Set(studio.turns.map(x => x.id));
   const poll = setInterval(async () => {
     studio.turns = await api('GET', `/api/turns?${query({ key: studio.project.key, run: studio.run })}`).catch(() => studio.turns);
@@ -3388,13 +3132,15 @@ function renderLadder() {
     ...r.steps.map(line))));
 }
 
-// ---- "Onde pesa" as a city: each file a district on a grid, each function that ran a building
-// (height by calls on a log scale, color by time), a red ring where a lock, wait or I/O sits in a
-// loop, and arcs from caller to callee. Fixed positions from the measure, no forces.
+// ---- The map: a city. Each file is a district on a grid and each function a building, with its
+// arcs from caller to callee on the chosen building; fixed positions, no forces. With "Medir tudo",
+// only the functions that ran: height by calls (log scale), color by time, a red ring where a
+// lock, wait or I/O sits in a loop. Without a measure (none yet, or a language it does not count):
+// every function, height by size, one color.
 const CITY = { lot: 10, gap: 5, street: 30, floor: 1.5 }, SEGMENTS = 16;
+const FUNCTIONS = new Set(['function', 'method', 'trait_method']);
+const CALLS = new Set(['call_observed', 'method_call_observed']);
 let city = null;
-const cityOn = () => !!city && $('#cityToggle').checked;
-$('#cityToggle').checked = saved.get('city') !== 'off';
 
 function clearCity() {
   cityGroup.traverse(o => { if (o !== cityGroup) { o.geometry?.dispose(); o.material?.dispose(); } });
@@ -3403,29 +3149,63 @@ function clearCity() {
   $('#cityLabels').replaceChildren();
 }
 
+// The buildings' data: from the measure when it has functions that ran, else from the graph.
+function cityFunctions() {
+  const pathOf = new Map();
+  for (const e of state.edges) if (e.kind === 'declares') pathOf.set(e.t, state.nodes[e.s].label);
+  const measured = new Map();
+  for (const r of hot?.rows ?? []) {
+    if (!r.symbol || !(r.calls > 0) || !state.index.has(r.symbol)) continue;
+    if (!(measured.get(r.symbol)?.calls >= r.calls)) measured.set(r.symbol, r);
+  }
+  if (measured.size) {
+    return [...measured.values()].map(row => ({ id: row.symbol, name: row.name ?? row.symbol, path: row.path, row, weight: row.calls,
+      height: 3 + 12 * Math.log10(1 + row.calls) }));
+  }
+  return state.nodes.flatMap((n, i) => FUNCTIONS.has(n.kind) && pathOf.has(i) ? [{ id: n.id, name: n.label, path: pathOf.get(i), row: null,
+    weight: state.out[i].length, height: 3 + 6 * Math.log10(1 + state.out[i].length) }] : []);
+}
+
+// Caller and callee: what the measure resolved, else the written call by name in the graph.
+function cityCalls(at) {
+  const pairs = new Map();
+  const add = (from, to) => { if (from && to && from !== to) pairs.set(`${from.id}→${to.id}`, { from, to }); };
+  for (const b of at.values()) {
+    if (b.row) {
+      for (const k of b.row.calls_out ?? []) for (const target of k.targets) add(b, at.get(target.symbol));
+      continue;
+    }
+    for (const k of state.out[state.index.get(b.id)]) {
+      const seen = state.edges[k];
+      if (seen.kind !== 'observes' || !CALLS.has(state.nodes[seen.t].kind)) continue;
+      for (const c of state.out[seen.t]) if (state.edges[c].kind === 'name_candidate') add(b, at.get(state.nodes[state.edges[c].t].id));
+    }
+  }
+  return [...pairs.values()];
+}
+
+// A district's name: the file and its folder, cut when long (an Alembic migration's hash).
+const districtName = path => { const name = path.split('/').slice(-2).join('/'); return name.length > 28 ? `${name.slice(0, 27)}…` : name; };
+
 function buildCity() {
   clearCity();
-  // One building per function: the row with the most calls when a function has several.
-  const bySymbol = new Map();
-  for (const r of hot?.rows ?? []) {
-    if (!r.symbol || !(r.calls > 0)) continue;
-    if (!(bySymbol.get(r.symbol)?.calls >= r.calls)) bySymbol.set(r.symbol, r);
-  }
-  $('#cityToggleRow').hidden = !bySymbol.size;
-  if (!bySymbol.size) return showCity();
-  const ringed = new Set((hot.structural ?? []).map(o => o.symbol));
+  if (!state.graph) return;
+  const functions = cityFunctions();
+  if (!functions.length) return status(t('status.openAny'));
+  const measuredCity = functions.some(f => f.row);
+  const ringed = new Set((measuredCity ? hot.structural ?? [] : []).map(o => o.symbol));
   const files = new Map();
-  for (const r of bySymbol.values()) {
-    if (!files.has(r.path)) files.set(r.path, { path: r.path, rows: [], calls: 0 });
-    const f = files.get(r.path);
-    f.rows.push(r);
-    f.calls += r.calls;
+  for (const f of functions) {
+    if (!files.has(f.path)) files.set(f.path, { path: f.path, rows: [], weight: 0 });
+    const d = files.get(f.path);
+    d.rows.push(f);
+    d.weight += f.weight;
   }
   // Districts heaviest first, packed in shelves about as wide as the city is deep.
   const { lot, gap, street, floor } = CITY, step = lot + gap;
-  const districts = [...files.values()].sort((a, b) => b.calls - a.calls);
+  const districts = [...files.values()].sort((a, b) => b.weight - a.weight);
   for (const d of districts) {
-    d.rows.sort((a, b) => b.calls - a.calls);
+    d.rows.sort((a, b) => b.weight - a.weight);
     d.cols = Math.ceil(Math.sqrt(d.rows.length));
     d.w = d.cols * step + gap;
     d.d = Math.ceil(d.rows.length / d.cols) * step + gap;
@@ -3443,16 +3223,16 @@ function buildCity() {
   for (const d of districts) box.expandByPoint(new THREE.Vector3(d.x, 0, d.z)).expandByPoint(new THREE.Vector3(d.x + d.w, 0, d.z + d.d));
   const center = box.getCenter(new THREE.Vector3());
 
-  const maxMs = Math.max(1, ...[...bySymbol.values()].map(r => r.cpu_ms ?? 0));
-  const list = [], at = new Map();
+  const maxMs = Math.max(1, ...functions.map(f => f.row?.cpu_ms ?? 0));
+  const list = [], at = new Map(), districtAt = new Map();
   for (const d of districts) {
-    d.rows.forEach((row, k) => {
-      const height = 3 + 12 * Math.log10(1 + row.calls);
+    districtAt.set(d.path, new THREE.Vector3(d.x + d.w / 2 - center.x, floor, d.z + d.d / 2 - center.z));
+    d.rows.forEach((f, k) => {
       const px = d.x + gap + (k % d.cols) * step + lot / 2 - center.x, pz = d.z + gap + Math.floor(k / d.cols) * step + lot / 2 - center.z;
-      const b = { row, height, heat: Math.log1p(row.cpu_ms ?? 0) / Math.log1p(maxMs), ring: ringed.has(row.symbol),
-        base: new THREE.Vector3(px, floor, pz), roof: new THREE.Vector3(px, floor + height, pz) };
+      const b = { ...f, heat: f.row ? Math.log1p(f.row.cpu_ms ?? 0) / Math.log1p(maxMs) : null, ring: ringed.has(f.id),
+        base: new THREE.Vector3(px, floor, pz), roof: new THREE.Vector3(px, floor + f.height, pz) };
       list.push(b);
-      at.set(row.symbol, b);
+      at.set(f.id, b);
     });
   }
 
@@ -3483,90 +3263,86 @@ function buildCity() {
     rings.setMatrixAt(k, dummy.matrix);
   });
 
-  // Arcs: each written call between two functions that ran, once per pair, raised by their distance.
-  const pairs = new Map();
-  for (const b of list) {
-    for (const k of b.row.calls_out ?? []) {
-      for (const target of k.targets) {
-        const to = at.get(target.symbol);
-        if (to && to !== b && !pairs.has(`${b.row.symbol}→${target.symbol}`)) pairs.set(`${b.row.symbol}→${target.symbol}`, { from: b, to });
-      }
-    }
-  }
-  const arcs = [...pairs.values()];
-  const positions = new Float32Array(arcs.length * SEGMENTS * 6);
-  const curve = new THREE.QuadraticBezierCurve3(), mid = new THREE.Vector3();
-  arcs.forEach((a, j) => {
-    mid.lerpVectors(a.from.roof, a.to.roof, .5);
-    mid.y = Math.max(a.from.roof.y, a.to.roof.y) + a.from.roof.distanceTo(a.to.roof) * .35;
-    curve.v0.copy(a.from.roof); curve.v1.copy(mid); curve.v2.copy(a.to.roof);
-    const points = curve.getPoints(SEGMENTS);
-    for (let s = 0; s < SEGMENTS; s++) {
-      positions.set([points[s].x, points[s].y, points[s].z, points[s + 1].x, points[s + 1].y, points[s + 1].z], (j * SEGMENTS + s) * 6);
-    }
-  });
+  // Arcs: only the chosen building's are drawn; all at once would be a tangle.
+  const arcs = cityCalls(at);
   const arcGeometry = new THREE.BufferGeometry();
-  arcGeometry.setAttribute('position', new THREE.BufferAttribute(positions.slice(), 3));
-  arcGeometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(positions.length), 3));
-  const arcLines = new THREE.LineSegments(arcGeometry, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: .7 }));
+  arcGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(Math.max(1, arcs.length) * SEGMENTS * 6), 3));
+  const arcLines = new THREE.LineSegments(arcGeometry, new THREE.LineBasicMaterial({ transparent: true, opacity: .75 }));
+  arcLines.frustumCulled = false;
   cityGroup.add(floors, buildings, rings, arcLines);
 
   // Labels: every district by its file, and the heaviest buildings by name.
-  const top = new Set([...list].sort((a, b) => (b.row.cpu_ms ?? 0) - (a.row.cpu_ms ?? 0)).slice(0, 8));
+  const top = [...list].sort((a, b) => (b.row?.cpu_ms ?? b.weight) - (a.row?.cpu_ms ?? a.weight)).slice(0, 8);
   const labels = [
     ...districts.map(d => ({ at: new THREE.Vector3(d.x - center.x, floor, d.z + d.d - center.z),
-      node: el('div', { className: 'district-label', textContent: d.path.split('/').slice(-2).join('/') }) })),
-    ...[...top].map(b => ({ at: b.roof, node: el('div', { className: 'city-label', textContent: shortName(b.row.name ?? '') }) })),
+      node: el('div', { className: 'district-label', title: d.path, textContent: districtName(d.path) }) })),
+    ...top.map(b => ({ at: b.roof, building: b, node: el('div', { className: 'city-label', textContent: shortName(b.name) }) })),
   ];
   $('#cityLabels').replaceChildren(...labels.map(l => l.node));
-  city = { list, at, arcs, arcPoints: positions, floors, buildings, arcLines, labels, districts: districts.length, bounds: box.translate(center.negate()) };
+  city = { list, at, arcs, districtAt, floors, buildings, arcLines, labels, measured: measuredCity, districts: districts.length, bounds: box.translate(center.negate()) };
+  cityStatus();
   paintCity();
-  showCity();
+  fitCity();
+}
+
+const cityStatus = () => status(t(city.measured ? 'city.status' : 'city.statusPlain', { functions: city.list.length, districts: city.districts }));
+
+// The building of a graph point: itself, or the function that holds it (an occurrence, a local).
+function buildingOf(i) {
+  for (let depth = 0; depth < 5 && i != null; depth++) {
+    const b = city.at.get(state.nodes[i].id);
+    if (b) return b;
+    const up = state.inn[i].map(k => state.edges[k]).find(e => e.kind === 'observes' || e.kind === 'contains');
+    i = up?.s;
+  }
+  return null;
+}
+// Where the camera goes for a graph point: its building, or else the district of its file.
+function placeOf(i) {
+  const b = buildingOf(i);
+  if (b) return b.roof;
+  for (let k = i, depth = 0; depth < 5 && k != null; depth++) {
+    const place = city.districtAt.get(state.nodes[k].label);
+    if (place) return place;
+    k = state.inn[k].map(e => state.edges[e])[0]?.s;
+  }
+  return null;
 }
 
 // Time as color, the same in the city and in the path: blue (little) to amber to red (a lot).
 const COLD = new THREE.Color(0x4a78c2), WARM = new THREE.Color(0xe8a33a), HOT = new THREE.Color(0xd6453d);
 const heatColor = (heat, into = new THREE.Color()) => into.copy(heat < .5 ? COLD : WARM).lerp(heat < .5 ? WARM : HOT, heat < .5 ? heat * 2 : heat * 2 - 1);
 function paintCity() {
-  const selected = state.selectedNode == null ? null : state.nodes[state.selectedNode]?.id;
-  const chosen = selected && city.at.get(selected);
-  // With a function chosen, it and the functions it calls or is called by keep their color.
-  const linked = new Set(chosen ? city.arcs.filter(a => a.from === chosen || a.to === chosen).flatMap(a => [a.from, a.to]) : []);
+  const picked = state.selectedNode ?? (state.selectedEdge != null ? state.edges[state.selectedEdge].s : null);
+  const chosen = picked != null ? buildingOf(picked) : null;
+  const shown = chosen ? city.arcs.filter(a => a.from === chosen || a.to === chosen) : [];
+  // What keeps its color: the chosen building and its links, or what a question or a search lit.
+  let kept = null;
+  if (chosen) kept = new Set([chosen, ...shown.flatMap(a => [a.from, a.to])]);
+  else if (state.overlayOn && state.overlay) kept = new Set([...state.overlay.nodes, ...state.overlay.neighbors].map(buildingOf));
+  else if (state.matches.size) kept = new Set([...state.matches].map(buildingOf));
   city.list.forEach((b, k) => {
-    heatColor(b.heat, tmp);
-    if (chosen && b !== chosen && !linked.has(b)) tmp.lerp(palette.surface, .75);
+    if (b.heat == null) tmp.copy(COLD).lerp(palette.surface, .3);
+    else heatColor(b.heat, tmp);
+    if (kept && !kept.has(b)) tmp.lerp(palette.surface, .75);
     city.buildings.setColorAt(k, tmp);
   });
   city.buildings.instanceColor.needsUpdate = true;
   city.floors.material.color.copy(palette.edge).lerp(palette.surface, .55);
-  // Arcs only for the chosen function: all of them at once are a tangle. The others collapse to
-  // their first point, so nothing of them is drawn.
-  const { color, position } = city.arcLines.geometry.attributes;
-  const span = SEGMENTS * 6;
-  city.arcs.forEach((a, j) => {
-    const lit = chosen && (a.from === chosen || a.to === chosen);
-    const from = city.arcPoints.subarray(j * span, (j + 1) * span);
-    if (lit) position.array.set(from, j * span);
-    else for (let s = 0; s < span; s += 3) position.array.set(from.subarray(0, 3), j * span + s);
-    for (let s = 0; s < SEGMENTS * 2; s++) color.array.set([palette.focus.r, palette.focus.g, palette.focus.b], (j * SEGMENTS * 2 + s) * 3);
+  const position = city.arcLines.geometry.attributes.position;
+  const curve = new THREE.QuadraticBezierCurve3(), mid = new THREE.Vector3();
+  shown.forEach((a, j) => {
+    mid.lerpVectors(a.from.roof, a.to.roof, .5);
+    mid.y = Math.max(a.from.roof.y, a.to.roof.y) + a.from.roof.distanceTo(a.to.roof) * .35;
+    curve.v0.copy(a.from.roof); curve.v1.copy(mid); curve.v2.copy(a.to.roof);
+    const points = curve.getPoints(SEGMENTS);
+    for (let s = 0; s < SEGMENTS; s++) {
+      position.array.set([points[s].x, points[s].y, points[s].z, points[s + 1].x, points[s + 1].y, points[s + 1].z], (j * SEGMENTS + s) * 6);
+    }
   });
-  color.needsUpdate = true;
   position.needsUpdate = true;
-  city.arcLines.visible = !!chosen;
-}
-
-function showCity() {
-  const on = cityOn();
-  cityGroup.visible = on;
-  graphGroup.visible = !on;
-  $('#cityLabels').style.display = on ? '' : 'none';
-  if (on) {
-    status(t('city.status', { functions: city.list.length, districts: city.districts }));
-    fitCity();
-  } else if (state.graph) {
-    if (layoutDone()) status(t('status.ready', { nodes: state.nodes.length, edges: state.edges.length }));
-    fit();
-  }
+  city.arcLines.geometry.setDrawRange(0, shown.length * SEGMENTS * 2);
+  city.arcLines.material.color.copy(palette.focus);
 }
 
 function fitCity() {
@@ -3574,26 +3350,6 @@ function fitCity() {
   // Seen from above at an angle, like a map, unless the person already turned the camera.
   flyTo(sphere.center, Math.max(160, sphere.radius * 1.9), userMoved ? null : new THREE.Vector3(.35, 1, .9));
 }
-
-function placeCityLabels() {
-  if (!cityOn()) return;
-  const w = viewport.clientWidth, h = viewport.clientHeight;
-  for (const l of city.labels) {
-    projected.copy(l.at).project(camera);
-    const visible = projected.z < 1 && Math.abs(projected.x) <= 1.05 && Math.abs(projected.y) <= 1.05;
-    l.node.style.display = visible ? '' : 'none';
-    if (visible) {
-      l.node.style.left = `${(projected.x + 1) / 2 * w}px`;
-      l.node.style.top = `${(1 - projected.y) / 2 * h}px`;
-    }
-  }
-}
-
-$('#cityToggle').addEventListener('change', ev => {
-  saved.set('city', ev.target.checked ? 'on' : 'off');
-  $('#tooltip').style.display = 'none';
-  showCity();
-});
 
 $('#ladderOn').addEventListener('change', () => refreshComposer());
 $('#inventoryFilter').addEventListener('change', () => renderInventory());
@@ -3787,86 +3543,6 @@ async function loadCommands() {
   $('#executionsList').replaceChildren(
     executions.length ? el('div', {}, el('strong', { textContent: t('executions.title') }), el('ol', { className: 'claims' }, ...executions.map(execution))) : '',
     el('p', { className: 'muted', style: 'font-size: 11px', textContent: serverText(data.limits) }));
-  await loadMutations();
-}
-
-// ---- R3: tests per piece, checked by mutation.
-// The declarations of the graph, by label, for the picker; the approved commands to run.
-let mutationAsk = null;
-function fillMutationPicker() {
-  const ids = new Map();
-  for (const n of state.nodes ?? []) {
-    if (n.category === 'symbol' && ['method', 'function', 'trait_method'].includes(n.kind) && !ids.has(n.label)) ids.set(n.label, n.id);
-  }
-  $('#mutationUnits').replaceChildren(...[...ids.keys()].sort().map(label => el('option', { value: label })));
-  $('#mutationUnit').dataset.ids = JSON.stringify(Object.fromEntries(ids));
-  const approved = (studio.commands ?? []).filter(c => c.approved).map(c => c.name);
-  const select = $('#mutationCommand'), current = select.value;
-  select.replaceChildren(...approved.map(name => el('option', { value: name, textContent: name })));
-  if (approved.includes(current)) select.value = current;
-  else if (approved.includes('testes')) select.value = 'testes';
-}
-
-async function loadMutations() {
-  fillMutationPicker();
-  if (!studio.project || !studio.run) { $('#mutationList').replaceChildren(); return; }
-  const records = await api('GET', `/api/mutations?${query({ key: studio.project.key, run: studio.run })}`);
-  $('#mutationList').replaceChildren(...records.slice().reverse().map((r, k) => mutationView(r, k === 0)));
-}
-
-function mutationView(r, open) {
-  const unit = r.unit.name;
-  const rows = r.mutants.map(m => el('div', { className: 'mono', style: 'font-size: 12px', title: `${m.mutant.before.trim()}\n→ ${m.mutant.after.trim()}` },
-    `${m.mutant.id} · ${t('mutation.line', { line: m.mutant.line })} · ${m.mutant.operator} · `,
-    m.result.applied === false ? t('mutation.notApplied')
-      : el('span', { className: m.survived ? 'verdict failed' : 'verdict passed', textContent: m.survived ? t('mutation.survived') : t('mutation.killed') })));
-  const ask = el('button', { className: 'primary', textContent: t('mutation.ask') });
-  ask.addEventListener('click', () => {
-    // The composer asks it: the person picks the LLM there, as for any question.
-    mutationAsk = { nodes: r.nodes, origin: { kind: 'mutation', mutation: r.id, summary: `${unit} (${r.survivors.join(', ')})` } };
-    $('#question').value = r.question;
-    say($('#mutationNote'), t('mutation.asked'));
-    $('#question').focus();
-  });
-  return el('details', { open, style: 'margin-top: 8px' },
-    el('summary', { textContent: t('mutation.summary', { unit, n: r.mutants.length, survivors: r.survivors.length, command: r.command }) }),
-    el('div', { style: 'margin: 6px 0' }, ...rows),
-    r.question ? el('div', {}, el('pre', { className: 'mono', style: 'white-space: pre-wrap; font-size: 12px', textContent: r.question }), ask) : null,
-    el('p', { className: 'muted', style: 'font-size: 11px', textContent: (r.limits ?? []).join(' ') }));
-}
-
-$('#mutationRun').addEventListener('click', () => busy([$('#mutationRun')], $('#mutationNote'), async () => {
-  const ids = JSON.parse($('#mutationUnit').dataset.ids ?? '{}');
-  const symbol = ids[$('#mutationUnit').value.trim()];
-  if (!symbol) throw new Error(t('mutation.unknown'));
-  const command = $('#mutationCommand').value;
-  if (!command) throw new Error(t('mutation.noCommand'));
-  say($('#mutationNote'), t('mutation.running'));
-  await api('POST', '/api/mutation/run', { key: studio.project.key, run: studio.run, symbol, command });
-  say($('#mutationNote'), '');
-  await loadMutations();
-}));
-
-// On an answer to a mutation question: the test checked against the survivors.
-function mutationCheck(k, s, turn) {
-  const origin = turn.gathered?.origin;
-  if (origin?.kind !== 'mutation') return null;
-  const note = el('div', { className: 'muted' });
-  const b = el('button', { className: 'primary', textContent: t('mutation.check') });
-  b.addEventListener('click', () => busy([b], note, async () => {
-    say(note, t('mutation.checking'));
-    const r = await api('POST', '/api/mutation/check', { key: studio.project.key, run: studio.run, mutation: origin.mutation,
-      change: { turn: turn.id, send: s.id, claim: k.id } });
-    const c = r.checks;
-    const verdict = t(`mutation.verdict.${r.verdict}`, { killed: c.killed ?? 0, survivors: c.survivors ?? 0 });
-    note.replaceChildren(
-      el('div', {}, el('span', { className: r.verdict === 'refused' ? 'verdict failed' : 'verdict passed', textContent: verdict })),
-      el('div', { textContent: t('mutation.checks', { adds: c.only_adds ? '✓' : '✗', tests: (c.adds_tests ?? []).join(', ') || '—',
-        unit: c.unit_name, calls: c.calls_unit ? '✓' : '✗', passes: c.passes_now ? (c.passes_now.ok ? '✓' : '✗') : '—' }) }),
-      ...(c.mutants ?? []).map(m => el('div', { className: 'mono', textContent: `${m.mutant}: ${m.killed ? t('mutation.killedByNew') : t('mutation.stillAlive')}` })));
-    await loadCommands();
-  }));
-  return el('div', { style: 'margin-top: 6px' }, b, note);
 }
 
 const number = v => typeof v === 'number' ? (Math.abs(v) >= 100 ? v.toFixed(1) : v.toPrecision(4)) : v;
@@ -4050,8 +3726,8 @@ async function drawPath() {
       note.textContent = old ? t('path.oldGraph') : t(calls ? 'path.callsNone' : 'path.none');
       return;
     }
-    const { graph, groups, edges } = pathGraph(data);
-    renderPath(data, await elk.layout(graph), groups, edges);
+    const { graph, nodes, edges } = pathGraph(data);
+    renderPath(data, await elk.layout(graph), nodes, edges);
   } catch (error) {
     note.textContent = error.message;
   }
@@ -4077,10 +3753,10 @@ function filterPath(data) {
     hidden: data.nodes.length - reached.size };
 }
 
-// Boxes are the enclosing class/impl, or the file; each edge merges the links of one pair.
+// A flat flow chart: each point a box with its file, each edge the links of one pair, in the order
+// of the caller's lines. No boxes around boxes: they sent the arrows on long detours.
 function pathGraph(data) {
-  const groups = new Map(), nodeInfo = new Map(), m = measure();
-  const edges = new Map();
+  const nodeInfo = new Map(), m = measure(), edges = new Map();
   for (const link of data.links) {
     // A symbol using its own name (recursion, or a homonym of itself) adds no step to the path.
     if (link.to === link.from) continue;
@@ -4088,37 +3764,31 @@ function pathGraph(data) {
     if (!edges.has(id)) edges.set(id, { id: `e${edges.size}`, near: nearEnd(link), far: farEnd(link), from: link.from, to: link.to, links: [] });
     edges.get(id).links.push(link);
   }
-  // In calls mode, an edge is read by the line of the first call it stands for: the order of the
-  // caller's body, top to bottom.
   for (const e of edges.values()) e.line = Math.min(...e.links.map(l => l.evidence.start_line));
   const ordered = [...edges.values()].sort((a, b) => a.line - b.line);
   const order = new Map([[data.seed, 0]]);
   for (const e of ordered) if (!order.has(e.far)) order.set(e.far, order.size);
-  for (const n of [...data.nodes].sort((a, b) => (order.get(a.id) ?? 1e9) - (order.get(b.id) ?? 1e9))) {
-    const key = `${n.path}|${n.container ?? ''}`;
-    if (!groups.has(key)) groups.set(key, { id: `g${groups.size}`, title: n.container ?? n.path, path: n.path, children: [] });
+  const children = [...data.nodes].sort((a, b) => (order.get(a.id) ?? 1e9) - (order.get(b.id) ?? 1e9)).map(n => {
     const row = m?.rows.get(n.id);
     const text = shortName(n.label);
+    const where = n.container ?? n.path.split('/').slice(-2).join('/');
     const count = row ? `${intPt(row.calls)} × · ${row.cpu_ms == null ? '—' : `${intPt(Math.round(row.cpu_ms))} ms`}` : idle(n.id) ? t('path.notRan') : null;
-    nodeInfo.set(n.id, { ...n, text, count, heat: row ? Math.log1p(row.cpu_ms ?? 0) / Math.log1p(m.maxMs) : null });
-    groups.get(key).children.push({ id: n.id, width: Math.max(80, text.length * 7.4 + 24, (count?.length ?? 0) * 6.4 + 24), height: count ? 44 : 30 });
-  }
+    nodeInfo.set(n.id, { ...n, text, where, count, heat: row ? Math.log1p(row.cpu_ms ?? 0) / Math.log1p(m.maxMs) : null });
+    return { id: n.id, width: Math.max(90, text.length * 7.4 + 26, where.length * 6.2 + 26, (count?.length ?? 0) * 6.4 + 26), height: count ? 60 : 44 };
+  });
   const graph = {
     id: 'root',
-    layoutOptions: { 'elk.algorithm': 'layered', 'elk.direction': 'RIGHT', 'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
-      'elk.layered.spacing.nodeNodeBetweenLayers': '90', 'elk.spacing.nodeNode': '16', 'elk.edgeRouting': 'ORTHOGONAL',
-      'elk.layered.spacing.edgeEdgeBetweenLayers': '8', 'elk.layered.considerModelOrder.strategy': 'NODES_AND_EDGES',
-      'elk.layered.mergeEdges': 'false', 'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX',
-      // Edges inside one box would otherwise come back relative to that box.
-      'elk.json.edgeCoords': 'ROOT' },
-    children: [...groups.values()].map(g => ({ id: g.id, width: Math.max(120, g.title.length * 6.6 + 24),
-      layoutOptions: { 'elk.padding': '[top=26,left=10,bottom=10,right=10]' }, children: g.children })),
+    layoutOptions: { 'elk.algorithm': 'layered', 'elk.direction': 'RIGHT', 'elk.edgeRouting': 'ORTHOGONAL',
+      'elk.layered.spacing.nodeNodeBetweenLayers': '110', 'elk.spacing.nodeNode': '14', 'elk.spacing.edgeEdge': '7', 'elk.layered.spacing.edgeEdgeBetweenLayers': '7',
+      'elk.layered.considerModelOrder.strategy': 'NODES_AND_EDGES', 'elk.layered.crossingMinimization.forceNodeModelOrder': 'true',
+      'elk.layered.mergeEdges': 'false', 'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX', 'elk.json.edgeCoords': 'ROOT' },
+    children,
     edges: ordered.map(e => ({ id: e.id, sources: [e.near], targets: [e.far] })),
   };
-  return { graph, groups: { byId: new Map([...groups.values()].map(g => [g.id, g])), nodes: nodeInfo }, edges: new Map([...edges.values()].map(e => [e.id, e])) };
+  return { graph, nodes: nodeInfo, edges: new Map([...edges.values()].map(e => [e.id, e])) };
 }
 
-function renderPath(data, layout, groups, edges) {
+function renderPath(data, layout, nodes, edges) {
   const ns = 'http://www.w3.org/2000/svg', calls = callsMode();
   const svg = (tag, attrs = {}, ...children) => {
     const node = document.createElementNS(ns, tag);
@@ -4130,43 +3800,34 @@ function renderPath(data, layout, groups, edges) {
   const root = svg('svg', { width: layout.width + 20, height: layout.height + 20, viewBox: `-10 -10 ${layout.width + 20} ${layout.height + 20}` },
     svg('defs', {}, svg('marker', { id: 'arrow', viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto' },
       svg('path', { d: 'M0,0 L10,5 L0,10 z' }))));
-  for (const g of layout.children) {
-    const info = groups.byId.get(g.id);
-    root.append(svg('g', { class: 'group' }, svg('rect', { x: g.x, y: g.y, width: g.width, height: g.height, rx: 8 }),
-      svg('text', { x: g.x + 10, y: g.y + 17 }, info.title), title(info.path)));
-    for (const n of g.children) {
-      const info2 = groups.nodes.get(n.id);
-      // A measured box carries its count and time, and a left band in the color of its time.
-      const band = info2.heat == null ? null
-        : svg('rect', { x: g.x + n.x, y: g.y + n.y, width: 6, height: n.height, rx: 3, style: `fill: ${heatColor(info2.heat).getStyle()}; stroke: none; pointer-events: none` });
-      const node = svg('g', { class: `node${info2.layer === 0 ? ' seed' : ''}${idle(n.id) ? ' idle' : ''}`, 'data-id': n.id },
-        svg('rect', { x: g.x + n.x, y: g.y + n.y, width: n.width, height: n.height, rx: 6 }),
-        band,
-        svg('text', { x: g.x + n.x + 12, y: g.y + n.y + 19 }, info2.text),
-        info2.count ? svg('text', { class: 'count', x: g.x + n.x + 12, y: g.y + n.y + 35 }, info2.count) : null,
-        title(t(calls ? 'path.callsNodeTitle' : 'path.nodeTitle', { label: info2.label, kind: info2.kind, location: `${info2.path}:${info2.line}` })));
-      node.addEventListener('click', () => {
-        root.querySelectorAll('.node.selected').forEach(x => x.classList.remove('selected'));
-        node.classList.add('selected');
-        const i = state.index.get(n.id);
-        if (i != null) selectNode(i);
-      });
-      node.addEventListener('dblclick', () => openPath(n.id, pathMode, false));
-      root.append(node);
-    }
+  for (const n of layout.children) {
+    const info = nodes.get(n.id);
+    // A measured box carries its count and time, and a left band in the color of its time.
+    const band = info.heat == null ? null
+      : svg('rect', { x: n.x, y: n.y, width: 6, height: n.height, rx: 3, style: `fill: ${heatColor(info.heat).getStyle()}; stroke: none; pointer-events: none` });
+    const node = svg('g', { class: `node${info.layer === 0 ? ' seed' : ''}${idle(n.id) ? ' idle' : ''}`, 'data-id': n.id },
+      svg('rect', { x: n.x, y: n.y, width: n.width, height: n.height, rx: 6 }),
+      band,
+      svg('text', { x: n.x + 13, y: n.y + 18 }, info.text),
+      svg('text', { class: 'where', x: n.x + 13, y: n.y + 34 }, info.where),
+      info.count ? svg('text', { class: 'count', x: n.x + 13, y: n.y + 50 }, info.count) : null,
+      title(t(callsMode() ? 'path.callsNodeTitle' : 'path.nodeTitle', { label: info.label, kind: info.kind, location: `${info.path}:${info.line}` })));
+    node.addEventListener('click', () => {
+      root.querySelectorAll('.node.selected').forEach(x => x.classList.remove('selected'));
+      node.classList.add('selected');
+      const i = state.index.get(n.id);
+      if (i != null) selectNode(i);
+    });
+    node.addEventListener('dblclick', () => openPath(n.id, pathMode, false));
+    root.append(node);
   }
-  // ELK reports each edge relative to its container (`container`): the root, or a box when both
-  // ends are inside it.
-  const boxAt = new Map(layout.children.map(g => [g.id, g]));
   for (const e of layout.edges) {
     const info = edges.get(e.id);
-    const box = boxAt.get(e.container);
-    const [dx, dy] = box ? [box.x, box.y] : [0, 0];
-    const points = (e.sections ?? []).flatMap(s => [s.startPoint, ...(s.bendPoints ?? []), s.endPoint]).map(p => ({ x: p.x + dx, y: p.y + dy }));
+    const points = (e.sections ?? []).flatMap(s => [s.startPoint, ...(s.bendPoints ?? []), s.endPoint]);
     if (!points.length) continue;
     const path = svg('polyline', { class: `edge${info.links.some(dashed) ? ' ambiguous' : ''}`, points: points.map(p => `${p.x},${p.y}`).join(' '), 'marker-end': 'url(#arrow)' },
       title(info.links.map(l => `${l.text.slice(0, 80)} · ${l.evidence.path}:${l.evidence.start_line}`).join('\n')));
-    path.addEventListener('click', () => showUse(info, groups.nodes));
+    path.addEventListener('click', () => showUse(info, nodes));
     root.append(path);
     // The line of the call, just before the arrow: read top to bottom, the order of the body.
     const end = points.at(-1);
@@ -4471,7 +4132,6 @@ document.querySelectorAll('dialog [data-close]').forEach(b => b.addEventListener
 
 // ---- language: relabels the static page and redraws everything built from data. Notes left
 // by a past action (saved, copied…) keep their language until the next action.
-function layoutDone() { return state.sim && (state.layoutTicks >= MAX_TICKS || state.sim.alpha() <= state.sim.alphaMin()); }
 function setLang(lang) {
   if (lang === LANG) return;
   LANG = lang;
@@ -4488,8 +4148,7 @@ function setLang(lang) {
     showProvenance();
     if (state.overlaySource) attachSearch(...state.overlaySource);
     if ($('#query').value) showMatches();
-    if (cityOn()) status(t('city.status', { functions: city.list.length, districts: city.districts }));
-    else if (layoutDone()) status(t('status.ready', { nodes: state.nodes.length, edges: state.edges.length }));
+    if (city) cityStatus();
   } else if (studio.status) status(t('status.openAny'));
   inspect();
   if (studio.browsing && $('#browseDialog').open) renderBrowse();
@@ -4504,42 +4163,36 @@ initStudio();
 if (location.hash === '#debug') window.viewerDebug = { state, camera, controls, get flight() { return flight; } };
 
 // ---------------------------------------------------------------- loop
-// Result labels follow their nodes on screen; hidden behind the camera or when the overlay is off.
+// Labels follow their buildings on screen; hidden behind the camera or out of the frame.
 const projected = new THREE.Vector3();
+function placeLabel(node, at) {
+  projected.copy(at).project(camera);
+  const visible = projected.z < 1 && Math.abs(projected.x) <= 1.05 && Math.abs(projected.y) <= 1.05;
+  node.style.display = visible ? '' : 'none';
+  if (visible) {
+    node.style.left = `${(projected.x + 1) / 2 * viewport.clientWidth}px`;
+    node.style.top = `${(1 - projected.y) / 2 * viewport.clientHeight}px`;
+  }
+}
 function placeLabels() {
-  placeCityLabels();
-  const shown = state.overlayOn && state.overlay && !cityOn();
+  if (!city) return;
+  const shown = state.overlayOn && state.overlay;
+  // A question's own labels replace the heaviest buildings' names, or a building would have two.
+  for (const l of city.labels) {
+    if (shown && l.building) l.node.style.display = 'none';
+    else placeLabel(l.node, l.at);
+  }
   $('#labels').style.display = shown ? '' : 'none';
   if (!shown) return;
-  const w = viewport.clientWidth, h = viewport.clientHeight;
   for (const hit of state.overlay.hits) {
     if (!hit.label) continue;
-    const p = state.simNodes[hit.node];
-    projected.set(p.x, p.y, p.z).project(camera);
-    const visible = projected.z < 1 && Math.abs(projected.x) <= 1.05 && Math.abs(projected.y) <= 1.05;
-    hit.label.style.display = visible ? '' : 'none';
-    if (visible) {
-      hit.label.style.left = `${(projected.x + 1) / 2 * w}px`;
-      hit.label.style.top = `${(1 - projected.y) / 2 * h}px`;
-    }
+    const b = buildingOf(hit.node);
+    if (b) placeLabel(hit.label, b.roof);
+    else hit.label.style.display = 'none';
   }
 }
 
-const MAX_TICKS = 400, FRAME_BUDGET_MS = 12;
 renderer.setAnimationLoop(() => {
-  if (state.sim && state.layoutTicks < MAX_TICKS && state.sim.alpha() > state.sim.alphaMin()) {
-    // Time-budgeted ticks keep the page responsive on large graphs.
-    const start = performance.now();
-    do { state.sim.tick(); state.layoutTicks++; }
-    while (performance.now() - start < FRAME_BUDGET_MS && state.layoutTicks < MAX_TICKS);
-    updatePositions();
-    if (!userMoved && !flight && state.layoutTicks % 30 < 3) fit();
-    if (!cityOn()) status(t('status.layout', { pct: Math.round(100 * state.layoutTicks / MAX_TICKS), nodes: state.nodes.length, edges: state.edges.length }));
-    if (layoutDone()) {
-      if (!cityOn()) status(t('status.ready', { nodes: state.nodes.length, edges: state.edges.length }));
-      if (!userMoved) fit();
-    }
-  }
   if (flight) {
     // Time-based, so slow frames do not stretch the movement.
     const t2 = Math.min(1, (performance.now() - flight.start) / 600);

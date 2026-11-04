@@ -18,7 +18,7 @@ Variáveis: `LIBRARIAN_ROOT` (raiz do Librarian; padrão, a do workspace) e
 | `src/main.rs` | Escuta em `127.0.0.1`, recusa `Host` e `Origin` de fora, roteia e envia com o vínculo da conferência |
 | `src/http.rs` | HTTP/1.1 mínimo sobre `std`: uma requisição por conexão, corpo por `Content-Length` (até 16 MiB) |
 | `src/store.rs` | Projetos, execuções e perguntas em `.studio/`; importa `librarian.json`; grava critérios antes da query; reconfere bundle, claims e critérios antes de cada envio e monta o vínculo; Modelfiles; navegação de pastas |
-| `web/index.html` | A página: grafo 3D (Three.js 0.180.0 e d3-force-3d 3.0.6 fixados no jsDelivr), projeto e conversa |
+| `web/index.html` | A página: o mapa como cidade (Three.js 0.180.0 fixado no jsDelivr), o fluxograma, projeto e conversa |
 | `src/lexicon.rs` | Pedido de léxico, leitura da resposta e conferência mecânica de cada grupo |
 | `src/facts.rs` | L4: portões, revisão por item (`reviews.jsonl`), acervo de fatos (`facts.jsonl`) e reconferência por texto contra uma edition |
 | `src/llm.rs` | Provedores: Ollama (`ollama create` + `attempt_linked` do LLM Engine, com o vínculo), Claude Code CLI (mesma conferência do hash da query) e os ainda não implementados |

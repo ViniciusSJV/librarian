@@ -102,19 +102,25 @@ diagnósticos), recarrega do disco, monta o `syntax-graph-v2` e o confere contra
 snapshots. Abaixo do botão aparecem fontes, símbolos, diagnósticos e o commit do Git.
 Grafos gerados antes ficam no seletor ao lado.
 
-O que o grafo mostra:
+O grafo aparece no **Mapa** como uma **cidade**:
 
-- **Nós:** fonte (octaedro), símbolo (esfera) e ocorrência (tetraedro). Formato e cor
-  identificam a categoria; a legenda, no canto do grafo, traz as contagens e serve de filtro.
-- **Arestas:** `declares`, `contains`, `observes` e `name_candidate` (tracejada, não
-  resolvida), cada uma com filtro próprio.
-- **Inspeção** (aba **Mapa**): clique num nó para ver categoria, kind, linguagem, ID e relações. Clique
-  numa relação ou numa aresta para ver **qual evidência autorizou a ligação**: arquivo,
-  linhas, bytes e hashes.
-- **Encontrar** por rótulo, kind ou ID. `F` enquadra, `Esc` limpa e o botão ◐ alterna o tema.
+- **Bairro:** um arquivo. **Prédio:** uma função ou método. As posições são fixas, em grade, e
+  proximidade não quer dizer relação.
+- **Com "Medir tudo":** só as funções que rodaram. A altura é o número de chamadas (em escala
+  log), a cor é o tempo, de azul (pouco) a vermelho (muito), e um anel vermelho marca trava,
+  espera ou E/S dentro de laço.
+- **Sem medição** (ainda não medido, ou uma linguagem que a medição não conta, como Python):
+  todas as funções, com a altura pelo tamanho e uma cor só. A barra no topo diz qual é o caso.
+- **Clique num prédio:** ele e os ligados a ele mantêm a cor, o resto fica apagado e os arcos
+  mostram quem chama e quem é chamado. Sem medição, os arcos são pelo nome escrito e podem
+  incluir homônimos.
+- **Inspeção** (aba **Mapa**): categoria, kind, linguagem, ID e relações do que foi clicado.
+  Clique numa relação para ver **qual evidência autorizou a ligação**: arquivo, linhas, bytes
+  e hashes.
+- **Encontrar** por rótulo, kind ou ID: o que não é função (um tipo, uma ocorrência) leva ao
+  prédio que o contém ou ao bairro do arquivo. `F` enquadra, `Esc` limpa e o botão ◐ alterna o
+  tema. Os destaques usam somente IDs, então homônimos não se confundem.
 
-O layout de forças é só para leitura: proximidade visual não cria relação, e o layout
-muda entre aberturas. Os destaques usam somente IDs, então homônimos não se confundem.
 
 ### 3. Perguntar
 
@@ -281,8 +287,7 @@ Uma HYPOTHESIS com mudança derivada (edições que passaram) tem **Aprovar a mu
 fato**, com um portão a mais: a mudança precisa ter rodado na Régua (**Rodar … com esta
 mudança**) com sucesso pelo menos uma vez. O fato, do tipo **CHANGE**, guarda o diff e os
 arquivos, quem propôs (provedor, Modelfile, custo em US$ e modelos que o CLI informou), cada
-execução com a mudança e a comparação com a linha de base, e as conferências por mutação
-desse item. LACUNA e INFERENCE nunca viram fato. Uma resposta recusada na mecânica ou um
+execução com a mudança e a comparação com a linha de base. LACUNA e INFERENCE nunca viram fato. Uma resposta recusada na mecânica ou um
 envio sem vínculo mostram o motivo no lugar do botão. Um item
 já promovido mostra **Aprovado como fato F<n>** e **Revogar**: revogar registra a recusa
 e marca o fato como revogado, sem apagá-lo. Aprovar de novo cria outro número.
@@ -365,7 +370,8 @@ Clique num símbolo do mapa (ou num resultado de **Encontrar**) e, na **Inspeç�
 o ponto escolhido, quem lê, escreve ou chama o nome dele, quem usa esses, e assim por
 diante, até a **profundidade** escolhida (padrão 2).
 
-- **Caixas** são a classe (ou impl) de cada função, ou o arquivo quando não há classe.
+- **Caixas** são as funções, com a classe (ou impl) ou o arquivo como subtítulo; com "Medir
+  tudo", também as chamadas e o tempo. As setas seguem a ordem das linhas de quem chama.
 - **Linha cheia:** o nome escrito só combina com aquele ponto. **Tracejada:** combina
   também com homônimos, então pode ser outro.
 - **Clique numa linha** para ver o texto escrito e o arquivo e linha. **Clique num ponto**
@@ -491,32 +497,6 @@ uma primeira comparação deu −4%, que intercalada virou −1%, dentro da vari
 As cópias são feitas com os arquivos como o repositório os guarda, sem a conversão de fim
 de linha do `core.autocrlf`: os diffs são escritos com as linhas da edition e precisam
 encaixar.
-
-### Testes por trecho (quebrar de propósito)
-
-Na aba **Régua**, a seção **Testes por trecho** responde se os testes do projeto realmente
-testam uma declaração:
-
-1. Escolha a declaração (o campo sugere os métodos e funções do grafo) e o comando de testes
-   aprovado, e clique **Quebrar de propósito**. O Librarian troca uma coisa escrita por vez
-   no corpo da declaração: um operador (`+` por `-`, `<` por `<=`, `==` por `!=`…),
-   `floor()` por `ceil()`, ou um literal (`2.` por `3.`), até 12 versões. Roda o comando em
-   cada versão, numa cópia só (aplica, roda, desfaz), e mostra quais **sobrevivem**: os
-   testes continuam passando com a declaração quebrada.
-2. Para os sobreviventes, **Perguntar ao LLM** põe na conversa a pergunta pronta ("um teste
-   que passe com o código atual e falhe com estas mudanças") e a evidência: a declaração e o
-   módulo de testes do arquivo. Escolha quem responde (os Modelfiles `teste-<modelo>`) e
-   pergunte. A resposta é uma HYPOTHESIS com uma inserção depois do último teste.
-3. Na resposta, **Conferir teste (mutação)** confere sem opinião: a mudança **só acrescenta**
-   linhas, acrescenta um `#[test]` que **chama a declaração** pelo nome, o comando **passa**
-   com ela, e, com ela, cada sobrevivente faz o comando falhar nomeando o teste novo. O
-   veredito é aprovado (mata todos), parcial (mata alguns) ou recusado.
-
-Um sobrevivente pode ser **equivalente**: calcula o mesmo que o original (no xadrez,
-`x + y + z` e `x - y + z` têm a mesma paridade). Nenhum teste o mata, e isso não é lacuna;
-o veredito fica parcial. Um mutante que não compila conta como morto pelos testes. Que o
-teste novo matou um mutante é lido no texto da saída (o comando falhou e a saída nomeia a
-função de teste).
 
 ### Pergunta com declarações juntadas
 

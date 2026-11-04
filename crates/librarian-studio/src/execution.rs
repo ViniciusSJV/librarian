@@ -158,7 +158,7 @@ impl Store {
         let edition = self.edition(key, run)?;
         let catalog = Catalog::load(&edition)?;
         let suffix = change.map(ChangeRef::folder);
-        let copy = self.copy(key, run, &root, &edition, &catalog, suffix.as_deref().zip(diff.as_deref()), None)?;
+        let copy = self.copy(key, run, &root, &edition, &catalog, suffix.as_deref().zip(diff.as_deref()))?;
         let (id, dir) = crate::store::reserve(&self.run_dir(key, run)?.join("executions"), &format!("{:02}-{name}", self.executions(key, run)?.len() + 1))?;
         let started = stamp();
         let mut runs = vec![];
@@ -209,7 +209,7 @@ impl Store {
         let edition = self.edition(key, run)?;
         let catalog = Catalog::load(&edition)?;
         let plan = crate::instrument::plan(&catalog, &instrument)?;
-        let copy = self.copy(key, run, &root, &edition, &catalog, Some(("medir-tudo", &plan.diff)), None)?;
+        let copy = self.copy(key, run, &root, &edition, &catalog, Some(("medir-tudo", &plan.diff)))?;
         let (id, dir) = crate::store::reserve(&self.run_dir(key, run)?.join("executions"), &format!("{:02}-{name}-tudo", self.executions(key, run)?.len() + 1))?;
         fs::write(dir.join("instrument.diff"), &plan.diff)?;
         let started = stamp();
@@ -279,67 +279,6 @@ impl Store {
         }).collect()
     }
 
-    /// R3: runs an approved command once per mutant, in one copy of `run`'s edition (with
-    /// `change` applied, when given) kept for the mutants: each mutant's diff is applied, the
-    /// command runs, and the diff is undone, so the tools build incrementally. Each result says
-    /// the exit code and which of `names` the command's output mentions (a failing test that
-    /// the tool names). Streams are saved in `out` as `stdout-<mutant>.txt`.
-    pub(crate) fn execute_mutants(&self, key: &str, run: &str, name: &str, change: Option<&ChangeRef>, mutants: &[(String, String)],
-        names: &[String], out: &Path) -> Result<Vec<Value>> {
-        let root = PathBuf::from(self.settings(key)?.root);
-        let command = declared(&root)?.remove(name).ok_or_else(|| format!("Comando não declarado em {PROFILE}: {name}"))?;
-        let sha256 = command.sha256(name);
-        self.approvals(key)?.into_iter().rev().find(|a| a["name"] == name && a["sha256"] == sha256.as_str())
-            .ok_or("Comando sem aprovação para esta versão; aprove-o antes de rodar")?;
-        let diff = change.map(|c| self.diff(key, run, c)).transpose()?;
-        let _one = RUNNING.lock().map_err(|_| "Uma execução anterior falhou no meio; reinicie o studio")?;
-        let edition = self.edition(key, run)?;
-        let catalog = Catalog::load(&edition)?;
-        let suffix = change.map(ChangeRef::folder);
-        let copy = self.copy(key, run, &root, &edition, &catalog, suffix.as_deref().zip(diff.as_deref()), Some("mutants"))?;
-        let git = |args: &[&str]| Process::new("git").arg("-C").arg(&copy.worktree).args(args).output()
-            .map_err(|e| format!("git não foi encontrado: {e}"));
-        let directory = format!("--directory={}", copy.prefix);
-        let mut results = vec![];
-        for (id, mutant) in mutants {
-            crate::store::safe_id(id)?;
-            let file = copy.worktree.with_extension(format!("{id}.diff"));
-            fs::write(&file, mutant)?;
-            let path = display(&file);
-            let apply = |reverse: bool| {
-                let mut args = vec!["apply", "--whitespace=nowarn", "--unidiff-zero"];
-                if reverse {
-                    args.push("-R");
-                }
-                if !copy.prefix.is_empty() {
-                    args.push(&directory);
-                }
-                args.push(&path);
-                git(&args)
-            };
-            let applied = apply(false)?;
-            if !applied.status.success() {
-                results.push(json!({ "id": id, "applied": false, "error": String::from_utf8_lossy(&applied.stderr).trim() }));
-                continue;
-            }
-            let one = once(&Command { repeat: 1, ..command.clone() }, &copy.dir, out, 0);
-            for stream in ["stdout", "stderr"] {
-                let _ = fs::rename(out.join(format!("{stream}-0.txt")), out.join(format!("{stream}-{id}.txt")));
-            }
-            let reverted = apply(true)?;
-            if !reverted.status.success() {
-                return Err(format!("Não foi possível desfazer o mutante {id}: {}", String::from_utf8_lossy(&reverted.stderr).trim()).into());
-            }
-            let one = one?;
-            let text = [out.join(format!("stdout-{id}.txt")), out.join(format!("stderr-{id}.txt"))]
-                .iter().map(|p| fs::read_to_string(p).unwrap_or_default()).collect::<Vec<_>>().join("\n");
-            let named: Vec<&String> = names.iter().filter(|n| text.contains(n.as_str())).collect();
-            results.push(json!({ "id": id, "applied": true, "exit_code": one["exit_code"], "timed_out": one["timed_out"],
-                "wall_ms": one["wall_ms"], "named": named, "stdout_tail": one["stdout_tail"], "stderr_tail": one["stderr_tail"] }));
-        }
-        Ok(results)
-    }
-
     /// The diff a check derived from one claim's line edits; only an answer whose edits passed
     /// has one. It is applied as written, never edited by the Librarian.
     pub(crate) fn diff(&self, key: &str, run: &str, change: &ChangeRef) -> Result<String> {
@@ -358,14 +297,13 @@ impl Store {
     /// The copy of the project at the edition's commit, made once per run (and once per change)
     /// and checked against the edition: every source the edition read must be there with the
     /// same bytes, except the files the change touches.
-    fn copy(&self, key: &str, run: &str, root: &Path, edition: &Path, catalog: &Catalog, change: Option<(&str, &str)>, label: Option<&str>) -> Result<Copy> {
+    fn copy(&self, key: &str, run: &str, root: &Path, edition: &Path, catalog: &Catalog, change: Option<(&str, &str)>) -> Result<Copy> {
         let head = catalog.manifest().git.head.clone()
             .ok_or("A edition não tem commit (o projeto não é um repositório git); não há cópia para rodar")?;
         let folder = match change {
             Some((suffix, _)) => format!("{run}--{suffix}"),
             None => run.to_owned(),
         };
-        let folder = match label { Some(l) => format!("{folder}--{l}"), None => folder };
         let dir = copies().join(crate::store::safe_id(key)?).join(crate::store::safe_id(&folder)?);
         let git = |at: &Path, args: &[&str]| Process::new("git").arg("-C").arg(at).args(args).output()
             .map_err(|e| format!("git não foi encontrado: {e}"));
@@ -433,7 +371,7 @@ impl Store {
             return Err(format!("A cópia no commit {} difere da edition em {} arquivo(s), por exemplo {}; a edition foi gerada com mudanças sem commit. Faça commit e gere o grafo de novo.",
                 &head[..head.len().min(12)], differ.len(), differ.iter().take(3).copied().collect::<Vec<_>>().join(", ")).into());
         }
-        Ok(Copy { dir: project, worktree: dir, prefix, head, verified: catalog.sources().len() - touched.len(), line_endings, touched })
+        Ok(Copy { dir: project, head, verified: catalog.sources().len() - touched.len(), line_endings, touched })
     }
 }
 
@@ -503,9 +441,6 @@ fn lf(bytes: &[u8]) -> Vec<u8> {
 }
 
 struct Copy {
-    /// The worktree, and the project's folder in it (`prefix`), for applying diffs.
-    worktree: PathBuf,
-    prefix: String,
     /// The project's folder inside the copy, where the command runs.
     dir: PathBuf,
     /// Sources whose copy differs from the edition only in line endings.

@@ -539,7 +539,7 @@ mod tests {
 SYSTEM \"\"\"x\"\"\""));
         assert!(!super::structured_output("# librarian: structured-output off (por quê)
 FROM gpt-oss:20b"));
-        let gptoss = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../modelfiles/teste-gptoss.Modelfile")).unwrap();
+        let gptoss = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../modelfiles/verificavel-gptoss.Modelfile")).unwrap();
         assert!(!super::structured_output(&gptoss));
     }
 
@@ -547,7 +547,7 @@ FROM gpt-oss:20b"));
     fn library_modelfiles_have_a_system_and_a_standard_name() {
         // `<task>-<model>`, SYSTEM in Portuguese; `<task>-<model>-en`, the same in English.
         let dir = concat!(env!("CARGO_MANIFEST_DIR"), "/../../modelfiles");
-        let (tasks, models) = (["analista", "lexico", "verificavel", "performance", "teste"], ["qwen3coder", "gemma4", "gptoss", "claude"]);
+        let (tasks, models) = (["analista", "lexico", "verificavel", "performance"], ["qwen3coder", "gemma4", "gptoss", "claude"]);
         let mut seen = 0;
         for entry in std::fs::read_dir(dir).unwrap() {
             let name = entry.unwrap().file_name().into_string().unwrap();
@@ -558,7 +558,7 @@ FROM gpt-oss:20b"));
             assert!(modelfile_system(&text).is_some_and(|s| !s.is_empty()), "{name}");
             seen += 1;
         }
-        assert_eq!(seen, tasks.len() * models.len() + 4, "every task with every model, and four Claude ones in English");
+        assert_eq!(seen, tasks.len() * models.len() + 6, "every task with every model, and six in English");
         let analista = std::fs::read_to_string(format!("{dir}/analista-qwen3coder.Modelfile")).unwrap();
         assert!(modelfile_system(&analista).unwrap().starts_with("Você explica somente"));
     }

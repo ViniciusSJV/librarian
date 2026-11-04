@@ -130,8 +130,8 @@ impl Store {
 
     /// Step 6: an approved change. Besides gates 1 and 2, its derived diff ran through the
     /// Ruler: at least one execution of the run with this change succeeded. The fact keeps the
-    /// diff, every execution with this change (and how it compares with its baseline), the
-    /// mutation checks of the change, and who proposed it (provider, Modelfile, cost, tokens).
+    /// diff, every execution with this change (and how it compares with its baseline), and who
+    /// proposed it (provider, Modelfile, cost, tokens).
     #[allow(clippy::too_many_arguments)]
     fn change_fact(&self, key: &str, run: &str, turn: &str, send: &str, send_dir: &Path, claim: &Claim, id: &str, link: &Value,
         claim_sha256: &str, response_sha256: &str, note: &str, reviewed: &Value) -> Result<Value> {
@@ -144,11 +144,6 @@ impl Store {
         if !executions.iter().any(|x| x["succeeded"].as_u64() > Some(0)) {
             return Err("Portão 3: rode na Régua ao menos um comando com esta mudança, com sucesso, antes de aprovar".into());
         }
-        let mutation_checks: Vec<Value> = fs::read_dir(self.run_dir(key, run)?.join("mutations")).into_iter().flatten().flatten()
-            .filter_map(|m| fs::read(m.path().join(format!("check-{turn}-{send}-{}.json", claim.id))).ok())
-            .filter_map(|b| serde_json::from_slice::<Value>(&b).ok())
-            .map(|c| json!({ "mutation": c["mutation"], "verdict": c["verdict"], "killed": c["checks"]["killed"], "survivors": c["checks"]["survivors"] }))
-            .collect();
         let sent: Value = serde_json::from_slice(&fs::read(send_dir.join("send.json"))?)?;
         Ok(json!({
             "format_version": 1, "event": "promoted", "id": id, "kind": "CHANGE",
@@ -159,7 +154,7 @@ impl Store {
             "citations": claim.citations.iter().map(|c| json!({ "path": c.path, "start_line": c.start_line,
                 "end_line": c.end_line, "quote": c.quote })).collect::<Vec<_>>(),
             "verification_plan": claim.verification_plan,
-            "executions": executions, "mutation_checks": mutation_checks,
+            "executions": executions,
             "edition": link["dossier_origin"], "run": run, "turn": turn, "send": send, "claim_id": claim.id,
             "claim_sha256": claim_sha256, "response_sha256": response_sha256, "link": link,
             "note": note, "reviewed": reviewed,
