@@ -1168,6 +1168,7 @@ const STRINGS = {
   'ladder.baseline': ["linha de base","baseline"],
   'ladder.turn': ["pergunta {turn}","question {turn}"],
   'ladder.gathered': ["juntou: {list}","gathered: {list}"],
+  'ladder.noRoom': ["a pergunta já tem 16 declarações: nada foi juntado, e a rodada termina aqui","the question already holds 16 declarations: nothing was gathered, and the round ends here"],
   'ladder.passedTitle': ["Escada: mudança aprovada no portão","Ladder: change passed the gate"],
   'ladder.failedTitle': ["Escada: nenhuma mudança passou","Ladder: no change passed"],
   'ladder.cost': ["nuvem US$ {cost}","cloud US$ {cost}"],
@@ -3270,7 +3271,8 @@ function renderLadder() {
     s.detail?.why?.length ? el('div', { className: 'muted', textContent: s.detail.why.join(' · ') }) : null,
     s.detail?.worse?.length ? el('div', { className: 'error', textContent: t('ladder.worse', { list: s.detail.worse.join(' · ') }) }) : null,
     s.detail?.issues?.length ? el('div', { className: 'muted', textContent: s.detail.issues.join(', ') }) : null,
-    s.detail?.gathered?.length ? el('div', { className: 'muted', textContent: t('ladder.gathered', { list: s.detail.gathered.map(g => g.name).join(', ') }) }) : null);
+    s.detail?.gathered?.length ? el('div', { className: 'muted', textContent: t('ladder.gathered', { list: s.detail.gathered.map(g => g.name).join(', ') }) }) : null,
+    s.detail?.no_room ? el('div', { className: 'muted', textContent: t('ladder.noRoom') }) : null);
   box.replaceChildren(...ladderLog.slice(0, 3).map(r => el('details', { open: r === ladderLog[0], className: 'ladder' },
     el('summary', {}, el('strong', { textContent: r.passed ? t('ladder.passedTitle') : t('ladder.failedTitle') }),
       r.steps.find(s => s.outcome === 'passed')?.detail?.worse?.length ? el('span', { className: 'error', textContent: ` · ${t('ladder.passedWorse')}` }) : null,

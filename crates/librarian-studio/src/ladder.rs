@@ -43,7 +43,8 @@ pub fn lacuna_names(text: &str) -> Vec<String> {
 /// nothing was measured): a type (two homonyms at most) with its own `impl` and the `impl` of a
 /// trait already gathered and, for an enum, the types of its variants that ran. Then a qualified
 /// name exactly, then a method when at most three have the name (a trait's own declaration
-/// first). Tests and what is already gathered stay out.
+/// first; when two traits declare it, nothing is guessed). Tests and what is already gathered
+/// stay out.
 pub fn resolve(catalog: &Catalog, names: &[String], gathered: &[String], ran: &[String], limit: usize) -> Vec<(String, String)> {
     let symbols: Vec<&librarian_ingest::Symbol> = catalog.symbols().values().filter(|s| !s.is_test).collect();
     let mut out: Vec<(String, String)> = vec![];
@@ -68,7 +69,9 @@ pub fn resolve(catalog: &Catalog, names: &[String], gathered: &[String], ran: &[
             add(&s.id, name, out);
         }
     };
-    let ran_type = |t: &str| ran.is_empty() || ran.iter().any(|q| q.starts_with(&format!("impl {t}::")) || q.contains(&format!(" for {t}::")));
+    // A trait ran through its own methods or through an `impl` of it.
+    let ran_type = |t: &str| ran.is_empty() || ran.iter().any(|q| q.starts_with(&format!("impl {t}::")) || q.contains(&format!(" for {t}::"))
+        || q.starts_with(&format!("{t}::")) || q.starts_with(&format!("impl {t} for ")));
     let (types, others): (Vec<&String>, Vec<&String>) = names.iter().partition(|n| !n.contains("::") && (1..=2).contains(&types_named(n).len()));
     for name in types.into_iter().filter(|n| ran_type(n)) {
         with_impls(name, name, &mut out);
@@ -90,15 +93,21 @@ pub fn resolve(catalog: &Catalog, names: &[String], gathered: &[String], ran: &[
             continue;
         }
         let methods: Vec<&&librarian_ingest::Symbol> = symbols.iter().filter(|s| matches!(s.kind.as_str(), "method" | "trait_method" | "function") && s.name == last).collect();
-        if let Some(own) = methods.iter().find(|s| s.kind == "trait_method") {
-            add(&own.id, name, &mut out);
-        } else if methods.len() <= 3 {
+        let own: Vec<&&&librarian_ingest::Symbol> = methods.iter().filter(|s| s.kind == "trait_method").collect();
+        if let [one] = own.as_slice() {
+            add(&one.id, name, &mut out);
+        } else if own.is_empty() && methods.len() <= 3 {
             for s in methods {
                 add(&s.id, name, &mut out);
             }
         }
     }
     out
+}
+
+/// A gathered question holds at most 16 declarations: what a LACUNA can still add to it.
+pub fn lacuna_room(gathered: usize) -> usize {
+    16usize.saturating_sub(gathered).min(10)
 }
 
 /// What a diff removes and adds in one file; a removed line keeps its number in the old file.
@@ -347,6 +356,14 @@ pub fn step(model: &Value, turn: &str, send: &str, what: &str, detail: Value) ->
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_full_question_has_no_room_for_a_lacuna() {
+        assert_eq!(lacuna_room(16), 0);
+        assert_eq!(lacuna_room(17), 0);
+        assert_eq!(lacuna_room(15), 1);
+        assert_eq!(lacuna_room(2), 10);
+    }
 
     #[test]
     fn names_a_lacuna_asks_for() {

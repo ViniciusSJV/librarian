@@ -400,10 +400,10 @@ fn ladder(store: &Store, body: &Value) -> Result<Value> {
                 let names: Vec<String> = lacunas.iter().flat_map(|t| ladder::lacuna_names(t)).collect();
                 let ran: Vec<String> = store.hotspots(&key, &run).ok().map(|h| h["rows"].as_array().into_iter().flatten()
                     .filter(|r| r["calls"].as_f64().unwrap_or(0.) > 0.).filter_map(|r| r["name"].as_str().map(String::from)).collect()).unwrap_or_default();
-                // A gathered question holds at most 16 declarations: the LACUNA fills what is left.
-                let room = 16usize.saturating_sub(nodes.len()).min(10);
+                let room = ladder::lacuna_room(nodes.len());
                 let added = ladder::resolve(&catalog, &names, &nodes, &ran, room);
-                steps.push(ladder::step(model, &turn, &send, "lacuna", json!({ "cost_usd": summary["cost_usd"], "text": lacunas, "names": names,
+                // Nothing leaves a full question to make room: the record only says so.
+                steps.push(ladder::step(model, &turn, &send, "lacuna", json!({ "cost_usd": summary["cost_usd"], "text": lacunas, "names": names, "no_room": room == 0,
                     "gathered": added.iter().map(|(id, n)| json!({ "symbol": id, "name": catalog.symbols().get(id).map(|s| &s.qualified_name), "for": n })).collect::<Vec<_>>() })));
                 if added.is_empty() {
                     break;

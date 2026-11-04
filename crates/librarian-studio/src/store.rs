@@ -2147,4 +2147,39 @@ librarian-measure memory_mb=100
         assert_eq!(&s[8..9], "-");
         assert!(s.starts_with("20"));
     }
+
+    /// A real edition of this source, for what a LACUNA finds in it.
+    fn catalog_of(source: &str) -> (Scratch, Catalog) {
+        let scratch = project();
+        fs::write(scratch.0.join("project/src/lib.rs"), source).unwrap();
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let key = store.open(&display(&scratch.0.join("project"))).unwrap()["key"].as_str().unwrap().to_owned();
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        let catalog = Catalog::load(&store.edition(&key, &run).unwrap()).unwrap();
+        (scratch, catalog)
+    }
+
+    fn found(catalog: &Catalog, name: &str, ran: &[&str]) -> Vec<String> {
+        let ran: Vec<String> = ran.iter().map(|r| (*r).to_owned()).collect();
+        crate::ladder::resolve(catalog, &[name.to_owned()], &[], &ran, 10).iter().map(|(id, _)| catalog.symbols()[id].qualified_name.clone()).collect()
+    }
+
+    #[test]
+    fn a_method_two_traits_declare_is_not_guessed() {
+        let (_scratch, catalog) = catalog_of("pub trait Incuse {\n    fn transform(&self) -> f64;\n}\n\npub trait Intersectable {\n    fn transform(&self) -> f64;\n    fn local(&self) -> f64;\n}\n");
+        assert_eq!(found(&catalog, "transform", &[]), Vec::<String>::new());
+        // Written with its trait there is nothing to guess, and a method of one trait still comes.
+        assert_eq!(found(&catalog, "Intersectable::transform", &[]), ["Intersectable::transform"]);
+        assert_eq!(found(&catalog, "local", &[]), ["Intersectable::local"]);
+    }
+
+    #[test]
+    fn a_trait_asked_by_name_comes_when_it_ran() {
+        let (_scratch, catalog) = catalog_of("pub trait Shape {\n    fn area(&self) -> f64 { 1.0 }\n}\n\npub struct Square;\n\nimpl Shape for Square {}\n\npub trait Idle {\n    fn nap(&self) -> f64 { 0.0 }\n}\n");
+        assert_eq!(found(&catalog, "Shape", &["Shape::area"]), ["Shape"]);
+        assert_eq!(found(&catalog, "Shape", &["impl Shape for Square::area"]), ["Shape"]);
+        // What did not run in the measure still stays out, and with no measure everything can come.
+        assert_eq!(found(&catalog, "Idle", &["Shape::area"]), Vec::<String>::new());
+        assert_eq!(found(&catalog, "Idle", &[]), ["Idle"]);
+    }
 }
