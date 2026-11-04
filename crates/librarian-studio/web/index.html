@@ -1152,9 +1152,9 @@ const STRINGS = {
   'help.hot': ["O projeto diz como contar uma passagem por uma função (instrument no librarian.json); o Librarian põe essa instrução no começo de cada função, numa cópia, e roda o comando aprovado. A contagem é exata; o tempo é inclusivo e inflado pela contagem: a ordem é o que vale.","The project says how to count a pass through a function (instrument in librarian.json); the Librarian puts that statement at the start of every function, in a copy, and runs the approved command. Counts are exact; time is inclusive and inflated by the counting: the order is what counts."],
   'help.hotSeparate': ["Para cada função que chama a mais pesada, a linha que a chama vira uma pergunta pequena ao qwen, só com aquela declaração. As respostas são fatos conferidos mecanicamente; você aprova um a um ou em lote.","For each function that calls the heaviest one, the line that calls it becomes a small question to qwen, with that declaration only. Answers are mechanically checked facts; you approve them one by one or as a batch."],
   'help.hotOptimize': ["Monta o envelope sugerido para esta função, com os fatos aprovados, e uma pergunta só com o que foi contado; a escada fica marcada. Você confere e pergunta.","Builds the suggested envelope for this function, with the reviewed facts, and a question made only of what was counted; the ladder is ticked. You check and ask."],
-  'composer.askLadder': ['Perguntar pela escada ({n}) · qwen → Claude Haiku', 'Ask through the ladder ({n}) · qwen → Claude Haiku'],
-  'ladder.on': ["Escada: qwen, depois Claude Haiku se o portão recusar","Ladder: qwen, then Claude Haiku if the gate refuses"],
-  'help.ladder': ["A mesma pergunta vai primeiro ao qwen (local). Uma mudança passa no portão quando os comandos aprovados rodam com ela, as saídas ficam iguais, alguma contagem cai e nenhuma sobe. Recusada, vai ao Claude Haiku. Uma LACUNA junta ao envelope o que ela diz faltar e pergunta de novo ao mesmo modelo.","The same question goes first to qwen (local). A change passes the gate when the approved commands run with it, outputs stay the same, some count drops and none grows. Refused, it goes to Claude Haiku. A LACUNA gathers into the envelope what it says is missing and asks the same model again."],
+  'composer.askLadder': ['Perguntar pela escada ({n}) · Claude Haiku', 'Ask through the ladder ({n}) · Claude Haiku'],
+  'ladder.on': ["Escada: Claude Haiku, com o portão em cada mudança","Ladder: Claude Haiku, with the gate on each change"],
+  'help.ladder': ["A pergunta vai ao Claude Haiku. Uma mudança passa no portão quando os comandos aprovados rodam com ela, as saídas ficam iguais, alguma contagem cai e nenhuma sobe. Das que passam, fica a de maior ganho. Uma LACUNA junta ao envelope o que ela diz faltar e pergunta de novo ao mesmo modelo.","The question goes to Claude Haiku. A change passes the gate when the approved commands run with it, outputs stay the same, some count drops and none grows. Of those that pass, the largest gain stays. A LACUNA gathers into the envelope what it says is missing and asks the same model again."],
   'ladder.noGate': ["Aprove ao menos um comando na Régua: ele é o portão.","Approve at least one command in the Ruler: it is the gate."],
   'ladder.running': ["Escada em andamento; portão: {gate}. As respostas aparecem na conversa.","Ladder running; gate: {gate}. Answers show in the conversation."],
   'ladder.passed': ["passou no portão, a de maior ganho","passed the gate, the largest gain"],
@@ -1247,7 +1247,7 @@ const STRINGS = {
   'lexicon.saved': ['Léxico salvo.', 'Lexicon saved.'],
   'lexicon.suggestTitle': ['Sugerir com um LLM', 'Suggest with an LLM'],
   'legend.title': ['Legenda do mapa', 'Map legend'],
-  'help.perf': ['O Librarian reconhece a pergunta por regras sobre as palavras, depois do léxico do projeto, sem modelo nenhum. Responde com os números do último Medir tudo e separa: perguntas pequenas de fato para o modelo leve (qwen) e pedidos de mudança para a escada (qwen, depois Haiku).', 'The Librarian recognizes the question by rules over its words, after the project lexicon, with no model at all. It answers with the numbers of the latest Measure everything and splits: small fact questions for the light model (qwen) and change requests for the ladder (qwen, then Haiku).'],
+  'help.perf': ['O Librarian reconhece a pergunta por regras sobre as palavras, depois do léxico do projeto, sem modelo nenhum. Responde com os números do último Medir tudo e separa: perguntas pequenas de fato para o modelo leve (qwen) e pedidos de mudança para a escada (Claude Haiku).', 'The Librarian recognizes the question by rules over its words, after the project lexicon, with no model at all. It answers with the numbers of the latest Measure everything and splits: small fact questions for the light model (qwen) and change requests for the ladder (Claude Haiku).'],
   'perf.route': ['Entendi: {intent} (pelas palavras: {words}).', 'Understood: {intent} (from the words: {words}).'],
   'perf.intent.heavy': ['quais funções pesam', 'which functions weigh'],
   'perf.intent.where': ['onde otimizar', 'where to optimize'],
@@ -2966,7 +2966,8 @@ function measuredOrigins(executions) {
 // (one small question per written line) from what goes up the ladder (a change).
 let hot = null, hotTurns = [];
 const FREQUENT = 1e6;
-const LADDER_MODELS = [{ provider: 'ollama', modelfile: 'performance-qwen3coder' }, { provider: 'claude-cli', modelfile: 'performance-claude', claude_model: 'haiku' }];
+// qwen is out of the changes for now: 0 of 8 answers passed, nearly all refused by their form (see the plan).
+const LADDER_MODELS = [{ provider: 'claude-cli', modelfile: 'performance-claude', claude_model: 'haiku' }];
 const FACT_MODEL = { provider: 'ollama', modelfile: 'verificavel-qwen3coder' };
 const intPt = v => Number(v).toLocaleString(LANG === 'pt' ? 'pt-BR' : 'en-US');
 function resetHot() {
@@ -3224,7 +3225,7 @@ async function optimize(r) {
   renderGathered();
   $('#question').focus();
 }
-// The ladder from the composer: the light model first, Claude Haiku when the gate refuses; a
+// The ladder from the composer: its models in order, the next when the gate refuses; a
 // LACUNA gathers what it names and asks the same model again. Each send shows in the
 // conversation as it is recorded.
 async function askLadder(question) {
