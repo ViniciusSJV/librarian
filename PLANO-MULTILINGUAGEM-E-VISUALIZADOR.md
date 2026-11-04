@@ -1183,11 +1183,33 @@ A escada parava na primeira proposta aprovada, e 39 propostas ficaram sem testar
 ### O que falta, em ordem
 
 1. **Envelope novo (etapa 7), em medição:** o código está pronto e desligado: as notas (papel de cada fonte, lacunas, comportamento) só vão ao modelo quando a pergunta as traz, e a tela ainda não as manda; a query compacta, sem o `excerpt` repetido, depende de `compact_items`, desligado por padrão. Cada uma é medida separadamente; só liga a que não piorar. As medições ainda não entram nas notas, fora a contagem de chamadas.
-2. **Comportamento, a segunda parte:** condições de execução, caminhos alternativos e invariantes exigem o extractor registrar `if`, `match` e asserções, com perfil e grafo novos. Chamadas dentro de macros também não são vistas.
-3. **Buscar fontes quando a lacuna for importante,** antes de enviar. Por exemplo, `impl Intersectable for Object` fica de fora por orçamento em dois casos: decidir se a origem pode passar do limite.
-4. **Identidade de homônimos:** resolver além da medição, pelo tipo do receptor, principalmente em Python, onde o Medir tudo não conta.
-5. **Medições na seleção:** hoje entra só a contagem de chamadas; faltam o tempo e os benchmarks.
-6. **Etapa 5, só se o gabarito mostrar que faltam fatos:** perguntas por tema (entrada, estado, dependências, execução, repetição, efeitos), cascata qwen → Haiku e novos estados de fato. O Claude nunca transforma um fato inconclusivo em comprovado.
-7. **Etapas 1 a 4:** validar a configuração, instrumentar outras linguagens, reconhecer melhor as intenções e tornar configuráveis os critérios do alvo.
+2. **Investigar o qwen nas mudanças,** conforme a seção abaixo.
+3. **Um caso difícil no gabarito e Python com LLM:** até agora a seleção só empatou em aprovações, e nos casos atuais a mudança grande já é conhecida. Falta um caso em que o envelope antigo falhava, como o `Intersectable::intersect` do vídeo 11 (3 de 8), e rodar os casos do `logistica-api` com o modelo. Isso decide onde investir nos itens seguintes.
+4. **Comportamento, a segunda parte:** condições de execução, caminhos alternativos e invariantes exigem o extractor registrar `if`, `match` e asserções, com perfil e grafo novos. Chamadas dentro de macros também não são vistas.
+5. **Buscar fontes quando a lacuna for importante,** antes de enviar. Por exemplo, `impl Intersectable for Object` fica de fora por orçamento em dois casos: decidir se a origem pode passar do limite.
+6. **Identidade de homônimos:** resolver além da medição, pelo tipo do receptor, principalmente em Python, onde o Medir tudo não conta.
+7. **Medições na seleção:** hoje entra só a contagem de chamadas; faltam o tempo e os benchmarks.
+8. **Etapa 5, só se o gabarito mostrar que faltam fatos:** perguntas por tema (entrada, estado, dependências, execução, repetição, efeitos), cascata qwen → Haiku e novos estados de fato. O Claude nunca transforma um fato inconclusivo em comprovado.
+9. **Etapas 1 a 4:** validar a configuração, instrumentar outras linguagens, reconhecer melhor as intenções e tornar configuráveis os critérios do alvo.
 
-**A decidir:** se o qwen continua tentando primeiro nas mudanças, com 0 de 8 hoje, ou se sai dessa etapa até investigarmos as recusas de forma.
+### O qwen nas mudanças (decidido em 04/11/2026)
+
+**Decisão:** o qwen sai da escada de mudanças, que vai direto ao Haiku, e continua nos fatos, onde passou em 9 de 10. Não é desistir do modelo local: é tirá-lo de onde hoje só gasta tempo, enquanto se investiga o motivo. O fine-tune continua sendo uma frente à parte.
+
+Nos 8 envios de mudança da gravação do vídeo 12, das 24 propostas só 1 saiu sem problema de forma, e o portão a recusou porque nem a contagem nem o tempo caíram. Ele gastou 10 min 21 s, cerca de um terço do tempo de máquina, antes de cada pergunta subir ao Haiku. A query não foi cortada: o Ollama processou praticamente o tamanho estimado.
+
+| Recusa | Vezes |
+|---|---|
+| `location_requires_fact` | 15 |
+| `edits_unbalanced` | 14 |
+| `edits_rewrite_not_whole_declaration` | 10 |
+| `edits_no_change` | 10 |
+| `edits_malformed` | 3 |
+| `quote_mismatch` | 2 |
+
+**Investigação, depois da medição do envelope novo e sem custo de nuvem:**
+
+1. ~~Remover `location` de uma HYPOTHESIS antes de conferir.~~ Descartado sem escrever código: o `location` é a única recusa de só 1 das 24 propostas. Nas outras 22 recusadas, a edição ou a citação também falha: `edits_unbalanced`, `edits_rewrite_not_whole_declaration`, `edits_no_change`, `edits_malformed` ou `quote_mismatch`. O problema é editar código nesse formato.
+2. Pedir menos: uma mudança só, em vez de três, e só `replace` em poucas linhas, com um Modelfile próprio. Roda depois da medição do envelope, porque o modelo local ocupa a máquina.
+
+**Critério para voltar:** nos 3 casos do gabarito, com 8 envios por caso, ao menos 1 proposta passa no portão em cada caso, e o ganho compensa o tempo gasto. Se não, ele fica fora até o fine-tune.

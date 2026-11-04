@@ -672,10 +672,11 @@ O envelope de um método padrão de trait também traz o `impl Trait for T` do t
 do inventário percorre até ele (`child.intersect` com `child` em `Vec<Object>` traz
 `impl Intersectable for Object`); depois de um Medir tudo, só os tipos cujo chamador rodou.
 
-### Escada (qwen, depois Claude Haiku)
+### Escada (Claude Haiku)
 
-No modo **Melhorar**, com um envelope juntado, a opção **Escada** manda a mesma pergunta
-primeiro ao qwen (local) e, se nada passar, ao Claude Haiku. Cada mudança proposta passa pelo
+No modo **Melhorar**, com um envelope juntado, a opção **Escada** manda a pergunta ao Claude Haiku.
+O qwen saiu das mudanças por enquanto, porque nenhuma resposta dele passou, e continua nos fatos. O
+servidor aceita mais de um modelo em ordem: o próximo só responde se nada passar. Cada mudança proposta passa pelo
 **portão**: os comandos aprovados rodam com ela, e ela passa quando todos têm sucesso, toda
 saída é igual à da linha de base, alguma contagem cai 5% ou mais (ou um tempo medido pelo
 projeto cai 10% com as faixas separadas; o `wall_ms` da Régua não conta) e nenhuma contagem
