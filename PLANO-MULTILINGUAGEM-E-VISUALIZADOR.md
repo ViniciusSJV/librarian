@@ -1240,7 +1240,7 @@ O perfil ganha `measures`: o que cada número significa e para que lado é melho
 - **A aprovação fica mais fácil:** a mudança com `plan_p95_ms` +244% antes era recusada, por outro motivo, e agora passa com o aviso. Quem olha só o "passou" não vê isso.
 - **O ganho mistura unidades:** ele compara a maior melhora em %, então consultas −99% valem mais que uma rota −35%. Nesta reprodução, cada envio teve uma só proposta testada, então a escolha entre propostas não mudou; isso continua sem medir.
 
-As medidas estão declaradas no perfil do `logistica-api`, sem commit naquele projeto. **Ainda não rodou com o modelo:** a reprodução usa propostas gravadas. O aviso foi visto no navegador, nos temas claro e escuro e em tela estreita, com a resposta da escada simulada.
+As medidas estão declaradas no perfil do `logistica-api`, sem commit naquele projeto. O aviso foi visto no navegador, nos temas claro e escuro e em tela estreita, com a resposta da escada simulada.
 
 **Defeito encontrado na limpeza e corrigido:** uma cópia apagada cujo `.diff` ficou era recriada sem a mudança, e a linha de base era medida como se fosse a mudança. O teste reproduziu o defeito antes da correção (100 em vez de 20).
 
@@ -1255,9 +1255,64 @@ As medidas declaradas são um contrato de avaliação: o Librarian conhece o sig
 
 **O que foi medido são hipóteses, não regras.** O mesmo envelope deu 4/6 e 8/8 em medições diferentes. O objetivo não é fazer o LLM pensar mais, e sim entregar informações melhores, suficientes e verificáveis, para que ele tenha menos espaço para inventar.
 
+### Portão com o modelo no `logistica-api` (04/11/2026)
+
+Com as medidas declaradas, 18 envios ao Haiku em `cd15515`, 3 por variante da seleção (gravada e nova) em cada caso, US$ 0,084, 59 min, sem erros:
+
+| Caso | Aprovadas, gravada | Aprovadas, nova | O que aparece na decisão |
+|---|---|---|---|
+| Memória | 2/3 (antes 0/3) | 3/3 (antes 1/3) | −77% nas aprovadas; 3 das 5 escolhidas com outras pioras |
+| N+1 | 3/3 | 3/3 | 4 de 6 com memória +15–19% |
+| `async` na rota | 3/3 | 3/3 | todas com memória +19–21% |
+
+O portão vê memória também com o modelo, e cada piora aparece ao lado da decisão.
+
+**Problema na escolha, observado em um envio da pergunta sobre memória:**
+
+| Proposta | `memory_end_mb` | `routing_cpu_p50_ms` | `plan_p95_ms` | `plans_per_s` | Resultado |
+|---|---|---|---|---|---|
+| A | **−77%** | piorou 166% | +267% | −57% | escolhida |
+| B | +11%, faixas sobrepostas | **−33,5%** | −4%, sem contar | +4%, sem contar | "ganho menor", sem piora registrada |
+
+A resolve o que foi perguntado, com um custo alto. B não tem piora, mas também não resolve: a memória não caiu. Nenhuma das duas é melhor em tudo, e a maior % elegeu A misturando unidades, numa troca que é da pessoa.
+
+**Hipótese, sem regra por enquanto:** quando há trocas entre medidas, não eleger vencedora e mostrar lado a lado as propostas que nenhuma outra supera em todas as medidas (fronteira de Pareto), com ganhos e pioras de cada uma, indicando as superadas. Sem pesos entre memória, tempo e vazão. Fica para o ajuste da tela; falta medir quantas vezes isso acontece, porque aqui foi um envio.
+
+### Condições e invariantes, com e sem (04/11/2026)
+
+**Pergunta:** o modelo propõe melhor quando recebe, em texto, o que guarda uma chamada e quem escreve um campo? Os fatos foram escritos à mão a partir do código, sem sugestão, como notas da query. O extractor não mudou.
+
+88 envios ao Haiku em duas rodadas, US$ 0,69, 95 min, sem erros, mesmo envelope e variantes alternadas. "Grande" é reduzir ao menos 50% das chamadas de `inverse` (`r1`, a inversa, e `r5`, o caso difícil).
+
+| Caso | Variante | Aprovadas | Grande, 1ª rodada | Grande, 2ª rodada | Grande, total | Ganho mediano |
+|---|---|---|---|---|---|---|
+| `r1` | Sem fatos | 16/16 | 2/8 | 1/8 | **3/16** | 26% |
+| `r1` | Condição e invariante | 15/16 | 6/8 | 7/8 | **13/16** | 44% |
+| `r1` | Só condição | 8/8 | | 5/8 | 5/8 | 44% |
+| `r1` | Só invariante | 8/8 | | 2/8 | 2/8 | 28% |
+| `r1` | Condição e todos os campos lidos | 8/8 | | 4/8 | 4/8 | 42% |
+| `r5` | Sem fatos | 7/16 | 3/8 | 4/8 | 7/16 | 17% |
+| `r5` | Condição e invariante | 11/16 | 5/8 | 6/8 | 11/16 | 18% |
+
+- **Em `r1` o efeito se repetiu:** 3/16 × 13/16, teste exato de Fisher p = 0,001. É o primeiro caso em que dar mais informação mudou o resultado de forma repetível. A mudança passa de acelerar `matrix.rs` para guardar a inversa em `groups.rs` e `obj.rs`.
+- **A condição parece fazer o trabalho:** só o invariante fica igual à base (2/8), e só a condição chega a 5/8 (p = 0,06).
+- **Parte do efeito pode vir de ter apontado o campo:** a versão com todos os campos lidos, sem destacar `transform`, ficou em 4/8. Com 8 envios, não se separa nem da base nem da versão completa (p = 0,17 nos dois).
+- **Em `r5` não há conclusão:** 7/16 × 11/16, p = 0,29. As recusas do portão são iguais (3 e 3); as respostas sem proposta caíram de 6 para 2.
+- **O invariante não foi necessário para a mudança ficar correta:** nas 27 mudanças que guardam a inversa, inclusive nas 8 sem a nota do invariante (3 sem fatos e 5 só com a condição), uma busca no texto das cópias encontrou a atualização junto de `group.transform` em `load_model` e de `model.transform` em `load_bvh`. Foi só uma busca, não um teste de valor velho.
+
+**Limites:**
+
+- Todas as variantes que ajudaram trazem uma condição escrita por mim, que nomeia `inverse` e diz que ela roda antes do `if`. Eu já sabia a resposta. Um extractor teria de produzir isso para as chamadas medidas sem saber qual importa, e isso não foi testado.
+- São um projeto, um modelo e dois casos, um deles sem conclusão. Os valores de p não têm correção por 9 comparações; o de `r1` continua abaixo de 0,05 com ela, os outros não chegariam lá.
+- O perfil do `renderer` não declara memória, então o custo de guardar a inversa não foi medido.
+
+**Próximo passo, decidido em 04/11/2026:** antes de mudar o extractor, gerar as notas por script e comparar com a base em `r1`, para ver se o efeito se repete, em `r5`, outro contexto, e em `r3-groups`, caso para o qual nenhum fato foi escrito. O script usa só o que o projeto oferece: não lê o gabarito nem as propostas e os resultados anteriores. Condições, invariantes e campos lidos ficam separados, e cada nota diz de onde veio. Extractor, perfis e grafos não mudam até lá. A pergunta é se o Librarian consegue produzir sozinho o que foi útil quando dado à mão.
+
+Propostas e resultados em `.studio/arquivo-copias/condicoes-20261104`, que o Git ignora.
+
 ### O que falta, em ordem
 
-1. **Condições, caminhos e invariantes:** completam a compreensão do comportamento e exigem o extractor registrar `if`, `match` e asserções, com perfil e grafo novos. Chamadas dentro de macros também não são vistas. Até aqui nenhum caso mostrou essa falta: a medição precisa comparar com e sem, antes de virar regra.
+1. **Condições e invariantes:** o sinal existe em `r1`, com fatos escritos à mão (acima). Falta saber se notas geradas sem escolher à mão repetem o efeito. Registrar `if`, `match` e asserções exige perfil e grafo novos, e chamadas dentro de macros também não são vistas.
 2. **Tempo e benchmarks na seleção:** hoje entra só a contagem de chamadas.
 3. **Busca por lacunas,** só quando necessário e antes de enviar. Por exemplo, `impl Intersectable for Object` fica de fora por orçamento em dois casos: decidir se a origem pode passar do limite.
 4. **Homônimos por identidade:** resolver além da medição, pelo tipo do receptor, principalmente em Python, onde o Medir tudo não conta.
