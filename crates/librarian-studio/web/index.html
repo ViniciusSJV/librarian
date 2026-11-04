@@ -1767,6 +1767,7 @@ const query = params => new URLSearchParams(params).toString();
 /// Runs an action with its buttons disabled and reports failures in `note`.
 async function busy(buttons, note, action) {
   for (const b of buttons) b.disabled = true;
+  if (note?.classList.contains('error')) say(note, '');
   try { return await action(); }
   catch (error) { console.error(error); if (note) { note.className = 'error'; note.textContent = error.message; } }
   finally { for (const b of buttons) b.disabled = false; refreshComposer(); }
@@ -2059,7 +2060,8 @@ function refreshComposer() {
     : provider === 'manual' ? t('composer.askManual') : t('composer.askSend', { target });
   $('#modelfileSummary').textContent = mf ? modelfileSummary(mf.content, provider) : (provider === 'claude-cli' ? t('composer.defaultSystem') : '');
   const llm = studio.status.llm;
-  $('#llmNote').textContent = {
+  // A failure stays on screen until the next action: redrawing the composer must not erase it.
+  if (!$('#llmNote').classList.contains('error')) $('#llmNote').textContent = {
     manual: t('llm.manual'),
     ollama: llm.ollama.running ? t('llm.ollama', { endpoint: llm.ollama.endpoint, model: mf ? 'librarian-' + mf.name : '…' })
       : t('llm.ollamaDown', { endpoint: llm.ollama.endpoint, missing: llm.ollama.executable ? '' : t('llm.ollamaMissing') }),
