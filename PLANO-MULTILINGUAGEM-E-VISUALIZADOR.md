@@ -1362,12 +1362,59 @@ Rodada exploratória, porque a regra nasceu depois de ver o resultado anterior. 
 
 Propostas e resultados em `.studio/arquivo-copias/foco-20261104`, que o Git ignora.
 
+### Tempo na seleção, sem LLM (04/11/2026)
+
+**Resultado: ordenar por tempo praticamente não muda o que a seleção escolhe, e o tempo disponível não é confiável para ordenar. A seleção não muda, e nenhum envio foi feito.**
+
+Rodei a seleção real, sem alterar o código dela, trocando só o número que ela usa para ordenar, com o Medir tudo gravado de cada caso. Sem custo. O mapeamento de linha para função bateu com o gabarito em todas as funções de `r1`, `r2` e `r3` (121, 119 e 119). Ordens comparadas: contagem (a atual), tempo inclusivo, tempo por chamada e camadas de Pareto entre contagem e tempo, sem pesos.
+
+| Caso | Correlação de postos, contagem × tempo | Vagas de custo, de 16 | O que muda em relação à contagem |
+|---|---|---|---|
+| `r1` | 0,52 | 4 | Nada; o tempo por chamada só reordena as mesmas 4 |
+| `r2` | 0,50 | 3 | Nada |
+| `r3` | 0,44 | 2 | Nada |
+| `r5` | 0,44 | 1 | Com as três ordens, entram `inverse` e `World::color_at`; saem `Bounds::intersects` e `Matrix` |
+
+Nenhuma declaração editada no gabarito se perde, em nenhuma ordem.
+
+- **As ordens discordam muito, mas a seleção quase não percebe.** Alvo, origem e apoio vêm antes do custo e ocupam de 12 a 15 das 16 vagas. O papel e o orçamento decidem, não o número.
+- **A única mudança já foi testada com o modelo:** a troca de `Bounds::intersects` por `inverse` em `r5` deu 6/16, contra 8/16 da seleção sem a troca, sem ajudar. Por isso não há caso novo para enviar. A troca de agora também traz `World::color_at`, o que não foi medido; não parece motivo suficiente para uma rodada.
+- **O caso "rara e pesada" não apareceu:** o tempo por chamada e as camadas de Pareto escolhem o mesmo conjunto que o tempo total.
+
+**Achado que importa mais: o tempo do Medir tudo muda a ordem entre as funções.** O contador em toda função infla mais quem chama muitas funções contadas. Em `r1`:
+
+| Função | Tempo com 8 contadores | Tempo com todos | Inflação |
+|---|---|---|---|
+| `Bounds::intersects` | 81 ms | 78 ms | 1× |
+| `Triangle::local_intersect` | 55 ms | 1.255 ms | 23× |
+| `World::color_at` | 4.835 ms | 498.966 ms | 103× |
+| `Groups::intersect` | 4.631 ms | 482.541 ms | 104× |
+| `Intersectable::intersect` | 1.260 ms | 175.575 ms | 139× |
+| `Matrix<4>::inverse` | 809 ms | 492.456 ms | 609× |
+
+- Com todos os contadores, `inverse` passa à frente de `Groups::intersect`; com 8, ela pesa menos de um quinto. O render vai de 55 ms sem contar nada para 213 ms com 8 contadores e 20,8 s com todos.
+- Nenhum dos dois está certo: `inverse` aparece com 99% e com 17% de `color_at`, e guardar a inversa rende cerca de 44% no portão.
+- Só a contagem é exata. **"A ordem é o que vale" não se sustenta:** a frase está no [STUDIO.md](STUDIO.md), em `instrument.rs` e no `count.rs` do `renderer`, e a tela "Onde pesa" ordena por esse tempo. Corrigir o texto e rever a ordem da tela fica como proposta, sem mudar nada agora.
+
+**Limites:**
+
+- Quatro casos de um só projeto, os mesmos de antes.
+- Sem tempo próprio por função: o tempo medido é inclusivo, então os valores se sobrepõem e não dá para somar quanto do total as funções selecionadas representam.
+- Benchmarks não entraram: em Python não há tempo por função, só números do projeto inteiro (`plan_p95_ms`, por exemplo), que não ordenam funções. Avaliar isso exige outra fonte.
+
+**Conclusão, decidida em 04/11/2026:** a contagem continua sendo a medida confiável, e o tempo instrumentado é só referência. A linha de seleção por tempo fica suspensa e só reabre com uma medição independente e confiável, como um profiler por amostragem. Resultados em `.studio/arquivo-copias/tempo-20261104`, que o Git ignora.
+
+**Especificação para o próximo ajuste do front, sem mudar código agora:**
+
+- **Tela "Onde pesa":** quantidade de chamadas como ordenação principal, tempo instrumentado como referência experimental e um aviso explícito de que esse tempo é inflado pela contagem e pode mudar a ordem entre funções. Isso vale também para o que usa o mesmo tempo como calor, nos mapas da tela.
+- **Texto:** corrigir "a ordem é o que vale" em `STUDIO.md`, `crates/librarian-studio/src/instrument.rs` e `src/count.rs` do `renderer`.
+- **Escada:** a hipótese da fronteira de Pareto, registrada acima, entra na mesma conversa.
+
 ### O que falta, em ordem
 
-1. **Tempo e benchmarks na seleção:** hoje entra só a contagem de chamadas.
-2. **Busca por lacunas,** só quando necessário e antes de enviar. Por exemplo, `impl Intersectable for Object` fica de fora por orçamento em dois casos: decidir se a origem pode passar do limite.
-3. **Homônimos por identidade:** resolver além da medição, pelo tipo do receptor, principalmente em Python, onde o Medir tudo não conta.
-4. **Cascata qwen → Haiku (etapa 5):** complementar fatos ausentes sem repetir trabalho, só se o gabarito mostrar que faltam fatos. Perguntas por tema (entrada, estado, dependências, execução, repetição, efeitos) e novos estados de fato. O Claude nunca transforma um fato inconclusivo em comprovado.
+1. **Busca por lacunas,** só quando necessário e antes de enviar. Por exemplo, `impl Intersectable for Object` fica de fora por orçamento em dois casos: decidir se a origem pode passar do limite. O resultado acima aponta para cá: o que decide a seleção é o orçamento e os papéis.
+2. **Homônimos por identidade:** resolver além da medição, pelo tipo do receptor, principalmente em Python, onde o Medir tudo não conta.
+3. **Cascata qwen → Haiku (etapa 5):** complementar fatos ausentes sem repetir trabalho, só se o gabarito mostrar que faltam fatos. Perguntas por tema (entrada, estado, dependências, execução, repetição, efeitos) e novos estados de fato. O Claude nunca transforma um fato inconclusivo em comprovado.
 
 **Separados, sem prioridade até haver evidência de que a seleção atual não fornece os fatos necessários:** as etapas 1 a 4 (validar a configuração, instrumentar outras linguagens, reconhecer melhor as intenções e tornar configuráveis os critérios do alvo).
 
