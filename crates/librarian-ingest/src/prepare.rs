@@ -69,6 +69,11 @@ pub struct Request {
     /// as before.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub headers: Vec<String>,
+    /// Gathered step: what the selection found about the evidence (each source's role, what the
+    /// graph did not settle, what is written and must be kept), reported as limits of the evidence.
+    /// Absent, the request is the same as before.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub notes: Vec<String>,
 }
 
 /// A declaration as a checked claim locates it.
@@ -319,6 +324,7 @@ pub fn prepare(catalog: &Catalog, request: &Request) -> Result<Prepared> {
             catalog.diagnostics.len()
         ));
     }
+    unknowns.extend(request.notes.iter().cloned());
     let dossier = serde_json::to_string_pretty(&json!({
         "id": format!("{}:{}", if request.targets.is_some() { "chain" } else { "search" }, hash(&search)),
         "unknowns": unknowns,

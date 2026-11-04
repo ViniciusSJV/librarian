@@ -72,6 +72,10 @@ pub struct Context {
     /// "en" writes the contract in English; empty is Portuguese, as every earlier question.
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub language: String,
+    /// The query carries each excerpt once, in `evidence.line_map`; recorded with each question,
+    /// and earlier questions keep both.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub compact_items: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -194,9 +198,15 @@ pub fn query(context: &Context, question: &str) -> Result<String, String> {
             })
         })
         .collect();
+    let mut items = serde_json::to_value(&context.evidence).map_err(|e| e.to_string())?;
+    if context.compact_items {
+        for item in items.as_array_mut().into_iter().flatten() {
+            item.as_object_mut().map(|o| o.remove("excerpt"));
+        }
+    }
     let mut query = serde_json::json!({
         "question": question,
-        "evidence": {"items": context.evidence, "line_map": line_map},
+        "evidence": {"items": items, "line_map": line_map},
         "policy": context.policy,
         "require_location": context.require_location,
         "response_schema": location::schema(context),

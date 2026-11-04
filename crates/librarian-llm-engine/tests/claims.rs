@@ -757,3 +757,23 @@ fn a_rewrite_restates_a_declaration_and_shows_only_what_changed() {
     short["claims"][0]["edits"][0]["new_lines"] = json!(["    fn ray(&self) -> f64 {", "        self.inv"]);
     assert_eq!(codes(&located, &short), ["edits_rewrite_not_whole_declaration"]);
 }
+
+#[test]
+fn compact_items_carry_each_excerpt_once() {
+    let context = |compact: bool| {
+        let mut context: Context = serde_json::from_value(serde_json::json!({
+            "schema_version": 1,
+            "policy": { "allow_inference": false, "allow_hypothesis": false },
+            "evidence": [{ "id": "E1", "path": "a.rs", "start_line": 3, "end_line": 4, "excerpt": "fn a() {\n}" }],
+        })).unwrap();
+        context.compact_items = compact;
+        context
+    };
+    let parsed = |compact: bool| -> serde_json::Value { serde_json::from_str(&claims::query(&context(compact), "Onde?").unwrap()).unwrap() };
+    assert_eq!(parsed(false)["evidence"]["items"][0]["excerpt"], "fn a() {\n}");
+    let compact = parsed(true);
+    assert_eq!(compact["evidence"]["items"][0].get("excerpt"), None);
+    assert_eq!(compact["evidence"]["items"][0]["path"], "a.rs");
+    assert_eq!(compact["evidence"]["line_map"][0]["lines"][1]["text"], "}");
+    assert_eq!(compact["evidence"]["line_map"][0]["lines"][1]["number"], 4);
+}

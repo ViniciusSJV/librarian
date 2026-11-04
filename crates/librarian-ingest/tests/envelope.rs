@@ -407,3 +407,22 @@ fn a_cut_origin_is_a_gap_and_behavior_says_what_is_written() {
     assert_eq!(kinds("loop"), [12], "{written:#?}");
     assert_eq!(kinds("state_write"), [13], "{written:#?}");
 }
+
+#[test]
+fn the_notes_say_why_each_source_is_there_and_what_is_open() {
+    let (_project, catalog) = scene();
+    let chosen = [id(&catalog, "impl Scene::sum")];
+    let candidates = envelope::candidates(&catalog, &chosen, None).unwrap();
+    let mut selection = envelope::select(&catalog, &candidates, None, envelope::BUDGET_BYTES, 16);
+    let found = librarian_ingest::inventory::inventory(&catalog, &Default::default()).unwrap();
+    selection.behavior = envelope::behavior(&catalog, &found, &selection);
+    let notes = envelope::notes(&selection);
+    let has = |piece: &str| notes.iter().any(|n| n.text.contains(piece));
+    assert!(notes.iter().any(|n| n.id == chosen[0] && n.text.contains("alvo da mudança")), "{notes:#?}");
+    assert!(has("Não resolvido: em impl Scene::sum, a chamada"), "{notes:#?}");
+    assert!(has("receptores de tipo desconhecido"), "{notes:#?}");
+    assert!(has("laço"), "{notes:#?}");
+    assert!(has("escreve"), "{notes:#?}");
+    // Rules say why a source is there; the first line says they do not describe behavior.
+    assert!(notes[0].text.contains("não como ele se comporta"));
+}

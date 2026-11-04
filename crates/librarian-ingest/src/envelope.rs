@@ -74,6 +74,15 @@ impl Measure {
     }
 }
 
+/// A line for the model about the evidence. With `id`, it holds only while that declaration is
+/// in the envelope; a person may have taken it out.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct Note {
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub id: String,
+    pub text: String,
+}
+
 /// A candidate with what the selection decided about it.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Entry {
@@ -98,6 +107,8 @@ pub struct Selection {
     pub gaps: Vec<Gap>,
     /// Filled by `behavior`, for the declarations being changed and what they cost.
     pub behavior: Vec<Behavior>,
+    /// Filled by `notes`: what of this selection goes to the model.
+    pub notes: Vec<Note>,
     pub budget_bytes: usize,
     pub used_bytes: usize,
     /// False when no measure was available and the order comes from the structure alone.
@@ -414,7 +425,7 @@ pub fn select(catalog: &Catalog, candidates: &Candidates, measure: Option<&Measu
     }).collect();
     // The sort is stable: within a rank, candidates keep the order the graph gave them.
     entries.sort_by(|(a, x), (b, y)| a.cmp(b).then(y.calls.unwrap_or(0.).total_cmp(&x.calls.unwrap_or(0.))));
-    let mut selection = Selection { items: vec![], left_out: vec![], gaps: candidates.gaps.clone(), behavior: vec![], budget_bytes: budget, used_bytes: 0, measured: measure.is_some(), limits: candidates.limits.clone() };
+    let mut selection = Selection { items: vec![], left_out: vec![], gaps: candidates.gaps.clone(), behavior: vec![], notes: vec![], budget_bytes: budget, used_bytes: 0, measured: measure.is_some(), limits: candidates.limits.clone() };
     for (rank, mut entry) in entries {
         let cold = rank >= 2 && measure.is_some_and(|m| m.did_not_run(&entry.item.id));
         entry.left_out = if rank == 0 {
@@ -482,6 +493,44 @@ pub fn behavior(catalog: &Catalog, found: &Inventory, selection: &Selection) -> 
         for reason in test.item.reasons.iter().filter(|r| r.code == "test_caller") {
             out.push(Behavior { name: reason.for_target.clone(), kind: "test".into(), path: test.item.path.clone(), line: reason.lines.first().copied().unwrap_or(test.item.start_line), text: test.item.name.clone(), detail: String::new() });
         }
+    }
+    out
+}
+
+const NOTE_ROLES: [(&str, &str); 6] = [("target", "alvo da mudança"), ("origin", "origem: declara ou escreve o que um alvo lê"), ("cost", "custo: rodou na medição, é chamado por um alvo"),
+    ("path", "caminho: chama um alvo"), ("support", "apoio: tipo ou topo de arquivo para compreender os alvos"), ("constraint", "restrição")];
+
+/// What the model reads about the selection, as lines of the evidence's limits: the role of each
+/// source, what the graph did not settle, what is written and must be kept. Roles come from fixed
+/// rules: they say why a source is there, never that it behaves in some way.
+pub fn notes(selection: &Selection) -> Vec<Note> {
+    let role = |code: &str| NOTE_ROLES.iter().find(|(c, _)| *c == code).map_or(code.to_owned(), |(_, text)| (*text).to_owned());
+    let mut out = vec![Note { id: String::new(), text: "Os papéis abaixo vêm de regras sobre o grafo e a medição: dizem por que cada trecho está aqui, não como ele se comporta.".into() }];
+    for entry in &selection.items {
+        let calls = entry.calls.map_or(String::new(), |c| format!("; {c} chamadas na medição"));
+        out.push(Note { id: entry.item.id.clone(), text: format!("Papel de {} ({}:{}-{}): {}{calls}.", entry.item.name, entry.item.path, entry.item.start_line, entry.item.end_line, role(&entry.role)) });
+    }
+    for gap in &selection.gaps {
+        let place = gap.line.map_or(String::new(), |l| format!(" em {}:{l}", gap.path));
+        let text = match gap.code.as_str() {
+            "homonym_call" if gap.candidates.is_empty() => format!("Não resolvido: em {}, a chamada `{}`{place} combina com {} declarações.", gap.for_target, gap.text, gap.count.unwrap_or(0)),
+            "homonym_call" => format!("Não resolvido: em {}, a chamada `{}`{place} pode ser {}.", gap.for_target, gap.text, gap.candidates.join(" ou ")),
+            "homonym_type" => format!("Não resolvido: em {}, o tipo `{}`{place} pode ser {}.", gap.for_target, gap.text, gap.candidates.join(" ou ")),
+            "write_not_followed" => format!("Não resolvido: o campo `{}` também é escrito por receptores de tipo desconhecido ({} lugares, como {}).", gap.for_target, gap.count.unwrap_or(0), gap.text),
+            "field_without_writer" => format!("Não resolvido: {} lê `{}`, e não foi achado quem o escreve.", gap.for_target, gap.text),
+            "origin_left_out" => format!("Fora da evidência por falta de espaço: {}, origem de um valor de {}{place}. Se precisar dele, responda com uma LACUNA.", gap.text, gap.for_target),
+            _ => continue,
+        };
+        out.push(Note { id: String::new(), text });
+    }
+    for b in selection.behavior.iter().filter(|b| b.kind != "test") {
+        let what = match b.kind.as_str() { "loop" => "laço", "operation" => "operação", _ => "escreve" };
+        let detail = if b.detail.is_empty() { String::new() } else { format!(" ({})", b.detail) };
+        out.push(Note { id: String::new(), text: format!("Escrito em {}, {}:{}: {what}{detail} `{}`.", b.name, b.path, b.line, b.text.split_whitespace().collect::<Vec<_>>().join(" ")) });
+    }
+    let tests: BTreeSet<&str> = selection.behavior.iter().filter(|b| b.kind == "test").map(|b| b.text.as_str()).collect();
+    if !tests.is_empty() {
+        out.push(Note { id: String::new(), text: format!("O portão roda os testes que chamam estes trechos, entre eles: {}.", tests.iter().take(5).copied().collect::<Vec<_>>().join(", ")) });
     }
     out
 }

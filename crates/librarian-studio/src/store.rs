@@ -55,6 +55,9 @@ pub struct Settings {
     /// The language of the claims contract: "en" for English; empty or "pt" for Portuguese.
     #[serde(default)]
     pub language: String,
+    /// Each excerpt once in the query of a new question, in `evidence.line_map`.
+    #[serde(default)]
+    pub compact_items: bool,
     /// Claims policy; INFERENCE and HYPOTHESIS are refused by the checker unless allowed here.
     #[serde(default)]
     pub allow_inference: bool,
@@ -341,6 +344,9 @@ impl Store {
             return Err("Junte ao menos uma declaração além dos topos de arquivo".into());
         }
         let reviewed = if with_facts { self.reviewed_about(key, run, &targets)? } else { vec![] };
+        // What the selection found goes with the evidence, for the declarations still in the envelope.
+        let notes: Vec<String> = origin.as_ref().and_then(|o| serde_json::from_value::<Vec<envelope::Note>>(o["selection"]["notes"].clone()).ok()).unwrap_or_default()
+            .into_iter().filter(|n| n.id.is_empty() || nodes.contains(&n.id)).map(|n| n.text).collect();
         let mut gathered = json!({ "nodes": nodes, "with_facts": with_facts, "reviewed_facts": reviewed.iter().map(|f| &f.id).collect::<Vec<_>>() });
         if let Some(origin) = origin {
             gathered["origin"] = origin;
@@ -348,6 +354,7 @@ impl Store {
         let mut request = request(&settings, question, Some(targets), reviewed, false);
         request.gathered = true;
         request.headers = headers;
+        request.notes = notes;
         self.new_turn(key, run, &settings, &catalog, question, None, request, Some(("gathered", gathered)))
     }
 
@@ -376,6 +383,7 @@ impl Store {
         envelope::trait_impls(&catalog, &found, nodes, measure.as_ref(), &mut candidates);
         let mut selection = envelope::select(&catalog, &candidates, measure.as_ref(), envelope::BUDGET_BYTES, MAX_GATHERED);
         selection.behavior = envelope::behavior(&catalog, &found, &selection);
+        selection.notes = envelope::notes(&selection);
         let facts = self.facts(key, run)?;
         let current: Vec<&Value> = facts["facts"].as_array().into_iter().flatten().filter(|f| f["status"] == "current").collect();
         let mut out = serde_json::to_value(&selection)?;
@@ -588,7 +596,7 @@ impl Store {
             (AnswerFormat::Claims, None) => {
                 let policy = Policy { allow_inference: settings.allow_inference, allow_hypothesis: settings.allow_hypothesis };
                 let instructions = settings.instructions.clone().unwrap_or_default();
-                crate::claims::write(catalog, &dir, policy, instructions, settings.allow_patch, &settings.language).err().map(|e| e.to_string())
+                crate::claims::write(catalog, &dir, policy, instructions, settings.allow_patch, &settings.language, settings.compact_items).err().map(|e| e.to_string())
             }
             _ => None,
         };
@@ -944,6 +952,7 @@ fn request(settings: &Settings, question: &str, targets: Option<Vec<Target>>, re
         callees: owner_context,
         gathered: false,
         headers: vec![],
+        notes: vec![],
     }
 }
 
@@ -1038,6 +1047,7 @@ fn initial_settings(name: &str, root: &str) -> Result<Settings> {
         // New projects ask for checkable claims; `prose` is one setting away.
         answer_format: AnswerFormat::Claims,
         language: String::new(),
+        compact_items: false,
         allow_inference: false,
         allow_hypothesis: false,
         allow_patch: false,
