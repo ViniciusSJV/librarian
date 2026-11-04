@@ -1310,13 +1310,64 @@ A resolve o que foi perguntado, com um custo alto. B não tem piora, mas também
 
 Propostas e resultados em `.studio/arquivo-copias/condicoes-20261104`, que o Git ignora.
 
+### Notas geradas por script (04/11/2026)
+
+**Resultado: as notas geradas não repetiram o efeito das manuais. O extractor não muda por este sinal.**
+
+120 envios ao Haiku, US$ 0,86, 115 min, sem erros. Critérios e notas congelados, com hash, antes do primeiro envio. O gerador lê o código da base, o Medir tudo e o envelope: escolhe as 5 funções mais contadas do envelope e, para cada uma, diz onde é chamada (em funções que rodam ao menos 1% das vezes), em que `if`, `match` ou laço, quais campos lê e onde são escritos, com arquivo e linha.
+
+"Grande": `inverse` cai ao menos 50% em `r1` e `r5`; `Groups::intersect` cai ao menos 50% em `r3`.
+
+| Variante | `r1`: grande | `r1`: aprovadas | `r3`: grande | `r3`: aprovadas | `r5`: grande | `r5`: aprovadas |
+|---|---|---|---|---|---|---|
+| Sem notas | 1/8 | 8/8 | 0/8 | 6/8 | 3/8 | 4/8 |
+| Condições | 1/8 | 7/8 | 0/8 | 7/8 | 2/8 | 3/8 |
+| Campos | 0/8 | 7/8 | 0/8 | 6/8 | 2/8 | 2/8 |
+| Invariantes | 0/8 | 8/8 | 0/8 | 8/8 | 0/8 | 0/8 |
+| Tudo | 1/8 | 8/8 | 0/8 | 8/8 | 1/8 | 1/8 |
+
+- **`r1` não repetiu:** condições 1/8 contra 1/8 sem notas. As manuais deram 13/16 (contra as geradas com tudo, 1/8: p = 0,002). A base ficou estável (3/16 antes, 1/8 agora), então não parece efeito de hora ou máquina, embora as duas medições não tenham sido feitas juntas.
+- **O fato estava na nota e não bastou.** A nota gerada de `r1` traz o mesmo "`inverse` em `Groups::intersect`, em toda chamada, antes do `if`". A diferença é o entorno: é a quarta de cinco notas de condição, depois de `cofactor`, `determinant` e `is_invertible`, e `Groups::intersect` não entrou no top 5. Só a condição manual, sozinha, deu 5/8. **Hipótese, não medida:** o que ajuda é o fato certo isolado, e o gerador não sabe qual é. A comparação 5/8 × 1/8 sozinha não conclui (p = 0,12).
+- **`r3` não serviu de teste:** o critério fixado foi ruim. Nenhuma mudança corta as chamadas de `Groups::intersect`, porque o que elas propõem é guardar a inversa. Já sem notas, 6 de 8 fazem isso, o que deixa pouca margem. Na medida secundária (`inverse` cai 50%), 6/8 sem notas e 7 a 8/8 com invariantes, condições ou tudo. Aprovadas 6/8 × 8/8, p = 0,47. **Sem conclusão,** e não é prova de generalização nem de falta dela.
+- **Em `r5` as notas podem atrapalhar:** aprovadas 4/8 sem notas e 6/32 somando as variantes com notas (p = 0,09); invariantes 0/8 (p = 0,08). Sem correção por comparações, não chega a conclusão, mas a direção é oposta à das manuais (7/16 × 11/16). As notas compactas do envelope também pioraram `r2` numa medição anterior.
+- **Pista no portão:** a recusa por apagar o contador apareceu em 1 proposta sem notas, 3 com condições e 4 com tudo, as variantes em que as notas citam `calls@`. O portão pegou todas. São poucos casos.
+
+**Limites:** regras escritas depois de ver a nota manual, um só projeto, só Rust, por texto e por nome, 8 envios por variante.
+
+**O que isto muda:** gerar fatos não basta; falta decidir quais entregar. A informação existe e o extractor conseguiria produzi-la, mas despejar tudo o que se sabe sobre as funções mais contadas não ajudou e pode atrapalhar. Isso combina com o princípio de entregar informação suficiente, não mais informação.
+
+Propostas e resultados em `.studio/arquivo-copias/notas-geradas-20261104`, que o Git ignora.
+
+### Condição só da função perguntada (04/11/2026)
+
+**Resultado: pelo critério fixado antes do primeiro envio, não recuperou o efeito. A linha de condições fica encerrada por enquanto, e o extractor não muda.**
+
+Rodada exploratória, porque a regra nasceu depois de ver o resultado anterior. A nota é a condição da primeira função `Tipo::nome` no texto da pergunta: onde é chamada e dentro de que `if`, `match` ou laço. Nada de campos, invariantes ou outras funções. 48 envios ao Haiku, US$ 0,37, 52 min, sem erros. "Grande": `inverse` cai ao menos 50%, nos três casos.
+
+| Caso | Grande, sem nota | Grande, com nota | Aprovadas, sem nota | Aprovadas, com nota | Ganho mediano, sem e com |
+|---|---|---|---|---|---|
+| `r1` | 2/8 | 4/8 | 8/8 | 8/8 | 31% e 42% |
+| `r3` | 7/8 | 7/8 | 7/8 | 7/8 | 15% e 19% |
+| `r5` | 4/8 | 6/8 | 4/8 | 7/8 | 20% e 20% |
+
+**O critério** era `r1` com nota em 5/8 ou mais e a base em 2/8 ou menos, sem `r5` piorar. `r1` ficou em 4/8. Nenhuma comparação contra a base é conclusiva (p = 0,61 em `r1` e em `r5`, p = 0,28 nas aprovadas de `r5`). Em `r3`, a base já chega a 7/8, sem margem.
+
+**O que fica como pista, sem virar regra:**
+
+- **A nota isolada não atrapalhou:** em `r5`, as aprovadas foram 7/8, contra 6/32 somando as notas acumuladas (p < 0,001). A comparação foi feita depois de ver os dados e entre rodadas diferentes, então é só indício. A direção combina com a hipótese de que a quantidade atrapalha.
+- **A direção em `r1` é positiva, mas fraca:** 4/8, entre as geradas com tudo (1/8) e as manuais (13/16). Somando as bases das três rodadas (6/32), daria p = 0,09: ainda sem conclusão, e o critério fixado não muda por isso.
+- **Apagar o contador:** 1 vez com a nota e 1 sem, em `r5`. A pista da rodada anterior não se repetiu aqui, e são poucos casos nas duas.
+
+**Conclusão desta sequência (hipótese, não regra):** extrair fatos do código é a parte fácil; quantidade de informação não é qualidade de contexto. O desafio é selecionar o fato certo para a pergunta certa. A manual ganhou de todas as geradas, e ainda não sabemos dizer por uma regra o que ela tinha a mais. Só voltar às condições com evidência nova.
+
+Propostas e resultados em `.studio/arquivo-copias/foco-20261104`, que o Git ignora.
+
 ### O que falta, em ordem
 
-1. **Condições e invariantes:** o sinal existe em `r1`, com fatos escritos à mão (acima). Falta saber se notas geradas sem escolher à mão repetem o efeito. Registrar `if`, `match` e asserções exige perfil e grafo novos, e chamadas dentro de macros também não são vistas.
-2. **Tempo e benchmarks na seleção:** hoje entra só a contagem de chamadas.
-3. **Busca por lacunas,** só quando necessário e antes de enviar. Por exemplo, `impl Intersectable for Object` fica de fora por orçamento em dois casos: decidir se a origem pode passar do limite.
-4. **Homônimos por identidade:** resolver além da medição, pelo tipo do receptor, principalmente em Python, onde o Medir tudo não conta.
-5. **Cascata qwen → Haiku (etapa 5):** complementar fatos ausentes sem repetir trabalho, só se o gabarito mostrar que faltam fatos. Perguntas por tema (entrada, estado, dependências, execução, repetição, efeitos) e novos estados de fato. O Claude nunca transforma um fato inconclusivo em comprovado.
+1. **Tempo e benchmarks na seleção:** hoje entra só a contagem de chamadas.
+2. **Busca por lacunas,** só quando necessário e antes de enviar. Por exemplo, `impl Intersectable for Object` fica de fora por orçamento em dois casos: decidir se a origem pode passar do limite.
+3. **Homônimos por identidade:** resolver além da medição, pelo tipo do receptor, principalmente em Python, onde o Medir tudo não conta.
+4. **Cascata qwen → Haiku (etapa 5):** complementar fatos ausentes sem repetir trabalho, só se o gabarito mostrar que faltam fatos. Perguntas por tema (entrada, estado, dependências, execução, repetição, efeitos) e novos estados de fato. O Claude nunca transforma um fato inconclusivo em comprovado.
 
 **Separados, sem prioridade até haver evidência de que a seleção atual não fornece os fatos necessários:** as etapas 1 a 4 (validar a configuração, instrumentar outras linguagens, reconhecer melhor as intenções e tornar configuráveis os critérios do alvo).
 
