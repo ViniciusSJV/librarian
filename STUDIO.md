@@ -679,9 +679,26 @@ No modo **Melhorar**, com um envelope juntado, a opção **Escada** manda a perg
 O qwen saiu das mudanças por enquanto, porque nenhuma resposta dele passou, e continua nos fatos. O
 servidor aceita mais de um modelo em ordem: o próximo só responde se nada passar. Cada mudança proposta passa pelo
 **portão**: os comandos aprovados rodam com ela, e ela passa quando todos têm sucesso, toda
-saída é igual à da linha de base, alguma contagem cai 5% ou mais (ou um tempo medido pelo
-projeto cai 10% com as faixas separadas; o `wall_ms` da Régua não conta) e nenhuma contagem
+saída é igual à da linha de base, alguma contagem cai 5% ou mais (ou um número medido pelo
+projeto melhora 10% com as faixas separadas; o `wall_ms` da Régua não conta) e nenhuma contagem
 sobe 5%. Linhas de base que faltam são rodadas antes.
+
+Sem declaração, só o tempo e a contagem dizem algo ao portão. O projeto declara os outros números
+em `measures`, no perfil, com o que cada um significa e para que lado é melhor:
+
+```json
+"measures": {
+  "memory_end_mb": { "better": "lower", "means": "memória no fim" },
+  "queries_per_plan": { "better": "lower", "means": "consultas por rota" },
+  "plans_per_s": { "better": "higher", "means": "rotas por segundo" }
+}
+```
+
+Uma medida declarada vale como um tempo: precisa mudar 10% com as faixas separadas, e não vale em
+comando que conta. Um número que piora assim, seja um tempo ou uma medida declarada, **não recusa a
+mudança**, porque um cache pode gastar memória de propósito: aparece em vermelho no registro, ao
+lado da decisão, e quem decide é a pessoa. Uma declaração inválida interrompe a execução, em vez
+de ser ignorada. O perfil já é protegido: a mudança não pode alterar a própria declaração.
 
 O que é medido não pode ser o que muda. Isso vale para qualquer linguagem que imprima essas
 medidas, mesmo onde o **Medir tudo** não sabe colocar os contadores:
@@ -698,8 +715,9 @@ medidas, mesmo onde o **Medir tudo** não sabe colocar os contadores:
   quando ela sai junto com a função.
 
 - A resposta pode trazer até três mudanças (uma HYPOTHESIS cada); o portão confere todas. Das que
-  passam, fica a de maior ganho: a maior queda de um tempo medido pelo projeto ou, num projeto que
-  só conta, do total das contagens. As outras aparecem no registro como "ganho menor". Uma mudança
+  passam, fica a de maior ganho: a maior melhora em % de um número medido pelo projeto ou, num
+  projeto que só conta, do total das contagens. O ganho compara números diferentes pela %, então uma
+  queda grande de memória vence uma queda menor de tempo, mesmo numa pergunta sobre tempo. As outras aparecem no registro como "ganho menor". Uma mudança
   vale por si: os próprios edits geraram o diff, nenhum problema a cita e nenhum problema é da
   resposta inteira.
 - Uma **LACUNA** precisa dizer entre crases o que falta. O Librarian procura esses nomes no

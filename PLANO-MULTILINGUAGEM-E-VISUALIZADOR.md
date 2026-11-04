@@ -1222,11 +1222,29 @@ A rodada 5 da gravação, que não aprovou nenhuma mudança. Com a escada corrig
 - **O portão não vê memória:** ele recusou 4 das 5 mudanças do caso de memória, todas com −77%, porque nem contagem nem tempo caíram. A aprovada passou só por uma queda de tempo.
 - **O portão também não vê subidas fora do que mede:** nos casos de N+1 e `async`, ele aprovou com a memória subindo de 16% a 22%. Num caso de memória, a leitura subiu 38% sem efeito no veredito, embora o portão a tenha recusado por outro motivo. E `queries_per_plan`, sem `at=`, não conta como contagem.
 
+### Portão com as medidas do projeto (decidido em 04/11/2026)
+
+Com o que foi medido, a prioridade passou a ser o portão, que mostrou falhas concretas, e não mais fontes, porque nenhum caso mostrou falta de informação.
+
+O perfil ganha `measures`: o que cada número significa e para que lado é melhor. Uma medida declarada vale como um tempo (10%, com as faixas separadas). Um número que piora assim aparece na decisão e **não recusa**: um cache pode gastar memória de propósito, e só o projeto sabe o quanto aceita. Sem declaração, nada muda; as rodadas gravadas do vídeo seguem com o mesmo veredito.
+
+**Reprodução sem LLM,** com o portão novo sobre as 17 propostas gravadas de Python, sem custo, declarando `memory_end_mb`, `queries_per_plan`, `queries_per_read` e `plans_per_s`:
+
+| Caso | Aprovadas antes | Aprovadas agora | O que aparece na decisão |
+|---|---|---|---|
+| Memória (`lru_cache`) | 1 de 5 | 5 de 5 | uma delas com `plan_p95_ms` +244% |
+| N+1 | 6 de 6 | 6 de 6 | 2 com memória +17–18% |
+| `async` na rota | 6 de 6 | 6 de 6 | todas com memória +20–22% |
+
+- **O portão passa a ver memória,** e nenhuma mudança antes aprovada foi recusada.
+- **A aprovação fica mais fácil:** a mudança com `plan_p95_ms` +244% antes era recusada, por outro motivo, e agora passa com o aviso. Quem olha só o "passou" não vê isso.
+- **O ganho mistura unidades:** ele compara a maior melhora em %, então consultas −99% valem mais que uma rota −35%. Nesta reprodução, cada envio teve uma só proposta testada, então a escolha entre propostas não mudou; isso continua sem medir.
+
+Falta declarar as medidas no perfil do `logistica-api`. Os testes de portão usam dados gravados e um projeto de teste, e o aviso na tela não foi visto no navegador.
+
 ### O que falta, em ordem
 
-**Proposta, a validar:** com o que foi medido, a prioridade passa a ser o portão, que mostrou falhas concretas, e não mais fontes, porque nenhum caso mostrou falta de informação.
-
-1. **Portão com as medidas do projeto:** o projeto declara o que cada medida significa e em que direção melhora (memória, consultas sem `at=`), e uma subida relevante fora do alvo aparece na decisão.
+1. **Decidir se o portão precisa de um alvo por pergunta,** para o ganho comparar o que a pergunta pediu, e se alguma piora deve recusar (um limite declarado). Só com um caso que mostre a necessidade.
 2. **Testar as notas em partes,** se aparecer um caso em que falte informação ao modelo. Hoje não há esse sinal.
 3. **Comportamento, a segunda parte:** condições de execução, caminhos alternativos e invariantes exigem o extractor registrar `if`, `match` e asserções, com perfil e grafo novos. Chamadas dentro de macros também não são vistas.
 4. **Buscar fontes quando a lacuna for importante,** antes de enviar. Por exemplo, `impl Intersectable for Object` fica de fora por orçamento em dois casos: decidir se a origem pode passar do limite.
