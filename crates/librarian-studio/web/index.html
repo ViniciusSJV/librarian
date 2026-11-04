@@ -3348,7 +3348,10 @@ function paintCity() {
 function fitCity() {
   const sphere = city.bounds.getBoundingSphere(new THREE.Sphere());
   // Seen from above at an angle, like a map, unless the person already turned the camera.
-  flyTo(sphere.center, Math.max(160, sphere.radius * 1.9), userMoved ? null : new THREE.Vector3(.35, 1, .9));
+  // Far enough for the whole sphere on the narrower side of the viewport.
+  const half = THREE.MathUtils.degToRad(camera.fov / 2);
+  const narrow = Math.min(half, Math.atan(Math.tan(half) * camera.aspect));
+  flyTo(sphere.center, Math.max(160, sphere.radius / Math.sin(narrow)), userMoved ? null : new THREE.Vector3(.35, 1, .9));
 }
 
 $('#ladderOn').addEventListener('change', () => refreshComposer());
@@ -3765,9 +3768,16 @@ function pathGraph(data) {
     edges.get(id).links.push(link);
   }
   for (const e of edges.values()) e.line = Math.min(...e.links.map(l => l.evidence.start_line));
-  const ordered = [...edges.values()].sort((a, b) => a.line - b.line);
-  const order = new Map([[data.seed, 0]]);
-  for (const e of ordered) if (!order.has(e.far)) order.set(e.far, order.size);
+  // Lines only compare inside one caller: from the seed, each point lists its calls in line order.
+  const ordered = [], order = new Map();
+  const visit = id => {
+    order.set(id, order.size);
+    for (const e of [...edges.values()].filter(e => e.near === id).sort((a, b) => a.line - b.line)) {
+      ordered.push(e);
+      if (!order.has(e.far)) visit(e.far);
+    }
+  };
+  visit(data.seed);
   const children = [...data.nodes].sort((a, b) => (order.get(a.id) ?? 1e9) - (order.get(b.id) ?? 1e9)).map(n => {
     const row = m?.rows.get(n.id);
     const text = shortName(n.label);
