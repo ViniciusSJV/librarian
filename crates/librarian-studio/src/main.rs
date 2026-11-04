@@ -354,23 +354,38 @@ fn ladder(store: &Store, body: &Value) -> Result<Value> {
             let send = summary["directory"].as_str().and_then(|d| std::path::Path::new(d).file_name()).map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
             let (usable, lacunas, codes) = ladder::outcome(&summary);
             if !usable.is_empty() {
-                // Each proposed change through the gate, in the answer's order, until one passes;
-                // the cost of the send is counted once, on its first change.
+                // Each proposed change through the gate, in the answer's order; of those that pass,
+                // the one that gains the most is the answer's: the first to pass is often a small
+                // one, and a larger one after it would never be seen. The cost of the send is
+                // counted once, on its first change.
                 let mut refused = vec![];
+                let mut best: Option<(usize, String, f64)> = None;
                 for (k, claim) in usable.iter().enumerate() {
                     let change = execution::ChangeRef { turn: turn.clone(), send: send.clone(), claim: claim.clone() };
                     let runs: Vec<Value> = gate.iter().map(|name| store.execute(&key, &run, name, Some(&change))
                         .unwrap_or_else(|e| json!({ "name": name, "refused": e.to_string() }))).collect();
                     let (passed, why) = ladder::verdict(&runs);
                     let cost = if k == 0 { summary["cost_usd"].clone() } else { Value::Null };
+                    let gain = ladder::gain(&runs);
                     steps.push(ladder::step(model, &turn, &send, if passed { "passed" } else { "refused_by_gate" },
-                        json!({ "claim": claim, "cost_usd": cost, "executions": runs.iter().map(|x| &x["id"]).collect::<Vec<_>>(), "why": why })));
+                        json!({ "claim": claim, "cost_usd": cost, "executions": runs.iter().map(|x| &x["id"]).collect::<Vec<_>>(), "why": why, "gain_pct": gain })));
                     if passed {
-                        return Ok(json!({ "passed": true, "turn": turn, "send": send, "claim": claim, "nodes": nodes, "steps": steps }));
+                        if best.as_ref().is_none_or(|(_, _, g)| gain > *g) {
+                            best = Some((steps.len() - 1, claim.clone(), gain));
+                        }
+                        continue;
                     }
                     let proposed = summary["check"]["claims"].as_array().into_iter().flatten().find(|c| c["id"] == claim.as_str())
                         .and_then(|c| c["text"].as_str()).unwrap_or("").trim_end_matches('.').to_owned();
                     refused.push(format!("{proposed}: {}", why.join("; ")));
+                }
+                if let Some((chosen, claim, _)) = best {
+                    for (i, step) in steps.iter_mut().enumerate() {
+                        if i != chosen && step["outcome"] == "passed" && step["send"] == send.as_str() {
+                            step["outcome"] = json!("passed_smaller");
+                        }
+                    }
+                    return Ok(json!({ "passed": true, "turn": turn, "send": send, "claim": claim, "nodes": nodes, "steps": steps }));
                 }
                 if tried < retries {
                     tried += 1;

@@ -1157,7 +1157,8 @@ const STRINGS = {
   'help.ladder': ["A mesma pergunta vai primeiro ao qwen (local). Uma mudança passa no portão quando os comandos aprovados rodam com ela, as saídas ficam iguais, alguma contagem cai e nenhuma sobe. Recusada, vai ao Claude Haiku. Uma LACUNA junta ao envelope o que ela diz faltar e pergunta de novo ao mesmo modelo.","The same question goes first to qwen (local). A change passes the gate when the approved commands run with it, outputs stay the same, some count drops and none grows. Refused, it goes to Claude Haiku. A LACUNA gathers into the envelope what it says is missing and asks the same model again."],
   'ladder.noGate': ["Aprove ao menos um comando na Régua: ele é o portão.","Approve at least one command in the Ruler: it is the gate."],
   'ladder.running': ["Escada em andamento; portão: {gate}. As respostas aparecem na conversa.","Ladder running; gate: {gate}. Answers show in the conversation."],
-  'ladder.passed': ["passou no portão","passed the gate"],
+  'ladder.passed': ["passou no portão, a de maior ganho","passed the gate, the largest gain"],
+  'ladder.passed_smaller': ["passou no portão, com ganho menor","passed the gate, with a smaller gain"],
   'ladder.refused_by_gate': ["recusada no portão","refused by the gate"],
   'ladder.refused': ["recusada na conferência","refused by the check"],
   'ladder.lacuna': ["LACUNA","LACUNA"],
@@ -3261,7 +3262,7 @@ function renderLadder() {
   const costOf = s => s.detail?.cost_usd != null ? ` · US$ ${Number(s.detail.cost_usd).toFixed(3)}` : '';
   const who = s => s.claude_model ? `Claude ${s.claude_model}` : (s.modelfile ?? s.name ?? '');
   const line = s => el('div', { style: 'font-size: 12px' },
-    el('span', { className: s.outcome === 'passed' ? 'verdict passed' : s.outcome === 'baseline' ? 'muted' : 'verdict failed', textContent: t(`ladder.${s.outcome}`) }),
+    el('span', { className: s.outcome === 'passed' || s.outcome === 'passed_smaller' ? 'verdict passed' : s.outcome === 'baseline' ? 'muted' : 'verdict failed', textContent: t(`ladder.${s.outcome}`) }),
     ` ${who(s)}${s.turn ? ` · ${t('ladder.turn', { turn: s.turn })}` : ''}${costOf(s)}`,
     s.detail?.why?.length ? el('div', { className: 'muted', textContent: s.detail.why.join(' · ') }) : null,
     s.detail?.issues?.length ? el('div', { className: 'muted', textContent: s.detail.issues.join(', ') }) : null,

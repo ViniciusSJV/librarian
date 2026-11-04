@@ -272,6 +272,29 @@ pub fn verdict(executions: &[Value]) -> (bool, Vec<String>) {
     (why.is_empty(), why)
 }
 
+/// How much a change that passed the gate gained, in percent, to choose among those of one answer:
+/// the largest drop of a time the project measured, which is what the change is for. A command that
+/// counts does not say it, because its time includes its counters; a project that only counts is
+/// compared by the total of its counts. The Régua's own `wall_ms` says nothing about the change.
+pub fn gain(executions: &[Value]) -> f64 {
+    let mut time: Option<f64> = None;
+    let (mut before, mut after) = (0., 0.);
+    for x in executions {
+        let stats = &x["comparison"]["stats"];
+        let counts = x["counts_itself"] == true || stats.as_object().into_iter().flatten().any(|(k, _)| k.starts_with("calls@"));
+        for (series, s) in stats.as_object().into_iter().flatten() {
+            if series.starts_with("calls@") {
+                before += s["baseline_median"].as_f64().unwrap_or(0.);
+                after += s["median"].as_f64().unwrap_or(0.);
+            } else if !counts && !series.contains('@') && series.ends_with("_ms") && series != "wall_ms" {
+                let drop = -s["change_pct"].as_f64().unwrap_or(0.);
+                time = Some(time.map_or(drop, |t: f64| t.max(drop)));
+            }
+        }
+    }
+    time.unwrap_or(if before > 0. { (before - after) / before * 100. } else { 0. })
+}
+
 /// A send's usable changes (each HYPOTHESIS with a derived diff, no issue of its own and no
 /// issue of the whole answer), its LACUNA texts and its issue codes.
 pub fn outcome(summary: &Value) -> (Vec<String>, Vec<String>, Vec<String>) {
@@ -420,6 +443,18 @@ mod tests {
         // A statement in the context lines of the diff is not touched.
         let context = "--- a/src/m.rs\n+++ b/src/m.rs\n@@ -1,2 +1,2 @@\n     crate::count!();\n-    a();\n+    b();\n";
         assert!(measurement_issues(context, STATEMENT, &[], &|_, _| None).is_empty());
+    }
+
+    #[test]
+    fn among_the_changes_that_pass_the_largest_time_drop_wins() {
+        let of = |text: &str| gain(&reviewed(&round(text), None, &[]));
+        let (first, second, third, fourth) = (of(include_str!("fixtures/rodada1.json")), of(include_str!("fixtures/rodada2.json")), of(include_str!("fixtures/rodada3.json")), of(include_str!("fixtures/rodada4.json")));
+        // What the renders of the recording measured: −15%, −51%, −5% and −9%.
+        assert!(second > first && first > fourth && fourth > third, "{first} {second} {third} {fourth}");
+        // A project that only counts is compared by its counts, and a time it did not measure is no gain.
+        let counting = |after: f64| json!([{ "name": "c", "comparison": { "stats": { "calls@a:1": { "baseline_median": 100., "median": after, "change_pct": after - 100. }, "wall_ms": { "change_pct": -90. } } } }]);
+        assert_eq!(gain(counting(40.).as_array().unwrap()), 60.);
+        assert_eq!(gain(counting(100.).as_array().unwrap()), 0.);
     }
 
     #[test]
