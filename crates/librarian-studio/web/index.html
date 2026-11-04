@@ -825,7 +825,34 @@ const STRINGS = {
   'envelope.suggest': ['Sugerir envelope', 'Suggest envelope'],
   'help.envelopeSuggest': ['O bibliotecário sugere o que uma mudança nestas declarações provavelmente precisa ver: o tipo dono e quem escreve os campos que elas leem, o que elas chamam e o tipo que isso devolve, quem as chama, os tipos que elas escrevem e o topo do arquivo, onde ficam os imports. Cada item vem com o motivo e a linha. É tudo pelo nome escrito: o que não está escrito pelo nome não aparece, e homônimos e testes ficam de fora. Você marca o que entra.',
     'The librarian suggests what a change to these declarations is likely to need in view: the owner type and whoever writes the fields they read, what they call and the type that returns, who calls them, the types they write and the head of the file, where imports live. Each item comes with why and the line. All by written names: what is not written by name does not show, and homonyms and tests are left out. You tick what goes in.'],
-  'envelope.title': ['Sugestão ({n})', 'Suggestion ({n})'],
+  'envelope.title': ['Sugestão ({n}, {kb} KB de {budget} KB)', 'Suggestion ({n}, {kb} KB of {budget} KB)'],
+  'envelope.noMeasure': ['Sem medição nesta edition: a ordem vem só da estrutura, e não dá para saber o que não rodou.', 'No measure in this edition: the order comes from the structure alone, and what did not run cannot be told apart.'],
+  'envelope.leftOut': ['Ficaram de fora ({n})', 'Left out ({n})'],
+  'envelope.turnSummary': ['{n} candidatas de fora', '{n} candidates left out'],
+  'envelope.turnTag': ['seleção: {summary}', 'selection: {summary}'],
+  'envelope.role.target': ['alvo', 'target'],
+  'envelope.role.origin': ['origem do valor', 'origin of the value'],
+  'envelope.role.cost': ['custo', 'cost'],
+  'envelope.role.path': ['caminho', 'path'],
+  'envelope.role.support': ['apoio', 'support'],
+  'envelope.role.constraint': ['restrição', 'constraint'],
+  'envelope.out.did_not_run': ['não rodou na medição', 'did not run in the measure'],
+  'envelope.out.test': ['teste: o portão já roda', 'test: the gate already runs it'],
+  'envelope.out.budget': ['não coube no orçamento', 'did not fit the budget'],
+  'envelope.out.max_items': ['passou de 16 declarações', 'past 16 declarations'],
+  'envelope.calls': ['{n} chamadas', '{n} calls'],
+  'envelope.gaps': ['O que o grafo não resolveu ({n})', 'What the graph did not settle ({n})'],
+  'envelope.gap.homonym_call': ['{t}: a chamada {text} pode ser {list}', '{t}: the call {text} may be {list}'],
+  'envelope.gap.homonym_type': ['{t}: o tipo {text} pode ser {list}', '{t}: the type {text} may be {list}'],
+  'envelope.gap.write_not_followed': ['{t} é escrito por receptores de tipo desconhecido ({n}): {text}', '{t} is written through receivers of unknown type ({n}): {text}'],
+  'envelope.gap.field_without_writer': ['{t} lê {text}, e ninguém foi achado escrevendo', '{t} reads {text}, and no writer was found'],
+  'envelope.gap.origin_left_out': ['{text} é origem de um valor de {t} e não coube', '{text} is the origin of a value of {t} and did not fit'],
+  'envelope.gap.many': ['{n} declarações', '{n} declarations'],
+  'envelope.behavior': ['O que está escrito e precisa ser preservado ({n})', 'What is written and must be preserved ({n})'],
+  'envelope.behavior.loop': ['laço', 'loop'],
+  'envelope.behavior.operation': ['operação', 'operation'],
+  'envelope.behavior.state_write': ['escreve estado', 'writes state'],
+  'envelope.behavior.test': ['teste', 'test'],
   'envelope.use': ['Juntar os marcados', 'Gather the ticked ones'],
   'envelope.close': ['Fechar', 'Close'],
   'envelope.truncated': ['Mais itens ficaram de fora (limite de {n}).', 'More items were left out (limit of {n}).'],
@@ -840,6 +867,9 @@ const STRINGS = {
   'why.caller': ['chama {t} ({lines})', 'calls {t} ({lines})'],
   'why.type_reference': ['{t} escreve este tipo ({lines})', '{t} writes this type ({lines})'],
   'why.header': ['topo do arquivo de {t}: imports', 'head of the file of {t}: imports'],
+  'why.called_measured': ['{t} chama ({lines}); o nome tem homônimos e só este rodou', '{t} calls it ({lines}); the name has homonyms and only this one ran'],
+  'why.test_caller': ['teste que chama {t} ({lines})', 'test that calls {t} ({lines})'],
+  'why.trait_impl': ['implementação de {t} para {fields}, no caminho ({lines})', 'implementation of {t} for {fields}, on the path ({lines})'],
   'why.lines': ['linha {lines}', 'line {lines}'],
   'help.gatheredTurn': ['Esta pergunta foi montada no envelope: cada declaração entrou porque você a juntou, à mão ou marcando a sugestão do bibliotecário. Nada foi buscado nem acrescentado depois.', 'This question was built in the envelope: each declaration is there because you gathered it, by hand or by ticking the librarian\x27s suggestion. Nothing was searched or added afterwards.'],
   'help.calls': ['Abre a vista Caminho a partir deste ponto, para a frente: o que ele chama e o que esses chamam, em camadas. Uma chamada com homônimos fica tracejada e o caminho para ali; clique nela para escolher o candidato certo e seguir.',
@@ -2104,7 +2134,8 @@ async function askModel(question) {
     const turn = investigated
       ? await api('POST', '/api/gathered-question', { key: studio.project.key, run: studio.run, question, nodes: investigated.nodes, with_facts: gatherFacts, origin: investigated.origin })
       : gathered.length
-      ? await api('POST', '/api/gathered-question', { key: studio.project.key, run: studio.run, question, nodes: gathered, with_facts: gatherFacts })
+      ? await api('POST', '/api/gathered-question', { key: studio.project.key, run: studio.run, question, nodes: gathered, with_facts: gatherFacts,
+          origin: selection ? { kind: 'selection', summary: t('envelope.turnSummary', { n: selection.left_out.length }), selection } : null })
       : await api('POST', '/api/ask', { key: studio.project.key, run: studio.run, question });
     if (investigated) { investigation = null; renderGathered(); }
     studio.turns.push(turn);
@@ -2148,7 +2179,7 @@ async function resendTurn(turn, button) {
 // It lives over the composer: with an envelope, the composer asks over exactly these declarations.
 let gathered = [];
 // P5: whether the gathered question carries the reviewed facts, and the open suggestion.
-let gatherFacts = false, suggestion = null;
+let gatherFacts = false, suggestion = null, selection = null;
 // The envelope can be folded to its title line, so it does not take the answers' room.
 let gatheredFolded = false;
 const HEADER = 'header:';
@@ -2240,7 +2271,7 @@ function renderGathered() {
   box.hidden = !gathered.length;
   refreshComposer();
   // An emptied envelope starts over open, so the next one shows its actions.
-  if (!gathered.length) { suggestion = null; gatheredFolded = false; box.replaceChildren(); return; }
+  if (!gathered.length) { suggestion = null; selection = null; gatheredFolded = false; box.replaceChildren(); return; }
   const declarations = gathered.filter(id => !id.startsWith(HEADER));
   const suggest = el('button', { textContent: t('envelope.suggest'), disabled: !declarations.length, onclick: event => suggestEnvelope(event.target) });
   const facts = el('input', { type: 'checkbox', checked: gatherFacts, onchange: event => { gatherFacts = event.target.checked; } });
@@ -2267,6 +2298,7 @@ async function suggestEnvelope(button) {
   await busy([button], $('#chatNote'), async () => {
     suggestion = await api('POST', '/api/envelope/suggest', { key: studio.project.key, run: studio.run, nodes });
     suggestion.ticked = new Set(suggestion.items.map(i => i.id));
+    selection = selectionRecord(suggestion);
     gatheredFolded = false;
     renderGathered();
   });
@@ -2276,35 +2308,54 @@ function reasonText(r) {
     lines: r.lines?.length ? t('why.lines', { lines: r.lines.join(', ') }) : '' };
   return t('why.' + r.code, vars).replace(/ \(\)$/, '');
 }
+// What the question records about the selection: the budget and what stayed out, and why.
+function selectionRecord(s) {
+  return { budget_bytes: s.budget_bytes, used_bytes: s.used_bytes, measured: s.measured,
+    left_out: s.left_out.map(e => ({ name: e.name, role: e.role, bytes: e.bytes, why: e.left_out })), gaps: s.gaps };
+}
 function suggestionView() {
-  const rows = suggestion.items.map(item => {
+  const row = item => {
     const box = el('input', { type: 'checkbox', checked: suggestion.ticked.has(item.id),
       onchange: event => event.target.checked ? suggestion.ticked.add(item.id) : suggestion.ticked.delete(item.id) });
     const name = item.kind === 'header' ? t('envelope.headerName') : item.name.replace(/^impl (.+ for )?/, '');
     return el('label', { className: 'item' }, box,
       el('span', {},
+        el('span', { className: 'tag', style: 'margin-right: 4px', textContent: t('envelope.role.' + item.role) }),
         el('span', { className: 'mono', textContent: name }), ` · ${item.path}:${item.start_line}–${item.end_line}`,
+        item.calls ? ` · ${t('envelope.calls', { n: intPt(item.calls) })}` : '',
         item.facts?.length ? el('span', { className: 'tag', style: 'margin-left: 4px', textContent: t('envelope.facts', { n: item.facts.length }) }) : null,
-        el('div', { className: 'why', textContent: item.reasons.map(reasonText).join(' · ') })));
-  });
+        el('div', { className: 'why', textContent: [item.left_out ? t('envelope.out.' + item.left_out) : '', ...item.reasons.map(reasonText)].filter(Boolean).join(' · ') })));
+  };
+  const rows = suggestion.items.map(row);
   return el('div', { id: 'suggestion' },
-    el('div', { className: 'row', style: 'gap: 6px' }, el('strong', { textContent: t('envelope.title', { n: suggestion.items.length }) }),
+    el('div', { className: 'row', style: 'gap: 6px' }, el('strong', { textContent: t('envelope.title', { n: suggestion.items.length, kb: (suggestion.used_bytes / 1024).toFixed(1), budget: (suggestion.budget_bytes / 1024).toFixed(0) }) }),
       el('button', { style: 'margin-left: auto', textContent: t('envelope.use'), onclick: () => {
         // The envelope's order: what was there first, then the ticked suggestions in their order.
-        const ticked = suggestion.items.map(i => i.id).filter(id => suggestion.ticked.has(id));
+        const ticked = [...suggestion.items, ...suggestion.left_out].map(i => i.id).filter(id => suggestion.ticked.has(id));
         gathered = [...gathered.filter(id => ticked.includes(id)), ...ticked.filter(id => !gathered.includes(id))];
         suggestion = null;
         renderGathered();
         inspect();
       } }),
       el('button', { className: 'link', textContent: t('envelope.close'), onclick: () => { suggestion = null; renderGathered(); } })),
+    suggestion.measured ? null : el('div', { className: 'muted', style: 'font-size: 12px', textContent: t('envelope.noMeasure') }),
     ...rows,
-    suggestion.truncated ? el('div', { className: 'muted', textContent: t('envelope.truncated', { n: 12 }) }) : null);
+    suggestion.left_out.length ? el('details', { style: 'margin-top: 6px' },
+      el('summary', { textContent: t('envelope.leftOut', { n: suggestion.left_out.length }) }),
+      ...suggestion.left_out.map(row)) : null,
+    suggestion.gaps.length ? el('details', { style: 'margin-top: 6px' },
+      el('summary', { textContent: t('envelope.gaps', { n: suggestion.gaps.length }) }),
+      ...suggestion.gaps.map(g => el('div', { className: 'why', textContent: t('envelope.gap.' + g.code, {
+        t: g.for_target.replace(/^impl (.+ for )?/, ''), text: g.text, n: g.count ?? '?',
+        list: g.candidates?.length ? g.candidates.join(', ') : t('envelope.gap.many', { n: g.count ?? '?' }) }) + (g.line ? ` · ${g.path}:${g.line}` : '') }))) : null,
+    suggestion.behavior.length ? el('details', { style: 'margin-top: 6px' },
+      el('summary', { textContent: t('envelope.behavior', { n: suggestion.behavior.length }) }),
+      ...suggestion.behavior.map(b => el('div', { className: 'why', textContent: `${t('envelope.behavior.' + b.kind)} · ${b.name.replace(/^impl (.+ for )?/, '')} · ${b.text.split(/\s+/).join(' ').slice(0, 90)} · ${b.path}:${b.line}` }))) : null);
 }
 function gatheredTurnView(g) {
   const facts = g.reviewed_facts?.length ?? 0;
   return el('div', { className: 'muted', style: 'margin-top: 6px' },
-    g.origin ? el('span', { className: 'tag', style: 'margin-right: 4px', textContent: t({ hot: 'hot.turnTag', ladder: 'ladder.turnTag' }[g.origin.kind] ?? 'investigate.turnTag', { summary: g.origin.summary }) }) : null,
+    g.origin ? el('span', { className: 'tag', style: 'margin-right: 4px', textContent: t({ hot: 'hot.turnTag', ladder: 'ladder.turnTag', selection: 'envelope.turnTag' }[g.origin.kind] ?? 'investigate.turnTag', { summary: g.origin.summary }) }) : null,
     el('span', { className: 'tag', textContent: t('gather.turnTag', { n: g.nodes.length }) }),
     facts ? el('span', { className: 'tag', style: 'margin-left: 4px', textContent: t('gather.turnFacts', { n: facts }) }) : null,
     helpButton(t('help.gatheredTurn')));
@@ -3077,7 +3128,8 @@ function perfCard(perf) {
         // The envelope the Librarian suggests for those points, as "Otimizar" does, up to 16.
         const suggestion = await api('POST', '/api/envelope/suggest', { key: studio.project.key, run: studio.run, nodes: c.nodes });
         gathered = [...new Set([...c.nodes, ...suggestion.items.map(i => i.id)])]
-          .filter(id => c.nodes.includes(id) || state.index.has(id) || id.startsWith(HEADER)).slice(0, 16);
+          .filter(id => c.nodes.includes(id) || state.index.has(id) || id.startsWith(HEADER));
+        selection = selectionRecord(suggestion);
         gatherFacts = true; renderGathered(); setMode('improve');
         // The envelope was for this change: the next question typed starts clean.
         try { await askLadder(c.text); } finally { gathered = []; gatherFacts = false; renderGathered(); }
@@ -3161,6 +3213,7 @@ async function optimize(r) {
   const called = suggestion.items.filter(i => i.reasons.some(x => x.code === 'called')).map(i => row(i.id)).filter(Boolean).sort((a, b) => b.calls - a.calls).slice(0, 3);
   investigation = null;
   gathered = suggestion.items.map(i => i.id);
+  selection = selectionRecord(suggestion);
   gatherFacts = true;
   suggestion.items.forEach(i => { if (!state.index.has(i.id) && !i.id.startsWith(HEADER)) gathered = gathered.filter(g => g !== i.id); });
   setMode('improve');
@@ -3187,7 +3240,7 @@ async function askLadder(question) {
   try {
     say($('#llmNote'), t('ladder.running', { gate: gate.join(', ') }));
     const result = await api('POST', '/api/ladder', { key: studio.project.key, run: studio.run, question, nodes: gathered, with_facts: gatherFacts,
-      gate, models: LADDER_MODELS.map(m => ({ ...m, skills: selectedSkills() })), lacuna_rounds: 2, origin: { kind: 'ladder', summary: question.slice(0, 80) } });
+      gate, models: LADDER_MODELS.map(m => ({ ...m, skills: selectedSkills() })), lacuna_rounds: 2, origin: { kind: 'ladder', summary: question.slice(0, 80), ...(selection ? { selection } : {}) } });
     ladderLog.unshift(result);
     $('#question').value = '';
     return result;

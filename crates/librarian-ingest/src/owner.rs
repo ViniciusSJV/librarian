@@ -124,6 +124,11 @@ struct Owner {
 /// The owner context of each target, in target order. Targets and earlier additions are never
 /// added twice.
 pub fn owner_context(catalog: &Catalog, graph: &Graph, targets: &[String]) -> Result<OwnerContext> {
+    owner_context_up_to(catalog, graph, targets, MAX_ADDED)
+}
+
+/// The owner context with its own cap: the envelope lists every candidate and selects afterwards.
+pub fn owner_context_up_to(catalog: &Catalog, graph: &Graph, targets: &[String], limit: usize) -> Result<OwnerContext> {
     if !catalog.registry.owner_context {
         return Err("Owner context needs an edition of a profile that records owner syntax (v4)".into());
     }
@@ -148,7 +153,7 @@ pub fn owner_context(catalog: &Catalog, graph: &Graph, targets: &[String]) -> Re
             .filter(|f| fields.contains_key(*f))
             .map(str::to_owned)
             .collect();
-        add(&mut context, &mut seen, catalog, Added {
+        add(&mut context, &mut seen, catalog, limit, Added {
             symbol_id: owner.id.clone(),
             name: String::new(),
             kind: String::new(),
@@ -224,7 +229,7 @@ pub fn owner_context(catalog: &Catalog, graph: &Graph, targets: &[String]) -> Re
         });
         for (writer, (resolution, written, mut evidence)) in writers {
             evidence.sort_by_key(|e| e.start_byte);
-            add(&mut context, &mut seen, catalog, Added {
+            add(&mut context, &mut seen, catalog, limit, Added {
                 symbol_id: writer.into(),
                 name: String::new(),
                 kind: String::new(),
@@ -256,11 +261,11 @@ pub fn owner_type(catalog: &Catalog, graph: &Graph, method: &str) -> Option<(Str
     owner_by_container(catalog, &Index::new(graph), syntax, method).map(|o| (o.id, o.evidence))
 }
 
-fn add(context: &mut OwnerContext, seen: &mut BTreeSet<String>, catalog: &Catalog, mut added: Added) {
+fn add(context: &mut OwnerContext, seen: &mut BTreeSet<String>, catalog: &Catalog, limit: usize, mut added: Added) {
     if !seen.insert(added.symbol_id.clone()) {
         return;
     }
-    if context.added.len() >= MAX_ADDED {
+    if context.added.len() >= limit {
         context.truncated = true;
         return;
     }

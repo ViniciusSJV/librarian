@@ -81,7 +81,7 @@ impl Drop for Project {
 /// The writers the suggested envelope adds for the field the method reads, by name.
 fn writers(catalog: &Catalog) -> Vec<String> {
     let hit = catalog.symbols().values().find(|s| s.qualified_name == "impl Group::hit").unwrap().id.clone();
-    let suggestion = envelope::suggest(catalog, &[hit]).unwrap();
+    let suggestion = envelope::candidates(catalog, &[hit], None).unwrap();
     let mut found: Vec<String> = suggestion
         .items
         .iter()

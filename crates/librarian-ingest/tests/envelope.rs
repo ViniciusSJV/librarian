@@ -3,7 +3,7 @@
 //! who calls without homonyms, the types written, and the head of the file; a gathered step can
 //! carry file heads as evidence.
 use librarian_ingest::{
-    envelope::{self, Suggestion},
+    envelope::{self, Candidates},
     generate,
     prepare::{self, Request},
     Catalog, Config,
@@ -127,7 +127,7 @@ fn id(catalog: &Catalog, qualified: &str) -> String {
 }
 
 /// Each suggested item as `name: code, code…`.
-fn reasons(suggestion: &Suggestion) -> Vec<String> {
+fn reasons(suggestion: &Candidates) -> Vec<String> {
     suggestion
         .items
         .iter()
@@ -140,7 +140,7 @@ fn the_world_change_gets_default_and_matrix_suggested() {
     let project = Project::new();
     let catalog = project.edition();
     let chosen = [id(&catalog, "impl World::intersect_world"), id(&catalog, "impl Object::hit")];
-    let suggestion = envelope::suggest(&catalog, &chosen).unwrap();
+    let suggestion = envelope::candidates(&catalog, &chosen, None).unwrap();
     let found = reasons(&suggestion);
     for expected in [
         "impl World::intersect_world: chosen",
@@ -166,15 +166,15 @@ fn the_world_change_gets_default_and_matrix_suggested() {
     assert_eq!(default.reasons[0].lines, [22]);
     let head = suggestion.items.iter().find(|i| i.id == "header:src/world.rs").unwrap();
     assert_eq!((head.start_line, head.end_line), (1, 1));
-    assert!(envelope::suggest(&catalog, &[]).is_err());
-    assert!(envelope::suggest(&catalog, &["nope".into()]).is_err());
+    assert!(envelope::candidates(&catalog, &[], None).is_err());
+    assert!(envelope::candidates(&catalog, &["nope".into()], None).is_err());
 }
 
 #[test]
 fn a_type_in_the_signature_and_the_file_head_reach_a_gathered_step() {
     let project = Project::new();
     let catalog = project.edition();
-    let suggestion = envelope::suggest(&catalog, &[id(&catalog, "list_for_day")]).unwrap();
+    let suggestion = envelope::candidates(&catalog, &[id(&catalog, "list_for_day")], None).unwrap();
     let found = reasons(&suggestion);
     // Written in the return type, and called to build one.
     assert!(found.contains(&"Delivery: called, type_reference".to_owned()), "{found:#?}");
@@ -203,4 +203,207 @@ fn a_type_in_the_signature_and_the_file_head_reach_a_gathered_step() {
     let mut none = request(true);
     none.headers = vec!["pkg/models.py".into()];
     assert!(prepare::prepare(&catalog, &none).is_err());
+}
+
+/// A hot function, the cold loader that also calls it, and the constructor where a computed value
+/// can be kept: the shape of the rounds that made this selection necessary.
+const SHAPES: &str = "pub struct Mat4 { pub v: f64 }
+
+impl Mat4 {
+    pub fn invert(&self) -> f64 {
+        1.0 / self.v
+    }
+}
+
+pub struct Shape {
+    pub transform: Mat4,
+}
+
+impl Shape {
+    pub fn new(transform: Mat4) -> Self {
+        Shape { transform }
+    }
+    pub fn trace(&self, x: f64) -> f64 {
+        self.transform.invert() * x
+    }
+}
+
+pub fn load(path: &str, m: &Mat4) -> f64 {
+    // A long loader, read once, that the frame never reaches.
+    let padding = \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\";
+    m.invert() + path.len() as f64 + padding.len() as f64
+}
+
+pub fn frame(shapes: &[Shape]) -> f64 {
+    shapes.iter().map(|s| s.trace(1.0)).sum()
+}
+
+#[test]
+fn invert_checks() {
+    let m = Mat4 { v: 2.0 };
+    assert_eq!(m.invert(), 0.5);
+}
+";
+
+fn shapes() -> (Project, Catalog) {
+    let project = Project::new();
+    fs::write(project.0.join("src/shapes.rs"), SHAPES).unwrap();
+    let catalog = project.edition();
+    (project, catalog)
+}
+
+fn measure(catalog: &Catalog, counted: &[(&str, f64)]) -> envelope::Measure {
+    let mut measure = envelope::Measure::default();
+    for (name, calls) in counted {
+        let symbol = id(catalog, name);
+        measure.counted.insert(symbol.clone());
+        if *calls > 0. {
+            measure.calls.insert(symbol, *calls);
+        }
+    }
+    measure
+}
+
+fn selected(selection: &envelope::Selection) -> Vec<(&str, &str)> {
+    selection.items.iter().map(|e| (e.item.name.as_str(), e.role.as_str())).collect()
+}
+
+fn out(selection: &envelope::Selection, name: &str) -> Option<String> {
+    selection.left_out.iter().find(|e| e.item.name == name).and_then(|e| e.left_out.clone())
+}
+
+#[test]
+fn what_did_not_run_stays_out_but_a_cold_constructor_stays_in() {
+    let (_project, catalog) = shapes();
+    let chosen = [id(&catalog, "impl Shape::trace")];
+    let candidates = envelope::candidates(&catalog, &chosen, None).unwrap();
+    let counted = measure(&catalog, &[("impl Shape::trace", 90.), ("impl Mat4::invert", 90.), ("impl Shape::new", 0.), ("frame", 1.), ("load", 0.)]);
+    let selection = envelope::select(&catalog, &candidates, Some(&counted), envelope::BUDGET_BYTES, 16);
+    let found = selected(&selection);
+    // The constructor did not run in the measure: it stays, because the value can be kept there.
+    for expected in [("impl Shape::trace", "target"), ("Shape", "origin"), ("impl Shape::new", "origin"), ("impl Mat4::invert", "cost"), ("frame", "path")] {
+        assert!(found.contains(&expected), "{expected:?} not in {found:#?}");
+    }
+    assert!(selection.measured);
+    assert_eq!(selection.used_bytes, selection.items.iter().map(|e| e.bytes).sum::<usize>());
+
+    let invert = [id(&catalog, "impl Mat4::invert")];
+    let candidates = envelope::candidates(&catalog, &invert, Some(&counted)).unwrap();
+    let selection = envelope::select(&catalog, &candidates, Some(&counted), envelope::BUDGET_BYTES, 16);
+    // The loader calls it and did not run; the test is left to the gate even though it builds a Mat4.
+    assert_eq!(out(&selection, "load").as_deref(), Some("did_not_run"));
+    assert_eq!(out(&selection, "invert_checks").as_deref(), Some("test"));
+    assert!(selected(&selection).contains(&("impl Shape::trace", "path")));
+}
+
+#[test]
+fn without_a_measure_the_structure_decides_and_says_so() {
+    let (_project, catalog) = shapes();
+    let chosen = [id(&catalog, "impl Mat4::invert")];
+    let candidates = envelope::candidates(&catalog, &chosen, None).unwrap();
+    let selection = envelope::select(&catalog, &candidates, None, envelope::BUDGET_BYTES, 16);
+    assert!(!selection.measured);
+    assert!(selected(&selection).contains(&("load", "path")));
+    assert!(selection.limits.iter().any(|l| l.starts_with("No measure")));
+}
+
+#[test]
+fn the_budget_cuts_by_role_and_never_the_chosen_ones() {
+    let (_project, catalog) = shapes();
+    let chosen = [id(&catalog, "impl Shape::trace")];
+    let candidates = envelope::candidates(&catalog, &chosen, None).unwrap();
+    // Too small for anything: the chosen declaration goes anyway, and each other says why it stayed out.
+    let selection = envelope::select(&catalog, &candidates, None, 1, 16);
+    assert_eq!(selected(&selection), [("impl Shape::trace", "target")]);
+    assert!(selection.left_out.iter().all(|e| e.left_out.as_deref() == Some("budget")), "{:#?}", selection.left_out);
+    // The count still caps a selection, and what is big does not block what fits after it.
+    let capped = envelope::select(&catalog, &candidates, None, envelope::BUDGET_BYTES, 2);
+    assert_eq!(capped.items.len(), 2);
+    assert!(capped.left_out.iter().any(|e| e.left_out.as_deref() == Some("max_items")));
+    assert_eq!(capped.items.len() + capped.left_out.len(), candidates.items.len());
+}
+
+/// Two shapes with the same method name, a field written through a receiver nobody can type, and
+/// a loop, a field write and a test around the method that calls them.
+const SCENE: &str = "pub struct Disk { pub r: f64 }
+impl Disk {
+    pub fn area_of(&self) -> f64 { self.r }
+}
+pub struct Square { pub r: f64 }
+impl Square {
+    pub fn area_of(&self) -> f64 { self.r }
+}
+pub struct Scene { pub disk: Disk, pub total: f64 }
+impl Scene {
+    pub fn sum(&mut self, n: usize) -> f64 {
+        for _ in 0..n {
+            self.total = self.total + self.disk.area_of();
+        }
+        self.total
+    }
+}
+pub fn reset(c: Scene2) {
+    c.total = 0.0;
+}
+pub struct Scene2 { pub total: f64 }
+#[test]
+fn sum_checks() {
+    Scene { disk: Disk { r: 1.0 }, total: 0.0 }.sum(1);
+}
+";
+
+fn scene() -> (Project, Catalog) {
+    let project = Project::new();
+    fs::write(project.0.join("src/scene.rs"), SCENE).unwrap();
+    let catalog = project.edition();
+    (project, catalog)
+}
+
+fn gaps<'a>(candidates: &'a envelope::Candidates, code: &str) -> Vec<&'a envelope::Gap> {
+    candidates.gaps.iter().filter(|g| g.code == code).collect()
+}
+
+#[test]
+fn a_call_with_homonyms_is_a_gap_until_the_measure_settles_it() {
+    let (_project, catalog) = scene();
+    let chosen = [id(&catalog, "impl Scene::sum")];
+    let open = envelope::candidates(&catalog, &chosen, None).unwrap();
+    let found = gaps(&open, "homonym_call");
+    let call = found.iter().find(|g| g.text.contains("area_of")).unwrap_or_else(|| panic!("{:#?}", open.gaps));
+    assert_eq!(call.candidates.len(), 2);
+    assert_eq!(call.line, Some(13));
+    assert!(!open.items.iter().any(|i| i.name.ends_with("area_of")));
+
+    // Only Disk's ran: it comes in as a cost, and the gap closes.
+    let counted = measure(&catalog, &[("impl Disk::area_of", 10.), ("impl Square::area_of", 0.), ("impl Scene::sum", 1.)]);
+    let settled = envelope::candidates(&catalog, &chosen, Some(&counted)).unwrap();
+    assert!(!gaps(&settled, "homonym_call").iter().any(|g| g.text.contains("area_of")), "{:#?}", settled.gaps);
+    let selection = envelope::select(&catalog, &settled, Some(&counted), envelope::BUDGET_BYTES, 16);
+    assert!(selected(&selection).contains(&("impl Disk::area_of", "cost")), "{:#?}", selected(&selection));
+
+    // Both ran: it stays a gap, naming the two that ran.
+    let both = measure(&catalog, &[("impl Disk::area_of", 10.), ("impl Square::area_of", 3.), ("impl Scene::sum", 1.)]);
+    let open = envelope::candidates(&catalog, &chosen, Some(&both)).unwrap();
+    assert_eq!(gaps(&open, "homonym_call").iter().find(|g| g.text.contains("area_of")).unwrap().candidates.len(), 2);
+}
+
+#[test]
+fn a_cut_origin_is_a_gap_and_behavior_says_what_is_written() {
+    let (_project, catalog) = scene();
+    let chosen = [id(&catalog, "impl Scene::sum")];
+    let candidates = envelope::candidates(&catalog, &chosen, None).unwrap();
+    // No budget: the owner type stays out, and that is said.
+    let cut = envelope::select(&catalog, &candidates, None, 1, 16);
+    assert!(cut.gaps.iter().any(|g| g.code == "origin_left_out" && g.text == "Scene"), "{:#?}", cut.gaps);
+
+    // A receiver nobody can type: one gap for the field, with the write it saw.
+    let unfollowed = gaps(&candidates, "write_not_followed");
+    assert!(unfollowed.iter().any(|g| g.for_target == "total" && g.text.contains("c.total") && g.count == Some(1)), "{:#?}", candidates.gaps);
+    let selection = envelope::select(&catalog, &candidates, None, envelope::BUDGET_BYTES, 16);
+    assert!(!selection.gaps.iter().any(|g| g.code == "origin_left_out"));
+    let found = librarian_ingest::inventory::inventory(&catalog, &Default::default()).unwrap();
+    let written = envelope::behavior(&catalog, &found, &selection);
+    let kinds = |kind: &str| written.iter().filter(|b| b.kind == kind).map(|b| b.line).collect::<Vec<_>>();
+    assert_eq!(kinds("loop"), [12], "{written:#?}");
+    assert_eq!(kinds("state_write"), [13], "{written:#?}");
 }
