@@ -1410,9 +1410,49 @@ Nenhuma declaração editada no gabarito se perde, em nenhuma ordem.
 - **Texto:** corrigir "a ordem é o que vale" em `STUDIO.md`, `crates/librarian-studio/src/instrument.rs` e `src/count.rs` do `renderer`.
 - **Escada:** a hipótese da fronteira de Pareto, registrada acima, entra na mesma conversa.
 
+### O que ficou de fora do envelope, sem LLM (04/11/2026)
+
+**Resultado: quase toda lacuna declarada está em um caso (`r5`), o mecanismo de lacunas não funciona com o envelope cheio, e ser citado pelo modelo não prova que algo faz falta. Nenhuma ausência está comprovada ainda.**
+
+Análise dos 516 envios gravados desta frente, em 7 casos (`r1`, `r2`, `r3`, `r5` e os 3 de Python), sem custo. Nenhum código mudou: os testes temporários foram removidos.
+
+**Comparar só as mudanças aprovadas não mostra lacuna, por construção.** O validador recusa edição fora das linhas enviadas: nas 394 mudanças guardadas que chegaram ao portão, nenhuma linha fora do envelope. Por isso olhei o que o modelo disse que faltou, o que tentou citar e por que o portão recusou.
+
+- **Tentativas de sair do envelope:** 11 problemas de citação ou edição fora do que foi enviado, em 516 envios.
+- **Lacunas:** 41 envios terminaram assim, 40 em `r5`, cujo alvo é um método de trait, e 1 em `r1`. `r2`, `r3` e os casos Python não têm nenhuma.
+- **Recusas do portão:** das 167, só 5 não compilaram, e nenhuma por falta de informação (campo privado, `OnceCell` entre threads). Em 129, nada melhorou.
+
+**O que as 40 lacunas de `r5` pedem,** em 144 envios desse caso:
+
+| Pedido | Citado em | Tamanho | Situação na seleção | Com ele no envelope | Sem ele |
+|---|---|---|---|---|---|
+| `transform` | 40 | 33 B (no trait) | Nunca candidato | não medido | |
+| `inverse` | 25 | 936 B | Corte por orçamento | lacuna em 9/32 (28%) | 31/112 (28%) |
+| `Intersectable` (o trait) | 22 | 1.082 B | Nunca candidato | nunca esteve | |
+| `Object` (o enum) | 21 | 185 B | Nunca candidato | nunca esteve | |
+| `local_intersect` | 21 | 59 B | Fora, por limite de itens | lacuna em 4/16 (25%) | 36/128 (28%) |
+| `impl Intersectable for Object` | não citado por esse nome | 3.948 B | Corte por orçamento | lacuna em **0/8** | 40/136 (29%) |
+
+**Classificação, na regra decidida em 04/11:**
+
+- **Irrelevante até aqui:** `inverse` em `r5`, citada em 25 lacunas e sem efeito nenhum na taxa (p = 1,0). `local_intersect` também, por ora. O que fica de fora em `r1`, `r2` e `r3`, onde não há lacuna e quase tudo que chega ao portão em `r1` e `r2` passa.
+- **Potencialmente importante:** `impl Intersectable for Object`, com 0/8 contra 40/136 (p = 0,11; p = 0,18 só na mesma rodada, 0/8 × 13/48). `Object` e o trait `Intersectable`: pedidos em cerca de metade das lacunas e nunca testados.
+- **Comprovadamente relevante:** nenhuma ainda. Sabemos que a lacuna acaba com o envio e que acontece em cerca de 28% de `r5`, mas não qual ausência causa isso.
+
+**Defeitos observados, todos no caminho da lacuna:**
+
+1. **A rodada de lacuna não tem espaço.** `main.rs:404` calcula `room = 16 - declarações`, e as 41 lacunas aconteceram com 16 declarações: o espaço é 0, nada é acrescentado e a rodada termina sem novo envio. A tela pede 2 rodadas, mas elas ficam inertes desde que a seleção passou a encher as 16 vagas. Os experimentos desta frente rodaram com 0 rodadas, então não mediram isso.
+2. **O nome certo chega à declaração errada.** Com espaço, o `resolve` traria algo em 40 das 41, mas para `transform` traz `Incuse::transform` em 33 lacunas: o primeiro trait que tem o método, e não `Intersectable`.
+3. **O trait pedido é descartado.** `Intersectable` é citado entre crases e não é trazido, porque o filtro do que rodou procura `impl Intersectable::`, e o método de um trait não tem esse nome.
+4. **O dono de um método de trait não é candidato.** O alvo `Groups::intersect` traz a struct `Groups`, mas o alvo `Intersectable::intersect` não traz o trait. É uma assimetria observada na lista de candidatas de `r5`; a causa no código ainda não foi confirmada.
+
+**Limites:** o efeito se concentra em um caso. A comparação de `impl` é natural, não planejada: os 8 envios são de uma variante de outra rodada. O texto da lacuna é o que o modelo diz, não prova de necessidade, como `inverse` mostra.
+
+**Próximo passo, decidido em 04/11/2026:** teste só em `r5`, 16 envios por variante e cerca de US$ 0,25, comparando a seleção de hoje com a troca de `Bounds::intersects` (1.174 B, sem nenhuma citação nas lacunas) e da struct `Matrix` (109 B, para ficar em 16 declarações) por `Object` e o trait (1.267 B), com critérios fixados antes. Medida principal: taxa de lacuna. Corrigir os defeitos do mecanismo só depois, porque sem saber o que faz falta não se sabe o que a rodada deve trazer. O que o modelo pede, o que está ausente e o que melhora o resultado quando fornecido são coisas diferentes. Resultados em `.studio/arquivo-copias/lacunas-20261104`, que o Git ignora.
+
 ### O que falta, em ordem
 
-1. **Busca por lacunas,** só quando necessário e antes de enviar. Por exemplo, `impl Intersectable for Object` fica de fora por orçamento em dois casos: decidir se a origem pode passar do limite. O resultado acima aponta para cá: o que decide a seleção é o orçamento e os papéis.
+1. **Busca por lacunas:** a análise sem LLM está feita (acima). Falta o teste em `r5` e decidir o que fazer com o mecanismo de rodadas, que hoje não atua com o envelope cheio.
 2. **Homônimos por identidade:** resolver além da medição, pelo tipo do receptor, principalmente em Python, onde o Medir tudo não conta.
 3. **Cascata qwen → Haiku (etapa 5):** complementar fatos ausentes sem repetir trabalho, só se o gabarito mostrar que faltam fatos. Perguntas por tema (entrada, estado, dependências, execução, repetição, efeitos) e novos estados de fato. O Claude nunca transforma um fato inconclusivo em comprovado.
 
