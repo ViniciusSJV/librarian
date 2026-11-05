@@ -1521,12 +1521,52 @@ Rodei a seleção real nos 7 casos, sem custo e sem mudar código.
 
 **Limites:** um projeto Rust e 3 casos Python. A classificação foi feita por mim, lendo o texto de cada chamada, sem conferir com um compilador. Os casos do gabarito só contêm mudanças que o envelope já alcançava, então não mostram o que seria possível fora dele.
 
-**Próximo passo proposto, sem decisão:** sem LLM, simular só as 11 chamadas que não exigem inferir tipos (as duas primeiras linhas da tabela) e ver o que muda no envelope de cada caso. Se quase nada mudar, fica registrado e encerra; se mudar, vale testar com o modelo, com critérios fixados antes. Resultados em `.studio/arquivo-copias/homonimos-20261104`, que o Git ignora.
+### Homônimos: simulação no envelope, sem LLM (04/11/2026)
+
+**Resultado: as 11 chamadas são resolvidas corretamente, mas nada indica que o envelope melhore. O que entra é pequeno e nunca foi alvo de mudança, e o nome mais pedido nem chega a entrar.**
+
+Decidido antes de rodar: limite de 16 declarações mantido e nenhum envio ao LLM. Uma resolução pode estar tecnicamente correta e ainda assim piorar o resultado, se retirar uma evidência mais útil. A chamada resolvida entra como `called`, como uma chamada de dono único, e a seleção real decide o que cabe. O teste temporário foi removido, e nenhum código mudou.
+
+**Desambiguadas: 11 de 11; ambíguas entre elas: 0.** As outras 24 das 35 continuam ambíguas, por exigirem tipos ou imports.
+
+| Caso | Chamadas resolvidas | Entra | Sai | Bytes |
+|---|---|---|---|---|
+| `r1` | 3 | `Matrix::from` (70 B), `Intersections::new` (192 B) | `is_invertible` (92 B), `Bounds::intersects` (1.174 B) | 5.373 → 4.369 |
+| `r2` | 3 | `Intersections::new` | `Bounds::intersects` | 5.512 → 4.530 |
+| `r3` | 2 | `Intersections::new`, `World::is_shadowed` (535 B), `World::color_at` (373 B) | `Bounds::intersects`, `Matrix` (109 B) | 6.082 → 5.899 |
+| `r5` | 3 | `Intersections::new` | `Matrix` | 5.896 → 5.979 |
+| Python (3 casos) | 0 | nada | nada | iguais |
+
+Trazer também o tipo dono não muda nenhum envelope: ele fica de fora pelo limite de itens.
+
+- **Nenhuma declaração editada do gabarito se perde.** Do envelope gravado, saem 1 declaração em `r1` e 2 em `r3`.
+- **O mais pedido não entra:** `Intersectable::transform`, por trás de `transform` em 40 de 41 lacunas, é resolvido e fica de fora nos 3 casos. Tem 33 B, mas é só uma assinatura, sem medição, com o papel mais baixo, e as 16 vagas já estão cheias.
+- **A contagem decide a troca:** `Intersections::new` tem 4,8 milhões de chamadas e tira `Bounds::intersects`, com 2,2 milhões. Em `r3` os bytes liberados ainda trazem duas funções de caminho, um efeito indireto.
+- **O que sai vinha sendo editado? Não:** em 412 mudanças guardadas de `r1`, `r3` e `r5`, `Bounds::intersects`, `is_invertible` e `Matrix` nunca foram editados. As edições se concentram em outras declarações: `inverse`, `Groups::intersect`, construtores e `load_model`. Isso não prova que sejam inúteis: elas podem servir de contexto, e `Bounds::intersects` é o teste que decide a saída antecipada de `Groups::intersect`.
+- **O que entra não tem como ter sido editado:** o validador só deixa editar o que foi enviado. Nada aqui mostra que ajudaria.
+- **O limite é de itens, não de bytes:** em `r1`, sobrariam 1.775 B do orçamento de 6.144 B, sem vaga para mais nada. Fica como observação: o limite de 16 foi mantido.
+
+**Leitura, separando as etapas:** o grafo encontra a declaração certa, o envelope a admite ou não, o orçamento decide o que fica, e o gabarito não mostra melhora nem perda. Resolver o homônimo é correto como fato sobre o código, e isso não o torna uma evidência útil para o modelo.
+
+**Limites:** um projeto Rust. A resolução do tipo escrito foi implementada só para esta simulação, por texto. O tipo de retorno, que uma chamada de dono único também traria, não foi simulado. O gabarito só tem mudanças que o envelope já alcançava.
+
+**Decisão de 04/11/2026: investigação suspensa, sem implementar a resolução simulada e sem teste com o modelo.** Isso não é funcionalidade concluída: os 35 homônimos continuam sem dono único no produto, e a simulação existiu só como teste temporário, já removido. Não há hipótese de ganho para testar: um teste em `r1` e `r5` mediria principalmente trocar `Bounds::intersects` por um construtor. Só reabre com um caso em que a identidade resolvida mude o resultado. Resultados em `.studio/arquivo-copias/homonimos-20261104`, que o Git ignora.
+
+### Próxima frente: consolidar e seguir para o Studio (04/11/2026)
+
+**Decisões:** lacunas e homônimos suspensos; correções técnicas preservadas; sem aumentar o limite do envelope nem alterar sua composição sem evidência; cascata qwen → Haiku só com evidência de necessidade. A próxima frente é a evolução do Librarian Studio com o Evidence Builder, incluindo "Onde pesa" e Pareto. O frontend deve tornar o trabalho do Librarian visível, não mudar o que o Librarian considera evidência.
+
+**Antes de implementar, um diagnóstico, sem alterar contratos de API, cálculos, seleção do envelope, instrumentação ou critérios do portão:**
+
+- **"Onde pesa":** mapear todos os consumidores da medição (ordenação, mapas de calor, top 8, Separar para o qwen). Alterar só um pode produzir uma visualização contraditória.
+- **Pareto:** verificar primeiro, nos dados existentes, a frequência do conflito entre `passed` e `passed_smaller`. Separar dados de medição, cálculo de dominância, critério de aprovação e visualização: uma escolha já embutida no backend não é uma verdade matemática sobre dominância.
+
+**Dados das rodadas:** copiados para `.studio/arquivo-copias/rodadas-20261104`, com manifesto de hashes conferido, fora do Git.
 
 ### O que falta, em ordem
 
 1. **Busca por lacunas:** suspensa (acima). Uma busca nova só com evidência de que a informação trazida melhora o resultado.
-2. **Homônimos por identidade:** linha de base feita (acima). Falta simular o efeito no envelope das chamadas que não exigem inferir tipos.
+2. **Homônimos por identidade:** suspensos (acima), sem implementar.
 3. **Cascata qwen → Haiku (etapa 5):** complementar fatos ausentes sem repetir trabalho, só se o gabarito mostrar que faltam fatos. Perguntas por tema (entrada, estado, dependências, execução, repetição, efeitos) e novos estados de fato. O Claude nunca transforma um fato inconclusivo em comprovado.
 
 **Separados, sem prioridade até haver evidência de que a seleção atual não fornece os fatos necessários:** as etapas 1 a 4 (validar a configuração, instrumentar outras linguagens, reconhecer melhor as intenções e tornar configuráveis os critérios do alvo).
