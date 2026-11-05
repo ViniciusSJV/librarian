@@ -198,7 +198,11 @@ fn route(app: &App, req: &Request) -> Result<Response> {
         }
         ("GET", "/api/facts") => ok(store.facts(param("key")?, param("run")?)?),
         // P2: the profile's commands; approval is for one exact command, running needs it.
-        ("GET", "/api/commands") => ok(store.commands(param("key")?)?),
+        ("GET", "/api/commands") => {
+            let mut commands = store.commands(param("key")?)?;
+            commands["measure_all"] = store.measure_all(param("key")?, req.param("run"))?;
+            ok(commands)
+        }
         ("POST", "/api/commands/approve") => {
             let body = req.json()?;
             ok(store.approve_command(&field(&body, "key")?, &field(&body, "name")?, &field(&body, "sha256")?)?)
@@ -213,13 +217,18 @@ fn route(app: &App, req: &Request) -> Result<Response> {
             ok(store.execute(&field(&body, "key")?, &field(&body, "run")?, &field(&body, "name")?, change.as_ref())?)
         }
         ("GET", "/api/executions") => ok(json!(store.executions(param("key")?, param("run")?)?)),
-        // R3: break a unit on purpose and see which tests notice; then check a proposed test.
         ("POST", "/api/instrument/run") => {
             let body = req.json()?;
             ok(store.execute_instrumented(&field(&body, "key")?, &field(&body, "run")?)?)
         }
         ("GET", "/api/value-sources") => ok(store.value_sources(param("key")?, param("run")?, param("symbol")?, param("text")?)?),
-        ("GET", "/api/hotspots") => ok(store.hotspots(param("key")?, param("run")?)?),
+        ("GET", "/api/hotspots") => {
+            // No measure yet is an answer, not a failure: the page tells the two apart.
+            if store.latest_measure(param("key")?, param("run")?)?.is_none() {
+                return Ok(Response::error(404, "Ainda não há medição de tudo nesta edition"));
+            }
+            ok(store.hotspots(param("key")?, param("run")?)?)
+        }
         ("GET", "/api/measure-detail") => ok(store.measure_detail(param("key")?, param("run")?)?),
         ("POST", "/api/performance-question") => {
             let body = req.json()?;

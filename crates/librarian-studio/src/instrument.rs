@@ -42,6 +42,13 @@ pub struct Plan {
 }
 
 const KINDS: [&str; 3] = ["function", "method", "trait_method"];
+/// The one language whose function bodies this module knows how to open.
+const LANGUAGE: &str = "rust";
+
+/// Whether the edition has a source the statement can be placed in.
+pub fn can_place(catalog: &Catalog) -> bool {
+    catalog.sources().values().any(|s| s.language == LANGUAGE)
+}
 
 /// Where a function's body opens, from the start of its declaration: the first `{` outside
 /// parentheses, brackets, comments, strings and character literals. A `;` first means no body.
@@ -93,7 +100,7 @@ pub fn plan(catalog: &Catalog, instrument: &Instrument) -> Result<Plan> {
     let mut skipped: BTreeMap<&'static str, usize> = BTreeMap::new();
     for symbol in catalog.symbols().values().filter(|s| KINDS.contains(&s.kind.as_str())) {
         let Some(source) = catalog.sources().get(&symbol.source_id) else { continue };
-        if source.language != "rust" {
+        if source.language != LANGUAGE {
             continue;
         }
         let why = if symbol.is_test {
@@ -174,7 +181,7 @@ pub fn holder<'a>(catalog: &'a Catalog, path: &str, line: usize) -> Option<&'a l
 
 /// "Onde pesa": every counted line of an instrumented run, with its function, calls and time,
 /// heaviest first. The counts are exact; the time is inclusive and inflated by the counting
-/// itself, so the order is what it tells.
+/// itself, which can change the order between functions.
 pub fn hotspots(catalog: &Catalog, execution: &Value) -> Value {
     let stats = &execution["summary"]["stats"];
     let mut rows: Vec<Value> = stats.as_object().into_iter().flatten()
@@ -237,7 +244,7 @@ pub fn hotspots(catalog: &Catalog, execution: &Value) -> Value {
         "counted": execution["instrumentation"]["functions"].as_array().into_iter().flatten().filter_map(|f| f["symbol"].as_str()).collect::<Vec<_>>(),
         "bodiless": bodiless,
         "skipped": execution["instrumentation"]["skipped"], "measures": plain, "rows": rows,
-        "limits": ["A contagem é exata; o tempo é inclusivo (conta o que a função chama), somado das threads e inflado pela própria contagem: a ordem é o que vale.",
+        "limits": ["A contagem é exata; o tempo é inclusivo (conta o que a função chama), somado das threads e inflado pela própria contagem, o que pode mudar a ordem entre as funções.",
             "Cada linha é onde o corpo da função abre (ou o contador que o projeto já tinha nela).",
             "Quem chama é pelo nome escrito, com as chamadas contadas daquele chamador; com homônimos, a ligação é candidata."],
     })

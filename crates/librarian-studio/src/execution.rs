@@ -160,6 +160,33 @@ impl Store {
         Ok(json!({ "profile": display(&root.join(PROFILE)), "commands": list, "limits": LIMITS }))
     }
 
+    /// Whether "Medir tudo" can run on this project: the profile declares `instrument` and its
+    /// command, and the edition has a source it can be placed in. Unavailable is not the same as
+    /// not measured yet, and being able to is not being approved to. An edition that cannot be
+    /// read says so here; the rest of the commands' answer does not depend on it.
+    pub fn measure_all(&self, key: &str, run: Option<&str>) -> Result<Value> {
+        let root = PathBuf::from(self.settings(key)?.root);
+        let instrument = match instrument_of(&root) {
+            Ok(instrument) => instrument,
+            Err(e) => return Ok(json!({ "available": false, "reason": "no_instrument", "detail": e.to_string() })),
+        };
+        let name = instrument.command.as_str();
+        let Some(command) = declared(&root)?.remove(name) else {
+            return Ok(json!({ "available": false, "reason": "no_command", "command": name }));
+        };
+        let Some(run) = run else { return Ok(json!({ "available": false, "reason": "no_run", "command": name })) };
+        let catalog = match self.edition(key, run).and_then(|edition| Catalog::load(&edition)) {
+            Ok(catalog) => catalog,
+            Err(e) => return Ok(json!({ "available": false, "reason": "no_edition", "command": name, "detail": e.to_string() })),
+        };
+        if !crate::instrument::can_place(&catalog) {
+            return Ok(json!({ "available": false, "reason": "no_source", "command": name }));
+        }
+        let sha256 = command.sha256(name);
+        let approved = self.approvals(key)?.iter().any(|a| a["name"] == name && a["sha256"] == sha256.as_str());
+        Ok(json!({ "available": true, "approved": approved, "command": name }))
+    }
+
     /// A person's approval of the command `name` exactly as the profile declares it now.
     /// Editing the command in the profile changes its hash and needs a new approval.
     pub fn approve_command(&self, key: &str, name: &str, sha256: &str) -> Result<Value> {

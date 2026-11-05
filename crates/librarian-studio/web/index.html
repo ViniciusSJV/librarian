@@ -205,11 +205,16 @@
   #askExtra:empty { display: none; }
   #askExtra { margin-top: 8px; }
   #composer #question { margin-top: 8px; }
+  #askRow { position: sticky; bottom: 0; z-index: 1; margin-top: 8px; padding: 6px 0; background: var(--surface-2); }
+  /* Labels that carry a model's real name can be long. */
+  #ask, .hot-sep button { max-width: 100%; white-space: normal; }
   #criteriaBox textarea { margin-top: 6px; }
   /* Envelope: the declarations gathered for one question, as chips over the composer. */
   #gathered { margin-bottom: 8px; padding: 8px; border: 1px dashed var(--cat-symbol); border-radius: 8px; }
   .chip.env { display: inline-flex; gap: 2px; align-items: center; padding: 1px 2px 1px 8px; font-size: 12px; }
   .chip.env button, button.link { padding: 0 5px; border: 0; background: transparent; color: var(--text-secondary); }
+  .chip.env button.target { font-size: 11px; color: var(--text-muted); }
+  .chip.env button.target[aria-pressed="true"] { font-weight: 700; color: var(--text-primary); }
   button.link { text-decoration: underline; font-size: 12px; }
   /* Suggested envelope: one row per item, with why it is suggested. */
   #suggestion { margin-top: 8px; max-height: 320px; overflow: auto; border-top: 1px solid var(--border, #444); padding-top: 6px; }
@@ -237,6 +242,8 @@
     body.studio #app { grid-template-rows: 60vh auto auto; height: auto; }
     main { order: -1; } aside { border-right: 0; border-top: 1px solid var(--border); }
     #chat { border-left: 0; border-top: 1px solid var(--border); }
+    #turns { flex: none; max-height: 70vh; }
+    #composer { max-height: none; }
   }
 </style>
 <script type="importmap">
@@ -344,6 +351,7 @@
           <button type="button" id="hotMeasure" class="primary" data-i18n="hot.measure" disabled></button>
           <span id="hotNote" class="muted"></span>
         </div>
+        <p id="hotState" class="muted" hidden></p>
         <div id="hotList"></div>
       </section>
       <section class="card">
@@ -468,12 +476,12 @@
         <select id="provider" data-i18n-title="composer.llm"></select>
         <span id="claudeModelRow"><select id="claudeModel" data-i18n-title="composer.claudeModel"></select></span>
         <span id="modelfileRow" class="row" style="flex-wrap: nowrap; gap: 4px"><select id="modelfile" title="Modelfile"></select><button id="editModelfile" data-i18n="composer.edit"></button></span>
-        <button type="button" class="help" data-help-key="help.llm">?</button>
+        <button type="button" class="help" id="llmHelp" data-help-key="help.llm">?</button>
         <span id="skillsRow" class="row" style="gap: 6px" hidden></span>
       </div>
       <span id="modelfileSummary" class="muted mono"></span>
-      <label class="check" id="ladderRow" hidden><input type="checkbox" id="ladderOn"> <span data-i18n="ladder.on"></span><button type="button" class="help" data-help-key="help.ladder">?</button></label>
-      <div class="row" style="margin-top: 8px">
+      <label class="check" id="ladderRow" hidden><input type="checkbox" id="ladderOn"> <span id="ladderText"></span><button type="button" class="help" data-help-key="help.ladder">?</button></label>
+      <div class="row" id="askRow">
         <button id="ask" class="primary" data-i18n="composer.ask" disabled></button>
       </div>
       <p id="llmNote" class="muted" style="margin-bottom: 0"></p>
@@ -621,8 +629,8 @@ const STRINGS = {
   'help.settings': ['As regras do balcão: como o bibliotecário procura nas estantes e o que ele exige de quem responde. Vale para as próximas consultas; as já feitas guardam as regras da época.',
     'The rules of the desk: how the librarian searches the shelves and what they require from whoever answers. Applies to the next consultations; those already made keep the rules of their time.'],
   'settings.lexicon': ['Léxico (JSON: <code>groups</code> de sinônimos e <code>stop_words</code>)', 'Lexicon (JSON: synonym <code>groups</code> and <code>stop_words</code>)'],
-  'help.lexicon': ['O dicionário de sinônimos do bibliotecário. Você pergunta por raios, mas na estante o livro se chama ray: o léxico faz essa ponte. Sem ele, uma pergunta em português não encontra nomes em inglês. stop_words são palavras que ele ignora, como de e o.',
-    'The librarian\'s synonym dictionary. You ask about raios, but on the shelf the book is called ray: the lexicon builds that bridge. Without it, a question in Portuguese does not find names in English. stop_words are words the librarian ignores, such as the and of.'],
+  'help.lexicon': ['O dicionário de sinônimos do bibliotecário. Você pergunta por usuário, mas na estante o livro se chama user: o léxico faz essa ponte. Sem ele, uma pergunta em português não encontra nomes em inglês. stop_words são palavras que ele ignora, como de e o.',
+    'The librarian\'s synonym dictionary. You ask about usuário, but on the shelf the book is called user: the lexicon builds that bridge. Without it, a question in Portuguese does not find names in English. stop_words are words the librarian ignores, such as the and of.'],
   'lexicon.suggest': ['Sugerir léxico com o LLM', 'Suggest lexicon with the LLM'],
   'lexicon.suggest.info': ['Os termos vêm do código da edition; o LLM escolhido aqui só propõe as palavras da pergunta (no Ollama, com o Modelfile <code>lexico</code>, a menos que você escolha outro <code>lexico-…</code>). As palavras vêm em português, ou em inglês quando o nome do Modelfile termina em <code>-en</code>. O pedido leva também as palavras das suas perguntas que não acharam nada, para virar stop word ou grupo. Cada grupo e cada stop word é conferido, e nada entra no léxico sem você aplicar.',
     'The terms come from the edition\'s code; the LLM chosen here only proposes the question words (in Ollama, with the <code>lexico</code> Modelfile, unless you choose another <code>lexico-…</code>). The words come in Portuguese, or in English when the Modelfile name ends in <code>-en</code>. The request also carries the words of your questions that found nothing, to become a stop word or a group. Each group and each stop word is checked, and nothing enters the lexicon unless you apply it.'],
@@ -719,7 +727,7 @@ const STRINGS = {
   // find, overlay, inspector
   'find.title': ['Encontrar', 'Find'],
   'help.find': ['Como consultar o catálogo pelo título: digite o nome de uma função, tipo ou arquivo e o mapa vai até ele. Ninguém é chamado para responder e nada muda.', 'Like looking up the catalog by title: type the name of a function, type or file and the map goes to it. No one is called to answer and nothing changes.'],
-  'find.placeholder': ['ray_from_pixel, Camera, src/world.rs…', 'ray_from_pixel, Camera, src/world.rs…'],
+  'find.placeholder': ['nome de função, tipo ou arquivo…', 'function, type or file name…'],
   'find.fit': ['Enquadrar (F)', 'Fit (F)'],
   'find.clear': ['Limpar (Esc)', 'Clear (Esc)'],
   'find.more': ['+{n} outros', '+{n} more'],
@@ -823,8 +831,8 @@ const STRINGS = {
   'help.gatherFacts': ['Ligado, a pergunta leva também os fatos vigentes do acervo sobre as declarações do envelope, como na cadeia: eles orientam a resposta, mas não podem ser citados.',
     'On, the question also carries the current reviewed facts about the envelope\'s declarations, as a chain step does: they guide the answer but cannot be cited.'],
   'envelope.suggest': ['Sugerir envelope', 'Suggest envelope'],
-  'help.envelopeSuggest': ['O bibliotecário sugere o que uma mudança nestas declarações provavelmente precisa ver: o tipo dono e quem escreve os campos que elas leem, o que elas chamam e o tipo que isso devolve, quem as chama, os tipos que elas escrevem e o topo do arquivo, onde ficam os imports. Cada item vem com o motivo e a linha. É tudo pelo nome escrito: o que não está escrito pelo nome não aparece, e homônimos e testes ficam de fora. Você marca o que entra.',
-    'The librarian suggests what a change to these declarations is likely to need in view: the owner type and whoever writes the fields they read, what they call and the type that returns, who calls them, the types they write and the head of the file, where imports live. Each item comes with why and the line. All by written names: what is not written by name does not show, and homonyms and tests are left out. You tick what goes in.'],
+  'help.envelopeSuggest': ['O bibliotecário sugere o que uma mudança nestas declarações provavelmente precisa ver: o tipo dono e quem escreve os campos que elas leem, o que elas chamam e o tipo que isso devolve, quem as chama, os tipos que elas escrevem e o topo do arquivo, onde ficam os imports. Cada item vem com o motivo e a linha. É tudo pelo nome escrito: o que não está escrito pelo nome não aparece, e homônimos e testes ficam de fora. Você marca o que entra, e a marca vale na hora: o que está marcado é o que vai.',
+    'The librarian suggests what a change to these declarations is likely to need in view: the owner type and whoever writes the fields they read, what they call and the type that returns, who calls them, the types they write and the head of the file, where imports live. Each item comes with why and the line. All by written names: what is not written by name does not show, and homonyms and tests are left out. You tick what goes in, and a tick counts at once: what is ticked is what goes.'],
   'envelope.title': ['Sugestão ({n}, {kb} KB de {budget} KB)', 'Suggestion ({n}, {kb} KB of {budget} KB)'],
   'envelope.noMeasure': ['Sem medição nesta edition: a ordem vem só da estrutura, e não dá para saber o que não rodou.', 'No measure in this edition: the order comes from the structure alone, and what did not run cannot be told apart.'],
   'envelope.leftOut': ['Ficaram de fora ({n})', 'Left out ({n})'],
@@ -853,7 +861,13 @@ const STRINGS = {
   'envelope.behavior.operation': ['operação', 'operation'],
   'envelope.behavior.state_write': ['escreve estado', 'writes state'],
   'envelope.behavior.test': ['teste', 'test'],
-  'envelope.use': ['Juntar os marcados', 'Gather the ticked ones'],
+  'envelope.use': ['Juntar as sugeridas ({n})', 'Gather the suggested ones ({n})'],
+  'envelope.declined': ['você tirou', 'you took it out'],
+  'gather.duringInvestigation': ['Há uma investigação aberta, e ela envia só o que está marcado nela. Pergunte ou cancele antes de juntar.', 'An investigation is open, and it sends only what is ticked in it. Ask or cancel before gathering.'],
+  'gather.isTarget': ['alvo', 'target'],
+  'gather.makeTarget': ['+alvo', '+target'],
+  'help.target': ['O alvo é o que a pergunta investiga, e é dele que uma sugestão parte. Clique para marcar ou desmarcar.', 'The target is what the question investigates, and what a suggestion starts from. Click to set or unset it.'],
+  'gather.noTarget': ['Nenhum alvo selecionado. Escolha um com +alvo numa das declarações acima antes de sugerir ou perguntar.', 'No target selected. Choose one with +target on a declaration above before suggesting or asking.'],
   'envelope.close': ['Fechar', 'Close'],
   'envelope.truncated': ['Mais itens ficaram de fora (limite de {n}).', 'More items were left out (limit of {n}).'],
   'envelope.headerName': ['topo do arquivo', 'head of the file'],
@@ -1036,7 +1050,7 @@ const STRINGS = {
   'reply.raw': ['Resposta bruta', 'Raw answer'],
   'reply.noText': ['Sem texto na resposta.', 'No text in the answer.'],
   'reply.completed': ['completed descreve o transporte; ', 'completed describes the transport; '],
-  'reply.stored': ['{completed}avaliação semântica pendente. Guardado em {dir}', '{completed}semantic review pending. Stored in {dir}'],
+  'reply.stored': ['{completed}sentido não avaliado. Guardado em {dir}', '{completed}meaning not assessed. Stored in {dir}'],
   'reply.link': ['Vínculo: enviou a {file} (sha256 {sha}…) conferida contra a edition antes do envio.', 'Link: sent the {file} (sha256 {sha}…) checked against the edition before the send.'],
   'reply.truncated': ['Entrada possivelmente truncada: o Ollama processou {prompt} tokens de uma query estimada em ~{estimated}{ctx}. A resposta pode não ter visto toda a evidência. (Um prefixo em cache também reduz a contagem.)',
     'Input possibly truncated: Ollama processed {prompt} tokens of a query estimated at ~{estimated}{ctx}. The answer may not have seen all the evidence. (A cached prefix also lowers the count.)'],
@@ -1047,7 +1061,7 @@ const STRINGS = {
   'help.check': ['Aprovada: o bibliotecário foi à estante e confirmou que as páginas citadas existem, que o trecho copiado é idêntico ao livro e que o texto não fala de páginas que não citou. Isso não quer dizer que a resposta está certa: o sentido quem julga é você. Recusada lista o que não bateu.',
     'Passed: the librarian went to the shelf and confirmed that the cited pages exist, that the copied excerpt is identical to the book and that the text does not talk about pages it did not cite. That does not mean the answer is right: you judge the meaning. Refused lists what did not match.'],
   'check.semantic': [' · semântica: {status}{fence}', ' · semantic: {status}{fence}'],
-  'check.pending': ['pendente', 'pending'],
+  'check.notAssessed': [' · Sentido não avaliado{fence}', ' · Meaning not assessed{fence}'],
   'check.fence': [' · JSON extraído de uma cerca de Markdown', ' · JSON extracted from a Markdown fence'],
   'check.answer': ['Resposta', 'Answer'],
   'check.resolved': ['Completado pelo Librarian a partir da evidência (o modelo deu as posições; o texto vem da edition)',
@@ -1086,7 +1100,7 @@ const STRINGS = {
   'review.mechanical': ['· recusado na mecânica: não pode virar fato', '· refused by the mechanical check: cannot become a fact'],
   'review.approveDialog': ['Aprovar {id} como fato', 'Approve {id} as a fact'],
   'review.approveMessage': ['Por que ele é verdadeiro? A nota fica registrada com o fato.', 'Why is it true? The note is recorded with the fact.'],
-  'review.approvePlaceholder': ['Por exemplo: conferi no código, a linha 82 faz a inversão a cada raio.', 'For example: checked in the code, line 82 does the inversion for every ray.'],
+  'review.approvePlaceholder': ['Por exemplo: conferi no código, a linha 82 faz esse cálculo a cada chamada.', 'For example: checked in the code, line 82 does this calculation on every call.'],
   'review.approveRequired': ['A aprovação precisa de uma nota.', 'An approval needs a note.'],
   'review.rejectDialog': ['Recusar {id}', 'Reject {id}'],
   'review.revokeDialog': ['Revogar o fato {id}', 'Revoke fact {id}'],
@@ -1135,26 +1149,26 @@ const STRINGS = {
   'hot.hottest': ["A mais pesada entre as que rodam mais de {n} vezes:","The heaviest among those that run more than {n} times:"],
   'hot.calls': ["{n} vezes","{n} times"],
   'hot.callers': ["Quem chama:","Called by:"],
-  'hot.askFacts': ["Separar para o qwen ({n} perguntas)","Separate for qwen ({n} questions)"],
+  'hot.askFacts': ["Separar para {model} ({n} perguntas)","Separate for {model} ({n} questions)"],
   'hot.approveAll': ["Aprovar em lote","Approve as a batch"],
   'hot.noFrequent': ["Nenhuma função roda mais de {n} vezes nesta medida.","No function runs more than {n} times in this measure."],
   'hot.ranking': ["Mais tempo, contado pelo projeto","Most time, counted by the project"],
   'hot.optimize': ["Otimizar","Optimize"],
-  'hot.asking': ["Pergunta {k} de {n} ao qwen: {name}…","Question {k} of {n} to qwen: {name}…"],
-  'hot.asked': ["{n} perguntas enviadas ao qwen. Confira as respostas na conversa e aprove uma a uma ou em lote.","{n} questions sent to qwen. Check the answers in the conversation and approve them one by one or as a batch."],
-  'hot.factQuestion': ["Em {name}, a linha {line} faz `{text}`. {name} roda {calls} vezes num frame e {target} roda {targetCalls} vezes (contagem do Medir tudo). O que a linha {line} calcula a cada chamada de {name}, e de que valores depende? Cite a linha {line}.","In {name}, line {line} does `{text}`. {name} runs {calls} times in a frame and {target} runs {targetCalls} times (Measure everything). What does line {line} compute on each call of {name}, and on which values does it depend? Cite line {line}."],
+  'hot.asking': ["Pergunta {k} de {n} a {model}: {name}…","Question {k} of {n} to {model}: {name}…"],
+  'hot.asked': ["{n} perguntas enviadas a {model}. Confira as respostas na conversa e aprove uma a uma ou em lote.","{n} questions sent to {model}. Check the answers in the conversation and approve them one by one or as a batch."],
+  'hot.factQuestion': ["Em {name}, a linha {line} faz `{text}`. {name} roda {calls} vezes e {target} roda {targetCalls} vezes (contagem do Medir tudo). O que a linha {line} calcula a cada chamada de {name}, e de que valores depende? Cite a linha {line}.","In {name}, line {line} does `{text}`. {name} runs {calls} times and {target} runs {targetCalls} times (Measure everything). What does line {line} compute on each call of {name}, and on which values does it depend? Cite line {line}."],
   'hot.nothingToApprove': ["Nenhum fato novo passou na conferência mecânica.","No new fact passed the mechanical check."],
   'hot.approveTitle': ["Aprovar {n} fato(s) de uma vez","Approve {n} fact(s) at once"],
   'hot.approved': ["{n} fato(s) aprovado(s) com a mesma nota.","{n} fact(s) approved with the same note."],
-  'hot.optimizeQuestion': ["No render medido, a contagem do Librarian (Medir tudo) mostra: {name} roda {calls} vezes num frame{called}. Proponha uma mudança que faça {name} trabalhar menos a cada chamada, sem mudar a imagem nem o comportamento dos testes.","In the measured render, the Librarian's count (Measure everything) shows: {name} runs {calls} times in a frame{called}. Propose a change that makes {name} do less work on each call, without changing the image or the tests' behavior."],
+  'hot.optimizeQuestion': ["A contagem do Librarian (Medir tudo) mostra: {name} roda {calls} vezes{called}. Proponha uma mudança que faça {name} trabalhar menos a cada chamada, sem mudar as saídas nem o comportamento dos testes.","The Librarian's count (Measure everything) shows: {name} runs {calls} times{called}. Propose a change that makes {name} do less work on each call, without changing the outputs or the tests' behavior."],
   'hot.optimizeCalled': ["; o que ela chama e mais pesa: {list}","; what it calls that weighs the most: {list}"],
   'hot.turnTag': ["onde pesa: {summary}","where the time goes: {summary}"],
-  'help.hot': ["O projeto diz como contar uma passagem por uma função (instrument no librarian.json); o Librarian põe essa instrução no começo de cada função, numa cópia, e roda o comando aprovado. A contagem é exata; o tempo é inclusivo e inflado pela contagem: a ordem é o que vale.","The project says how to count a pass through a function (instrument in librarian.json); the Librarian puts that statement at the start of every function, in a copy, and runs the approved command. Counts are exact; time is inclusive and inflated by the counting: the order is what counts."],
-  'help.hotSeparate': ["Para cada função que chama a mais pesada, a linha que a chama vira uma pergunta pequena ao qwen, só com aquela declaração. As respostas são fatos conferidos mecanicamente; você aprova um a um ou em lote.","For each function that calls the heaviest one, the line that calls it becomes a small question to qwen, with that declaration only. Answers are mechanically checked facts; you approve them one by one or as a batch."],
+  'help.hot': ["O projeto diz como contar uma passagem por uma função (instrument no librarian.json); o Librarian põe essa instrução no começo de cada função, numa cópia, e roda o comando aprovado. A contagem é exata; o tempo é inclusivo e inflado pela contagem, o que pode mudar a ordem entre as funções.","The project says how to count a pass through a function (instrument in librarian.json); the Librarian puts that statement at the start of every function, in a copy, and runs the approved command. Counts are exact; time is inclusive and inflated by the counting, which can change the order between functions."],
+  'help.hotSeparate': ["Para cada função que chama a mais pesada, a linha que a chama vira uma pergunta pequena a {model}, só com aquela declaração. As respostas são fatos conferidos mecanicamente; você aprova um a um ou em lote.","For each function that calls the heaviest one, the line that calls it becomes a small question to {model}, with that declaration only. Answers are mechanically checked facts; you approve them one by one or as a batch."],
   'help.hotOptimize': ["Monta o envelope sugerido para esta função, com os fatos aprovados, e uma pergunta só com o que foi contado; a escada fica marcada. Você confere e pergunta.","Builds the suggested envelope for this function, with the reviewed facts, and a question made only of what was counted; the ladder is ticked. You check and ask."],
-  'composer.askLadder': ['Perguntar pela escada ({n}) · Claude Haiku', 'Ask through the ladder ({n}) · Claude Haiku'],
-  'ladder.on': ["Escada: Claude Haiku, com o portão em cada mudança","Ladder: Claude Haiku, with the gate on each change"],
-  'help.ladder': ["A pergunta vai ao Claude Haiku. Uma mudança passa no portão quando os comandos aprovados rodam com ela, as saídas ficam iguais, alguma contagem cai e nenhuma sobe. Das que passam, fica a de maior ganho. Uma LACUNA junta ao envelope o que ela diz faltar e pergunta de novo ao mesmo modelo.","The question goes to Claude Haiku. A change passes the gate when the approved commands run with it, outputs stay the same, some count drops and none grows. Of those that pass, the largest gain stays. A LACUNA gathers into the envelope what it says is missing and asks the same model again."],
+  'composer.askLadder': ['Perguntar pela escada ({n}) · {model}', 'Ask through the ladder ({n}) · {model}'],
+  'ladder.on': ["Escada: {model}, com o portão em cada mudança","Ladder: {model}, with the gate on each change"],
+  'help.ladder': ["A pergunta vai ao modelo da escada, indicado ao lado. Uma mudança passa no portão quando os comandos aprovados rodam com ela, as saídas ficam iguais, alguma contagem cai e nenhuma sobe. Das que passam, fica a de maior ganho. Nada muda o pacote sozinho: uma LACUNA ou uma resposta recusada aparece no registro, sem novo envio, e você decide o que perguntar de novo.","The question goes to the ladder's model, named next to it. A change passes the gate when the approved commands run with it, outputs stay the same, some count drops and none grows. Of those that pass, the largest gain stays. Nothing changes the package on its own: a LACUNA or a refused answer shows in the record, with no new send, and you decide what to ask next."],
   'ladder.noGate': ["Aprove ao menos um comando na Régua: ele é o portão.","Approve at least one command in the Ruler: it is the gate."],
   'ladder.running': ["Escada em andamento; portão: {gate}. As respostas aparecem na conversa.","Ladder running; gate: {gate}. Answers show in the conversation."],
   'ladder.passed': ["passou no portão, a de maior ganho","passed the gate, the largest gain"],
@@ -1167,8 +1181,7 @@ const STRINGS = {
   'ladder.provider_failed': ["falha no envio","send failed"],
   'ladder.baseline': ["linha de base","baseline"],
   'ladder.turn': ["pergunta {turn}","question {turn}"],
-  'ladder.gathered': ["juntou: {list}","gathered: {list}"],
-  'ladder.noRoom': ["a pergunta já tem 16 declarações: nada foi juntado, e a rodada termina aqui","the question already holds 16 declarations: nothing was gathered, and the round ends here"],
+  'ladder.asked': ["o modelo disse que falta: {list}. Nada foi acrescentado ao pacote; revise e pergunte de novo se quiser.","the model says this is missing: {list}. Nothing was added to the package; review and ask again if you want."],
   'ladder.passedTitle': ["Escada: mudança aprovada no portão","Ladder: change passed the gate"],
   'ladder.failedTitle': ["Escada: nenhuma mudança passou","Ladder: no change passed"],
   'ladder.cost': ["nuvem US$ {cost}","cloud US$ {cost}"],
@@ -1250,7 +1263,7 @@ const STRINGS = {
   'lexicon.saved': ['Léxico salvo.', 'Lexicon saved.'],
   'lexicon.suggestTitle': ['Sugerir com um LLM', 'Suggest with an LLM'],
   'legend.title': ['Legenda do mapa', 'Map legend'],
-  'help.perf': ['O Librarian reconhece a pergunta por regras sobre as palavras, depois do léxico do projeto, sem modelo nenhum. Responde com os números do último Medir tudo e separa: perguntas pequenas de fato para o modelo leve (qwen) e pedidos de mudança para a escada (Claude Haiku).', 'The Librarian recognizes the question by rules over its words, after the project lexicon, with no model at all. It answers with the numbers of the latest Measure everything and splits: small fact questions for the light model (qwen) and change requests for the ladder (Claude Haiku).'],
+  'help.perf': ['O Librarian reconhece a pergunta por regras sobre as palavras, depois do léxico do projeto, sem modelo nenhum. Responde com os números do último Medir tudo e separa: perguntas pequenas de fato para {facts} e pedidos de mudança para a escada ({ladder}).', 'The Librarian recognizes the question by rules over its words, after the project lexicon, with no model at all. It answers with the numbers of the latest Measure everything and splits: small fact questions for {facts} and change requests for the ladder ({ladder}).'],
   'perf.route': ['Entendi: {intent} (pelas palavras: {words}).', 'Understood: {intent} (from the words: {words}).'],
   'perf.intent.heavy': ['quais funções pesam', 'which functions weigh'],
   'perf.intent.where': ['onde otimizar', 'where to optimize'],
@@ -1278,7 +1291,19 @@ const STRINGS = {
   'legend.ring': ['Anel: trava, espera ou E/S dentro de laço', 'Ring: a lock, wait or I/O inside a loop'],
   'legend.arc': ['Arco: quem chama e quem é chamado, ao clicar num prédio', 'Arc: caller and callee, when a building is clicked'],
   'city.status': ['{functions} funções que rodaram em {districts} arquivos · arraste para girar, clique num prédio para ver quem ele chama', '{functions} functions that ran in {districts} files · drag to rotate, click a building to see what it calls'],
-  'city.statusPlain': ['{functions} funções em {districts} arquivos · sem medição: altura pelo tamanho · Medir tudo (aba Investigar) mostra o que roda e o que pesa', '{functions} functions in {districts} files · no measure: height by size · Measure everything (Investigate tab) shows what runs and what weighs'],
+  'city.statusPlain': ['{functions} funções em {districts} arquivos · sem medição: altura pelo tamanho', '{functions} functions in {districts} files · no measure: height by size'],
+  'city.statusNotYet': ['{functions} funções em {districts} arquivos · ainda não medido: altura pelo tamanho · Medir tudo (aba Investigar) conta o que roda', '{functions} functions in {districts} files · not measured yet: height by size · Measure everything (Investigate tab) counts what runs'],
+  'city.statusUnavailable': ['{functions} funções em {districts} arquivos · medição por função não disponível neste projeto: altura pelo tamanho', '{functions} functions in {districts} files · per-function measure not available in this project: height by size'],
+  'hot.notYet': ['Ainda não medido nesta edition. Medir tudo conta quantas vezes cada função roda.', 'Not measured yet in this edition. Measure everything counts how many times each function runs.'],
+  'hot.unavailable.no_instrument': ['Não disponível neste projeto: o librarian.json não declara um instrument válido.', 'Not available in this project: librarian.json does not declare a valid instrument.'],
+  'hot.unavailable.no_source': ['Não disponível neste projeto: a contagem por função só é inserida em fontes Rust, e esta edition não tem nenhuma.', 'Not available in this project: the per-function count only goes into Rust sources, and this edition has none.'],
+  'hot.unavailable.no_run': ['Gere o grafo antes de medir.', 'Generate the graph before measuring.'],
+  'hot.unavailable.no_command': ['Não disponível neste projeto: o comando {command}, que o instrument indica, não está declarado no librarian.json.', 'Not available in this project: the command {command}, which instrument names, is not declared in librarian.json.'],
+  'hot.unavailable.no_edition': ['Não disponível nesta edition: ela não pôde ser lida.', 'Not available in this edition: it could not be read.'],
+  'executions.unread': ['Não foi possível ler o histórico de execuções: {error}', 'The execution history could not be read: {error}'],
+  'hot.needsApproval': ['É possível medir, mas o comando {command} ainda não foi aprovado (aba Régua).', 'Measuring is possible, but the command {command} is not approved yet (Ruler tab).'],
+  'hot.readFailed': ['Não foi possível ler a medição desta edition: {error}', 'The measure of this edition could not be read: {error}'],
+  'city.statusFailed': ['{functions} funções em {districts} arquivos · a medição não pôde ser lida: altura pelo tamanho', '{functions} functions in {districts} files · the measure could not be read: height by size'],
   'city.notMeasured': ['{kind} · sem medição', '{kind} · no measure'],
   'city.tip': ['{calls} chamadas · {ms}', '{calls} calls · {ms}'],
   'city.ring': ['trava, espera ou E/S em laço', 'lock, wait or I/O in a loop'],
@@ -1627,7 +1652,7 @@ function inspect() {
         helpButton(t('help.usedBy')),
         el('button', { textContent: t('inspector.calls'), onclick: () => openPath(n.id, 'calls') }),
         helpButton(t('help.calls')),
-        el('button', { textContent: gathered.includes(n.id) ? t('gather.remove') : t('gather.add'), onclick: () => toggleGathered(n.id) }),
+        el('button', { textContent: gathered.includes(n.id) ? t('gather.remove') : t('gather.add'), disabled: Boolean(investigation), title: investigation ? t('gather.duringInvestigation') : '', onclick: () => toggleGathered(n.id) }),
         helpButton(t('help.gather')))
       : null;
     box.replaceChildren(
@@ -1793,10 +1818,13 @@ async function api(method, path, body) {
   const text = await response.text();
   let data;
   try { data = JSON.parse(text); } catch { data = text; }
-  if (!response.ok) throw new Error(data?.error ?? `HTTP ${response.status}`);
+  if (!response.ok) throw Object.assign(new Error(data?.error ?? `HTTP ${response.status}`), { status: response.status });
   return data;
 }
 const query = params => new URLSearchParams(params).toString();
+// Whether the project and graph open now are the ones open when this was called: an answer that
+// arrives after the person moved on must not write over what is on screen.
+const sameRun = () => { const key = studio.project?.key, run = studio.run; return () => studio.project?.key === key && studio.run === run; };
 
 /// Runs an action with its buttons disabled and reports failures in `note`.
 async function busy(buttons, note, action) {
@@ -1937,14 +1965,20 @@ async function loadRun(id) {
   studio.run = id;
   // Gathered declarations belong to one edition's graph.
   gathered = [];
+  say($('#chatNote'), '');
   investigation = null;
   renderGathered();
   resetInventory();
   $('#runs').value = id;
   status(t('status.loading'));
-  showGraph(await api('GET', `/api/graph?${query({ key: studio.project.key, run: id })}`));
+  const same = sameRun();
+  const graph = await api('GET', `/api/graph?${query({ key: studio.project.key, run: id })}`);
+  if (!same()) return;
+  showGraph(graph);
   showRunNote();
-  studio.turns = await api('GET', `/api/turns?${query({ key: studio.project.key, run: id })}`);
+  const turns = await api('GET', `/api/turns?${query({ key: studio.project.key, run: id })}`);
+  if (!same()) return;
+  studio.turns = turns;
   studio.activeTurn = null;
   renderTurns();
   await loadFacts();
@@ -2017,7 +2051,6 @@ function applyMode() {
   $('#allowHypothesis').checked = mode === 'improve';
   $('#allowPatch').checked = mode === 'improve';
   $('#criteriaBox').hidden = mode !== 'improve';
-  $('#ladderRow').hidden = mode !== 'improve';
   const lines = $('#criteria').value.split('\n').filter(l => l.trim()).length;
   $('#criteriaCount').textContent = lines ? t('mode.criteriaLines', { n: lines }) : t('mode.criteriaNone');
   for (const b of document.querySelectorAll('#modeSeg [data-mode]')) b.setAttribute('aria-pressed', String(b.dataset.mode === mode));
@@ -2076,19 +2109,25 @@ const composerChoice = () => {
 
 function refreshComposer() {
   if (!studio.status) return;
-  const provider = $('#provider').value;
+  const ladder = mode === 'improve' && $('#ladderOn')?.checked && gathered.length && !investigation;
+  const provider = ladder ? LADDER_MODELS[0].provider : $('#provider').value;
   const ready = Boolean(studio.run);
   $('#question').disabled = !ready;
   $('#ask').disabled = !ready;
-  $('#claudeModelRow').hidden = provider !== 'claude-cli';
-  $('#modelfileRow').hidden = !['ollama', 'claude-cli'].includes(provider);
+  // The ladder is offered only where it would answer, with what is configured for it.
+  $('#ladderRow').hidden = mode !== 'improve' || !gathered.length || Boolean(investigation);
+  $('#ladderText').textContent = t('ladder.on', { model: ladderLabel() });
+  // With the ladder, its own models answer: a selector here would be ignored.
+  $('#provider').hidden = ladder;
+  $('#llmHelp').hidden = ladder;
+  $('#claudeModelRow').hidden = ladder || provider !== 'claude-cli';
+  $('#modelfileRow').hidden = ladder || !['ollama', 'claude-cli'].includes(provider);
   const noneOption = $('#modelfile').querySelector('option[value=""]');
   if (noneOption) noneOption.disabled = provider === 'ollama';
   if (provider === 'ollama' && !$('#modelfile').value && studio.modelfiles.length) $('#modelfile').value = studio.modelfiles[0].name;
-  const mf = studio.modelfiles.find(m => m.name === $('#modelfile').value);
+  const mf = studio.modelfiles.find(m => m.name === (ladder ? LADDER_MODELS[0].modelfile : $('#modelfile').value));
   const target = choiceLabel(composerChoice());
-  const ladder = mode === 'improve' && $('#ladderOn')?.checked && gathered.length && !investigation;
-  $('#ask').textContent = ladder ? t('composer.askLadder', { n: gathered.length })
+  $('#ask').textContent = ladder ? t('composer.askLadder', { n: gathered.length, model: ladderLabel() })
     : investigation ? t('composer.askInvestigation', { n: investigation.ticked.size, target })
     : gathered.length ? t('composer.askGathered', { n: gathered.length, target })
     : provider === 'manual' ? t('composer.askManual') : t('composer.askSend', { target });
@@ -2101,7 +2140,7 @@ function refreshComposer() {
       : t('llm.ollamaDown', { endpoint: llm.ollama.endpoint, missing: llm.ollama.executable ? '' : t('llm.ollamaMissing') }),
     'claude-cli': llm.claude_cli.executable ? t('llm.claude', { path: llm.claude_cli.executable }) : t('llm.claudeMissing'),
   }[provider] ?? '';
-  $('#chatNote').textContent = ready ? t('chat.ready', { run: studio.run }) : t('chat.empty');
+  if (!$('#chatNote').classList.contains('error')) $('#chatNote').textContent = ready ? t('chat.ready', { run: studio.run }) : t('chat.empty');
 }
 
 function modelfileSummary(content, provider) {
@@ -2117,6 +2156,13 @@ function modelfileSummary(content, provider) {
 async function ask() {
   const question = $('#question').value.trim();
   if (!question || !studio.run) return;
+  if ($('#chatNote').classList.contains('error')) { say($('#chatNote'), ''); refreshComposer(); }
+  // An envelope whose targets were all taken out has nothing to be about until one is chosen.
+  if (gathered.length && !investigation && !seeds.length) {
+    $('#llmNote').className = 'error';
+    $('#llmNote').textContent = t('gather.noTarget');
+    return;
+  }
   if (mode === 'improve' && $('#ladderOn').checked && gathered.length && !investigation) {
     return busy([$('#ask')], $('#llmNote'), async () => { await saveSettings(); await askLadder(question); });
   }
@@ -2128,7 +2174,7 @@ async function askModel(question) {
   await busy([$('#ask')], $('#llmNote'), async () => {
     // The question uses the saved settings; save what is on screen so nothing is forgotten.
     await saveSettings();
-    say($('#chatNote'), t('chat.preparing'));
+    if (!$('#chatNote').classList.contains('error')) say($('#chatNote'), t('chat.preparing'));
     // An investigation asks over exactly the ticked items, in the order proposed.
     const investigated = investigation && {
       nodes: investigation.items.map(i => i.id).filter(id => investigation.ticked.has(id)),
@@ -2139,9 +2185,9 @@ async function askModel(question) {
       ? await api('POST', '/api/gathered-question', { key: studio.project.key, run: studio.run, question, nodes: investigated.nodes, with_facts: gatherFacts, origin: investigated.origin })
       : gathered.length
       ? await api('POST', '/api/gathered-question', { key: studio.project.key, run: studio.run, question, nodes: gathered, with_facts: gatherFacts,
-          origin: selection ? { kind: 'selection', summary: t('envelope.turnSummary', { n: selection.left_out.length }), selection } : null })
+          origin: selectionOnRecord() ? { kind: 'selection', summary: t('envelope.turnSummary', { n: selectionOnRecord().left_out.length }), selection: selectionOnRecord() } : null })
       : await api('POST', '/api/ask', { key: studio.project.key, run: studio.run, question });
-    if (investigated) { investigation = null; renderGathered(); }
+    if (investigated) { investigation = null; renderGathered(); inspect(); }
     studio.turns.push(turn);
     $('#question').value = '';
     activate(turn.id);
@@ -2183,30 +2229,65 @@ async function resendTurn(turn, button) {
 // It lives over the composer: with an envelope, the composer asks over exactly these declarations.
 let gathered = [];
 // P5: whether the gathered question carries the reviewed facts, and the open suggestion.
-let gatherFacts = false, suggestion = null, selection = null;
+let gatherFacts = false, suggestion = null;
+// `gathered` alone says what goes: the panel's marks and the record are read from it. `selection`
+// only explains: what is known about each source and what the person took out. `seeds` are the
+// targets a suggestion starts from; a seed leaves with its source, and nothing becomes one by itself.
+let selection = null, seeds = [];
+// Which folded lists of the panel are open: marking a source redraws it.
+const panelOpen = {};
 // The envelope can be folded to its title line, so it does not take the answers' room.
 let gatheredFolded = false;
 const HEADER = 'header:';
 const envelopeLabel = id => id.startsWith(HEADER) ? t('gather.header', { path: id.slice(HEADER.length) })
-  : (state.nodes[state.index.get(id)]?.label ?? id);
+  : (state.nodes[state.index.get(id)]?.label ?? selection?.sources.get(id)?.name ?? id);
 function toggleGathered(id) {
-  gathered = gathered.includes(id) ? gathered.filter(g => g !== id) : [...gathered, id];
+  // An open investigation sends exactly its own marks: nothing gathered now would go with it.
+  if (investigation) return;
+  selection ??= newSelection();
+  const removing = gathered.includes(id);
+  gathered = removing ? gathered.filter(g => g !== id) : [...gathered, id];
+  if (!selection.sources.has(id)) selection.sources.set(id, manualSource(id));
+  selection.decisions.set(id, { decision: removing ? 'removed' : 'included', scope: 'single' });
+  if (removing) seeds = seeds.filter(g => g !== id);
+  // By hand, with nothing suggested yet, what is gathered is what the question is about.
+  else if (!selection.suggested_from) seeds = [...seeds, id];
   renderGathered();
   inspect();
 }
+function toggleTarget(id) {
+  seeds = seeds.includes(id) ? seeds.filter(g => g !== id) : [...seeds, id];
+  renderGathered();
+}
+const newSelection = () => ({ sources: new Map(), decisions: new Map(), gaps: [] });
+const manualSource = id => { const n = state.nodes[state.index.get(id)];
+  return { id, name: n?.label ?? id, path: null, kind: n?.kind ?? null, start_line: null, end_line: null, role: null, bytes: null, calls: null, reasons: [], facts: [], left_out_why: null, kept_out: null, provenance: 'manual' }; };
+// One action of the person over many sources: joining a suggestion, or asking for one and taking it whole.
+const includeBulk = ids => ids.forEach(id => {
+  if (!selection.sources.has(id)) selection.sources.set(id, manualSource(id));
+  selection.decisions.set(id, { decision: 'included', scope: 'bulk' });
+});
 // An investigation from the inventory: the finding, the evidence the librarian proposes (each
 // item with why, all ticked) and a proposed question in the composer. Asking sends exactly the
 // ticked items, and the question records the finding it came from.
 let investigation = null;
 async function investigate(target, button) {
   await busy([button], $('#inventoryNote'), async () => {
+    const same = sameRun();
     const data = await api('POST', '/api/inventory/investigate', { key: studio.project.key, run: studio.run, target });
+    if (!same()) return;
     investigation = { ...data, ticked: new Set(data.items.map(i => i.id)) };
+    // The card has no control for facts: nothing it does not show may go with the question.
+    gatherFacts = false;
     gathered = [];
+    selection = null;
+    seeds = [];
+    suggestion = null;
     gatheredFolded = false;
     setMode('locate');
     $('#question').value = proposedQuestion(data);
     renderGathered();
+    inspect();
     $('#question').focus();
   });
 }
@@ -2256,7 +2337,7 @@ function investigationView() {
       el('button', { className: 'link', style: 'margin-left: auto', textContent: t(gatheredFolded ? 'gather.unfold' : 'gather.fold'),
         onclick: () => { gatheredFolded = !gatheredFolded; renderGathered(); } }),
       el('button', { className: 'link', textContent: t('investigate.cancel'),
-        onclick: () => { investigation = null; gatheredFolded = false; $('#question').value = ''; renderGathered(); } })),
+        onclick: () => { investigation = null; gatheredFolded = false; $('#question').value = ''; renderGathered(); inspect(); } })),
     el('div', { style: 'font-size: 12px', textContent: `${findingSummary(investigation)} · ${t('investigate.ticked', { n: investigation.ticked.size, total: investigation.items.length })}` }),
     gatheredFolded || investigation.kind !== 'loop' ? '' : el('div', { className: 'muted', style: 'font-size: 12px; margin-top: 4px' },
       t('investigate.found'), el('ul', { style: 'margin: 2px 0 0 16px; padding: 0' }, ...findingLines(investigation).map(l => el('li', { textContent: l })))),
@@ -2266,6 +2347,7 @@ function investigationView() {
 
 function renderGathered() {
   const box = $('#gathered');
+  if ((seeds.length || !gathered.length) && $('#llmNote').textContent === t('gather.noTarget')) say($('#llmNote'), '');
   if (investigation) {
     box.hidden = false;
     refreshComposer();
@@ -2275,9 +2357,9 @@ function renderGathered() {
   box.hidden = !gathered.length;
   refreshComposer();
   // An emptied envelope starts over open, so the next one shows its actions.
-  if (!gathered.length) { suggestion = null; selection = null; gatheredFolded = false; box.replaceChildren(); return; }
+  if (!gathered.length) { suggestion = null; selection = null; seeds = []; gatheredFolded = false; box.replaceChildren(); return; }
   const declarations = gathered.filter(id => !id.startsWith(HEADER));
-  const suggest = el('button', { textContent: t('envelope.suggest'), disabled: !declarations.length, onclick: event => suggestEnvelope(event.target) });
+  const suggest = el('button', { textContent: t('envelope.suggest'), disabled: !seeds.length, onclick: event => suggestEnvelope(event.target) });
   const facts = el('input', { type: 'checkbox', checked: gatherFacts, onchange: event => { gatherFacts = event.target.checked; } });
   const head = el('div', { className: 'row', style: 'gap: 4px' },
     el('strong', { textContent: t('gather.title', { n: gathered.length }) }), helpButton(t('help.gather')),
@@ -2288,8 +2370,10 @@ function renderGathered() {
   box.replaceChildren(
     head,
     el('div', {}, ...gathered.map(id => el('span', { className: 'chip env', title: envelopeLabel(id) },
+      id.startsWith(HEADER) ? null : el('button', { className: 'target', textContent: t(seeds.includes(id) ? 'gather.isTarget' : 'gather.makeTarget'), title: t('help.target'), ariaPressed: String(seeds.includes(id)), onclick: () => toggleTarget(id) }),
       el('span', { className: 'mono', textContent: envelopeLabel(id).replace(/^impl (.+ for )?/, '') }),
       el('button', { textContent: '×', title: t('gather.remove'), onclick: () => toggleGathered(id) })))),
+    seeds.length ? '' : el('p', { className: 'error', style: 'margin: 6px 0 0; font-size: 12px', textContent: t('gather.noTarget') }),
     el('div', { className: 'row', style: 'gap: 6px; margin-top: 6px' }, suggest, helpButton(t('help.envelopeSuggest')),
       el('label', { className: 'check', style: 'margin: 0' }, facts, el('span', { textContent: t('gather.withFacts') })), helpButton(t('help.gatherFacts'))),
     // replaceChildren writes a null as text, unlike el(): the closed suggestion is left out.
@@ -2298,11 +2382,13 @@ function renderGathered() {
 }
 // The declarations in the envelope are the seeds; the suggestion lists every item with why.
 async function suggestEnvelope(button) {
-  const nodes = gathered.filter(id => !id.startsWith(HEADER));
+  if (!seeds.length) return;
+  const same = sameRun(), nodes = seeds;
   await busy([button], $('#chatNote'), async () => {
-    suggestion = await api('POST', '/api/envelope/suggest', { key: studio.project.key, run: studio.run, nodes });
-    suggestion.ticked = new Set(suggestion.items.map(i => i.id));
-    selection = selectionRecord(suggestion);
+    const answer = await api('POST', '/api/envelope/suggest', { key: studio.project.key, run: studio.run, nodes });
+    if (!same()) return;
+    suggestion = answer;
+    absorbSuggestion(answer, nodes);
     gatheredFolded = false;
     renderGathered();
   });
@@ -2312,49 +2398,83 @@ function reasonText(r) {
     lines: r.lines?.length ? t('why.lines', { lines: r.lines.join(', ') }) : '' };
   return t('why.' + r.code, vars).replace(/ \(\)$/, '');
 }
-// What the question records about the selection: the budget and what stayed out, and why.
-function selectionRecord(s) {
-  return { budget_bytes: s.budget_bytes, used_bytes: s.used_bytes, measured: s.measured,
-    left_out: s.left_out.map(e => ({ name: e.name, role: e.role, bytes: e.bytes, why: e.left_out })), gaps: s.gaps };
+// Learns what a suggestion says about each source, keeping what earlier ones said: a new suggestion
+// may not mention a source that stays in the envelope. How a source first came (`provenance`) and
+// why a selection first kept it out (`left_out_why`) do not change; whether it is kept out now
+// (`kept_out`) follows the latest suggestion that mentions it. Never `notes`: in a question's
+// origin they would go to the model (see ask_gathered).
+function absorbSuggestion(s, nodes) {
+  selection ??= newSelection();
+  const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+  const learn = (e, provenance) => {
+    const before = selection.sources.get(e.id);
+    selection.sources.set(e.id, { id: e.id, name: e.name, path: e.path, kind: e.kind, start_line: e.start_line, end_line: e.end_line, role: e.role, bytes: e.bytes,
+      calls: e.calls ?? null, facts: e.facts ?? [], reasons: [...(before?.reasons ?? []), ...e.reasons.filter(r => !before?.reasons.some(o => same(o, r)))],
+      left_out_why: before?.left_out_why ?? e.left_out ?? null, kept_out: e.left_out ?? null, provenance: before?.provenance ?? provenance });
+  };
+  s.items.forEach(e => learn(e, 'suggested'));
+  s.left_out.forEach(e => learn(e, 'left_out'));
+  selection.gaps = [...selection.gaps, ...s.gaps.filter(g => !selection.gaps.some(o => same(o, g)))];
+  Object.assign(selection, { suggested_from: nodes, budget_bytes: s.budget_bytes, suggested_bytes: s.used_bytes, measured: s.measured });
+}
+// origin.selection, format 1: every source known, each in exactly one list. `included` is the
+// envelope as it is sent, in its order, the same ids as the question's nodes; `removed` the person
+// took out; `left_out` the selection kept out (`why`); `not_joined` were suggested and never
+// brought in. Being in a list is the state now. Each source carries role, reasons, lines, bytes and
+// approved facts, from the latest suggestion that mentioned it, and two separate things: where it
+// first came from (`provenance`: suggested, left_out or manual, plus `left_out_why` if a selection
+// ever kept it out) and the person's last action on it (`decision`: included, removed or null, with
+// `decision_scope`: single or bulk, or null). `seeds` are the targets now, all in the envelope;
+// `suggested_from` what the last suggestion started from. `included_bytes` counts what has a known
+// size. With no suggestion there is no record: the question's nodes say what went.
+function selectionOnRecord() {
+  if (!selection?.suggested_from) return null;
+  const decided = ({ kept_out, ...e }) => { const d = selection.decisions.get(e.id); return { ...e, decision: d?.decision ?? null, decision_scope: d?.scope ?? null }; };
+  const removed = e => selection.decisions.get(e.id)?.decision === 'removed';
+  const others = [...selection.sources.values()].filter(e => !gathered.includes(e.id));
+  const included = gathered.map(id => decided(selection.sources.get(id)));
+  return { format_version: 1, seeds, suggested_from: selection.suggested_from, measured: selection.measured, budget_bytes: selection.budget_bytes, suggested_bytes: selection.suggested_bytes,
+    included_bytes: included.reduce((sum, e) => sum + (e.bytes ?? 0), 0), included,
+    removed: others.filter(removed).map(decided),
+    left_out: others.filter(e => !removed(e) && e.kept_out).map(e => ({ ...decided(e), why: e.kept_out })),
+    not_joined: others.filter(e => !removed(e) && !e.kept_out).map(decided),
+    gaps: selection.gaps };
 }
 function suggestionView() {
   const row = item => {
-    const box = el('input', { type: 'checkbox', checked: suggestion.ticked.has(item.id),
-      onchange: event => event.target.checked ? suggestion.ticked.add(item.id) : suggestion.ticked.delete(item.id) });
+    const box = el('input', { type: 'checkbox', checked: gathered.includes(item.id), onchange: () => toggleGathered(item.id) });
     const name = item.kind === 'header' ? t('envelope.headerName') : item.name.replace(/^impl (.+ for )?/, '');
     return el('label', { className: 'item' }, box,
       el('span', {},
         el('span', { className: 'tag', style: 'margin-right: 4px', textContent: t('envelope.role.' + item.role) }),
+        selection.decisions.get(item.id)?.decision === 'removed' ? el('span', { className: 'tag', style: 'margin-right: 4px', textContent: t('envelope.declined') }) : null,
         el('span', { className: 'mono', textContent: name }), ` · ${item.path}:${item.start_line}–${item.end_line}`,
         item.calls ? ` · ${t('envelope.calls', { n: intPt(item.calls) })}` : '',
         item.facts?.length ? el('span', { className: 'tag', style: 'margin-left: 4px', textContent: t('envelope.facts', { n: item.facts.length }) }) : null,
         el('div', { className: 'why', textContent: [item.left_out ? t('envelope.out.' + item.left_out) : '', ...item.reasons.map(reasonText)].filter(Boolean).join(' · ') })));
   };
   const rows = suggestion.items.map(row);
+  const fold = (name, title, kids) => el('details', { style: 'margin-top: 6px', open: Boolean(panelOpen[name]), ontoggle: event => { panelOpen[name] = event.target.open; } }, el('summary', { textContent: title }), ...kids);
+  // What the suggestion adds that is not in yet and that the person did not take out.
+  const toJoin = suggestion.items.map(i => i.id).filter(id => !gathered.includes(id) && selection.decisions.get(id)?.decision !== 'removed');
   return el('div', { id: 'suggestion' },
     el('div', { className: 'row', style: 'gap: 6px' }, el('strong', { textContent: t('envelope.title', { n: suggestion.items.length, kb: (suggestion.used_bytes / 1024).toFixed(1), budget: (suggestion.budget_bytes / 1024).toFixed(0) }) }),
-      el('button', { style: 'margin-left: auto', textContent: t('envelope.use'), onclick: () => {
-        // The envelope's order: what was there first, then the ticked suggestions in their order.
-        const ticked = [...suggestion.items, ...suggestion.left_out].map(i => i.id).filter(id => suggestion.ticked.has(id));
-        gathered = [...gathered.filter(id => ticked.includes(id)), ...ticked.filter(id => !gathered.includes(id))];
+      toJoin.length ? el('button', { style: 'margin-left: auto', textContent: t('envelope.use', { n: toJoin.length }), onclick: () => {
+        // It only adds: what the person brought stays, and what they took out stays out.
+        includeBulk(toJoin);
+        gathered = [...gathered, ...toJoin];
         suggestion = null;
         renderGathered();
         inspect();
-      } }),
-      el('button', { className: 'link', textContent: t('envelope.close'), onclick: () => { suggestion = null; renderGathered(); } })),
+      } }) : null,
+      el('button', { className: 'link', style: toJoin.length ? '' : 'margin-left: auto', textContent: t('envelope.close'), onclick: () => { suggestion = null; renderGathered(); } })),
     suggestion.measured ? null : el('div', { className: 'muted', style: 'font-size: 12px', textContent: t('envelope.noMeasure') }),
     ...rows,
-    suggestion.left_out.length ? el('details', { style: 'margin-top: 6px' },
-      el('summary', { textContent: t('envelope.leftOut', { n: suggestion.left_out.length }) }),
-      ...suggestion.left_out.map(row)) : null,
-    suggestion.gaps.length ? el('details', { style: 'margin-top: 6px' },
-      el('summary', { textContent: t('envelope.gaps', { n: suggestion.gaps.length }) }),
-      ...suggestion.gaps.map(g => el('div', { className: 'why', textContent: t('envelope.gap.' + g.code, {
+    suggestion.left_out.length ? fold('left', t('envelope.leftOut', { n: suggestion.left_out.length }), suggestion.left_out.map(row)) : null,
+    suggestion.gaps.length ? fold('gaps', t('envelope.gaps', { n: suggestion.gaps.length }), suggestion.gaps.map(g => el('div', { className: 'why', textContent: t('envelope.gap.' + g.code, {
         t: g.for_target.replace(/^impl (.+ for )?/, ''), text: g.text, n: g.count ?? '?',
         list: g.candidates?.length ? g.candidates.join(', ') : t('envelope.gap.many', { n: g.count ?? '?' }) }) + (g.line ? ` · ${g.path}:${g.line}` : '') }))) : null,
-    suggestion.behavior.length ? el('details', { style: 'margin-top: 6px' },
-      el('summary', { textContent: t('envelope.behavior', { n: suggestion.behavior.length }) }),
-      ...suggestion.behavior.map(b => el('div', { className: 'why', textContent: `${t('envelope.behavior.' + b.kind)} · ${b.name.replace(/^impl (.+ for )?/, '')} · ${b.text.split(/\s+/).join(' ').slice(0, 90)} · ${b.path}:${b.line}` }))) : null);
+    suggestion.behavior.length ? fold('behavior', t('envelope.behavior', { n: suggestion.behavior.length }), suggestion.behavior.map(b => el('div', { className: 'why', textContent: `${t('envelope.behavior.' + b.kind)} · ${b.name.replace(/^impl (.+ for )?/, '')} · ${b.text.split(/\s+/).join(' ').slice(0, 90)} · ${b.path}:${b.line}` }))) : null);
 }
 function gatheredTurnView(g) {
   const facts = g.reviewed_facts?.length ?? 0;
@@ -2838,9 +2958,8 @@ function checkView(c, s, turn) {
     el('div', {},
       el('span', { className: `verdict ${passed ? 'passed' : 'error'}`, textContent: passed ? t('check.passed') : t('check.failed') }),
       helpButton(t('help.check')),
-      el('span', { className: 'muted', textContent: t('check.semantic', {
-        status: c.report.semantic_status === 'pending' ? t('check.pending') : c.report.semantic_status,
-        fence: c.extracted_from_fence ? t('check.fence') : '' }) })),
+      el('span', { className: 'muted', textContent: t(c.report.semantic_status === 'pending' ? 'check.notAssessed' : 'check.semantic', {
+        status: c.report.semantic_status, fence: c.extracted_from_fence ? t('check.fence') : '' }) })),
     c.report.issues.length ? el('ul', { className: 'claims error' }, ...c.report.issues.map(issue)) : null,
     c.resolutions?.length ? el('details', {},
       el('summary', { className: 'muted', textContent: `${t('check.resolved')} (${c.resolutions.length})` }),
@@ -2895,7 +3014,15 @@ function reviewView(k, passed, s, turn) {
 
 async function loadFacts() {
   if (!studio.project || !studio.run) { $('#factsList').replaceChildren(); $('#factsCount').textContent = ''; return loadCommands(); }
-  const data = await api('GET', `/api/facts?${query({ key: studio.project.key, run: studio.run })}`);
+  const same = sameRun();
+  let data;
+  try {
+    data = await api('GET', `/api/facts?${query({ key: studio.project.key, run: studio.run })}`);
+  } catch (error) {
+    await loadCommands();
+    throw error;
+  }
+  if (!same()) return;
   const classes = { current: 'verdict passed', applied: 'verdict passed', proposed: 'muted', stale: 'error', revoked: 'muted' };
   // A change: who proposed it, at what cost, and the runs that backed it.
   const changeLines = f => f.kind !== 'CHANGE' ? [] : [
@@ -2934,10 +3061,12 @@ function resetInventory() {
 }
 $('#inventoryBuild').addEventListener('click', () => busy([$('#inventoryBuild')], $('#inventoryNote'), async () => {
   say($('#inventoryNote'), t('inventory.building'));
+  const same = sameRun();
   const [built, executions] = await Promise.all([
     api('GET', `/api/inventory?${query({ key: studio.project.key, run: studio.run })}`),
     api('GET', `/api/executions?${query({ key: studio.project.key, run: studio.run })}`),
   ]);
+  if (!same()) return;
   inventory = built;
   inventory.measured = measuredOrigins(executions);
   say($('#inventoryNote'), '');
@@ -2971,25 +3100,54 @@ let hot = null, hotTurns = [];
 const FREQUENT = 1e6;
 // qwen is out of the changes for now: 0 of 8 answers passed, nearly all refused by their form (see the plan).
 const LADDER_MODELS = [{ provider: 'claude-cli', modelfile: 'performance-claude', claude_model: 'haiku' }];
+const ladderLabel = () => LADDER_MODELS.map(m => [providerLabel(m.provider), m.claude_model ?? m.modelfile].filter(Boolean).join(' · ')).join(', ');
 const FACT_MODEL = { provider: 'ollama', modelfile: 'verificavel-qwen3coder' };
 const intPt = v => Number(v).toLocaleString(LANG === 'pt' ? 'pt-BR' : 'en-US');
+// What the page knows about this edition's measure: `idle`, `pending` (being read), `ready`,
+// `none` (the server says there is none) or `failed` (it could not be read: no claim about it).
+let hotStatus = 'idle', hotFailure = '';
 function resetHot() {
   hot = null;
   hotTurns = [];
+  studio.measureAll = null;
+  hotStatus = 'idle';
   buildCity();
-  $('#hotMeasure').disabled = !studio.project || !studio.run;
+  paintMeasure();
   perfEntries = [];
   perfAsked = null;
   measureDetail = null;
   $('#hotList').replaceChildren();
   say($('#hotNote'), '');
-  if (studio.project && studio.run) loadHot().catch(() => {});
+  if (studio.project && studio.run) loadHot();
+}
+// Why "Medir tudo" cannot run now: not possible here, or possible and waiting for an approval.
+const measureBlocked = () => { const m = studio.measureAll;
+  return !m ? '' : !m.available ? t('hot.unavailable.' + m.reason, m) : m.approved ? '' : t('hot.needsApproval', m); };
+function paintMeasure() {
+  const m = studio.measureAll, failed = hotStatus === 'failed';
+  $('#hotMeasure').disabled = !m?.available || !m.approved;
+  const text = failed ? t('hot.readFailed', { error: hotFailure }) : !m ? '' : measureBlocked() || (hotStatus === 'none' ? t('hot.notYet') : '');
+  $('#hotState').hidden = !text;
+  $('#hotState').className = failed ? 'error' : 'muted';
+  $('#hotState').textContent = text;
+  $('#hotState').title = m?.detail ?? '';
+  if (city && !city.measured) cityStatus();
 }
 async function loadHot() {
-  const run = studio.run;
-  const measure = await api('GET', `/api/hotspots?${query({ key: studio.project.key, run })}`);
-  if (run !== studio.run) return;
+  const same = sameRun();
+  hotStatus = 'pending';
+  let measure;
+  try {
+    measure = await api('GET', `/api/hotspots?${query({ key: studio.project.key, run: studio.run })}`);
+  } catch (error) {
+    if (!same()) return;
+    hotStatus = error.status === 404 ? 'none' : 'failed';
+    hotFailure = error.message;
+    return paintMeasure();
+  }
+  if (!same()) return;
   hot = measure;
+  hotStatus = 'ready';
   renderHot();
 }
 async function runMeasure(note) {
@@ -3014,6 +3172,7 @@ function hotTarget() {
 }
 function renderHot() {
   buildCity();
+  paintMeasure();
   const box = $('#hotList');
   if (!hot) return box.replaceChildren();
   const goTo = (id, label) => {
@@ -3028,10 +3187,10 @@ function renderHot() {
     el('div', { className: 'muted', style: 'font-size: 12px' }, t('hot.callers'), ' ',
       ...sep.callers.flatMap((c, k) => [k ? ', ' : '', goTo(c.symbol, c.name), ` (${intPt(c.calls)})`])),
     el('div', { className: 'row', style: 'gap: 6px; margin-top: 6px' },
-      el('button', { className: 'primary', textContent: t('hot.askFacts', { n: sep.lines.length }), disabled: !sep.lines.length,
+      el('button', { className: 'primary', textContent: t('hot.askFacts', { n: sep.lines.length, model: choiceLabel(FACT_MODEL) }), disabled: !sep.lines.length,
         onclick: ev => busy([ev.target], $('#hotNote'), () => askHotFacts(sep)) }),
       el('button', { id: 'hotApprove', textContent: t('hot.approveAll'), hidden: !hotTurns.length, onclick: ev => approveHotFacts(ev.target) }),
-      helpButton(t('help.hotSeparate')))) : el('p', { className: 'muted', textContent: t('hot.noFrequent', { n: intPt(FREQUENT) }) });
+      helpButton(t('help.hotSeparate', { model: choiceLabel(FACT_MODEL) })))) : el('p', { className: 'muted', textContent: t('hot.noFrequent', { n: intPt(FREQUENT) }) });
   const row = r => el('li', {}, el('details', { className: 'finding' },
     el('summary', {}, el('button', { className: 'primary investigate', textContent: t('hot.optimize'), title: t('help.hotOptimize'),
       onclick: ev => { ev.preventDefault(); busy([ev.target], $('#hotNote'), () => optimize(r)); } }),
@@ -3101,7 +3260,9 @@ function measureLines(row) {
 // ladder. These cards are worked out from the recorded measure and live only on the page.
 let perfEntries = [], perfAsked = null, perfRunning = false;
 async function askPerf(question) {
+  const same = sameRun();
   const answer = await api('POST', '/api/performance-question', { key: studio.project.key, run: studio.run, question });
+  if (!same()) return true;
   if (!answer.route.intent) return false;
   perfEntries.push({ ...answer, question, at: studio.turns.length });
   $('#question').value = '';
@@ -3125,22 +3286,27 @@ function perfCard(perf) {
   return el('div', { className: 'hot-sep perf-card' },
     el('strong', { textContent: perf.question }),
     el('div', { className: 'muted', style: 'font-size: 12px', textContent: t('perf.route', { intent, words: r.matched.join(', ') }) }),
-    perf.needs_measure ? null : el('div', { className: 'muted', style: 'font-size: 12px' }, t('perf.noModel'), helpButton(t('help.perf'))),
+    perf.needs_measure ? null : el('div', { className: 'muted', style: 'font-size: 12px' }, t('perf.noModel'), helpButton(t('help.perf', { facts: choiceLabel(FACT_MODEL), ladder: ladderLabel() }))),
     ...perf.answer.map(a => el('div', { style: 'font-size: 13px; margin-top: 4px', textContent: a })),
     ...perf.facts.map(f => el('div', { style: 'font-size: 12px; margin-top: 6px' }, tag(t('perf.qwen')), f.text)),
     ...perf.changes.map(c => el('div', { style: 'font-size: 12px; margin-top: 6px' }, tag(t('perf.ladder')), c.text, ' ',
       button(t('perf.toLadder'), async () => {
         // The envelope the Librarian suggests for those points, as "Otimizar" does, up to 16.
-        const suggestion = await api('POST', '/api/envelope/suggest', { key: studio.project.key, run: studio.run, nodes: c.nodes });
-        gathered = [...new Set([...c.nodes, ...suggestion.items.map(i => i.id)])]
-          .filter(id => c.nodes.includes(id) || state.index.has(id) || id.startsWith(HEADER));
-        selection = selectionRecord(suggestion);
+        const same = sameRun();
+        const suggested = await api('POST', '/api/envelope/suggest', { key: studio.project.key, run: studio.run, nodes: c.nodes });
+        if (!same()) return;
+        selection = null;
+        absorbSuggestion(suggested, c.nodes);
+        gathered = [...new Set([...c.nodes, ...suggested.items.map(i => i.id)])];
+        includeBulk(gathered);
+        seeds = c.nodes;
         gatherFacts = true; renderGathered(); setMode('improve');
         // The envelope was for this change: the next question typed starts clean.
         try { await askLadder(c.text); } finally { gathered = []; gatherFacts = false; renderGathered(); }
       }))),
     el('div', { className: 'row', style: 'gap: 6px; margin-top: 8px' },
-      perf.needs_measure ? button(t('hot.measure'), async () => {
+      perf.needs_measure && measureBlocked() ? el('span', { className: 'muted', textContent: measureBlocked() }) : null,
+      perf.needs_measure && studio.measureAll?.available && studio.measureAll.approved ? button(t('hot.measure'), async () => {
         await runMeasure($('#llmNote'));
         const answer = await api('POST', '/api/performance-question', { key: studio.project.key, run: studio.run, question: perf.question });
         delete perf.needs_measure;
@@ -3159,7 +3325,7 @@ async function askFacts(items) {
   await saveSettings();
   hotTurns = [];
   for (const [k, item] of items.entries()) {
-    say($('#llmNote'), t('hot.asking', { k: k + 1, n: items.length, name: item.summary }));
+    say($('#llmNote'), t('hot.asking', { k: k + 1, n: items.length, name: item.summary, model: choiceLabel(FACT_MODEL) }));
     const turn = await api('POST', '/api/gathered-question', { key: studio.project.key, run: studio.run, question: item.question, nodes: [item.symbol],
       with_facts: false, origin: { kind: 'hot', summary: item.summary } });
     studio.turns.push(turn);
@@ -3167,7 +3333,7 @@ async function askFacts(items) {
     renderTurns();
     await sendTurn(turn, FACT_MODEL);
   }
-  say($('#llmNote'), t('hot.asked', { n: items.length }));
+  say($('#llmNote'), t('hot.asked', { n: items.length, model: choiceLabel(FACT_MODEL) }));
   renderHot();
 }
 
@@ -3178,7 +3344,7 @@ async function askHotFacts(sep) {
   hotTurns = [];
   perfAsked = null;
   for (const [k, item] of sep.lines.entries()) {
-    say($('#hotNote'), t('hot.asking', { k: k + 1, n: sep.lines.length, name: item.caller.name }));
+    say($('#hotNote'), t('hot.asking', { k: k + 1, n: sep.lines.length, name: item.caller.name, model: choiceLabel(FACT_MODEL) }));
     const question = t('hot.factQuestion', { name: item.caller.name, line: item.line, text: item.text, calls: intPt(item.caller.calls),
       target: sep.target.name, targetCalls: intPt(sep.target.calls) });
     const turn = await api('POST', '/api/gathered-question', { key: studio.project.key, run: studio.run, question, nodes: [item.caller.symbol], with_facts: false,
@@ -3188,7 +3354,7 @@ async function askHotFacts(sep) {
     renderTurns();
     await sendTurn(turn, FACT_MODEL);
   }
-  say($('#hotNote'), t('hot.asked', { n: sep.lines.length }));
+  say($('#hotNote'), t('hot.asked', { n: sep.lines.length, model: choiceLabel(FACT_MODEL) }));
   renderHot();
 }
 // Every FACT of those questions that passed the mechanical check, approved with one note.
@@ -3213,24 +3379,31 @@ async function approveHotFacts(button, where = $('#hotNote')) {
 // "Otimizar": the envelope the Librarian suggests for the function, with the reviewed facts,
 // and a question made of what was counted; the ladder is ticked. The person reads and asks.
 async function optimize(r) {
-  const suggestion = await api('POST', '/api/envelope/suggest', { key: studio.project.key, run: studio.run, nodes: [r.symbol] });
+  const same = sameRun();
+  const answer = await api('POST', '/api/envelope/suggest', { key: studio.project.key, run: studio.run, nodes: [r.symbol] });
+  if (!same()) return;
+  suggestion = answer;
   const row = id => hot.rows.find(x => x.symbol === id);
   const called = suggestion.items.filter(i => i.reasons.some(x => x.code === 'called')).map(i => row(i.id)).filter(Boolean).sort((a, b) => b.calls - a.calls).slice(0, 3);
   investigation = null;
+  selection = null;
+  absorbSuggestion(suggestion, [r.symbol]);
   gathered = suggestion.items.map(i => i.id);
-  selection = selectionRecord(suggestion);
+  includeBulk(gathered);
+  seeds = [r.symbol];
   gatherFacts = true;
-  suggestion.items.forEach(i => { if (!state.index.has(i.id) && !i.id.startsWith(HEADER)) gathered = gathered.filter(g => g !== i.id); });
+  gatheredFolded = false;
   setMode('improve');
   $('#ladderOn').checked = true;
   $('#question').value = t('hot.optimizeQuestion', { name: r.name, calls: intPt(r.calls),
     called: called.length ? t('hot.optimizeCalled', { list: called.map(c => `${c.name} (${intPt(c.calls)})`).join(', ') }) : '' });
   renderGathered();
+  inspect();
   $('#question').focus();
 }
-// The ladder from the composer: its models in order, the next when the gate refuses; a
-// LACUNA gathers what it names and asks the same model again. Each send shows in the
-// conversation as it is recorded.
+// The ladder from the composer, once: nothing changes the package after it is asked. A refusal or
+// a LACUNA stays in the record for the person to decide. Each send shows in the conversation as it
+// is recorded.
 async function askLadder(question) {
   const gate = (studio.commands ?? []).filter(c => c.approved).map(c => c.name);
   if (!gate.length) throw new Error(t('ladder.noGate'));
@@ -3238,24 +3411,25 @@ async function askLadder(question) {
   // allowed) must be saved before the ladder, or every model is told not to propose a change.
   await saveSettings();
   const before = new Set(studio.turns.map(x => x.id));
-  const poll = setInterval(async () => {
-    studio.turns = await api('GET', `/api/turns?${query({ key: studio.project.key, run: studio.run })}`).catch(() => studio.turns);
-    renderTurns();
-  }, 4000);
+  const same = sameRun();
+  const readTurns = async () => { const turns = await api('GET', `/api/turns?${query({ key: studio.project.key, run: studio.run })}`).catch(() => null); if (turns && same()) studio.turns = turns; };
+  const poll = setInterval(async () => { await readTurns(); if (same()) renderTurns(); }, 4000);
   try {
     say($('#llmNote'), t('ladder.running', { gate: gate.join(', ') }));
     const result = await api('POST', '/api/ladder', { key: studio.project.key, run: studio.run, question, nodes: gathered, with_facts: gatherFacts,
-      gate, models: LADDER_MODELS.map(m => ({ ...m, skills: selectedSkills() })), lacuna_rounds: 2, origin: { kind: 'ladder', summary: question.slice(0, 80), ...(selection ? { selection } : {}) } });
+      gate, models: LADDER_MODELS.map(m => ({ ...m, skills: selectedSkills() })), retries: 0, lacuna_rounds: 0, origin: { kind: 'ladder', summary: question.slice(0, 80), ...(selectionOnRecord() ? { selection: selectionOnRecord() } : {}) } });
     ladderLog.unshift(result);
     $('#question').value = '';
     return result;
   } finally {
     clearInterval(poll);
-    studio.turns = await api('GET', `/api/turns?${query({ key: studio.project.key, run: studio.run })}`);
-    renderTurns();
-    const fresh = studio.turns.filter(x => !before.has(x.id)).at(-1);
-    if (fresh) activate(fresh.id);
-    await loadCommands();
+    await readTurns();
+    if (same()) {
+      renderTurns();
+      const fresh = studio.turns.filter(x => !before.has(x.id)).at(-1);
+      if (fresh) activate(fresh.id);
+      await loadCommands();
+    }
     renderLadder();
   }
 }
@@ -3271,8 +3445,7 @@ function renderLadder() {
     s.detail?.why?.length ? el('div', { className: 'muted', textContent: s.detail.why.join(' · ') }) : null,
     s.detail?.worse?.length ? el('div', { className: 'error', textContent: t('ladder.worse', { list: s.detail.worse.join(' · ') }) }) : null,
     s.detail?.issues?.length ? el('div', { className: 'muted', textContent: s.detail.issues.join(', ') }) : null,
-    s.detail?.gathered?.length ? el('div', { className: 'muted', textContent: t('ladder.gathered', { list: s.detail.gathered.map(g => g.name).join(', ') }) }) : null,
-    s.detail?.no_room ? el('div', { className: 'muted', textContent: t('ladder.noRoom') }) : null);
+    s.outcome === 'lacuna' && s.detail?.text?.length ? el('div', { className: 'muted', textContent: t('ladder.asked', { list: s.detail.text.join(' · ') }) }) : null);
   box.replaceChildren(...ladderLog.slice(0, 3).map(r => el('details', { open: r === ladderLog[0], className: 'ladder' },
     el('summary', {}, el('strong', { textContent: r.passed ? t('ladder.passedTitle') : t('ladder.failedTitle') }),
       r.steps.find(s => s.outcome === 'passed')?.detail?.worse?.length ? el('span', { className: 'error', textContent: ` · ${t('ladder.passedWorse')}` }) : null,
@@ -3433,7 +3606,7 @@ function buildCity() {
   fitCity();
 }
 
-const cityStatus = () => status(t(city.measured ? 'city.status' : 'city.statusPlain', { functions: city.list.length, districts: city.districts }));
+const cityStatus = () => status(t(city.measured ? 'city.status' : hotStatus === 'failed' ? 'city.statusFailed' : !studio.measureAll ? 'city.statusPlain' : !studio.measureAll.available ? 'city.statusUnavailable' : hotStatus === 'none' ? 'city.statusNotYet' : 'city.statusPlain', { functions: city.list.length, districts: city.districts }));
 
 // The building of a graph point: itself, or the function that holds it (an occurrence, a local).
 function buildingOf(i) {
@@ -3653,11 +3826,13 @@ function renderInventory() {
 // P2: the profile's commands, approved one exact version at a time, and what each run recorded.
 async function loadCommands() {
   if (!studio.project) { $('#commandsList').replaceChildren(); $('#executionsList').replaceChildren(); $('#commandsCount').textContent = ''; return; }
-  const key = studio.project.key;
+  const key = studio.project.key, same = sameRun();
+  let unread = '';
   const [data, executions] = await Promise.all([
-    api('GET', `/api/commands?${query({ key })}`),
-    studio.run ? api('GET', `/api/executions?${query({ key, run: studio.run })}`) : [],
+    api('GET', `/api/commands?${query(studio.run ? { key, run: studio.run } : { key })}`),
+    studio.run ? api('GET', `/api/executions?${query({ key, run: studio.run })}`).catch(error => { unread = error.message; return []; }) : [],
   ]);
+  if (!same()) return;
   $('#commandsCount').textContent = data.commands.length ? `(${data.commands.length})` : '';
   const note = el('span', { className: 'muted' });
   const item = c => {
@@ -3684,6 +3859,8 @@ async function loadCommands() {
       el('div', { className: 'row', style: 'margin-top: 4px; gap: 6px' }, c.approved ? null : approve, runIt));
   };
   studio.commands = data.commands;
+  studio.measureAll = data.measure_all;
+  paintMeasure();
   // The Ruler keeps the history: one line per execution, the latest one open. The result of a
   // run with a change also shows under the change itself, in the Conversation.
   const latest = executions.reduce((a, x) => (!a || x.started > a.started ? x : a), null);
@@ -3692,6 +3869,7 @@ async function loadCommands() {
     data.commands.length ? el('ol', { className: 'claims' }, ...data.commands.map(item)) : el('p', { className: 'muted', textContent: t('commands.none') }),
     studio.run ? '' : el('p', { className: 'muted', textContent: t('commands.noRun') }), note);
   $('#executionsList').replaceChildren(
+    unread ? el('p', { className: 'error', textContent: t('executions.unread', { error: unread }) }) : '',
     executions.length ? el('div', {}, el('strong', { textContent: t('executions.title') }), el('ol', { className: 'claims' }, ...executions.map(execution))) : '',
     el('p', { className: 'muted', style: 'font-size: 11px', textContent: serverText(data.limits) }));
 }
@@ -4300,6 +4478,7 @@ function setLang(lang) {
   if (studio.status) { fillProviders(); setModelfiles(studio.modelfiles); renderSkills(); }
   if (studio.project) { renderProjectInfo(); renderRuns(); showRunNote(); loadFacts().catch(console.error); }
   renderGathered();
+  paintMeasure();
   if (studio.status) renderTurns();
   if (state.graph) {
     showProvenance();

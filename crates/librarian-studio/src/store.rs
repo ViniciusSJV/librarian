@@ -1200,6 +1200,47 @@ mod tests {
     }
 
     #[test]
+    fn measure_all_is_available_only_with_instrument_and_a_source_it_can_be_placed_in() {
+        let scratch = project();
+        let root = scratch.0.join("project");
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let key = store.open(&display(&root)).unwrap()["key"].as_str().unwrap().to_owned();
+        let git = |args: &[&str]| {
+            let out = std::process::Command::new("git").arg("-C").arg(&root).args(["-c", "user.name=t", "-c", "user.email=t@t"]).args(args).output().unwrap();
+            assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
+        };
+        git(&["init", "-q"]);
+        let commit = || { git(&["add", "-A"]); git(&["commit", "-q", "-m", "x", "--allow-empty"]); };
+        let profile = |value: Value| fs::write(root.join(PROFILE), value.to_string()).unwrap();
+        // A profile without the statement: not available, whatever the run.
+        profile(json!({ "project_root": "." }));
+        commit();
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        assert_eq!(store.measure_all(&key, Some(&run)).unwrap()["reason"], "no_instrument");
+        profile(json!({ "project_root": ".", "commands": { "c": { "argv": ["git", "status"] } }, "instrument": { "statement": "count();", "command": "c" } }));
+        // Possible only with its command declared, and being approved is a separate answer.
+        assert_eq!(store.measure_all(&key, Some(&run)).unwrap()["available"], true);
+        profile(json!({ "project_root": ".", "instrument": { "statement": "count();", "command": "falta" } }));
+        assert_eq!(store.measure_all(&key, Some(&run)).unwrap(), json!({ "available": false, "reason": "no_command", "command": "falta" }));
+        profile(json!({ "project_root": ".", "commands": { "c": { "argv": ["git", "status"] } }, "instrument": { "statement": "count();", "command": "c" } }));
+        assert_eq!(store.measure_all(&key, None).unwrap()["reason"], "no_run");
+        assert_eq!(store.measure_all(&key, Some(&run)).unwrap(), json!({ "available": true, "approved": false, "command": "c" }));
+        let sha = store.commands(&key).unwrap()["commands"][0]["sha256"].as_str().unwrap().to_owned();
+        store.approve_command(&key, "c", &sha).unwrap();
+        assert_eq!(store.measure_all(&key, Some(&run)).unwrap(), json!({ "available": true, "approved": true, "command": "c" }));
+        // An edition that cannot be read: not measurable, and the commands still answer.
+        let unknown = store.measure_all(&key, Some("nao-existe")).unwrap();
+        assert_eq!((&unknown["available"], &unknown["reason"]), (&json!(false), &json!("no_edition")));
+        assert_eq!(store.commands(&key).unwrap()["commands"].as_array().unwrap().len(), 1);
+        // The statement declared, in a project with no source it can go in.
+        fs::remove_file(root.join("src/lib.rs")).unwrap();
+        fs::write(root.join("src/app.py"), "def demo():\n    return 1\n").unwrap();
+        commit();
+        let python = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        assert_eq!(store.measure_all(&key, Some(&python)).unwrap(), json!({ "available": false, "reason": "no_source", "command": "c" }));
+    }
+
+    #[test]
     fn open_generate_and_ask_light_the_graph_and_prepare_a_numbered_query() {
         let scratch = project();
         let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };

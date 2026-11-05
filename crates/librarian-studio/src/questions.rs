@@ -87,7 +87,7 @@ impl Store {
             let route = route(question, &lexicon, &names);
             let needs_measure = route["intent"].is_string();
             return Ok(json!({ "route": route, "needs_measure": needs_measure, "facts": [], "changes": [],
-                "answer": ["Para responder, o Librarian precisa contar antes quantas vezes cada função roda: rode o Medir tudo."] }));
+                "answer": ["Para responder, o Librarian precisa saber quantas vezes cada função roda, e esta edition não tem essa medição."] }));
         }
         let hot = self.hotspots(key, run)?;
         let rows: Vec<&Value> = hot["rows"].as_array().into_iter().flatten().filter(|r| r["symbol"].is_string()).collect();
@@ -104,7 +104,7 @@ impl Store {
             Some("heavy") => {
                 let mut top = rows.clone();
                 top.sort_by(|a, b| ms(b).total_cmp(&ms(a)));
-                answer.push(format!("As que mais pesam no render medido (tempo somado das threads): {}.",
+                answer.push(format!("As que mais pesam na medição (tempo somado das threads): {}.",
                     top.iter().take(5).map(|r| format!("{} ({} chamadas, {} ms)", short(r["name"].as_str().unwrap_or("?")), int(calls(r)), int(ms(r)))).collect::<Vec<_>>().join(", ")));
             }
             Some("where") | Some("optimize") => {
@@ -124,9 +124,9 @@ impl Store {
                     callers.extend(all.first().copied());
                 }
                 answer.push(if route["function"].is_string() {
-                    format!("{name} roda {} vezes num frame, {} ms somados nas threads.", int(calls(target)), int(ms(target)))
+                    format!("{name} roda {} vezes na medição, {} ms somados nas threads.", int(calls(target)), int(ms(target)))
                 } else {
-                    format!("{name} é a que mais roda entre as frequentes: {} vezes num frame, {} ms somados nas threads.", int(calls(target)), int(ms(target)))
+                    format!("{name} é a que mais roda entre as frequentes: {} vezes na medição, {} ms somados nas threads.", int(calls(target)), int(ms(target)))
                 });
                 if !callers.is_empty() {
                     answer.push(format!("Quem mais a chama: {}.", callers.iter().map(|c| format!("{} ({})", short(c["name"].as_str().unwrap_or("?")), int(calls(c)))).collect::<Vec<_>>().join(", ")));
@@ -136,14 +136,14 @@ impl Store {
                     let caller = short(row["name"].as_str().unwrap_or("?"));
                     for line in row["calls_out"].as_array().into_iter().flatten().filter(|l| l["targets"].as_array().into_iter().flatten().any(|t| t["symbol"] == target["symbol"])) {
                         facts.push(fact(&row["symbol"], format!(
-                            "{caller} chama {name} na linha {} (`{}`). {caller} roda {} vezes num frame e {name}, {}. O que essa linha calcula a cada vez, e de quais valores ela depende? Cite a linha {}.",
+                            "{caller} chama {name} na linha {} (`{}`). {caller} roda {} vezes na medição e {name}, {}. O que essa linha calcula a cada vez, e de quais valores ela depende? Cite a linha {}.",
                             line["line"], line["text"].as_str().unwrap_or(""), int(calls(row)), int(calls(target)), line["line"])));
                     }
                 }
                 let mut nodes = vec![target["symbol"].clone()];
                 nodes.extend(callers.iter().map(|c| c["symbol"].clone()));
                 changes.push(json!({ "to": "ladder", "symbol": target["symbol"], "nodes": nodes, "text": format!(
-                    "{name} é a função que mais roda no render: {} vezes num frame{}. O que dá para mudar para ela trabalhar menos, sem mudar a imagem nem o resultado dos testes? Proponha até três mudanças diferentes, uma por HYPOTHESIS.",
+                    "{name} é a função que mais roda na medição: {} vezes{}. O que dá para mudar para ela trabalhar menos, sem mudar as saídas nem o resultado dos testes? Proponha até três mudanças diferentes, uma por HYPOTHESIS.",
                     int(calls(target)),
                     if callers.is_empty() { String::new() } else { format!(", chamada principalmente por {}", callers.iter().map(|c| short(c["name"].as_str().unwrap_or("?"))).collect::<Vec<_>>().join(" e ")) }) }));
             }
