@@ -184,8 +184,8 @@ assinatura. Envios feitos antes dele não têm `link`.
 | Claude (API), DeepSeek | Listados como "em breve"; ainda não enviam. |
 
 A resposta aparece na conversa com provedor, Modelfile, modelo, estado, custo e tempo.
-`completed` descreve o transporte; **a avaliação semântica continua pendente** e é feita
-por você, com os critérios gravados antes.
+`completed` descreve o transporte. O Librarian não avalia o sentido, e a tela diz **Sentido não
+avaliado**: essa avaliação é feita por você, com os critérios gravados antes.
 
 O executável do Claude é procurado em `LIBRARIAN_CLAUDE`, depois no `PATH`, depois na
 extensão mais recente do VS Code. Se o Ollama não responder, inicie o aplicativo e tente
@@ -508,13 +508,19 @@ todas como evidência, na ordem em que foram juntadas: nada é buscado e nada é
 o contexto do dono). A pergunta mostra a faixa **juntadas (N)**, e o `search.json` diz
 "Gathered step". Até 16 declarações.
 
+O que você junta antes de qualquer sugestão vira **alvo**; depois de uma sugestão, não. O botão
+**+alvo** de cada declaração marca e desmarca. Sem alvo, **Sugerir envelope** e a pergunta param com
+o aviso "Nenhum alvo selecionado", que some quando você escolhe um ou o envelope fica vazio. Tirar
+um alvo não transforma outra declaração em alvo. Com uma investigação aberta, **Juntar à pergunta**
+fica desligado, porque ela envia só o que está marcado nela.
+
 Serve para uma mudança que o grafo não liga pelo nome: guardar a inversa de cada objeto no
 `World` precisou da struct, de `new`, de `default`, de `intersect_world`, do método do trait
 que calcula a inversa, do `transform` do `Object` e da struct `Matrix`. Faltando `default`
 e `Matrix`, a mudança não compilou; com elas, passou nos 210 testes do renderer, com a
 imagem idêntica e o render cerca de 30% mais rápido.
 
-**Sugerir envelope.** Com ao menos uma declaração no envelope, o botão **Sugerir envelope**
+**Sugerir envelope.** Com ao menos um alvo no envelope, o botão **Sugerir envelope**
 lista o que uma mudança nelas provavelmente precisa ver, cada item com o motivo e a linha onde
 a ligação está escrita:
 
@@ -548,7 +554,9 @@ Uma função que a medição contou e não rodou fica de fora, salvo se for orig
 roda antes da parte medida e é justamente onde a mudança guarda o valor. Sem medição, a ordem vem só
 da estrutura, e a tela avisa.
 
-A sugestão vem marcada; você desmarca o que não quer e clica em **Juntar os marcados**. Abaixo dela:
+A sugestão não muda o envelope sozinha. A caixa de cada item mostra se ele está no envelope: marcar
+junta e desmarcar tira, na hora. **Juntar as sugeridas (N)** traz de uma vez as selecionadas que ainda
+não estão, sem as que você tirou e sem descartar o que você juntou à mão. Abaixo dela:
 
 - **Ficaram de fora:** cada item com o motivo (não rodou, teste, não coube no orçamento ou passou de
   16). Marcar um deles o traz para o envelope.
@@ -558,7 +566,8 @@ A sugestão vem marcada; você desmarca o que não quer e clica em **Juntar os m
   testes dos alvos e dos custos. Condições, caminhos alternativos e invariantes ainda não são
   extraídos, e chamadas dentro de macros não são vistas.
 
-Essas listas ainda não vão ao modelo. A pergunta grava o orçamento, o que ficou de fora e as lacunas.
+Essas listas não vão ao modelo. A pergunta grava o estado final da seleção, com o orçamento, o que
+ficou de fora, o que você tirou e as lacunas: veja [Registro da seleção](#registro-da-seleção-originselection-formato-1).
 
 O **topo do arquivo** é uma faixa de linhas, não uma declaração: entra como ficha só na pergunta
 juntada, e a mudança proposta pode editar essas linhas (por exemplo, acrescentar um import). Sem
@@ -633,6 +642,12 @@ tempo?" sem que ninguém precise saber onde olhar. O projeto diz só *como* cont
 por uma função, numa linha do perfil (`instrument`, veja o [perfil](#perfil-do-projeto-librarianjson)).
 O Librarian decide *onde*.
 
+O cartão separa **não disponível neste projeto** (sem `instrument` válido, sem o comando que ele
+indica ou sem fonte Rust), **falta aprovar o comando**, **ainda não medido** e **falha ao ler a
+medição**. A capacidade vem de `measure_all`, em `GET /api/commands`, e `GET /api/hotspots` responde
+404 enquanto a edition não tem medição. Capacidade não é cobertura: veja
+[Medição: capacidade não é cobertura](#medição-capacidade-não-é-cobertura).
+
 - **Medir tudo** põe essa instrução logo depois da chave que abre o corpo de cada função Rust
   da edition, na mesma linha, numa cópia (a sua pasta não muda), e roda o comando aprovado
   de `instrument.command`. Ficam de fora os testes, as `const fn`, as funções sem corpo, as
@@ -643,9 +658,11 @@ O Librarian decide *onde*.
   para aquela linha. Abre na função mais pesada que recebeu o contador (uma que já contava não
   recebe nada, e a tela diz isso) e guarda o diff inteiro e a saída inteira, como foram gravados.
 - O **ranking** lista cada linha contada com a função, as chamadas e o tempo (inclusivo,
-  somado das threads e inflado pela própria contagem: a ordem é o que vale; a contagem é
-  exata). Cada linha mostra **quem chama** (pelo nome escrito, com as chamadas contadas de
-  cada chamador) e as chamadas escritas no corpo que levam a funções contadas.
+  somado das threads e inflado pela própria contagem, o que pode mudar a ordem entre as funções; a
+  contagem é exata). Por enquanto, a lista ainda vem ordenada por esse tempo; passar a ordenar por
+  chamadas é a [Etapa 3](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#etapa-3-onde-pesa). Cada linha mostra
+  **quem chama** (pelo nome escrito, com as chamadas contadas de cada chamador) e as chamadas
+  escritas no corpo que levam a funções contadas.
 - **Operações estruturais:** uma operação do inventário que não é conta matemática (trava,
   espera, E/S) dentro de um laço de uma função que rodou na medida. Ela é cara pelo tipo,
   não pela frequência: a `canvas_mutex.lock()` do laço de pixels da câmera.
@@ -662,12 +679,13 @@ O Librarian decide *onde*.
   "onde otimizar?" e "otimize o Groups::intersect" por regras sobre as palavras, depois do
   léxico, sem modelo. A resposta sai da medição, num cartão na própria conversa, com os botões
   para conferir fatos com o modelo local e para pedir a mudança. Sem medição, o cartão oferece o
-  **Medir tudo**. **Perguntar ao modelo mesmo assim** manda a mesma pergunta a quem está escolhido
+  **Medir tudo** ou diz por que não dá para medir. **Perguntar ao modelo mesmo assim** manda a mesma pergunta a quem está escolhido
   na conversa, para quando as regras reconheceram uma pergunta que não era sobre isso. Uma
   pergunta com envelope ou que as regras não reconhecem vai direto ao modelo. O cartão é
   calculado da medição gravada e não fica salvo: some ao recarregar a página.
-- **Otimizar** monta o envelope sugerido da função (com os fatos aprovados), uma pergunta só
-  com o que foi contado, sem a solução, e marca a escada.
+- **Otimizar** recomeça o envelope do zero e monta o sugerido da função (com os fatos aprovados),
+  uma pergunta só com o que foi contado, sem a solução, e marca a escada. Fecha uma investigação
+  aberta, e o registro conta as fontes como inclusão em bloco.
 
 O envelope de um método padrão de trait também traz o `impl Trait for T` do tipo que a cadeia
 do inventário percorre até ele (`child.intersect` com `child` em `Vec<Object>` traz
@@ -676,6 +694,7 @@ do inventário percorre até ele (`child.intersect` com `child` em `Vec<Object>`
 ### Escada (Claude Haiku)
 
 No modo **Melhorar**, com um envelope juntado, a opção **Escada** manda a pergunta ao Claude Haiku.
+Com ela ligada, o seletor de modelo some, porque ela não o usa.
 O qwen saiu das mudanças por enquanto, porque nenhuma resposta dele passou, e continua nos fatos. O
 servidor aceita mais de um modelo em ordem: o próximo só responde se nada passar. Cada mudança proposta passa pelo
 **portão**: os comandos aprovados rodam com ela, e ela passa quando todos têm sucesso, toda
@@ -721,13 +740,17 @@ medidas, mesmo onde o **Medir tudo** não sabe colocar os contadores:
   queda grande de memória vence uma queda menor de tempo, mesmo numa pergunta sobre tempo. As outras aparecem no registro como "ganho menor". Uma mudança
   vale por si: os próprios edits geraram o diff, nenhum problema a cita e nenhum problema é da
   resposta inteira.
-- Uma **LACUNA** precisa dizer entre crases o que falta. O Librarian procura esses nomes no
+- **A tela envia `retries: 0` e `lacuna_rounds: 0`:** cada pergunta é uma rodada só, sem mudar o que
+  foi enviado. O servidor continua aceitando valores maiores, e são eles que ligam a nova tentativa
+  e a rodada de lacuna dos dois itens abaixo. A escada real com esses valores zerados ainda não foi
+  executada pela tela.
+- Uma **LACUNA** precisa dizer entre crases o que falta. Com `lacuna_rounds` maior que 0, o Librarian procura esses nomes no
   catálogo (tipos primeiro, só os que rodaram na medida; um enum traz os tipos das variantes
   que rodaram), junta ao envelope (até 16 declarações) e pergunta de novo ao mesmo modelo. Um
   método que dois traits declaram não é adivinhado: só vem escrito com o trait. Com as 16
   declarações já ocupadas, nada sai para dar lugar: o registro diz que não houve espaço, e a
   rodada termina ali.
-- Uma recusa ganha uma nova tentativa, com as propostas recusadas e o porquê na pergunta.
+- Com `retries` maior que 0, uma recusa ganha uma nova tentativa, com as propostas recusadas e o porquê na pergunta.
 - O registro da escada fica abaixo do compositor: cada passo, quem respondeu, o custo e o
   motivo de cada recusa. Cada envio fica na conversa como qualquer outro.
 
@@ -850,7 +873,7 @@ apaga).
     executions/<NN>-<comando>/     execution.json, stdout-N.txt, stderr-N.txt
     last-turn.txt                  maior número de pergunta já usado (não é reutilizado)
     turns/<NN>/
-      question.json                pergunta, data, formato, hash dos critérios, recusas
+      question.json                pergunta, data, formato, hash dos critérios, recusas, registro da seleção
       criteria-before.md           critérios gravados antes da resposta
       search.json                  o que o léxico tocou e a vizinhança
       prepare-request.json         pedido autocontido do prepare
@@ -862,6 +885,172 @@ apaga).
 ```
 
 Para começar do zero, apague a pasta do projeto em `.studio/projects/`.
+
+## Registro da seleção (`origin.selection`, formato 1)
+
+Contrato do registro implementado em `99f69f3`.
+
+Fica em `question.json`, em `gathered.origin.selection`. É montado pela página (`selectionOnRecord`, em `web/index.html`) no momento em que a pergunta é preparada. O servidor guarda sem interpretar e, desse objeto, lê apenas `notes`.
+
+**Não confundir** com `selection` de `origin.json` e de `send.link`, que descreve o bundle preparado e é outra estrutura.
+
+### Quando existe
+
+| Situação | `origin` | Onde está o que foi enviado |
+|---|---|---|
+| Envelope à mão, sem nenhuma sugestão | `null` | `gathered.nodes` e a query |
+| Houve ao menos uma sugestão, ou Otimizar, ou cartão de desempenho | Com `selection` | `selection.included`, `gathered.nodes` e a query |
+| Investigação do inventário | `{ inventory, kind, summary }`, sem `selection` | `gathered.nodes` e a query |
+| Fatos do lote de Separar | `{ kind: "hot", summary }`, sem `selection` | `gathered.nodes` e a query |
+
+`origin: null` significa só que nada foi sugerido. Não significa que não há registro da pergunta: `gathered.nodes` continua dizendo o que foi.
+
+### Fonte conhecida
+
+**Fonte conhecida** é toda fonte que, desde o início do envelope atual, a pessoa juntou ou removeu, ou que uma sugestão mencionou (selecionada ou deixada de fora).
+
+- O envelope atual começa no primeiro gesto: juntar à mão, Otimizar ou o cartão de desempenho.
+- **Otimizar e o cartão de desempenho recomeçam do zero**, assim como trocar de grafo ou abrir uma investigação.
+- **Envelope que fica vazio recomeça do zero**: o que se sabia dele é descartado. Isso inclui "Limpar".
+
+### Regras
+
+1. **Partição total.** Toda fonte conhecida está em exatamente uma destas listas: `included`, `removed`, `left_out`, `not_joined`.
+2. **`included` é o estado de inclusão e é o envio.** Mesmos ids e mesma ordem de `gathered.nodes`.
+3. **Origem, estado e decisão são coisas separadas.** A lista diz o estado atual. `provenance` diz de onde a fonte veio. `decision` diz a última ação da pessoa.
+4. **Sem `notes`.** A presença desse campo faz o servidor mandar as notas ao modelo (`store.rs`, `ask_gathered`). A página nunca o escreve. Um cliente que o escrever liga as notas: a proteção é da página, não do servidor.
+5. **O que o modelo recebeu é a query.** O registro explica a seleção; a prova do envio é `claims/query.json` e `sends/*/query.json`.
+
+### As quatro listas
+
+| Lista | Significado | Como se decide |
+|---|---|---|
+| `included` | Está no envelope agora | Está em `gathered` |
+| `removed` | A pessoa tirou | Fora de `gathered`, com última ação `removed` |
+| `left_out` | A seleção deixou de fora | Fora de `gathered`, sem remoção, e a **última sugestão que mencionou a fonte** a deixou de fora |
+| `not_joined` | Sugerida e não trazida | Fora de `gathered`, sem remoção, e a última sugestão que a mencionou a selecionou |
+
+Uma fonte mencionada só por uma sugestão anterior mantém o que essa sugestão disse. Uma sugestão nova que não a mencione não muda a classificação dela.
+
+### `provenance`: de onde veio
+
+Fixada no momento em que a fonte passa a ser conhecida. **Não muda depois**, nem mesmo se a fonte for removida, devolvida ou mencionada por outra sugestão.
+
+| Valor | Regra |
+|---|---|
+| `manual` | A pessoa a juntou antes de qualquer sugestão a mencionar. Vale também se uma sugestão depois a mencionar |
+| `suggested` | Apareceu primeiro como selecionada numa sugestão |
+| `left_out` | Apareceu primeiro como deixada de fora numa sugestão |
+
+Com Otimizar e o cartão de desempenho, as fontes têm `suggested` ou `left_out`, inclusive a função escolhida como alvo: elas nascem da sugestão daquele clique.
+
+### `decision` e `decision_scope`: a última ação da pessoa
+
+| Campo | Valores | Significado |
+|---|---|---|
+| `decision` | `included`, `removed`, `null` | **Última ação humana registrada.** Não é o estado atual (esse é a lista) nem o histórico |
+| `decision_scope` | `single`, `bulk`, `null` | Granularidade dessa ação |
+
+**Não há histórico.** Removida e depois devolvida termina como `included`/`single`, sem marca da remoção. A pergunta "foi removida antes?" não tem resposta neste formato.
+
+Marcar ou desmarcar uma fonte como alvo (`+alvo`) não é registrado em `decision`: aparece em `seeds`.
+
+### Tabela de combinações
+
+| # | Situação | Lista | `provenance` | `decision` | `decision_scope` |
+|---|---|---|---|---|---|
+| 1 | Veio com Otimizar ou com o cartão de desempenho | `included` | `suggested` | `included` | `bulk` |
+| 2 | Deixada de fora pela sugestão, sem toque | `left_out` | `left_out` | `null` | `null` |
+| 3 | Deixada de fora, e a pessoa trouxe | `included` | `left_out` | `included` | `single` |
+| 4 | Sugerida, e a pessoa tirou | `removed` | `suggested` | `removed` | `single` |
+| 5 | Removida e devolvida | `included` | a de antes | `included` | `single` |
+| 6 | Juntada pelo mapa, com sugestão existente | `included` | `manual` | `included` | `single` |
+| 7 | Juntada à mão antes da primeira sugestão | `included` | `manual` | `included` | `single` |
+| 8a | Sugerida e não trazida | `not_joined` | `suggested` | `null` | `null` |
+| 8b | Entrou por "Juntar as sugeridas" | `included` | `suggested` | `included` | `bulk` |
+| — | Removida antes da primeira sugestão | `removed` | `manual` | `removed` | `single` |
+
+**Remoção antes da primeira sugestão:** fica guardada e aparece em `removed` quando houver sugestão. Se não houver sugestão, não há registro nenhum (`origin: null`), e essa remoção não fica gravada.
+
+### Campos de topo
+
+| Campo | Tipo | Obrigatório | Significado |
+|---|---|---|---|
+| `format_version` | `1` | Sim | Ausente significa registro antigo |
+| `seeds` | ids | Sim | Alvos atuais, todos em `included`. Vazio só em estado que a página não deixa enviar |
+| `suggested_from` | ids | Sim | De onde partiu a última sugestão; pode não coincidir com `seeds` |
+| `measured` | booleano | Sim | Existe medição nesta edition. **Não diz nada sobre cobertura** (veja [Medição: capacidade não é cobertura](#medição-capacidade-não-é-cobertura)) |
+| `budget_bytes`, `suggested_bytes` | número | Sim | Orçamento e uso da última sugestão |
+| `included_bytes` | número | Sim | Soma só o que tem tamanho conhecido; fonte sem sugestão conta 0 |
+| `included`, `removed`, `left_out`, `not_joined` | fontes | Sim | A partição |
+| `gaps` | lista | Sim | União das sugestões feitas; fora da partição |
+
+**Não existe a lista `added`.** Para saber o que a pessoa incluiu, filtre `included` por `decision`.
+
+### Campos de cada fonte
+
+| Campo | Tipo | Pode ser nulo | Significado |
+|---|---|---|---|
+| `id`, `name` | texto | Não | Identidade |
+| `reasons` | lista | Não; vazia sem sugestão que a mencione | Motivos, **somados** entre sugestões |
+| `role` | texto | Sim | Papel na **sugestão mais recente que mencionou a fonte**. **Não acompanha a mudança de alvo**: `+alvo` não muda `role` |
+| `calls` | número | Sim | Contagem na mesma sugestão. Nulo não distingue "não rodou" de "sem cobertura" |
+| `facts` | ids | Não; pode ser vazia | Fatos conhecidos na mesma sugestão. **Não é o que foi enviado**: isso depende de `with_facts` e está na query |
+| `provenance` | texto | Não | Ver acima |
+| `left_out_why` | texto | Sim | **Histórico:** o primeiro motivo pelo qual uma sugestão a deixou de fora. Não muda, e não decide a lista |
+| `why` | texto | Só existe em `left_out` | **Estado:** o motivo dado pela última sugestão que a mencionou |
+| `decision`, `decision_scope` | texto | Sim | Ver acima |
+| `path`, `start_line`, `end_line`, `bytes`, `kind` | vários | Sem sugestão que a mencione | A página não conhece esses dados. `kind` vem do grafo, quando a fonte está nele |
+
+### Exemplos
+
+```jsonc
+// Veio com Otimizar
+{ "id": "src:…", "name": "Matrix", "path": "src/matrix.rs", "kind": "struct", "start_line": 6, "end_line": 9,
+  "role": "origin", "bytes": 109, "calls": null, "facts": [],
+  "reasons": [{ "code": "owner_type", "for_target": "impl Matrix<4>::inverse", "fields": ["…"], "lines": [193] }],
+  "left_out_why": null, "provenance": "suggested", "decision": "included", "decision_scope": "bulk" }
+
+// Estava de fora, e a pessoa trouxe
+{ "name": "parse_obj_smooth", "left_out_why": "did_not_run", "provenance": "left_out", "decision": "included", "decision_scope": "single", "…": "…" }
+
+// Pelo mapa, sem sugestão que a mencione
+{ "id": "src:…", "name": "impl World::color_at", "path": null, "kind": "method", "start_line": null, "end_line": null,
+  "role": null, "bytes": null, "calls": null, "reasons": [], "facts": [], "left_out_why": null,
+  "provenance": "manual", "decision": "included", "decision_scope": "single" }
+
+// Removida: mantém os motivos
+{ "name": "Matrix", "role": "origin", "reasons": ["…"], "left_out_why": null, "provenance": "suggested", "decision": "removed", "decision_scope": "single" }
+
+// De fora, sem toque
+{ "name": "impl Groups::len", "role": "cost", "why": "max_items", "left_out_why": "max_items", "provenance": "left_out", "decision": null, "decision_scope": null }
+
+// De fora na primeira sugestão, selecionada na segunda, não trazida: not_joined, sem `why`
+{ "name": "Computations", "left_out_why": "budget", "provenance": "left_out", "decision": null, "decision_scope": null }
+```
+
+### Registros antigos
+
+Não há migração. Formas encontradas nas raízes verificadas (arquivo `rodadas-20261104` e produção do vídeo 12):
+
+| Forma | Onde | Tratamento |
+|---|---|---|
+| Sem `selection` | `root`, `root2`, `rootpy`, vídeo 12 | A tela usa `origin.kind` e `summary` |
+| `{ "notes": [...] }` | 200 registros em `root` (experimentos) | Idem; as notas foram enviadas naqueles experimentos |
+| `budget_bytes`, `used_bytes`, `left_out` curto, `gaps` | Nenhum registro encontrado | Presumido pela leitura do código |
+
+Nenhum registro antigo tem `format_version`, e o campo é o que distingue o formato novo. O formato entrou em commit só em `99f69f3`, então 1 é o primeiro valor.
+
+### Compatibilidade
+
+| Consumidor | Situação |
+|---|---|
+| Tela, com registros sem `selection` | Comprovada: renderizados nos testes |
+| Tela, com registros `{notes}` | Comprovada: renderizados nos testes, sem erro de página |
+| Servidor, preparando pacote com o formato novo | Comprovada: servidor real, sem notas, `nodes` = `included`, registro gravado = registro calculado |
+| Forma intermediária | Não comprovada: sem registros |
+| Scripts arquivados (`cond.js`, `gen.js`, `foco.js` escrevem `{notes}`; `q.js` imprime `origin`) | Não comprovada: não reexecutados; o servidor não mudou nesse ponto |
+| Consumidores futuros | Não comprovada: dependem de este contrato ser adotado |
 
 ## Limites
 
@@ -892,3 +1081,40 @@ Para começar do zero, apague a pasta do projeto em `.studio/projects/`.
   expõe `window.viewerDebug`.
 
 Detalhes técnicos do servidor: [crates/librarian-studio](crates/librarian-studio/README.md).
+
+### Medição: capacidade não é cobertura
+
+**Regra: capacidade do projeto não significa cobertura de todas as funções.**
+
+| Nível | Pergunta | De onde vem |
+|---|---|---|
+| Capacidade do projeto | Dá para rodar o Medir tudo? | `measure_all` em `/api/commands` |
+| Instrumentação por linguagem | Esta linguagem recebe contador? | `LANGUAGE` em `instrument.rs`; hoje só Rust |
+| Cobertura da função | Esta função foi contada? | `hot.counted` |
+| Medição da função | Quantas vezes rodou? | `hot.rows` |
+
+#### O que a Etapa 2 não resolve
+
+Reproduzido num projeto com 2 funções em Rust e 2 em Python, e no `renderer`. **Previsto para a [Etapa 3](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#etapa-3-onde-pesa).**
+
+- **Mapa:** com medição, mostra só as funções que rodaram. Arquivos sem cobertura somem, sem aviso.
+- **"Onde pesa":** diz "N funções contadas", sem dizer de quantas. No `renderer`: 236 contadas de 487 no grafo; 251 sem contagem (214 testes, 17 em caminhos excluídos, 12 sem corpo, 8 que já contavam).
+- **"Quais funções pesam?":** responde só com o que foi contado, sem dizer isso.
+- **Sugestão:** `measured: true` numa edition medida, mesmo com alvo sem cobertura.
+- **Fluxograma: afirmação falsa.** `bodiless` (`instrument.rs`) procura `{` sem filtrar a linguagem, então toda função Python vira "sem corpo", e a tela a trata como "não rodou" e a esconde com "só o que rodou". Só ocorre em projeto com medição e fonte que não seja Rust, ou seja, misto.
+- **`calls: null`:** não distingue "contada e não rodou" de "sem cobertura".
+
+**Até a Etapa 3, leia assim:** em projeto misto, a medição descreve apenas as funções Rust contadas, não o projeto. Nenhum dos dois projetos de teste atuais é misto.
+
+**Python:** sem instrumentação por função. O projeto aparece como "não disponível", sem convite a medir. Não há suporte novo nesta etapa.
+
+### Envelope e investigação
+
+Aceitos na Etapa 2, e nenhum foi agravado por ela. Ficam para a [Etapa 5](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#etapa-5-pacote-e-revisão).
+
+- **Juntar durante o carregamento da investigação se perde sem aviso.** Enquanto a resposta não chega, o inspetor ainda aceita juntar; quando ela chega, o envelope é substituído pela investigação.
+- **Duas investigações no mesmo grafo:** vence a que responde por último, não a pedida por último. `sameRun` protege contra troca de grafo, não contra isso.
+- **Sem proteção de grafo (`sameRun`), risco não reproduzido:** `askFacts`, `askHotFacts`, `continueTurn`, `askPath`, `drawPath` e outros caminhos sem a guarda.
+- **Sem histórico de decisões:** só a última ação fica registrada (veja [Registro da seleção](#registro-da-seleção-originselection-formato-1)).
+
+O cartão de desempenho e **Separar** ainda enviam sem revisão do pacote (também [Etapa 5](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#etapa-5-pacote-e-revisão)).

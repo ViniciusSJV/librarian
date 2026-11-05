@@ -1,6 +1,6 @@
 # Contexto de continuidade do Librarian
 
-Conferido no repositório em 04/11/2026. Documento de transferência entre sessões. Não substitui o plano: as tabelas completas estão em [PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md), da linha 1116 em diante.
+Conferido no repositório em 05/11/2026, ao fim da Etapa 2 da frente do Studio. Documento de transferência entre sessões. Não substitui o plano: as tabelas completas estão em [PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md), da linha 1116 em diante, e o andamento desta frente em [Evidence Builder no Studio](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evidence-builder-no-studio-etapas-0-a-7-05112026).
 
 **Como ler as marcas:** **[confirmado]** foi verificado agora no repositório ou nos dados gravados. **[registrado]** vem do plano ou da memória de trabalho, sem nova verificação. **[hipótese]** não foi demonstrado. **[não confirmado]** não pôde ser verificado.
 
@@ -68,14 +68,15 @@ Resultados são hipóteses, não regras. O mesmo envelope já deu 4/6 e 8/8 em m
 
 ## 3. Estado atual do repositório [confirmado]
 
-**Branch:** `main`, 9 commits à frente de `origin/main`. Sem stash. **Decisão do usuário: não fazer push por enquanto.**
+**Branch:** `main`, 10 commits à frente de `origin/main`. Sem stash. **Decisão do usuário: não fazer push por enquanto.**
 
 **Commits locais sem push (do mais novo ao mais antigo):**
 
 | Commit | Conteúdo |
 |---|---|
-| O mais recente | Docs: este arquivo. O hash não cabe aqui: confira no `git log` |
-| O anterior | Docs: plano com homônimos suspensos e a próxima frente |
+| `99f69f3` | **Código:** Etapa 2 da frente do Studio, com decisões e proveniência |
+| `8b575ee` | Docs: este arquivo |
+| `94e2238` | Docs: plano com homônimos suspensos e a próxima frente |
 | `df43138` | Docs: defeitos da lacuna corrigidos, rodada sem espaço e linha de base dos homônimos |
 | `abb682a` | **Código:** método de dois traits não é adivinhado, trait pedido não é filtrado, rodada sem espaço no registro |
 | `e07c038` | Docs: `Object` e o trait em `r5` sem conclusão, lacunas suspensas |
@@ -86,9 +87,9 @@ Resultados são hipóteses, não regras. O mesmo envelope já deu 4/6 e 8/8 em m
 
 Último commit já enviado: `7868912`.
 
-**Sem commit:** nada neste repositório, salvo trabalho posterior.
+**Sem commit:** a documentação da Etapa 2 (`STUDIO.md`, o plano e este arquivo), até a aprovação do usuário. Confira no `git status`.
 
-**Testes, rodados antes destes dois commits de documentação:** `cargo test --workspace`: **196 passaram, 0 falharam, 2 ignorados.** Os ignorados são o gabarito (`crates/librarian-ingest/tests/gabarito.rs`), que depende de dados locais, e um teste em `crates/librarian-llm-engine/src/cli/send_ollama.rs`.
+**Testes, rodados em `99f69f3`:** `cargo test --workspace`: **197 passaram, 0 falharam, 2 ignorados.** Os ignorados são o gabarito (`crates/librarian-ingest/tests/gabarito.rs`), que depende de dados locais, e um teste em `crates/librarian-llm-engine/src/cli/send_ollama.rs`.
 
 **Outros projetos:**
 
@@ -98,7 +99,7 @@ Resultados são hipóteses, não regras. O mesmo envelope já deu 4/6 e 8/8 em m
 | `renderer-librarian` | `diff-librarian` em `35cb76e`, limpo |
 | `logistica-api` | `main` em `127dbd7`. `backend/librarian.json` com `measures` **sem commit naquele projeto**, por decisão; `LOGISTICS.md` não rastreado, e sua origem não foi verificada. O experimento de Python usou `cd15515`, ancestral de `127dbd7` |
 
-**Ambiente:** nada escutando em 8765 nem em 8830–8839. Nenhum contêiner em execução; o volume de `logistica-api-db-1` foi deixado intacto **[registrado]**. `Temp/lt-ev` (4,3 GB), diretório de build de um experimento antigo: **decisão do usuário, não limpar ainda.** A máquina não tem `python`: use `uv run --no-project python`. Heredocs do Bash perderam `\` em scripts: escreva-os com a ferramenta Write.
+**Ambiente:** nada escutando em 8765 nem em 8830–8839 **[registrado]**; os servidores de teste em 8841 e 8842 foram encerrados **[confirmado]**. Nenhum contêiner em execução; o volume de `logistica-api-db-1` foi deixado intacto **[registrado]**. `Temp/lt-ev` (4,3 GB), diretório de build de um experimento antigo: **decisão do usuário, não limpar ainda.** A máquina não tem `python`: use `uv run --no-project python`. Heredocs do Bash perderam `\` em scripts: escreva-os com a ferramenta Write.
 
 **Dados que o Git não guarda (`.studio/` é ignorado):**
 
@@ -106,6 +107,7 @@ Resultados são hipóteses, não regras. O mesmo envelope já deu 4/6 e 8/8 em m
 - `.studio/arquivo-copias/`: `condicoes-`, `notas-geradas-`, `foco-`, `tempo-`, `lacunas-`, `trait-` e `homonimos-20261104`, com resultados, scripts e diffs.
 - `.studio/arquivo-copias/rodadas-20261104` (516 MB): as editions, execuções e turnos das 6 rodadas (`root`, com `r5`, que não faz parte do gabarito, e `rootpy`), além de resultados e scripts. Tem `LEIA-ME.md` e `MANIFESTO.sha256`. Conferido: 29.174 hashes iguais aos da origem, e `condres.js`, `traitres.js` e `lac3.js` reproduzem a mesma saída sobre a cópia.
 - **Origem preservada:** o scratchpad em `AppData/Local/Temp/claude/.../d9e4a878-dc19-44c2-b141-f69816ea3920/scratchpad` não foi alterado, mas é temporário. **Não remova, sobrescreva nem reorganize esses dados sem aprovação do usuário.**
+- **Baterias da tela e raízes de teste da frente do Studio:** `etapa2.js`, `etapa2b.js`, `etapa2c.js`, `etapa2-modelo.js`, `mutacao3.js`, `final.sh` e `iso/`, no scratchpad da sessão `465f4d1b-0d17-4dff-903f-d3077bb3c8f4`. **Não estão no repositório nem no arquivo, e a pasta é temporária.** O diagnóstico do Evidence Builder só existe na transcrição dessa sessão; o que dele foi decidido está no plano.
 - **Limite do arquivo:** ele serve para reanalisar. Reenviar exige o studio e o projeto na base da rodada. `hom-casos.json` e `tempo-casos.json` têm caminhos absolutos da origem e precisam ser gerados de novo se ela sumir. O arquivo não está no Git, e não há cópia fora desta máquina.
 
 **Alterações temporárias já removidas [confirmado]:** `crates/librarian-ingest/tests/tempo_tmp.rs`, `crates/librarian-ingest/tests/homonimos_tmp.rs` e o teste injetado em `ladder.rs`. As cópias dos experimentos (`lc-*`) e os builds `lt-gate`, `lt-gen`, `lt-tempo`, `lt-fix` e `lt-handoff` também foram removidos.
@@ -305,7 +307,9 @@ A resolve o que foi perguntado, com custo alto. B não tem piora registrada e n�
 - Resultado inconclusivo não vira conclusão.
 - A troca entre medidas é decisão humana.
 
-**Trabalho:** conversa e documentação em português; commits em português, sem acentos; documentação validada antes do commit; código aprovado segue até commit local; push só quando pedido.
+**Frente do Studio:** as decisões das etapas 0 a 7 estão no plano, em [Evidence Builder no Studio](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evidence-builder-no-studio-etapas-0-a-7-05112026). Aquela seção prevalece sobre a seção 9 deste arquivo.
+
+**Trabalho:** conversa e documentação em português; commits em português, sem acentos (o `99f69f3` tem acentos e prefixo porque o usuário escreveu assim a mensagem); documentação validada antes do commit; código aprovado segue até commit local; push só quando pedido.
 
 ### Sugeridas por mim, ainda não aprovadas como desenho
 
@@ -338,12 +342,12 @@ A resolve o que foi perguntado, com custo alto. B não tem piora registrada e n�
 
 **Documentação:**
 
-- Corrigir "a ordem é o que vale" em `STUDIO.md:646`, `crates/librarian-studio/src/instrument.rs:177` e `:240`, e `src/count.rs:9` do `renderer-librarian`. Parte da especificação do front; o último arquivo é **de outro repositório**.
+- Corrigir "a ordem é o que vale" em `src/count.rs:9` do `renderer-librarian`, que é **de outro repositório**. No `STUDIO.md` e em `instrument.rs`, já foi corrigido.
 - `STUDIO.md` afirma que uma chamada com homônimos entra quando o Medir tudo viu um deles rodar. É verdade, mas nos casos medidos isso desempatou 0 vezes.
 
 **Limitações técnicas conhecidas, sem correção:**
 
-- `main.rs`: a rodada de lacuna não acrescenta nada com 16 declarações; a tela pede 2 rodadas, e elas ficam inertes nesse caso. Hoje isso fica registrado. Os experimentos rodaram com `lacuna_rounds: 0`, então **o efeito no fluxo real com rodadas não foi medido**.
+- `main.rs`: a rodada de lacuna não acrescenta nada com 16 declarações. Hoje isso fica registrado. A tela passou a enviar `lacuna_rounds: 0`, como os experimentos, então **o efeito no fluxo real com rodadas não foi medido**.
 - O dono de um método de trait não é candidato (alvo `Groups::intersect` traz `Groups`; `Intersectable::intersect` não traz o trait). Causa no código **[não confirmada]**.
 - `lacuna_names` extrai palavras em maiúscula do português (`Sem`, `Falta`, `Por`). Inofensivo enquanto não houver símbolo com esse nome.
 - Chamadas dentro de macros não são vistas; condições e caminhos alternativos não são extraídos.
@@ -351,16 +355,16 @@ A resolve o que foi perguntado, com custo alto. B não tem piora registrada e n�
 
 **Decisões do usuário em aberto:**
 
-- Push dos 9 commits: aguardando.
+- Push dos 10 commits: aguardando.
 - Commit do `measures` no `logistica-api`: aguardando.
 - Limpeza de `Temp/lt-ev`: não limpar ainda.
 - Vídeo 13: roteiro em espera, depois do vídeo 12 reprovado **[registrado]**.
 
-## 9. Próxima etapa: frontend
+## 9. Frontend: de onde veio e o que falta
 
 ### A especificação
 
-**O prompt "Librarian Studio — Evidence Builder", que o usuário fornecerá na nova sessão, é a especificação principal de implementação.** Esta sessão não leu esse prompt: nada aqui o substitui, resume ou interpreta. Se algo aqui divergir dele, vale o prompt, e a divergência deve ser mostrada ao usuário.
+**Etapas 0, 1 e 2 feitas; a próxima é a Etapa 3, "Onde pesa", ainda não iniciada e dependente de autorização.** As decisões estão no plano, em [Evidence Builder no Studio](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evidence-builder-no-studio-etapas-0-a-7-05112026), e prevalecem sobre esta seção, que guarda o contexto anterior a elas. O contrato do registro e as limitações estão no [STUDIO.md](STUDIO.md#registro-da-seleção-originselection-formato-1).
 
 ### Por que esta evolução
 
@@ -372,11 +376,11 @@ A interface **mostra** decisões de seleção e medição; não as toma. Seleç�
 
 ### Ordem aprovada
 
-Diagnóstico primeiro, implementação depois: ler este contexto, conferir o Git, apresentar o diagnóstico e validar os conflitos com o usuário, especialmente Pareto, "Onde pesa", contratos de API e compatibilidade entre linguagens. As restrições do diagnóstico estão na seção 6.
+Uma etapa por vez, com testes, diff e resultados apresentados antes do commit, que depende de autorização separada. O diagnóstico já foi feito e aprovado.
 
 ### "Onde pesa": especificação aprovada
 
-Sem mudar código antes do prompt do front:
+Detalhada depois na Etapa 3 do plano:
 
 | Informação | Apresentação |
 |---|---|
@@ -384,9 +388,9 @@ Sem mudar código antes do prompt do front:
 | Tempo instrumentado | Referência experimental |
 | Confiabilidade | Aviso explícito: inflado pela contagem, pode mudar a ordem entre funções |
 
-**O que existe hoje [confirmado]:** `GET /api/hotspots` devolve `rows` com `at`, `calls`, `cpu_ms`, `symbol`, `name`, `path`, `start_line`, `end_line`, `callers`, `calls_out`, além de `limits` e `measures`. As linhas vêm ordenadas por `cpu_ms` em `instrument.rs:194`.
+**O que existe hoje [confirmado]:** sem medição, `GET /api/hotspots` responde 404; com ela, devolve `rows` com `at`, `calls`, `cpu_ms`, `symbol`, `name`, `path`, `start_line`, `end_line`, `callers`, `calls_out`, além de `limits` e `measures`. As linhas vêm ordenadas por `cpu_ms` em `instrument.rs`.
 
-**Usos de `cpu_ms` em `index.html`, a revisar:**
+**Usos de `cpu_ms` em `index.html`, a revisar.** As linhas abaixo são de antes da Etapa 2 e mudaram: procure por `cpu_ms`.
 
 - Linha 3040: etiqueta no ranking.
 - Linhas 3374 e 3380, e 3814 e 3934: calor nos mapas.
@@ -401,7 +405,7 @@ Sem mudar código antes do prompt do front:
 
 **Direção do usuário:** quando há trocas entre medidas, não eleger vencedora; mostrar lado a lado as alternativas não dominadas, com ganhos e pioras de cada uma; identificar as dominadas; sem pesos; escolha final do usuário.
 
-**Decisão do usuário:** não implementar imediatamente. Primeiro, verificar nos dados existentes a frequência do conflito entre `passed` e `passed_smaller`. Separar **dados de medição, cálculo de dominância, critério de aprovação e visualização**: uma escolha já embutida no backend não deve virar uma suposta verdade matemática sobre dominância.
+**Decisão do usuário:** sem dominância nem seleção Pareto por enquanto; a frequência do conflito já foi medida (tabela na seção "Etapas 0 e 1" do plano). Propostas lado a lado na Etapa 6. Separar **dados de medição, cálculo de dominância, critério de aprovação e visualização**: uma escolha já embutida no backend não deve virar uma suposta verdade matemática sobre dominância.
 
 **Dados que existem [confirmado]:**
 
@@ -418,7 +422,7 @@ Sem mudar código antes do prompt do front:
 
 - Calcular dominância exige decidir o que conta como diferença. Regra do portão hoje: ao menos 10%, com faixas separadas; por ela, os +11% de memória de B na E4 não contam como piora.
 - Medidas sem declaração de direção só têm sentido para tempo e contagem. O `renderer` não declara memória: lá o Pareto é pobre.
-- A frequência do conflito **não foi medida**: há um caso observado. Os dados para essa contagem estão no arquivo de rodadas, sem LLM.
+- A frequência do conflito foi medida nas rodadas arquivadas: 1 caso sem dominância em 141 envios com 2 ou mais aprovadas. Isso **não prova que o conflito seja raro**, porque só 1 desses envios é em Python.
 - O que mudou de propósito não pode ser julgado pela própria medida (contadores, tempo em comando que conta).
 
 ### O que influencia o frontend
@@ -446,17 +450,16 @@ As investigações da seção 7, e também: ordenar a seleção por tempo; troca
 1. **Leia este arquivo inteiro.** Depois, no plano, da linha 1116 em diante, quando precisar de tabelas completas.
 2. **Confirme o estado, sem confiar neste texto:**
    - `git status -sb`
-   - `git log --oneline origin/main..HEAD`, que deve listar 9 commits, a partir de `7b13e13`, salvo trabalho posterior.
+   - `git log --oneline origin/main..HEAD`, que deve listar 10 commits, de `7b13e13` a `99f69f3`, salvo trabalho posterior.
    - Antes de qualquer limpeza de temporários, verifique os dados: `sha256sum -c MANIFESTO.sha256 --quiet` em `.studio/arquivo-copias/rodadas-20261104` e a existência de `root` e `rootpy` no scratchpad. Não remova, sobrescreva nem reorganize nada sem aprovação.
-3. **Aguarde o prompt "Librarian Studio — Evidence Builder"** e trate-o como especificação principal. Ao recebê-lo, compare com a seção 9, apresente o diagnóstico e aponte conflitos, sobretudo em Pareto, "Onde pesa", contratos de API e compatibilidade entre linguagens.
-4. **Não implemente durante o diagnóstico** (restrições na seção 6). Apresente as propostas separadamente e aguarde aprovação.
+3. **Leia a seção [Evidence Builder no Studio](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evidence-builder-no-studio-etapas-0-a-7-05112026) do plano** e o [contrato no STUDIO.md](STUDIO.md#registro-da-seleção-originselection-formato-1). Antes de usar as baterias de tela, confira se o scratchpad citado na seção 3 ainda existe.
+4. **Não inicie a Etapa 3 sem autorização do usuário.** Apresente testes, diff e resultados antes do commit de cada etapa, e aguarde.
 5. **Não faça push** sem pedido.
 6. **Não retome investigações suspensas** sem evidência nova e decisão do usuário. Experimento novo exige hipótese e critérios fixados antes, e o usuário costuma decidir etapa por etapa.
 7. **Relate os resultados com honestidade:** o que falhou, o que não foi testado e o que é só hipótese. Corrija números errados, inclusive os seus e os do usuário: este trabalho já teve correções assim (B com "+34%" de memória, orçamento de "16 KB").
 
 ### Informações não confirmadas
 
-- O conteúdo do prompt do frontend.
 - O custo total da frente inteira.
 - A origem de `LOGISTICS.md` no `logistica-api`.
 - Se `GET /api/executions` devolve as comparações completas.

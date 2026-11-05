@@ -1563,6 +1563,8 @@ Trazer também o tipo dono não muda nenhum envelope: ele fica de fora pelo limi
 
 **Dados das rodadas:** copiados para `.studio/arquivo-copias/rodadas-20261104`, com manifesto de hashes conferido, fora do Git.
 
+**Andamento:** o diagnóstico e as etapas estão em [Evidence Builder no Studio](#evidence-builder-no-studio-etapas-0-a-7-05112026), no fim deste plano.
+
 ### O que falta, em ordem
 
 1. **Busca por lacunas:** suspensa (acima). Uma busca nova só com evidência de que a informação trazida melhora o resultado.
@@ -1594,3 +1596,178 @@ Nos 8 envios de mudança da gravação do vídeo 12, das 24 propostas só 1 saiu
 2. ~~Pedir menos: uma mudança só e só `replace` em poucas linhas, com um Modelfile próprio.~~ Testado nos 3 casos, 8 envios por caso, com temperatura 0,3, porque com temperatura 0 e semente fixa ele tende a repetir a resposta: **0 de 24, e nenhuma proposta chegou ao portão.** O tempo caiu de cerca de 75 s para cerca de 15 s por resposta, mas todas as 24 trazem `location` numa HYPOTHESIS, apesar de o SYSTEM pedir `null`, e 19 delas também erram a edição ou a citação. Só em 5 o `location` é a única recusa.
 
 **Critério para voltar:** nos 3 casos do gabarito, com 8 envios por caso, ao menos 1 proposta passa no portão em cada caso, e o ganho compensa o tempo gasto. **Não atingido: o qwen fica fora das mudanças até o fine-tune,** e o Modelfile do teste não entra na biblioteca. Remover o `location` não mudaria isso: em `r1` nenhuma proposta seria salva.
+
+## Evidence Builder no Studio: etapas 0 a 7 (05/11/2026)
+
+**"Etapa" nesta seção é a etapa desta frente**, sem relação com a ETAPA 2 do início deste plano nem com as etapas do roteiro de 30/10. As decisões abaixo vieram de pedidos do usuário que não estão no repositório; por isso ficam registradas aqui por inteiro. O que já vale na tela está no [STUDIO.md](STUDIO.md); o contrato do registro, em [Registro da seleção](STUDIO.md#registro-da-seleção-originselection-formato-1).
+
+| Etapa | Conteúdo | Estado |
+|---|---|---|
+| 0 | Preservação dos dados | Feita, fora do Git |
+| 1 | Diagnóstico visual e contratos | Feita, sem alterar arquivos |
+| 2 | Correções e remoções aprovadas | **Feita:** `99f69f3`, local, sem push |
+| 3 | "Onde pesa" | Não iniciada |
+| 4 | Evidence Builder | Não iniciada |
+| 5 | Pacote e revisão, C1 e C2 | Não iniciada |
+| 6 | Fact Builder e portão | Não iniciada |
+| 7 | Verificação | Não iniciada |
+
+**Regras de trabalho:** um commit local por etapa aprovada, sem push; `STUDIO.md` e plano só depois da validação; não misturar documentação e código sem necessidade; não modificar resultados históricos; não rodar experimento com LLM sem necessidade; não aumentar o envelope; não reativar investigações suspensas; não criar heurísticas sem evidência. Preservar a cidade 3D e o fluxograma. A skill `frontend-design` vale para o trabalho na interface, e `ponytail` só quando for pertinente; nenhuma das duas deve ser reinstalada.
+
+### Decisões que valem para todas as etapas
+
+**O modelo recebe:** pergunta real, trechos de código, fatos aprovados que pertencem ao envelope, limites e instruções.
+
+**Só a pessoa vê:** gaps e candidatos, comportamento identificado, fontes que ficaram de fora, justificativas da seleção, categorias estruturais, comportamentais e de desempenho, informações de desempenho e ambiguidades. Nada disso vai automaticamente ao modelo, e o conteúdo do pacote não muda sem deixar claro o que mudou. `notes` não entra em `origin.selection`, porque ligaria as notas na query.
+
+**Modelos:** qwen para fatos, Haiku para mudanças, sem cascata qwen → Haiku. A tela não apresenta um escalonamento que não existe, e a divisão só muda com investigação e aprovação específicas.
+
+**Agnosticismo:** não presumir o mesmo extrator, medição, métricas, relações ou capacidades em todo projeto. Validar ao menos o ray tracer em Rust e o Logística API em Python. A tela mostra o que o projeto analisado tem, e Java, C# ou outras linguagens não aparecem como suportadas enquanto não houver extrator.
+
+**Estados de cada informação**, identificáveis por texto, não só por cor:
+
+| Estado | O que é |
+|---|---|
+| Grafo | Relação estrutural identificada |
+| Medição | Informação instrumentada |
+| Proposta do modelo | Hipótese |
+| Conferido mecanicamente | Referência conferida |
+| Aprovado por pessoa | Fato aprovado |
+| Ambíguo | Candidatos apresentados, sem resolução automática |
+
+A tela exibe o aviso **"Referência conferida não significa que a relação semântica esteja comprovada."** Não existe estado de validação semântica inconclusiva, porque o sistema não faz esse julgamento.
+
+**Não remover:** modo arquivo (**Abrir arquivos**), `#overlayCard`, `/api/ask`, aba Léxico, `askPath`, colar resposta e o cartão de desempenho da conversa, que passa pela revisão na Etapa 5. Outra remoção precisa de dependências, consumidores e justificativa, com aprovação.
+
+### Etapas 0 e 1: resultado
+
+**Preservação:** `root2` e 10 arquivos soltos copiados para `.studio/arquivo-copias/rodadas-20261104`, e os scripts `conflito.js`, `inspecao.js` e `inspecao2.js` para `diagnostico-studio/` no mesmo arquivo, sem executar nem mudar. `MANIFESTO.sha256` tem hoje 31.530 linhas, com os 29.174 hashes originais em `manifesto-origem.txt`. A origem não foi alterada.
+
+**Chip com id cru (`src:e19e…`):** causa encontrada na inspeção: artefato do antigo `ui.js`, não defeito do produto.
+
+**Conflito `passed` × `passed_smaller`, nas rodadas arquivadas, sem LLM** (`diagnostico-studio/conflito.js`):
+
+| Medida | Resultado |
+|---|---|
+| Envios com alguma proposta aprovada | 409 |
+| Envios com 2 ou mais aprovadas | 141 |
+| Escolhida domina as outras | 140 |
+| Sem dominância entre elas | 1 (`py-memoria/nova`, o caso da E4) |
+| Escolhida dominada por outra | 0 |
+| Envios com só 1 aprovada, mas com piora | 12 de 268 |
+
+**Isso não prova que o conflito seja raro.** Cada envio do `renderer` tem 1 medida de projeto comparável e 8 contadores à mão, então a maior % quase sempre vence. Em Python, com 9 medidas, só 1 envio teve 2 ou mais aprovadas. Não generalizar para outros projetos ou distribuições de medidas.
+
+### Etapa 2: resultado (`99f69f3`, 05/11/2026)
+
+Seis arquivos em `crates/librarian-studio/`, +390 e −127 linhas. SHA-256 do diff aprovado: `2187a15d5badf5a0284873f43002d9f9436291af8ca593b4115976e1974625d1`. Nenhum envio a LLM.
+
+**Decisões do usuário nesta etapa:**
+
+- **Registro:** `decision` (`included`, `removed`, `null`) e `decision_scope` (`single`, `bulk`, `null`), com a última ação humana, separados de `provenance` e do estado atual. Sem a lista `added`. Sem inventar histórico: remoção seguida de inclusão termina como a última ação. Otimizar conta como `bulk`.
+- **Capacidade de medição (C5):** `measure_all` em `/api/commands`. Tecnicamente disponível só com `instrument` declarado, fonte Rust na edition e comando de medição declarado. A aprovação é um estado à parte: não é possível medir; é possível, mas falta aprovar; é possível e ainda não rodou; já existe medição. Falha de leitura não aparece como "ainda não medido".
+- **`investigate`:** sai só `investigationView`, na Etapa 4; `/api/inventory/investigate` e seus consumidores ficam. Isso substitui a aprovação anterior de remover a rota.
+- **Retentativas e lacunas:** a tela envia `retries: 0` e `lacuna_rounds: 0`.
+- **Semântica:** "Semântica: pendente" virou "Sentido não avaliado", com o campo gravado preservado.
+- **Remoções feitas:** seletor de modelo com a escada ligada, `lacuna_rounds: 2`, comentário obsoleto em `main.rs`. **Adiadas para a Etapa 4:** `investigationView` e a lista de fontes do compositor.
+
+**Defeitos corrigidos:**
+
+| Item | O que era |
+|---|---|
+| D1 | Fonte desmarcada no painel continuava sendo enviada |
+| D2 | Remover a semente transformava outras fontes em alvo |
+| D3 | Nova sugestão apagava motivos das fontes que continuavam no envelope |
+| D4 | Fonte trazida de fora perdia o motivo original |
+| D5 | Juntar descartava acréscimos manuais sem avisar |
+| D6 | Fonte removida voltava ao clicar em Juntar |
+| D7 | Falha de leitura aparecia como "Ainda não medido" |
+| D8 | Edition inválida derrubava `/api/commands` |
+| D9 | Resposta de um grafo anterior sobrescrevia o grafo atual |
+| D10, D11 | Resumo não contava o estado final; registro chamava de semente o que não foi usado |
+| D12 | Erro antigo ficava na tela na ação seguinte |
+| D13 | "Escada: Claude Haiku" aparecia sem a escada no fluxo efetivo |
+| D14 | Textos supunham `raios`, `ray_from_pixel` e outros elementos do renderer |
+| Revisão final | Inspetor juntava durante investigação e não enviava; `gatherFacts` de Otimizar ia invisível no inventário; `investigate` sem `sameRun`; fonte removida sumia do registro |
+| Encerramento | `left_out` passou a seguir a última sugestão que mencionou a fonte; `provenance` nasce no primeiro gesto; Otimizar com investigação aberta devolve o inspetor; a nota "Nenhum alvo" some ao escolher um; a falha de um grafo não aparece ao abrir outro |
+
+Também: `optimize` mostra o que ficou de fora, `hot.askFacts` não tem mais "qwen" fixo, e o texto do limite em `instrument.rs` não diz mais "a ordem é o que vale".
+
+**Testes no código final:**
+
+| Bateria | Resultado |
+|---|---|
+| `etapa2c.js` | 45 de 45 |
+| `etapa2b.js` | 75 de 75 |
+| `etapa2.js` | 66 de 66 |
+| `cargo test --workspace` | 197 aprovados, 0 falhas, 2 ignorados |
+| Modelo externo, 5 sementes de 70 passos | 350 passos, 0 ocorrências, gravação conferida nas 5 |
+| 10 mutações contra `etapa2c.js` | 10 detectadas |
+| 6 mutações contra o modelo externo | 6 detectadas; `provenance` só na terceira semente (abaixo) |
+
+**As baterias de tela não estão no repositório.** Ficam no scratchpad da sessão `465f4d1b-0d17-4dff-903f-d3077bb3c8f4` (`etapa2.js`, `etapa2b.js`, `etapa2c.js`, `etapa2-modelo.js`, `mutacao3.js`, `final.sh`), uma pasta temporária. Só os testes em Rust ficam com o código.
+
+#### Mudança de texto enviado ao modelo (C3)
+
+As perguntas geradas deixaram de citar "frame", "render" e "imagem" (`questions.rs` e `hot.factQuestion`, `hot.optimizeQuestion`). Resultados anteriores a esta mudança **não são diretamente comparáveis** com perguntas novas.
+
+#### Limites da verificação
+
+- **Modelo externo:** usa só os grafos `rust` e `python` de teste, 350 passos em 5 sementes. Zero ocorrências vale para esses grafos e essas sequências.
+- **Ponto cego do modelo:** juntar à mão sem registrar a fonte só aparece se a sugestão vier antes de outro gesto que crie a seleção. A mutação passou sem efeito nas sementes `rust:11` e `rust:22` e foi detectada na `rust:33`, por exceção na página, não por uma ocorrência comparada. Quem compara esse caso é a bateria (`[Tabela] 7` e `[B4]`). Aceito pelo usuário como limitação conhecida.
+- **D8:** sem prova por mutação.
+- **D9:** dois testes passam mesmo sem a proteção, então não provam nada sobre ela.
+- **Partição na bateria:** o teste confere só o mapa conhecido; a prova independente é o modelo externo.
+- **Não executado até aqui:** a escada real com `retries: 0` e `lacuna_rounds: 0`, e qualquer envio ao LLM.
+
+### Etapa 3: "Onde pesa"
+
+Corrigir todos os consumidores da medição de uma vez, com coerência entre frontend, backend, cidade, fluxograma e respostas. Testar. C4 está aprovado com essa condição.
+
+**Consumidores:** ranking e top 20; etiqueta de frequência; "A mais chamada"; ação Separar; "Como contou"; cidade, calor e top 8; fluxograma e dicas; a resposta de "o que pesa" em `questions.rs`; o aviso em `instrument.rs`.
+
+**Regras:**
+
+- A frequência de chamadas passa a ser o critério de ordenação. **Frequência de chamadas não é custo computacional**, e as duas interpretações não se misturam.
+- **Sem alvo automático:** a pessoa escolhe o alvo na lista, em Separar e em "Onde otimizar?". Remover `FREQUENT = 1e6`, em `index.html` e em `questions.rs`, inclusive o comentário "in a frame".
+- Rótulo "Mais chamadas" quando a ordem for por frequência, e "Tempo instrumentado (referência)" para o tempo. A função mais chamada não se chama "mais pesada".
+- A cor pode continuar representando tempo, com a legenda dizendo isso.
+- Não inventar tempo próprio: só existe tempo inclusivo.
+
+**Cobertura:** as seis limitações em [Medição: capacidade não é cobertura](STUDIO.md#medição-capacidade-não-é-cobertura), reproduzidas na Etapa 2, são desta etapa.
+
+### Etapa 4: Evidence Builder
+
+Evolução do fluxo atual, não um produto paralelo. Abre no espaço central, no padrão de `#pathView`; ao fechar, a cidade volta ao estado anterior; as três colunas ficam; a lista de fontes é o centro da experiência.
+
+**Apresenta:** alvo da investigação; linguagem e localização; cobertura da seleção; fontes selecionadas; fontes que ficaram de fora; gaps e candidatos não resolvidos; categorias estruturais, comportamentais e de desempenho; papéis e justificativas; código e linhas de origem; fatos associados a cada fonte; procedência e estado de cada informação; pacote efetivamente enviado.
+
+**Regras:** categorias organizam a tela e não alteram a seleção. Ambiguidades aparecem sem resolução automática. Só capacidades que existem para a linguagem.
+
+**Herdado da Etapa 2:**
+
+- Remover `investigationView` e `investigation.ticked`, o segundo estado de seleção, junto com a lista de fontes duplicada do compositor. Ao abrir um achado no Builder, preservar a cadeia de chamadas como motivo e procedência. O inventário continua alimentando o anel vermelho da cidade.
+- Hoje o inventário não registra motivos nem o que foi desmarcado.
+- D15: botão fixo cobre linhas em janela baixa.
+
+### Etapa 5: pacote e revisão
+
+**O pacote revisado precisa ser exatamente o pacote enviado.** Revisão antes do envio, com os blocos "O modelo recebe" e "Só você vê", e a visão "O que o modelo recebeu" conferindo o conteúdo efetivo, não uma aproximação.
+
+- **C1, `/api/ladder`:** campo opcional `turn` para reutilizar a pergunta preparada. Validar a identidade entre pergunta, fontes, trechos, linhas, fatos aprovados, limites, instruções e conteúdo enviado, incluindo SYSTEM e skills. Se o pacote mudar entre revisão e envio, informar. Não recalcular nem substituir a seleção em silêncio. Testes de regressão.
+- **C2, `GET /api/source?key&run&id`:** conteúdo da fonte a partir da edition, inclusive de fontes de fora ou ainda não preparadas. Validar resolução, identidade de projeto e execução, segurança de leitura, linhas e conteúdo, e fonte inexistente. Não inventar conteúdo.
+- **`/api/send`:** a mesma proteção de identidade de C1, com a comparação com o pacote revisado.
+- **Sem alteração automática depois da revisão.** "Revisar e tentar de novo" inicia uma nova revisão antes de qualquer reenvio.
+- **Separar:** revisão única do lote, antes do envio. **Cartão de desempenho:** passa pela revisão. Hoje os dois enviam sem ela.
+- **`/api/ask` e perguntas por caminho:** ficam como estão, com a visão "O que o modelo recebeu".
+- **Fato revogado** depois da revisão: invalida a revisão e exige nova conferência.
+
+**Herdado da Etapa 2:** os limites em [Envelope e investigação](STUDIO.md#envelope-e-investigação): juntar durante o carregamento, duas investigações no mesmo grafo, caminhos sem `sameRun` e a falta de histórico de decisões.
+
+### Etapa 6: Fact Builder e portão
+
+Fatos por fonte. Propostas lado a lado, com medidas e pioras de `execution.json`. **Sem cálculo de dominância nem seleção Pareto.** `passed` aparece como **"Maior %, critério atual"**, nunca como vencedora por dominância. Preservar a validação mecânica existente, sem inventar validação semântica.
+
+### Etapa 7: verificação
+
+`cargo test`; testes de regressão; Playwright em raiz isolada; tema escuro, tema claro e troca manual de tema; tela estreita; estados de carregamento e erro; projeto Rust e projeto Python; dados apresentados comparados com as respostas reais de `/api/*`; pacote revisado comparado com o payload efetivamente enviado. Testes automatizados passando não bastam para considerar a interface validada.
