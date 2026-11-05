@@ -1486,10 +1486,47 @@ Análise dos 516 envios gravados desta frente, em 7 casos (`r1`, `r2`, `r3`, `r5
 
 Propostas e resultados em `.studio/arquivo-copias/trait-20261104`, que o Git ignora.
 
+### Os dois defeitos do caminho da lacuna, corrigidos (04/11/2026)
+
+Commit `abb682a`, sem mudar a estratégia de seleção nem o envelope. Cada teste falhou antes da correção e passa depois.
+
+- **Método de dois traits:** quando mais de um trait declara o método, nada é trazido. Antes vinha o primeiro: `["Incuse::transform"]`. Escrito com o trait, continua vindo. Escolher qual trait é o certo é pergunta de homônimos, e não foi resolvido aqui.
+- **Trait pedido por nome:** agora vem quando um método dele, ou um `impl` dele, rodou. O que não rodou continua de fora.
+- **Rodada sem espaço:** o passo da escada grava `no_room`, e o registro diz que a pergunta já tem 16 declarações. Nada sai do envelope. Visto nos temas claro e escuro e em tela estreita, com a escada simulada.
+
+Testes do workspace: 196 passaram, 0 falharam, 2 ignorados. Reproduzindo as 41 lacunas gravadas: `Incuse::transform` deixa de vir (era em 33), e `Intersectable` passa a vir em 14, **se houvesse espaço**. Todas continuam com espaço 0.
+
+**A correção não tem como melhorar seleção ou aprovações hoje, e não há o que medir:** a seleção não usa esse caminho, e a rodada não acrescenta nada com 16 declarações. Só passa a ter efeito num envelope menor.
+
+### Homônimos: linha de base, sem LLM (04/11/2026)
+
+**Resultado: há 35 chamadas sem dono único nos alvos dos 7 casos, nenhuma declaração editada depende delas, e 11 nem exigem saber o tipo de nada. Ainda não há evidência de que resolver melhora o resultado.**
+
+Rodei a seleção real nos 7 casos, sem custo e sem mudar código.
+
+- **As edições não dependem disso:** todas as 14 declarações editadas no gabarito já estão no envelope, nenhuma por homônimo.
+- **A medição não desempatou nenhuma:** nenhum item entrou por `called_measured`. Na lista de candidatos que a seleção vê, sobram 35 chamadas registradas como lacuna.
+- **Python quase não aparece:** 1 das 35, ao contrário do que este plano supunha ao dizer "principalmente em Python". São só 3 casos, e em 2 deles nenhuma chamada dos alvos foi seguida até outra declaração, então esta linha de base pouco diz sobre eles.
+
+| O que decidiria a identidade | Chamadas | Exemplo | O que exige |
+|---|---|---|---|
+| O tipo já escrito na chamada | 8 | `Intersections::new`, com 22 candidatos | Ler o que está escrito |
+| `self` dentro do próprio trait | 3 | `self.transform()`, com 15 candidatos | Saber em que trait está |
+| Parâmetro com tipo declarado | 9 | `ray.set_transform(...)`, com `ray: Ray` | Ler a assinatura |
+| Variável local, de laço ou de campo | 14 | `child.intersect(...)`, em `for child in &self.children` | Inferir tipos |
+| Módulo importado (Python) | 1 | `route_planner.plan_route(...)` | Ler os imports |
+
+- **Ligação com as lacunas:** `self.transform()` é a chamada por trás do nome mais pedido (`transform`, em 40 das 41 lacunas). `ray.set_transform` e `object.local_intersect` também estão na tabela. Lembrando a regra de método: ser pedido não prova que faz falta.
+- **Cuidado antes de codificar:** cada chamada resolvida vira uma nova candidata, que disputa o mesmo orçamento e pode tirar outra evidência. Resolver mais não é automaticamente melhor.
+
+**Limites:** um projeto Rust e 3 casos Python. A classificação foi feita por mim, lendo o texto de cada chamada, sem conferir com um compilador. Os casos do gabarito só contêm mudanças que o envelope já alcançava, então não mostram o que seria possível fora dele.
+
+**Próximo passo proposto, sem decisão:** sem LLM, simular só as 11 chamadas que não exigem inferir tipos (as duas primeiras linhas da tabela) e ver o que muda no envelope de cada caso. Se quase nada mudar, fica registrado e encerra; se mudar, vale testar com o modelo, com critérios fixados antes. Resultados em `.studio/arquivo-copias/homonimos-20261104`, que o Git ignora.
+
 ### O que falta, em ordem
 
 1. **Busca por lacunas:** suspensa (acima). Uma busca nova só com evidência de que a informação trazida melhora o resultado.
-2. **Homônimos por identidade:** resolver além da medição, pelo tipo do receptor, principalmente em Python, onde o Medir tudo não conta.
+2. **Homônimos por identidade:** linha de base feita (acima). Falta simular o efeito no envelope das chamadas que não exigem inferir tipos.
 3. **Cascata qwen → Haiku (etapa 5):** complementar fatos ausentes sem repetir trabalho, só se o gabarito mostrar que faltam fatos. Perguntas por tema (entrada, estado, dependências, execução, repetição, efeitos) e novos estados de fato. O Claude nunca transforma um fato inconclusivo em comprovado.
 
 **Separados, sem prioridade até haver evidência de que a seleção atual não fornece os fatos necessários:** as etapas 1 a 4 (validar a configuração, instrumentar outras linguagens, reconhecer melhor as intenções e tornar configuráveis os critérios do alvo).

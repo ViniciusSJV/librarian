@@ -723,7 +723,10 @@ medidas, mesmo onde o **Medir tudo** não sabe colocar os contadores:
   resposta inteira.
 - Uma **LACUNA** precisa dizer entre crases o que falta. O Librarian procura esses nomes no
   catálogo (tipos primeiro, só os que rodaram na medida; um enum traz os tipos das variantes
-  que rodaram), junta ao envelope (até 16 declarações) e pergunta de novo ao mesmo modelo.
+  que rodaram), junta ao envelope (até 16 declarações) e pergunta de novo ao mesmo modelo. Um
+  método que dois traits declaram não é adivinhado: só vem escrito com o trait. Com as 16
+  declarações já ocupadas, nada sai para dar lugar: o registro diz que não houve espaço, e a
+  rodada termina ali.
 - Uma recusa ganha uma nova tentativa, com as propostas recusadas e o porquê na pergunta.
 - O registro da escada fica abaixo do compositor: cada passo, quem respondeu, o custo e o
   motivo de cada recusa. Cada envio fica na conversa como qualquer outro.
