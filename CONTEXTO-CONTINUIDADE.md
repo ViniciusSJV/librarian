@@ -1,0 +1,465 @@
+# Contexto de continuidade do Librarian
+
+Conferido no repositório em 04/11/2026. Documento de transferência entre sessões. Não substitui o plano: as tabelas completas estão em [PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md), da linha 1116 em diante.
+
+**Como ler as marcas:** **[confirmado]** foi verificado agora no repositório ou nos dados gravados. **[registrado]** vem do plano ou da memória de trabalho, sem nova verificação. **[hipótese]** não foi demonstrado. **[não confirmado]** não pôde ser verificado.
+
+## 1. Visão geral
+
+O Librarian lê um projeto como um bibliotecário lê um acervo: guarda as fontes byte a byte, relaciona o que está escrito e acha onde vale perguntar. O modelo vê só a evidência da pergunta, e nada do que ele diz vira fato sem passar por um portão mecânico e por uma pessoa. É em Rust; analisa Rust e Python hoje. O uso normal é pelo Librarian Studio, uma página web. Projetos de teste: `renderer` (ray tracer em Rust) e `logistica-api` (Python).
+
+Lema do projeto: *condensar fatos a partir de vapores de nuances*. Princípio desta frente: o objetivo não é fazer o modelo pensar mais, e sim entregar informação melhor, suficiente e verificável, para que ele tenha menos espaço para inventar.
+
+## 2. Arquitetura e responsabilidades
+
+### Onde cada parte está no código [confirmado]
+
+| Nome usado na conversa | Onde está de fato |
+|---|---|
+| Acervo e edition | `crates/librarian-ingest` |
+| Grafo usado pelo Studio | `crates/librarian-ingest/src/graph/` (contrato `v2`) |
+| Crate `librarian-graph-engine` | Existe, mas o Studio **não depende dele**: o Cargo do Studio lista só `librarian-ingest` e `librarian-llm-engine`. Sua referência (`WORKFLOW-V0.1.md`) é do fluxo formal de dossiês 0.1 |
+| Evidence Builder (seleção) | Não é um crate: `crates/librarian-ingest/src/envelope.rs` |
+| LLM Engine | `crates/librarian-llm-engine`, com o contrato em `CLAIMS.md` |
+| Escada e portão | `crates/librarian-studio/src/ladder.rs`, `main.rs` e `execution.rs` |
+| Interface | Um único `crates/librarian-studio/web/index.html` |
+
+Ao ler "Graph Engine" em pedidos e documentos, confirme se é o grafo de `librarian-ingest` ou o crate antigo.
+
+### Responsabilidades
+
+- **Grafo:** relações estruturais pelo nome escrito. Nunca é resolução por compilador, nem afirmação semântica. Uma ligação com homônimos é candidata, não fato.
+- **Evidence Builder:** decide o que vai ao modelo, por regras e sem modelo. Papéis, nesta ordem: alvo, origem do valor, custo, caminho, apoio, restrição. Registra o que ficou de fora e o que o grafo não resolveu.
+- **LLM Engine:** prepara a query e faz a verificação mecânica de categorias e citações. Não aprova o sentido de nada.
+- **Portão:** execução real da mudança numa cópia, com a medição do projeto e os testes. Mostra efeitos; não julga sentido.
+- **Pessoa:** decide. O que passou continua HYPOTHESIS até alguém aprovar como fato.
+
+### Quatro responsabilidades que não se misturam
+
+**Seleção:** quais informações são necessárias. **Investigação:** quais relações existem entre elas. **Medição:** o que aconteceu na execução. **Decisão:** se a mudança é aceitável diante dos resultados.
+
+### O envelope e seus limites [confirmado]
+
+`envelope.rs:15`: `BUDGET_BYTES = 6 * 1024` (6.144 B de código), com no máximo **16 declarações**. Alvos vão sempre. Testes ficam de fora porque o portão os roda. O que a medição contou e não rodou sai, salvo se for origem de um valor. Dentro de custo e caminho, ordena-se por contagem (`envelope.rs:427`). Observado: quem limita costuma ser o número de itens, não os bytes.
+
+### Categorias que não podem ser confundidas
+
+| Categoria | O que é | Quem produz |
+|---|---|---|
+| Relação estrutural | Algo escrito no código: chama, escreve, tem o tipo | Grafo |
+| Evidência | Trecho verificável enviado ao modelo | Evidence Builder |
+| FACT, INFERENCE, LACUNA | Categorias de uma resposta, conferidas mecanicamente | Modelo e LLM Engine |
+| Hipótese | Proposta de mudança. Passar no portão não a torna fato | Modelo e portão |
+| Fato validado | Aprovado por uma pessoa | Pessoa |
+
+### Regra de método
+
+Não confundir **o que o modelo solicita**, **o que o sistema consegue encontrar** e **o que efetivamente melhora o resultado**. Exemplo: `inverse` é citada em 25 lacunas de `r5` e tê-la no envelope não muda a taxa de lacuna (28% e 28%). Também não confundir: o grafo encontra, o envelope admite, o orçamento decide o que fica, e o gabarito verifica. Uma resolução tecnicamente correta pode piorar o resultado se tirar evidência mais útil.
+
+### Medição e portão [confirmado no código e no STUDIO]
+
+- **Contagem é exata.** O tempo de um comando que conta não é evidência de melhora, porque inclui os contadores.
+- **`measures` no perfil é um contrato de avaliação:** o que cada número significa e para que lado é melhor. O Librarian conhece isso e não sabe se memória vale mais que velocidade.
+- **Uma piora não recusa a mudança:** aparece ao lado da decisão, porque um cache pode gastar memória de propósito. A troca é decisão humana.
+- **O que é medido não pode ser o que muda:** contador apagado é recusado, e perfil e caminhos protegidos não podem ser tocados.
+- **A escada** testa todas as propostas de uma resposta e marca a de maior % de ganho como `passed` e as outras como `passed_smaller`. Isso é o que o Pareto questiona (seção 9).
+
+Resultados são hipóteses, não regras. O mesmo envelope já deu 4/6 e 8/8 em medições diferentes.
+
+## 3. Estado atual do repositório [confirmado]
+
+**Branch:** `main`, 9 commits à frente de `origin/main`. Sem stash. **Decisão do usuário: não fazer push por enquanto.**
+
+**Commits locais sem push (do mais novo ao mais antigo):**
+
+| Commit | Conteúdo |
+|---|---|
+| O mais recente | Docs: este arquivo. O hash não cabe aqui: confira no `git log` |
+| O anterior | Docs: plano com homônimos suspensos e a próxima frente |
+| `df43138` | Docs: defeitos da lacuna corrigidos, rodada sem espaço e linha de base dos homônimos |
+| `abb682a` | **Código:** método de dois traits não é adivinhado, trait pedido não é filtrado, rodada sem espaço no registro |
+| `e07c038` | Docs: `Object` e o trait em `r5` sem conclusão, lacunas suspensas |
+| `bab430a` | Docs: o que ficou de fora do envelope, classes de ausência, defeitos |
+| `02d7ae6` | Docs: tempo na seleção, contagem como medida confiável, correção de "Onde pesa" para o front |
+| `9fcb05e` | Docs: notas geradas e condição da função perguntada, condições encerradas por enquanto |
+| `7b13e13` | Docs: portão com o modelo, condições e invariantes, notas geradas como próximo experimento |
+
+Último commit já enviado: `7868912`.
+
+**Sem commit:** nada neste repositório, salvo trabalho posterior.
+
+**Testes, rodados antes destes dois commits de documentação:** `cargo test --workspace`: **196 passaram, 0 falharam, 2 ignorados.** Os ignorados são o gabarito (`crates/librarian-ingest/tests/gabarito.rs`), que depende de dados locais, e um teste em `crates/librarian-llm-engine/src/cli/send_ollama.rs`.
+
+**Outros projetos:**
+
+| Projeto | Estado |
+|---|---|
+| `renderer` | `master` em `e38254b`, limpo. 3 pastas de trabalho (`renderer`, `renderer-claude`, `renderer-librarian`). 12 refs locais em `refs/librarian-arquivo/*` |
+| `renderer-librarian` | `diff-librarian` em `35cb76e`, limpo |
+| `logistica-api` | `main` em `127dbd7`. `backend/librarian.json` com `measures` **sem commit naquele projeto**, por decisão; `LOGISTICS.md` não rastreado, e sua origem não foi verificada. O experimento de Python usou `cd15515`, ancestral de `127dbd7` |
+
+**Ambiente:** nada escutando em 8765 nem em 8830–8839. Nenhum contêiner em execução; o volume de `logistica-api-db-1` foi deixado intacto **[registrado]**. `Temp/lt-ev` (4,3 GB), diretório de build de um experimento antigo: **decisão do usuário, não limpar ainda.** A máquina não tem `python`: use `uv run --no-project python`. Heredocs do Bash perderam `\` em scripts: escreva-os com a ferramenta Write.
+
+**Dados que o Git não guarda (`.studio/` é ignorado):**
+
+- `.studio/gabarito`: 6 casos com edition, medição e declarações editadas.
+- `.studio/arquivo-copias/`: `condicoes-`, `notas-geradas-`, `foco-`, `tempo-`, `lacunas-`, `trait-` e `homonimos-20261104`, com resultados, scripts e diffs.
+- `.studio/arquivo-copias/rodadas-20261104` (516 MB): as editions, execuções e turnos das 6 rodadas (`root`, com `r5`, que não faz parte do gabarito, e `rootpy`), além de resultados e scripts. Tem `LEIA-ME.md` e `MANIFESTO.sha256`. Conferido: 29.174 hashes iguais aos da origem, e `condres.js`, `traitres.js` e `lac3.js` reproduzem a mesma saída sobre a cópia.
+- **Origem preservada:** o scratchpad em `AppData/Local/Temp/claude/.../d9e4a878-dc19-44c2-b141-f69816ea3920/scratchpad` não foi alterado, mas é temporário. **Não remova, sobrescreva nem reorganize esses dados sem aprovação do usuário.**
+- **Limite do arquivo:** ele serve para reanalisar. Reenviar exige o studio e o projeto na base da rodada. `hom-casos.json` e `tempo-casos.json` têm caminhos absolutos da origem e precisam ser gerados de novo se ela sumir. O arquivo não está no Git, e não há cópia fora desta máquina.
+
+**Alterações temporárias já removidas [confirmado]:** `crates/librarian-ingest/tests/tempo_tmp.rs`, `crates/librarian-ingest/tests/homonimos_tmp.rs` e o teste injetado em `ladder.rs`. As cópias dos experimentos (`lc-*`) e os builds `lt-gate`, `lt-gen`, `lt-tempo`, `lt-fix` e `lt-handoff` também foram removidos.
+
+## 4. Histórico técnico relevante
+
+**Código desta frente [confirmado no `git log`]:**
+
+| Commit | O que fez |
+|---|---|
+| `a979f60` | Seleção por papéis e orçamento em bytes, com o que ficou de fora, lacunas e comportamento |
+| `75d8a1a` | Escada testa todas as propostas e fica com a de maior ganho |
+| `d24af75` | Envelope novo, desligado: notas ao modelo e query sem o excerpt repetido |
+| `9c5c761` | Escada de mudanças vai direto ao Haiku; o qwen continua nos fatos |
+| `fa10448` | Query compacta ligada nas perguntas novas |
+| `fd45483` | `measures` no perfil, com o que piorou ao lado da decisão |
+| `c265776` | Cópia recriada aplica a mudança: um `.diff` que sobrou fazia a linha de base passar por mudança (100 em vez de 20) |
+| `b5eefca` | Registro da escada: piora em destaque, também no título da mudança escolhida |
+| `abb682a` | Correções do caminho da lacuna (abaixo) |
+
+**`abb682a` em detalhe:**
+
+- `ladder.rs`, `resolve`: quando **mais de um trait** declara o método, nada é trazido, em vez do primeiro (`Incuse::transform`). Escrito com o trait, continua vindo. Não escolhe qual trait é o certo, porque isso seria uma heurística nova.
+- `ladder.rs`, `ran_type`: um trait pedido por nome vem quando um método dele, ou um `impl` dele, rodou.
+- `ladder.rs`, `lacuna_room`; `main.rs`, `no_room`; `index.html`, `ladder.noRoom`: o registro diz que não houve espaço. Nada sai do envelope.
+- Testes em `store.rs`: `a_method_two_traits_declare_is_not_guessed` e `a_trait_asked_by_name_comes_when_it_ran`, os dois vistos falhando antes da correção. Em `ladder.rs`: `a_full_question_has_no_room_for_a_lacuna`.
+
+**Efeito de `abb682a`:** nenhum na seleção nem nas aprovações. A seleção não usa esse caminho, e a rodada não acrescenta nada com 16 declarações. As 41 lacunas gravadas têm espaço 0.
+
+**Interface nos temas [registrado, com limite]:** o aviso de piora e a linha `no_room` foram vistos nos temas claro e escuro e em tela estreita, sem erro de página, com a escada **simulada**, via `colorScheme` do navegador. **Não foram testados:** a troca manual por `data-theme`, a interface inteira, e o caminho com a escada real.
+
+## 5. Experimentos e resultados
+
+Modelo: Haiku via `claude-cli`, salvo indicação. p é o teste exato de Fisher, duas caudas, sem correção por múltiplas comparações. "Grande" é cortar ao menos 50% das chamadas de `inverse`, salvo indicação. São um projeto Rust e 3 casos Python: nada aqui é regra.
+
+Soma do custo informado das cinco rodadas com LLM mais recentes (E4 a E7 e o teste da E9): cerca de US$ 2,24. A frente inteira custou mais; o total exato **[não confirmado]**.
+
+Casos: `r1` e `r2` (`inverse`), `r3` (`Groups::intersect`), `r5` (`Intersectable::intersect`, alvo em método de trait, fora do gabarito), `py-memoria`, `py-n-mais-1`, `py-async`.
+
+### E1. Dimensionamento e papéis do envelope
+
+- **Hipótese:** o problema é como as fontes são escolhidas, não falta de contexto.
+- **Método:** retirar fontes e reenviar: 63 envios, US$ 0,51, 5 variantes.
+- **Resultado:** gravado 15/18, nova 15/18, sem custo 9/9, sem origem 5/9, só o alvo 5/9. Sem origem, a mudança grande nunca aparece.
+- **Conclusão permitida:** a seleção nova empatou com a gravada, com custo por envio cerca de 8% menor. A origem do valor importa.
+- **Não concluído:** que a seleção nova aprove mais; até aqui, em nenhum caso.
+- **Decisão:** seleção por papéis fica, e o papel custo fica: numa medição seguinte, tirá-lo melhora `r1` (6/8 × 2/7) e piora `r3` (4/8 × 8/8).
+
+### E2. Escada e query compacta
+
+- **Hipótese:** parar na primeira proposta aprovada perde a maior; o texto repetido na query não ajuda.
+- **Método:** 48 envios (US$ 0,39) para cada medição. As notas ao modelo foram medidas juntas.
+- **Resultado:** com as mesmas respostas, em 11 de 43 aprovações a escada escolheu proposta melhor. A compacta reduz a query em cerca de 13%, com ganho igual. As notas pioraram: em `r2`, grande 6/8 → 2/8 e ganho 40% → 15%.
+- **Conclusão permitida:** esses são os efeitos mais claros da frente; o da escada não depende de comparar envios diferentes.
+- **Não concluído:** qual parte das notas atrapalha.
+- **Decisão:** escada corrigida e compacta ligadas; notas desligadas.
+
+### E3. `r5` com variantes de envelope
+
+- **Método:** 16 envios por variante (8 na última): gravado 10/16, nova 8/16, trocando `Bounds::intersects` por `inverse` 6/16, com `impl Intersectable for Object` (9,6 KB) 5/8 com 0 sem proposta.
+- **Conclusão permitida:** empate. 2/8 × 6/8 nos primeiros envios foi ruído.
+- **Decisão:** nenhuma regra muda por menos que uma diferença repetida. Não deixar a origem passar do limite.
+
+### E4. Portão com medidas declaradas
+
+- **Hipótese:** o portão não via memória, e por isso recusava mudanças que a reduziam.
+- **Método:** reprodução sem LLM em 17 propostas; depois 18 envios no `logistica-api` em `cd15515`, US$ 0,084, 59 min.
+- **Resultado:** memória de 0/3 para 2/3 (gravada) e de 1/3 para 3/3 (nova); N+1 e `async` 3/3, com memória subindo em boa parte e a piora visível.
+- **Conclusão permitida:** o portão vê memória, e cada piora aparece ao lado da decisão.
+- **Não concluído:** como escolher entre propostas com trocas.
+- **Decisão:** mantido. Problema da escolha pela maior %:
+
+| Proposta, envio `py-memoria` nova k=2 | `memory_end_mb` | `routing_cpu_p50_ms` | `plan_p95_ms` | `plans_per_s` | Resultado |
+|---|---|---|---|---|---|
+| A | **−77%** | +166% | +267% | −57% | escolhida |
+| B | +11%, faixas sobrepostas | **−33,5%** | −4%, sem contar | +4%, sem contar | ganho menor |
+
+A resolve o que foi perguntado, com custo alto. B não tem piora registrada e não resolve. **Nenhuma domina a outra.** Foi observado em um envio.
+
+### E5. Condições e invariantes escritas à mão
+
+- **Hipótese:** dizer o que guarda uma chamada e quem escreve um campo melhora a proposta.
+- **Método:** 88 envios, US$ 0,69, duas rodadas, mesmo envelope, notas à mão.
+- **Resultado:** `r1`: 3/16 sem fatos × 13/16 com condição e invariante (p = 0,001; repetiu nas duas rodadas). Só condição 5/8, só invariante 2/8, condição com todos os campos 4/8. `r5`: 7/16 × 11/16 (p = 0,29).
+- **Conclusão permitida:** em `r1`, esses fatos escritos à mão mudaram o resultado de forma repetível.
+- **Não concluído:** generalização. Escrevi as notas sabendo a resposta.
+- **Decisão:** testar notas geradas antes de mexer no extractor (E6).
+
+### E6. Notas geradas por script
+
+- **Hipótese:** o Librarian produz sozinho o que foi útil à mão.
+- **Método:** 120 envios, US$ 0,86, critérios e notas congelados com hash. O gerador lê código, Medir tudo e envelope.
+- **Resultado:** `r1` grande: 1/8 sem notas, 1/8 condições, 0/8 campos, 0/8 invariantes, 1/8 tudo. `r5` aprovadas: 4/8 × 6/32 somando as variantes com notas (p = 0,09). O critério de `r3` foi ruim: `Groups::intersect` não cai, e a base já guarda a inversa em 6/8.
+- **Conclusão permitida:** não repetiu o efeito, embora a nota gerada de `r1` traga o mesmo fato, como a quarta de cinco notas.
+- **Não concluído:** por que a manual funcionou; se as notas atrapalham `r5`; nada sobre `r3`.
+- **Decisão:** extractor não muda. Regra, antes de enviar: o "top 5 do projeto" só traz funções internas de `matrix.rs`.
+
+### E7. Condição só da função perguntada
+
+- **Hipótese:** o fato específico e isolado ajuda onde o acumulado não ajudou.
+- **Método:** 48 envios, US$ 0,37. Critério fixado: `r1` ≥ 5/8 com base ≤ 2/8, sem `r5` piorar.
+- **Resultado:** `r1` grande 2/8 × 4/8; `r3` 7/8 × 7/8; `r5` grande 4/8 × 6/8, aprovadas 4/8 × 7/8.
+- **Conclusão permitida:** **não recuperou** pelo critério.
+- **Não concluído:** que a nota isolada não ajude. Pista, entre rodadas e depois de ver os dados: em `r5`, 7/8 contra 6/32 das acumuladas.
+- **Decisão:** linha de condições encerrada por enquanto.
+
+### E8. Tempo na seleção (sem LLM, sem custo)
+
+- **Hipótese:** ordenar por tempo melhora a seleção.
+- **Método:** a seleção real, trocando só o número de ordenação: contagem, tempo inclusivo, tempo por chamada e camadas de Pareto. Mapeamento conferido com o gabarito.
+- **Resultado:** `r1`, `r2` e `r3` escolhem o mesmo conjunto. Só `r5` muda, trazendo `inverse` e `World::color_at`, e a troca por `inverse` já deu 6/16 × 8/16. Alvo, origem e apoio ocupam de 12 a 15 das 16 vagas.
+- **Achado:** o tempo do Medir tudo **muda a ordem entre as funções**. Em `r1`, de 8 contadores para todos: `Bounds::intersects` 81 → 78 ms; `Groups::intersect` 4.631 → 482.541 ms (104×); `inverse` 809 → 492.456 ms (609×). `inverse` aparece com 17% ou 99% de `color_at`, enquanto guardar a inversa rende cerca de 44% no portão.
+- **Conclusão permitida:** papéis e orçamento decidem a seleção; o tempo instrumentado não serve para ordenar. "A ordem é o que vale" não se sustenta.
+- **Não concluído:** o custo real de cada função; quanto do tempo total os selecionados representam (o tempo é inclusivo e não soma); benchmarks em Python (só há números do projeto inteiro).
+- **Decisão:** contagem é a medida confiável, tempo instrumentado é referência. Linha suspensa até um profiler por amostragem.
+
+### E9. Investigação de lacunas
+
+**Análise sem LLM, 516 envios gravados:**
+
+- **Comparar só as aprovadas não mostra lacuna, por construção:** o validador recusa edição fora das linhas enviadas (0 em 394 mudanças fora do envelope).
+- **41 lacunas, 40 em `r5` e 1 em `r1`.** Nenhuma em `r2`, `r3` ou Python.
+- **Pedidos em `r5` (144 envios):** `transform` 40 (nunca candidato); `inverse` 25 (corte por orçamento; lacuna 9/32 × 31/112, 28% e 28%); `Intersectable` 22 e `Object` 21 (nunca candidatos); `local_intersect` 21 (limite de itens; 4/16 × 36/128). `impl Intersectable for Object`, 3.948 B: 0/8 × 40/136 (p = 0,11), variante de outra rodada.
+- **Classes decididas:** irrelevante até aqui (`inverse`, `local_intersect` por ora, o que fica de fora em `r1`–`r3`); potencialmente importante (`impl Intersectable for Object`, `Object`, o trait); comprovadamente relevante: **nenhuma**.
+
+**Teste de `Object` e do trait em `r5` (32 envios, US$ 0,24):**
+
+- **Hipótese:** dar a estrutura e o contrato do objeto reduz as lacunas.
+- **Método:** 16 envios por variante, mesmo limite: saem `Bounds::intersects` (1.174 B) e `Matrix` (109 B), entram `Object` (185 B) e `Intersectable` (1.082 B). Critério: lacuna menor com p < 0,05, sem aprovadas caírem mais de 2.
+- **Resultado:** lacuna 8/16 × 3/16 (p = 0,14); aprovadas 7/16 × 8/16; grande 7/16 × 7/16; sem proposta 8/16 × 5/16. A base veio alta contra o histórico de 28% (p = 0,09), e 3/16 não se separa do histórico (p = 0,56). Os envios que deixaram de ser lacuna viraram recusas. As 3 lacunas restantes pedem as implementações do trait.
+- **Conclusão permitida:** sem conclusão. Menos lacuna não virou mais mudança neste teste.
+- **Não concluído:** que `Object` e o trait sejam inúteis, ou úteis. O teste mede a troca inteira. O 0/8 de `impl` segue sem repetição.
+- **Decisão:** lacunas suspensas, sem descartar os resultados. Isso **não** considera o mecanismo resolvido.
+
+### E10. Homônimos (sem LLM, sem custo)
+
+**Linha de base:**
+
+- **Resultado:** 35 chamadas sem dono único nos alvos dos 7 casos. As 14 declarações editadas no gabarito já estão no envelope, nenhuma por homônimo. A medição desempatou 0. Classes, atribuídas por mim lendo o texto, sem compilador: tipo escrito 8; `self` no próprio trait 3; parâmetro com tipo declarado 9; variável local, de laço ou de campo 14; módulo importado em Python 1.
+- **Limite:** Python só aparece com 1, mas em 2 dos 3 casos nenhuma chamada dos alvos foi seguida, então pouco se pode dizer sobre Python.
+
+**Simulação das 11 chamadas sem inferência de tipos, limite de 16 mantido:**
+
+- **Hipótese:** resolver homônimos que já estão escritos melhora o envelope.
+- **Método:** a chamada resolvida entra como `called`, e a seleção real decide. Com e sem o tipo dono.
+- **Resultado:** 11 de 11 desambiguadas; as outras 24 seguem ambíguas.
+
+| Caso | Entra | Sai | Bytes |
+|---|---|---|---|
+| `r1` | `Matrix::from`, `Intersections::new` | `is_invertible`, `Bounds::intersects` | 5.373 → 4.369 |
+| `r2` | `Intersections::new` | `Bounds::intersects` | 5.512 → 4.530 |
+| `r3` | `Intersections::new`, `World::is_shadowed`, `World::color_at` | `Bounds::intersects`, `Matrix` | 6.082 → 5.899 |
+| `r5` | `Intersections::new` | `Matrix` | 5.896 → 5.979 |
+| Python | nada | nada | iguais |
+
+- **Efeito das substituições:** nenhuma declaração editada se perde. Do envelope gravado saem 1 em `r1` e 2 em `r3`. A contagem decide a troca: `Intersections::new` (4,8 milhões de chamadas) tira `Bounds::intersects` (2,2 milhões). Trazer o dono não muda nenhum envelope. `Intersectable::transform`, o mais pedido, é resolvido e fica de fora por limite de itens. Em 412 mudanças guardadas, o que sai nunca foi editado; o que entra não tinha como ser, porque o validador só permite editar o que foi enviado.
+- **Conclusão permitida:** resolver é correto como fato sobre o código; nada indica melhora no envelope.
+- **Não concluído:** o efeito no modelo, nunca enviado. O valor de `Bounds::intersects` como contexto: é o teste de saída antecipada de `Groups::intersect`. O tipo de retorno não foi simulado.
+- **Decisão:** suspenso, sem implementar.
+
+### E11. Qwen nas mudanças [registrado]
+
+- **Resultado:** 1 de 24 propostas sem problema de forma, e 10 min 21 s gastos. Com pedido menor, 0 de 24 no portão.
+- **Decisão:** fora da escada de mudanças até o fine-tune; continua nos fatos, onde passou 9 de 10. Critério de volta na seção "O qwen nas mudanças" do plano.
+
+## 6. Decisões tomadas
+
+### Aprovadas pelo usuário
+
+**Direção atual:**
+
+- Consolidar lacunas e homônimos e avançar para o frontend.
+- Próxima frente: evolução do Librarian Studio com Evidence Builder, incluindo as visualizações "Onde pesa" e Pareto.
+- Manter o agnosticismo de linguagem e preservar a arquitetura existente.
+- Sem push até decisão posterior. `measures` no `logistica-api` também aguarda.
+- O frontend deve tornar o trabalho do Librarian visível, não mudar o que o Librarian considera evidência.
+- Dados experimentais preservados antes de qualquer limpeza, fora do Git.
+
+**Durante o diagnóstico do frontend, não:** alterar contratos de API; implementar cálculos de Pareto; alterar a seleção do envelope; modificar a instrumentação de desempenho; alterar os critérios do portão. Identificar contratos, limitações e mudanças necessárias, apresentar as propostas separadamente e aguardar aprovação.
+
+**Investigações:**
+
+- Lacunas suspensas, sem comprovação de benefício; `Object` e o trait seguem como potencialmente importantes.
+- Homônimos suspensos, sem implementar a resolução simulada.
+- Correções técnicas de `abb682a` preservadas.
+- Condições encerradas por enquanto, extractor sem mudança.
+- Tempo: contagem é a medida confiável; linha suspensa até medição independente.
+- Cascata qwen → Haiku: não implementar sem evidência de necessidade.
+
+**Envelope:** não aumentar o limite nem alterar a composição sem evidência. Reconhecer uma necessidade potencial não autoriza retirar outra evidência. Sem pesos entre memória, tempo e vazão.
+
+**Método:**
+
+- Nenhuma mudança de arquitetura baseada só em hipótese não validada.
+- Corrigir defeito não é oportunidade de mudar comportamento sem evidência.
+- Critérios fixados antes de cada experimento e não mudados depois.
+- Resultado inconclusivo não vira conclusão.
+- A troca entre medidas é decisão humana.
+
+**Trabalho:** conversa e documentação em português; commits em português, sem acentos; documentação validada antes do commit; código aprovado segue até commit local; push só quando pedido.
+
+### Sugeridas por mim, ainda não aprovadas como desenho
+
+- Ordem interna da tela "Onde pesa" além da especificação da seção 9.
+- Reabrir lacunas e homônimos por um caminho específico.
+- Guardar uma cópia do arquivo de rodadas fora desta máquina.
+
+## 7. Investigações suspensas
+
+**Não retomar sem evidência nova:**
+
+| Linha | Por que parou | O que reabre |
+|---|---|---|
+| Condições e invariantes no extractor | Notas geradas e foco não recuperaram o efeito | Regra que escolha o fato certo sem saber a resposta, ou caso novo |
+| Tempo na seleção | Quase não muda a seleção, e o tempo é distorcido | Profiler por amostragem, e caso em que a contagem exclua função necessária |
+| Busca por lacunas | Sem ganho demonstrado em aprovações | Evidência de que a informação trazida melhora o resultado |
+| Resolução de homônimos | Sem sinal de melhora no envelope | Caso em que a identidade resolvida mude o resultado |
+| Abrir vaga na rodada de lacuna | Exige decidir o que sai, sem evidência | A mesma evidência das lacunas |
+| Cascata qwen → Haiku | O gabarito não mostrou fatos faltando | O gabarito mostrar que faltam fatos |
+| Qwen nas mudanças | 0/24 | Critério do plano, depois do fine-tune |
+| Notas de papel, lacunas e comportamento ao modelo | Pioraram quando medidas juntas | Teste em partes e menor |
+
+**Hipóteses não comprovadas:** o fato isolado funciona melhor que o acumulado; `Object` e o trait ajudam em método de trait; `impl Intersectable for Object` elimina lacunas.
+
+**Mal-entendido a evitar:** o gabarito só tem mudanças que o envelope já alcançava, e o validador impede editar fora dele. "Nenhuma editada se perde" é sinal fraco, e "nunca foi editado" não prova inutilidade.
+
+**Outras prioridades sem evidência (decisão anterior):** validar a configuração, instrumentar outras linguagens, reconhecer melhor as intenções, tornar configuráveis os critérios do alvo. Só com caso concreto: alvo por pergunta, limite de piora no portão, notas em partes.
+
+## 8. Pendências conhecidas
+
+**Documentação:**
+
+- Corrigir "a ordem é o que vale" em `STUDIO.md:646`, `crates/librarian-studio/src/instrument.rs:177` e `:240`, e `src/count.rs:9` do `renderer-librarian`. Parte da especificação do front; o último arquivo é **de outro repositório**.
+- `STUDIO.md` afirma que uma chamada com homônimos entra quando o Medir tudo viu um deles rodar. É verdade, mas nos casos medidos isso desempatou 0 vezes.
+
+**Limitações técnicas conhecidas, sem correção:**
+
+- `main.rs`: a rodada de lacuna não acrescenta nada com 16 declarações; a tela pede 2 rodadas, e elas ficam inertes nesse caso. Hoje isso fica registrado. Os experimentos rodaram com `lacuna_rounds: 0`, então **o efeito no fluxo real com rodadas não foi medido**.
+- O dono de um método de trait não é candidato (alvo `Groups::intersect` traz `Groups`; `Intersectable::intersect` não traz o trait). Causa no código **[não confirmada]**.
+- `lacuna_names` extrai palavras em maiúscula do português (`Sem`, `Falta`, `Por`). Inofensivo enquanto não houver símbolo com esse nome.
+- Chamadas dentro de macros não são vistas; condições e caminhos alternativos não são extraídos.
+- Em Python, não há contagem por função no Medir tudo.
+
+**Decisões do usuário em aberto:**
+
+- Push dos 9 commits: aguardando.
+- Commit do `measures` no `logistica-api`: aguardando.
+- Limpeza de `Temp/lt-ev`: não limpar ainda.
+- Vídeo 13: roteiro em espera, depois do vídeo 12 reprovado **[registrado]**.
+
+## 9. Próxima etapa: frontend
+
+### A especificação
+
+**O prompt "Librarian Studio — Evidence Builder", que o usuário fornecerá na nova sessão, é a especificação principal de implementação.** Esta sessão não leu esse prompt: nada aqui o substitui, resume ou interpreta. Se algo aqui divergir dele, vale o prompt, e a divergência deve ser mostrada ao usuário.
+
+### Por que esta evolução
+
+As investigações mostraram que os dados de seleção e os trade-offs da decisão precisam ficar visíveis e honestos, não que falte mais conteúdo no envelope. A seleção já grava o orçamento, o que ficou de fora e as lacunas, e a escada já mede ganhos e pioras, mas a tela ainda sugere conclusões que os dados não sustentam: uma ordem por tempo distorcido e uma "vencedora" pela maior %.
+
+### Como se conecta à arquitetura
+
+A interface **mostra** decisões de seleção e medição; não as toma. Seleção, investigação, medição e decisão continuam separadas. A interface é uma camada sobre o que `/api/envelope/suggest`, `/api/ladder`, `/api/hotspots` e `/api/executions` oferecem.
+
+### Ordem aprovada
+
+Diagnóstico primeiro, implementação depois: ler este contexto, conferir o Git, apresentar o diagnóstico e validar os conflitos com o usuário, especialmente Pareto, "Onde pesa", contratos de API e compatibilidade entre linguagens. As restrições do diagnóstico estão na seção 6.
+
+### "Onde pesa": especificação aprovada
+
+Sem mudar código antes do prompt do front:
+
+| Informação | Apresentação |
+|---|---|
+| Quantidade de chamadas | Ordenação principal |
+| Tempo instrumentado | Referência experimental |
+| Confiabilidade | Aviso explícito: inflado pela contagem, pode mudar a ordem entre funções |
+
+**O que existe hoje [confirmado]:** `GET /api/hotspots` devolve `rows` com `at`, `calls`, `cpu_ms`, `symbol`, `name`, `path`, `start_line`, `end_line`, `callers`, `calls_out`, além de `limits` e `measures`. As linhas vêm ordenadas por `cpu_ms` em `instrument.rs:194`.
+
+**Usos de `cpu_ms` em `index.html`, a revisar:**
+
+- Linha 3040: etiqueta no ranking.
+- Linhas 3374 e 3380, e 3814 e 3934: calor nos mapas.
+- Linha 3423: top 8.
+- Linhas 1686 e 3933: textos de dica.
+
+`hot.ranking` diz "Mais tempo, contado pelo projeto", e a "mais pesada" (`hot.hottest`) também alimenta **Separar para o qwen**.
+
+**Decisão do usuário:** isso não é só uma mudança de ordenação. O diagnóstico precisa mapear todos os consumidores da medição (ordenação, mapas de calor, top 8, Separar para o qwen), porque alterar só um pode produzir uma visualização contraditória.
+
+### Pareto: não implementar antes de medir
+
+**Direção do usuário:** quando há trocas entre medidas, não eleger vencedora; mostrar lado a lado as alternativas não dominadas, com ganhos e pioras de cada uma; identificar as dominadas; sem pesos; escolha final do usuário.
+
+**Decisão do usuário:** não implementar imediatamente. Primeiro, verificar nos dados existentes a frequência do conflito entre `passed` e `passed_smaller`. Separar **dados de medição, cálculo de dominância, critério de aprovação e visualização**: uma escolha já embutida no backend não deve virar uma suposta verdade matemática sobre dominância.
+
+**Dados que existem [confirmado]:**
+
+- Cada passo da escada traz `outcome` (`passed`, `passed_smaller`, `refused_by_gate`…), `detail.gain_pct`, `detail.worse` (lista de **textos**), `detail.executions` (ids) e `detail.why`.
+- Os números por medida estão em cada `execution.json`: `comparison.stats` com `change_pct` e `ranges_overlap`, além de `measures`.
+
+**Não existe, e não deve ser presumido:**
+
+- Contrato de API com as medidas lado a lado por proposta, ou cálculo de dominância.
+- Não verifiquei se `GET /api/executions` já devolve `comparison.stats` completo. Confira antes de desenhar.
+- `passed` e `passed_smaller` já embutem a escolha pela maior %. Mudar isso muda o backend e o significado do registro: combine antes com o usuário.
+
+**Cuidados de dados:**
+
+- Calcular dominância exige decidir o que conta como diferença. Regra do portão hoje: ao menos 10%, com faixas separadas; por ela, os +11% de memória de B na E4 não contam como piora.
+- Medidas sem declaração de direção só têm sentido para tempo e contagem. O `renderer` não declara memória: lá o Pareto é pobre.
+- A frequência do conflito **não foi medida**: há um caso observado. Os dados para essa contagem estão no arquivo de rodadas, sem LLM.
+- O que mudou de propósito não pode ser julgado pela própria medida (contadores, tempo em comando que conta).
+
+### O que influencia o frontend
+
+- A piora não recusa; a decisão é da pessoa.
+- A distinção entre evidência, hipótese e fato precisa aparecer na tela: aprovado no portão não é fato.
+- A rodada sem espaço já aparece (`ladder.noRoom`).
+- Sem pesos arbitrários, sem pontuação composta e sem nova heurística de seleção embutida na interface.
+
+### Cuidados de implementação
+
+- `index.html` é um arquivo único, com textos em pares pt/en (`t('chave')`) e tokens de cor. Temas por `prefers-color-scheme` e `data-theme`: verifique os dois temas e a tela estreita.
+- **Não testar em raiz em uso:** `askLadder` salva settings, e já desligou `allow_hypothesis` numa cópia. Use `LIBRARIAN_ROOT` e `LIBRARIAN_COPIES` isolados, porta própria e projeto descartável.
+- **O Studio serve a página de `LIBRARIAN_ROOT/crates/librarian-studio/web/index.html`.** Numa raiz isolada, copie o arquivo atual antes de testar, ou verá uma versão antiga.
+- Teste de tela: Playwright em `C:/Users/beatl/Videos/librarian-ferramentas/pw`, com o padrão de escada simulada em `ui4.js` e `ui5.js`, no arquivo de rodadas. Projeto novo precisa de `POST /api/project` e `POST /api/generate` antes de abrir.
+- `cargo` sempre com `CARGO_TARGET_DIR` fora do projeto se houver studio ou experimento rodando.
+- Manter o agnosticismo: o texto da tela não pode supor Rust, `matrix.rs` ou `renderer`.
+
+### Não repetir sem justificativa
+
+As investigações da seção 7, e também: ordenar a seleção por tempo; trocar `Bounds::intersects` por `inverse`; "top N do projeto" como seleção; comparar só propostas aprovadas para achar lacunas; notas acumuladas ao modelo.
+
+## 10. Instruções para a nova sessão
+
+1. **Leia este arquivo inteiro.** Depois, no plano, da linha 1116 em diante, quando precisar de tabelas completas.
+2. **Confirme o estado, sem confiar neste texto:**
+   - `git status -sb`
+   - `git log --oneline origin/main..HEAD`, que deve listar 9 commits, a partir de `7b13e13`, salvo trabalho posterior.
+   - Antes de qualquer limpeza de temporários, verifique os dados: `sha256sum -c MANIFESTO.sha256 --quiet` em `.studio/arquivo-copias/rodadas-20261104` e a existência de `root` e `rootpy` no scratchpad. Não remova, sobrescreva nem reorganize nada sem aprovação.
+3. **Aguarde o prompt "Librarian Studio — Evidence Builder"** e trate-o como especificação principal. Ao recebê-lo, compare com a seção 9, apresente o diagnóstico e aponte conflitos, sobretudo em Pareto, "Onde pesa", contratos de API e compatibilidade entre linguagens.
+4. **Não implemente durante o diagnóstico** (restrições na seção 6). Apresente as propostas separadamente e aguarde aprovação.
+5. **Não faça push** sem pedido.
+6. **Não retome investigações suspensas** sem evidência nova e decisão do usuário. Experimento novo exige hipótese e critérios fixados antes, e o usuário costuma decidir etapa por etapa.
+7. **Relate os resultados com honestidade:** o que falhou, o que não foi testado e o que é só hipótese. Corrija números errados, inclusive os seus e os do usuário: este trabalho já teve correções assim (B com "+34%" de memória, orçamento de "16 KB").
+
+### Informações não confirmadas
+
+- O conteúdo do prompt do frontend.
+- O custo total da frente inteira.
+- A origem de `LOGISTICS.md` no `logistica-api`.
+- Se `GET /api/executions` devolve as comparações completas.
+- A causa no código da assimetria do dono de método de trait.
+- O efeito das rodadas de lacuna num fluxo real, nunca medido.
+- A troca manual de tema por `data-theme`, não testada nestes ajustes.
