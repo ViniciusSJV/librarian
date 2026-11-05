@@ -68,12 +68,14 @@ Resultados são hipóteses, não regras. O mesmo envelope já deu 4/6 e 8/8 em m
 
 ## 3. Estado atual do repositório [confirmado]
 
-**Branch:** `main`, 10 commits à frente de `origin/main`. Sem stash. **Decisão do usuário: não fazer push por enquanto.**
+**Branch:** `main`, 11 commits à frente de `origin/main` até `a530017`, mais o ajuste de documentação que traz este texto: 12 no total. Sem stash. **Decisão do usuário: não fazer push por enquanto.**
 
 **Commits locais sem push (do mais novo ao mais antigo):**
 
 | Commit | Conteúdo |
 |---|---|
+| O mais recente | Docs: este estado, depois do commit da documentação e do arquivo da Etapa 2. O hash não cabe aqui: confira no `git log` |
+| `a530017` | Docs: contrato de `origin.selection`, limitações e etapas do Evidence Builder |
 | `99f69f3` | **Código:** Etapa 2 da frente do Studio, com decisões e proveniência |
 | `8b575ee` | Docs: este arquivo |
 | `94e2238` | Docs: plano com homônimos suspensos e a próxima frente |
@@ -87,7 +89,7 @@ Resultados são hipóteses, não regras. O mesmo envelope já deu 4/6 e 8/8 em m
 
 Último commit já enviado: `7868912`.
 
-**Sem commit:** a documentação da Etapa 2 (`STUDIO.md`, o plano e este arquivo), até a aprovação do usuário. Confira no `git status`.
+**Sem commit:** nada neste repositório, salvo trabalho posterior. O contrato e a documentação da Etapa 2 estão em `a530017`.
 
 **Testes, rodados em `99f69f3`:** `cargo test --workspace`: **197 passaram, 0 falharam, 2 ignorados.** Os ignorados são o gabarito (`crates/librarian-ingest/tests/gabarito.rs`), que depende de dados locais, e um teste em `crates/librarian-llm-engine/src/cli/send_ollama.rs`.
 
@@ -107,7 +109,9 @@ Resultados são hipóteses, não regras. O mesmo envelope já deu 4/6 e 8/8 em m
 - `.studio/arquivo-copias/`: `condicoes-`, `notas-geradas-`, `foco-`, `tempo-`, `lacunas-`, `trait-` e `homonimos-20261104`, com resultados, scripts e diffs.
 - `.studio/arquivo-copias/rodadas-20261104` (516 MB): as editions, execuções e turnos das 6 rodadas (`root`, com `r5`, que não faz parte do gabarito, e `rootpy`), além de resultados e scripts. Tem `LEIA-ME.md` e `MANIFESTO.sha256`. Conferido: 29.174 hashes iguais aos da origem, e `condres.js`, `traitres.js` e `lac3.js` reproduzem a mesma saída sobre a cópia.
 - **Origem preservada:** o scratchpad em `AppData/Local/Temp/claude/.../d9e4a878-dc19-44c2-b141-f69816ea3920/scratchpad` não foi alterado, mas é temporário. **Não remova, sobrescreva nem reorganize esses dados sem aprovação do usuário.**
-- **Baterias da tela e raízes de teste da frente do Studio:** `etapa2.js`, `etapa2b.js`, `etapa2c.js`, `etapa2-modelo.js`, `mutacao3.js`, `final.sh` e `iso/`, no scratchpad da sessão `465f4d1b-0d17-4dff-903f-d3077bb3c8f4`. **Não estão no repositório nem no arquivo, e a pasta é temporária.** O diagnóstico do Evidence Builder só existe na transcrição dessa sessão; o que dele foi decidido está no plano.
+- **`.studio/arquivo-copias/evidence-builder-etapa2-20261105` (939 MB), material da Etapa 2 do Studio:** baterias da tela (`etapa2.js`, `etapa2b.js`, `etapa2c.js`), modelo externo (`etapa2-modelo.js`), mutações (`mutacao3.js`, `final.sh`), raízes de teste (`iso/`), logs, telas, auditorias, o executável usado nos testes, o documento de contrato aprovado e, em `conversa/`, o diagnóstico integral, os pedidos do usuário e as respostas. Comece pelo `LEIA-ME.md`. `ORIGEM.tsv` diz de onde veio cada arquivo, e `EXCLUIDOS.tsv`, o que ficou de fora. Conferir: `sha256sum -c MANIFESTO.sha256 --quiet`, nessa pasta; SHA-256 do manifesto: `81d7739a576ed225ea714e67a313db806b919de34342795b606e56126dc9a601`. Fora do Git, sem cópia fora desta máquina.
+- **Limites desse arquivo:** a restauração **não foi executada**: está provado que as cópias são iguais à origem, não que a restauração funcione de ponta a ponta. Ela precisa ser no caminho original, porque a chave do projeto Python é o hash do caminho. `iso/mix/project` não tem `.git`, que trazia nome e e-mail: esse projeto precisa de `git init` e de um grafo novo, e nenhuma das quatro baterias o usa. `conversa/` traz extratos, porque a transcrição crua ficou de fora. `tasks/begpgaj0k.output` sumiu da origem depois da cópia, e a cópia foi conferida no momento em que foi feita.
+- **Origem preservada:** o scratchpad da sessão `465f4d1b-0d17-4dff-903f-d3077bb3c8f4` não foi movido nem apagado, mas é temporário.
 - **Limite do arquivo:** ele serve para reanalisar. Reenviar exige o studio e o projeto na base da rodada. `hom-casos.json` e `tempo-casos.json` têm caminhos absolutos da origem e precisam ser gerados de novo se ela sumir. O arquivo não está no Git, e não há cópia fora desta máquina.
 
 **Alterações temporárias já removidas [confirmado]:** `crates/librarian-ingest/tests/tempo_tmp.rs`, `crates/librarian-ingest/tests/homonimos_tmp.rs` e o teste injetado em `ladder.rs`. As cópias dos experimentos (`lc-*`) e os builds `lt-gate`, `lt-gen`, `lt-tempo`, `lt-fix` e `lt-handoff` também foram removidos.
@@ -355,7 +359,8 @@ A resolve o que foi perguntado, com custo alto. B não tem piora registrada e n�
 
 **Decisões do usuário em aberto:**
 
-- Push dos 10 commits: aguardando.
+- Push dos 12 commits: aguardando.
+- Cópia do arquivo de preservação fora desta máquina: não decidida.
 - Commit do `measures` no `logistica-api`: aguardando.
 - Limpeza de `Temp/lt-ev`: não limpar ainda.
 - Vídeo 13: roteiro em espera, depois do vídeo 12 reprovado **[registrado]**.
@@ -450,9 +455,9 @@ As investigações da seção 7, e também: ordenar a seleção por tempo; troca
 1. **Leia este arquivo inteiro.** Depois, no plano, da linha 1116 em diante, quando precisar de tabelas completas.
 2. **Confirme o estado, sem confiar neste texto:**
    - `git status -sb`
-   - `git log --oneline origin/main..HEAD`, que deve listar 10 commits, de `7b13e13` a `99f69f3`, salvo trabalho posterior.
+   - `git log --oneline origin/main..HEAD`, que deve listar 12 commits, de `7b13e13` a "Docs: estado apos o commit da documentacao e o arquivo da Etapa 2", salvo trabalho posterior.
    - Antes de qualquer limpeza de temporários, verifique os dados: `sha256sum -c MANIFESTO.sha256 --quiet` em `.studio/arquivo-copias/rodadas-20261104` e a existência de `root` e `rootpy` no scratchpad. Não remova, sobrescreva nem reorganize nada sem aprovação.
-3. **Leia a seção [Evidence Builder no Studio](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evidence-builder-no-studio-etapas-0-a-7-05112026) do plano** e o [contrato no STUDIO.md](STUDIO.md#registro-da-seleção-originselection-formato-1). Antes de usar as baterias de tela, confira se o scratchpad citado na seção 3 ainda existe.
+3. **Leia a seção [Evidence Builder no Studio](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evidence-builder-no-studio-etapas-0-a-7-05112026) do plano** e o [contrato no STUDIO.md](STUDIO.md#registro-da-seleção-originselection-formato-1). Antes de usar as baterias de tela, confira se o scratchpad citado na seção 3 ainda existe. Se não existir, restaure pelo `LEIA-ME.md` do arquivo de preservação, sabendo que esse caminho ainda não foi testado.
 4. **Não inicie a Etapa 3 sem autorização do usuário.** Apresente testes, diff e resultados antes do commit de cada etapa, e aguarde.
 5. **Não faça push** sem pedido.
 6. **Não retome investigações suspensas** sem evidência nova e decisão do usuário. Experimento novo exige hipótese e critérios fixados antes, e o usuário costuma decidir etapa por etapa.
@@ -466,3 +471,4 @@ As investigações da seção 7, e também: ordenar a seleção por tempo; troca
 - A causa no código da assimetria do dono de método de trait.
 - O efeito das rodadas de lacuna num fluxo real, nunca medido.
 - A troca manual de tema por `data-theme`, não testada nestes ajustes.
+- Se a restauração do arquivo de preservação reproduz as baterias: nunca executada.

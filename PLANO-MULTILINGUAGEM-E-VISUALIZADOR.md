@@ -1705,7 +1705,9 @@ Também: `optimize` mostra o que ficou de fora, `hot.askFacts` não tem mais "qw
 | 10 mutações contra `etapa2c.js` | 10 detectadas |
 | 6 mutações contra o modelo externo | 6 detectadas; `provenance` só na terceira semente (abaixo) |
 
-**As baterias de tela não estão no repositório.** Ficam no scratchpad da sessão `465f4d1b-0d17-4dff-903f-d3077bb3c8f4` (`etapa2.js`, `etapa2b.js`, `etapa2c.js`, `etapa2-modelo.js`, `mutacao3.js`, `final.sh`), uma pasta temporária. Só os testes em Rust ficam com o código.
+**As baterias de tela não estão no repositório;** só os testes em Rust ficam com o código. As baterias (`etapa2.js`, `etapa2b.js`, `etapa2c.js`, `etapa2-modelo.js`, `mutacao3.js`, `final.sh`) estão no scratchpad da sessão `465f4d1b-0d17-4dff-903f-d3077bb3c8f4`, que é temporário, e no arquivo de preservação abaixo.
+
+**Arquivo de preservação:** `.studio/arquivo-copias/evidence-builder-etapa2-20261105`, fora do Git e sem cópia fora desta máquina. Guarda as baterias, o modelo externo, as raízes de teste, os resultados, o executável usado nos testes e o diagnóstico integral, com `LEIA-ME.md`, `ORIGEM.tsv`, `EXCLUIDOS.tsv` e `MANIFESTO.sha256`. As cópias foram conferidas por SHA-256 contra a origem. **Limites:** a restauração não foi executada, e precisa ser no caminho original, porque a chave do projeto Python é o hash do caminho. O projeto misto ficou sem `.git`, que trazia nome e e-mail, mas nenhuma das quatro baterias o usa. O diagnóstico e as conversas são extratos da transcrição, que não foi copiada crua.
 
 #### Mudança de texto enviado ao modelo (C3)
 
