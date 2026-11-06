@@ -369,6 +369,8 @@ A resolve o que foi perguntado, com custo alto. B não tem piora registrada e n�
 
 ### A especificação
 
+**Atualização de 06/11/2026: os Passos 1 e 2 da Etapa 3 estão concluídos; o Passo 3 não foi iniciado.** Já estão implementados: cobertura por função; ordem por contagem observada, com o tempo como referência; sem `FREQUENT` nem alvo automático; `count_kind` por origem; `counted_no_passes` e `zero_evidence`; resolução do alvo antes da medição, por símbolo; e, no cartão, a origem da resposta decidida por `execution`. O contrato está no [STUDIO.md](STUDIO.md#medição-capacidade-não-é-cobertura), e as baterias de tela desta etapa estão em [crates/librarian-studio/tests/tela](crates/librarian-studio/tests/tela/README.md), junto com `etapa2c.js`: fora do `cargo test`, porque precisam de um ambiente e de dados que não estão no Git. O texto abaixo guarda o contexto de antes disso.
+
 **Etapas 0, 1 e 2 feitas; a próxima é a Etapa 3, "Onde pesa", ainda não iniciada e dependente de autorização.** As decisões estão no plano, em [Evidence Builder no Studio](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evidence-builder-no-studio-etapas-0-a-7-05112026), e prevalecem sobre esta seção, que guarda o contexto anterior a elas. O contrato do registro e as limitações estão no [STUDIO.md](STUDIO.md#registro-da-seleção-originselection-formato-1).
 
 ### Por que esta evolução
@@ -393,7 +395,7 @@ Detalhada depois na Etapa 3 do plano:
 | Tempo instrumentado | Referência experimental |
 | Confiabilidade | Aviso explícito: inflado pela contagem, pode mudar a ordem entre funções |
 
-**O que existe hoje [confirmado]:** sem medição, `GET /api/hotspots` responde 404; com ela, devolve `rows` com `at`, `calls`, `cpu_ms`, `symbol`, `name`, `path`, `start_line`, `end_line`, `callers`, `calls_out`, além de `limits` e `measures`. As linhas vêm ordenadas por `cpu_ms` em `instrument.rs`.
+**O que existe hoje [confirmado]:** sem medição, `GET /api/hotspots` responde 404; com ela, devolve `rows` com `at`, `calls`, `cpu_ms`, `symbol`, `name`, `path`, `start_line`, `end_line`, `callers`, `calls_out`, além de `limits` e `measures`. As linhas vinham ordenadas por `cpu_ms` em `instrument.rs`; desde o Passo 2 vêm pela contagem observada, depois o tempo e o lugar, como desempate.
 
 **Usos de `cpu_ms` em `index.html`, a revisar.** As linhas abaixo são de antes da Etapa 2 e mudaram: procure por `cpu_ms`.
 
@@ -402,7 +404,7 @@ Detalhada depois na Etapa 3 do plano:
 - Linha 3423: top 8.
 - Linhas 1686 e 3933: textos de dica.
 
-`hot.ranking` diz "Mais tempo, contado pelo projeto", e a "mais pesada" (`hot.hottest`) também alimenta **Separar para o qwen**.
+Antes do Passo 2, `hot.ranking` dizia "Mais tempo, contado pelo projeto", e a "mais pesada" (`hot.hottest`) também alimentava **Separar para o qwen**. Hoje o título é "Maior contagem observada, com o tempo instrumentado como referência", e a pessoa escolhe o alvo de Separar numa lista.
 
 **Decisão do usuário:** isso não é só uma mudança de ordenação. O diagnóstico precisa mapear todos os consumidores da medição (ordenação, mapas de calor, top 8, Separar para o qwen), porque alterar só um pode produzir uma visualização contraditória.
 
@@ -458,7 +460,7 @@ As investigações da seção 7, e também: ordenar a seleção por tempo; troca
    - `git log --oneline origin/main..HEAD`, que deve listar 12 commits, de `7b13e13` a "Docs: estado apos o commit da documentacao e o arquivo da Etapa 2", salvo trabalho posterior.
    - Antes de qualquer limpeza de temporários, verifique os dados: `sha256sum -c MANIFESTO.sha256 --quiet` em `.studio/arquivo-copias/rodadas-20261104` e a existência de `root` e `rootpy` no scratchpad. Não remova, sobrescreva nem reorganize nada sem aprovação.
 3. **Leia a seção [Evidence Builder no Studio](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evidence-builder-no-studio-etapas-0-a-7-05112026) do plano** e o [contrato no STUDIO.md](STUDIO.md#registro-da-seleção-originselection-formato-1). Antes de usar as baterias de tela, confira se o scratchpad citado na seção 3 ainda existe. Se não existir, restaure pelo `LEIA-ME.md` do arquivo de preservação, sabendo que esse caminho ainda não foi testado.
-4. **Não inicie a Etapa 3 sem autorização do usuário.** Apresente testes, diff e resultados antes do commit de cada etapa, e aguarde.
+4. **Não inicie o Passo 3 da Etapa 3 sem autorização do usuário.** Apresente testes, diff e resultados antes do commit de cada etapa, e aguarde.
 5. **Não faça push** sem pedido.
 6. **Não retome investigações suspensas** sem evidência nova e decisão do usuário. Experimento novo exige hipótese e critérios fixados antes, e o usuário costuma decidir etapa por etapa.
 7. **Relate os resultados com honestidade:** o que falhou, o que não foi testado e o que é só hipótese. Corrija números errados, inclusive os seus e os do usuário: este trabalho já teve correções assim (B com "+34%" de memória, orçamento de "16 KB").

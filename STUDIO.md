@@ -106,8 +106,8 @@ O grafo aparece no **Mapa** como uma **cidade**:
 
 - **Bairro:** um arquivo. **Prédio:** uma função ou método. As posições são fixas, em grade, e
   proximidade não quer dizer relação.
-- **Com "Medir tudo":** só as funções que rodaram. A altura é o número de chamadas (em escala
-  log), a cor é o tempo, de azul (pouco) a vermelho (muito), e um anel vermelho marca trava,
+- **Com "Medir tudo":** só as funções com contagem acima de zero. A altura é a contagem observada (em escala
+  log), e só é número de chamadas quando a linha é a instrução de entrada do Medir tudo, a cor é o tempo, de azul (pouco) a vermelho (muito), e um anel vermelho marca trava,
   espera ou E/S dentro de laço.
 - **Sem medição** (ainda não medido, ou uma linguagem que a medição não conta, como Python):
   todas as funções, com a altura pelo tamanho e uma cor só. A barra no topo diz qual é o caso.
@@ -550,7 +550,7 @@ recebe um papel, e os papéis preenchem 6 KB de código, com no máximo 16 decla
 | apoio | tipos escritos e devolvidos, e o que ela chama quando não há medição |
 | restrição | os testes que a chamam: ficam de fora, porque o portão já os roda |
 
-Uma função que a medição contou e não rodou fica de fora, salvo se for origem do valor: um construtor
+Uma função que a medição contou e que não teve passagens observadas fica de fora, salvo se for origem do valor: um construtor
 roda antes da parte medida e é justamente onde a mudança guarda o valor. Sem medição, a ordem vem só
 da estrutura, e a tela avisa.
 
@@ -558,7 +558,7 @@ A sugestão não muda o envelope sozinha. A caixa de cada item mostra se ele est
 junta e desmarcar tira, na hora. **Juntar as sugeridas (N)** traz de uma vez as selecionadas que ainda
 não estão, sem as que você tirou e sem descartar o que você juntou à mão. Abaixo dela:
 
-- **Ficaram de fora:** cada item com o motivo (não rodou, teste, não coube no orçamento ou passou de
+- **Ficaram de fora:** cada item com o motivo (sem passagens na medição, teste, não coube no orçamento ou passou de
   16). Marcar um deles o traz para o envelope.
 - **O que o grafo não resolveu:** chamadas e tipos com homônimos, campos escritos por um receptor de
   tipo desconhecido, campos lidos sem quem escreva e origens que não couberam.
@@ -637,8 +637,12 @@ linha de comando: `librarian_ingest investigate inventory <edition> [regras.json
 
 ### Onde pesa (Medir tudo)
 
-O cartão **Onde pesa**, no topo da aba **Investigar**, responde "quais funções consomem mais
-tempo?" sem que ninguém precise saber onde olhar. O projeto diz só *como* contar uma passagem
+O cartão **Onde pesa**, no topo da aba **Investigar**, mostra a contagem observada em cada linha de
+uma medição, com o tempo instrumentado como referência, sem que ninguém precise saber onde olhar.
+Em `entry_calls`, a linha é a instrução que o Medir tudo pôs na entrada da função, e o número é o de
+chamadas observadas: uma frequência, não um custo. Nas [outras origens](#limitações-conhecidas-dos-números-por-função)
+ele é um valor observado naquela linha e não é apresentado como número exato de chamadas da função.
+O nome do cartão fica, mas nada nele diz qual função é a mais pesada: a medição não tem esse dado. O projeto diz só *como* contar uma passagem
 por uma função, numa linha do perfil (`instrument`, veja o [perfil](#perfil-do-projeto-librarianjson)).
 O Librarian decide *onde*.
 
@@ -655,19 +659,24 @@ medição**. A capacidade vem de `measure_all`, em `GET /api/commands`, e `GET /
   `at=` aponta para a função. No renderer, 236 funções contadas num frame de 128×72.
 - **Como esta contagem foi feita** mostra a medição de uma função por vez: a linha antes e
   depois na cópia, com o contador destacado, o comando que rodou e o que o programa imprimiu
-  para aquela linha. Abre na função mais pesada que recebeu o contador (uma que já contava não
+  para aquela linha. Abre na função mais chamada que recebeu o contador (uma que já contava não
   recebe nada, e a tela diz isso) e guarda o diff inteiro e a saída inteira, como foram gravados.
-- O **ranking** lista cada linha contada com a função, as chamadas e o tempo (inclusivo,
-  somado das threads e inflado pela própria contagem, o que pode mudar a ordem entre as funções; a
-  contagem é exata). Por enquanto, a lista ainda vem ordenada por esse tempo; passar a ordenar por
-  chamadas é a [Etapa 3](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#etapa-3-onde-pesa). Cada linha mostra
-  **quem chama** (pelo nome escrito, com as chamadas contadas de cada chamador) e as chamadas
+- O **ranking** lista cada linha contada com a função, a contagem observada naquela linha e o
+  tempo instrumentado. A ordem é pela contagem, que é exata. O que o número diz depende da origem
+  da linha; veja [as limitações](#limitações-conhecidas-dos-números-por-função).
+  Em contagens iguais, decide o maior tempo e depois o
+  lugar (`at`), para que um empate caia sempre do mesmo jeito. O tempo é inclusivo, somado das
+  threads e inflado pela própria contagem, o que pode mudar a ordem entre as funções: não é o custo
+  próprio dela e serve só de referência. Cada linha mostra
+  **quem chama** (pelo nome escrito, com a contagem observada de cada chamador) e as chamadas
   escritas no corpo que levam a funções contadas.
 - **Operações estruturais:** uma operação do inventário que não é conta matemática (trava,
   espera, E/S) dentro de um laço de uma função que rodou na medida. Ela é cara pelo tipo,
   não pela frequência: a `canvas_mutex.lock()` do laço de pixels da câmera.
-- **Separar para o qwen:** a função mais pesada entre as que rodam mais de um milhão de vezes
-  e os chamadores de onde vêm as chamadas. Para cada linha de um chamador que chama essa
+- **Separar para o qwen:** o Librarian não escolhe o alvo, e não há limite de chamadas: a pessoa
+  escolhe a função numa lista, na ordem das chamadas. Aparecem os chamadores que têm ao menos 5% da
+  contagem dela. Essa comparação usa a contagem de cada chamador, não as chamadas que ele faz a
+  ela. Para cada linha de um chamador que chama essa
   função, uma pergunta pequena ao qwen, só com aquela declaração ("o que a linha 88 calcula a
   cada chamada, e de que valores depende?"). Para cada valor lido de `self` nessa linha, o
   Librarian segue quem escreve o campo (o contexto do dono; por um método de trait, nos tipos
@@ -678,7 +687,32 @@ medição**. A capacidade vem de `measure_all`, em `GET /api/commands`, e `GET /
 - **A mesma pergunta na conversa:** o campo da conversa reconhece "quais funções pesam?",
   "onde otimizar?" e "otimize o Groups::intersect" por regras sobre as palavras, depois do
   léxico, sem modelo. A resposta sai da medição, num cartão na própria conversa, com os botões
-  para conferir fatos com o modelo local e para pedir a mudança. Sem medição, o cartão oferece o
+  para conferir fatos com o modelo local e para pedir a mudança. "Quais funções pesam?" e "onde
+  otimizar?" dão duas listas separadas, **maior contagem observada** e **maior tempo instrumentado
+  observado**, e dizem quanto a medição observou; sem uma função nomeada, nenhuma pergunta nem
+  mudança é montada, porque a escolha é da pessoa. Uma função nomeada sem chamadas tem resposta
+  conforme a evidência (veja [a semântica do zero](#semântica-do-zero)): nenhum desses casos prova
+  que ela não rodou.
+
+  **O alvo é resolvido antes da medição**, entre todas as funções da edition, com ou sem contagem.
+  Vale o nome inteiro; depois, o nome com o tipo dono (`Stripe::default` para `Default for
+  Stripe::default`); e só numa pergunta sem nome qualificado, o último nome. Um nome qualificado não
+  encontrado não vira outro com o mesmo último nome: a resposta diz isso. Várias funções com o nome
+  pedido são uma ambiguidade, e a pessoa escolhe. Se os nomes forem idênticos, a pergunta ainda não
+  consegue separá-las pelo arquivo. Um arquivo citado na pergunta (`src/app.py`) não conta como nome
+  de função.
+
+  **Vários nomes qualificados na mesma pergunta** são resolvidos um a um, e nenhum é ignorado. Se todos
+  levam à mesma função, ela é o alvo. Senão, a resposta diz o que aconteceu com cada um, e nada é
+  montado com só uma parte do pedido: o Librarian trata uma função por vez. Só nomes qualificados são
+  reconhecidos assim: em "otimize Tuple::dot e cross", `cross` é só uma palavra da pergunta.
+
+  **Falsos nomes.** Uma palavra que começa com letra e tem `::` ou um ponto no meio é lida como nome
+  qualificado, salvo se for um arquivo. Por isso, `v1.2` e `e.g.` em "otimize dot na v1.2" ou "otimize dot,
+  e.g. depressa" viram um nome não encontrado, mesmo que `dot` exista. Nada é montado, e a resposta diz qual
+  nome não foi encontrado: basta perguntar de novo sem essa expressão.
+
+  Sem medição, o cartão oferece o
   **Medir tudo** ou diz por que não dá para medir. **Perguntar ao modelo mesmo assim** manda a mesma pergunta a quem está escolhido
   na conversa, para quando as regras reconheceram uma pergunta que não era sobre isso. Uma
   pergunta com envelope ou que as regras não reconhecem vai direto ao modelo. O cartão é
@@ -994,7 +1028,7 @@ Marcar ou desmarcar uma fonte como alvo (`+alvo`) não é registrado em `decisio
 | `id`, `name` | texto | Não | Identidade |
 | `reasons` | lista | Não; vazia sem sugestão que a mencione | Motivos, **somados** entre sugestões |
 | `role` | texto | Sim | Papel na **sugestão mais recente que mencionou a fonte**. **Não acompanha a mudança de alvo**: `+alvo` não muda `role` |
-| `calls` | número | Sim | Contagem na mesma sugestão. Nulo não distingue "não rodou" de "sem cobertura" |
+| `calls` | número | Sim | Contagem na mesma sugestão. Nulo não distingue "sem passagens" de "sem cobertura" |
 | `facts` | ids | Não; pode ser vazia | Fatos conhecidos na mesma sugestão. **Não é o que foi enviado**: isso depende de `with_facts` e está na query |
 | `provenance` | texto | Não | Ver acima |
 | `left_out_why` | texto | Sim | **Histórico:** o primeiro motivo pelo qual uma sugestão a deixou de fora. Não muda, e não decide a lista |
@@ -1090,19 +1124,136 @@ Detalhes técnicos do servidor: [crates/librarian-studio](crates/librarian-studi
 |---|---|---|
 | Capacidade do projeto | Dá para rodar o Medir tudo? | `measure_all` em `/api/commands` |
 | Instrumentação por linguagem | Esta linguagem recebe contador? | `LANGUAGE` em `instrument.rs`; hoje só Rust |
-| Cobertura da função | Esta função foi contada? | `hot.counted` |
-| Medição da função | Quantas vezes rodou? | `hot.rows` |
+| Cobertura da função | Esta medição observou a função? | `coverage.functions` em `/api/hotspots` |
+| Medição da função | Qual contagem cada linha teve? | `hot.rows` |
+
+#### Campos de cobertura
+
+`/api/hotspots` traz `coverage`, e `/api/envelope/suggest` traz o mesmo resumo, sem a lista de funções, ou nulo sem medição. A regra fica só em `coverage()`, em `instrument.rs`. Cada função tem:
+
+| `coverage_state` | Significa | Não significa |
+|---|---|---|
+| `counted_and_ran` | Alguma observação é maior que zero, em qualquer repetição e linguagem | Que tenha pesado, nem que o maior valor seja o número de chamadas |
+| `counted_no_passes` | Tem contagem ou instrução, e a medição não observou passagens positivas. `zero_evidence` diz qual é o caso | Que ela não tenha rodado |
+| `no_coverage` | Não há evidência de contagem sobre a função | Que ela não tenha rodado |
+
+**Dois números que não são o mesmo:**
+
+| Campo | O que conta | No `renderer` |
+|---|---|---|
+| `coverage.instrumented` | Quem recebeu a instrução. Igual a `hot.functions` e ao tamanho da lista `hot.counted` | 236 |
+| `coverage.counted` | Quem tem contagem ou instrução: os instrumentados, mais quem imprimiu a própria contagem sem receber a instrução. Fica de fora quem recebeu a instrução numa linha dividida com outra função e com passagens: elas não podem ser atribuídas a nenhuma das duas sem mais evidência, e essa função vai para `no_coverage`, com o motivo `shared_line` | 244 |
+
+`coverage.counted` é um número, e `hot.counted`, uma lista: apesar do nome igual, medem coisas diferentes. `total` é igual a `counted` mais `no_coverage`.
+
+**Motivos, só em `no_coverage`** (`exclusion_reason`; total por motivo em `coverage.excluded`): `test`, `skipped_path`, `no_body`, `const_fn`, `already_counts` e `language_not_supported`, que vêm do plano, e `shared_line`, calculado na leitura: a função recebeu a instrução, mas divide a linha com outra, e as passagens nela podem ser de qualquer uma das duas. Nas novas medições, os motivos do plano ficam em `instrumentation.excluded` no `execution.json`.
+
+**Três ausências diferentes:**
+
+| Valor | Quando | Leitura |
+|---|---|---|
+| `not_recorded` | O registro não tem `instrumentation.excluded` | Medição antiga. O motivo não é reconstruído |
+| `not_classified` | O registro tem a lista, mas não esta função | Medição nova sem classificação. Não é esperado: uma edition carregada sempre dá source e trecho a cada função |
+| Nulo | Não há medição | Nada foi deixado de fora de nada |
+
+`coverage.reasons_recorded` diz se o registro guarda os motivos. A escolha entre `not_recorded` e `not_classified` depende só dele, tanto em `/api/hotspots` quanto em `/api/envelope/suggest`.
+
+`already_counts` sem contagem impressa fica em `no_coverage`: o contador aparece no texto, mas pode ser um comentário.
+
+#### Semântica do zero
+
+**Zero não é "não rodou".** No `renderer`, a macro `count!` registra a linha na primeira passagem, e `cena_video` chama `reset()` depois de montar a cena. O relatório imprime essa linha com zero: `Camera::new`, `World::new` e outras rodaram no comando, fora da janela contada. O mesmo vale para qualquer projeto que zere as contagens durante a execução.
+
+`coverage.functions` traz `zero_evidence`, calculado na leitura, sem mudar o que é gravado. `coverage.zero_evidence` traz o total de cada valor:
+
+| `zero_evidence` | Quando | O que dá para dizer |
+|---|---|---|
+| `entry_zero` | Linha da instrução de entrada com zero | A instrução contou zero nesta medição. Não prova que a função não rodou |
+| `no_line` | Recebeu a instrução e não há linha impressa | A medição não imprimiu contagem para ela. Depende de como o projeto imprime |
+| `own_zero` | Contador próprio com zero | Nada passou por aquela linha na medição |
+| `several_zero` | Várias linhas contadas, todas com zero | Nada passou por nenhuma delas na medição |
+| `unknown_zero` | Zero de origem desconhecida, ou linha dividida com outra função e com zero | Só que há uma contagem zero |
+
+Continua em `counted_no_passes`, porque há evidência de contagem. Ausência de linha sem instrução continua `no_coverage`, e sem medição não há estado nenhum.
+
+**Mediana zero com máximo positivo é `counted_and_ran`.** Ao menos uma repetição observou passagem. O máximo prova só isso e não é apresentado como número de chamadas; o número da linha continua sendo a mediana, e a resposta explica a divergência.
+
+**Duas funções na mesma linha, com contagem positiva:** uma fica com a linha, e a outra fica em `no_coverage`, com o motivo `shared_line`, porque não dá para saber de quem são as passagens.
+
+**`did_not_run` no envelope é um nome interno.** O código continua em `envelope.rs`, em `origin.selection` e nas rodadas gravadas, e quer dizer "sem passagens observadas na medição", não "não rodou". A tela diz "sem passagens na medição". A seleção não mudou: a função sem passagens fica de fora como fria, o que faz sentido para a janela medida. Ela usa a mediana, e também vale para contador próprio com zero. O limite em inglês de `envelope.rs` ("what did not run cannot be told apart") ficou como está.
+
+#### O que chega ao modelo
+
+Depois da Etapa 3, Passo 2, o pedido de mudança do cartão traz a contagem observada, nomeada conforme a origem da linha, o tempo instrumentado (ou "não registrado", nunca zero), como ler esses dois números e o resumo de cobertura. Não diz mais "a função que mais roda" nem "chamada principalmente por". O texto de **Otimizar** também perdeu "o que ela chama e mais pesa".
+
+**Resultados de escada anteriores a essa mudança não são comparáveis com os novos:** o texto enviado ao modelo mudou. O envelope não mudou.
+
+**Contagem manual** é o `calls@` ou o `cpu_ms@` impresso por um comando comum, sem Medir tudo. Ela fica na execução daquele comando e aparece em Investigar, mas não entra em `rows` nem em Onde pesa, por maior que seja, mesmo numa linha que o ranking tem. `hotspots` lê um único registro: o último Medir tudo com sucesso. O contador que o projeto já tinha e que é impresso durante o Medir tudo faz parte dessa medição, com a mesma execução, saída e repetições, e por isso fica no ranking. Uma linha não diz, por si, se veio da instrução inserida ou de um contador próprio.
+
+#### Limitações conhecidas dos números por função
+
+**O número é uma contagem observada, não necessariamente a frequência exata da função.** O que ele pode dizer depende da origem da linha, não de quantas linhas a função tem. Cada linha de `/api/hotspots` traz `count_kind`, calculado só em `instrument.rs` a partir de `instrumentation.functions`, e a tela, as respostas e os textos ao modelo leem esse campo:
+
+| `count_kind` | Quando | Como é apresentado |
+|---|---|---|
+| `entry_calls` | O `at` é a linha que o plano registra para aquela função, e só para ela. O Medir tudo põe a instrução logo depois da chave que abre o corpo | Chamadas observadas |
+| `own_counter` | O `at` não está no plano: a instrução não foi inserida ali, e o contador é do próprio projeto. Vale também com uma linha só, porque ela pode estar num laço ou num desvio | Passagens pela linha |
+| `several_lines` | A função tem mais de uma linha contada | A contagem da linha; no número da função, a maior entre as linhas |
+| `unknown` | O registro não tem um plano legível, ou mais de uma função está na mesma linha e elas dividem a série | Contagem observada |
+
+No `renderer`, os contadores próprios (`Groups::intersect`, `Matrix::inverse` e outros) aparecem como passagens, mesmo estando na primeira linha do corpo: a medição não registra onde a linha está, e o Librarian não deduz isso do texto do código. `entry_calls` confia em que a instrução declarada pelo projeto conta uma passagem por execução, sem amostragem: o Librarian não verifica o que ela faz.
+
+**Maior contagem não é número de entradas.** Uma linha conta as passagens por ela, e o registro não diz onde ela está na função. Quando uma função tem mais de uma linha, `calls_by_symbol` consolida ficando com a maior. O envelope (`measure_of`) e a tela já faziam o mesmo, e a regra fica assim por decisão. A alternativa de usar a linha de entrada não foi adotada.
+
+Não somamos porque a mesma chamada seria contada uma vez por linha. A maior contagem evita isso, mas também não garante o número real de entradas:
+
+| Linhas de uma função chamada 100 vezes | Maior | Soma |
+|---|---|---|
+| Na entrada (100) e num desvio (30) | **100, certo** | 130, errado |
+| Na entrada (100) e num laço de 5 (500) | 500, errado | 600, errado |
+| Uma em cada desvio exclusivo (60 e 40) | 60, errado | **100, certo** |
+
+O que vale sempre é que qualquer linha acima de zero quer dizer que a função rodou. Nas três medições do `renderer` consultadas, cada função tem uma única linha, então essa limitação não afeta os resultados atuais.
+
+**O que aparece na tela e nas respostas:**
+
+| Onde | `entry_calls` | `own_counter` | `several_lines` | `unknown` |
+|---|---|---|---|---|
+| Ranking e Separar | N vezes | N vezes na linha L | N vezes na linha L | contagem observada: N |
+| Cidade e sugestão | N chamadas | N passagens pela linha contada | maior contagem entre as linhas: N | contagem observada: N |
+| Fluxograma | N × | N × na linha L | ≤ N × | contagem: N |
+| Respostas e textos ao modelo | N chamadas | N passagens pela linha L, de um contador do próprio projeto | N passagens pela linha L, uma de K linhas contadas | contagem observada de N |
+
+Uma linha com zero diz só que a medição não observou passagens por ela: veja [a semântica do zero](#semântica-do-zero). A nota opcional do envelope ("N chamadas na medição") e os números de "Quem chama" usam a maior contagem sem esse aviso por função; o aviso geral está em `limits`.
+
+**O filtro de 5% de "Quem chama" compara grandezas diferentes.** Ele compara a contagem do chamador com a do alvo, não as chamadas que aquele chamador faz ao alvo. Um chamador que roda poucas vezes e chama o alvo muitas vezes num laço pode ficar de fora. A resposta diz quantos ficaram de fora. A correção fica para o passo que revisar "Quem chama".
 
 #### O que a Etapa 2 não resolve
 
 Reproduzido num projeto com 2 funções em Rust e 2 em Python, e no `renderer`. **Previsto para a [Etapa 3](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#etapa-3-onde-pesa).**
 
-- **Mapa:** com medição, mostra só as funções que rodaram. Arquivos sem cobertura somem, sem aviso.
+- **Mapa:** com medição, mostra só as funções com contagem acima de zero. Arquivos sem cobertura somem, sem aviso.
 - **"Onde pesa":** diz "N funções contadas", sem dizer de quantas. No `renderer`: 236 contadas de 487 no grafo; 251 sem contagem (214 testes, 17 em caminhos excluídos, 12 sem corpo, 8 que já contavam).
-- **"Quais funções pesam?":** responde só com o que foi contado, sem dizer isso.
-- **Sugestão:** `measured: true` numa edition medida, mesmo com alvo sem cobertura.
-- **Fluxograma: afirmação falsa.** `bodiless` (`instrument.rs`) procura `{` sem filtrar a linguagem, então toda função Python vira "sem corpo", e a tela a trata como "não rodou" e a esconde com "só o que rodou". Só ocorre em projeto com medição e fonte que não seja Rust, ou seja, misto.
-- **`calls: null`:** não distingue "contada e não rodou" de "sem cobertura".
+- **Sugestão:** `measured: true` numa edition medida, mesmo com alvo sem cobertura. O estado de cada item já vem em `coverage_state`; a tela ainda não o usa.
+- **`calls: null`:** sozinho, não distingue "contada e sem passagens" de "sem cobertura". Na sugestão, `coverage_state` distingue; no registro `origin.selection`, não.
+
+#### Fluxograma: efeito indireto da correção de `bodiless`
+
+**O que estava errado:** `bodiless` usava `body_brace`, que só lê a sintaxe de Rust, em toda linguagem. No teste, 5 de 7 funções Python viravam "sem corpo", e as outras 2 só escapavam porque tinham uma `{` no texto. A tela tratava as 5 como paradas.
+
+**O que mudou:** `bodiless` agora só avalia Rust. O fluxograma não foi alterado, mas `idle` (`index.html`) depende desse campo, então o que ele mostra mudou. Só em projeto com medição e fonte que não seja Rust:
+
+| No projeto misto de teste | Antes | Agora |
+|---|---|---|
+| "Só o que teve contagem" (antes "Só o que rodou") | Escondia as funções Python | Mostra as funções Python |
+| Caixa de função Python | "não rodou" (hoje "sem contagem") | Sem essa etiqueta |
+| Função Rust contada e não executada | Parada | Parada |
+| Assinatura de trait sem corpo | Parada | Parada |
+
+**O que continua pendente, sem reformulação nesta correção:**
+- "Só o que teve contagem" agora também mostra funções **sem cobertura**, que a medição não observou. O nome do filtro fica impreciso nesse caso.
+- A caixa de uma função sem cobertura ainda não diz "sem cobertura": fica sem etiqueta, o que não afirma nada de falso, mas também não informa.
+- Pela leitura do código, um homônimo Python deixa de ser desempatado pelo fluxograma se o outro candidato não foi contado, porque `measuredPicks` exige que os demais estejam parados. Não foi executado. O desempate do envelope é outro, e não mudou.
 
 **Até a Etapa 3, leia assim:** em projeto misto, a medição descreve apenas as funções Rust contadas, não o projeto. Nenhum dos dois projetos de teste atuais é misto.
 

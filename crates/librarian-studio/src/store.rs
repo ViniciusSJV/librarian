@@ -359,9 +359,8 @@ impl Store {
         self.new_turn(key, run, &settings, &catalog, question, None, request, Some(("gathered", gathered)))
     }
 
-    /// What the latest "Medir tudo" of `run` says about each function, if there is one.
-    fn measure_of(&self, key: &str, run: &str) -> Option<envelope::Measure> {
-        let hot = self.hotspots(key, run).ok()?;
+    /// What a "Medir tudo" says about each function.
+    fn measure_of(hot: &Value) -> Option<envelope::Measure> {
         let rows = hot["rows"].as_array()?;
         let mut measure = envelope::Measure::default();
         measure.counted.extend(hot["counted"].as_array().into_iter().flatten().filter_map(|s| s.as_str().map(String::from)));
@@ -378,7 +377,8 @@ impl Store {
     /// role and why, what stayed out and why, and the current reviewed facts about each one.
     pub fn suggest_envelope(&self, key: &str, run: &str, nodes: &[String]) -> Result<Value> {
         let catalog = Catalog::load(&self.edition(key, run)?)?;
-        let measure = self.measure_of(key, run);
+        let hot = self.hotspots(key, run).ok();
+        let measure = hot.as_ref().and_then(Self::measure_of);
         let mut candidates = envelope::candidates(&catalog, nodes, measure.as_ref())?;
         let (found, _, _) = self.inventory_of(key, run)?;
         envelope::trait_impls(&catalog, &found, nodes, measure.as_ref(), &mut candidates);
@@ -400,6 +400,7 @@ impl Store {
                 value["facts"] = json!(ids);
             }
         }
+        crate::instrument::annotate_suggestion(&mut out, hot.as_ref().map(|h| &h["coverage"]));
         Ok(out)
     }
 
@@ -2179,6 +2180,1164 @@ librarian-measure memory_mb=100
         assert_eq!((how["statement"].as_str(), how["functions"].as_u64()), (Some("crate::count!();"), Some(1)));
         assert!(how["diff"].as_str().unwrap().contains("+pub fn demo() -> u32 { crate::count!();"), "{how:#}");
         assert!(how["stdout"].as_str().unwrap().contains("librarian-measure calls=5 at=src/lib.rs:1"), "{how:#}");
+    }
+
+    /// A project in two languages, measured through the real flow. What the command prints is in
+    /// the string: two Rust functions and one that already counted, and a Python one whose count
+    /// the project printed by itself.
+    fn measured_mix() -> (Scratch, Store, String, String) {
+        let scratch = project();
+        let root = scratch.0.join("project");
+        fs::write(root.join("src/lib.rs"), concat!(
+            "pub fn roda() -> u32 {\n    1\n}\n",
+            "pub fn contada_sem_rodar() -> u32 {\n    2\n}\n",
+            "pub trait Forma {\n    fn area(&self) -> f64;\n    fn nome(&self) -> u32 {\n        3\n    }\n}\n",
+            "pub struct C;\nimpl C {\n    pub fn metodo(&self) -> u32 {\n        4\n    }\n}\n",
+            "pub const fn constante() -> u32 {\n    5\n}\n",
+            "pub fn ja_conta() -> u32 {\n    crate::count!();\n    6\n}\n",
+            "pub fn ja_conta_sem_linha() -> u32 {\n    crate::count!();\n    7\n}\n",
+            "#[test]\nfn um_teste() {}\n",
+            "pub const PRINTED: &str = \"\n",
+            "librarian-measure calls=10 at=src/lib.rs:1\n",
+            "librarian-measure calls=7 at=src/lib.rs:15\n",
+            "librarian-measure calls=5 at=src/lib.rs:23\n",
+            "librarian-measure calls=3 at=src/app.py:4\n",
+            "\";\n",
+        )).unwrap();
+        fs::create_dir_all(root.join("src/bin")).unwrap();
+        fs::write(root.join("src/bin/fora.rs"), "pub fn fora() -> u32 {\n    8\n}\n").unwrap();
+        fs::write(root.join("src/app.py"), concat!(
+            "def sem_chave(x):\n    return ajuda(x)\n\n",
+            "def ajuda(x):\n    return x + 1\n\n",
+            "def com_dict(x):\n    return {\"a\": x}\n\n",
+            "def com_fstring(x):\n    return f\"{x}\"\n\n",
+            "def comentario_com_chave(x):\n    # um { aqui\n    return x\n\n",
+            "def condicional(x):\n    if x:\n        return {1: x}\n    return {}\n\n",
+            "def stub(x): ...\n\n",
+            "def test_algo():\n    assert {}\n\n",
+            "class K:\n    def em_classe(self):\n        return {\"b\": 1}\n",
+        )).unwrap();
+        fs::write(root.join("src/manual.txt"), concat!(
+            "librarian-measure calls=999 at=src/app.py:1\n",
+            "librarian-measure calls=12345 at=src/lib.rs:1\n",
+            "librarian-measure cpu_ms=777 ms at=src/lib.rs:1\n",
+        )).unwrap();
+        let profile = json!({ "project_root": ".", "commands": { "contagem": { "argv": ["git", "grep", "-h", "librarian-measure", "--", "src/lib.rs"], "repeat": 1 },
+            "manual": { "argv": ["git", "grep", "-h", "librarian-measure", "--", "src/manual.txt"], "repeat": 1 } },
+            "instrument": { "statement": "crate::count!();", "command": "contagem", "skip": ["src/bin/"] } });
+        fs::write(root.join(PROFILE), profile.to_string()).unwrap();
+        let git = |args: &[&str]| {
+            let out = std::process::Command::new("git").arg("-C").arg(&root).args(["-c", "user.name=t", "-c", "user.email=t@t"]).args(args).output().unwrap();
+            assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
+        };
+        git(&["init", "-q"]);
+        git(&["config", "core.autocrlf", "false"]);
+        git(&["add", "."]);
+        git(&["commit", "-q", "-m", "x"]);
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let key = store.open(&display(&root)).unwrap()["key"].as_str().unwrap().to_owned();
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        let sha = store.commands(&key).unwrap()["commands"][0]["sha256"].as_str().unwrap().to_owned();
+        store.approve_command(&key, "contagem", &sha).unwrap();
+        let measured = store.execute_instrumented(&key, &run).unwrap();
+        assert_eq!(measured["summary"]["succeeded"], 1, "{:#}", measured["runs"]);
+        (scratch, store, key, run)
+    }
+
+    fn symbol_id(store: &Store, key: &str, run: &str, name: &str) -> String {
+        let catalog = Catalog::load(&store.edition(key, run).unwrap()).unwrap();
+        let found = catalog.symbols().values().find(|s| s.name == name).unwrap_or_else(|| panic!("{name} não está na edition"));
+        found.id.clone()
+    }
+
+    /// The state and the reason `/api/hotspots` gives a function.
+    fn coverage_of(hot: &Value, id: &str) -> (Value, Value) {
+        let found = hot["coverage"]["functions"].as_array().into_iter().flatten().find(|f| f["symbol"] == id);
+        let found = found.unwrap_or_else(|| panic!("{id} não está em coverage.functions: {:#}", hot["coverage"]));
+        (found["coverage_state"].clone(), found["exclusion_reason"].clone())
+    }
+
+    /// A record from before the reasons were kept: the same execution without them.
+    fn forget_reasons(store: &Store, key: &str, run: &str) {
+        let id = store.latest_measure(key, run).unwrap().unwrap()["id"].as_str().unwrap().to_owned();
+        let file = store.run_dir(key, run).unwrap().join("executions").join(id).join("execution.json");
+        let mut record: Value = serde_json::from_slice(&fs::read(&file).unwrap()).unwrap();
+        record["instrumentation"].as_object_mut().unwrap().remove("excluded");
+        fs::write(&file, serde_json::to_vec_pretty(&record).unwrap()).unwrap();
+    }
+
+    const PYTHON_FUNCTIONS: [&str; 9] = ["sem_chave", "ajuda", "com_dict", "com_fstring", "comentario_com_chave", "condicional", "stub", "test_algo", "em_classe"];
+
+    #[test]
+    fn a_python_function_is_never_bodiless_whatever_braces_it_writes() {
+        let (_scratch, store, key, run) = measured_mix();
+        let hot = store.hotspots(&key, &run).unwrap();
+        let bodiless = hot["bodiless"].as_array().unwrap();
+        for name in PYTHON_FUNCTIONS {
+            let id = symbol_id(&store, &key, &run, name);
+            assert!(!bodiless.iter().any(|b| b == id.as_str()), "{name} aparece como sem corpo");
+        }
+    }
+
+    #[test]
+    fn rust_keeps_its_bodiless_signature_and_its_reasons() {
+        let (_scratch, store, key, run) = measured_mix();
+        let hot = store.hotspots(&key, &run).unwrap();
+        let id = |name| symbol_id(&store, &key, &run, name);
+        // Only the trait's signature has no body, and it stays out of the count.
+        assert_eq!(hot["bodiless"], json!([id("area")]));
+        // The fields that were there keep their meaning: what got the statement, and the totals.
+        assert_eq!(hot["functions"], 4);
+        assert_eq!(hot["skipped"], json!({ "caminho deixado de fora": 1, "const fn": 1, "já conta": 2, "sem corpo": 1, "teste": 1 }));
+        for (name, state, reason) in [
+            ("roda", "counted_and_ran", Value::Null),
+            ("metodo", "counted_and_ran", Value::Null),
+            // It counted by itself, and the line it printed is the evidence.
+            ("ja_conta", "counted_and_ran", Value::Null),
+            ("contada_sem_rodar", "counted_no_passes", Value::Null),
+            // A trait's default method has a body: it got the count and did not run.
+            ("nome", "counted_no_passes", Value::Null),
+            ("area", "no_coverage", json!("no_body")),
+            ("constante", "no_coverage", json!("const_fn")),
+            ("ja_conta_sem_linha", "no_coverage", json!("already_counts")),
+            ("um_teste", "no_coverage", json!("test")),
+            ("fora", "no_coverage", json!("skipped_path")),
+        ] {
+            assert_eq!(coverage_of(&hot, &id(name)), (json!(state), reason), "{name}");
+        }
+    }
+
+    #[test]
+    fn a_mixed_project_shows_a_partial_coverage_with_its_python_functions_in_it() {
+        let (_scratch, store, key, run) = measured_mix();
+        let hot = store.hotspots(&key, &run).unwrap();
+        let coverage = &hot["coverage"];
+        assert_eq!(coverage["total"], 19, "{coverage:#}");
+        assert_eq!(coverage["instrumented"], 4);
+        assert_eq!(coverage["counted"], 6);
+        assert_eq!(coverage["counted_and_ran"], 4);
+        assert_eq!(coverage["counted_no_passes"], 2);
+        assert_eq!(coverage["no_coverage"], 13);
+        assert_eq!(coverage["partial"], true);
+        assert_eq!(coverage["excluded"], json!({ "already_counts": 1, "const_fn": 1, "language_not_supported": 8, "no_body": 1, "skipped_path": 1, "test": 1 }));
+        assert_eq!(coverage["by_language"]["rust"], json!({ "total": 10, "counted": 5, "counted_and_ran": 3, "counted_no_passes": 2, "no_coverage": 5 }));
+        assert_eq!(coverage["by_language"]["python"], json!({ "total": 9, "counted": 1, "counted_and_ran": 1, "counted_no_passes": 0, "no_coverage": 8 }));
+        // Coverage comes from the measure, not the language: a Python count the command printed is a count.
+        assert_eq!(coverage_of(&hot, &symbol_id(&store, &key, &run, "ajuda")), (json!("counted_and_ran"), Value::Null));
+        for name in PYTHON_FUNCTIONS.into_iter().filter(|n| *n != "ajuda") {
+            let id = symbol_id(&store, &key, &run, name);
+            assert_eq!(coverage_of(&hot, &id), (json!("no_coverage"), json!("language_not_supported")), "{name}");
+            let function = coverage["functions"].as_array().unwrap().iter().find(|f| f["symbol"] == id.as_str()).unwrap();
+            assert_eq!((function["language"].as_str(), function["path"].as_str()), (Some("python"), Some("src/app.py")));
+        }
+    }
+
+    #[test]
+    fn a_new_measure_keeps_the_reason_of_each_function_left_out() {
+        let (_scratch, store, key, run) = measured_mix();
+        let record = store.latest_measure(&key, &run).unwrap().unwrap();
+        let excluded = record["instrumentation"]["excluded"].as_array().expect("instrumentation.excluded");
+        assert_eq!(excluded.len(), 15);
+        let area = symbol_id(&store, &key, &run, "area");
+        assert_eq!(excluded.iter().find(|e| e["symbol"] == area.as_str()).unwrap()["reason"], "no_body");
+        let ajuda = symbol_id(&store, &key, &run, "ajuda");
+        assert_eq!(excluded.iter().find(|e| e["symbol"] == ajuda.as_str()).unwrap()["reason"], "language_not_supported");
+    }
+
+    #[test]
+    fn a_record_without_reasons_says_not_recorded_and_invents_none() {
+        let (_scratch, store, key, run) = measured_mix();
+        let before = store.hotspots(&key, &run).unwrap();
+        forget_reasons(&store, &key, &run);
+        let hot = store.hotspots(&key, &run).unwrap();
+        let coverage = &hot["coverage"];
+        assert_eq!(before["coverage"]["reasons_recorded"], true);
+        assert_eq!(coverage["reasons_recorded"], false);
+        assert_eq!(coverage["excluded"], json!({ "not_recorded": 13 }), "{coverage:#}");
+        assert_eq!(coverage_of(&hot, &symbol_id(&store, &key, &run, "area")), (json!("no_coverage"), json!("not_recorded")));
+        assert_eq!(coverage_of(&hot, &symbol_id(&store, &key, &run, "com_dict")), (json!("no_coverage"), json!("not_recorded")));
+        // What was counted is in the record either way.
+        assert_eq!(coverage_of(&hot, &symbol_id(&store, &key, &run, "roda")), (json!("counted_and_ran"), Value::Null));
+        assert_eq!(coverage_of(&hot, &symbol_id(&store, &key, &run, "nome")), (json!("counted_no_passes"), Value::Null));
+        assert_eq!(coverage["counted"], before["coverage"]["counted"]);
+        assert!(coverage["limits"].as_array().unwrap().iter().any(|l| l.as_str().unwrap().contains("não foi guardado")), "{coverage:#}");
+        // The totals it did keep stay as they were, and the other fields do not move.
+        assert_eq!(hot["skipped"], before["skipped"]);
+        assert_eq!(hot["bodiless"], before["bodiless"]);
+        assert_eq!(hot["rows"], before["rows"]);
+    }
+
+    #[test]
+    fn a_new_measure_with_a_function_left_unclassified_does_not_pass_for_an_old_record() {
+        let (_scratch, store, key, run) = measured_mix();
+        // A real new measure classifies every function: neither absence appears.
+        let hot = store.hotspots(&key, &run).unwrap();
+        let excluded = hot["coverage"]["excluded"].as_object().unwrap();
+        assert!(!excluded.contains_key("not_recorded") && !excluded.contains_key("not_classified"), "{excluded:#?}");
+        // The record keeps reasons, and has none for this one function.
+        let area = symbol_id(&store, &key, &run, "area");
+        let id = store.latest_measure(&key, &run).unwrap().unwrap()["id"].as_str().unwrap().to_owned();
+        let file = store.run_dir(&key, &run).unwrap().join("executions").join(id).join("execution.json");
+        let mut record: Value = serde_json::from_slice(&fs::read(&file).unwrap()).unwrap();
+        record["instrumentation"]["excluded"].as_array_mut().unwrap().retain(|e| e["symbol"] != area.as_str());
+        fs::write(&file, serde_json::to_vec_pretty(&record).unwrap()).unwrap();
+        let hot = store.hotspots(&key, &run).unwrap();
+        assert_eq!(coverage_of(&hot, &area), (json!("no_coverage"), json!("not_classified")));
+        // The others keep the reason on record, and nothing says the record is an old one.
+        assert_eq!(coverage_of(&hot, &symbol_id(&store, &key, &run, "constante")), (json!("no_coverage"), json!("const_fn")));
+        let coverage = &hot["coverage"];
+        assert!(!coverage["excluded"].as_object().unwrap().contains_key("not_recorded"), "{coverage:#}");
+        let limits = coverage["limits"].to_string();
+        assert!(!limits.contains("não foi guardado") && limits.contains("sem classificação"), "{limits}");
+    }
+
+    #[test]
+    fn counted_and_instrumented_are_different_numbers() {
+        let (_scratch, store, key, run) = measured_mix();
+        let hot = store.hotspots(&key, &run).unwrap();
+        let coverage = &hot["coverage"];
+        // Instrumented: what got the statement, the same list as `functions` and `counted` beside it.
+        assert_eq!(coverage["instrumented"], hot["functions"]);
+        assert_eq!(coverage["instrumented"].as_u64(), hot["counted"].as_array().map(|c| c.len() as u64));
+        // Counted: also what printed a count without getting the statement, here in both languages.
+        let got_it = |name| hot["counted"].as_array().unwrap().iter().any(|c| c == symbol_id(&store, &key, &run, name).as_str());
+        assert!(!got_it("ja_conta") && !got_it("ajuda"));
+        assert_eq!(coverage["counted"].as_u64().unwrap() - coverage["instrumented"].as_u64().unwrap(), 2);
+        assert!(coverage.get("eligible").is_none(), "{coverage:#}");
+        assert!(coverage["limits"].to_string().contains("sem ter recebido a instrução"), "{:#}", coverage["limits"]);
+    }
+
+    #[test]
+    fn a_suggestion_tells_counted_without_running_from_no_coverage_and_selects_the_same() {
+        let (_scratch, store, key, run) = measured_mix();
+        let python = symbol_id(&store, &key, &run, "com_dict");
+        let rust = symbol_id(&store, &key, &run, "contada_sem_rodar");
+        let items_of = |nodes: &[String]| store.suggest_envelope(&key, &run, nodes).unwrap();
+        let on_python = items_of(std::slice::from_ref(&python));
+        let on_rust = items_of(std::slice::from_ref(&rust));
+        // Both have a measure and no calls: `measured` and `calls` alone cannot tell them apart.
+        assert_eq!((&on_python["measured"], &on_rust["measured"]), (&json!(true), &json!(true)));
+        let item = |out: &Value, id: &str| out["items"].as_array().unwrap().iter().find(|e| e["id"] == id).unwrap().clone();
+        assert_eq!(item(&on_python, &python)["calls"], item(&on_rust, &rust)["calls"]);
+        assert_eq!(item(&on_python, &python)["coverage_state"], "no_coverage");
+        assert_eq!(item(&on_python, &python)["exclusion_reason"], "language_not_supported");
+        assert_eq!(item(&on_rust, &rust)["coverage_state"], "counted_no_passes");
+        assert_eq!(item(&on_rust, &rust)["exclusion_reason"], Value::Null);
+        // What is not a function has no such state: a file's head is not "without coverage".
+        for out in [&on_python, &on_rust] {
+            for entry in out["items"].as_array().unwrap().iter().chain(out["left_out"].as_array().unwrap()) {
+                assert!(entry.get("coverage_state").is_some(), "{entry:#}");
+                if !["function", "method", "trait_method"].contains(&entry["kind"].as_str().unwrap_or_default()) {
+                    assert_eq!(entry["coverage_state"], Value::Null, "{entry:#}");
+                }
+            }
+        }
+        // The summary is the one `/api/hotspots` gives, without the list of every function.
+        let mut summary = store.hotspots(&key, &run).unwrap()["coverage"].clone();
+        summary.as_object_mut().unwrap().remove("functions");
+        assert_eq!(on_python["coverage"], summary);
+        // Knowing the reasons or not changes no selection.
+        let picked = |out: &Value, list: &str| out[list].as_array().unwrap().iter().map(|e| (e["id"].clone(), e["role"].clone(), e["calls"].clone(), e["left_out"].clone())).collect::<Vec<_>>();
+        forget_reasons(&store, &key, &run);
+        let forgotten = items_of(std::slice::from_ref(&python));
+        assert_eq!(picked(&forgotten, "items"), picked(&on_python, "items"));
+        assert_eq!(picked(&forgotten, "left_out"), picked(&on_python, "left_out"));
+        assert_eq!(item(&forgotten, &python)["exclusion_reason"], "not_recorded");
+    }
+
+    #[test]
+    fn with_no_measure_a_function_has_no_coverage_and_nothing_was_left_out() {
+        let scratch = project();
+        let root = scratch.0.join("project");
+        fs::remove_file(root.join("src/lib.rs")).unwrap();
+        fs::write(root.join("src/app.py"), "def demo():\n    return {\"a\": 1}\n").unwrap();
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let key = store.open(&display(&root)).unwrap()["key"].as_str().unwrap().to_owned();
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        // Still the same "no measure" answer, the one the route turns into a 404.
+        assert!(store.hotspots(&key, &run).unwrap_err().to_string().starts_with("Ainda não há medição"));
+        let demo = symbol_id(&store, &key, &run, "demo");
+        let out = store.suggest_envelope(&key, &run, std::slice::from_ref(&demo)).unwrap();
+        assert_eq!(out["measured"], false);
+        assert!(out.get("coverage").is_some_and(Value::is_null), "{out:#}");
+        let item = out["items"].as_array().unwrap().iter().find(|e| e["id"] == demo.as_str()).unwrap();
+        assert_eq!(item["coverage_state"], "no_coverage");
+        assert!(item.get("exclusion_reason").is_some_and(Value::is_null), "{item:#}");
+    }
+
+    /// Replaces what the recorded measure counted: `(at, calls, instrumented time)`.
+    fn record_counts(store: &Store, key: &str, run: &str, lines: &[(&str, f64, Option<f64>)]) {
+        let id = store.latest_measure(key, run).unwrap().unwrap()["id"].as_str().unwrap().to_owned();
+        let file = store.run_dir(key, run).unwrap().join("executions").join(id).join("execution.json");
+        let mut record: Value = serde_json::from_slice(&fs::read(&file).unwrap()).unwrap();
+        let mut stats = serde_json::Map::new();
+        for (at, calls, cpu) in lines {
+            stats.insert(format!("calls@{at}"), json!({ "measure": "calls", "at": at, "median": calls }));
+            if let Some(cpu) = cpu {
+                stats.insert(format!("cpu_ms@{at}"), json!({ "measure": "cpu_ms", "at": at, "median": cpu }));
+            }
+        }
+        record["summary"]["stats"] = Value::Object(stats);
+        fs::write(&file, serde_json::to_vec_pretty(&record).unwrap()).unwrap();
+    }
+
+    fn places(hot: &Value) -> Vec<String> {
+        hot["rows"].as_array().unwrap().iter().map(|r| r["at"].as_str().unwrap().to_owned()).collect()
+    }
+
+    /// Everything a question's answer gives the person and sends to a model.
+    fn all_text(answer: &Value) -> String {
+        ["answer", "facts", "changes", "limits"].iter().map(|k| answer[*k].to_string()).collect::<Vec<_>>().join(" ")
+    }
+
+    /// Words no text of a measure can use: what it has is calls and instrumented time.
+    fn claims_nothing_it_has_no_data_for(text: &str) {
+        for word in ["mais roda", "mais pesa", "mais pesada", "mais chama", "principalmente", "frequentes", "um milhão", "somados nas threads"] {
+            assert!(!text.contains(word), "{word:?} em: {text}");
+        }
+    }
+
+    #[test]
+    fn more_calls_come_before_more_time() {
+        let (_scratch, store, key, run) = measured_mix();
+        record_counts(&store, &key, &run, &[("src/lib.rs:1", 10., Some(9000.)), ("src/lib.rs:15", 700., Some(2.)), ("src/lib.rs:23", 50., Some(40.))]);
+        let hot = store.hotspots(&key, &run).unwrap();
+        assert_eq!(places(&hot), ["src/lib.rs:15", "src/lib.rs:23", "src/lib.rs:1"]);
+        // The time stays beside the count, as it was recorded.
+        assert_eq!((hot["rows"][0]["calls"].as_f64(), hot["rows"][0]["cpu_ms"].as_f64()), (Some(700.), Some(2.)));
+    }
+
+    #[test]
+    fn the_function_with_the_most_time_is_not_described_as_the_most_frequent() {
+        let (_scratch, store, key, run) = measured_mix();
+        record_counts(&store, &key, &run, &[("src/lib.rs:1", 10., Some(9000.)), ("src/lib.rs:15", 700., Some(2.))]);
+        let answer = store.performance_question(&key, &run, "Quais funções pesam?").unwrap();
+        let lines: Vec<&str> = answer["answer"].as_array().unwrap().iter().filter_map(Value::as_str).collect();
+        assert!(lines[0].starts_with("Maior contagem observada: C::metodo (700 chamadas"), "{lines:#?}");
+        assert!(lines[1].starts_with("Maior tempo instrumentado observado, como referência: roda (9.000 ms de tempo instrumentado, 10 chamadas)"), "{lines:#?}");
+        claims_nothing_it_has_no_data_for(&all_text(&answer));
+    }
+
+    #[test]
+    fn a_tie_on_the_calls_always_falls_the_same_way() {
+        let (_scratch, store, key, run) = measured_mix();
+        record_counts(&store, &key, &run, &[("src/lib.rs:23", 10., Some(5.)), ("src/lib.rs:1", 10., Some(5.)), ("src/lib.rs:15", 10., Some(6.))]);
+        // Equal calls: the time, and with equal time too, the place.
+        let first = places(&store.hotspots(&key, &run).unwrap());
+        assert_eq!(first, ["src/lib.rs:15", "src/lib.rs:1", "src/lib.rs:23"]);
+        assert_eq!(places(&store.hotspots(&key, &run).unwrap()), first);
+    }
+
+    #[test]
+    fn no_coverage_is_not_zero_calls() {
+        let (_scratch, store, key, run) = measured_mix();
+        let hot = store.hotspots(&key, &run).unwrap();
+        let python = symbol_id(&store, &key, &run, "com_dict");
+        assert_eq!(coverage_of(&hot, &python).0, "no_coverage");
+        // No line was made up for it, not even with zero.
+        assert!(!hot["rows"].as_array().unwrap().iter().any(|r| r["symbol"] == python.as_str()), "{:#}", hot["rows"]);
+        let answer = store.performance_question(&key, &run, "Otimize o com_dict").unwrap();
+        assert_eq!((answer["route"]["intent"].as_str(), answer["route"]["function"].as_str()), (Some("optimize"), Some("com_dict")));
+        let text = answer["answer"].to_string();
+        assert!(text.contains("com_dict está sem cobertura nesta medição") && text.contains("não quer dizer que ela não rodou"), "{text}");
+        assert!(!text.contains("0 chamadas") && !text.contains("não rodou neste comando"), "{text}");
+        // There is nothing to send about a function the measure did not see.
+        assert_eq!((answer["facts"].as_array().unwrap().len(), answer["changes"].as_array().unwrap().len()), (0, 0));
+    }
+
+    #[test]
+    fn counted_without_calls_is_not_the_same_as_no_coverage() {
+        let (_scratch, store, key, run) = measured_mix();
+        let hot = store.hotspots(&key, &run).unwrap();
+        assert_eq!(coverage_of(&hot, &symbol_id(&store, &key, &run, "contada_sem_rodar")).0, "counted_no_passes");
+        let idle = store.performance_question(&key, &run, "Otimize o contada_sem_rodar").unwrap()["answer"].to_string();
+        assert!(idle.contains("recebeu a instrução e a medição não imprimiu contagem para ela; isso não prova que a função não rodou"), "{idle}");
+        assert!(!idle.contains("sem cobertura"), "{idle}");
+        let unseen = store.performance_question(&key, &run, "Otimize o com_dict").unwrap()["answer"].to_string();
+        assert!(unseen.contains("sem cobertura") && !unseen.contains("recebeu a instrução"), "{unseen}");
+        // A printed zero is a line and no pass: another reading, and neither ranking lists it.
+        record_counts(&store, &key, &run, &[("src/lib.rs:1", 0., Some(3.)), ("src/lib.rs:15", 4., Some(1.))]);
+        let zero = store.performance_question(&key, &run, "Otimize o roda").unwrap();
+        assert!(zero["answer"].to_string().contains("A instrução de entrada de roda contou zero nesta medição; isso não prova que a função não rodou"), "{zero:#}");
+        assert_eq!(zero["changes"].as_array().unwrap().len(), 0);
+        let heavy = store.performance_question(&key, &run, "Quais funções pesam?").unwrap()["answer"].to_string();
+        assert!(!heavy.contains("roda ("), "{heavy}");
+    }
+
+    /// A count from a common command belongs to that command: it does not reach the ranking, however
+    /// large, and with no "Medir tudo" there is no ranking at all.
+    #[test]
+    fn a_manual_count_stays_out_of_the_ranking() {
+        let (_scratch, store, key, run) = measured_mix();
+        let before = store.hotspots(&key, &run).unwrap();
+        let commands = store.commands(&key).unwrap();
+        let sha = commands["commands"].as_array().unwrap().iter().find(|c| c["name"] == "manual").unwrap()["sha256"].as_str().unwrap().to_owned();
+        store.approve_command(&key, "manual", &sha).unwrap();
+        let manual = store.execute(&key, &run, "manual", None).unwrap();
+        assert_eq!(manual["summary"]["stats"]["calls@src/app.py:1"]["median"], 999.);
+        let hot = store.hotspots(&key, &run).unwrap();
+        assert_eq!(hot["rows"], before["rows"]);
+        assert_eq!(hot["execution"], before["execution"]);
+        let sem_chave = symbol_id(&store, &key, &run, "sem_chave");
+        assert_eq!(coverage_of(&hot, &sem_chave).0, "no_coverage");
+        assert!(!store.performance_question(&key, &run, "Quais funções pesam?").unwrap()["answer"].to_string().contains("999"));
+
+        let scratch = project();
+        let root = scratch.0.join("project");
+        fs::remove_file(root.join("src/lib.rs")).unwrap();
+        fs::write(root.join("src/app.py"), "def demo():\n    return 1\n").unwrap();
+        fs::write(root.join("src/manual.txt"), "librarian-measure calls=999 at=src/app.py:1\n").unwrap();
+        let profile = json!({ "project_root": ".", "commands": { "manual": { "argv": ["git", "grep", "-h", "librarian-measure", "--", "src/manual.txt"], "repeat": 1 } } });
+        fs::write(root.join(PROFILE), profile.to_string()).unwrap();
+        let git = |args: &[&str]| {
+            let out = std::process::Command::new("git").arg("-C").arg(&root).args(["-c", "user.name=t", "-c", "user.email=t@t"]).args(args).output().unwrap();
+            assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
+        };
+        git(&["init", "-q"]);
+        git(&["add", "."]);
+        git(&["commit", "-q", "-m", "x"]);
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let key = store.open(&display(&root)).unwrap()["key"].as_str().unwrap().to_owned();
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        let sha = store.commands(&key).unwrap()["commands"][0]["sha256"].as_str().unwrap().to_owned();
+        store.approve_command(&key, "manual", &sha).unwrap();
+        let manual = store.execute(&key, &run, "manual", None).unwrap();
+        assert_eq!(manual["summary"]["stats"]["calls@src/app.py:1"]["median"], 999.);
+        assert!(store.hotspots(&key, &run).unwrap_err().to_string().starts_with("Ainda não há medição"));
+        assert_eq!(store.performance_question(&key, &run, "Quais funções pesam?").unwrap()["needs_measure"], true);
+    }
+
+    /// Investigar reads what a command counted from `/api/executions`. A count made outside "Medir
+    /// tudo" stays there, even on a line the ranking has, and the ranking keeps the measure's number.
+    #[test]
+    fn a_manual_count_is_there_for_investigar_and_not_in_the_ranking() {
+        let (_scratch, store, key, run) = measured_mix();
+        let before = store.hotspots(&key, &run).unwrap();
+        let row = |hot: &Value| hot["rows"].as_array().unwrap().iter().find(|r| r["at"] == "src/lib.rs:1").unwrap().clone();
+        assert_eq!(row(&before)["calls"], 10.);
+        let commands = store.commands(&key).unwrap();
+        let sha = commands["commands"].as_array().unwrap().iter().find(|c| c["name"] == "manual").unwrap()["sha256"].as_str().unwrap().to_owned();
+        store.approve_command(&key, "manual", &sha).unwrap();
+        store.execute(&key, &run, "manual", None).unwrap();
+
+        let executions = store.executions(&key, &run).unwrap();
+        let manual = executions.iter().find(|x| x["name"] == "manual").unwrap();
+        assert!(manual["instrumentation"].is_null());
+        let stats = &manual["summary"]["stats"];
+        assert_eq!((stats["calls@src/lib.rs:1"]["median"].as_f64(), stats["calls@src/lib.rs:1"]["at"].as_str()), (Some(12345.), Some("src/lib.rs:1")));
+        assert_eq!((stats["cpu_ms@src/lib.rs:1"]["median"].as_f64(), stats["cpu_ms@src/lib.rs:1"]["at"].as_str()), (Some(777.), Some("src/lib.rs:1")));
+        assert_eq!(stats["calls@src/app.py:1"]["median"].as_f64(), Some(999.));
+
+        let hot = store.hotspots(&key, &run).unwrap();
+        assert_eq!(hot["rows"], before["rows"]);
+        assert_eq!(row(&hot)["calls"], 10.);
+        assert!(row(&hot)["cpu_ms"].is_null());
+        assert_ne!(hot["execution"], manual["id"]);
+        let text = all_text(&store.performance_question(&key, &run, "Quais funções pesam?").unwrap());
+        assert!(!text.contains("12.345") && !text.contains("777") && !text.contains("999"), "{text}");
+    }
+
+    /// A project's own counter printed while "Medir tudo" runs is in the ranking because it belongs
+    /// to that measure: the row names the execution, whose output has that line and whose diff left
+    /// it alone. Nothing is brought in from another execution.
+    #[test]
+    fn a_counter_printed_during_the_measure_belongs_to_that_measure() {
+        let (_scratch, store, key, run) = measured_mix();
+        let hot = store.hotspots(&key, &run).unwrap();
+        let record = store.latest_measure(&key, &run).unwrap().unwrap();
+        assert!(!record["instrumentation"].is_null());
+        assert_eq!(hot["execution"], record["id"]);
+        let own = hot["rows"].as_array().unwrap().iter().find(|r| r["at"] == "src/lib.rs:23").unwrap();
+        assert_eq!(own["symbol"], symbol_id(&store, &key, &run, "ja_conta").as_str());
+        // It did not get the statement; the program printed the line, in that execution.
+        let got_it = record["instrumentation"]["functions"].as_array().unwrap().iter().any(|f| f["symbol"] == own["symbol"]);
+        assert!(!got_it);
+        assert_eq!(own["calls"], record["summary"]["stats"]["calls@src/lib.rs:23"]["median"]);
+        let how = store.measure_detail(&key, &run).unwrap();
+        assert_eq!(how["execution"], record["id"]);
+        assert!(how["stdout"].as_str().unwrap().contains("librarian-measure calls=5 at=src/lib.rs:23"), "{how:#}");
+        assert!(!how["diff"].as_str().unwrap().contains("@@ -23,"), "{how:#}");
+        // Every row is one of that record's series, and no other execution has any.
+        let series = record["summary"]["stats"].as_object().unwrap();
+        assert!(hot["rows"].as_array().unwrap().iter().all(|r| series.contains_key(&format!("calls@{}", r["at"].as_str().unwrap()))));
+        assert_eq!(store.executions(&key, &run).unwrap().len(), 1);
+    }
+
+    /// With no automatic target, no count makes a function the target: not a small one, and not one
+    /// past the limit there used to be. The numbers are given, and the choice is the person's.
+    #[test]
+    fn no_count_picks_a_target_by_itself() {
+        let (_scratch, store, key, run) = measured_mix();
+        for calls in [3., 5e6] {
+            record_counts(&store, &key, &run, &[("src/lib.rs:1", calls, Some(1.)), ("src/lib.rs:15", 2., Some(1.))]);
+            let answer = store.performance_question(&key, &run, "Onde dá para otimizar?").unwrap();
+            assert_eq!(answer["route"]["intent"], "where");
+            assert!(answer["route"]["function"].is_null());
+            assert_eq!((answer["facts"].as_array().unwrap().len(), answer["changes"].as_array().unwrap().len()), (0, 0), "{answer:#}");
+            let lines = answer["answer"].to_string();
+            assert!(lines.contains("Maior contagem observada: roda") && lines.contains("não escolhe o alvo: diga qual função, por exemplo: otimize o roda"), "{lines}");
+            claims_nothing_it_has_no_data_for(&all_text(&answer));
+        }
+        // No calls at all: it says so, instead of comparing with a number.
+        record_counts(&store, &key, &run, &[]);
+        let none = store.performance_question(&key, &run, "Onde dá para otimizar?").unwrap();
+        assert!(none["answer"].to_string().contains("Nenhuma função teve contagem acima de zero nesta medição"), "{none:#}");
+        // And the limit is gone from what decides it, in the server and in the page.
+        for (file, text) in [("questions.rs", include_str!("questions.rs")), ("index.html", include_str!("../web/index.html"))] {
+            assert!(!text.contains("FREQUENT") && !text.contains("1e6"), "{file}");
+        }
+    }
+
+    #[test]
+    fn a_mixed_project_keeps_its_languages_apart_in_the_new_order() {
+        let (_scratch, store, key, run) = measured_mix();
+        let before = store.hotspots(&key, &run).unwrap()["coverage"].clone();
+        record_counts(&store, &key, &run, &[("src/lib.rs:1", 2., Some(90.)), ("src/lib.rs:15", 7., Some(1.)), ("src/lib.rs:23", 5., None), ("src/app.py:4", 40., None)]);
+        let hot = store.hotspots(&key, &run).unwrap();
+        // The order is the count's, in any language; the coverage per language does not move with it.
+        assert_eq!(places(&hot), ["src/app.py:4", "src/lib.rs:15", "src/lib.rs:23", "src/lib.rs:1"]);
+        assert_eq!(hot["coverage"]["by_language"], before["by_language"]);
+        assert_eq!(hot["coverage"]["instrumented"], before["instrumented"]);
+        assert_eq!(hot["coverage"]["by_language"]["python"]["counted_and_ran"], 1);
+        assert!(hot["coverage"]["by_language"]["python"]["no_coverage"].as_u64().unwrap() > 0);
+        let python = store.performance_question(&key, &run, "Quais funções pesam?").unwrap();
+        let text = python["answer"].to_string();
+        // A line without time says so, and the answer does not stop at the functions it lists.
+        // Printed by the project: its passes, whatever the language, and with no time on record.
+        assert!(text.contains("ajuda (40 passagens pela linha 4, de um contador do próprio projeto (pode não ser quantas vezes a função foi chamada), tempo instrumentado não registrado)"), "{text}");
+        assert!(text.contains(&format!("{} sem cobertura", hot["coverage"]["no_coverage"])), "{text}");
+    }
+
+    /// What goes to a model: counts and instrumented time under their names, what the time is not,
+    /// and what the measure did not see. The caller's count is not the calls it makes.
+    #[test]
+    fn what_a_model_receives_is_no_stronger_than_the_measure() {
+        let (_scratch, store, key, run) = measured_mix();
+        record_counts(&store, &key, &run, &[("src/app.py:4", 40., Some(9000.)), ("src/app.py:1", 2., Some(1.)), ("src/lib.rs:1", 500., Some(3.))]);
+        let answer = store.performance_question(&key, &run, "Otimize o ajuda").unwrap();
+        let change = answer["changes"][0]["text"].as_str().unwrap();
+        assert!(change.starts_with("ajuda: 40 passagens observadas pela linha 4, de um contador do próprio projeto (pode não ser quantas vezes a função foi chamada) nesta medição, 9.000 ms de tempo instrumentado; quem a chama, pelo nome escrito: sem_chave."), "{change}");
+        assert!(change.contains("não é o custo próprio da função nem diz quantas vezes ela rodou"), "{change}");
+        // The summary keeps a printed zero, no line and no coverage apart, and none is "did not run".
+        let coverage = store.hotspots(&key, &run).unwrap()["coverage"].clone();
+        let n = |field: &str| coverage[field].as_u64().unwrap();
+        let no_line = coverage["zero_evidence"]["no_line"].as_u64().unwrap();
+        assert!(no_line > 0, "{coverage:#}");
+        assert!(change.contains(&format!("Esta medição tem contagem ou instrução em {} de {} funções: {} com contagem acima de zero; {} com zero impresso; {no_line} que receberam a instrução e não imprimiram linha; {} sem cobertura. Nenhum desses casos prova que a função não rodou.",
+            n("counted"), n("total"), n("counted_and_ran"), n("counted_no_passes") - no_line, n("no_coverage"))), "{change}");
+        for false_claim in ["não rodaram neste comando", "não rodou neste comando", "não executaram", "não foram chamadas"] {
+            assert!(!change.contains(false_claim), "{false_claim:?} em {change}");
+        }
+        let fact = answer["facts"][0]["text"].as_str().unwrap();
+        assert!(fact.starts_with("sem_chave chama ajuda na linha 2 (`ajuda`). A medição contou 2 passagens pela linha 1, de um contador do próprio projeto (pode não ser quantas vezes a função foi chamada) de sem_chave e 40 passagens pela linha 4,"), "{fact}");
+        let told = answer["answer"].to_string();
+        assert!(told.contains("com a contagem observada de cada chamador (não as chamadas feitas a ela): sem_chave (2)"), "{told}");
+        claims_nothing_it_has_no_data_for(&all_text(&answer));
+        // With no time on record, no number stands in for it.
+        record_counts(&store, &key, &run, &[("src/lib.rs:1", 500., None)]);
+        let change = store.performance_question(&key, &run, "Otimize o roda").unwrap()["changes"][0]["text"].as_str().unwrap().to_owned();
+        assert!(change.contains("tempo instrumentado não registrado") && !change.contains("0 ms"), "{change}");
+    }
+
+    /// With several counted lines, no text calls a line's count the function's calls; with one, the
+    /// text stays as it is. The number used for the function is still the largest.
+    #[test]
+    fn a_function_with_several_lines_is_not_said_to_have_been_called_that_many_times() {
+        let (_scratch, store, key, run) = measured_mix();
+        record_counts(&store, &key, &run, &[("src/lib.rs:1", 700., Some(5.)), ("src/lib.rs:2", 30., Some(4.)), ("src/lib.rs:15", 9., Some(1.)),
+            ("src/app.py:4", 40., None), ("src/app.py:1", 80., None), ("src/app.py:2", 6., None)]);
+        let hot = store.hotspots(&key, &run).unwrap();
+        // Two lines of one function: each keeps its own count, and the function's number is the largest.
+        let roda = symbol_id(&store, &key, &run, "roda");
+        let of_roda: Vec<_> = hot["rows"].as_array().unwrap().iter().filter(|r| r["symbol"] == roda.as_str()).map(|r| r["calls"].as_f64().unwrap()).collect();
+        assert_eq!(of_roda, [700., 30.]);
+        assert_eq!(crate::instrument::calls_by_symbol(hot["rows"].as_array().unwrap())[&roda], 700.);
+
+        let warned = "pode não ser quantas vezes a função foi chamada";
+        let heavy = store.performance_question(&key, &run, "Quais funções pesam?").unwrap()["answer"].to_string();
+        assert!(heavy.contains(&format!("roda (700 passagens pela linha 1 (uma de 2 linhas contadas; {warned})")), "{heavy}");
+        assert!(!heavy.contains("700 chamadas") && !heavy.contains("30 chamadas"), "{heavy}");
+        // One line: as before.
+        assert!(heavy.contains("C::metodo (9 chamadas"), "{heavy}");
+
+        let named = store.performance_question(&key, &run, "Otimize o roda").unwrap();
+        let change = named["changes"][0]["text"].as_str().unwrap();
+        assert!(change.starts_with(&format!("roda: 700 passagens observadas pela linha 1 (uma de 2 linhas contadas; {warned}) nesta medição")), "{change}");
+        assert!(!change.contains("700 chamadas"), "{change}");
+        assert!(named["answer"][0].as_str().unwrap().contains(warned), "{named:#}");
+
+        // A question about a line: the caller has two, the target one.
+        let fact = store.performance_question(&key, &run, "Otimize o ajuda").unwrap()["facts"][0]["text"].as_str().unwrap().to_owned();
+        assert!(fact.contains(&format!("A medição contou 80 passagens pela linha 1 (uma de 2 linhas contadas; {warned}) de sem_chave e 40 passagens pela linha 4,")), "{fact}");
+        let single = store.performance_question(&key, &run, "Otimize o C::metodo").unwrap()["changes"][0]["text"].as_str().unwrap().to_owned();
+        assert!(single.starts_with("C::metodo: 9 chamadas observadas nesta medição"), "{single}");
+    }
+
+    /// The same record through the real flow: the statement at the entry reads as calls, and a line
+    /// off the plan does not, though it is the only one its function has.
+    #[test]
+    fn one_line_is_not_enough_to_call_a_count_the_functions_calls() {
+        let (_scratch, store, key, run) = measured_mix();
+        let hot = store.hotspots(&key, &run).unwrap();
+        let kind = |at: &str| hot["rows"].as_array().unwrap().iter().find(|r| r["at"] == at).unwrap()["count_kind"].clone();
+        assert_eq!(kind("src/lib.rs:1"), "entry_calls");
+        assert_eq!(kind("src/lib.rs:15"), "entry_calls");
+        assert_eq!(kind("src/lib.rs:23"), "own_counter");
+        assert_eq!(kind("src/app.py:4"), "own_counter");
+        let entry = store.performance_question(&key, &run, "Otimize o roda").unwrap();
+        assert!(entry["answer"][0].as_str().unwrap().starts_with("roda: 10 chamadas observadas nesta medição"), "{entry:#}");
+        assert!(entry["changes"][0]["text"].as_str().unwrap().starts_with("roda: 10 chamadas observadas nesta medição"), "{entry:#}");
+        let own = store.performance_question(&key, &run, "Otimize o ja_conta").unwrap();
+        for text in [own["answer"][0].as_str().unwrap(), own["changes"][0]["text"].as_str().unwrap()] {
+            assert!(text.starts_with("ja_conta: 5 passagens observadas pela linha 23, de um contador do próprio projeto"), "{text}");
+            assert!(!text.contains("5 chamadas"), "{text}");
+        }
+        // A zero off the entry is not "did not run".
+        record_counts(&store, &key, &run, &[("src/lib.rs:23", 0., None), ("src/lib.rs:1", 3., None)]);
+        let zero = store.performance_question(&key, &run, "Otimize o ja_conta").unwrap()["answer"].to_string();
+        assert!(zero.contains("A linha contada de ja_conta não teve passagens nesta medição, o que não prova que a função não rodou"), "{zero}");
+        assert!(!zero.contains("não rodou neste comando"), "{zero}");
+    }
+
+    /// A project's counter inside a loop, measured for real: 30 passes through the line of a function
+    /// entered 3 times. One line, and still not its calls.
+    #[test]
+    fn a_counter_inside_a_loop_is_read_as_passes() {
+        let scratch = project();
+        let root = scratch.0.join("project");
+        fs::write(root.join("src/lib.rs"), concat!(
+            "pub fn percorre() -> u32 {\n    for _ in 0..10 {\n        crate::count!();\n    }\n    0\n}\n",
+            "pub const PRINTED: &str = \"\nlibrarian-measure calls=30 at=src/lib.rs:3\n\";\n",
+        )).unwrap();
+        let profile = json!({ "project_root": ".", "commands": { "contagem": { "argv": ["git", "grep", "-h", "librarian-measure", "--", "src/lib.rs"], "repeat": 1 } },
+            "instrument": { "statement": "crate::count!();", "command": "contagem" } });
+        fs::write(root.join(PROFILE), profile.to_string()).unwrap();
+        // The plan needs one function to place the statement in.
+        fs::write(root.join("src/outra.rs"), "pub fn outra() -> u32 {\n    1\n}\n").unwrap();
+        let git = |args: &[&str]| {
+            let out = std::process::Command::new("git").arg("-C").arg(&root).args(["-c", "user.name=t", "-c", "user.email=t@t"]).args(args).output().unwrap();
+            assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
+        };
+        git(&["init", "-q"]);
+        git(&["config", "core.autocrlf", "false"]);
+        git(&["add", "."]);
+        git(&["commit", "-q", "-m", "x"]);
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let key = store.open(&display(&root)).unwrap()["key"].as_str().unwrap().to_owned();
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        let sha = store.commands(&key).unwrap()["commands"][0]["sha256"].as_str().unwrap().to_owned();
+        store.approve_command(&key, "contagem", &sha).unwrap();
+        assert_eq!(store.execute_instrumented(&key, &run).unwrap()["summary"]["succeeded"], 1);
+        let hot = store.hotspots(&key, &run).unwrap();
+        let row = hot["rows"].as_array().unwrap().iter().find(|r| r["at"] == "src/lib.rs:3").unwrap();
+        assert_eq!((row["calls"].as_f64(), row["count_kind"].as_str()), (Some(30.), Some("own_counter")));
+        let answer = store.performance_question(&key, &run, "Otimize o percorre").unwrap();
+        let text = all_text(&answer);
+        assert!(text.contains("percorre: 30 passagens observadas pela linha 3"), "{text}");
+        assert!(!text.contains("30 chamadas"), "{text}");
+        claims_nothing_it_has_no_data_for(&text);
+    }
+
+    /// A record that cannot say where its counts came from: nothing is called calls or passes, in the
+    /// answer or in what goes to a model. The number kept for the function does not move.
+    #[test]
+    fn a_count_of_unknown_origin_says_only_that_it_was_observed() {
+        let (_scratch, store, key, run) = measured_mix();
+        let before = store.hotspots(&key, &run).unwrap();
+        let id = store.latest_measure(&key, &run).unwrap().unwrap()["id"].as_str().unwrap().to_owned();
+        let file = store.run_dir(&key, &run).unwrap().join("executions").join(id).join("execution.json");
+        let mut record: Value = serde_json::from_slice(&fs::read(&file).unwrap()).unwrap();
+        let functions = record["instrumentation"]["functions"].take();
+        fs::write(&file, serde_json::to_vec_pretty(&record).unwrap()).unwrap();
+        let hot = store.hotspots(&key, &run).unwrap();
+        assert!(hot["rows"].as_array().unwrap().iter().all(|r| r["count_kind"] == "unknown"), "{:#}", hot["rows"]);
+        let calls_of = |h: &Value| h["rows"].as_array().unwrap().iter().map(|r| (r["at"].clone(), r["calls"].clone())).collect::<Vec<_>>();
+        assert_eq!(calls_of(&hot), calls_of(&before));
+        let answer = store.performance_question(&key, &run, "Otimize o roda").unwrap();
+        for text in [answer["answer"][0].as_str().unwrap(), answer["changes"][0]["text"].as_str().unwrap()] {
+            assert!(text.starts_with("roda: contagem observada de 10 nesta medição"), "{text}");
+            assert!(!text.contains("10 chamadas") && !text.contains("10 passagens"), "{text}");
+        }
+        // Two functions on one line of the plan share one series: not the calls of either.
+        record["instrumentation"]["functions"] = functions;
+        let roda = symbol_id(&store, &key, &run, "roda");
+        let sharing = record["instrumentation"]["functions"].as_array().unwrap().iter().find(|f| f["symbol"] == roda.as_str()).unwrap().clone();
+        let mut other = sharing.clone();
+        other["symbol"] = json!("outra");
+        record["instrumentation"]["functions"].as_array_mut().unwrap().push(other);
+        fs::write(&file, serde_json::to_vec_pretty(&record).unwrap()).unwrap();
+        let hot = store.hotspots(&key, &run).unwrap();
+        let row = hot["rows"].as_array().unwrap().iter().find(|r| r["at"] == "src/lib.rs:1").unwrap();
+        assert_eq!(row["count_kind"], "unknown");
+    }
+
+    /// A project with homonyms, measured through the real flow: `Sphere::default` has passes,
+    /// `Stripe::default` got the statement and printed nothing, and `igual` exists twice.
+    fn measured_homonyms() -> (Scratch, Store, String, String) {
+        let scratch = project();
+        let root = scratch.0.join("project");
+        fs::write(root.join("src/lib.rs"), concat!(
+            "pub struct Stripe;\nimpl Default for Stripe {\n    fn default() -> Self {\n        Stripe\n    }\n}\n",
+            "pub struct Sphere;\nimpl Default for Sphere {\n    fn default() -> Self {\n        Sphere\n    }\n}\n",
+            "pub fn unica() -> u32 {\n    1\n}\n",
+            "pub trait Mostra {\n    fn nome(&self) -> u32;\n}\npub trait Conta {\n    fn nome(&self) -> u32;\n}\n",
+            "impl Mostra for Stripe {\n    fn nome(&self) -> u32 {\n        1\n    }\n}\nimpl Conta for Stripe {\n    fn nome(&self) -> u32 {\n        2\n    }\n}\n",
+            "impl Mostra for Sphere {\n    fn nome(&self) -> u32 {\n        3\n    }\n}\nimpl Conta for Sphere {\n    fn nome(&self) -> u32 {\n        4\n    }\n}\n",
+            "pub const PRINTED: &str = \"\nlibrarian-measure calls=500 at=src/lib.rs:9\n\";\n",
+        )).unwrap();
+        fs::write(root.join("src/a.rs"), "pub fn igual() -> u32 {\n    1\n}\n").unwrap();
+        fs::write(root.join("src/b.rs"), "pub fn igual() -> u32 {\n    2\n}\n").unwrap();
+        let profile = json!({ "project_root": ".", "commands": { "contagem": { "argv": ["git", "grep", "-h", "librarian-measure", "--", "src/lib.rs"], "repeat": 1 } },
+            "instrument": { "statement": "crate::count!();", "command": "contagem" } });
+        fs::write(root.join(PROFILE), profile.to_string()).unwrap();
+        let git = |args: &[&str]| {
+            let out = std::process::Command::new("git").arg("-C").arg(&root).args(["-c", "user.name=t", "-c", "user.email=t@t"]).args(args).output().unwrap();
+            assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
+        };
+        git(&["init", "-q"]);
+        git(&["config", "core.autocrlf", "false"]);
+        git(&["add", "."]);
+        git(&["commit", "-q", "-m", "x"]);
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let key = store.open(&display(&root)).unwrap()["key"].as_str().unwrap().to_owned();
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        (scratch, store, key, run)
+    }
+
+    fn measure_it(store: &Store, key: &str, run: &str) {
+        let sha = store.commands(key).unwrap()["commands"][0]["sha256"].as_str().unwrap().to_owned();
+        store.approve_command(key, "contagem", &sha).unwrap();
+        assert_eq!(store.execute_instrumented(key, run).unwrap()["summary"]["succeeded"], 1);
+    }
+
+    fn id_of(store: &Store, key: &str, run: &str, qualified: &str) -> String {
+        let catalog = Catalog::load(&store.edition(key, run).unwrap()).unwrap();
+        let found = catalog.symbols().values().find(|s| s.qualified_name == qualified).unwrap_or_else(|| panic!("{qualified} não está na edition"));
+        found.id.clone()
+    }
+
+    /// The case that was wrong: a function with no count asked for by name, and another with the
+    /// same last part and passes. The answer is about the one asked for.
+    #[test]
+    fn a_qualified_name_gets_that_function_whatever_the_counts_say() {
+        let (_scratch, store, key, run) = measured_homonyms();
+        let stripe = id_of(&store, &key, &run, "impl Default for Stripe::default");
+        let sphere = id_of(&store, &key, &run, "impl Default for Sphere::default");
+        measure_it(&store, &key, &run);
+        let hot = store.hotspots(&key, &run).unwrap();
+        assert_eq!(hot["rows"][0]["symbol"], sphere.as_str());
+        assert_eq!(hot["rows"][0]["calls"], 500.);
+        for question in ["Otimize o Stripe::default", "Otimize o Default for Stripe::default"] {
+            let answer = store.performance_question(&key, &run, question).unwrap();
+            assert_eq!(answer["route"]["target"]["symbol"], stripe.as_str(), "{question}");
+            assert_eq!(answer["route"]["function"], "Default for Stripe::default", "{question}");
+            let text = answer["answer"].to_string();
+            assert!(text.contains("Default for Stripe::default recebeu a instrução e a medição não imprimiu contagem"), "{text}");
+            assert!(!text.contains("Sphere") && !text.contains("500"), "{text}");
+            // Only its own evidence: Sphere's passes would add a sentence here, under this name.
+            assert_eq!(answer["answer"].as_array().unwrap().len(), 1, "{text}");
+            assert!(!text.contains("mediana"), "{text}");
+            assert_eq!((answer["facts"].as_array().unwrap().len(), answer["changes"].as_array().unwrap().len()), (0, 0));
+        }
+    }
+
+    /// The measure is used once the target is known, on that symbol: the text and what goes to the
+    /// model are about the same function.
+    #[test]
+    fn the_measure_is_read_only_for_the_target_already_resolved() {
+        let (_scratch, store, key, run) = measured_homonyms();
+        let stripe = id_of(&store, &key, &run, "impl Default for Stripe::default");
+        let sphere = id_of(&store, &key, &run, "impl Default for Sphere::default");
+        let asked = |store: &Store, question: &str| store.performance_question(&key, &run, question).unwrap();
+        // Before any measure, the same target.
+        let early = asked(&store, "Otimize o Stripe::default");
+        assert_eq!((early["route"]["target"]["symbol"].as_str(), early["needs_measure"].as_bool()), (Some(stripe.as_str()), Some(true)));
+        measure_it(&store, &key, &run);
+        let on_sphere = asked(&store, "Otimize o Sphere::default");
+        assert_eq!(on_sphere["route"]["target"]["symbol"], sphere.as_str());
+        assert!(on_sphere["answer"][0].as_str().unwrap().starts_with("Default for Sphere::default: 500 chamadas observadas nesta medição"), "{on_sphere:#}");
+        let change = &on_sphere["changes"][0];
+        assert_eq!((change["symbol"].as_str(), change["nodes"][0].as_str()), (Some(sphere.as_str()), Some(sphere.as_str())));
+        assert!(change["text"].as_str().unwrap().starts_with("Default for Sphere::default: 500 chamadas"), "{change:#}");
+        // The counts change hands, and no target does.
+        for (question, id) in [("Otimize o Stripe::default", &stripe), ("Otimize o Sphere::default", &sphere)] {
+            record_counts(&store, &key, &run, &[("src/lib.rs:3", 900., None), ("src/lib.rs:9", 0., None)]);
+            assert_eq!(asked(&store, question)["route"]["target"]["symbol"], id.as_str(), "{question}");
+            record_counts(&store, &key, &run, &[("src/lib.rs:3", 0., None), ("src/lib.rs:9", 900., None)]);
+            assert_eq!(asked(&store, question)["route"]["target"]["symbol"], id.as_str(), "{question}");
+            record_counts(&store, &key, &run, &[]);
+            assert_eq!(asked(&store, question)["route"]["target"]["symbol"], id.as_str(), "{question}");
+        }
+        record_counts(&store, &key, &run, &[("src/lib.rs:3", 900., None), ("src/lib.rs:9", 0., None)]);
+        let moved = asked(&store, "Otimize o Stripe::default");
+        assert_eq!(moved["changes"][0]["symbol"], stripe.as_str());
+        assert!(moved["answer"][0].as_str().unwrap().starts_with("Default for Stripe::default: 900 chamadas"), "{moved:#}");
+    }
+
+    #[test]
+    fn a_name_that_does_not_settle_on_one_function_asks_the_person() {
+        let (_scratch, store, key, run) = measured_homonyms();
+        let asked = |question: &str| store.performance_question(&key, &run, question).unwrap();
+        let unresolved = |answer: &Value, status: &str| {
+            assert_eq!(answer["route"]["target"]["status"], status, "{answer:#}");
+            assert!(answer["route"]["function"].is_null() && answer["route"]["target"]["symbol"].is_null(), "{answer:#}");
+            assert_eq!((answer["facts"].as_array().unwrap().len(), answer["changes"].as_array().unwrap().len()), (0, 0));
+            assert!(answer["needs_measure"].is_null(), "{answer:#}");
+        };
+        // Whether or not there is a measure, and whichever has a count.
+        for measured in [false, true] {
+            if measured {
+                measure_it(&store, &key, &run);
+            }
+            let many = asked("Otimize default");
+            unresolved(&many, "ambiguous");
+            let text = many["answer"].to_string();
+            assert!(text.contains("O nome default combina com 2 funções: Default for Sphere::default (src/lib.rs), Default for Stripe::default (src/lib.rs)."), "{text}");
+            assert!(text.contains("não escolhe: diga qual"), "{text}");
+            // Not found: said so, with what shares the last part as a suggestion and not as an answer.
+            let none = asked("Otimize o Cube::default");
+            unresolved(&none, "not_found");
+            let text = none["answer"].to_string();
+            assert!(text.contains("Não encontrei a função Cube::default nesta edition") && text.contains("Com o mesmo último nome: Default for Sphere::default"), "{text}");
+            unresolved(&asked("Otimize o Stripe::nada"), "not_found");
+            assert!(!asked("Otimize o Stripe::nada")["answer"].to_string().contains("mesmo último nome"));
+            // The same name twice: there is no way to write the difference, and the answer says so.
+            let twice = asked("Otimize igual");
+            unresolved(&twice, "ambiguous");
+            let text = twice["answer"].to_string();
+            assert!(text.contains("igual (src/a.rs), igual (src/b.rs)") && text.contains("não consegue separá-las pelo arquivo"), "{text}");
+            // One function with the name: it is the target. A part of a name is not.
+            assert_eq!(asked("Otimize a unica")["route"]["function"], "unica");
+            assert_eq!(asked("Otimize a unic")["route"]["intent"], Value::Null);
+        }
+        // Where to optimize, with a name that does not settle: the same.
+        unresolved(&asked("Onde melhorar o default?"), "ambiguous");
+        // A question about the whole measure does not depend on any name.
+        assert_eq!(asked("Quais funções pesam?")["route"]["intent"], "heavy");
+    }
+
+    /// The question as a person sends it: through the socket, the request parser, the route and the
+    /// serialized body, and read back from those bytes.
+    fn asked_through_the_api(store: &Store, key: &str, run: &str, question: &str) -> Value {
+        use std::io::{Read, Write};
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let body = json!({ "key": key, "run": run, "question": question }).to_string();
+        let mut client = std::net::TcpStream::connect(listener.local_addr().unwrap()).unwrap();
+        write!(client, "POST /api/performance-question HTTP/1.1\r\nHost: 127.0.0.1\r\nContent-Length: {}\r\n\r\n{body}", body.len()).unwrap();
+        let (server, _) = listener.accept().unwrap();
+        let request = crate::http::read(&server).unwrap();
+        let app = crate::App { port: 0, viewer: PathBuf::new(), store: Store { dir: store.dir.clone(), modelfiles: store.modelfiles.clone() }, graph: std::sync::Mutex::new(None) };
+        let response = crate::route(&app, &request).unwrap_or_else(|e| panic!("{question}: {e}"));
+        crate::http::write(&server, &response).unwrap();
+        drop(server);
+        let mut raw = vec![];
+        client.read_to_end(&mut raw).unwrap();
+        let text = String::from_utf8(raw).unwrap();
+        let (head, body) = text.split_once("\r\n\r\n").unwrap();
+        assert!(head.starts_with("HTTP/1.1 200"), "{question}: {head}");
+        serde_json::from_str(body).unwrap_or_else(|e| panic!("{question}: {e}: {body}"))
+    }
+
+    /// `execution` comes in the response exactly when the answer was read from a measure: the page
+    /// says where an answer came from by this field alone.
+    #[test]
+    fn execution_comes_only_with_an_answer_read_from_a_measure() {
+        let (_scratch, store, key, run) = measured_homonyms();
+        let asked = |question: &str| asked_through_the_api(&store, &key, &run, question);
+        let without = |question: &str, status: &str| {
+            let answer = asked(question);
+            assert_eq!(answer["route"]["target"]["status"], status, "{question}: {answer:#}");
+            assert!(answer.get("execution").is_none(), "{question}: {answer:#}");
+            answer
+        };
+        // No measure yet: it asks for one, and nothing was read.
+        for (question, status) in [("Otimize a unica", "resolved"), ("Quais funções pesam?", "none")] {
+            assert_eq!(without(question, status)["needs_measure"], true, "{question}");
+        }
+        // A name that settles on no function is answered before the measure, with or without one.
+        let unsettled = || {
+            for (question, status) in [("Otimize default", "ambiguous"), ("Otimize o Cube::nada", "not_found"), ("Otimize Stripe::default e Cube::nada", "not_found"), ("Otimize Stripe::default e Sphere::default", "ambiguous")] {
+                assert!(without(question, status).get("needs_measure").is_none(), "{question}");
+            }
+        };
+        unsettled();
+        measure_it(&store, &key, &run);
+        unsettled();
+        // The measure was read: the field names that very execution.
+        let id = store.latest_measure(&key, &run).unwrap().unwrap()["id"].clone();
+        for (question, status) in [
+            ("Otimize o Sphere::default", "resolved"),
+            ("Otimize o Stripe::default", "resolved"),
+            ("Quais funções pesam?", "none"),
+            ("Onde dá para otimizar?", "none"),
+            // Ambiguous, and still answered from the measure: the status does not tell where from.
+            ("Quais default pesam?", "ambiguous"),
+        ] {
+            let answer = asked(question);
+            assert_eq!(answer["route"]["target"]["status"], status, "{question}: {answer:#}");
+            assert_eq!(answer["execution"], id, "{question}: {answer:#}");
+            assert!(answer.get("needs_measure").is_none(), "{question}: {answer:#}");
+        }
+    }
+
+    /// Several names in one question: every one is accounted for, and nothing goes to a model on the
+    /// strength of only some of them.
+    #[test]
+    fn no_name_asked_for_is_dropped_on_the_way() {
+        let (_scratch, store, key, run) = measured_homonyms();
+        let stripe = id_of(&store, &key, &run, "impl Default for Stripe::default");
+        let sphere = id_of(&store, &key, &run, "impl Default for Sphere::default");
+        measure_it(&store, &key, &run);
+        let asked = |question: &str| asked_through_the_api(&store, &key, &run, question);
+        let nothing_built = |answer: &Value| {
+            assert!(answer["route"]["function"].is_null() && answer["route"]["target"]["symbol"].is_null(), "{answer:#}");
+            assert_eq!((answer["facts"].as_array().unwrap().len(), answer["changes"].as_array().unwrap().len()), (0, 0), "{answer:#}");
+            assert!(answer.get("execution").is_none(), "{answer:#}");
+        };
+        let part = |answer: &Value, name: &str| answer["route"]["target"]["targets"].as_array().unwrap().iter().find(|p| p["asked"] == name).unwrap().clone();
+
+        // One that exists and one that does not, in either order.
+        for question in ["Otimize Stripe::default e Cube::nada", "Otimize Cube::nada e Stripe::default"] {
+            let answer = asked(question);
+            nothing_built(&answer);
+            assert_eq!((answer["route"]["target"]["status"].as_str(), answer["route"]["target"]["written"].as_str()), (Some("not_found"), Some("Cube::nada")), "{question}");
+            assert_eq!(part(&answer, "Stripe::default")["symbol"], stripe.as_str());
+            let text = answer["answer"].to_string();
+            assert!(text.contains("Não encontrei a função Cube::nada nesta edition"), "{text}");
+            assert!(text.contains("Também pedida, e encontrada: Default for Stripe::default (src/lib.rs)") && text.contains("Nada foi montado com só uma parte do pedido"), "{text}");
+        }
+        // Two that exist: both named, one at a time, with the same reading as before this rule.
+        let two = asked("Otimize Stripe::default e Sphere::default");
+        nothing_built(&two);
+        assert_eq!(two["route"]["target"]["status"], "ambiguous");
+        assert_eq!((part(&two, "Stripe::default")["symbol"].as_str(), part(&two, "Sphere::default")["symbol"].as_str()), (Some(stripe.as_str()), Some(sphere.as_str())));
+        assert!(two["answer"].to_string().contains("A pergunta nomeia 2 funções: Default for Stripe::default (src/lib.rs), Default for Sphere::default (src/lib.rs). O Librarian trata uma por vez"), "{two:#}");
+        // Two that do not.
+        let none = asked("Otimize Cube::nada e Bola::nada");
+        nothing_built(&none);
+        assert_eq!((none["route"]["target"]["status"].as_str(), none["route"]["target"]["written"].as_str()), (Some("not_found"), Some("Cube::nada e Bola::nada")));
+        let text = none["answer"].to_string();
+        assert!(text.contains("Não encontrei a função Cube::nada") && text.contains("Não encontrei a função Bola::nada"), "{text}");
+        assert!(!text.contains("Também pedida"), "{text}");
+        // Two that are each ambiguous: `Stripe::nome` is in two impls, and so is `Sphere::nome`.
+        let open = asked("Otimize Stripe::nome e Sphere::nome");
+        nothing_built(&open);
+        assert_eq!((open["route"]["target"]["status"].as_str(), open["route"]["target"]["written"].as_str()), (Some("ambiguous"), Some("Stripe::nome e Sphere::nome")));
+        let text = open["answer"].to_string();
+        assert!(text.contains("O nome Stripe::nome combina com 2 funções") && text.contains("O nome Sphere::nome combina com 2 funções"), "{text}");
+        // One that exists and one that is ambiguous.
+        let mixed = asked("Otimize Stripe::default e Sphere::nome");
+        nothing_built(&mixed);
+        assert_eq!((mixed["route"]["target"]["status"].as_str(), mixed["route"]["target"]["written"].as_str()), (Some("ambiguous"), Some("Sphere::nome")));
+        let text = mixed["answer"].to_string();
+        assert!(text.contains("O nome Sphere::nome combina com 2 funções") && text.contains("Também pedida, e encontrada: Default for Stripe::default"), "{text}");
+        // One name: as it was, in the answer and in what goes to a model.
+        let one = asked("Otimize o Sphere::default");
+        assert_eq!(one["route"]["target"]["symbol"], sphere.as_str());
+        assert!(one["route"]["target"].get("targets").is_none());
+        assert_eq!(one["changes"].as_array().unwrap().len(), 1);
+        assert!(one["answer"][0].as_str().unwrap().starts_with("Default for Sphere::default: 500 chamadas observadas"), "{one:#}");
+        // A file beside the name is not a second name, and neither is the same name written twice.
+        for question in ["Otimize Sphere::default em src/lib.rs", "Otimize Sphere::default em lib.rs", "Otimize Sphere::default e Default for Sphere::default"] {
+            assert_eq!(asked(question)["route"]["target"]["symbol"], sphere.as_str(), "{question}");
+        }
+    }
+
+    /// Python names have their owner after a dot, and the rule is the same.
+    #[test]
+    fn a_python_function_is_found_by_its_own_name() {
+        let (_scratch, store, key, run) = measured_mix();
+        let asked = |question: &str| store.performance_question(&key, &run, question).unwrap();
+        let method = id_of(&store, &key, &run, "K.em_classe");
+        assert_eq!(asked("Otimize o K.em_classe")["route"]["target"]["symbol"], method.as_str());
+        assert_eq!(asked("Otimize em_classe")["route"]["target"]["symbol"], method.as_str());
+        assert_eq!(asked("Otimize o Outra.em_classe")["route"]["target"]["status"], "not_found");
+        assert!(asked("Otimize em_classe")["answer"].to_string().contains("K.em_classe está sem cobertura"));
+    }
+
+    /// The evidence of a function with no pass observed, as `coverage.functions` gives it.
+    fn zero_of_function(hot: &Value, id: &str) -> (Value, Value, Value) {
+        let found = hot["coverage"]["functions"].as_array().unwrap().iter().find(|f| f["symbol"] == id).unwrap();
+        (found["coverage_state"].clone(), found["zero_evidence"].clone(), found["exclusion_reason"].clone())
+    }
+
+    /// What the renderer does, through the real flow: the program's report prints the line of a
+    /// function at its entry with zero, because it ran before the counts were zeroed. The function
+    /// ran; the measure only saw no passes, and no text may say it did not run.
+    #[test]
+    fn a_zero_at_the_entry_after_a_reset_is_not_did_not_run() {
+        let scratch = project();
+        let root = scratch.0.join("project");
+        fs::write(root.join("src/lib.rs"), concat!(
+            "pub fn monta() -> u32 {\n    1\n}\n",
+            "pub fn trabalha() -> u32 {\n    2\n}\n",
+            "pub fn nunca() -> u32 {\n    3\n}\n",
+            "pub const PRINTED: &str = \"\nlibrarian-measure calls=0 at=src/lib.rs:1\nlibrarian-measure calls=9 at=src/lib.rs:4\n\";\n",
+        )).unwrap();
+        let profile = json!({ "project_root": ".", "commands": { "contagem": { "argv": ["git", "grep", "-h", "librarian-measure", "--", "src/lib.rs"], "repeat": 1 } },
+            "instrument": { "statement": "crate::count!();", "command": "contagem" } });
+        fs::write(root.join(PROFILE), profile.to_string()).unwrap();
+        let git = |args: &[&str]| {
+            let out = std::process::Command::new("git").arg("-C").arg(&root).args(["-c", "user.name=t", "-c", "user.email=t@t"]).args(args).output().unwrap();
+            assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
+        };
+        git(&["init", "-q"]);
+        git(&["config", "core.autocrlf", "false"]);
+        git(&["add", "."]);
+        git(&["commit", "-q", "-m", "x"]);
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let key = store.open(&display(&root)).unwrap()["key"].as_str().unwrap().to_owned();
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        let sha = store.commands(&key).unwrap()["commands"][0]["sha256"].as_str().unwrap().to_owned();
+        store.approve_command(&key, "contagem", &sha).unwrap();
+        assert_eq!(store.execute_instrumented(&key, &run).unwrap()["summary"]["succeeded"], 1);
+        let hot = store.hotspots(&key, &run).unwrap();
+        let of = |name| zero_of_function(&hot, &symbol_id(&store, &key, &run, name));
+        assert_eq!(of("monta"), (json!("counted_no_passes"), json!("entry_zero"), Value::Null));
+        assert_eq!(of("trabalha"), (json!("counted_and_ran"), Value::Null, Value::Null));
+        assert_eq!(of("nunca"), (json!("counted_no_passes"), json!("no_line"), Value::Null));
+        assert_eq!(hot["coverage"]["zero_evidence"], json!({ "entry_zero": 1, "no_line": 1 }));
+        let answer = store.performance_question(&key, &run, "Otimize o monta").unwrap();
+        let text = answer["answer"].to_string();
+        assert!(text.contains("A instrução de entrada de monta contou zero nesta medição; isso não prova que a função não rodou, porque o programa pode zerar as contagens"), "{text}");
+        assert!(!text.contains("não rodou neste comando"), "{text}");
+        assert_eq!(answer["changes"].as_array().unwrap().len(), 0);
+        // The two have different words, and neither is said to have not run.
+        let silent = store.performance_question(&key, &run, "Otimize o nunca").unwrap()["answer"].to_string();
+        assert!(silent.contains("nunca recebeu a instrução e a medição não imprimiu contagem para ela"), "{silent}");
+        let summary = store.performance_question(&key, &run, "Otimize o trabalha").unwrap()["changes"][0]["text"].as_str().unwrap().to_owned();
+        assert!(summary.contains("1 com contagem acima de zero; 1 com zero impresso; 1 que receberam a instrução e não imprimiram linha;"), "{summary}");
+    }
+
+    #[test]
+    fn each_kind_of_zero_has_its_own_evidence() {
+        let (_scratch, store, key, run) = measured_mix();
+        let id = |name| symbol_id(&store, &key, &run, name);
+        // Got the statement and printed nothing; printed zero at the entry; the project's own counter
+        // with zero, in Rust and in Python; and neither a line nor the statement.
+        record_counts(&store, &key, &run, &[("src/lib.rs:1", 0., None), ("src/lib.rs:23", 0., None), ("src/app.py:4", 0., None), ("src/lib.rs:15", 3., None)]);
+        let hot = store.hotspots(&key, &run).unwrap();
+        assert_eq!(zero_of_function(&hot, &id("roda")).1, "entry_zero");
+        assert_eq!(zero_of_function(&hot, &id("contada_sem_rodar")).1, "no_line");
+        assert_eq!(zero_of_function(&hot, &id("ja_conta")).1, "own_zero");
+        assert_eq!(zero_of_function(&hot, &id("ajuda")).1, "own_zero");
+        for name in ["roda", "contada_sem_rodar", "ja_conta", "ajuda"] {
+            assert_eq!(zero_of_function(&hot, &id(name)).0, "counted_no_passes", "{name}");
+        }
+        assert_eq!(zero_of_function(&hot, &id("metodo")), (json!("counted_and_ran"), Value::Null, Value::Null));
+        // No line and no statement stays no coverage, with its reason and no evidence of a zero.
+        assert_eq!(zero_of_function(&hot, &id("com_dict")), (json!("no_coverage"), Value::Null, json!("language_not_supported")));
+        assert_eq!(zero_of_function(&hot, &id("constante")), (json!("no_coverage"), Value::Null, json!("const_fn")));
+        let total: u64 = hot["coverage"]["zero_evidence"].as_object().unwrap().values().filter_map(Value::as_u64).sum();
+        assert_eq!(hot["coverage"]["counted_no_passes"].as_u64(), Some(total));
+        // The suggestion says the same of a function it mentions.
+        let out = store.suggest_envelope(&key, &run, &[id("sem_chave")]).unwrap();
+        let mentioned = out["items"].as_array().unwrap().iter().chain(out["left_out"].as_array().unwrap()).find(|e| e["id"] == id("ajuda").as_str()).expect("ajuda na sugestão");
+        assert_eq!((mentioned["coverage_state"].as_str(), mentioned["zero_evidence"].as_str()), (Some("counted_no_passes"), Some("own_zero")));
+
+        // Several lines of a function, all zero; one above zero is a pass.
+        record_counts(&store, &key, &run, &[("src/lib.rs:1", 0., None), ("src/lib.rs:2", 0., None)]);
+        let hot = store.hotspots(&key, &run).unwrap();
+        assert_eq!(zero_of_function(&hot, &id("roda")).1, "several_zero");
+        let text = store.performance_question(&key, &run, "Otimize o roda").unwrap()["answer"].to_string();
+        assert!(text.contains("Nenhuma das linhas contadas de roda teve passagens nesta medição, o que não prova"), "{text}");
+        record_counts(&store, &key, &run, &[("src/lib.rs:1", 0., None), ("src/lib.rs:2", 7., None)]);
+        assert_eq!(zero_of_function(&store.hotspots(&key, &run).unwrap(), &id("roda")).0, "counted_and_ran");
+    }
+
+    #[test]
+    fn a_zero_of_unknown_origin_stays_a_count_and_says_nothing_about_running() {
+        let (_scratch, store, key, run) = measured_mix();
+        let roda = symbol_id(&store, &key, &run, "roda");
+        let contada = symbol_id(&store, &key, &run, "contada_sem_rodar");
+        let measure = store.latest_measure(&key, &run).unwrap().unwrap()["id"].as_str().unwrap().to_owned();
+        let file = store.run_dir(&key, &run).unwrap().join("executions").join(measure).join("execution.json");
+        record_counts(&store, &key, &run, &[("src/lib.rs:1", 0., None), ("src/lib.rs:15", 4., None)]);
+        let mut record: Value = serde_json::from_slice(&fs::read(&file).unwrap()).unwrap();
+        let functions = record["instrumentation"]["functions"].take();
+        fs::write(&file, serde_json::to_vec_pretty(&record).unwrap()).unwrap();
+        // No plan to read. The zero is evidence of a count, not of no coverage; with no line and no
+        // plan there is no evidence at all.
+        let hot = store.hotspots(&key, &run).unwrap();
+        assert_eq!(zero_of_function(&hot, &roda), (json!("counted_no_passes"), json!("unknown_zero"), Value::Null));
+        assert_eq!(zero_of_function(&hot, &contada).0, "no_coverage");
+        assert_eq!(zero_of_function(&hot, &contada).1, Value::Null);
+        let text = store.performance_question(&key, &run, "Otimize o roda").unwrap()["answer"].to_string();
+        assert!(text.contains("roda tem contagem observada de zero nesta medição, e a origem não permite dizer se a função rodou"), "{text}");
+
+        // Two functions on one source line, one series. With a zero: unknown. With passes: whose they
+        // are the record cannot say, so the other one has no evidence of its own.
+        record["instrumentation"]["functions"] = functions;
+        for f in record["instrumentation"]["functions"].as_array_mut().unwrap() {
+            if f["symbol"] == contada.as_str() {
+                f["line"] = json!(1);
+            }
+        }
+        fs::write(&file, serde_json::to_vec_pretty(&record).unwrap()).unwrap();
+        let hot = store.hotspots(&key, &run).unwrap();
+        assert_eq!(zero_of_function(&hot, &contada), (json!("counted_no_passes"), json!("unknown_zero"), Value::Null));
+        record["summary"]["stats"]["calls@src/lib.rs:1"]["median"] = json!(6.);
+        fs::write(&file, serde_json::to_vec_pretty(&record).unwrap()).unwrap();
+        let hot = store.hotspots(&key, &run).unwrap();
+        assert_eq!(zero_of_function(&hot, &contada), (json!("no_coverage"), Value::Null, json!("shared_line")));
+    }
+
+    /// One repetition above zero is a pass, whatever the median. The median stays the number shown,
+    /// and the largest is not presented as the function's calls.
+    #[test]
+    fn a_median_of_zero_with_a_positive_maximum_ran() {
+        let (_scratch, store, key, run) = measured_mix();
+        let measure = store.latest_measure(&key, &run).unwrap().unwrap()["id"].as_str().unwrap().to_owned();
+        let file = store.run_dir(&key, &run).unwrap().join("executions").join(measure).join("execution.json");
+        let mut record: Value = serde_json::from_slice(&fs::read(&file).unwrap()).unwrap();
+        let before = fs::read(&file).unwrap();
+        record["summary"]["stats"]["calls@src/lib.rs:1"] = json!({ "measure": "calls", "at": "src/lib.rs:1", "median": 0., "min": 0., "max": 5., "n": 3 });
+        fs::write(&file, serde_json::to_vec_pretty(&record).unwrap()).unwrap();
+        assert_ne!(before, fs::read(&file).unwrap());
+        let on_disk = fs::read(&file).unwrap();
+        let hot = store.hotspots(&key, &run).unwrap();
+        let roda = symbol_id(&store, &key, &run, "roda");
+        assert_eq!(zero_of_function(&hot, &roda), (json!("counted_and_ran"), Value::Null, Value::Null));
+        let row = hot["rows"].as_array().unwrap().iter().find(|r| r["at"] == "src/lib.rs:1").unwrap();
+        assert_eq!((row["calls"].as_f64(), row["calls_max"].as_f64()), (Some(0.), Some(5.)));
+        assert_eq!(crate::instrument::calls_by_symbol(hot["rows"].as_array().unwrap())[&roda], 0.);
+        let answer = store.performance_question(&key, &run, "Otimize o roda").unwrap();
+        let text = answer["answer"].to_string();
+        assert!(text.contains("A mediana das repetições de roda é zero, mas ao menos uma repetição observou passagens"), "{text}");
+        assert!(!text.contains("5 chamadas") && !text.contains("contou zero"), "{text}");
+        // Reading does not touch what was recorded.
+        assert_eq!(on_disk, fs::read(&file).unwrap());
+    }
+
+    /// The page describes counts, not execution, wherever it speaks of functions with no passes. The
+    /// page itself is exercised on a real measure by the screen checks.
+    #[test]
+    fn the_page_does_not_say_a_function_did_not_run() {
+        let page = include_str!("../web/index.html");
+        for claim in ["não rodou", "não rodaram nenhuma", "que rodaram em", "só o que rodou", "só este rodou", "só um deles rodou", "did not run", "never ran", "only what ran", "only this one ran", "functions that ran", "counted_not_run"] {
+            assert!(!page.lines().any(|l| l.contains(claim) && !l.contains("o que não prova que não rodaram") && !l.contains("does not prove they did not run")), "{claim:?}");
+        }
+        for label in ["'envelope.out.did_not_run': ['sem passagens na medição'", "'path.notRan': ['sem contagem'", "'path.ran': ['só o que teve contagem'", "funções com contagem acima de zero em {districts}"] {
+            assert!(page.contains(label), "{label:?}");
+        }
+    }
+
+    #[test]
+    fn the_limits_of_a_measure_say_what_each_number_is() {
+        let (_scratch, store, key, run) = measured_mix();
+        let hot = store.hotspots(&key, &run).unwrap();
+        let limits = hot["limits"].to_string();
+        for phrase in ["cada número é o que esta medição observou naquela linha", "a frequência observada neste comando", "é o número de chamadas observadas", "a maior contagem, que pode não ser quantas vezes ela foi chamada",
+            "conta as passagens por aquela linha", "tempo instrumentado, não o custo próprio", "pode mudar a ordem",
+            "não quer dizer que ela não rodou", "não observou passagens positivas, não que ela não rodou", "zerar as contagens durante a execução"] {
+            assert!(limits.contains(phrase), "{phrase:?} em {limits}");
+        }
+        // The fields of the coverage stay as they were.
+        for field in ["instrumented", "counted", "counted_and_ran", "counted_no_passes", "no_coverage", "partial", "excluded", "by_language", "limits", "reasons_recorded", "zero_evidence"] {
+            assert!(hot["coverage"].get(field).is_some(), "{field}");
+        }
+        assert!(!limits.contains("não rodou neste comando"), "{limits}");
+        assert!(hot["coverage"].get("counted_not_run").is_none());
     }
 
     #[test]

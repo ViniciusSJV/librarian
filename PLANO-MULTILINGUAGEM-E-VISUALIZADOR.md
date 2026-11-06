@@ -1705,7 +1705,7 @@ Também: `optimize` mostra o que ficou de fora, `hot.askFacts` não tem mais "qw
 | 10 mutações contra `etapa2c.js` | 10 detectadas |
 | 6 mutações contra o modelo externo | 6 detectadas; `provenance` só na terceira semente (abaixo) |
 
-**As baterias de tela não estão no repositório;** só os testes em Rust ficam com o código. As baterias (`etapa2.js`, `etapa2b.js`, `etapa2c.js`, `etapa2-modelo.js`, `mutacao3.js`, `final.sh`) estão no scratchpad da sessão `465f4d1b-0d17-4dff-903f-d3077bb3c8f4`, que é temporário, e no arquivo de preservação abaixo.
+**As baterias de tela não estão no repositório;** só os testes em Rust ficam com o código. As baterias (`etapa2.js`, `etapa2b.js`, `etapa2c.js`, `etapa2-modelo.js`, `mutacao3.js`, `final.sh`) estão no scratchpad da sessão `465f4d1b-0d17-4dff-903f-d3077bb3c8f4`, que é temporário, e no arquivo de preservação abaixo. **Atualização de 06/11/2026:** `etapa2c.js` passou para [crates/librarian-studio/tests/tela](crates/librarian-studio/tests/tela/README.md), com as baterias da Etapa 3; as demais continuam fora do repositório.
 
 **Arquivo de preservação:** `.studio/arquivo-copias/evidence-builder-etapa2-20261105`, fora do Git e sem cópia fora desta máquina. Guarda as baterias, o modelo externo, as raízes de teste, os resultados, o executável usado nos testes e o diagnóstico integral, com `LEIA-ME.md`, `ORIGEM.tsv`, `EXCLUIDOS.tsv` e `MANIFESTO.sha256`. As cópias foram conferidas por SHA-256 contra a origem. **Limites:** a restauração não foi executada, e precisa ser no caminho original, porque a chave do projeto Python é o hash do caminho. O projeto misto ficou sem `.git`, que trazia nome e e-mail, mas nenhuma das quatro baterias o usa. O diagnóstico e as conversas são extratos da transcrição, que não foi copiada crua.
 
@@ -1732,11 +1732,13 @@ Corrigir todos os consumidores da medição de uma vez, com coerência entre fro
 
 - A frequência de chamadas passa a ser o critério de ordenação. **Frequência de chamadas não é custo computacional**, e as duas interpretações não se misturam.
 - **Sem alvo automático:** a pessoa escolhe o alvo na lista, em Separar e em "Onde otimizar?". Remover `FREQUENT = 1e6`, em `index.html` e em `questions.rs`, inclusive o comentário "in a frame".
-- Rótulo "Mais chamadas" quando a ordem for por frequência, e "Tempo instrumentado (referência)" para o tempo. A função mais chamada não se chama "mais pesada".
+- Rótulo "Mais chamadas" quando a ordem for por frequência, e "Tempo instrumentado (referência)" para o tempo. A função mais chamada não se chama "mais pesada". **Atualizado no Passo 2:** o título do ranking é "Maior contagem observada, com o tempo instrumentado como referência", porque a lista mistura origens, e só a instrução de entrada é número de chamadas. A ordem é: contagem, depois tempo e lugar, como desempate.
 - A cor pode continuar representando tempo, com a legenda dizendo isso.
 - Não inventar tempo próprio: só existe tempo inclusivo.
 
 **Cobertura:** as seis limitações em [Medição: capacidade não é cobertura](STUDIO.md#medição-capacidade-não-é-cobertura), reproduzidas na Etapa 2, são desta etapa.
+
+**Estado em 06/11/2026:** os Passos 1 e 2 estão concluídos; o Passo 3 não foi iniciado. Passo 1: cobertura por função no backend. Passo 2: ordem por contagem observada, sem `FREQUENT` nem alvo automático, textos ao modelo, `count_kind` por origem, `counted_no_passes` com `zero_evidence`, resolução do alvo antes da medição, por símbolo, e origem da resposta no cartão, decidida por `execution`. Na cidade, a altura já vem da contagem; a cor (o calor) e o top 8 continuam por tempo e ficam para os passos seguintes.
 
 ### Etapa 4: Evidence Builder
 

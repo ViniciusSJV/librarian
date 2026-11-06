@@ -834,7 +834,7 @@ const STRINGS = {
   'help.envelopeSuggest': ['O bibliotecário sugere o que uma mudança nestas declarações provavelmente precisa ver: o tipo dono e quem escreve os campos que elas leem, o que elas chamam e o tipo que isso devolve, quem as chama, os tipos que elas escrevem e o topo do arquivo, onde ficam os imports. Cada item vem com o motivo e a linha. É tudo pelo nome escrito: o que não está escrito pelo nome não aparece, e homônimos e testes ficam de fora. Você marca o que entra, e a marca vale na hora: o que está marcado é o que vai.',
     'The librarian suggests what a change to these declarations is likely to need in view: the owner type and whoever writes the fields they read, what they call and the type that returns, who calls them, the types they write and the head of the file, where imports live. Each item comes with why and the line. All by written names: what is not written by name does not show, and homonyms and tests are left out. You tick what goes in, and a tick counts at once: what is ticked is what goes.'],
   'envelope.title': ['Sugestão ({n}, {kb} KB de {budget} KB)', 'Suggestion ({n}, {kb} KB of {budget} KB)'],
-  'envelope.noMeasure': ['Sem medição nesta edition: a ordem vem só da estrutura, e não dá para saber o que não rodou.', 'No measure in this edition: the order comes from the structure alone, and what did not run cannot be told apart.'],
+  'envelope.noMeasure': ['Sem medição nesta edition: a ordem vem só da estrutura, e não dá para saber o que teve contagem.', 'No measure in this edition: the order comes from the structure alone, and what had a count cannot be told apart.'],
   'envelope.leftOut': ['Ficaram de fora ({n})', 'Left out ({n})'],
   'envelope.turnSummary': ['{n} candidatas de fora', '{n} candidates left out'],
   'envelope.turnTag': ['seleção: {summary}', 'selection: {summary}'],
@@ -844,11 +844,14 @@ const STRINGS = {
   'envelope.role.path': ['caminho', 'path'],
   'envelope.role.support': ['apoio', 'support'],
   'envelope.role.constraint': ['restrição', 'constraint'],
-  'envelope.out.did_not_run': ['não rodou na medição', 'did not run in the measure'],
+  'envelope.out.did_not_run': ['sem passagens na medição', 'no passes in the measure'],
   'envelope.out.test': ['teste: o portão já roda', 'test: the gate already runs it'],
   'envelope.out.budget': ['não coube no orçamento', 'did not fit the budget'],
   'envelope.out.max_items': ['passou de 16 declarações', 'past 16 declarations'],
   'envelope.calls': ['{n} chamadas', '{n} calls'],
+  'envelope.callsLines': ['maior contagem entre as linhas: {n}', 'largest count among its lines: {n}'],
+  'envelope.callsOwn': ['{n} passagens pela linha contada', '{n} passes through the counted line'],
+  'envelope.callsObserved': ['contagem observada: {n}', 'observed count: {n}'],
   'envelope.gaps': ['O que o grafo não resolveu ({n})', 'What the graph did not settle ({n})'],
   'envelope.gap.homonym_call': ['{t}: a chamada {text} pode ser {list}', '{t}: the call {text} may be {list}'],
   'envelope.gap.homonym_type': ['{t}: o tipo {text} pode ser {list}', '{t}: the type {text} may be {list}'],
@@ -881,7 +884,7 @@ const STRINGS = {
   'why.caller': ['chama {t} ({lines})', 'calls {t} ({lines})'],
   'why.type_reference': ['{t} escreve este tipo ({lines})', '{t} writes this type ({lines})'],
   'why.header': ['topo do arquivo de {t}: imports', 'head of the file of {t}: imports'],
-  'why.called_measured': ['{t} chama ({lines}); o nome tem homônimos e só este rodou', '{t} calls it ({lines}); the name has homonyms and only this one ran'],
+  'why.called_measured': ['{t} chama ({lines}); o nome tem homônimos e só este teve contagem', '{t} calls it ({lines}); the name has homonyms and only this one had a count'],
   'why.test_caller': ['teste que chama {t} ({lines})', 'test that calls {t} ({lines})'],
   'why.trait_impl': ['implementação de {t} para {fields}, no caminho ({lines})', 'implementation of {t} for {fields}, on the path ({lines})'],
   'why.lines': ['linha {lines}', 'line {lines}'],
@@ -890,6 +893,8 @@ const STRINGS = {
     'Opens the Path view from this point, forward: what it calls and what those call, in layers. A call with homonyms is dashed and the path stops there; click it to choose the right candidate and go on.'],
   'help.pathCalls': ['O que este ponto chama, em camadas da esquerda para a direita, pelo nome escrito em cada chamada. Linha cheia: a chamada foi seguida porque o nome só combina com uma declaração, porque é uma chamada do próprio receptor (self.f()) e só um homônimo está na mesma classe ou impl, ou porque você escolheu. Linha tracejada: o nome combina com vários homônimos e o caminho para ali até você escolher qual seguir. É um mapa pelo nome, sem compilador: não prova que aquela chamada acontece nem quantas vezes.',
     'What this point calls, in layers from left to right, by the name written in each call. Solid line: the call was followed because the name matches only one declaration, because it is the receiver\'s own call (self.f()) and only one homonym is in the same class or impl, or because you chose it. Dashed line: the name matches several homonyms and the path stops there until you choose which one to follow. It is a map by name, without a compiler: it does not prove the call happens or how often.'],
+  'path.countOwn': ['{n} × na linha {line}', '{n} × on line {line}'],
+  'path.countObserved': ['contagem: {n}', 'count: {n}'],
   'path.solidCalls': ['só chamadas seguidas', 'only followed calls'],
   'help.pathSolidCalls': ['Esconde as linhas tracejadas: chamadas cujo nome combina com vários homônimos e que você ainda não escolheu. Sobra o caminho que foi seguido.',
     'Hides the dashed lines: calls whose name matches several homonyms and that you have not chosen yet. What remains is the path that was followed.'],
@@ -905,10 +910,10 @@ const STRINGS = {
   'path.resolution.unique': ['seguida: o nome só combina com esta declaração', 'followed: the name matches only this declaration'],
   'path.resolution.receiver': ['seguida: chamada do próprio receptor, e só este homônimo está na mesma classe ou impl', 'followed: the receiver\'s own call, and only this homonym is in the same class or impl'],
   'path.resolution.chosen': ['seguida: escolhida por você', 'followed: chosen by you'],
-  'path.resolution.measured': ['seguida: dos homônimos, só este rodou no Medir tudo', 'followed: of the homonyms, only this one ran in Measure everything'],
-  'path.ran': ['só o que rodou', 'only what ran'],
-  'help.pathRan': ['Usa o último Medir tudo. Esconde as funções que foram contadas e não rodaram nenhuma vez. Quando um nome combina com vários homônimos e só um deles rodou, segue por ele, como se você o tivesse escolhido. As caixas mostram quantas vezes cada função rodou e quanto tempo levou, com a cor de azul (pouco) a vermelho (muito).', 'Uses the latest Measure everything. Hides the functions that were counted and never ran. When a name matches several homonyms and only one of them ran, follows it, as if you had chosen it. The boxes show how many times each function ran and how long it took, colored from blue (little) to red (a lot).'],
-  'path.notRan': ['não rodou', 'did not run'],
+  'path.resolution.measured': ['seguida: dos homônimos, só este teve contagem no Medir tudo', 'followed: of the homonyms, only this one had a count in Measure everything'],
+  'path.ran': ['só o que teve contagem', 'only what had a count'],
+  'help.pathRan': ['Usa o último Medir tudo. Esconde as funções que foram contadas e não tiveram passagens observadas, o que não prova que não rodaram. Quando um nome combina com vários homônimos e só um deles teve contagem, segue por ele, como se você o tivesse escolhido. As caixas mostram a contagem observada de cada função e o tempo instrumentado, com a cor de azul (pouco) a vermelho (muito).', 'Uses the latest Measure everything. Hides the functions that were counted and had no passes observed, which does not prove they did not run. When a name matches several homonyms and only one of them had a count, follows it, as if you had chosen it. The boxes show the observed count and instrumented time of each function, colored from blue (little) to red (a lot).'],
+  'path.notRan': ['sem contagem', 'no count'],
   'path.measuredCount': [' {n} homônimo(s) resolvido(s) pela medição.', ' {n} homonym(s) resolved by the measure.'],
   'path.resolution.homonym': ['não seguida: o nome combina com {n} declarações; esta é uma delas', 'not followed: the name matches {n} declarations; this is one of them'],
   'path.choose': ['Seguir por este', 'Follow this one'],
@@ -1146,25 +1151,33 @@ const STRINGS = {
   'hot.measure': ["Medir tudo","Measure everything"],
   'hot.measuring': ["Contando cada função numa cópia…","Counting every function in a copy…"],
   'hot.summary': ["{n} funções contadas pelo Librarian · {rows} linhas com contagem · execução {execution}","{n} functions counted by the Librarian · {rows} counted lines · run {execution}"],
-  'hot.hottest': ["A mais pesada entre as que rodam mais de {n} vezes:","The heaviest among those that run more than {n} times:"],
+  'hot.pick': ["Função a separar:","Function to separate:"],
+  'hot.pickNone': ["Escolha uma função","Choose a function"],
+  'hot.askFactsNone': ["Separar para {model}","Separate for {model}"],
   'hot.calls': ["{n} vezes","{n} times"],
+  'hot.callsLine': ["{n} vezes na linha {line}","{n} times on line {line}"],
+  'hot.callsObserved': ["contagem observada: {n}","observed count: {n}"],
+  'hot.runs': ["roda {n} vezes","runs {n} times"],
+  'hot.runsOwn': ["passa {n} vezes pela linha {line}, de um contador do próprio projeto (pode não ser quantas vezes roda)","passes {n} times through line {line}, from the project's own counter (which may not be how many times it runs)"],
+  'hot.runsObserved': ["tem contagem observada de {n}","has an observed count of {n}"],
+  'hot.runsLine': ["passa {n} vezes pela linha {line}, uma de {k} linhas contadas (pode não ser quantas vezes roda)","passes {n} times through line {line}, one of {k} counted lines (which may not be how many times it runs)"],
   'hot.callers': ["Quem chama:","Called by:"],
   'hot.askFacts': ["Separar para {model} ({n} perguntas)","Separate for {model} ({n} questions)"],
   'hot.approveAll': ["Aprovar em lote","Approve as a batch"],
-  'hot.noFrequent': ["Nenhuma função roda mais de {n} vezes nesta medida.","No function runs more than {n} times in this measure."],
-  'hot.ranking': ["Mais tempo, contado pelo projeto","Most time, counted by the project"],
+  'hot.noneRan': ["Nenhuma função teve contagem acima de zero nesta medição.","No function had a count above zero in this measure."],
+  'hot.ranking': ["Maior contagem observada, com o tempo instrumentado como referência","Largest count observed, with the instrumented time as a reference"],
   'hot.optimize': ["Otimizar","Optimize"],
   'hot.asking': ["Pergunta {k} de {n} a {model}: {name}…","Question {k} of {n} to {model}: {name}…"],
   'hot.asked': ["{n} perguntas enviadas a {model}. Confira as respostas na conversa e aprove uma a uma ou em lote.","{n} questions sent to {model}. Check the answers in the conversation and approve them one by one or as a batch."],
-  'hot.factQuestion': ["Em {name}, a linha {line} faz `{text}`. {name} roda {calls} vezes e {target} roda {targetCalls} vezes (contagem do Medir tudo). O que a linha {line} calcula a cada chamada de {name}, e de que valores depende? Cite a linha {line}.","In {name}, line {line} does `{text}`. {name} runs {calls} times and {target} runs {targetCalls} times (Measure everything). What does line {line} compute on each call of {name}, and on which values does it depend? Cite line {line}."],
+  'hot.factQuestion': ["Em {name}, a linha {line} faz `{text}`. {name} {runs} e {target} {targetRuns} (contagem do Medir tudo). O que a linha {line} calcula a cada chamada de {name}, e de que valores depende? Cite a linha {line}.","In {name}, line {line} does `{text}`. {name} {runs} and {target} {targetRuns} (Measure everything). What does line {line} compute on each call of {name}, and on which values does it depend? Cite line {line}."],
   'hot.nothingToApprove': ["Nenhum fato novo passou na conferência mecânica.","No new fact passed the mechanical check."],
   'hot.approveTitle': ["Aprovar {n} fato(s) de uma vez","Approve {n} fact(s) at once"],
   'hot.approved': ["{n} fato(s) aprovado(s) com a mesma nota.","{n} fact(s) approved with the same note."],
-  'hot.optimizeQuestion': ["A contagem do Librarian (Medir tudo) mostra: {name} roda {calls} vezes{called}. Proponha uma mudança que faça {name} trabalhar menos a cada chamada, sem mudar as saídas nem o comportamento dos testes.","The Librarian's count (Measure everything) shows: {name} runs {calls} times{called}. Propose a change that makes {name} do less work on each call, without changing the outputs or the tests' behavior."],
-  'hot.optimizeCalled': ["; o que ela chama e mais pesa: {list}","; what it calls that weighs the most: {list}"],
+  'hot.optimizeQuestion': ["A contagem do Librarian (Medir tudo) mostra: {name} {runs}{called}. Proponha uma mudança que faça {name} trabalhar menos a cada chamada, sem mudar as saídas nem o comportamento dos testes.","The Librarian's count (Measure everything) shows: {name} {runs}{called}. Propose a change that makes {name} do less work on each call, without changing the outputs or the tests' behavior."],
+  'hot.optimizeCalled': ["; do que ela chama, as de maior contagem observada: {list}","; of what it calls, those with the largest observed count: {list}"],
   'hot.turnTag': ["onde pesa: {summary}","where the time goes: {summary}"],
-  'help.hot': ["O projeto diz como contar uma passagem por uma função (instrument no librarian.json); o Librarian põe essa instrução no começo de cada função, numa cópia, e roda o comando aprovado. A contagem é exata; o tempo é inclusivo e inflado pela contagem, o que pode mudar a ordem entre as funções.","The project says how to count a pass through a function (instrument in librarian.json); the Librarian puts that statement at the start of every function, in a copy, and runs the approved command. Counts are exact; time is inclusive and inflated by the counting, which can change the order between functions."],
-  'help.hotSeparate': ["Para cada função que chama a mais pesada, a linha que a chama vira uma pergunta pequena a {model}, só com aquela declaração. As respostas são fatos conferidos mecanicamente; você aprova um a um ou em lote.","For each function that calls the heaviest one, the line that calls it becomes a small question to {model}, with that declaration only. Answers are mechanically checked facts; you approve them one by one or as a batch."],
+  'help.hot': ["O projeto diz como contar uma passagem por uma função (instrument no librarian.json); o Librarian põe essa instrução no começo de cada função, numa cópia, e roda o comando aprovado. A contagem é exata em cada linha. Só na instrução que o Librarian pôs na entrada da função ela é o número de chamadas; um contador do próprio projeto conta as passagens pela linha dele, e uma função com mais de uma linha contada fica com a maior. O tempo é inclusivo e inflado pela contagem, o que pode mudar a ordem entre as funções.","The project says how to count a pass through a function (instrument in librarian.json); the Librarian puts that statement at the start of every function, in a copy, and runs the approved command. Each line's count is exact. Only on the statement the Librarian put at the function's entry is it the number of calls; the project's own counter counts the passes through its line, and a function with more than one counted line keeps the largest. Time is inclusive and inflated by the counting, which can change the order between functions."],
+  'help.hotSeparate': ["Para cada função que chama a função escolhida, a linha que a chama vira uma pergunta pequena a {model}, só com aquela declaração. As respostas são fatos conferidos mecanicamente; você aprova um a um ou em lote.","For each function that calls the chosen one, the line that calls it becomes a small question to {model}, with that declaration only. Answers are mechanically checked facts; you approve them one by one or as a batch."],
   'help.hotOptimize': ["Monta o envelope sugerido para esta função, com os fatos aprovados, e uma pergunta só com o que foi contado; a escada fica marcada. Você confere e pergunta.","Builds the suggested envelope for this function, with the reviewed facts, and a question made only of what was counted; the ladder is ticked. You check and ask."],
   'composer.askLadder': ['Perguntar pela escada ({n}) · {model}', 'Ask through the ladder ({n}) · {model}'],
   'ladder.on': ["Escada: {model}, com o portão em cada mudança","Ladder: {model}, with the gate on each change"],
@@ -1269,6 +1282,8 @@ const STRINGS = {
   'perf.intent.where': ['onde otimizar', 'where to optimize'],
   'perf.intent.optimize': ['otimizar uma função', 'optimize one function'],
   'perf.noModel': ['Respondido pela medição, sem nenhum modelo.', 'Answered from the measure, with no model.'],
+  'perf.ambiguous': ['É preciso escolher a função: a medição não foi consultada, e nenhum modelo foi usado.', 'A function has to be chosen: the measure was not read, and no model was used.'],
+  'perf.notFound': ['Nenhuma função corresponde ao nome pedido: a medição não foi consultada, e nenhum modelo foi usado.', 'No function matches the name asked for: the measure was not read, and no model was used.'],
   'perf.askModel': ['Perguntar ao modelo mesmo assim', 'Ask the model anyway'],
   'perf.toQwen': ['Conferir fatos com o modelo local ({n})', 'Check facts with the local model ({n})'],
   'perf.toLadder': ['Pedir esta mudança', 'Request this change'],
@@ -1286,11 +1301,11 @@ const STRINGS = {
   'help.skills': ['Uma skill é um texto de instruções sobre como trabalhar (a pasta skills/ ao lado de modelfiles/). A marcada entra no SYSTEM de tudo o que a página envia: perguntas, escada, fichas do Onde pesa e perguntas do caminho, no Ollama e no Claude. O formato de resposta que o Librarian pede continua valendo. Cada resposta mostra as skills que foram junto.', 'A skill is a text of instructions on how to work (the skills/ folder next to modelfiles/). The checked one joins the SYSTEM of everything the page sends: questions, ladder, Where it weighs facts and path questions, on Ollama and on Claude. The answer format the Librarian asks for still holds. Each answer shows the skills that went with it.'],
   'legend.district': ['Bairro: um arquivo', 'District: a file'],
   'legend.building': ['Prédio: uma função', 'Building: a function'],
-  'legend.height': ['Altura: quantas vezes rodou (sem medição, o tamanho da função)', 'Height: how many times it ran (without a measure, the size of the function)'],
+  'legend.height': ['Altura: a contagem observada (sem medição, o tamanho da função)', 'Height: the observed count (without a measure, the size of the function)'],
   'legend.heat': ['Cor: o tempo, de azul (pouco) a vermelho (muito); sem medição, uma cor só', 'Color: the time, from blue (little) to red (a lot); without a measure, one color'],
   'legend.ring': ['Anel: trava, espera ou E/S dentro de laço', 'Ring: a lock, wait or I/O inside a loop'],
   'legend.arc': ['Arco: quem chama e quem é chamado, ao clicar num prédio', 'Arc: caller and callee, when a building is clicked'],
-  'city.status': ['{functions} funções que rodaram em {districts} arquivos · arraste para girar, clique num prédio para ver quem ele chama', '{functions} functions that ran in {districts} files · drag to rotate, click a building to see what it calls'],
+  'city.status': ['{functions} funções com contagem acima de zero em {districts} arquivos · arraste para girar, clique num prédio para ver quem ele chama', '{functions} functions with a count above zero in {districts} files · drag to rotate, click a building to see what it calls'],
   'city.statusPlain': ['{functions} funções em {districts} arquivos · sem medição: altura pelo tamanho', '{functions} functions in {districts} files · no measure: height by size'],
   'city.statusNotYet': ['{functions} funções em {districts} arquivos · ainda não medido: altura pelo tamanho · Medir tudo (aba Investigar) conta o que roda', '{functions} functions in {districts} files · not measured yet: height by size · Measure everything (Investigate tab) counts what runs'],
   'city.statusUnavailable': ['{functions} funções em {districts} arquivos · medição por função não disponível neste projeto: altura pelo tamanho', '{functions} functions in {districts} files · per-function measure not available in this project: height by size'],
@@ -1306,6 +1321,9 @@ const STRINGS = {
   'city.statusFailed': ['{functions} funções em {districts} arquivos · a medição não pôde ser lida: altura pelo tamanho', '{functions} functions in {districts} files · the measure could not be read: height by size'],
   'city.notMeasured': ['{kind} · sem medição', '{kind} · no measure'],
   'city.tip': ['{calls} chamadas · {ms}', '{calls} calls · {ms}'],
+  'city.tipLines': ['maior contagem entre as linhas: {calls} · {ms}', 'largest count among its lines: {calls} · {ms}'],
+  'city.tipOwn': ['{calls} passagens pela linha contada · {ms}', '{calls} passes through the counted line · {ms}'],
+  'city.tipObserved': ['contagem observada: {calls} · {ms}', 'observed count: {calls} · {ms}'],
   'city.ring': ['trava, espera ou E/S em laço', 'lock, wait or I/O in a loop'],
   'mode.aria': ['Modo da pergunta', 'Question mode'],
   'mode.label': ['Modo', 'Mode'],
@@ -1708,7 +1726,7 @@ function hover() {
   if (!b) { tip.style.display = 'none'; return; }
   tip.replaceChildren(el('strong', { textContent: b.name.slice(0, 120) }),
     el('div', { textContent: b.row
-      ? t('city.tip', { calls: intPt(b.row.calls), ms: b.row.cpu_ms == null ? '—' : `${intPt(Math.round(b.row.cpu_ms))} ms` })
+      ? t({ entry_calls: 'city.tip', several_lines: 'city.tipLines', own_counter: 'city.tipOwn' }[b.row.count_kind] ?? 'city.tipObserved', { calls: intPt(b.row.calls), ms: b.row.cpu_ms == null ? '—' : `${intPt(Math.round(b.row.cpu_ms))} ms` })
       : t('city.notMeasured', { kind: state.nodes[state.index.get(b.id)]?.kind ?? '' }) }),
     ...(b.ring ? [el('div', { className: 'error', textContent: t('city.ring') })] : []),
     el('div', { className: 'muted mono', textContent: b.row?.start_line ? `${b.path}:${b.row.start_line}` : b.path }));
@@ -2449,7 +2467,7 @@ function suggestionView() {
         el('span', { className: 'tag', style: 'margin-right: 4px', textContent: t('envelope.role.' + item.role) }),
         selection.decisions.get(item.id)?.decision === 'removed' ? el('span', { className: 'tag', style: 'margin-right: 4px', textContent: t('envelope.declined') }) : null,
         el('span', { className: 'mono', textContent: name }), ` · ${item.path}:${item.start_line}–${item.end_line}`,
-        item.calls ? ` · ${t('envelope.calls', { n: intPt(item.calls) })}` : '',
+        item.calls ? ` · ${t({ entry_calls: 'envelope.calls', several_lines: 'envelope.callsLines', own_counter: 'envelope.callsOwn' }[hot?.rows.find(r => r.symbol === item.id)?.count_kind] ?? 'envelope.callsObserved', { n: intPt(item.calls) })}` : '',
         item.facts?.length ? el('span', { className: 'tag', style: 'margin-left: 4px', textContent: t('envelope.facts', { n: item.facts.length }) }) : null,
         el('div', { className: 'why', textContent: [item.left_out ? t('envelope.out.' + item.left_out) : '', ...item.reasons.map(reasonText)].filter(Boolean).join(' · ') })));
   };
@@ -3096,19 +3114,28 @@ function measuredOrigins(executions) {
 // ---- "Onde pesa": the Librarian counts every function itself (the project only says how to
 // count, in the profile's `instrument`), ranks them, and separates what goes to the light model
 // (one small question per written line) from what goes up the ladder (a change).
-let hot = null, hotTurns = [];
-const FREQUENT = 1e6;
+let hot = null, hotTurns = [], hotPicked = null;
 // qwen is out of the changes for now: 0 of 8 answers passed, nearly all refused by their form (see the plan).
 const LADDER_MODELS = [{ provider: 'claude-cli', modelfile: 'performance-claude', claude_model: 'haiku' }];
 const ladderLabel = () => LADDER_MODELS.map(m => [providerLabel(m.provider), m.claude_model ?? m.modelfile].filter(Boolean).join(' · ')).join(', ');
 const FACT_MODEL = { provider: 'ollama', modelfile: 'verificavel-qwen3coder' };
 const intPt = v => Number(v).toLocaleString(LANG === 'pt' ? 'pt-BR' : 'en-US');
+// A count as the page says it, by what the server says its line can be (`count_kind`): only the
+// statement put at a function's entry reads as its calls.
+const countedLines = id => (hot?.rows ?? []).filter(r => r.symbol && r.symbol === id).length;
+const lineOf = r => r.at.slice(r.path.length + 1);
+const callsText = r => { const n = intPt(r.calls);
+  return r.count_kind === 'entry_calls' ? t('hot.calls', { n }) : ['own_counter', 'several_lines'].includes(r.count_kind) ? t('hot.callsLine', { n, line: lineOf(r) }) : t('hot.callsObserved', { n }); };
+const runsText = r => { const n = intPt(r.calls), line = r.at && r.path ? lineOf(r) : '?';
+  return r.count_kind === 'entry_calls' ? t('hot.runs', { n }) : r.count_kind === 'own_counter' ? t('hot.runsOwn', { n, line })
+    : r.count_kind === 'several_lines' ? t('hot.runsLine', { n, line, k: countedLines(r.symbol) }) : t('hot.runsObserved', { n }); };
 // What the page knows about this edition's measure: `idle`, `pending` (being read), `ready`,
 // `none` (the server says there is none) or `failed` (it could not be read: no claim about it).
 let hotStatus = 'idle', hotFailure = '';
 function resetHot() {
   hot = null;
   hotTurns = [];
+  hotPicked = null;
   studio.measureAll = null;
   hotStatus = 'idle';
   buildCity();
@@ -3159,9 +3186,9 @@ async function runMeasure(note) {
   await loadCommands();
 }
 $('#hotMeasure').addEventListener('click', () => busy([$('#hotMeasure')], $('#hotNote'), () => runMeasure($('#hotNote'))));
-// The hottest function among the frequent ones, and the callers its calls come from.
+// The function the person chose, and the callers its calls come from.
 function hotTarget() {
-  const target = hot?.rows.find(r => r.calls >= FREQUENT);
+  const target = hot?.rows.find(r => r.at === hotPicked);
   if (!target) return null;
   const callers = (target.callers ?? []).filter(c => c.calls >= target.calls * 0.05);
   const row = id => hot.rows.find(r => r.symbol === id);
@@ -3182,20 +3209,25 @@ function renderHot() {
   };
   const ms = v => v == null ? '—' : `${intPt(Math.round(v))} ms`;
   const sep = hotTarget();
-  const separate = sep ? el('div', { className: 'hot-sep' },
-    el('div', {}, t('hot.hottest', { n: intPt(FREQUENT) }), ' ', goTo(sep.target.symbol, sep.target.name), ` · ${t('hot.calls', { n: intPt(sep.target.calls) })}`),
-    el('div', { className: 'muted', style: 'font-size: 12px' }, t('hot.callers'), ' ',
-      ...sep.callers.flatMap((c, k) => [k ? ', ' : '', goTo(c.symbol, c.name), ` (${intPt(c.calls)})`])),
+  const ranked = hot.rows.filter(r => r.symbol && r.calls > 0);
+  const picker = el('select', { id: 'hotPick', onchange: () => { hotPicked = picker.value || null; renderHot(); } },
+    el('option', { value: '', textContent: t('hot.pickNone') }),
+    ...ranked.map(r => el('option', { value: r.at, textContent: `${r.name} · ${callsText(r)}` })));
+  picker.value = sep ? hotPicked : '';
+  const separate = ranked.length ? el('div', { className: 'hot-sep' },
+    el('div', { className: 'row', style: 'gap: 6px' }, t('hot.pick'), picker),
+    sep ? el('div', { className: 'muted', style: 'font-size: 12px' }, t('hot.callers'), ' ',
+      ...sep.callers.flatMap((c, k) => [k ? ', ' : '', goTo(c.symbol, c.name), ` (${intPt(c.calls)})`])) : null,
     el('div', { className: 'row', style: 'gap: 6px; margin-top: 6px' },
-      el('button', { className: 'primary', textContent: t('hot.askFacts', { n: sep.lines.length, model: choiceLabel(FACT_MODEL) }), disabled: !sep.lines.length,
+      el('button', { className: 'primary', textContent: sep ? t('hot.askFacts', { n: sep.lines.length, model: choiceLabel(FACT_MODEL) }) : t('hot.askFactsNone', { model: choiceLabel(FACT_MODEL) }), disabled: !sep?.lines.length,
         onclick: ev => busy([ev.target], $('#hotNote'), () => askHotFacts(sep)) }),
       el('button', { id: 'hotApprove', textContent: t('hot.approveAll'), hidden: !hotTurns.length, onclick: ev => approveHotFacts(ev.target) }),
-      helpButton(t('help.hotSeparate', { model: choiceLabel(FACT_MODEL) })))) : el('p', { className: 'muted', textContent: t('hot.noFrequent', { n: intPt(FREQUENT) }) });
+      helpButton(t('help.hotSeparate', { model: choiceLabel(FACT_MODEL) })))) : el('p', { className: 'muted', textContent: t('hot.noneRan') });
   const row = r => el('li', {}, el('details', { className: 'finding' },
     el('summary', {}, el('button', { className: 'primary investigate', textContent: t('hot.optimize'), title: t('help.hotOptimize'),
       onclick: ev => { ev.preventDefault(); busy([ev.target], $('#hotNote'), () => optimize(r)); } }),
       ' ', r.symbol ? goTo(r.symbol, r.name) : el('span', { className: 'mono', textContent: r.at }),
-      el('span', { className: 'tag measured', style: 'margin-left: 4px', textContent: t('hot.calls', { n: intPt(r.calls) }) }),
+      el('span', { className: 'tag measured', style: 'margin-left: 4px', textContent: callsText(r) }),
       el('span', { className: 'tag', style: 'margin-left: 4px', textContent: ms(r.cpu_ms) })),
     (r.callers ?? []).length ? el('div', { className: 'muted', style: 'font-size: 12px' }, t('hot.callers'), ' ',
       ...r.callers.slice(0, 6).flatMap((c, k) => [k ? ', ' : '', goTo(c.symbol, c.name), ` (${intPt(c.calls)})`])) : null,
@@ -3218,7 +3250,7 @@ function measureHow() {
     measureDetail ??= await api('GET', `/api/measure-detail?${query({ key: studio.project.key, run: studio.run })}`);
     if (measureDetail.execution !== hot.execution) return;
     const rows = hot.rows.filter(r => r.symbol).slice(0, 40);
-    // Opens on the heaviest function that received the counter: some may already have their own.
+    // Opens on the most called function that received the counter: some may already have their own.
     const shown = () => rows.find(r => r.at === measurePicked) ?? rows.find(r => measureHunk(r).length) ?? rows[0];
     const lines = el('div');
     const paint = () => lines.replaceChildren(...measureLines(shown()));
@@ -3286,7 +3318,11 @@ function perfCard(perf) {
   return el('div', { className: 'hot-sep perf-card' },
     el('strong', { textContent: perf.question }),
     el('div', { className: 'muted', style: 'font-size: 12px', textContent: t('perf.route', { intent, words: r.matched.join(', ') }) }),
-    perf.needs_measure ? null : el('div', { className: 'muted', style: 'font-size: 12px' }, t('perf.noModel'), helpButton(t('help.perf', { facts: choiceLabel(FACT_MODEL), ladder: ladderLabel() }))),
+    // Where the answer came from: `execution` comes when a measure was read. A question with no
+    // intent gets it too, but no card: the page sends it to the model.
+    perf.execution ? el('div', { className: 'muted', style: 'font-size: 12px' }, t('perf.noModel'), helpButton(t('help.perf', { facts: choiceLabel(FACT_MODEL), ladder: ladderLabel() })))
+      : r.target?.status === 'ambiguous' ? el('div', { className: 'muted', style: 'font-size: 12px', textContent: t('perf.ambiguous') })
+      : r.target?.status === 'not_found' ? el('div', { className: 'muted', style: 'font-size: 12px', textContent: t('perf.notFound') }) : null,
     ...perf.answer.map(a => el('div', { style: 'font-size: 13px; margin-top: 4px', textContent: a })),
     ...perf.facts.map(f => el('div', { style: 'font-size: 12px; margin-top: 6px' }, tag(t('perf.qwen')), f.text)),
     ...perf.changes.map(c => el('div', { style: 'font-size: 12px; margin-top: 6px' }, tag(t('perf.ladder')), c.text, ' ',
@@ -3345,8 +3381,8 @@ async function askHotFacts(sep) {
   perfAsked = null;
   for (const [k, item] of sep.lines.entries()) {
     say($('#hotNote'), t('hot.asking', { k: k + 1, n: sep.lines.length, name: item.caller.name, model: choiceLabel(FACT_MODEL) }));
-    const question = t('hot.factQuestion', { name: item.caller.name, line: item.line, text: item.text, calls: intPt(item.caller.calls),
-      target: sep.target.name, targetCalls: intPt(sep.target.calls) });
+    const question = t('hot.factQuestion', { name: item.caller.name, line: item.line, text: item.text, runs: runsText(item.caller),
+      target: sep.target.name, targetRuns: runsText(sep.target) });
     const turn = await api('POST', '/api/gathered-question', { key: studio.project.key, run: studio.run, question, nodes: [item.caller.symbol], with_facts: false,
       origin: { kind: 'hot', summary: `${item.caller.name}:${item.line}` } });
     studio.turns.push(turn);
@@ -3395,7 +3431,7 @@ async function optimize(r) {
   gatheredFolded = false;
   setMode('improve');
   $('#ladderOn').checked = true;
-  $('#question').value = t('hot.optimizeQuestion', { name: r.name, calls: intPt(r.calls),
+  $('#question').value = t('hot.optimizeQuestion', { name: r.name, runs: runsText(r),
     called: called.length ? t('hot.optimizeCalled', { list: called.map(c => `${c.name} (${intPt(c.calls)})`).join(', ') }) : '' });
   renderGathered();
   inspect();
@@ -3455,7 +3491,7 @@ function renderLadder() {
 
 // ---- The map: a city. Each file is a district on a grid and each function a building, with its
 // arcs from caller to callee on the chosen building; fixed positions, no forces. With "Medir tudo",
-// only the functions that ran: height by calls (log scale), color by time, a red ring where a
+// only the functions with a count above zero: height by calls (log scale), color by time, a red ring where a
 // lock, wait or I/O sits in a loop. Without a measure (none yet, or a language it does not count):
 // every function, height by size, one color.
 const CITY = { lot: 10, gap: 5, street: 30, floor: 1.5 }, SEGMENTS = 16;
@@ -3470,7 +3506,7 @@ function clearCity() {
   $('#cityLabels').replaceChildren();
 }
 
-// The buildings' data: from the measure when it has functions that ran, else from the graph.
+// The buildings' data: from the measure when it has counts above zero, else from the graph.
 function cityFunctions() {
   const pathOf = new Map();
   for (const e of state.edges) if (e.kind === 'declares') pathOf.set(e.t, state.nodes[e.s].label);
@@ -3981,7 +4017,7 @@ const farEnd = l => callsMode() ? l.to : l.from;
 const dashed = l => callsMode() ? l.resolution === 'homonym' : l.candidates > 1;
 
 // What the latest "Medir tudo" says of a function: how often it ran and for how long, that it
-// was counted and never ran, or nothing (not counted). Built once per measure.
+// was counted with no pass observed, or nothing (not counted). Built once per measure.
 let hotIndex = null;
 function measure() {
   if (!hot?.rows?.length) return null;
@@ -4108,7 +4144,7 @@ function pathGraph(data) {
     const row = m?.rows.get(n.id);
     const text = shortName(n.label);
     const where = n.container ?? n.path.split('/').slice(-2).join('/');
-    const count = row ? `${intPt(row.calls)} × · ${row.cpu_ms == null ? '—' : `${intPt(Math.round(row.cpu_ms))} ms`}` : idle(n.id) ? t('path.notRan') : null;
+    const count = row ? `${{ entry_calls: `${intPt(row.calls)} ×`, several_lines: `≤ ${intPt(row.calls)} ×`, own_counter: t('path.countOwn', { n: intPt(row.calls), line: lineOf(row) }) }[row.count_kind] ?? t('path.countObserved', { n: intPt(row.calls) })} · ${row.cpu_ms == null ? '—' : `${intPt(Math.round(row.cpu_ms))} ms`}` : idle(n.id) ? t('path.notRan') : null;
     nodeInfo.set(n.id, { ...n, text, where, count, heat: row ? Math.log1p(row.cpu_ms ?? 0) / Math.log1p(m.maxMs) : null });
     return { id: n.id, width: Math.max(90, text.length * 7.4 + 26, where.length * 6.2 + 26, (count?.length ?? 0) * 6.4 + 26), height: count ? 60 : 44 };
   });

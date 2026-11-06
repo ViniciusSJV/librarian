@@ -385,6 +385,14 @@ fn a_call_with_homonyms_is_a_gap_until_the_measure_settles_it() {
     let both = measure(&catalog, &[("impl Disk::area_of", 10.), ("impl Square::area_of", 3.), ("impl Scene::sum", 1.)]);
     let open = envelope::candidates(&catalog, &chosen, Some(&both)).unwrap();
     assert_eq!(gaps(&open, "homonym_call").iter().find(|g| g.text.contains("area_of")).unwrap().candidates.len(), 2);
+
+    // One ran and the other was never counted: the selection settles it all the same, though the
+    // measure says nothing about the other one. Known and kept as it is; the page's flowchart asks
+    // for more before settling. This holds the behavior in place, it does not endorse it.
+    let uncounted = measure(&catalog, &[("impl Disk::area_of", 10.), ("impl Scene::sum", 1.)]);
+    let settled = envelope::candidates(&catalog, &chosen, Some(&uncounted)).unwrap();
+    assert!(!gaps(&settled, "homonym_call").iter().any(|g| g.text.contains("area_of")), "{:#?}", settled.gaps);
+    assert!(selected(&envelope::select(&catalog, &settled, Some(&uncounted), envelope::BUDGET_BYTES, 16)).contains(&("impl Disk::area_of", "cost")));
 }
 
 #[test]

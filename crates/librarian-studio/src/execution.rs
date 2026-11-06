@@ -308,7 +308,7 @@ impl Store {
             "sources_line_endings_only": copy.line_endings,
             "machine": machine(), "started": started, "finished": stamp(),
             "runs": runs, "summary": summary(&runs), "limits": LIMITS,
-            "instrumentation": { "statement": instrument.statement, "functions": plan.functions, "skipped": plan.skipped,
+            "instrumentation": { "statement": instrument.statement, "functions": plan.functions, "skipped": plan.skipped, "excluded": plan.excluded,
                 "diff_sha256": hash(plan.diff.as_bytes()), "files": copy.touched },
         });
         fs::write(dir.join("execution.json"), serde_json::to_vec_pretty(&record)?)?;
@@ -342,8 +342,7 @@ impl Store {
         // What is costly by its kind, not by how often its function runs: an inventory operation
         // other than arithmetic (a lock, a sleep, I/O) inside a loop of a function that ran.
         let (found, _, _) = self.inventory_of(key, run)?;
-        let calls: std::collections::BTreeMap<String, f64> = hot["rows"].as_array().into_iter().flatten()
-            .filter_map(|r| Some((r["symbol"].as_str()?.to_owned(), r["calls"].as_f64()?))).collect();
+        let calls = crate::instrument::calls_by_symbol(hot["rows"].as_array().map_or(&[], |r| r.as_slice()));
         let structural: Vec<Value> = found.operations.iter()
             .filter(|o| o.operation != "math" && o.in_loop && calls.get(&o.symbol).is_some_and(|c| *c > 0.))
             .map(|o| json!({ "symbol": o.symbol, "name": o.symbol_name, "path": o.path, "line": o.line, "text": o.text.split_whitespace().collect::<Vec<_>>().join(" "),
