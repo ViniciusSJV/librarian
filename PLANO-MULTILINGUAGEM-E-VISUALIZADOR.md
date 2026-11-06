@@ -1605,14 +1605,14 @@ Nos 8 envios de mudança da gravação do vídeo 12, das 24 propostas só 1 saiu
 |---|---|---|
 | 0 | Preservação dos dados | Feita, fora do Git |
 | 1 | Diagnóstico visual e contratos | Feita, sem alterar arquivos |
-| 2 | Correções e remoções aprovadas | **Feita:** `99f69f3`, local, sem push |
-| 3 | "Onde pesa" | Não iniciada |
+| 2 | Correções e remoções aprovadas | **Feita:** `99f69f3` |
+| 3 | "Onde pesa" | Em andamento: Passos 1 e 2 concluídos (`47337e9`, baterias em `9659de5`); Passo 3 não iniciado |
 | 4 | Evidence Builder | Não iniciada |
 | 5 | Pacote e revisão, C1 e C2 | Não iniciada |
 | 6 | Fact Builder e portão | Não iniciada |
 | 7 | Verificação | Não iniciada |
 
-**Regras de trabalho:** um commit local por etapa aprovada, sem push; `STUDIO.md` e plano só depois da validação; não misturar documentação e código sem necessidade; não modificar resultados históricos; não rodar experimento com LLM sem necessidade; não aumentar o envelope; não reativar investigações suspensas; não criar heurísticas sem evidência. Preservar a cidade 3D e o fluxograma. A skill `frontend-design` vale para o trabalho na interface, e `ponytail` só quando for pertinente; nenhuma das duas deve ser reinstalada.
+**Regras de trabalho:** um commit local por etapa aprovada, e publicação só com pedido do usuário; `STUDIO.md` e plano só depois da validação; não misturar documentação e código sem necessidade; não modificar resultados históricos; não rodar experimento com LLM sem necessidade; não aumentar o envelope; não reativar investigações suspensas; não criar heurísticas sem evidência. Preservar a cidade 3D e o fluxograma. A skill `frontend-design` vale para o trabalho na interface, e `ponytail` só quando for pertinente; nenhuma das duas deve ser reinstalada.
 
 ### Decisões que valem para todas as etapas
 

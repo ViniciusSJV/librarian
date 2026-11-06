@@ -1,6 +1,6 @@
 # Contexto de continuidade do Librarian
 
-Conferido no repositório em 05/11/2026, ao fim da Etapa 2 da frente do Studio. Documento de transferência entre sessões. Não substitui o plano: as tabelas completas estão em [PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md), da linha 1116 em diante, e o andamento desta frente em [Evidence Builder no Studio](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evidence-builder-no-studio-etapas-0-a-7-05112026).
+Conferido no repositório em 06/11/2026, com os Passos 1 e 2 da Etapa 3 da frente do Studio concluídos. Documento de transferência entre sessões. Não substitui o plano: as tabelas completas estão em [PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md), da linha 1116 em diante, e o andamento desta frente em [Evidence Builder no Studio](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evidence-builder-no-studio-etapas-0-a-7-05112026).
 
 **Como ler as marcas:** **[confirmado]** foi verificado agora no repositório ou nos dados gravados. **[registrado]** vem do plano ou da memória de trabalho, sem nova verificação. **[hipótese]** não foi demonstrado. **[não confirmado]** não pôde ser verificado.
 
@@ -68,13 +68,16 @@ Resultados são hipóteses, não regras. O mesmo envelope já deu 4/6 e 8/8 em m
 
 ## 3. Estado atual do repositório [confirmado]
 
-**Branch:** `main`, 11 commits à frente de `origin/main` até `a530017`, mais o ajuste de documentação que traz este texto: 12 no total. Sem stash. **Decisão do usuário: não fazer push por enquanto.**
+**Branch:** `main`. Sobre `7868912`, o último commit em `origin/main` antes desta publicação, há 15 commits: os 14 da tabela abaixo e o que traz este texto. Sem stash. **A publicação em `origin/main` está planejada e não está confirmada neste texto:** veja a [seção 11](#11-publicação-dos-passos-1-e-2-da-etapa-3-06112026).
 
-**Commits locais sem push (do mais novo ao mais antigo):**
+**Commits sobre `7868912` (do mais novo ao mais antigo):**
 
 | Commit | Conteúdo |
 |---|---|
-| O mais recente | Docs: este estado, depois do commit da documentação e do arquivo da Etapa 2. O hash não cabe aqui: confira no `git log` |
+| O mais recente | Docs: este registro de continuidade. O hash não cabe aqui: confira no `git log` |
+| `9659de5` | Test: baterias de tela preservadas em `crates/librarian-studio/tests/tela` |
+| `47337e9` | **Código:** Passos 1 e 2 da Etapa 3, com cobertura, contagem e resolução do alvo |
+| `746fa31` | Docs: estado depois do commit da documentação e do arquivo da Etapa 2 |
 | `a530017` | Docs: contrato de `origin.selection`, limitações e etapas do Evidence Builder |
 | `99f69f3` | **Código:** Etapa 2 da frente do Studio, com decisões e proveniência |
 | `8b575ee` | Docs: este arquivo |
@@ -87,11 +90,11 @@ Resultados são hipóteses, não regras. O mesmo envelope já deu 4/6 e 8/8 em m
 | `9fcb05e` | Docs: notas geradas e condição da função perguntada, condições encerradas por enquanto |
 | `7b13e13` | Docs: portão com o modelo, condições e invariantes, notas geradas como próximo experimento |
 
-Último commit já enviado: `7868912`.
+Último commit em `origin/main` antes desta publicação: `7868912`.
 
 **Sem commit:** nada neste repositório, salvo trabalho posterior. O contrato e a documentação da Etapa 2 estão em `a530017`.
 
-**Testes, rodados em `99f69f3`:** `cargo test --workspace`: **197 passaram, 0 falharam, 2 ignorados.** Os ignorados são o gabarito (`crates/librarian-ingest/tests/gabarito.rs`), que depende de dados locais, e um teste em `crates/librarian-llm-engine/src/cli/send_ollama.rs`.
+**Testes, rodados em `9659de5`:** `cargo test --workspace --locked`: **240 passaram, 0 falharam, 2 ignorados.** Os ignorados são o gabarito (`crates/librarian-ingest/tests/gabarito.rs`), que depende de dados locais, e um teste em `crates/librarian-llm-engine/src/cli/send_ollama.rs`.
 
 **Outros projetos:**
 
@@ -286,7 +289,7 @@ A resolve o que foi perguntado, com custo alto. B não tem piora registrada e n�
 - Consolidar lacunas e homônimos e avançar para o frontend.
 - Próxima frente: evolução do Librarian Studio com Evidence Builder, incluindo as visualizações "Onde pesa" e Pareto.
 - Manter o agnosticismo de linguagem e preservar a arquitetura existente.
-- Sem push até decisão posterior. `measures` no `logistica-api` também aguarda.
+- Publicação só com pedido do usuário: veja a [seção 11](#11-publicação-dos-passos-1-e-2-da-etapa-3-06112026). `measures` no `logistica-api` aguarda decisão.
 - O frontend deve tornar o trabalho do Librarian visível, não mudar o que o Librarian considera evidência.
 - Dados experimentais preservados antes de qualquer limpeza, fora do Git.
 
@@ -359,7 +362,7 @@ A resolve o que foi perguntado, com custo alto. B não tem piora registrada e n�
 
 **Decisões do usuário em aberto:**
 
-- Push dos 12 commits: aguardando.
+- Publicação em `origin/main`: planejada, não confirmada neste texto (seção 11).
 - Cópia do arquivo de preservação fora desta máquina: não decidida.
 - Commit do `measures` no `logistica-api`: aguardando.
 - Limpeza de `Temp/lt-ev`: não limpar ainda.
@@ -371,7 +374,7 @@ A resolve o que foi perguntado, com custo alto. B não tem piora registrada e n�
 
 **Atualização de 06/11/2026: os Passos 1 e 2 da Etapa 3 estão concluídos; o Passo 3 não foi iniciado.** Já estão implementados: cobertura por função; ordem por contagem observada, com o tempo como referência; sem `FREQUENT` nem alvo automático; `count_kind` por origem; `counted_no_passes` e `zero_evidence`; resolução do alvo antes da medição, por símbolo; e, no cartão, a origem da resposta decidida por `execution`. O contrato está no [STUDIO.md](STUDIO.md#medição-capacidade-não-é-cobertura), e as baterias de tela desta etapa estão em [crates/librarian-studio/tests/tela](crates/librarian-studio/tests/tela/README.md), junto com `etapa2c.js`: fora do `cargo test`, porque precisam de um ambiente e de dados que não estão no Git. O texto abaixo guarda o contexto de antes disso.
 
-**Etapas 0, 1 e 2 feitas; a próxima é a Etapa 3, "Onde pesa", ainda não iniciada e dependente de autorização.** As decisões estão no plano, em [Evidence Builder no Studio](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evidence-builder-no-studio-etapas-0-a-7-05112026), e prevalecem sobre esta seção, que guarda o contexto anterior a elas. O contrato do registro e as limitações estão no [STUDIO.md](STUDIO.md#registro-da-seleção-originselection-formato-1).
+**Etapas 0, 1 e 2 feitas; a Etapa 3, "Onde pesa", está em andamento, com os Passos 1 e 2 concluídos e o Passo 3 dependente de autorização.** As decisões estão no plano, em [Evidence Builder no Studio](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evidence-builder-no-studio-etapas-0-a-7-05112026), e prevalecem sobre esta seção, que guarda o contexto anterior a elas. O contrato do registro e as limitações estão no [STUDIO.md](STUDIO.md#registro-da-seleção-originselection-formato-1).
 
 ### Por que esta evolução
 
@@ -444,7 +447,7 @@ Antes do Passo 2, `hot.ranking` dizia "Mais tempo, contado pelo projeto", e a "m
 - `index.html` é um arquivo único, com textos em pares pt/en (`t('chave')`) e tokens de cor. Temas por `prefers-color-scheme` e `data-theme`: verifique os dois temas e a tela estreita.
 - **Não testar em raiz em uso:** `askLadder` salva settings, e já desligou `allow_hypothesis` numa cópia. Use `LIBRARIAN_ROOT` e `LIBRARIAN_COPIES` isolados, porta própria e projeto descartável.
 - **O Studio serve a página de `LIBRARIAN_ROOT/crates/librarian-studio/web/index.html`.** Numa raiz isolada, copie o arquivo atual antes de testar, ou verá uma versão antiga.
-- Teste de tela: Playwright em `C:/Users/beatl/Videos/librarian-ferramentas/pw`, com o padrão de escada simulada em `ui4.js` e `ui5.js`, no arquivo de rodadas. Projeto novo precisa de `POST /api/project` e `POST /api/generate` antes de abrir.
+- Teste de tela: Playwright, com o caminho em `LIBRARIAN_TESTE_PLAYWRIGHT`, e o padrão de escada simulada em `ui4.js` e `ui5.js`, no arquivo de rodadas. Projeto novo precisa de `POST /api/project` e `POST /api/generate` antes de abrir.
 - `cargo` sempre com `CARGO_TARGET_DIR` fora do projeto se houver studio ou experimento rodando.
 - Manter o agnosticismo: o texto da tela não pode supor Rust, `matrix.rs` ou `renderer`.
 
@@ -457,7 +460,7 @@ As investigações da seção 7, e também: ordenar a seleção por tempo; troca
 1. **Leia este arquivo inteiro.** Depois, no plano, da linha 1116 em diante, quando precisar de tabelas completas.
 2. **Confirme o estado, sem confiar neste texto:**
    - `git status -sb`
-   - `git log --oneline origin/main..HEAD`, que deve listar 12 commits, de `7b13e13` a "Docs: estado apos o commit da documentacao e o arquivo da Etapa 2", salvo trabalho posterior.
+   - `git log --oneline origin/main..HEAD`, que vem vazio com a publicação feita, ou lista os 15 commits da [seção 11](#11-publicação-dos-passos-1-e-2-da-etapa-3-06112026) sem ela, salvo trabalho posterior.
    - Antes de qualquer limpeza de temporários, verifique os dados: `sha256sum -c MANIFESTO.sha256 --quiet` em `.studio/arquivo-copias/rodadas-20261104` e a existência de `root` e `rootpy` no scratchpad. Não remova, sobrescreva nem reorganize nada sem aprovação.
 3. **Leia a seção [Evidence Builder no Studio](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evidence-builder-no-studio-etapas-0-a-7-05112026) do plano** e o [contrato no STUDIO.md](STUDIO.md#registro-da-seleção-originselection-formato-1). Antes de usar as baterias de tela, confira se o scratchpad citado na seção 3 ainda existe. Se não existir, restaure pelo `LEIA-ME.md` do arquivo de preservação, sabendo que esse caminho ainda não foi testado.
 4. **Não inicie o Passo 3 da Etapa 3 sem autorização do usuário.** Apresente testes, diff e resultados antes do commit de cada etapa, e aguarde.
@@ -474,3 +477,61 @@ As investigações da seção 7, e também: ordenar a seleção por tempo; troca
 - O efeito das rodadas de lacuna num fluxo real, nunca medido.
 - A troca manual de tema por `data-theme`, não testada nestes ajustes.
 - Se a restauração do arquivo de preservação reproduz as baterias: nunca executada.
+
+## 11. Publicação dos Passos 1 e 2 da Etapa 3 (06/11/2026)
+
+**Situação: os Passos 1 e 2 estão concluídos, e a publicação em `origin/main` está planejada, mas não confirmada neste texto.** Ela depende de autorização do usuário e acontece depois do commit que traz este registro, cujo hash não cabe aqui. Confira o estado real com os comandos abaixo.
+
+**O Passo 3 não foi iniciado.** O objetivo da próxima sessão é iniciá-lo, com autorização do usuário.
+
+**Os 14 commits, do mais antigo ao mais novo, sobre `7868912`:**
+
+| Hash | Mensagem |
+|---|---|
+| `7b13e133ad2a52560fa3fee27a17e9291efe2bcd` | Docs: portao com o modelo, condicoes e invariantes medidas, e notas geradas como proximo experimento |
+| `9fcb05e0a1efd63ee1983761679e48fdbc6b1413` | Docs: notas geradas por script e condicao da funcao perguntada, linha de condicoes encerrada por enquanto |
+| `02d7ae6cae6a536af9481dcf1dbfac5e7109fbfa` | Docs: tempo na selecao, contagem como medida confiavel e correcao da tela Onde pesa para o front |
+| `bab430adf06973f5b712369ce498d06797d06114` | Docs: o que ficou de fora do envelope, classes de ausencia e defeitos no caminho da lacuna |
+| `e07c038b98cfe59778a64730ea5a57d6945ae6bc` | Docs: Object e o trait em r5 sem conclusao, lacunas suspensas e decisoes sobre os defeitos |
+| `abb682acc799af4e6dcbe37bf67b84cb9718a228` | Lacuna: metodo de dois traits nao e adivinhado, trait pedido nao e filtrado e a rodada sem espaco aparece no registro |
+| `df43138ef2b79e3c12f6fa89ce1afa587a7dc325` | Docs: defeitos da lacuna corrigidos, rodada sem espaco e linha de base dos homonimos |
+| `94e22383ce8bdf39e98314e1a3b3ab1ff8b9b292` | Docs: homonimos suspensos, sem implementar, e diagnostico antes da proxima frente do Studio |
+| `8b575eebee6c3a029f36c4ab90b247482d1541d8` | Docs: contexto de continuidade para a proxima sessao |
+| `99f69f3deff704ff6be8b33812600b6babc301ab` | feat(studio): finalize etapa 2 de decisões e proveniência |
+| `a530017643e5c6d8f25e1a2dbec11c4dc0f943f8` | Docs: contrato de selecao, limitacoes e etapas do Evidence Builder |
+| `746fa31e9b2afa5cc99b956686f83f34d40f7e00` | Docs: estado apos o commit da documentacao e o arquivo da Etapa 2 |
+| `47337e9d66db43d3554bacebedeb53c625ea68b7` | feat(studio): passos 1 e 2 da etapa 3, cobertura, contagem e resolucao do alvo |
+| `9659de5fc8ae479249f26a5974f6cf75ea56b92a` | Test: preserva regressoes dos passos 1 e 2 |
+
+O histórico local foi reescrito antes da primeira publicação, só em documentos, e os seis últimos commits mudaram de hash. O mapa do antigo para o novo está em `.studio/arquivo-copias/reescrita-hashes-20261106`, fora do Git, com os originais dos 15 arquivos do arquivo de preservação em que as citações foram trocadas.
+
+**Testes em `9659de5`:**
+
+| Verificação | Resultado |
+|---|---|
+| `cargo test --workspace --locked` | 240 aprovados, 0 falhas, 2 ignorados |
+| `tela-cartao.js` | 37 de 37 |
+| `tela-zero.js` | 29 de 29 |
+| `tela-origem.js` | 32 de 32 |
+| `tela-nomes.js` | 12 de 12 |
+| `tela-passo2.js` | 9 de 9 |
+| `etapa2c.js` | 45 de 45 |
+| Gabarito, 2 execuções | Mesma saída da base |
+
+`etapa2.js` (66 de 66) e `etapa2b.js` (75 de 75) rodaram com o mesmo código antes da reescrita, e as mutações, antes disso; não foram repetidas depois dela. O código e as baterias são idênticos, byte a byte, aos testados antes da reescrita.
+
+**Limitações conhecidas e aceitas:**
+
+- Uma pergunta sem intenção reconhecida ("Bom dia"), com medição, traz `execution` na API, sem cartão na tela.
+- Expressões como `v1.2` e `e.g.` podem ser lidas como nomes qualificados inexistentes (veja o [STUDIO.md](STUDIO.md#onde-pesa-medir-tudo)).
+- Em `otimize Tuple::dot e cross`, só o nome qualificado é reconhecido.
+- As baterias de tela ficam fora do `cargo test` e do CI, dependem de cerca de 1,2 GB de dados fora do Git e nunca rodaram em outra máquina. `etapa2.js` e `etapa2b.js` continuam fora do repositório.
+- `cargo fmt --check` já falhava antes destes passos; o projeto não usa formatação global.
+- O histórico de `8b575ee` a `9659de5` ainda contém um caminho local nesta linha de contexto; o nome de usuário já era público em `origin/main`, e o texto atual não o traz.
+
+**Para reconstruir o contexto na próxima sessão:**
+
+1. Leia este arquivo, a [seção do plano](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evidence-builder-no-studio-etapas-0-a-7-05112026) e a memória de trabalho, que guarda as preferências de commit do usuário.
+2. Rode `git fetch origin`, `git status -sb` e `git log --oneline origin/main..HEAD`. Com a publicação feita, a lista vem vazia e `git rev-parse HEAD origin/main` dá o mesmo hash, salvo trabalho posterior. Sem ela, a lista traz estes 14 commits e o que traz este registro.
+3. Nunca use force push, e não publique sem pedido do usuário.
+4. Não inicie o Passo 3 sem autorização explícita.
