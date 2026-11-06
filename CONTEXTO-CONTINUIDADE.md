@@ -18,13 +18,13 @@ Lema do projeto: *condensar fatos a partir de vapores de nuances*. Princípio de
 |---|---|
 | Acervo e edition | `crates/librarian-ingest` |
 | Grafo usado pelo Studio | `crates/librarian-ingest/src/graph/` (contrato `v2`) |
-| Crate `librarian-graph-engine` | Existe, mas o Studio **não depende dele**: o Cargo do Studio lista só `librarian-ingest` e `librarian-llm-engine`. Sua referência (`WORKFLOW-V0.1.md`) é do fluxo formal de dossiês 0.1 |
+| Crate `librarian-graph-engine` | Dossiês e query preparada. O Studio **não depende dele diretamente**: o Cargo do Studio lista só `librarian-ingest` e `librarian-llm-engine`. **Depende dele de forma transitiva:** `prepare.rs`, em `librarian-ingest`, usa `prepare_query_formatted`, `LineFormat`, `PreparedQuery` e `Source` para montar a query. O grafo que o Studio desenha não vem desse crate. Sua referência (`WORKFLOW-V0.1.md`) é do fluxo formal de dossiês 0.1 |
 | Evidence Builder (seleção) | Não é um crate: `crates/librarian-ingest/src/envelope.rs` |
 | LLM Engine | `crates/librarian-llm-engine`, com o contrato em `CLAIMS.md` |
 | Escada e portão | `crates/librarian-studio/src/ladder.rs`, `main.rs` e `execution.rs` |
 | Interface | Um único `crates/librarian-studio/web/index.html` |
 
-Ao ler "Graph Engine" em pedidos e documentos, confirme se é o grafo de `librarian-ingest` ou o crate antigo.
+Ao ler "Graph Engine" em pedidos e documentos, confirme se é o grafo de `librarian-ingest` ou o crate de dossiês.
 
 ### Responsabilidades
 
@@ -68,7 +68,7 @@ Resultados são hipóteses, não regras. O mesmo envelope já deu 4/6 e 8/8 em m
 
 ## 3. Estado atual do repositório [confirmado]
 
-**Branch:** `main`. Sobre `7868912`, o último commit em `origin/main` antes desta publicação, há 15 commits: os 14 da tabela abaixo e o que traz este texto. Sem stash. **Publicados em `origin/main`, em `f6f3958`,** conferido em 06/11/2026: veja a [seção 12](#12-passo-3-encerrado-e-sequência-da-etapa-3-06112026). Sobre `f6f3958` há dois commits locais, sem push: o da 4A (`1908658`, [seção 13](#13-4a-concluída-e-encerrada-06112026)) e o da 4B ([seção 14](#14-4b-concluída-e-encerrada-06112026)).
+**Branch:** `main`. Sobre `7868912`, o último commit em `origin/main` antes desta publicação, há 15 commits: os 14 da tabela abaixo e o que traz este texto. Sem stash. **Publicados em `origin/main`, em `f6f3958`,** conferido em 06/11/2026: veja a [seção 12](#12-passo-3-encerrado-e-sequência-da-etapa-3-06112026). Sobre `f6f3958`, também publicados: a 4A (`1908658`, [seção 13](#13-4a-concluída-e-encerrada-06112026)), a 4B (`3b64f66`, [seção 14](#14-4b-concluída-e-encerrada-06112026)) e a apresentação pública (`5136dbe`): veja a [seção 15](#15-publicação-da-4a-da-4b-e-da-apresentação-06112026).
 
 **Commits sobre `7868912` (do mais novo ao mais antigo):**
 
@@ -461,7 +461,7 @@ As investigações da seção 7, e também: ordenar a seleção por tempo; troca
 1. **Leia este arquivo inteiro.** Depois, no plano, da linha 1116 em diante, quando precisar de tabelas completas.
 2. **Confirme o estado, sem confiar neste texto:**
    - `git status -sb`
-   - `git log --oneline origin/main..HEAD`, que lista o que ainda não foi publicado. Sem push depois do encerramento da 4B, ele traz os commits da [seção 13](#13-4a-concluída-e-encerrada-06112026) e da [seção 14](#14-4b-concluída-e-encerrada-06112026), salvo trabalho posterior.
+   - `git log --oneline origin/main..HEAD`, que lista o que ainda não foi publicado. Com a publicação da [seção 15](#15-publicação-da-4a-da-4b-e-da-apresentação-06112026), ele vem vazio, salvo trabalho posterior.
    - Antes de qualquer limpeza de temporários, verifique os dados: `sha256sum -c MANIFESTO.sha256 --quiet` em `.studio/arquivo-copias/rodadas-20261104` e a existência de `root` e `rootpy` no scratchpad. Não remova, sobrescreva nem reorganize nada sem aprovação.
 3. **Leia a seção [Evidence Builder no Studio](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evidence-builder-no-studio-etapas-0-a-7-05112026) do plano** e o [contrato no STUDIO.md](STUDIO.md#registro-da-seleção-originselection-formato-1). Antes de usar as baterias de tela, confira se o scratchpad citado na seção 3 ainda existe. Se não existir, restaure pelo `LEIA-ME.md` do arquivo de preservação, sabendo que esse caminho ainda não foi testado.
 4. **O Passo 4 da Etapa 3 está concluído, nas entregas 4A e 4B ([seção 13](#13-4a-concluída-e-encerrada-06112026) e [seção 14](#14-4b-concluída-e-encerrada-06112026)), e nenhuma atividade seguinte está autorizada. Não inicie a evolução da cidade, o resumo "N de M", o fallback único, o Passo 6 nem a Etapa 4 sem autorização do usuário** ([seção 12](#12-passo-3-encerrado-e-sequência-da-etapa-3-06112026)). Apresente testes, diff e resultados antes do commit de cada etapa, e aguarde.
@@ -595,7 +595,7 @@ A sequência vem da tabela do §11 do diagnóstico da Etapa 3, aprovado na sess�
 
 **A entrega 4A do Passo 4 da Etapa 3 está concluída, revisada e encerrada. A próxima atividade é a 4B, autorizada e não iniciada.** O registro completo está no [plano](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#resultado-da-4a-06112026).
 
-**Git:** um commit local em `main`, sobre `f6f3958`, que é `origin/main`, sem push. Mensagem: `feat(studio): conclui visualizacao de cobertura da 4A`. O hash de um commit não cabe no próprio commit: confira com `git log -1 --format=%H --grep="conclui visualizacao de cobertura da 4A"`.
+**Git:** commit `1908658`, sobre `f6f3958`. Era local no encerramento e foi publicado depois: veja a [seção 15](#15-publicação-da-4a-da-4b-e-da-apresentação-06112026). Mensagem: `feat(studio): conclui visualizacao de cobertura da 4A`.
 
 ### O que a tela faz
 
@@ -640,7 +640,7 @@ As limitações estão no [plano](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#resulta
 
 **A entrega 4B do Passo 4 da Etapa 3 está concluída, revisada e encerrada. Com ela, o Passo 4 está concluído.** O registro completo está no [plano](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#resultado-da-4b-06112026). **Nenhuma atividade seguinte está autorizada.** Na [sequência aprovada](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#sequência-dos-passos), o próximo é o Passo 6, não iniciado, que aguarda revisão e autorização; o Passo 5 segue adiado para a etapa própria de evolução visual, e o Passo 7 não foi iniciado.
 
-**Git:** um segundo commit local em `main`, sobre `1908658`, sem push. Mensagem: `feat(studio): conclui estados de cobertura no painel da sugestao`. O hash de um commit não cabe no próprio commit: confira com `git log -1 --format=%H --grep="conclui estados de cobertura no painel"`.
+**Git:** commit `3b64f66`, sobre `1908658`. Era local no encerramento e foi publicado depois: veja a [seção 15](#15-publicação-da-4a-da-4b-e-da-apresentação-06112026). Mensagem: `feat(studio): conclui estados de cobertura no painel da sugestao`.
 
 ### O que a tela faz
 
@@ -679,3 +679,19 @@ Seguem pendentes, cada um com decisão ou autorização própria: o resumo "N de
 1. Faça a conferência da [seção 10](#10-instruções-para-a-nova-sessão) e aguarde a instrução do usuário: nada depois do Passo 4 está autorizado.
 2. O ambiente das baterias está na [seção 13](#13-4a-concluída-e-encerrada-06112026), item 4 de "Como retomar", e os dados continuam temporários.
 3. **Não faça push** sem pedido.
+
+## 15. Publicação da 4A, da 4B e da apresentação (06/11/2026)
+
+**A 4A, a 4B e a apresentação pública estão publicadas em `origin/main`.** O push foi normal, de `f6f3958` a `5136dbe`, sem reescrita de histórico, com autorização do usuário. Nada depois do Passo 4 está autorizado: continua valendo a [seção 14](#14-4b-concluída-e-encerrada-06112026).
+
+| Commit | Conteúdo |
+|---|---|
+| `1908658` | 4A: estados de cobertura em Onde pesa |
+| `3b64f66` | 4B: estados de cobertura no painel da sugestão |
+| `5136dbe` | READMEs públicos em português e inglês e capas em `docs/img/librarian-cover-*.jpg`. CI concluído com sucesso ([execução](https://github.com/ViniciusSJV/librarian/actions/runs/42291412877)) |
+
+Um commit posterior traz esta revisão documental, cujo hash não cabe aqui: confira no `git log`.
+
+**Frase das capas, decisão do usuário:** "Knowledge is the most powerful of goods" e "O conhecimento é o mais poderoso dos bens" ficam como elemento da identidade visual, sem atribuição literária, porque a origem em *Snow Crash* não foi confirmada. A linha "— Snow Crash" foi retirada das duas capas, e o resto das imagens foi preservado.
+
+**Capas antigas:** `docs/img/cover-en.png`, `docs/img/cover-pt-BR.png`, `docs/img/capa.png` e `docs/img/cover/` não têm referência fora da própria pasta: a única é `cover.html` apontando para `base.png`. Elas foram mantidas, e a exclusão depende de uma revisão separada.

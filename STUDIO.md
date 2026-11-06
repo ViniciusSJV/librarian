@@ -1249,7 +1249,7 @@ Uma linha com zero diz só que a medição não observou passagens por ela: veja
 
 #### O que a Etapa 2 não resolve
 
-Reproduzido num projeto com 2 funções em Rust e 2 em Python, e no `renderer`. **O mapa fica para a [etapa própria de evolução visual](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evolução-visual-cidade-e-fluxograma-planejada-em-06112026). O resumo de cobertura "N de M" depende de decisão específica. As demais limitações de apresentação dos estados ficam para o [Passo 4 da Etapa 3](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#escopo-registrado-do-passo-4).**
+Reproduzido num projeto com 2 funções em Rust e 2 em Python, e no `renderer`. **O mapa fica para a [etapa própria de evolução visual](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evolução-visual-cidade-e-fluxograma-planejada-em-06112026). O resumo de cobertura "N de M" depende de decisão específica. O [Passo 4 da Etapa 3](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#escopo-registrado-do-passo-4), concluído nas entregas 4A e 4B, levou os estados à tela Onde pesa e ao painel da sugestão. As ressalvas abaixo continuam valendo, salvo onde o próprio item diz o contrário.**
 
 - **Mapa:** com medição, mostra só as funções com contagem acima de zero. Arquivos sem cobertura somem, sem aviso.
 - **"Onde pesa":** diz "N funções contadas", sem dizer de quantas. No `renderer`: 236 contadas de 487 no grafo; 251 sem contagem (214 testes, 17 em caminhos excluídos, 12 sem corpo, 8 que já contavam).

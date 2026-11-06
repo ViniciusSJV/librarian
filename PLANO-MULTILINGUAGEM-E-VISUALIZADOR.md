@@ -1846,7 +1846,7 @@ A 4B é uma entrega do Passo 4: não reabre o Passo 3 nem implementa a opção B
 
 #### Resultado da 4B (06/11/2026)
 
-**Concluída, revisada e encerrada. Com ela, o Passo 4 está concluído.** O commit e o estado do Git estão na [seção 14 do contexto](CONTEXTO-CONTINUIDADE.md#14-4b-concluída-e-encerrada-06112026).
+**Concluída, revisada e encerrada. Com ela, o Passo 4 está concluído.** O commit e o estado do Git estão na [seção 14 do contexto](CONTEXTO-CONTINUIDADE.md#14-4b-concluída-e-encerrada-06112026). A 4A (`1908658`) e a 4B (`3b64f66`) foram publicadas em `origin/main`: veja a [seção 15 do contexto](CONTEXTO-CONTINUIDADE.md#15-publicação-da-4a-da-4b-e-da-apresentação-06112026).
 
 **Escopo entregue, só em `web/index.html`:** cada item da sugestão e de "Ficaram de fora" mostra o `coverage_state` de `/api/envelope/suggest`, com o motivo de `zero_evidence` ou `exclusion_reason`, numa linha própria, em português e inglês, e o painel traz uma nota sobre o que os estados não dizem. Sem dependência nova de `/api/hotspots`.
 

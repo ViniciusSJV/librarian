@@ -11,6 +11,7 @@ Nada disso gera afirmações semânticas.
 | `graph` (formato `v1` ou `v2`), `verify-graph` | Grafo derivado dos snapshots; `v2` é o contrato neutro |
 | `search` | Ranking lexical e vizinhança do primeiro resultado |
 | `prepare`, `verify-prepared` | Fichas estruturais, dossiê e `PreparedQuery` conferidos, refeitos byte a byte |
+| `investigate inventory` | Inventário de operações derivado da edition e do grafo, por regras declaradas |
 
 ## Extractors e perfis
 
@@ -21,12 +22,20 @@ versionado do registry reúne a identidade gravada no manifest, as extensões
 descobertas, os extractors, os limites, a versão do grafo e os limites da busca.
 `generate` usa o perfil atual. A verificação usa o perfil da identidade gravada
 na edition e recusa as desconhecidas; editions antigas nunca são reinterpretadas.
-Há dois perfis:
+Há oito perfis. `generate` usa o v8 (`Registry::current`), e os anteriores continuam lidos e reproduzíveis com `generate_with_profile`. A identidade completa de cada um está nas constantes `EXTRACTOR*`, em `src/lib.rs`.
 
-| Perfil | Linguagens | Uso |
+| Perfil | Linguagens | O que acrescenta |
 | --- | --- | --- |
-| v1 (`librarian-ingest/0.1.0;syn/3.0.5;rust-structural-v1`) | Rust | Congelado por fixtures e goldens em `tests/fixtures/v1`; ainda lido e reproduzível com `generate_with_profile` |
-| v2 (`librarian-ingest/0.2.0;syn/3.0.5;rustpython-parser/0.4.0;rust-structural-v1;python-structural-v1`) | Rust e Python | Atual. O adaptador Rust é o mesmo do v1; a descoberta ignora `.git`, `.venv`, `venv`, `__pycache__`, `site-packages`, `node_modules`, `target` e caches |
+| v1 | Rust | Congelado por fixtures e goldens em `tests/fixtures/v1` |
+| v2 | Rust e Python | Python, com o mesmo adaptador Rust do v1 |
+| v3 | Rust e Python | Campos como símbolos, acessos a atributos, e chamadas e bases como candidatos por nome |
+| v4 | Rust e Python | Em Rust, literais de struct, escritas de campo e o tipo escrito no `impl` |
+| v5 | Rust e Python | Nomes usados como valor, variáveis de módulo, variantes, padrões e laços |
+| v6 | Rust e Python | Em Python, parâmetros, testes de pertença e nomes ligados a uma lista |
+| v7 | Rust e Python | Em Rust, closures de cadeias de iteradores como laços e o tipo escrito do receptor de uma chamada de método |
+| v8 | Rust e Python | **Atual.** Em Rust, o tipo escrito da base de um acesso ou de uma escrita de campo |
+
+Na descoberta, o v8 ignora as pastas `.git`, `.hg`, `.svn`, `.venv`, `venv`, `.tox`, `.nox`, `__pycache__`, `.mypy_cache`, `.pytest_cache`, `.ruff_cache`, `site-packages`, `node_modules`, `target` e `.studio`.
 
 `tests/agnostic.rs` impede nomes de linguagem em grafo, busca e `prepare`.
 `tests/python.rs` cobre o G5: um projeto misto Rust + Python passa por edition, grafo,
@@ -42,12 +51,12 @@ Crie `sources-config.json` com a seleção do seu projeto:
 {"project":"meu-projeto","inputs":["src","tests","Cargo.toml","Cargo.lock"]}
 ```
 
-Diretórios incluem `.rs` recursivamente; arquivos explicitamente indicados entram
+Diretórios incluem `.rs` e `.py` recursivamente; arquivos explicitamente indicados entram
 mesmo sem essa extensão, como fontes auxiliares. Todos os caminhos são relativos
 à raiz informada, usam `/` e precisam existir. Entradas sobrepostas são deduplicadas.
 Symlinks, escapes da raiz, arquivos especiais e caminhos não UTF-8 são recusados.
 Erros de leitura interrompem a geração; erros de análise preservam o snapshot e
-produzem diagnósticos. Não há exclusões implícitas dentro dos diretórios indicados.
+produzem diagnósticos. Dentro dos diretórios indicados, só ficam de fora as pastas que o perfil ignora.
 
 Na raiz do Librarian, usando um destino novo cujo diretório pai já exista:
 
@@ -80,8 +89,8 @@ símbolos/trechos acrescentam tipo e intervalo. Mudança de arquivo cria nova
 identidade: IDs não representam continuidade histórica automática de um símbolo.
 
 O extrator usa `syn` 3.0.5 e spans de `proc-macro2`. Declarações incluem módulos,
-structs/enums/unions, traits, aliases, funções, métodos, impls, constantes e
-estáticos. Trechos podem se sobrepor (módulo, impl e método). Documentação associada
+structs/enums/unions, traits, aliases, funções, métodos, impls, constantes,
+estáticos, campos nomeados e variantes de enum. Trechos podem se sobrepor (módulo, impl e método). Documentação associada
 por atributos entra no span; comentários comuns permanecem no snapshot. O flag
 `is_test` observa `#[test]`, sem reconhecer automaticamente frameworks externos.
 Não há expansão de macros, avaliação de `cfg`, resolução entre arquivos, imports
@@ -89,14 +98,17 @@ catalogados, grafo de chamadas ou inferência de comportamento. Ambas as alterna
 de compilação condicional podem aparecer. Rust inválido não recebe extração parcial.
 
 O extrator Python usa `rustpython-parser` 0.4.0.
-- **Declarações:** classes (`class`), funções (`function`, inclusive aninhadas) e métodos
-  (`method`). O trecho começa no primeiro decorator. Os nomes qualificados usam ponto
+- **Declarações:** classes (`class`), funções (`function`, inclusive aninhadas), métodos
+  (`method`), campos (`field`) e variáveis de módulo (`variable`). O trecho começa no primeiro decorator. Os nomes qualificados usam ponto
   (`Classe.metodo`).
 - **Ocorrências:** chamadas (`call_observed`, `method_call_observed`), anotações e bases
   (`type_reference`, com candidato por nome, inclusive referências em string),
-  retornos declarados e atribuições (`local_binding`).
-- **Candidatos e navegação:** só classes recebem candidatos, e somente da mesma
-  linguagem. A classe é navegação: os métodos é que são as respostas da busca.
+  retornos declarados e atribuições (`local_binding`). Nos perfis novos, também acessos a
+  atributos, bases de classe, nomes usados como valor ou escritos, argumentos nomeados,
+  parâmetros, testes de pertença, nomes ligados a uma lista, laços e blocos `with`.
+- **Candidatos e navegação:** chamadas, acessos a atributos, bases, nomes usados como
+  valor e argumentos nomeados se ligam pelo nome a declarações da mesma linguagem. São
+  candidatos, não resolução. A classe é navegação: os métodos é que são as respostas da busca.
 - **Testes:** `is_test` observa nomes `test*`/`Test*` (convenção do pytest), não execução.
 - **Limites:** não há resolução de imports, despacho dinâmico nem avaliação de
   decorators. Um arquivo que não faz parse vira diagnóstico, sem extração parcial. O

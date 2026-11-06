@@ -59,13 +59,17 @@ retorno bruto, texto e estado.
   passou a citar a linha 86 de `src/camera.rs`; antes citava "linha 11", a posição
   dentro do trecho. Ela ainda não nomeia a função e copia o objeto
   `{number, text}` como evidência. A avaliação semântica está pendente.
-- **O contrato de afirmações ainda não está na trilha do studio.** As
-  [séries de experimentos](../../experiments/) continuam reprovadas pelo checker.
+- **O contrato de afirmações está na trilha do studio** desde a L2: o formato **claims**
+  deriva a query do bundle conferido, confere cada resposta (`check.json`) e mostra o
+  resultado na conversa. Aprovada na mecânica não quer dizer correta. As
+  [séries de experimentos](../../experiments/), anteriores a isso, continuam reprovadas
+  pelo checker.
 - **Vínculo do bundle no envio (L3):** o studio passa a `attempt_linked` o vínculo
   com o bundle conferido, e o transporte recusa a query cujo hash mudou
   (`input_rejected`) e grava o vínculo em `result.json` (`integration`). A CLI
   `send_ollama` continua passando `None`.
 
-Esses pontos seguem na fase L (limites do LLM Engine). Origem do crate,
+A fase L (limites do LLM Engine) está registrada no
+[plano](../../PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#fase-l--limites-do-llm-engine). Origem do crate,
 validação da extração (27/09/2026) e experimentos anteriores estão no
 [HISTORICO](../../HISTORICO.md).
