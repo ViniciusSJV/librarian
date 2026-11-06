@@ -566,7 +566,13 @@ não estão, sem as que você tirou e sem descartar o que você juntou à mão. 
   testes dos alvos e dos custos. Condições, caminhos alternativos e invariantes ainda não são
   extraídos, e chamadas dentro de macros não são vistas.
 
-Essas listas não vão ao modelo. A pergunta grava o estado final da seleção, com o orçamento, o que
+**Estado de cobertura.** Com medição, cada item da sugestão e do que ficou de fora mostra o `coverage_state` que `/api/envelope/suggest` deu a ele: **contada com passagens observadas**, **contada sem passagens observadas** (com o motivo de `zero_evidence`) ou **sem cobertura** (com o motivo de `exclusion_reason`). A tela não calcula o estado nem consulta `/api/hotspots` para isso. Sem medição, o servidor diz `no_coverage` com motivo nulo, e a tela não repete isso: fica só o aviso de que não há medição. O que não é função e um estado que a tela não conhece ficam sem etiqueta. Veja [a semântica do zero](#semântica-do-zero).
+
+A seleção e o estado não usam o mesmo critério: a seleção lê a mediana da linha contada, e o estado, qualquer repetição. Quando a seleção deixa de fora como `did_not_run` uma função com outro estado (mediana zero com máximo positivo, ou `shared_line`), a linha diz "a seleção não encontrou contagem acima de zero", em vez de "sem passagens na medição". Só o texto da tela muda: o registro continua com `did_not_run`.
+
+**Limite:** uma falha ao ler a medição chega à sugestão como `measured: false` e `coverage: null`, e o painel diz "Sem medição", enquanto Onde pesa diz que não conseguiu ler a medição.
+
+Essas listas e os estados não vão ao modelo. A pergunta grava o estado final da seleção, com o orçamento, o que
 ficou de fora, o que você tirou e as lacunas: veja [Registro da seleção](#registro-da-seleção-originselection-formato-1).
 
 O **topo do arquivo** é uma faixa de linhas, não uma declaração: entra como ficha só na pergunta
@@ -1247,7 +1253,7 @@ Reproduzido num projeto com 2 funções em Rust e 2 em Python, e no `renderer`. 
 
 - **Mapa:** com medição, mostra só as funções com contagem acima de zero. Arquivos sem cobertura somem, sem aviso.
 - **"Onde pesa":** diz "N funções contadas", sem dizer de quantas. No `renderer`: 236 contadas de 487 no grafo; 251 sem contagem (214 testes, 17 em caminhos excluídos, 12 sem corpo, 8 que já contavam).
-- **Sugestão:** `measured: true` numa edition medida, mesmo com alvo sem cobertura. O estado de cada item já vem em `coverage_state`; a tela ainda não o usa.
+- **Sugestão:** `measured: true` numa edition medida, mesmo com alvo sem cobertura. O estado de cada item vem em `coverage_state`, e o painel da sugestão o mostra.
 - **`calls: null`:** sozinho, não distingue "contada e sem passagens" de "sem cobertura". Na sugestão, `coverage_state` distingue; no registro `origin.selection`, não.
 
 #### Fluxograma: efeito indireto da correção de `bodiless`

@@ -219,7 +219,7 @@
   /* Suggested envelope: one row per item, with why it is suggested. */
   #suggestion { margin-top: 8px; max-height: 320px; overflow: auto; border-top: 1px solid var(--border, #444); padding-top: 6px; }
   #suggestion label.item { display: flex; gap: 6px; align-items: flex-start; font-size: 12px; margin: 3px 0; }
-  #suggestion .why { color: var(--text-secondary); }
+  #suggestion .why, #suggestion .coverage { color: var(--text-secondary); }
   /* Legend: a small panel in the map corner. */
   #legendHud { position: absolute; left: 12px; bottom: 12px; max-width: 290px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 8px;
     background: color-mix(in srgb, var(--surface-1) 92%, transparent); }
@@ -845,6 +845,7 @@ const STRINGS = {
   'envelope.role.support': ['apoio', 'support'],
   'envelope.role.constraint': ['restrição', 'constraint'],
   'envelope.out.did_not_run': ['sem passagens na medição', 'no passes in the measure'],
+  'envelope.out.did_not_run_other': ['a seleção não encontrou contagem acima de zero', 'the selection found no count above zero'],
   'envelope.out.test': ['teste: o portão já roda', 'test: the gate already runs it'],
   'envelope.out.budget': ['não coube no orçamento', 'did not fit the budget'],
   'envelope.out.max_items': ['passou de 16 declarações', 'past 16 declarations'],
@@ -852,6 +853,10 @@ const STRINGS = {
   'envelope.callsLines': ['maior contagem entre as linhas: {n}', 'largest count among its lines: {n}'],
   'envelope.callsOwn': ['{n} passagens pela linha contada', '{n} passes through the counted line'],
   'envelope.callsObserved': ['contagem observada: {n}', 'observed count: {n}'],
+  'envelope.coverage.counted_and_ran': ['contada com passagens observadas', 'counted with passes observed'],
+  'envelope.coverage.counted_no_passes': ['contada sem passagens observadas', 'counted with no passes observed'],
+  'envelope.coverage.no_coverage': ['sem cobertura', 'no coverage'],
+  'envelope.coverageNote': ['Passagens observadas não dizem que a função pesa. Ausência de passagens observadas não prova que ela não executou, e ausência de cobertura não diz se ela executou.', 'Observed passes do not say the function is heavy. Absence of observed passes does not prove it did not execute, and absence of coverage does not say whether it executed.'],
   'envelope.gaps': ['O que o grafo não resolveu ({n})', 'What the graph did not settle ({n})'],
   'envelope.gap.homonym_call': ['{t}: a chamada {text} pode ser {list}', '{t}: the call {text} may be {list}'],
   'envelope.gap.homonym_type': ['{t}: o tipo {text} pode ser {list}', '{t}: the type {text} may be {list}'],
@@ -2479,6 +2484,16 @@ function selectionOnRecord() {
     gaps: selection.gaps };
 }
 function suggestionView() {
+  // The state the server gives the item. With no measure there is no state to show, even though the
+  // server says no_coverage then; what it does not name gets none, and an unknown reason shows no reason.
+  const hasState = item => Boolean(suggestion.coverage && STRINGS[`envelope.coverage.${item.coverage_state}`]);
+  const coverageWhy = item => {
+    const key = { counted_no_passes: `hot.zero.${item.zero_evidence}`, no_coverage: `hot.reason.${item.exclusion_reason}` }[item.coverage_state];
+    return STRINGS[key] ? ` ${t(key)}` : '';
+  };
+  // The selection reads the median of the counted line, the state any repetition: a function it found
+  // no count for may have passes observed, or passes it cannot be given. "No passes" would contradict that.
+  const leftOutText = item => t(item.left_out === 'did_not_run' && hasState(item) && item.coverage_state !== 'counted_no_passes' ? 'envelope.out.did_not_run_other' : `envelope.out.${item.left_out}`);
   const row = item => {
     const box = el('input', { type: 'checkbox', checked: gathered.includes(item.id), onchange: () => toggleGathered(item.id) });
     const name = item.kind === 'header' ? t('envelope.headerName') : item.name.replace(/^impl (.+ for )?/, '');
@@ -2489,7 +2504,8 @@ function suggestionView() {
         el('span', { className: 'mono', textContent: name }), ` · ${item.path}:${item.start_line}–${item.end_line}`,
         item.calls ? ` · ${t({ entry_calls: 'envelope.calls', several_lines: 'envelope.callsLines', own_counter: 'envelope.callsOwn' }[hot?.rows.find(r => r.symbol === item.id)?.count_kind] ?? 'envelope.callsObserved', { n: intPt(item.calls) })}` : '',
         item.facts?.length ? el('span', { className: 'tag', style: 'margin-left: 4px', textContent: t('envelope.facts', { n: item.facts.length }) }) : null,
-        el('div', { className: 'why', textContent: [item.left_out ? t('envelope.out.' + item.left_out) : '', ...item.reasons.map(reasonText)].filter(Boolean).join(' · ') })));
+        el('div', { className: 'why', textContent: [item.left_out ? leftOutText(item) : '', ...item.reasons.map(reasonText)].filter(Boolean).join(' · ') }),
+        hasState(item) ? el('div', { className: 'coverage' }, el('span', { className: 'tag measured', textContent: t(`envelope.coverage.${item.coverage_state}`) }), coverageWhy(item)) : null));
   };
   const rows = suggestion.items.map(row);
   const fold = (name, title, kids) => el('details', { style: 'margin-top: 6px', open: Boolean(panelOpen[name]), ontoggle: event => { panelOpen[name] = event.target.open; } }, el('summary', { textContent: title }), ...kids);
@@ -2507,6 +2523,7 @@ function suggestionView() {
       } }) : null,
       el('button', { className: 'link', style: toJoin.length ? '' : 'margin-left: auto', textContent: t('envelope.close'), onclick: () => { suggestion = null; renderGathered(); } })),
     suggestion.measured ? null : el('div', { className: 'muted', style: 'font-size: 12px', textContent: t('envelope.noMeasure') }),
+    [...suggestion.items, ...suggestion.left_out].some(hasState) ? el('div', { id: 'suggestionCoverageNote', className: 'muted', style: 'font-size: 12px', textContent: t('envelope.coverageNote') }) : null,
     ...rows,
     suggestion.left_out.length ? fold('left', t('envelope.leftOut', { n: suggestion.left_out.length }), suggestion.left_out.map(row)) : null,
     suggestion.gaps.length ? fold('gaps', t('envelope.gaps', { n: suggestion.gaps.length }), suggestion.gaps.map(g => el('div', { className: 'why', textContent: t('envelope.gap.' + g.code, {

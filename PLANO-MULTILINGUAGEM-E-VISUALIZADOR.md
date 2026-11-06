@@ -1606,7 +1606,7 @@ Nos 8 envios de mudança da gravação do vídeo 12, das 24 propostas só 1 saiu
 | 0 | Preservação dos dados | Feita, fora do Git |
 | 1 | Diagnóstico visual e contratos | Feita, sem alterar arquivos |
 | 2 | Correções e remoções aprovadas | **Feita:** `99f69f3` |
-| 3 | "Onde pesa" | Em andamento: Passos 1 e 2 concluídos (`47337e9`, baterias em `9659de5`); Passo 3 encerrado no backend, pela opção A; 4A do Passo 4 concluída; 4B autorizada e não iniciada |
+| 3 | "Onde pesa" | Em andamento: Passos 1 e 2 concluídos (`47337e9`, baterias em `9659de5`); Passo 3 encerrado no backend, pela opção A; Passo 4 concluído, nas entregas 4A e 4B |
 | 4 | Evidence Builder | Não iniciada |
 | 5 | Pacote e revisão, C1 e C2 | Não iniciada |
 | 6 | Fact Builder e portão | Não iniciada |
@@ -1739,7 +1739,7 @@ Corrigir todos os consumidores da medição de uma vez, com coerência entre fro
 
 **Cobertura:** as seis limitações em [Medição: capacidade não é cobertura](STUDIO.md#medição-capacidade-não-é-cobertura), reproduzidas na Etapa 2, são desta etapa. **Atualização de 06/11/2026:** o mapa fica para a [etapa própria](#evolução-visual-cidade-e-fluxograma-planejada-em-06112026), o resumo "N de M" depende de decisão específica, e as demais limitações de apresentação dos estados ficam para o [Passo 4](#escopo-registrado-do-passo-4).
 
-**Estado em 06/11/2026:** os Passos 1 e 2 estão concluídos, e o Passo 3 está encerrado no backend; a 4A do Passo 4 está concluída, e a 4B está autorizada e não foi iniciada. Passo 1: cobertura por função no backend. Passo 2: ordem por contagem observada, sem `FREQUENT` nem alvo automático, textos ao modelo, `count_kind` por origem, `counted_no_passes` com `zero_evidence`, resolução do alvo antes da medição, por símbolo, e origem da resposta no cartão, decidida por `execution`. Na cidade, a altura já vem da contagem; a cor (o calor) e o top 8 continuam por tempo, e a direção futura está em [Evolução visual](#evolução-visual-cidade-e-fluxograma-planejada-em-06112026).
+**Estado em 06/11/2026:** os Passos 1 e 2 estão concluídos, e o Passo 3 está encerrado no backend; as entregas 4A e 4B do Passo 4 estão concluídas. Passo 1: cobertura por função no backend. Passo 2: ordem por contagem observada, sem `FREQUENT` nem alvo automático, textos ao modelo, `count_kind` por origem, `counted_no_passes` com `zero_evidence`, resolução do alvo antes da medição, por símbolo, e origem da resposta no cartão, decidida por `execution`. Na cidade, a altura já vem da contagem; a cor (o calor) e o top 8 continuam por tempo, e a direção futura está em [Evolução visual](#evolução-visual-cidade-e-fluxograma-planejada-em-06112026).
 
 #### Sequência dos passos
 
@@ -1751,7 +1751,7 @@ Origem: a tabela do §11 do diagnóstico da Etapa 3, aprovado na sessão `661d76
 | 1 | Backend, cobertura | Concluído |
 | 2 | Backend, ordem por contagem, textos sem afirmação falsa e sem alvo automático | Concluído |
 | 3 | Estado por função em `/api/envelope/suggest`, distinguindo `calls: null` | **Concluído no backend** |
-| 4 | Tela de Onde pesa: rótulos, resumo de cobertura e fallback único | 4A concluída; 4B autorizada e não iniciada. O Passo 2 já tinha levado à tela o título do ranking, os rótulos por `count_kind` e o seletor de Separar. O [escopo registrado](#escopo-registrado-do-passo-4) define 4A e 4B e deixa de fora "N de M" e o fallback único |
+| 4 | Tela de Onde pesa: rótulos, resumo de cobertura e fallback único | **Concluído,** nas entregas 4A e 4B. O Passo 2 já tinha levado à tela o título do ranking, os rótulos por `count_kind` e o seletor de Separar. O [escopo registrado](#escopo-registrado-do-passo-4) define 4A e 4B e deixa de fora "N de M" e o fallback único |
 | 5 | Cidade e fluxograma: legenda, top 8 e estado "sem cobertura" | Adiado para a [etapa própria](#evolução-visual-cidade-e-fluxograma-planejada-em-06112026) |
 | 6 | Conversa e Python: D6, D7 e D8 | Não iniciado, aguardando revisão; o estado desses três itens não foi conferido |
 | 7 | Verificação final e documentação | Não iniciado |
@@ -1768,11 +1768,11 @@ Origem: a tabela do §11 do diagnóstico da Etapa 3, aprovado na sessão `661d76
 
 **Decisão formal do usuário: opção A. O Passo 3 está encerrado como entregue, concluído no backend, e não será ampliado com a apresentação visual dos estados.** O Passo 3 fornece os estados, e o Passo 4 os apresenta. A opção B, levar o estado à tela da sugestão, não foi implementada, porque misturaria essas duas responsabilidades. A falta na tela é uma pendência do Passo 4, não um motivo para reabrir o Passo 3.
 
-A entrega veio junto com o Passo 1, cujo pedido incluiu os campos em `/api/envelope/suggest`: `annotate_suggestion`, em `instrument.rs:457`, com `coverage_state`, `exclusion_reason` e `zero_evidence` por função e o resumo `coverage`, ao lado de `calls: null`. O teste é `a_suggestion_tells_counted_without_running_from_no_coverage_and_selects_the_same`, em `store.rs:2411`: Python alvo × Rust contado sem passagens, com a mesma seleção. Ele foi executado em 06/11/2026, em `f6f3958`, e passou. A decisão não mudou código. A página ainda não lê esses campos.
+A entrega veio junto com o Passo 1, cujo pedido incluiu os campos em `/api/envelope/suggest`: `annotate_suggestion`, em `instrument.rs:457`, com `coverage_state`, `exclusion_reason` e `zero_evidence` por função e o resumo `coverage`, ao lado de `calls: null`. O teste é `a_suggestion_tells_counted_without_running_from_no_coverage_and_selects_the_same`, em `store.rs:2411`: Python alvo × Rust contado sem passagens, com a mesma seleção. Ele foi executado em 06/11/2026, em `f6f3958`, e passou. A decisão não mudou código. A página ainda não lê esses campos. **Atualização:** desde a [4B](#resultado-da-4b-06112026), o painel da sugestão os lê.
 
 #### Escopo registrado do Passo 4
 
-**Autorizado em 06/11/2026, com as entregas 4A e 4B separadas. A [4A está concluída e encerrada](#resultado-da-4a-06112026); a 4B é a próxima atividade, autorizada e não iniciada.** O nome oficial é **Passo 4 da Etapa 3**, para não confundir com a [Etapa 4](#etapa-4-evidence-builder) deste plano. O Passo 4 deverá apresentar os estados na interface, com textos em português e inglês, sem mostrar estados diferentes como se fossem equivalentes:
+**Autorizado em 06/11/2026, com as entregas 4A e 4B separadas. A [4A](#resultado-da-4a-06112026) e a [4B](#resultado-da-4b-06112026) estão concluídas e encerradas.** O nome oficial é **Passo 4 da Etapa 3**, para não confundir com a [Etapa 4](#etapa-4-evidence-builder) deste plano. O Passo 4 deverá apresentar os estados na interface, com textos em português e inglês, sem mostrar estados diferentes como se fossem equivalentes:
 
 | O que a tela distingue | Campo que já existe | Cuidado |
 |---|---|---|
@@ -1797,7 +1797,7 @@ São duas entregas distintas:
 - Não introduzir uma dependência desnecessária de `/api/hotspots` no painel da sugestão.
 - Não alterar seleção, envelope, portão, `origin.selection` ou o conteúdo enviado ao modelo.
 
-A 4B é uma entrega futura do Passo 4: não reabre o Passo 3 nem implementa a opção B retroativamente.
+A 4B é uma entrega do Passo 4: não reabre o Passo 3 nem implementa a opção B retroativamente.
 
 **Limites, que seguem dependendo de decisão específica e de autorização:**
 
@@ -1842,7 +1842,35 @@ A 4B é uma entrega futura do Passo 4: não reabre o Passo 3 nem implementa a op
 
 **Pendentes, cada um com decisão ou autorização própria:** o resumo "N de M", o fallback único, o filtro de 5%, a evolução da cidade e do fluxograma, e o Passo 6. A limitação de `calls: null` em `origin.selection` continua sem passo atribuído.
 
-**Próxima atividade: a 4B,** autorizada e não iniciada.
+**Próxima atividade, quando a 4A foi encerrada: a 4B.** Ela também foi encerrada: veja o [resultado](#resultado-da-4b-06112026).
+
+#### Resultado da 4B (06/11/2026)
+
+**Concluída, revisada e encerrada. Com ela, o Passo 4 está concluído.** O commit e o estado do Git estão na [seção 14 do contexto](CONTEXTO-CONTINUIDADE.md#14-4b-concluída-e-encerrada-06112026).
+
+**Escopo entregue, só em `web/index.html`:** cada item da sugestão e de "Ficaram de fora" mostra o `coverage_state` de `/api/envelope/suggest`, com o motivo de `zero_evidence` ou `exclusion_reason`, numa linha própria, em português e inglês, e o painel traz uma nota sobre o que os estados não dizem. Sem dependência nova de `/api/hotspots`.
+
+**Decisões do usuário:**
+
+- O motivo fica na linha de cobertura, porque complementa o estado.
+- A nota fica, com o texto revisado que está no [contexto](CONTEXTO-CONTINUIDADE.md#14-4b-concluída-e-encerrada-06112026).
+- Sem medição, só o aviso geral, sem etiqueta repetida em cada item.
+- "a seleção não encontrou contagem acima de zero" (em inglês, "the selection found no count above zero") substitui "sem passagens na medição" quando o motivo é `did_not_run` e o estado é outro.
+- A falha de leitura da medição continua aparecendo como "Sem medição" nesta etapa, como limitação conhecida.
+
+**Semântica preservada:** a tela não calcula estado. Ausência de medição, ausência de passagens observadas e ausência de cobertura não se confundem. A seleção e o estado continuam com critérios diferentes (a mediana da linha contada e qualquer repetição), o que não mudou: só o texto da tela deixou de afirmar "sem passagens" ao lado de outro estado. `did_not_run` continua em `origin.selection`, e nenhum campo de cobertura entra nele.
+
+**Testes,** na página final: `rodar.js`, 249 de 249, com `tela-4b.js` 55, vista falhando antes da mudança, e `tela-4a.js` 30; `etapa2.js` 66; `etapa2b.js` 75; `etapa2-modelo.js`, 350 passos e 0 ocorrências; 16 mutações detectadas; `cargo test --workspace --locked`, 240 aprovados, 0 falhas, 2 ignorados; gabarito com SHA-256 `2714b840…`, igual à linha de base. Sem erro de página e sem envio a LLM. A medição mista real foi conferida por uma sonda fora do repositório.
+
+**Limitações:**
+
+- **Falha ao ler a medição aparece como "Sem medição" no painel,** enquanto Onde pesa diz que não conseguiu lê-la: `suggest_envelope` descarta o erro com `.ok()`. A solução adequada exige distinguir os estados no backend, e não tem etapa atribuída.
+- Com mediana zero e máximo positivo, a linha diz "com passagens observadas" sem mostrar número.
+- Mediana zero e `shared_line` foram exercitados com registros editados: não ocorrem nas duas rodadas reais do `renderer`. Python puro com medição não foi testado, porque o Medir tudo exige fonte Rust.
+- O painel transborda 96 px em 420 px de largura, com ou sem a 4B.
+- `tela-4b.js` depende do ambiente e dos dados locais, e não faz parte do `cargo test` nem do CI.
+
+**Pendentes, cada um com decisão ou autorização própria:** o resumo "N de M", o fallback único, o filtro de 5%, a evolução da cidade e do fluxograma, o Passo 6 e a limitação de `calls: null` em `origin.selection`. **Nenhuma atividade seguinte está autorizada;** na [sequência](#sequência-dos-passos), o próximo é o Passo 6, que aguarda revisão e autorização.
 
 ### Etapa 4: Evidence Builder
 

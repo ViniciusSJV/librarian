@@ -1,4 +1,4 @@
-// Sobe os dois servidores nas raízes de teste, roda as seis baterias e encerra os servidores.
+// Sobe os dois servidores nas raízes de teste, roda as baterias e encerra os servidores.
 // As baterias gravam nas raízes e etapa2c cria turnos: por isso a raiz real do repositório é recusada.
 const { spawn, spawnSync } = require('child_process');
 const fs = require('fs');
@@ -8,7 +8,7 @@ const { PYTHON } = require('./ambiente');
 const pede = nome => { const v = process.env[nome]; if (!v) { console.error(`Falta a variável de ambiente ${nome}: veja README.md`); process.exit(2); } return v; };
 const STUDIO = pede('LIBRARIAN_TESTE_STUDIO'), RAIZ_RS = pede('LIBRARIAN_TESTE_RAIZ_RS'), RAIZ_PY = pede('LIBRARIAN_TESTE_RAIZ_PY'), COPIAS = pede('LIBRARIAN_TESTE_COPIAS'), SAIDA = pede('LIBRARIAN_TESTE_SAIDA');
 const REPO = path.resolve(__dirname, '../../../..'), PAGINA = 'crates/librarian-studio/web/index.html';
-const BATERIAS = ['tela-cartao', 'tela-zero', 'tela-origem', 'tela-nomes', 'tela-passo2', 'tela-4a', 'etapa2c'];
+const BATERIAS = ['tela-cartao', 'tela-zero', 'tela-origem', 'tela-nomes', 'tela-passo2', 'tela-4a', 'tela-4b', 'etapa2c'];
 const sai = motivo => { console.error(motivo); process.exit(2); };
 
 for (const raiz of [RAIZ_RS, RAIZ_PY]) {
