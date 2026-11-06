@@ -28,8 +28,10 @@ O Modelfile, seleção e política de domínio continuam sendo responsabilidade 
 ## API pública e fronteiras
 
 - `ollama::request(query, model)`: valida a estrutura básica e preserva os bytes
-  da query como prompt; envia `model`, `prompt`, `stream=false`, sem overrides.
-- `ollama::client::Config`: endpoint, modelo, timeout e limite de bytes explícitos.
+  da query como prompt; envia `model`, `prompt`, `stream=false`, sem overrides, e
+  `format` quando a query traz `response_schema`.
+- `ollama::client::Config`: endpoint, modelo, timeout e limite de bytes explícitos, e se
+  o schema vai como `format` (`structured_output`).
 - `ollama::client::attempt_linked(query_path, destination, id, &config, link)`:
   preserva consulta, request, retorno bruto, texto e estado. Use `None` para envio
   isolado; não reconfere as fontes nem julga afirmações.
@@ -51,19 +53,23 @@ inclui um LF final; o request do transporte não inclui esse LF adicional.
 
 O [Librarian Studio](../../STUDIO.md) envia ao Ollama o `query.json` de um bundle
 produzido por `prepare` e conferido por `verify-prepared` imediatamente antes do
-envio, usando `attempt_linked` deste crate. O transporte preserva query, request,
+envio, ou, no formato **claims**, a query derivada desse bundle, usando `attempt_linked`
+deste crate. O transporte preserva query, request,
 retorno bruto, texto e estado.
 
-- **Explicação ainda não aprovada.** Com `prepare.numbered_lines`, cada linha do
-  contexto leva a linha original do arquivo. Numa execução, a resposta da câmera
-  passou a citar a linha 86 de `src/camera.rs`; antes citava "linha 11", a posição
-  dentro do trecho. Ela ainda não nomeia a função e copia o objeto
-  `{number, text}` como evidência. A avaliação semântica está pendente.
+- **Linhas numeradas.** Com `prepare.numbered_lines`, cada linha do contexto leva a linha
+  original do arquivo. Registro de uma execução da L1, em prosa
+  ([plano](../../PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#l1--resultado-20102026)): a resposta
+  da câmera passou a citar a linha 86 de `src/camera.rs`, onde antes citava "linha 11", a
+  posição dentro do trecho; ela não nomeou a função e copiou o objeto `{number, text}`
+  como evidência, e a avaliação semântica não foi feita. Uma execução não mede tendência.
 - **O contrato de afirmações está na trilha do studio** desde a L2: o formato **claims**
   deriva a query do bundle conferido, confere cada resposta (`check.json`) e mostra o
   resultado na conversa. Aprovada na mecânica não quer dizer correta. As
-  [séries de experimentos](../../experiments/), anteriores a isso, continuam reprovadas
-  pelo checker.
+  [séries de experimentos](../../experiments/), anteriores a isso, são registro: nas 13
+  respostas preservadas, `claims check` com o contexto de cada série dá o mesmo resultado
+  gravado, com as séries 01, 02 e 05 rejeitadas e as séries 03 e 04 aprovadas na mecânica.
+  Nenhuma foi aceita.
 - **Vínculo do bundle no envio (L3):** o studio passa a `attempt_linked` o vínculo
   com o bundle conferido, e o transporte recusa a query cujo hash mudou
   (`input_rejected`) e grava o vínculo em `result.json` (`integration`). A CLI

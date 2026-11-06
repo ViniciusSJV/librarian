@@ -80,7 +80,7 @@ classes de mesmo nome. Acima de 8 declarações candidatas, nenhuma ligação é
 nó da ocorrência guarda `ambiguous_candidates` com a contagem. Os perfis v1 e v2 continuam
 lidos e reproduzíveis sem nada disso.
 
-No perfil v4 (G6d, o atual), o adaptador de Rust registra também `struct_literal`
+No perfil v4 (G6d), o adaptador de Rust registra também `struct_literal`
 (`Camera { .. }`, `Self { .. }`), `field_init` (cada campo nomeado que o literal preenche),
 `field_assign` (`x.campo = …` e `x.campo += …`, que deixam de ser `attribute_access`) e
 `impl_self_type` (o tipo escrito no `impl`, que deixa de ser `type_reference`). Literais e

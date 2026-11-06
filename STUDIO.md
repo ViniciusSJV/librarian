@@ -316,7 +316,7 @@ e quem responde nesta etapa (por exemplo, Ollama com `performance-qwen3coder`). 
   como fichas F (autoria "revisão humana no Librarian Studio"), com os trechos conferidos
   contra a edition. No formato claims, eles aparecem em `evidence.reviewed_facts`, com a
   instrução de que orientam a resposta, mas não são citáveis.
-- **Contexto do dono** (grafo gerado no perfil v4, v5 ou v6): quando a declaração é um método, entram
+- **Contexto do dono** (grafo gerado no perfil v4 ou posterior): quando a declaração é um método, entram
   também o tipo dono (a struct com o nome do `impl`, ou a classe que contém o método em
   Python) e os métodos que escrevem os campos que esse método lê (por `self.campo = …` ou
   por um literal do tipo, como `Self { campo: .. }`). Assim uma etapa de performance vê
@@ -333,7 +333,7 @@ e quem responde nesta etapa (por exemplo, Ollama com `performance-qwen3coder`). 
   declarações e fatos).
 
 A pergunta nova mostra a faixa **cadeia ← NN** com a evidência, os fatos e as respostas
-usadas (e, no v4, a faixa **contexto do dono**), e pode ser continuada de novo. No teste real, o DeepSeek copiou um fato revisado
+usadas (e, a partir do v4, a faixa **contexto do dono**), e pode ser continuada de novo. No teste real, o DeepSeek copiou um fato revisado
 como resposta, com a função inteira como operação, e a conferência mecânica recusou.
 
 ### Comparar respostas
@@ -383,7 +383,7 @@ diante, até a **profundidade** escolhida (padrão 2).
 
 Exige um grafo gerado com o perfil v3 ou posterior (desde a G6). No v4, também aparecem quem
 constrói o tipo (`Camera { .. }`), quem preenche ou escreve um campo (`self.transform = …`)
-e o `impl` que implementa o tipo. A partir do v5 (o atual é o v6), também aparecem:
+e o `impl` que implementa o tipo. A partir do v5 (o atual é o v8), também aparecem:
 
 - **nomes usados como valor:** `Depends(get_db)`, `with _lock:`, `let f = helper;`,
   `MAX_DEPTH`, `Shape::Plane` (**usa o nome**);
@@ -403,7 +403,7 @@ nome escrito, não um grafo de chamadas resolvido.
 
 **Quando não aparece nada, ou aparece menos do que existe:**
 
-- o grafo é anterior à G6: gere de novo (para os usos do v5, gere no v5);
+- o grafo é anterior à G6: gere de novo (os usos do v5 exigem um grafo no v5 ou posterior, e um grafo novo sai no perfil atual);
 - o nome tem mais de 8 homônimos (`new`, `get`, `__init__`): nenhuma ligação é desenhada,
   e a inspeção da ocorrência mostra a contagem;
 - os filtros esconderam os usos (a vista avisa quantos);
