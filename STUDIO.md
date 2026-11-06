@@ -669,7 +669,20 @@ medição**. A capacidade vem de `measure_all`, em `GET /api/commands`, e `GET /
   threads e inflado pela própria contagem, o que pode mudar a ordem entre as funções: não é o custo
   próprio dela e serve só de referência. Cada linha mostra
   **quem chama** (pelo nome escrito, com a contagem observada de cada chamador) e as chamadas
-  escritas no corpo que levam a funções contadas.
+  escritas no corpo que levam a funções contadas. O título diz **Top 20**: são até 20 linhas contadas, não
+  todas as funções com passagens observadas.
+- **Contadas sem passagens observadas** e **Sem cobertura**, duas listas recolhidas abaixo do ranking,
+  vêm dos estados de `coverage.functions`, em `/api/hotspots`. Cada função aparece com o arquivo e o motivo
+  (`zero_evidence` ou `exclusion_reason`), sem quantidades. Ausência de contagem observada não é prova de
+  ausência de execução, e sem cobertura não diz se a função executou: veja [a semântica do zero](#semântica-do-zero).
+  O estado aberto ou fechado se mantém quando a pessoa escolhe uma função em Separar. Sem medição, as listas
+  não aparecem.
+
+  **Limites destas listas:** as funções com passagens fora do Top 20 não aparecem nelas; ficam no seletor de
+  Separar. Não há número de linha, porque `coverage.functions` não traz esse dado. Uma linha contada sem
+  função só aparece no ranking, pelo lugar. Com mediana zero e máximo positivo, a função tem passagens
+  observadas e não entra em "sem passagens"; como o seletor de Separar lê a mediana, ela também não está nele.
+  Trocar o idioma não redesenha este cartão: os textos mudam na próxima vez que ele é desenhado.
 - **Operações estruturais:** uma operação do inventário que não é conta matemática (trava,
   espera, E/S) dentro de um laço de uma função que rodou na medida. Ela é cara pelo tipo,
   não pela frequência: a `canvas_mutex.lock()` do laço de pixels da câmera.
@@ -1230,7 +1243,7 @@ Uma linha com zero diz só que a medição não observou passagens por ela: veja
 
 #### O que a Etapa 2 não resolve
 
-Reproduzido num projeto com 2 funções em Rust e 2 em Python, e no `renderer`. **Previsto para a [Etapa 3](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#etapa-3-onde-pesa).**
+Reproduzido num projeto com 2 funções em Rust e 2 em Python, e no `renderer`. **O mapa fica para a [etapa própria de evolução visual](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evolução-visual-cidade-e-fluxograma-planejada-em-06112026). O resumo de cobertura "N de M" depende de decisão específica. As demais limitações de apresentação dos estados ficam para o [Passo 4 da Etapa 3](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#escopo-registrado-do-passo-4).**
 
 - **Mapa:** com medição, mostra só as funções com contagem acima de zero. Arquivos sem cobertura somem, sem aviso.
 - **"Onde pesa":** diz "N funções contadas", sem dizer de quantas. No `renderer`: 236 contadas de 487 no grafo; 251 sem contagem (214 testes, 17 em caminhos excluídos, 12 sem corpo, 8 que já contavam).
@@ -1255,7 +1268,7 @@ Reproduzido num projeto com 2 funções em Rust e 2 em Python, e no `renderer`. 
 - A caixa de uma função sem cobertura ainda não diz "sem cobertura": fica sem etiqueta, o que não afirma nada de falso, mas também não informa.
 - Pela leitura do código, um homônimo Python deixa de ser desempatado pelo fluxograma se o outro candidato não foi contado, porque `measuredPicks` exige que os demais estejam parados. Não foi executado. O desempate do envelope é outro, e não mudou.
 
-**Até a Etapa 3, leia assim:** em projeto misto, a medição descreve apenas as funções Rust contadas, não o projeto. Nenhum dos dois projetos de teste atuais é misto.
+**Enquanto o fluxograma e o mapa não mudarem, leia assim:** em projeto misto, a medição descreve apenas as funções Rust contadas, não o projeto. Nenhum dos dois projetos de teste atuais é misto.
 
 **Python:** sem instrumentação por função. O projeto aparece como "não disponível", sem convite a medir. Não há suporte novo nesta etapa.
 

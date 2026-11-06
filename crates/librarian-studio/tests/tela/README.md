@@ -1,6 +1,6 @@
 # Baterias de tela do Studio
 
-Regressão dos Passos 1 e 2 da Etapa 3 e da seleção da Etapa 2 (`origin.selection`), na página real, num
+Regressão dos Passos 1, 2 e 4 da Etapa 3 e da seleção da Etapa 2 (`origin.selection`), na página real, num
 Chrome sem janela, contra o servidor real. Cobrem o que os testes em Rust não alcançam: o que a tela diz, o
 cartão de desempenho, a dica da cidade, o fluxograma e o registro da seleção.
 
@@ -14,6 +14,7 @@ ambiente e de dados que não estão no repositório.
 | `tela-origem.js` | 32 | O texto de cada `count_kind` no ranking, em Separar, na cidade, no fluxograma e na pergunta |
 | `tela-nomes.js` | 12 | Função com mais de uma linha contada, nas mesmas telas |
 | `tela-passo2.js` | 9 | Ordem por contagem, sem alvo automático, seletor de Separar |
+| `tela-4a.js` | 30 | Passo 4, entrega 4A: ranking identificado como Top 20 e as listas de sem passagens e sem cobertura, comparadas com `/api/hotspots`, em português e inglês |
 | `etapa2c.js` | 45 | Os bloqueadores e as combinações de `origin.selection`, gravadas pelo servidor real |
 
 Nada é enviado a um modelo: as baterias abortam `/api/send`, as execuções e `/api/generate`, e simulam ou
@@ -58,7 +59,7 @@ mesmas variáveis. `etapa2c.js` pede também o caminho do projeto Python: `node 
 
 ## Origem
 
-Cópias das baterias usadas na auditoria dos Passos 1 e 2, com as verificações intactas. Só mudaram as linhas
+`tela-4a.js` nasceu aqui. As outras são cópias das baterias usadas na auditoria dos Passos 1 e 2, com as verificações intactas. Só mudaram as linhas
 de ambiente: o `require` do Playwright, os caminhos do `renderer`, do Python e do `casos.json` e as chaves.
 Para conferir, compare com o original.
 

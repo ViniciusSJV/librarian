@@ -1,6 +1,6 @@
 # Contexto de continuidade do Librarian
 
-Conferido no repositório em 06/11/2026, com os Passos 1 e 2 da Etapa 3 da frente do Studio concluídos. Documento de transferência entre sessões. Não substitui o plano: as tabelas completas estão em [PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md), da linha 1116 em diante, e o andamento desta frente em [Evidence Builder no Studio](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evidence-builder-no-studio-etapas-0-a-7-05112026).
+Conferido no repositório em 06/11/2026, com os Passos 1 e 2 da Etapa 3 da frente do Studio concluídos e o Passo 3 encerrado no backend ([seção 12](#12-passo-3-encerrado-e-sequência-da-etapa-3-06112026)). Documento de transferência entre sessões. Não substitui o plano: as tabelas completas estão em [PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md), da linha 1116 em diante, e o andamento desta frente em [Evidence Builder no Studio](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evidence-builder-no-studio-etapas-0-a-7-05112026).
 
 **Como ler as marcas:** **[confirmado]** foi verificado agora no repositório ou nos dados gravados. **[registrado]** vem do plano ou da memória de trabalho, sem nova verificação. **[hipótese]** não foi demonstrado. **[não confirmado]** não pôde ser verificado.
 
@@ -68,7 +68,7 @@ Resultados são hipóteses, não regras. O mesmo envelope já deu 4/6 e 8/8 em m
 
 ## 3. Estado atual do repositório [confirmado]
 
-**Branch:** `main`. Sobre `7868912`, o último commit em `origin/main` antes desta publicação, há 15 commits: os 14 da tabela abaixo e o que traz este texto. Sem stash. **A publicação em `origin/main` está planejada e não está confirmada neste texto:** veja a [seção 11](#11-publicação-dos-passos-1-e-2-da-etapa-3-06112026).
+**Branch:** `main`. Sobre `7868912`, o último commit em `origin/main` antes desta publicação, há 15 commits: os 14 da tabela abaixo e o que traz este texto. Sem stash. **Publicados em `origin/main`, em `f6f3958`,** conferido em 06/11/2026: veja a [seção 12](#12-passo-3-encerrado-e-sequência-da-etapa-3-06112026). Sobre `f6f3958` há o commit local da 4A, sem push: veja a [seção 13](#13-4a-concluída-e-encerrada-06112026).
 
 **Commits sobre `7868912` (do mais novo ao mais antigo):**
 
@@ -362,7 +362,7 @@ A resolve o que foi perguntado, com custo alto. B não tem piora registrada e n�
 
 **Decisões do usuário em aberto:**
 
-- Publicação em `origin/main`: planejada, não confirmada neste texto (seção 11).
+- Implementação da evolução da cidade e do fluxograma e do Passo 6: cada uma depende de autorização própria (seção 12).
 - Cópia do arquivo de preservação fora desta máquina: não decidida.
 - Commit do `measures` no `logistica-api`: aguardando.
 - Limpeza de `Temp/lt-ev`: não limpar ainda.
@@ -372,9 +372,9 @@ A resolve o que foi perguntado, com custo alto. B não tem piora registrada e n�
 
 ### A especificação
 
-**Atualização de 06/11/2026: os Passos 1 e 2 da Etapa 3 estão concluídos; o Passo 3 não foi iniciado.** Já estão implementados: cobertura por função; ordem por contagem observada, com o tempo como referência; sem `FREQUENT` nem alvo automático; `count_kind` por origem; `counted_no_passes` e `zero_evidence`; resolução do alvo antes da medição, por símbolo; e, no cartão, a origem da resposta decidida por `execution`. O contrato está no [STUDIO.md](STUDIO.md#medição-capacidade-não-é-cobertura), e as baterias de tela desta etapa estão em [crates/librarian-studio/tests/tela](crates/librarian-studio/tests/tela/README.md), junto com `etapa2c.js`: fora do `cargo test`, porque precisam de um ambiente e de dados que não estão no Git. O texto abaixo guarda o contexto de antes disso.
+**Atualização de 06/11/2026: os Passos 1 e 2 da Etapa 3 estão concluídos, e o Passo 3 está encerrado no backend, pela opção A ([seção 12](#12-passo-3-encerrado-e-sequência-da-etapa-3-06112026)); a entrega 4A do Passo 4 está concluída e encerrada ([seção 13](#13-4a-concluída-e-encerrada-06112026)), e a 4B não foi iniciada.** Já estão implementados: cobertura por função; ordem por contagem observada, com o tempo como referência; sem `FREQUENT` nem alvo automático; `count_kind` por origem; `counted_no_passes` e `zero_evidence`; resolução do alvo antes da medição, por símbolo; e, no cartão, a origem da resposta decidida por `execution`. O contrato está no [STUDIO.md](STUDIO.md#medição-capacidade-não-é-cobertura), e as baterias de tela desta etapa estão em [crates/librarian-studio/tests/tela](crates/librarian-studio/tests/tela/README.md), junto com `etapa2c.js`: fora do `cargo test`, porque precisam de um ambiente e de dados que não estão no Git. O texto abaixo guarda o contexto de antes disso.
 
-**Etapas 0, 1 e 2 feitas; a Etapa 3, "Onde pesa", está em andamento, com os Passos 1 e 2 concluídos e o Passo 3 dependente de autorização.** As decisões estão no plano, em [Evidence Builder no Studio](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evidence-builder-no-studio-etapas-0-a-7-05112026), e prevalecem sobre esta seção, que guarda o contexto anterior a elas. O contrato do registro e as limitações estão no [STUDIO.md](STUDIO.md#registro-da-seleção-originselection-formato-1).
+**Etapas 0, 1 e 2 feitas; a Etapa 3, "Onde pesa", está em andamento, com os Passos 1 a 3 e a 4A do Passo 4 concluídos, e a 4B autorizada e não iniciada.** As decisões estão no plano, em [Evidence Builder no Studio](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evidence-builder-no-studio-etapas-0-a-7-05112026), e prevalecem sobre esta seção, que guarda o contexto anterior a elas. O contrato do registro e as limitações estão no [STUDIO.md](STUDIO.md#registro-da-seleção-originselection-formato-1).
 
 ### Por que esta evolução
 
@@ -460,10 +460,10 @@ As investigações da seção 7, e também: ordenar a seleção por tempo; troca
 1. **Leia este arquivo inteiro.** Depois, no plano, da linha 1116 em diante, quando precisar de tabelas completas.
 2. **Confirme o estado, sem confiar neste texto:**
    - `git status -sb`
-   - `git log --oneline origin/main..HEAD`, que vem vazio com a publicação feita, ou lista os 15 commits da [seção 11](#11-publicação-dos-passos-1-e-2-da-etapa-3-06112026) sem ela, salvo trabalho posterior.
+   - `git log --oneline origin/main..HEAD`, que lista o que ainda não foi publicado. Sem push depois do encerramento da 4A, ele traz só o commit da [seção 13](#13-4a-concluída-e-encerrada-06112026), salvo trabalho posterior.
    - Antes de qualquer limpeza de temporários, verifique os dados: `sha256sum -c MANIFESTO.sha256 --quiet` em `.studio/arquivo-copias/rodadas-20261104` e a existência de `root` e `rootpy` no scratchpad. Não remova, sobrescreva nem reorganize nada sem aprovação.
 3. **Leia a seção [Evidence Builder no Studio](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evidence-builder-no-studio-etapas-0-a-7-05112026) do plano** e o [contrato no STUDIO.md](STUDIO.md#registro-da-seleção-originselection-formato-1). Antes de usar as baterias de tela, confira se o scratchpad citado na seção 3 ainda existe. Se não existir, restaure pelo `LEIA-ME.md` do arquivo de preservação, sabendo que esse caminho ainda não foi testado.
-4. **Não inicie o Passo 3 da Etapa 3 sem autorização do usuário.** Apresente testes, diff e resultados antes do commit de cada etapa, e aguarde.
+4. **O Passo 4 da Etapa 3 está autorizado, só nas entregas 4A e 4B. A 4A está encerrada ([seção 13](#13-4a-concluída-e-encerrada-06112026)); a 4B é a próxima atividade e não foi iniciada. Não inicie a evolução da cidade, o resumo "N de M", o fallback único nem o Passo 6 sem autorização do usuário** ([seção 12](#12-passo-3-encerrado-e-sequência-da-etapa-3-06112026)). Apresente testes, diff e resultados antes do commit de cada etapa, e aguarde.
 5. **Não faça push** sem pedido.
 6. **Não retome investigações suspensas** sem evidência nova e decisão do usuário. Experimento novo exige hipótese e critérios fixados antes, e o usuário costuma decidir etapa por etapa.
 7. **Relate os resultados com honestidade:** o que falhou, o que não foi testado e o que é só hipótese. Corrija números errados, inclusive os seus e os do usuário: este trabalho já teve correções assim (B com "+34%" de memória, orçamento de "16 KB").
@@ -480,9 +480,9 @@ As investigações da seção 7, e também: ordenar a seleção por tempo; troca
 
 ## 11. Publicação dos Passos 1 e 2 da Etapa 3 (06/11/2026)
 
-**Situação: os Passos 1 e 2 estão concluídos, e a publicação em `origin/main` está planejada, mas não confirmada neste texto.** Ela depende de autorização do usuário e acontece depois do commit que traz este registro, cujo hash não cabe aqui. Confira o estado real com os comandos abaixo.
+**Registro de antes da publicação; o estado atual está na [seção 12](#12-passo-3-encerrado-e-sequência-da-etapa-3-06112026).** Quando este texto foi escrito, os Passos 1 e 2 estavam concluídos, e a publicação em `origin/main` estava planejada, porque acontece depois do commit que traz este registro, cujo hash não cabia aqui.
 
-**O Passo 3 não foi iniciado.** O objetivo da próxima sessão é iniciá-lo, com autorização do usuário.
+Naquele momento, o Passo 3 não tinha sido iniciado.
 
 **Os 14 commits, do mais antigo ao mais novo, sobre `7868912`:**
 
@@ -534,4 +534,101 @@ O histórico local foi reescrito antes da primeira publicação, só em document
 1. Leia este arquivo, a [seção do plano](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evidence-builder-no-studio-etapas-0-a-7-05112026) e a memória de trabalho, que guarda as preferências de commit do usuário.
 2. Rode `git fetch origin`, `git status -sb` e `git log --oneline origin/main..HEAD`. Com a publicação feita, a lista vem vazia e `git rev-parse HEAD origin/main` dá o mesmo hash, salvo trabalho posterior. Sem ela, a lista traz estes 14 commits e o que traz este registro.
 3. Nunca use force push, e não publique sem pedido do usuário.
-4. Não inicie o Passo 3 sem autorização explícita.
+4. O que está autorizado depois deste registro está na seção 12.
+
+## 12. Passo 3 encerrado e sequência da Etapa 3 (06/11/2026)
+
+**Decisão formal do usuário: opção A. O Passo 3 está encerrado como entregue, concluído no backend, e não será ampliado com a apresentação visual dos estados.** A decisão não mudou código. O registro completo está no [plano](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#passo-3-encerrado-pela-opção-a-06112026).
+
+**Por que não a opção B:** ela levaria o estado por função à tela da sugestão. Isso misturaria a responsabilidade do backend, que fornece os estados, com a da interface, que os apresenta, e essa apresentação é do Passo 4. A falta na tela é uma pendência do Passo 4, não um motivo para reabrir o Passo 3. A entrega 4B do Passo 4 planeja esse painel para o futuro: ela não reabre o Passo 3 nem implementa a opção B retroativamente.
+
+### O que cada passo entregou
+
+| Passo | O que resolveu | Onde |
+|---|---|---|
+| 1, cobertura | Ausência de cobertura deixou de ser confundida com ausência de execução: estados e motivos de exclusão, com `not_recorded`, `not_classified` e nulo distintos, e `bodiless` só em Rust | `47337e9` |
+| 2, interpretação | Frequência deixou de se confundir com custo: ordem por contagem observada, sem `FREQUENT` nem alvo automático, com `count_kind`, `counted_no_passes`, `zero_evidence` e o alvo resolvido antes da medição | `47337e9` |
+| 3, estado por função | A API fornece o que distingue ausência de cobertura de ausência de contagem: `coverage_state`, `exclusion_reason`, `zero_evidence` e o resumo `coverage`, ao lado de `calls: null`. Foi entregue junto com o Passo 1 | `instrument.rs:457`, teste em `store.rs:2411` |
+
+### Verificações
+
+| Verificação | Resultado | Situação |
+|---|---|---|
+| `git ls-remote`, `HEAD` e `origin/main` | Todos em `f6f3958`, sem divergência | Executada em 06/11/2026, nesta decisão |
+| `cargo test --workspace --locked`, em `f6f3958` | 240 aprovados, 0 falhas, 2 ignorados | Executada em 06/11/2026, nesta decisão |
+| `a_suggestion_tells_counted_without_running_from_no_coverage_and_selects_the_same`, Python alvo × Rust contado sem passagens, com a mesma seleção | Aprovado | Executada em 06/11/2026, nesta decisão |
+| Gabarito, 1 execução, em `f6f3958` | Saída sem a linha de resultado com SHA-256 `2714b840…`, igual à linha de base | Executada em 06/11/2026, nesta decisão |
+| Baterias de tela, 164 de 164, em `9659de5` | Veja a seção 11 | Resultado histórico, não repetido |
+| `etapa2.js` e `etapa2b.js` | Veja a seção 11 | Resultado histórico, não repetido |
+
+As limitações da seção 11 continuam valendo.
+
+### Sequência e autorizações
+
+A sequência vem da tabela do §11 do diagnóstico da Etapa 3, aprovado na sessão `661d7681`, cuja transcrição fica fora do repositório. O plano guarda a [tabela completa](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#sequência-dos-passos). Ela é a sequência aprovada, e **não autoriza a implementação de nenhum passo**.
+
+| Trabalho | Estado | O que falta |
+|---|---|---|
+| Passo 4: 4A, estados na tela Onde pesa, e 4B, estados no painel da sugestão | 4A concluída e encerrada; 4B autorizada e não iniciada ([escopo](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#escopo-registrado-do-passo-4) e [resultado](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#resultado-da-4a-06112026)) | A 4B, com testes, diff e resultados antes do commit, que depende de autorização separada |
+| Resumo "N de M" | Fora do escopo definido do Passo 4 | Decisão específica; não está autorizado |
+| Fallback único da tabela do §11 | Fora de 4A e de 4B; pendência sem etapa atribuída | Não implementar nem atribuir a outra etapa |
+| Passo 5: cidade e fluxograma | Adiado para uma [etapa própria de evolução visual](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evolução-visual-cidade-e-fluxograma-planejada-em-06112026) | Autorização e os pontos em aberto listados lá |
+| Passo 6: conversa e Python | Não iniciado, aguardando revisão | Revisão e autorização |
+
+**Encerramento e autorização de 06/11/2026:** a revisão documental do Passo 3 está encerrada, e o Passo 4 da Etapa 3 está autorizado para execução numa sessão posterior, com as entregas 4A e 4B separadas. O nome oficial é Passo 4 da Etapa 3, para não confundir com a Etapa 4 (Evidence Builder) do plano. **A 4A foi revisada e encerrada; a 4B continua autorizada e é a próxima atividade.** A autorização não vale para o Passo 6, a evolução da cidade, o mapa, o fluxograma, o resumo "N de M", a instrumentação, a arquitetura de evidências, uma Fase 5 nem refatorações fora do escopo. A evolução da cidade continua sendo uma iniciativa futura, sem etapa atribuída.
+
+**Decisão de planejamento não é autorização.** A direção visual e semântica da cidade está aprovada para planejamento. Implementá-la depende de autorização expressa, e ela não deve ser antecipada no Passo 4. Até lá, a cidade, o fluxograma, os dados da API e a instrumentação ficam como estão.
+
+**Semântica a preservar, decidida pelo usuário:**
+
+- **Três estados:** passagens observadas, sem passagens observadas e ausência de cobertura. O nome é "função contada sem passagens observadas", porque ausência de contagem observada não é prova de ausência de execução. Os casos são diferentes: um zero pode vir de um contador zerado depois de uma execução anterior, e em `no_line` nenhuma linha foi impressa.
+- **Top 8 por `cpu_ms` observado.** Não são as oito de maior custo próprio: `cpu_ms` é inclusivo e influenciado pela contagem.
+- **Altura:** só representa número de chamadas quando `count_kind` for `entry_calls`. A legenda respeita a origem e a semântica de cada métrica.
+- **Prédio como arquivo:** a navegação planejada fica, e a semântica continua em aberto. Nenhuma agregação por arquivo está definida, e `cpu_ms` não se soma, porque a soma pode duplicar valores.
+
+**Efeito aceito do adiamento:** a seção 9 registra que alterar só um consumidor da medição pode produzir uma visualização contraditória. Com a cidade adiada, o ranking segue a contagem, enquanto a cor e o top 8 da cidade seguem `cpu_ms`. A legenda diz que a cor é o tempo.
+
+## 13. 4A concluída e encerrada (06/11/2026)
+
+**A entrega 4A do Passo 4 da Etapa 3 está concluída, revisada e encerrada. A próxima atividade é a 4B, autorizada e não iniciada.** O registro completo está no [plano](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#resultado-da-4a-06112026).
+
+**Git:** um commit local em `main`, sobre `f6f3958`, que é `origin/main`, sem push. Mensagem: `feat(studio): conclui visualizacao de cobertura da 4A`. O hash de um commit não cabe no próprio commit: confira com `git log -1 --format=%H --grep="conclui visualizacao de cobertura da 4A"`.
+
+### O que a tela faz
+
+Só `web/index.html` mudou. Backend, API, contrato de cobertura, instrumentação, envelope, seleção, portão, `origin.selection` e gabarito não mudaram.
+
+- **Ranking:** as mesmas linhas, com o título "Top 20 · Maior contagem observada, com o tempo instrumentado como referência" e uma nota dizendo que não são todas as funções com passagens observadas.
+- **Duas listas recolhidas, sem quantidades:** "Contadas sem passagens observadas" (`counted_no_passes`, com o motivo de `zero_evidence`) e "Sem cobertura" (`no_coverage`, com o motivo de `exclusion_reason`). As duas vêm de `coverage.functions`, em `/api/hotspots`, e mantêm o estado aberto ou fechado quando a pessoa escolhe uma função em Separar.
+- **Correção semântica depois da revisão:** a nota de `counted_no_passes` falava em contador zerado, o que não explica `no_line`. O texto final é "A medição não registrou passagens por estas funções. Isso não prova que elas não executaram: ausência de contagem observada não é prova de ausência de execução." Em inglês: "The measurement recorded no passes through these functions. This does not prove they did not execute: absence of observed counts is not proof of absence of execution."
+- **"236 funções contadas pelo Librarian" não mudou:** 236 é quem recebeu a instrução, e `coverage.counted` (244) soma quem imprimiu contagem própria sem recebê-la. Veja o [plano](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#resultado-da-4a-06112026).
+
+### Testes
+
+| Verificação | Resultado | Situação |
+|---|---|---|
+| `tela-4a.js` | 30 de 30 | Executada no encerramento, no código do commit |
+| `tela-cartao.js`, `tela-zero.js`, `tela-origem.js`, `tela-nomes.js`, `tela-passo2.js`, `etapa2c.js` | 37, 29, 32, 12, 9 e 45, todas sem falha | Executadas no encerramento, no código do commit |
+| Erros de página e envios a LLM | Nenhum, pelas próprias baterias; 844 `send.json` antes e depois, nas cópias de teste | Executada no encerramento |
+| 6 mutações contra `tela-4a.js` | 6 detectadas | Antes da correção semântica, que só trocou um texto; não repetidas |
+| `cargo test --workspace --locked` | 240 aprovados, 0 falhas, 2 ignorados | Durante a 4A; não repetido, porque nada em Rust mudou |
+| Gabarito | SHA-256 `2714b840…`, igual à linha de base | Durante a 4A; não repetido, porque ele não mudou |
+| `etapa2.js`, `etapa2b.js` e `etapa2-modelo.js` | Não executados na 4A | Veja a seção 11 |
+
+### Limitações e pendências
+
+As limitações estão no [plano](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#resultado-da-4a-06112026). Seguem pendentes, cada uma com decisão ou autorização própria: o resumo "N de M", o fallback único, o filtro de 5%, a evolução da cidade e do fluxograma, e o Passo 6. A limitação de `calls: null` em `origin.selection` continua sem passo atribuído.
+
+### Como retomar
+
+1. Faça a conferência da [seção 10](#10-instruções-para-a-nova-sessão) e leia, no plano, o [escopo do Passo 4](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#escopo-registrado-do-passo-4) e o [resultado da 4A](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#resultado-da-4a-06112026).
+2. A 4B é o painel da sugestão e usa o `coverage_state` que cada item de `/api/envelope/suggest` já traz (`instrument.rs:467`). Essa rota não traz `coverage.functions` (`instrument.rs:474`), e o painel não deve depender de `/api/hotspots`. O painel está em `index.html`: procure `envelope.out.`.
+3. **Cuidado para a 4B:** sem medição, o item vem com `no_coverage` e motivo nulo. O texto não pode dizer que a medição não cobriu a função quando não houve medição.
+4. **Baterias de tela:** veja o [README](crates/librarian-studio/tests/tela/README.md), rodam em mais de 10 minutos e gravam na raiz, por isso use cópias. Os dados são temporários:
+   - raízes: `base/rs` e `base/py`, no scratchpad da sessão `661d7681-430a-4afe-b472-97d59768c138`;
+   - projeto Python: `iso/pyproj/backend`, no scratchpad da sessão `465f4d1b-0d17-4dff-903f-d3077bb3c8f4`;
+   - Playwright: `librarian-ferramentas/pw/node_modules/playwright-core`, na pasta de vídeos do usuário;
+   - antes de rodar, copie o `web/index.html` atual para as raízes de teste.
+
+   Se esses dados tiverem sumido, avise o usuário antes de reconstruir: a restauração pelo arquivo de preservação nunca foi executada.
+5. **Não faça push** sem pedido, e apresente testes, diff e resultados antes de qualquer commit da 4B.

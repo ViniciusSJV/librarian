@@ -1606,11 +1606,12 @@ Nos 8 envios de mudança da gravação do vídeo 12, das 24 propostas só 1 saiu
 | 0 | Preservação dos dados | Feita, fora do Git |
 | 1 | Diagnóstico visual e contratos | Feita, sem alterar arquivos |
 | 2 | Correções e remoções aprovadas | **Feita:** `99f69f3` |
-| 3 | "Onde pesa" | Em andamento: Passos 1 e 2 concluídos (`47337e9`, baterias em `9659de5`); Passo 3 não iniciado |
+| 3 | "Onde pesa" | Em andamento: Passos 1 e 2 concluídos (`47337e9`, baterias em `9659de5`); Passo 3 encerrado no backend, pela opção A; 4A do Passo 4 concluída; 4B autorizada e não iniciada |
 | 4 | Evidence Builder | Não iniciada |
 | 5 | Pacote e revisão, C1 e C2 | Não iniciada |
 | 6 | Fact Builder e portão | Não iniciada |
 | 7 | Verificação | Não iniciada |
+| Sem número | [Evolução visual: cidade e fluxograma](#evolução-visual-cidade-e-fluxograma-planejada-em-06112026) | Planejada; implementação não autorizada |
 
 **Regras de trabalho:** um commit local por etapa aprovada, e publicação só com pedido do usuário; `STUDIO.md` e plano só depois da validação; não misturar documentação e código sem necessidade; não modificar resultados históricos; não rodar experimento com LLM sem necessidade; não aumentar o envelope; não reativar investigações suspensas; não criar heurísticas sem evidência. Preservar a cidade 3D e o fluxograma. A skill `frontend-design` vale para o trabalho na interface, e `ponytail` só quando for pertinente; nenhuma das duas deve ser reinstalada.
 
@@ -1724,7 +1725,7 @@ As perguntas geradas deixaram de citar "frame", "render" e "imagem" (`questions.
 
 ### Etapa 3: "Onde pesa"
 
-Corrigir todos os consumidores da medição de uma vez, com coerência entre frontend, backend, cidade, fluxograma e respostas. Testar. C4 está aprovado com essa condição.
+Corrigir todos os consumidores da medição de uma vez, com coerência entre frontend, backend, cidade, fluxograma e respostas. Testar. C4 está aprovado com essa condição. **Atualização de 06/11/2026:** por decisão do usuário, cidade e fluxograma passam para uma [etapa própria](#evolução-visual-cidade-e-fluxograma-planejada-em-06112026), e o efeito disso está em [Sequência dos passos](#sequência-dos-passos).
 
 **Consumidores:** ranking e top 20; etiqueta de frequência; "A mais chamada"; ação Separar; "Como contou"; cidade, calor e top 8; fluxograma e dicas; a resposta de "o que pesa" em `questions.rs`; o aviso em `instrument.rs`.
 
@@ -1736,9 +1737,112 @@ Corrigir todos os consumidores da medição de uma vez, com coerência entre fro
 - A cor pode continuar representando tempo, com a legenda dizendo isso.
 - Não inventar tempo próprio: só existe tempo inclusivo.
 
-**Cobertura:** as seis limitações em [Medição: capacidade não é cobertura](STUDIO.md#medição-capacidade-não-é-cobertura), reproduzidas na Etapa 2, são desta etapa.
+**Cobertura:** as seis limitações em [Medição: capacidade não é cobertura](STUDIO.md#medição-capacidade-não-é-cobertura), reproduzidas na Etapa 2, são desta etapa. **Atualização de 06/11/2026:** o mapa fica para a [etapa própria](#evolução-visual-cidade-e-fluxograma-planejada-em-06112026), o resumo "N de M" depende de decisão específica, e as demais limitações de apresentação dos estados ficam para o [Passo 4](#escopo-registrado-do-passo-4).
 
-**Estado em 06/11/2026:** os Passos 1 e 2 estão concluídos; o Passo 3 não foi iniciado. Passo 1: cobertura por função no backend. Passo 2: ordem por contagem observada, sem `FREQUENT` nem alvo automático, textos ao modelo, `count_kind` por origem, `counted_no_passes` com `zero_evidence`, resolução do alvo antes da medição, por símbolo, e origem da resposta no cartão, decidida por `execution`. Na cidade, a altura já vem da contagem; a cor (o calor) e o top 8 continuam por tempo e ficam para os passos seguintes.
+**Estado em 06/11/2026:** os Passos 1 e 2 estão concluídos, e o Passo 3 está encerrado no backend; a 4A do Passo 4 está concluída, e a 4B está autorizada e não foi iniciada. Passo 1: cobertura por função no backend. Passo 2: ordem por contagem observada, sem `FREQUENT` nem alvo automático, textos ao modelo, `count_kind` por origem, `counted_no_passes` com `zero_evidence`, resolução do alvo antes da medição, por símbolo, e origem da resposta no cartão, decidida por `execution`. Na cidade, a altura já vem da contagem; a cor (o calor) e o top 8 continuam por tempo, e a direção futura está em [Evolução visual](#evolução-visual-cidade-e-fluxograma-planejada-em-06112026).
+
+#### Sequência dos passos
+
+Origem: a tabela do §11 do diagnóstico da Etapa 3, aprovado na sessão `661d7681` (05/11/2026), cuja transcrição fica fora do repositório. Os passos 0 a 7 são os daquela tabela, e a coluna "Situação" é de 06/11/2026. **A tabela é a sequência aprovada. Ela não autoriza a implementação de nenhum passo.**
+
+| Passo | Conteúdo no diagnóstico | Situação |
+|---|---|---|
+| 0 | Linha de base, sem alterar nada | Concluído |
+| 1 | Backend, cobertura | Concluído |
+| 2 | Backend, ordem por contagem, textos sem afirmação falsa e sem alvo automático | Concluído |
+| 3 | Estado por função em `/api/envelope/suggest`, distinguindo `calls: null` | **Concluído no backend** |
+| 4 | Tela de Onde pesa: rótulos, resumo de cobertura e fallback único | 4A concluída; 4B autorizada e não iniciada. O Passo 2 já tinha levado à tela o título do ranking, os rótulos por `count_kind` e o seletor de Separar. O [escopo registrado](#escopo-registrado-do-passo-4) define 4A e 4B e deixa de fora "N de M" e o fallback único |
+| 5 | Cidade e fluxograma: legenda, top 8 e estado "sem cobertura" | Adiado para a [etapa própria](#evolução-visual-cidade-e-fluxograma-planejada-em-06112026) |
+| 6 | Conversa e Python: D6, D7 e D8 | Não iniciado, aguardando revisão; o estado desses três itens não foi conferido |
+| 7 | Verificação final e documentação | Não iniciado |
+
+**D6, D7 e D8 aqui são os do diagnóstico da Etapa 3,** não os defeitos de mesmo nome da Etapa 2:
+
+- **D6:** em Python, com `calls@` gravado, a tela diz que a edition não tem medição.
+- **D7:** em Python, a mensagem sugere que declarar `instrument` resolveria.
+- **D8:** a mesma pergunta era reconhecida antes da medição e deixava de ser depois. A resolução do alvo no Passo 2 pode ter mudado isso, o que não foi conferido.
+
+**Efeito de adiar o Passo 5:** a condição "de uma vez" do início desta etapa não vale para cidade e fluxograma. Até a etapa própria, o ranking segue a contagem, enquanto a cor e o top 8 da cidade seguem `cpu_ms`, e a legenda diz que a cor é o tempo.
+
+#### Passo 3 encerrado pela opção A (06/11/2026)
+
+**Decisão formal do usuário: opção A. O Passo 3 está encerrado como entregue, concluído no backend, e não será ampliado com a apresentação visual dos estados.** O Passo 3 fornece os estados, e o Passo 4 os apresenta. A opção B, levar o estado à tela da sugestão, não foi implementada, porque misturaria essas duas responsabilidades. A falta na tela é uma pendência do Passo 4, não um motivo para reabrir o Passo 3.
+
+A entrega veio junto com o Passo 1, cujo pedido incluiu os campos em `/api/envelope/suggest`: `annotate_suggestion`, em `instrument.rs:457`, com `coverage_state`, `exclusion_reason` e `zero_evidence` por função e o resumo `coverage`, ao lado de `calls: null`. O teste é `a_suggestion_tells_counted_without_running_from_no_coverage_and_selects_the_same`, em `store.rs:2411`: Python alvo × Rust contado sem passagens, com a mesma seleção. Ele foi executado em 06/11/2026, em `f6f3958`, e passou. A decisão não mudou código. A página ainda não lê esses campos.
+
+#### Escopo registrado do Passo 4
+
+**Autorizado em 06/11/2026, com as entregas 4A e 4B separadas. A [4A está concluída e encerrada](#resultado-da-4a-06112026); a 4B é a próxima atividade, autorizada e não iniciada.** O nome oficial é **Passo 4 da Etapa 3**, para não confundir com a [Etapa 4](#etapa-4-evidence-builder) deste plano. O Passo 4 deverá apresentar os estados na interface, com textos em português e inglês, sem mostrar estados diferentes como se fossem equivalentes:
+
+| O que a tela distingue | Campo que já existe | Cuidado |
+|---|---|---|
+| Função contada com passagens observadas | `counted_and_ran` | Não diz que ela pesa |
+| Função contada sem passagens observadas | `counted_no_passes`, com `zero_evidence` | Pela [semântica do zero](STUDIO.md#semântica-do-zero), ausência de contagem observada não é prova de ausência de execução. Os casos são diferentes: um zero pode vir de um contador zerado depois de uma execução anterior, e em `no_line` nenhuma linha foi impressa |
+| Função sem cobertura | `no_coverage`, com `exclusion_reason` | Não diz que ela não executou |
+
+São duas entregas distintas:
+
+**4A, tela Onde pesa:**
+
+- Apresentar os estados de cobertura e medição.
+- Diferenciar passagens observadas, ausência de passagens observadas e ausência de cobertura.
+- Não inferir execução a partir de zero.
+- Considerar `coverage.functions`, fornecida por `/api/hotspots`, para apresentar as funções sem cobertura que não aparecem no ranking, que contém somente linhas contadas.
+
+**4B, painel da sugestão:**
+
+- Apresentar corretamente o estado das funções relacionadas à sugestão.
+- Distinguir funções sem cobertura das funções sem passagens observadas.
+- Usar `coverage_state`, que `/api/envelope/suggest` já fornece em cada item da sugestão (`instrument.rs:467`). Essa rota não fornece `coverage.functions`: o resumo `coverage` dela vem sem a lista (`instrument.rs:474`).
+- Não introduzir uma dependência desnecessária de `/api/hotspots` no painel da sugestão.
+- Não alterar seleção, envelope, portão, `origin.selection` ou o conteúdo enviado ao modelo.
+
+A 4B é uma entrega futura do Passo 4: não reabre o Passo 3 nem implementa a opção B retroativamente.
+
+**Limites, que seguem dependendo de decisão específica e de autorização:**
+
+- Não alterar o que é enviado ao modelo.
+- Não alterar `origin.selection`.
+- Não modificar o envelope, a seleção ou o portão.
+- O resumo "N de M" fica fora do escopo definido do Passo 4, embora a tabela do diagnóstico cite o resumo de cobertura neste passo. Ele depende de decisão específica e não está autorizado.
+- O fallback único citado na tabela do diagnóstico não faz parte de 4A nem de 4B. É uma pendência sem etapa atribuída, e não deve ser implementado nem atribuído a outra etapa. Ele é o D4 do diagnóstico da Etapa 3, não o da Etapa 2: backend e tela escolhiam os chamadores de modos diferentes, o que podia deixar "Quem chama" vazio e Separar sem perguntas.
+- Não alterar o filtro de 5% nesta definição.
+- Não implementar cidade, mapa nem fluxograma.
+- Não alterar a instrumentação nem a arquitetura de evidências.
+- Não iniciar o Passo 6 nem uma Fase 5.
+- Não fazer refatorações fora do escopo.
+
+#### Resultado da 4A (06/11/2026)
+
+**Concluída, revisada e encerrada.** O commit e o estado do Git estão na [seção 13 do contexto](CONTEXTO-CONTINUIDADE.md#13-4a-concluída-e-encerrada-06112026).
+
+**Escopo entregue, só em `web/index.html`:** o ranking fica com as mesmas linhas, identificado como Top 20, com uma nota de que não são todas as funções com passagens observadas. Abaixo dele, duas listas recolhidas, "Contadas sem passagens observadas" e "Sem cobertura", pelos estados de `coverage.functions`, com o arquivo e o motivo de cada função, em português e inglês. O estado aberto ou fechado se mantém quando a pessoa escolhe uma função em Separar. Sem medição, nenhuma das listas aparece.
+
+**Decisões do usuário:** sem quantidades nas listas; "236 funções contadas pelo Librarian" não muda; `coverage.functions` serve aos dois estados das listas, sem forçar classificação onde o contrato não a dá.
+
+**Semântica preservada:** a tela só lê os estados que o backend calcula, e os três não se confundem. Ausência de contagem observada não é prova de ausência de execução, e sem cobertura não diz se a função executou. Na revisão, a nota de `counted_no_passes` deixou de falar em contador zerado, porque isso não explica `no_line`. Texto final: "A medição não registrou passagens por estas funções. Isso não prova que elas não executaram: ausência de contagem observada não é prova de ausência de execução." Em inglês: "The measurement recorded no passes through these functions. This does not prove they did not execute: absence of observed counts is not proof of absence of execution."
+
+**236 e 244, no `renderer`:** `hot.functions` (236) é quem recebeu a instrução, o tamanho de `instrumentation.functions`, e `coverage.counted` (244) soma `counted_and_ran` e `counted_no_passes`. Os 8 a mais imprimiram contagem sem receber a instrução: `Matrix<4>::inverse`, `Triangle::local_intersect`, `Intersectable::intersect`, `Bounds::intersects`, `Groups::intersect`, `World::shade_hit`, `World::is_shadowed` e `World::color_at`. Os números não divergem por erro: contam populações diferentes.
+
+**Testes:**
+
+- **No encerramento, no código do commit:** baterias de tela, 194 de 194: `tela-4a.js` 30, vista falhando antes da mudança; `tela-cartao.js` 37; `tela-zero.js` 29; `tela-origem.js` 32; `tela-nomes.js` 12; `tela-passo2.js` 9; `etapa2c.js` 45. Sem erro de página e sem envio a LLM.
+- **Durante a 4A, não repetidos, porque nada em Rust nem no gabarito mudou:** `cargo test --workspace --locked`, 240 aprovados, 0 falhas, 2 ignorados; gabarito com SHA-256 `2714b840…`, igual à linha de base.
+- **Antes da correção da nota, que só trocou um texto:** 6 mutações detectadas pela `tela-4a.js`.
+- **Não executados na 4A:** `etapa2.js`, `etapa2b.js` e `etapa2-modelo.js`.
+
+**Limitações:**
+
+- Funções com passagens fora do Top 20 não aparecem nas listas desta tela: 61 na rodada `20261104-020244`. O ranking não é um inventário de funções executadas. Elas ficam no seletor de Separar.
+- As listas não têm número de linha, porque `coverage.functions` não traz esse dado.
+- `tela-4a.js` depende do ambiente e dos dados locais, e não faz parte do `cargo test` nem do CI.
+- Trocar o idioma com a página aberta não redesenha o cartão, o que já acontecia. Corrigir chamaria `renderHot`, que reconstrói a cidade.
+- Projeto misto, Python com medição e os motivos que as rodadas do `renderer` não têm foram verificados só com dados simulados na página.
+- Mediana zero com máximo positivo continua `counted_and_ran`, sem inferir ausência de execução. `hot.noneRan` e o seletor de Separar leem a mediana, então essa função fica fora dos dois. Nenhuma das duas rodadas conferidas do `renderer` tem esse caso.
+
+**Pendentes, cada um com decisão ou autorização própria:** o resumo "N de M", o fallback único, o filtro de 5%, a evolução da cidade e do fluxograma, e o Passo 6. A limitação de `calls: null` em `origin.selection` continua sem passo atribuído.
+
+**Próxima atividade: a 4B,** autorizada e não iniciada.
 
 ### Etapa 4: Evidence Builder
 
@@ -1775,3 +1879,45 @@ Fatos por fonte. Propostas lado a lado, com medidas e pioras de `execution.json`
 ### Etapa 7: verificação
 
 `cargo test`; testes de regressão; Playwright em raiz isolada; tema escuro, tema claro e troca manual de tema; tela estreita; estados de carregamento e erro; projeto Rust e projeto Python; dados apresentados comparados com as respostas reais de `/api/*`; pacote revisado comparado com o payload efetivamente enviado. Testes automatizados passando não bastam para considerar a interface validada.
+
+### Evolução visual: cidade e fluxograma (planejada em 06/11/2026)
+
+**Decisão de planejamento do usuário, não autorização de implementação.** A direção visual e semântica está aprovada para planejamento. Esta é uma etapa própria, ainda sem número, e implementá-la depende de autorização expressa. Ela não deve ser antecipada no Passo 4 da Etapa 3, e até lá a cidade, o fluxograma, os dados da API e a instrumentação ficam como estão. A regra de preservar a cidade 3D e o fluxograma continua: isto é uma evolução deles, não uma troca.
+
+**Objetivo:** a cidade evolui para um visualizador interativo da estrutura e do comportamento do projeto. Não é só uma reformulação estética: a aparência deve comunicar informações reais do grafo e das medições.
+
+**Direção visual:** uma cidade tecnológica estilizada, com aparência arquitetônica, e não um painel convencional de gráficos.
+
+- Prédios em blocos, com alturas, dimensões e cores variadas.
+- Fundo grafite e sombras suaves para dar profundidade.
+- Ruas, calçadas e quadras conectando os edifícios.
+- Iluminação arquitetônica discreta nas janelas e ruas.
+- Aparência organizada, moderna e legível, sem excesso de neon, efeitos exagerados ou estética cyberpunk.
+
+**Semântica dos dados, a preservar rigorosamente:**
+
+- A altura dos prédios representa a quantidade de execuções observada, e só representa número de chamadas quando `count_kind` for `entry_calls`.
+- A cor e a intensidade visual representam `cpu_ms`, que é inclusivo e influenciado pela contagem.
+- **Top 8 por `cpu_ms` observado.** Essas funções não são descritas como as oito de maior custo próprio.
+- A ausência de cobertura tem representação visual própria.
+- A ausência de medição não é representada como zero.
+- A legenda respeita a origem e a semântica de cada métrica.
+- Contagem e `cpu_ms` não se misturam, e nenhum significado visual é atribuído a dados que não existem.
+
+**Navegação:** `Cidade → Bairro/Módulo → Prédio/Arquivo → Função/Fluxograma`. A pessoa explora progressivamente, da visão geral até a função, para compreender suas relações e seu fluxo. A semântica do prédio como arquivo permanece em aberto (ponto 1, abaixo).
+
+**Interação e informação a considerar:**
+
+- Identificação visual de módulos e arquivos.
+- Destaque das funções relevantes.
+- Acesso ao fluxograma da função.
+- Informações de contagem e de `cpu_ms`.
+- Estados explícitos para funções sem cobertura ou sem medição.
+- Legendas que expliquem alturas, cores e destaques.
+
+**Pontos em aberto, a decidir antes de implementar.** Vêm da comparação desta direção com os contratos em vigor, e nenhum foi resolvido aqui:
+
+1. **O que é um prédio.** Hoje, bairro é arquivo e prédio é função. Na navegação acima, prédio é arquivo, e essa semântica permanece em aberto. Contagem e tempo existem por linha e por função, e **nenhuma agregação por arquivo está definida**. `cpu_ms` não se soma entre funções: o tempo é inclusivo, e a soma pode duplicar valores ([limitações dos números por função](STUDIO.md#limitações-conhecidas-dos-números-por-função)).
+2. **Legenda com origens diferentes.** A regra da altura está acima. Falta definir como a legenda mostra, na mesma cidade, prédios com `count_kind` diferentes.
+3. **Sem medição.** Hoje, sem medição, a altura vem do tamanho da função, numa cor só. É preciso definir como isso convive com "altura é execução".
+4. **Funções sem passagens e sem cobertura.** Hoje, com medição, a cidade mostra só as funções com contagem acima de zero. As duas ausências precisam aparecer, e diferentes entre si.

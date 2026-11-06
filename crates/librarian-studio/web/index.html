@@ -1165,7 +1165,27 @@ const STRINGS = {
   'hot.askFacts': ["Separar para {model} ({n} perguntas)","Separate for {model} ({n} questions)"],
   'hot.approveAll': ["Aprovar em lote","Approve as a batch"],
   'hot.noneRan': ["Nenhuma função teve contagem acima de zero nesta medição.","No function had a count above zero in this measure."],
-  'hot.ranking': ["Maior contagem observada, com o tempo instrumentado como referência","Largest count observed, with the instrumented time as a reference"],
+  'hot.ranking': ["Top 20 · Maior contagem observada, com o tempo instrumentado como referência","Top 20 · Largest count observed, with the instrumented time as a reference"],
+  'hot.rankingNote': ["Até 20 linhas contadas, não todas as funções com passagens observadas.","Up to 20 counted lines, not all the functions with passes observed."],
+  'hot.noPasses': ["Contadas sem passagens observadas","Counted with no passes observed"],
+  'hot.noPassesNote': ["A medição não registrou passagens por estas funções. Isso não prova que elas não executaram: ausência de contagem observada não é prova de ausência de execução.","The measurement recorded no passes through these functions. This does not prove they did not execute: absence of observed counts is not proof of absence of execution."],
+  'hot.noCoverage': ["Sem cobertura","No coverage"],
+  'hot.noCoverageNote': ["Esta medição não observou estas funções. Isso não diz se elas executaram.","This measure did not observe these functions. That does not say whether they executed."],
+  'hot.stateNone': ["Nenhuma função neste estado.","No function in this state."],
+  'hot.zero.entry_zero': ["a instrução de entrada contou zero","the entry statement counted zero"],
+  'hot.zero.no_line': ["recebeu a instrução, e nenhuma linha foi impressa para ela","got the statement, and no line was printed for it"],
+  'hot.zero.own_zero': ["o contador do projeto contou zero","the project's own counter counted zero"],
+  'hot.zero.several_zero': ["as linhas contadas ficaram em zero","the counted lines stayed at zero"],
+  'hot.zero.unknown_zero': ["contagem zero de origem desconhecida","a zero count of unknown origin"],
+  'hot.reason.test': ["teste","test"],
+  'hot.reason.skipped_path': ["caminho deixado de fora no perfil","path left out in the profile"],
+  'hot.reason.no_body': ["sem corpo","no body"],
+  'hot.reason.const_fn': ["const fn, que não recebe contador","const fn, which gets no counter"],
+  'hot.reason.already_counts': ["o contador aparece no texto, e nenhuma contagem foi impressa","the counter appears in the text, and no count was printed"],
+  'hot.reason.language_not_supported': ["a linguagem não recebe contador","the language gets no counter"],
+  'hot.reason.shared_line': ["divide a linha com outra função: as passagens não podem ser atribuídas a nenhuma das duas","shares the line with another function: the passes cannot be attributed to either"],
+  'hot.reason.not_recorded': ["medição antiga: o motivo não foi guardado","older measure: the reason was not kept"],
+  'hot.reason.not_classified': ["o registro não classifica esta função","the record does not classify this function"],
   'hot.optimize': ["Otimizar","Optimize"],
   'hot.asking': ["Pergunta {k} de {n} a {model}: {name}…","Question {k} of {n} to {model}: {name}…"],
   'hot.asked': ["{n} perguntas enviadas a {model}. Confira as respostas na conversa e aprove uma a uma ou em lote.","{n} questions sent to {model}. Check the answers in the conversation and approve them one by one or as a batch."],
@@ -3197,6 +3217,7 @@ function hotTarget() {
     .map(k => ({ caller: row(c.symbol), line: k.line, text: k.text })));
   return { target, callers, lines };
 }
+const hotStateOpen = {};
 function renderHot() {
   buildCity();
   paintMeasure();
@@ -3233,12 +3254,24 @@ function renderHot() {
       ...r.callers.slice(0, 6).flatMap((c, k) => [k ? ', ' : '', goTo(c.symbol, c.name), ` (${intPt(c.calls)})`])) : null,
     ...(r.calls_out ?? []).map(k => el('div', { style: 'font-size: 12px' }, el('span', { className: 'muted mono', textContent: `${r.path}:${k.line} ` }), el('code', { textContent: k.text }),
       ' → ', ...k.targets.flatMap((x, i) => [i ? ', ' : '', goTo(x.symbol, x.name), ` (${intPt(x.calls)})`])))));
+  // A state the measure gives each function: the ranking holds counted lines, not every function.
+  const stateList = (state, title, note, why) => {
+    const found = (hot.coverage?.functions ?? []).filter(f => f.coverage_state === state).sort((a, b) => `${a.path}:${a.name}`.localeCompare(`${b.path}:${b.name}`));
+    return el('details', { id: `hotList-${state}`, className: 'hot-sep', open: Boolean(hotStateOpen[state]), ontoggle: ev => { hotStateOpen[state] = ev.target.open; } },
+      el('summary', { textContent: t(title) }),
+      el('p', { className: 'muted', style: 'font-size: 12px', textContent: t(note) }),
+      found.length ? el('ul', { className: 'claims' }, ...found.map(f => el('li', {}, goTo(f.symbol, f.name),
+        el('span', { className: 'muted', style: 'font-size: 12px', textContent: ` ${f.path} · ${why(f)}` })))) : el('p', { className: 'muted', style: 'font-size: 12px', textContent: t('hot.stateNone') }));
+  };
   box.replaceChildren(
     el('p', { className: 'muted', style: 'font-size: 12px', textContent: t('hot.summary', { n: hot.functions, rows: hot.rows.length, execution: hot.execution }) }),
     measureHow(),
     separate,
     el('h3', { textContent: t('hot.ranking') }),
+    el('p', { id: 'hotRankingNote', className: 'muted', style: 'font-size: 12px', textContent: t('hot.rankingNote') }),
     el('ol', { className: 'claims' }, ...hot.rows.slice(0, 20).map(row)),
+    stateList('counted_no_passes', 'hot.noPasses', 'hot.noPassesNote', f => t(`hot.zero.${f.zero_evidence}`)),
+    stateList('no_coverage', 'hot.noCoverage', 'hot.noCoverageNote', f => t(`hot.reason.${f.exclusion_reason}`)),
     el('p', { className: 'muted', style: 'font-size: 11px', textContent: hot.limits.join(' ') }));
 }
 // How the latest "Medir tudo" counted, on one function at a time: the line before and after in
