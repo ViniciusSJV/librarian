@@ -168,7 +168,15 @@ impl Store {
         let root = PathBuf::from(self.settings(key)?.root);
         let instrument = match instrument_of(&root) {
             Ok(instrument) => instrument,
-            Err(e) => return Ok(json!({ "available": false, "reason": "no_instrument", "detail": e.to_string() })),
+            Err(e) => {
+                // With no source it can go in, declaring the statement would not make it possible.
+                let catalog = run.and_then(|run| self.edition(key, run).and_then(|edition| Catalog::load(&edition)).ok());
+                return Ok(if catalog.is_some_and(|c| !crate::instrument::can_place(&c)) {
+                    json!({ "available": false, "reason": "no_source" })
+                } else {
+                    json!({ "available": false, "reason": "no_instrument", "detail": e.to_string() })
+                });
+            }
         };
         let name = instrument.command.as_str();
         let Some(command) = declared(&root)?.remove(name) else {
@@ -185,6 +193,28 @@ impl Store {
         let sha256 = command.sha256(name);
         let approved = self.approvals(key)?.iter().any(|a| a["name"] == name && a["sha256"] == sha256.as_str());
         Ok(json!({ "available": true, "approved": approved, "command": name }))
+    }
+
+    /// What a plain command counted by line (`calls` with `at=`), in the run Investigar shows for it:
+    /// the latest one of each command without a change, whatever its result (`measuredOrigins`, in
+    /// the page), so this never points at lines that are not there. Not a "Medir tudo": it stays out
+    /// of "Onde pesa" and of what the selection reads. This only says that it exists.
+    pub fn manual_counts(&self, key: &str, run: Option<&str>) -> Result<Value> {
+        let Some(run) = run else { return Ok(json!([])) };
+        let mut latest: BTreeMap<String, Value> = BTreeMap::new();
+        for x in self.executions(key, run)? {
+            let name = x["name"].as_str().unwrap_or_default().to_owned();
+            // Strictly later, as the page compares: within the same second, the first one stays.
+            if x["change"].is_null() && latest.get(&name).map_or(true, |y| x["started"].as_str() > y["started"].as_str()) {
+                latest.insert(name, x);
+            }
+        }
+        let plain = latest.into_iter().filter(|(_, x)| x["instrumentation"].is_null() && x["summary"]["succeeded"].as_u64() > Some(0));
+        let counted: Vec<Value> = plain.filter_map(|(command, x)| {
+            let lines = x["summary"]["stats"].as_object()?.values().filter(|s| s["measure"] == "calls" && s["at"].is_string()).count();
+            (lines > 0).then(|| json!({ "command": command, "execution": x["id"], "lines": lines }))
+        }).collect();
+        Ok(json!(counted))
     }
 
     /// A person's approval of the command `name` exactly as the profile declares it now.

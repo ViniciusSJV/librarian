@@ -835,6 +835,7 @@ const STRINGS = {
     'The librarian suggests what a change to these declarations is likely to need in view: the owner type and whoever writes the fields they read, what they call and the type that returns, who calls them, the types they write and the head of the file, where imports live. Each item comes with why and the line. All by written names: what is not written by name does not show, and homonyms and tests are left out. You tick what goes in, and a tick counts at once: what is ticked is what goes.'],
   'envelope.title': ['Sugestão ({n}, {kb} KB de {budget} KB)', 'Suggestion ({n}, {kb} KB of {budget} KB)'],
   'envelope.noMeasure': ['Sem medição nesta edition: a ordem vem só da estrutura, e não dá para saber o que teve contagem.', 'No measure in this edition: the order comes from the structure alone, and what had a count cannot be told apart.'],
+  'envelope.noMeasureManual': ['Sem Medir tudo nesta edition: a ordem vem só da estrutura. Há contagens manuais em Investigar, que esta sugestão não usa.', 'No Measure everything in this edition: the order comes from the structure alone. There are manual counts in Investigate, which this suggestion does not use.'],
   'envelope.leftOut': ['Ficaram de fora ({n})', 'Left out ({n})'],
   'envelope.turnSummary': ['{n} candidatas de fora', '{n} candidates left out'],
   'envelope.turnTag': ['seleção: {summary}', 'selection: {summary}'],
@@ -1335,6 +1336,8 @@ const STRINGS = {
   'city.statusNotYet': ['{functions} funções em {districts} arquivos · ainda não medido: altura pelo tamanho · Medir tudo (aba Investigar) conta o que roda', '{functions} functions in {districts} files · not measured yet: height by size · Measure everything (Investigate tab) counts what runs'],
   'city.statusUnavailable': ['{functions} funções em {districts} arquivos · medição por função não disponível neste projeto: altura pelo tamanho', '{functions} functions in {districts} files · per-function measure not available in this project: height by size'],
   'hot.notYet': ['Ainda não medido nesta edition. Medir tudo conta quantas vezes cada função roda.', 'Not measured yet in this edition. Measure everything counts how many times each function runs.'],
+  'hot.notYetManual': ['O Medir tudo ainda não foi feito nesta edition. Ele conta quantas vezes cada função roda.', 'Measure everything has not run in this edition yet. It counts how many times each function runs.'],
+  'hot.manual': ['{commands} imprimiu contagens manuais em {n} linha(s). Elas ficam fora de Onde pesa: veja-as em Investigar, ao montar o inventário.', '{commands} printed manual counts on {n} line(s). They stay out of Where the time goes: see them in Investigate, by building the inventory.'],
   'hot.unavailable.no_instrument': ['Não disponível neste projeto: o librarian.json não declara um instrument válido.', 'Not available in this project: librarian.json does not declare a valid instrument.'],
   'hot.unavailable.no_source': ['Não disponível neste projeto: a contagem por função só é inserida em fontes Rust, e esta edition não tem nenhuma.', 'Not available in this project: the per-function count only goes into Rust sources, and this edition has none.'],
   'hot.unavailable.no_run': ['Gere o grafo antes de medir.', 'Generate the graph before measuring.'],
@@ -2522,7 +2525,7 @@ function suggestionView() {
         inspect();
       } }) : null,
       el('button', { className: 'link', style: toJoin.length ? '' : 'margin-left: auto', textContent: t('envelope.close'), onclick: () => { suggestion = null; renderGathered(); } })),
-    suggestion.measured ? null : el('div', { className: 'muted', style: 'font-size: 12px', textContent: t('envelope.noMeasure') }),
+    suggestion.measured ? null : el('div', { className: 'muted', style: 'font-size: 12px', textContent: t(manualCounts().length ? 'envelope.noMeasureManual' : 'envelope.noMeasure') }),
     [...suggestion.items, ...suggestion.left_out].some(hasState) ? el('div', { id: 'suggestionCoverageNote', className: 'muted', style: 'font-size: 12px', textContent: t('envelope.coverageNote') }) : null,
     ...rows,
     suggestion.left_out.length ? fold('left', t('envelope.leftOut', { n: suggestion.left_out.length }), suggestion.left_out.map(row)) : null,
@@ -3174,6 +3177,7 @@ function resetHot() {
   hotTurns = [];
   hotPicked = null;
   studio.measureAll = null;
+  studio.manualCounts = null;
   hotStatus = 'idle';
   buildCity();
   paintMeasure();
@@ -3187,10 +3191,14 @@ function resetHot() {
 // Why "Medir tudo" cannot run now: not possible here, or possible and waiting for an approval.
 const measureBlocked = () => { const m = studio.measureAll;
   return !m ? '' : !m.available ? t('hot.unavailable.' + m.reason, m) : m.approved ? '' : t('hot.needsApproval', m); };
+// That manual counts exist, from the server: they stay out of the ranking, and of `measured`.
+const manualCounts = () => studio.manualCounts ?? [];
+const manualNote = () => manualCounts().length ? t('hot.manual', { commands: manualCounts().map(c => `«${c.command}»`).join(', '), n: manualCounts().reduce((sum, c) => sum + c.lines, 0) }) : '';
 function paintMeasure() {
   const m = studio.measureAll, failed = hotStatus === 'failed';
   $('#hotMeasure').disabled = !m?.available || !m.approved;
-  const text = failed ? t('hot.readFailed', { error: hotFailure }) : !m ? '' : measureBlocked() || (hotStatus === 'none' ? t('hot.notYet') : '');
+  const none = hotStatus === 'none';
+  const text = failed ? t('hot.readFailed', { error: hotFailure }) : !m ? '' : [measureBlocked() || (none ? t(manualNote() ? 'hot.notYetManual' : 'hot.notYet') : ''), none ? manualNote() : ''].filter(Boolean).join(' ');
   $('#hotState').hidden = !text;
   $('#hotState').className = failed ? 'error' : 'muted';
   $('#hotState').textContent = text;
@@ -3946,6 +3954,7 @@ async function loadCommands() {
   };
   studio.commands = data.commands;
   studio.measureAll = data.measure_all;
+  studio.manualCounts = data.manual_counts;
   paintMeasure();
   // The Ruler keeps the history: one line per execution, the latest one open. The result of a
   // run with a change also shows under the change itself, in the Conversation.

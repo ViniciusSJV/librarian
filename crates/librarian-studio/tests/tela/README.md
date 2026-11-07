@@ -1,6 +1,6 @@
 # Baterias de tela do Studio
 
-Regressão dos Passos 1, 2 e 4 da Etapa 3 e da seleção da Etapa 2 (`origin.selection`), na página real, num
+Regressão dos Passos 1, 2, 4 e 6 da Etapa 3 e da seleção da Etapa 2 (`origin.selection`), na página real, num
 Chrome sem janela, contra o servidor real. Cobrem o que os testes em Rust não alcançam: o que a tela diz, o
 cartão de desempenho, a dica da cidade, o fluxograma e o registro da seleção.
 
@@ -16,10 +16,11 @@ ambiente e de dados que não estão no repositório.
 | `tela-passo2.js` | 9 | Ordem por contagem, sem alvo automático, seletor de Separar |
 | `tela-4a.js` | 30 | Passo 4, entrega 4A: ranking identificado como Top 20 e as listas de sem passagens e sem cobertura, comparadas com `/api/hotspots`, em português e inglês |
 | `tela-4b.js` | 55 | Passo 4, entrega 4B: o estado de cada item no painel da sugestão, comparado com `/api/envelope/suggest`, sem medição, com estado ausente ou desconhecido, em português e inglês |
+| `tela-passo6.js` | 36 | Passo 6: contagens manuais, inclusive depois de uma execução que falha, projeto sem fonte Rust e a mesma pergunta antes e depois da medição, em projetos Python e misto criados na hora, em `LIBRARIAN_TESTE_SAIDA` |
 | `etapa2c.js` | 45 | Os bloqueadores e as combinações de `origin.selection`, gravadas pelo servidor real |
 
 Nada é enviado a um modelo: as baterias abortam `/api/send`, as execuções e `/api/generate`, e simulam ou
-abortam `/api/ladder`.
+abortam `/api/ladder`. Só `tela-passo6.js` executa comandos, fora da página e pela API: `git grep` nos projetos que cria.
 
 ## O que precisa existir
 
@@ -60,7 +61,7 @@ mesmas variáveis. `etapa2c.js` pede também o caminho do projeto Python: `node 
 
 ## Origem
 
-`tela-4a.js` e `tela-4b.js` nasceram aqui. As outras são cópias das baterias usadas na auditoria dos Passos 1 e 2, com as verificações intactas. Só mudaram as linhas
+`tela-4a.js`, `tela-4b.js` e `tela-passo6.js` nasceram aqui. As outras são cópias das baterias usadas na auditoria dos Passos 1 e 2, com as verificações intactas. Só mudaram as linhas
 de ambiente: o `require` do Playwright, os caminhos do `renderer`, do Python e do `casos.json` e as chaves.
 Para conferir, compare com o original.
 

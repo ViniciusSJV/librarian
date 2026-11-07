@@ -326,8 +326,17 @@ impl Store {
         }
         if self.latest_measure(key, run)?.is_none() {
             let needs_measure = route["intent"].is_string();
-            return Ok(json!({ "route": route, "needs_measure": needs_measure, "facts": [], "changes": [],
-                "answer": ["Para responder, o Librarian precisa saber quantas vezes cada função roda, e esta edition não tem essa medição."] }));
+            let manual = self.manual_counts(key, Some(run))?;
+            let manual = manual.as_array().map_or(&[][..], |m| m.as_slice());
+            let lines: u64 = manual.iter().filter_map(|m| m["lines"].as_u64()).sum();
+            let commands: Vec<&str> = manual.iter().filter_map(|m| m["command"].as_str()).collect();
+            let answer = if manual.is_empty() {
+                "Para responder, o Librarian precisa saber quantas vezes cada função roda, e esta edition não tem essa medição.".to_owned()
+            } else {
+                format!("Esta edition não tem Medir tudo, de onde esta resposta sai. {} imprimiu contagens manuais em {lines} {}, que ficam fora desta resposta: veja-as em Investigar.",
+                    commands.iter().map(|c| format!("«{c}»")).collect::<Vec<_>>().join(", "), if lines == 1 { "linha" } else { "linhas" })
+            };
+            return Ok(json!({ "route": route, "needs_measure": needs_measure, "facts": [], "changes": [], "answer": [answer] }));
         }
         let hot = self.hotspots(key, run)?;
         let rows: Vec<&Value> = hot["rows"].as_array().into_iter().flatten().filter(|r| r["symbol"].is_string()).collect();

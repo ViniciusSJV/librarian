@@ -1241,6 +1241,204 @@ mod tests {
         assert_eq!(store.measure_all(&key, Some(&python)).unwrap(), json!({ "available": false, "reason": "no_source", "command": "c" }));
     }
 
+    /// A project in git with these files and profile, opened, and with no other source.
+    fn project_with(files: &[(&str, &str)], profile: Value) -> (Scratch, Store, String, PathBuf) {
+        let scratch = project();
+        let root = scratch.0.join("project");
+        fs::remove_file(root.join("src/lib.rs")).unwrap();
+        for (path, text) in files {
+            fs::write(root.join(path), text).unwrap();
+        }
+        fs::write(root.join(PROFILE), profile.to_string()).unwrap();
+        let git = |args: &[&str]| {
+            let out = std::process::Command::new("git").arg("-C").arg(&root).args(["-c", "user.name=t", "-c", "user.email=t@t"]).args(args).output().unwrap();
+            assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
+        };
+        git(&["init", "-q"]);
+        git(&["add", "-A"]);
+        git(&["commit", "-q", "-m", "x"]);
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let key = store.open(&display(&root)).unwrap()["key"].as_str().unwrap().to_owned();
+        (scratch, store, key, root)
+    }
+
+    fn approve(store: &Store, key: &str, name: &str) {
+        let commands = store.commands(key).unwrap();
+        let sha = commands["commands"].as_array().unwrap().iter().find(|c| c["name"] == name).unwrap()["sha256"].as_str().unwrap().to_owned();
+        store.approve_command(key, name, &sha).unwrap();
+    }
+
+    const PY_APP: &str = "def demo():\n    return 1\n";
+    const PY_PRINTED: &str = "librarian-measure calls=7 at=src/app.py:1\nlibrarian-measure calls=2 at=src/app.py:2\nlibrarian-measure outro=1\nlibrarian-measure calls=5\nlibrarian-measure tempo=3 at=src/app.py:1\n";
+
+    #[test]
+    fn with_no_source_it_can_go_in_declaring_the_statement_is_not_offered_as_the_way_out() {
+        let python = [("src/app.py", PY_APP)];
+        // Python alone, with no statement declared or with an invalid one: the source is what is missing.
+        for profile in [json!({ "project_root": "." }), json!({ "project_root": ".", "instrument": { "statement": "count()", "command": "c" } })] {
+            let (_scratch, store, key, _root) = project_with(&python, profile);
+            let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+            assert_eq!(store.measure_all(&key, Some(&run)).unwrap(), json!({ "available": false, "reason": "no_source" }));
+            // With no edition to look at, or one that cannot be read, nothing is known about its sources.
+            assert_eq!(store.measure_all(&key, None).unwrap()["reason"], "no_instrument");
+            assert_eq!(store.measure_all(&key, Some("nao-existe")).unwrap()["reason"], "no_instrument");
+        }
+        // With a Rust source, declaring it is the way out, in a mixed project too.
+        let (_scratch, store, key, _root) = project_with(&[("src/app.py", PY_APP), ("src/lib.rs", "pub fn a() {}\n")], json!({ "project_root": "." }));
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        assert_eq!(store.measure_all(&key, Some(&run)).unwrap()["reason"], "no_instrument");
+    }
+
+    #[test]
+    fn manual_counts_are_told_apart_and_stay_out_of_the_measure() {
+        const NO_MEASURE: &str = "esta edition não tem essa medição";
+        let profile = json!({ "project_root": ".", "commands": {
+            "manual": { "argv": ["git", "grep", "-h", "librarian-measure", "--", "src/printed.txt"], "repeat": 1 },
+            "sem_contagem": { "argv": ["git", "status"], "repeat": 1 },
+            "falha": { "argv": ["git", "nao-existe"], "repeat": 1 } } });
+        let (_scratch, store, key, _root) = project_with(&[("src/app.py", PY_APP), ("src/printed.txt", PY_PRINTED)], profile);
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        let answer = |store: &Store| store.performance_question(&key, &run, "Quais funções pesam?").unwrap();
+        // Nothing counted yet: the answer of always.
+        assert_eq!(store.manual_counts(&key, Some(&run)).unwrap(), json!([]));
+        assert!(answer(&store)["answer"][0].as_str().unwrap().contains(NO_MEASURE));
+        // A failed run and a run that counts nothing do not count.
+        for name in ["falha", "sem_contagem"] {
+            approve(&store, &key, name);
+            let _ = store.execute(&key, &run, name, None);
+        }
+        assert_eq!(store.manual_counts(&key, Some(&run)).unwrap(), json!([]));
+        approve(&store, &key, "manual");
+        let ran = store.execute(&key, &run, "manual", None).unwrap();
+        // Two lines: a count with no `at` says nothing about a line, and only `calls` is a count.
+        assert_eq!(store.manual_counts(&key, Some(&run)).unwrap(), json!([{ "command": "manual", "execution": ran["id"], "lines": 2 }]));
+        let said = answer(&store);
+        let text = said["answer"][0].as_str().unwrap();
+        assert!(!text.contains(NO_MEASURE), "{text}");
+        assert!(text.contains("manual") && text.contains("2 linhas") && text.contains("Investigar"), "{text}");
+        assert_eq!(said["needs_measure"], true);
+        // They stay out of the measure: the same 404 answer, and nothing measured for the selection.
+        assert!(store.latest_measure(&key, &run).unwrap().is_none());
+        assert!(store.hotspots(&key, &run).unwrap_err().to_string().starts_with("Ainda não há medição"));
+        let demo = symbol_id(&store, &key, &run, "demo");
+        let suggested = store.suggest_envelope(&key, &run, std::slice::from_ref(&demo)).unwrap();
+        assert_eq!(suggested["measured"], false);
+        assert!(suggested["coverage"].is_null(), "{suggested:#}");
+        // Another run has none of them, and with no run there is nothing to say.
+        let other = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        assert_eq!(store.manual_counts(&key, Some(&other)).unwrap(), json!([]));
+        assert_eq!(store.manual_counts(&key, None).unwrap(), json!([]));
+        // A run that did not succeed says nothing, and neither does a run with a change: it is not
+        // what the project counts.
+        let dir = store.run_dir(&key, &run).unwrap().join("executions").join(ran["id"].as_str().unwrap()).join("execution.json");
+        let mut record: Value = serde_json::from_slice(&fs::read(&dir).unwrap()).unwrap();
+        record["summary"]["succeeded"] = json!(0);
+        fs::write(&dir, record.to_string()).unwrap();
+        assert_eq!(store.manual_counts(&key, Some(&run)).unwrap(), json!([]));
+        record["summary"]["succeeded"] = json!(1);
+        record["change"] = json!({ "turn": "01" });
+        fs::write(&dir, record.to_string()).unwrap();
+        assert_eq!(store.manual_counts(&key, Some(&run)).unwrap(), json!([]));
+    }
+
+    /// The note points at Investigar, so it reads the run Investigar reads: the latest one without
+    /// a change, whatever its result (`measuredOrigins`, in the page). Found in the audit of steps 6 and 7.
+    #[test]
+    fn manual_counts_read_the_run_investigar_shows() {
+        const NO_MEASURE: &str = "esta edition não tem essa medição";
+        let profile = |argv: Value| json!({ "project_root": ".", "commands": { "manual": { "argv": argv, "repeat": 1 } } });
+        let good = json!(["git", "grep", "-h", "librarian-measure", "--", "src/printed.txt"]);
+        let (_scratch, store, key, root) = project_with(&[("src/app.py", PY_APP), ("src/lib.rs", "pub fn a() {}
+"), ("src/printed.txt", PY_PRINTED)], profile(good.clone()));
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        // Executions are ordered by when they started, to the second.
+        let run_with = |argv: &Value| {
+            std::thread::sleep(std::time::Duration::from_millis(1100));
+            fs::write(root.join(PROFILE), profile(argv.clone()).to_string()).unwrap();
+            approve(&store, &key, "manual");
+            store.execute(&key, &run, "manual", None)
+        };
+        let answer = || store.performance_question(&key, &run, "Quais funções pesam?").unwrap()["answer"][0].as_str().unwrap().to_owned();
+        let first = run_with(&good).unwrap();
+        assert_eq!(store.manual_counts(&key, Some(&run)).unwrap(), json!([{ "command": "manual", "execution": first["id"], "lines": 2 }]));
+        assert!(!answer().contains(NO_MEASURE));
+        // The same command fails: Investigar shows none of its lines, and nothing points there.
+        let _ = run_with(&json!(["git", "nao-existe"]));
+        assert_eq!(store.executions(&key, &run).unwrap().len(), 2);
+        assert_eq!(store.manual_counts(&key, Some(&run)).unwrap(), json!([]));
+        assert!(answer().contains(NO_MEASURE), "{}", answer());
+        // It counts again: the newer run is the one both read.
+        let third = run_with(&good).unwrap();
+        assert_eq!(store.manual_counts(&key, Some(&run)).unwrap(), json!([{ "command": "manual", "execution": third["id"], "lines": 2 }]));
+        // A "Medir tudo" of the same command that fails is the latest run too, and it is not a manual count.
+        fs::write(root.join(PROFILE), json!({ "project_root": ".", "commands": { "manual": { "argv": ["git", "nao-existe"], "repeat": 1 } },
+            "instrument": { "statement": "crate::count!();", "command": "manual" } }).to_string()).unwrap();
+        approve(&store, &key, "manual");
+        std::thread::sleep(std::time::Duration::from_millis(1100));
+        let _ = store.execute_instrumented(&key, &run);
+        let all = store.executions(&key, &run).unwrap();
+        assert_eq!((all.len(), all[3]["instrumentation"].is_null(), &all[3]["summary"]["succeeded"]), (4, false, &json!(0)));
+        assert_eq!(store.manual_counts(&key, Some(&run)).unwrap(), json!([]));
+    }
+
+    /// The route keeps `measure_all` and `manual_counts` apart, and records it cannot read are not "none".
+    #[test]
+    fn the_commands_route_tells_unread_records_from_no_counts() {
+        let profile = json!({ "project_root": ".", "commands": { "manual": { "argv": ["git", "grep", "-h", "librarian-measure", "--", "src/printed.txt"], "repeat": 1 } } });
+        let (_scratch, store, key, _root) = project_with(&[("src/app.py", PY_APP), ("src/printed.txt", PY_PRINTED)], profile);
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        let get = || {
+            use std::io::{Read, Write};
+            let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+            let mut client = std::net::TcpStream::connect(listener.local_addr().unwrap()).unwrap();
+            write!(client, "GET /api/commands?key={key}&run={run} HTTP/1.1\r\nHost: 127.0.0.1\r\n\r\n").unwrap();
+            let (server, _) = listener.accept().unwrap();
+            let request = crate::http::read(&server).unwrap();
+            let app = crate::App { port: 0, viewer: PathBuf::new(), store: Store { dir: store.dir.clone(), modelfiles: store.modelfiles.clone() }, graph: std::sync::Mutex::new(None) };
+            let response = crate::route(&app, &request).unwrap();
+            crate::http::write(&server, &response).unwrap();
+            drop(server);
+            let mut raw = vec![];
+            client.read_to_end(&mut raw).unwrap();
+            let text = String::from_utf8(raw).unwrap();
+            serde_json::from_str::<Value>(text.split_once("\r\n\r\n").unwrap().1).unwrap()
+        };
+        assert_eq!(get()["manual_counts"], json!([]));
+        approve(&store, &key, "manual");
+        let ran = store.execute(&key, &run, "manual", None).unwrap();
+        let answer = get();
+        assert_eq!(answer["manual_counts"][0]["lines"], 2);
+        assert!(answer["measure_all"].get("manual_counts").is_none(), "{answer:#}");
+        let file = store.run_dir(&key, &run).unwrap().join("executions").join(ran["id"].as_str().unwrap()).join("execution.json");
+        fs::write(&file, "{ corrompido").unwrap();
+        let answer = get();
+        assert!(answer["manual_counts"].is_null(), "{answer:#}");
+        assert_eq!(answer["commands"].as_array().unwrap().len(), 1);
+    }
+
+    #[test]
+    fn a_question_takes_the_same_route_before_and_after_the_measure() {
+        let lib = "pub fn roda() -> u32 {\n    nao_roda()\n}\npub fn nao_roda() -> u32 {\n    1\n}\npub const P: &str = \"\nlibrarian-measure calls=7 at=src/lib.rs:1\n\";\n";
+        let profile = json!({ "project_root": ".", "commands": { "contagem": { "argv": ["git", "grep", "-h", "librarian-measure", "--", "src/lib.rs"], "repeat": 1 } },
+            "instrument": { "statement": "crate::count!();", "command": "contagem" } });
+        let (_scratch, store, key, _root) = project_with(&[("src/app.py", PY_APP), ("src/lib.rs", lib)], profile);
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        // A function with passes, one with none, one of a language with no counter, none at all, and no name.
+        let questions = ["Otimize o roda", "Otimize o nao_roda", "Otimize o demo", "Otimize o relatorio", "Quais funções pesam?", "Onde otimizar?"];
+        let routes = || questions.map(|q| store.performance_question(&key, &run, q).unwrap()["route"].clone());
+        let before = routes();
+        approve(&store, &key, "contagem");
+        store.execute_instrumented(&key, &run).unwrap();
+        assert_eq!(before, routes());
+        // What "Medir tudo" counted is the measure, not a manual count.
+        assert_eq!(store.manual_counts(&key, Some(&run)).unwrap(), json!([]));
+        for (question, route) in questions.iter().zip(&before) {
+            let known = question.starts_with("Otimize o") && !question.ends_with("relatorio");
+            assert_eq!(route["target"]["status"], if known { "resolved" } else { "none" }, "{question}: {route:#}");
+            assert_eq!(route["intent"].is_null(), question.ends_with("relatorio"), "{question}: {route:#}");
+        }
+    }
+
     #[test]
     fn open_generate_and_ask_light_the_graph_and_prepare_a_numbered_query() {
         let scratch = project();

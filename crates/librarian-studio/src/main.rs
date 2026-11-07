@@ -201,6 +201,8 @@ fn route(app: &App, req: &Request) -> Result<Response> {
         ("GET", "/api/commands") => {
             let mut commands = store.commands(param("key")?)?;
             commands["measure_all"] = store.measure_all(param("key")?, req.param("run"))?;
+            // Null when the records cannot be read: not the same as none, and the rest still answers.
+            commands["manual_counts"] = store.manual_counts(param("key")?, req.param("run")).unwrap_or(Value::Null);
             ok(commands)
         }
         ("POST", "/api/commands/approve") => {

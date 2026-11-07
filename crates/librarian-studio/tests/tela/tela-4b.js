@@ -145,6 +145,8 @@ const base = (items, more) => ({ items, left_out: [], gaps: [], behavior: [], me
 
   // Sem medição não é "sem cobertura": o servidor diz no_coverage, e a tela não diz que a medição não cobriu.
   const noMeasure = base([entry('a', { coverage_state: 'no_coverage', exclusion_reason: null }), entry('b', { coverage_state: 'no_coverage', exclusion_reason: null })], { measured: false, coverage: null });
+  // Esta rodada real tem contagens manuais; aqui a edition não tem nenhuma. O caso com elas está em tela-passo6.js.
+  await sim.evaluate(() => { __t.studio.manualCounts = []; });
   await draw(sim, noMeasure);
   const nm = await rows(sim), nmText = await panel(sim);
   ok('simulado, sem medição: nenhum estado na linha, e a nota não aparece', nm.every(r => r.coverage === null) && (await note(sim)) === null);
