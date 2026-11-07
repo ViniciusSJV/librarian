@@ -1606,7 +1606,7 @@ Nos 8 envios de mudança da gravação do vídeo 12, das 24 propostas só 1 saiu
 | 0 | Preservação dos dados | Feita, fora do Git |
 | 1 | Diagnóstico visual e contratos | Feita, sem alterar arquivos |
 | 2 | Correções e remoções aprovadas | **Feita:** `99f69f3` |
-| 3 | "Onde pesa" | Em andamento: Passos 1 e 2 concluídos (`47337e9`, baterias em `9659de5`); Passo 3 encerrado no backend, pela opção A; Passo 4 concluído, nas entregas 4A e 4B |
+| 3 | "Onde pesa" | Passos 1 e 2 concluídos (`47337e9`, baterias em `9659de5`); Passo 3 encerrado no backend, pela opção A; Passo 4 concluído, nas entregas 4A e 4B; **Passos 6 e 7 feitos (`94089d3`)**; Passo 5 adiado para a etapa própria |
 | 4 | Evidence Builder | Não iniciada |
 | 5 | Pacote e revisão, C1 e C2 | Não iniciada |
 | 6 | Fact Builder e portão | Não iniciada |
@@ -1739,7 +1739,7 @@ Corrigir todos os consumidores da medição de uma vez, com coerência entre fro
 
 **Cobertura:** as seis limitações em [Medição: capacidade não é cobertura](STUDIO.md#medição-capacidade-não-é-cobertura), reproduzidas na Etapa 2, são desta etapa. **Atualização de 06/11/2026:** o mapa fica para a [etapa própria](#evolução-visual-cidade-e-fluxograma-planejada-em-06112026), o resumo "N de M" depende de decisão específica, e as demais limitações de apresentação dos estados ficam para o [Passo 4](#escopo-registrado-do-passo-4).
 
-**Estado em 06/11/2026:** os Passos 1 e 2 estão concluídos, e o Passo 3 está encerrado no backend; as entregas 4A e 4B do Passo 4 estão concluídas. Passo 1: cobertura por função no backend. Passo 2: ordem por contagem observada, sem `FREQUENT` nem alvo automático, textos ao modelo, `count_kind` por origem, `counted_no_passes` com `zero_evidence`, resolução do alvo antes da medição, por símbolo, e origem da resposta no cartão, decidida por `execution`. Na cidade, a altura já vem da contagem; a cor (o calor) e o top 8 continuam por tempo, e a direção futura está em [Evolução visual](#evolução-visual-cidade-e-fluxograma-planejada-em-06112026).
+**Estado em 06/11/2026:** os Passos 1 e 2 estão concluídos, e o Passo 3 está encerrado no backend; as entregas 4A e 4B do Passo 4 estão concluídas, e os Passos 6 e 7 foram feitos, em `94089d3`. Passo 1: cobertura por função no backend. Passo 2: ordem por contagem observada, sem `FREQUENT` nem alvo automático, textos ao modelo, `count_kind` por origem, `counted_no_passes` com `zero_evidence`, resolução do alvo antes da medição, por símbolo, e origem da resposta no cartão, decidida por `execution`. Na cidade, a altura já vem da contagem; a cor (o calor) e o top 8 continuam por tempo, e a direção futura está em [Evolução visual](#evolução-visual-cidade-e-fluxograma-planejada-em-06112026).
 
 #### Sequência dos passos
 
@@ -1753,14 +1753,14 @@ Origem: a tabela do §11 do diagnóstico da Etapa 3, aprovado na sessão `661d76
 | 3 | Estado por função em `/api/envelope/suggest`, distinguindo `calls: null` | **Concluído no backend** |
 | 4 | Tela de Onde pesa: rótulos, resumo de cobertura e fallback único | **Concluído,** nas entregas 4A e 4B. O Passo 2 já tinha levado à tela o título do ranking, os rótulos por `count_kind` e o seletor de Separar. O [escopo registrado](#escopo-registrado-do-passo-4) define 4A e 4B e deixa de fora "N de M" e o fallback único |
 | 5 | Cidade e fluxograma: legenda, top 8 e estado "sem cobertura" | Adiado para a [etapa própria](#evolução-visual-cidade-e-fluxograma-planejada-em-06112026) |
-| 6 | Conversa e Python: D6, D7 e D8 | Não iniciado, aguardando revisão; o estado desses três itens não foi conferido |
-| 7 | Verificação final e documentação | Não iniciado |
+| 6 | Conversa e Python: D6, D7 e D8 | **Feito, em `94089d3`:** veja o [resultado](#resultado-dos-passos-6-e-7-06112026) |
+| 7 | Verificação final e documentação | **Feito, em `94089d3`:** veja o [resultado](#resultado-dos-passos-6-e-7-06112026) |
 
 **D6, D7 e D8 aqui são os do diagnóstico da Etapa 3,** não os defeitos de mesmo nome da Etapa 2:
 
 - **D6:** em Python, com `calls@` gravado, a tela diz que a edition não tem medição.
 - **D7:** em Python, a mensagem sugere que declarar `instrument` resolveria.
-- **D8:** a mesma pergunta era reconhecida antes da medição e deixava de ser depois. A resolução do alvo no Passo 2 pode ter mudado isso, o que não foi conferido.
+- **D8:** a mesma pergunta era reconhecida antes da medição e deixava de ser depois. Conferido no Passo 6: a resolução do alvo no Passo 2 já tinha resolvido isso.
 
 **Efeito de adiar o Passo 5:** a condição "de uma vez" do início desta etapa não vale para cidade e fluxograma. Até a etapa própria, o ranking segue a contagem, enquanto a cor e o top 8 da cidade seguem `cpu_ms`, e a legenda diz que a cor é o tempo.
 
@@ -1870,7 +1870,61 @@ A 4B é uma entrega do Passo 4: não reabre o Passo 3 nem implementa a opção B
 - O painel transborda 96 px em 420 px de largura, com ou sem a 4B.
 - `tela-4b.js` depende do ambiente e dos dados locais, e não faz parte do `cargo test` nem do CI.
 
-**Pendentes, cada um com decisão ou autorização própria:** o resumo "N de M", o fallback único, o filtro de 5%, a evolução da cidade e do fluxograma, o Passo 6 e a limitação de `calls: null` em `origin.selection`. **Nenhuma atividade seguinte está autorizada;** na [sequência](#sequência-dos-passos), o próximo é o Passo 6, que aguarda revisão e autorização.
+**Pendentes, cada um com decisão ou autorização própria:** o resumo "N de M", o fallback único, o filtro de 5%, a evolução da cidade e do fluxograma, o Passo 6 e a limitação de `calls: null` em `origin.selection`. **Nenhuma atividade seguinte estava autorizada neste encerramento;** na [sequência](#sequência-dos-passos), o próximo era o Passo 6. **Atualização:** ele foi autorizado e feito depois; veja o [resultado](#resultado-dos-passos-6-e-7-06112026).
+
+#### Resultado dos Passos 6 e 7 (06/11/2026)
+
+**Feitos e verificados, em `94089d3`.** O estado do Git e como retomar estão na [seção 16 do contexto](CONTEXTO-CONTINUIDADE.md#16-passos-6-e-7-feitos-06112026).
+
+**Decisões do usuário:**
+
+- **D6:** `calls@` continua contagem manual, fora do ranking. Quando existir, a interface informa e indica Investigar, sem afirmar simplesmente que não há medição.
+- **D7:** opção A: sem fonte Rust, `no_source` prevalece sobre `no_instrument`, com um único motivo.
+- **D8:** só um teste de regressão, preservando a correção do Passo 2.
+- **API:** `manual_counts` em `/api/commands`, separado de `measure_all`.
+- **Na auditoria:** `manual_counts` lê a mesma execução que Investigar, sem alterar Investigar, e `cpu_ms@` não entra nesta tarefa.
+
+**Entrega:**
+
+| Item | O que mudou | Onde |
+|---|---|---|
+| D6 | `Store::manual_counts`: as linhas de `calls` com `at=` da execução que Investigar mostra para cada comando, a última sem mudança, quando ela teve sucesso e não é um Medir tudo. A resposta da conversa, a nota de Onde pesa e o aviso do painel da sugestão usam esse dado. A página não recalcula nada | `execution.rs`, `questions.rs`, `main.rs`, `index.html` |
+| D7 | Em `measure_all`, a falta de `instrument` responde `no_source` quando a edition é legível e não tem onde pôr o contador | `execution.rs` |
+| D8 | Conferido: o Passo 2 já resolvia. Sem mudança no produto | Teste em `store.rs` |
+
+**Passo 7, auditoria:**
+
+- **Contra os invariantes:** `/api/hotspots` dá 404 sem Medir tudo; manual fora de `rows` e de `measured`; o Python segue `no_coverage` com `language_not_supported` numa medição mista; o registro `origin.selection`, o envelope, o portão, 4A e 4B passam nas baterias sem mudança de asserção, salvo a abaixo; gabarito igual.
+- **Testes novos:** 5 em `store.rs` e `tela-passo6.js`, com projetos Python e misto reais, criados na hora, em português, inglês, tema escuro e tela estreita. Os de D6 e D7 foram vistos falhando antes da mudança; o de D8 passou desde o início, porque só fixa o Passo 2. O quinto e as 6 asserções novas de `tela-passo6.js` vêm da [auditoria](#auditoria-dos-passos-6-e-7-06112026).
+- **Mudança de asserção:** uma simulação de `tela-4b.js` agora declara que a edition não tem contagens manuais, porque roda sobre uma rodada real que as tem.
+- **Mutações:** 6 de página e 8 de backend detectadas. A nona de backend, retirar a exigência de `at`, é **equivalente**: `measure` só é preenchido em séries com `at`, em `summary`, em `execution.rs`. Feitas antes da correção da auditoria e não repetidas.
+- **Da lista da seção 12 do diagnóstico, sem teste dedicado encontrado:** medição com zero linhas. Tela em "carregamento" só tem a cobertura das baterias da Etapa 2.
+
+**Limitações aceitas:**
+
+- **Cidade:** os textos `city.statusPlain`, `city.statusNotYet` e `city.notMeasured` ainda falam em "sem medição" ou "ainda não medido", mesmo com contagens manuais. Ficam para a etapa própria de evolução visual, que não foi iniciada.
+- **`no_command`:** em Python, um `instrument` válido com comando não declarado continua `no_command`, que ainda sugere declarar o comando. A decisão D7 é sobre `no_instrument`, e a asserção de `etapa2b.js` espera esse motivo.
+- **Idioma:** a resposta da conversa vem do backend só em português, inclusive com a tela em inglês. Já era assim.
+- **Falha de leitura:** `manual_counts` fica nulo, e a sugestão continua dizendo "Sem medição", como registrado na [4B](#resultado-da-4b-06112026).
+- **Dados:** `tela-passo6.js` usa contadores impressos por `git grep`, não um programa contando de verdade: prova o caminho do dado, não o valor de uma medição real. No `renderer`, a rodada real com `medir-contagem` (8 linhas) foi vista por `etapa2.js`.
+- **Escopo da contagem manual:** a nota só considera `calls` com `at=`. `cpu_ms@` e medidas como `queries_per_report@` aparecem em Investigar e não acionam a nota. O `logistica-api` imprime só medidas desse segundo tipo: lá, a resposta da conversa continua dizendo que não há medição.
+- **Mais de um comando:** a nota soma as linhas de cada comando, então a mesma linha impressa por dois conta duas vezes, e o texto fica no singular: "«a», «b» imprimiu contagens manuais em 4 linhas", para 2 linhas distintas. Reproduzido por uma sonda.
+- **Custo de D7:** veja a [auditoria](#auditoria-dos-passos-6-e-7-06112026).
+
+##### Auditoria dos Passos 6 e 7 (06/11/2026)
+
+Parecer: apto com ressalvas, sem bloqueador técnico. Decisões do usuário e o que foi feito:
+
+- **R1, corrigida (opção A).** `manual_counts` lia a última execução com sucesso, e Investigar (`measuredOrigins`) lê a última sem mudança, com qualquer resultado. Depois de um comando contar e falhar, a nota dizia "2 linhas: veja em Investigar", e Investigar mostrava 0. Agora `manual_counts` escolhe a execução pela mesma regra, inclusive o empate no mesmo segundo, e só a aproveita se ela teve sucesso e não é um Medir tudo. Investigar não mudou. O teste `manual_counts_read_the_run_investigar_shows` foi visto falhando antes da correção, e 4 das 6 asserções novas de `tela-passo6.js` falham com o binário anterior. As outras 2 passam nos dois: a execução antes da falha e Investigar sem as linhas, o que confirma que Investigar não mudou.
+- **R3, custo registrado.** Para dizer `no_source`, `measure_all` carrega o catálogo também em projeto sem `instrument`. Observado no TheAlgorithms-Python, com 1.608 arquivos: cerca de 0,46 s por chamada de `/api/commands`, contra 0,002 s antes. Projetos com `instrument` já pagavam esse carregamento. A página chama `loadCommands` em 8 lugares, 1 vez por gesto nos dois gestos medidos, abrir o projeto e trocar o idioma. Só a primeira leitura de cada edition precisa do catálogo, porque as linguagens de uma edition não mudam. Nada mudou no código por isso.
+- **R4, timeout isolado.** Na auditoria, `etapa2c.js` estourou 30 s ao abrir a página dentro de `rodar.js`, com uma sonda rodando ao mesmo tempo. A causa não foi provada. Passou 45 de 45 sozinho, e `rodar.js` inteiro passou em seguida, sem nada em paralelo.
+- **R5, documentação.** O `STUDIO.md` definia contagem manual como `calls@` ou `cpu_ms@`, e a implementação só conta `calls`. A [definição](STUDIO.md#o-que-chega-ao-modelo) agora diz o que existe, com o limite explícito. `cpu_ms@` não foi acrescentado.
+
+**Decisões finais do usuário:** a leitura só de `sources.jsonl`, que reduziria o custo de R3, fica fora do escopo; o timeout de R4 é aceito, com este registro; as baterias atualizadas ficam em `.studio/arquivo-copias/baterias-passos-6-e-7-20261106`, sem alterar o arquivo da Etapa 2 nem o manifesto dele.
+
+**Validação final, em build novo, em sequência:** `cargo test --workspace --locked`, 245 aprovados, 0 falhas, 2 ignorados; gabarito `2714b840…`; `rodar.js`, 285 de 285; `etapa2.js` 66; `etapa2b.js` 75; `etapa2-modelo.js`, 350 passos e 0 ocorrências; 1.688 `send.json` antes e depois. `web/index.html` não mudou.
+
+**Próxima atividade:** a escolha é do usuário. Nada depois disto está autorizado: nem a [Etapa 4](#etapa-4-evidence-builder) nem a [evolução visual](#evolução-visual-cidade-e-fluxograma-planejada-em-06112026). O estado da publicação está na [seção 16 do contexto](CONTEXTO-CONTINUIDADE.md#16-passos-6-e-7-feitos-06112026).
 
 ### Etapa 4: Evidence Builder
 

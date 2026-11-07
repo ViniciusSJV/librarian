@@ -655,8 +655,10 @@ O Librarian decide *onde*.
 O cartão separa **não disponível neste projeto** (sem `instrument` válido, sem o comando que ele
 indica ou sem fonte Rust), **falta aprovar o comando**, **ainda não medido** e **falha ao ler a
 medição**. A capacidade vem de `measure_all`, em `GET /api/commands`, e `GET /api/hotspots` responde
-404 enquanto a edition não tem medição. Capacidade não é cobertura: veja
+404 enquanto a edition não tem medição. Sem fonte Rust na edition, o motivo é a fonte, mesmo sem `instrument`: declará-lo não resolveria. Para saber disso, `/api/commands` carrega o catálogo também em projeto sem `instrument`, como já fazia nos outros: observado cerca de 0,46 s por chamada no TheAlgorithms-Python, com 1.608 arquivos, contra 0,002 s antes. Capacidade não é cobertura: veja
 [Medição: capacidade não é cobertura](#medição-capacidade-não-é-cobertura).
+
+Sem Medir tudo e com [contagens manuais](#medição-capacidade-não-é-cobertura) nesta edition, o cartão, a resposta da conversa e o painel da sugestão dizem que elas existem e apontam Investigar, em vez de dizer só que não há medição. Elas não entram no ranking nem na seleção.
 
 - **Medir tudo** põe essa instrução logo depois da chave que abre o corpo de cada função Rust
   da edition, na mesma linha, numa cópia (a sua pasta não muda), e roda o comando aprovado
@@ -1142,6 +1144,7 @@ Detalhes técnicos do servidor: [crates/librarian-studio](crates/librarian-studi
 | Nível | Pergunta | De onde vem |
 |---|---|---|
 | Capacidade do projeto | Dá para rodar o Medir tudo? | `measure_all` em `/api/commands` |
+| Contagem manual | Um comando comum imprimiu contagens por linha? | `manual_counts` em `/api/commands` |
 | Instrumentação por linguagem | Esta linguagem recebe contador? | `LANGUAGE` em `instrument.rs`; hoje só Rust |
 | Cobertura da função | Esta medição observou a função? | `coverage.functions` em `/api/hotspots` |
 | Medição da função | Qual contagem cada linha teve? | `hot.rows` |
@@ -1207,7 +1210,13 @@ Depois da Etapa 3, Passo 2, o pedido de mudança do cartão traz a contagem obse
 
 **Resultados de escada anteriores a essa mudança não são comparáveis com os novos:** o texto enviado ao modelo mudou. O envelope não mudou.
 
-**Contagem manual** é o `calls@` ou o `cpu_ms@` impresso por um comando comum, sem Medir tudo. Ela fica na execução daquele comando e aparece em Investigar, mas não entra em `rows` nem em Onde pesa, por maior que seja, mesmo numa linha que o ranking tem. `hotspots` lê um único registro: o último Medir tudo com sucesso. O contador que o projeto já tinha e que é impresso durante o Medir tudo faz parte dessa medição, com a mesma execução, saída e repetições, e por isso fica no ranking. Uma linha não diz, por si, se veio da instrução inserida ou de um contador próprio.
+**Contagem manual** é uma linha `calls` com `at=` (`calls@`) impressa por um comando comum, sem Medir tudo. Ela fica na execução daquele comando e aparece em Investigar, ao montar o inventário, mas não entra em `rows`, em `measured` nem em Onde pesa, por maior que seja, mesmo numa linha que o ranking tem.
+
+A nota que aponta Investigar, na conversa, em Onde pesa e no painel da sugestão, vem de `manual_counts`, que lê a execução que Investigar mostra para cada comando: a última sem mudança, com qualquer resultado. Se ela falhou, nem Investigar mostra as linhas nem a nota aparece, mesmo que uma execução anterior tenha contado. Com mais de um comando, a nota soma as linhas de cada um, e a mesma linha impressa por dois conta duas vezes.
+
+**Limite do que a nota considera:** só `calls` com `at=`. `cpu_ms@` e outras medidas com `at=`, como `queries_per_report@`, também aparecem em Investigar e também ficam fora de `rows`, de `measured` e de Onde pesa, mas não acionam a nota. Num projeto que só imprime essas medidas, a resposta continua dizendo que não há a medição de quantas vezes cada função roda.
+
+`hotspots` lê um único registro: o último Medir tudo com sucesso. O contador que o projeto já tinha e que é impresso durante o Medir tudo faz parte dessa medição, com a mesma execução, saída e repetições, e por isso fica no ranking. Uma linha não diz, por si, se veio da instrução inserida ou de um contador próprio.
 
 #### Limitações conhecidas dos números por função
 
@@ -1276,7 +1285,7 @@ Reproduzido num projeto com 2 funções em Rust e 2 em Python, e no `renderer`. 
 
 **Enquanto o fluxograma e o mapa não mudarem, leia assim:** em projeto misto, a medição descreve apenas as funções Rust contadas, não o projeto. Nenhum dos dois projetos de teste atuais é misto.
 
-**Python:** sem instrumentação por função. O projeto aparece como "não disponível", sem convite a medir. Não há suporte novo nesta etapa.
+**Python:** sem instrumentação por função. O projeto aparece como "não disponível", sem convite a medir, com o motivo `no_source` também quando não declara `instrument`. Não há suporte novo nesta etapa.
 
 ### Envelope e investigação
 
