@@ -136,7 +136,7 @@ fn skills_record(skills: &[Skill]) -> Value {
 }
 
 impl Choice {
-    pub fn request<'a>(&'a self, query: &'a Path, dir: &'a Path) -> Send<'a> {
+    fn request<'a>(&'a self, query: &'a Path, dir: &'a Path) -> Send<'a> {
         Send {
             query,
             dir,
@@ -150,13 +150,30 @@ impl Choice {
     }
 }
 
-/// Runs one provider and writes `send.json`, the summary the page shows.
-pub fn send(provider: &str, request: Send) -> Result<Value> {
+/// A question's send: only a question that passed its checks (`Store::verify_for_send`) has a
+/// `Verified`, and only one can be sent. Its link, with the package's hash, goes with the send.
+pub fn send_question(provider: &str, choice: &Choice, verified: &crate::store::Verified, dir: &Path) -> Result<Value> {
+    let mut request = choice.request(verified.query(), dir);
+    request.criteria_sha256 = verified.criteria_sha256();
+    request.link = Some(verified.link());
+    send(provider, request, "question")
+}
+
+/// A lexicon's send: its own request, with no question and no evidence package behind it.
+pub fn send_lexicon(provider: &str, choice: &Choice, query: &Path, dir: &Path) -> Result<Value> {
+    send(provider, choice.request(query, dir), "lexicon")
+}
+
+/// Runs one provider and writes `send.json`, the summary the page shows, with what the send was for.
+fn send(provider: &str, request: Send, purpose: &str) -> Result<Value> {
     fs::create_dir(request.dir)?;
     let started = now_ms();
     let mut summary = match provider {
         "ollama" => send_ollama(&request)?,
         "claude-cli" => send_claude(&request)?,
+        // Tests stand a provider that answers at once for one that would call a model.
+        #[cfg(test)]
+        "test" => json!({ "state": "completed", "text": "" }),
         other => return Err(format!("Provedor não implementado: {other}").into()),
     };
     summary["provider"] = json!(provider);
@@ -167,6 +184,11 @@ pub fn send(provider: &str, request: Send) -> Result<Value> {
     summary["criteria_sha256"] = json!(request.criteria_sha256);
     summary["link"] = json!(request.link);
     summary["skills"] = skills_record(request.skills);
+    summary["purpose"] = json!(purpose);
+    // Not recorded is not linked: the send stands only once its send.json is written.
+    if crate::store::failing_at("send_record") {
+        return Err("O registro do envio não foi gravado; a resposta não está vinculada".into());
+    }
     fs::write(request.dir.join("send.json"), serde_json::to_vec_pretty(&summary)?)?;
     Ok(summary)
 }

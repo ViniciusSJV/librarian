@@ -1,0 +1,22 @@
+{
+  "question": "Por que roda?",
+  "lexicon": {
+    "groups": [],
+    "stop_words": []
+  },
+  "top": 5,
+  "depth": 2,
+  "hits": 1,
+  "radius": 0,
+  "numbered_lines": false,
+  "instructions": null,
+  "accept_diagnostics": false,
+  "targets": [
+    {
+      "path": "src/lib.rs",
+      "symbol_name": "roda",
+      "declaration_line": 1
+    }
+  ],
+  "gathered": true
+}

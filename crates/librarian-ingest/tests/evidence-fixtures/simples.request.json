@@ -1,0 +1,15 @@
+{
+  "depth": 0,
+  "hits": 1,
+  "numbered_lines": true,
+  "question": "O que outra faz?",
+  "radius": 2,
+  "targets": [
+    {
+      "declaration_line": 1,
+      "path": "src/b.rs",
+      "symbol_name": "outra"
+    }
+  ],
+  "top": 1
+}

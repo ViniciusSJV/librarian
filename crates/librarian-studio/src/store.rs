@@ -1,9 +1,19 @@
 //! Projects, runs and questions under `.studio/`. Nothing is written inside analyzed projects.
 //! Layout: projects/<key>/project.json, runs/<run>/{edition, graph-v2.json, run.json},
-//! runs/<run>/turns/<NN>/{question.json, search.json, prepare-request.json, prepared/, claims/, sends/}.
+//! runs/<run>/turns/<NN>/{question.json, search.json, prepare-request.json, prepared/, claims/, sends/},
+//! runs/<run>/suggestions/<sha256>.json; each new question that reached the preparation also has
+//! turns/<NN>/evidence.json, named by its hash in question.json, and one asked with a selection has
+//! turns/<NN>/selection.json, named by its hash in the package.
 use librarian_llm_engine::claims::{self, compare::compare, Claim, Policy};
 use librarian_ingest::{
-    envelope, inventory,
+    envelope,
+    evidence::{
+        self, BoundArtifacts, ClaimsEvidence, CompositionInput, EditionIdentity, EvidencePackage, FactRecord, Form, InventoryRuleEntry, InventoryRuleOrigin,
+        MeasureAtQuestion, MeasureReferences, MeasureSelectionBasis, Normalization, OriginKind, PackageFormat, PackageKind, ProvenanceInput, QuestionInput,
+        Representation, RetryRule, Route, RulesVersion, SelectionEdition, SelectionInput, SelectionRecord, SelectionRecordFormat, SelectionReference,
+        ServerAddition, ServerDeclared, Sha256Hex, SnapshotInput, SuffixInput, SuggestionInput, SuggestionInventoryRules, SuggestionMeasure, SuggestionRecord, Versions,
+    },
+    inventory,
     graph::v2,
     hash,
     prepare::{self, Request, ReviewedFact, Target},
@@ -13,14 +23,56 @@ use librarian_ingest::{
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::{
-    fs,
+    fs::{self, OpenOptions},
+    io::{self, Write},
     path::{Path, PathBuf},
+    sync::atomic::{AtomicUsize, Ordering},
     time::{SystemTime, UNIX_EPOCH},
 };
 
 /// Optional profile in the project root: sources, lexicon, instructions, criteria, search.
 pub const PROFILE: &str = "librarian.json";
 const CRITERIA: &str = "criteria-before.md";
+/// A new question's evidence package, beside its question.json.
+const EVIDENCE: &str = "evidence.json";
+/// The record of the selection a new question was asked with, beside its package.
+const SELECTION: &str = "selection.json";
+
+/// A selection the server checked at the entry of a question, before anything was created: its
+/// record and the bytes it is kept in. Only `Store::accept_selection` makes one.
+pub struct AcceptedSelection {
+    record: SelectionRecord,
+    bytes: Vec<u8>,
+    sha256: Sha256Hex,
+}
+
+/// What a server retry added to a client's question, with the rule that added it.
+#[derive(Debug, Clone)]
+pub struct Suffix {
+    pub text: String,
+    pub rule: RetryRule,
+    pub attempt: usize,
+}
+
+/// A question as asked: the client's text and what the server added to it, in order.
+#[derive(Debug, Clone, Copy)]
+pub struct Asked<'a> {
+    pub original: &'a str,
+    pub suffixes: &'a [Suffix],
+}
+
+impl<'a> Asked<'a> {
+    fn client(original: &'a str) -> Self {
+        Self { original, suffixes: &[] }
+    }
+    /// The question prepared: the texts joined, nothing else.
+    fn prepared(&self) -> String {
+        std::iter::once(self.original).chain(self.suffixes.iter().map(|s| s.text.as_str())).collect()
+    }
+}
+
+/// Where a run keeps the record of each suggestion, by the hash of its bytes.
+const SUGGESTIONS: &str = "suggestions";
 /// Highest question number handed out in a run, so numbers are never reused.
 const LAST_TURN: &str = "last-turn.txt";
 /// At most this many questions from one path at once (P1b).
@@ -86,13 +138,32 @@ pub struct Store {
     pub modelfiles: PathBuf,
 }
 
-/// What a send delivers once its question was re-verified (`Store::verify_for_send`).
+/// What a send delivers once its question was re-verified. Only `Store::verify_for_send` makes
+/// one, after every check it runs; nothing else can, since its fields are its own.
 pub struct Verified {
-    pub query: PathBuf,
-    pub context: Option<librarian_llm_engine::claims::Context>,
-    pub criteria_sha256: Option<String>,
+    query: PathBuf,
+    context: Option<librarian_llm_engine::claims::Context>,
+    criteria_sha256: Option<String>,
     /// Recorded with the send (`send.json`, and the Ollama attempt's `result.json`).
-    pub link: Value,
+    link: Value,
+}
+
+impl Verified {
+    pub fn query(&self) -> &Path {
+        &self.query
+    }
+    pub fn context(&self) -> Option<&librarian_llm_engine::claims::Context> {
+        self.context.as_ref()
+    }
+    pub fn into_context(self) -> Option<librarian_llm_engine::claims::Context> {
+        self.context
+    }
+    pub fn criteria_sha256(&self) -> Option<&str> {
+        self.criteria_sha256.as_deref()
+    }
+    pub fn link(&self) -> &Value {
+        &self.link
+    }
 }
 
 impl Store {
@@ -300,13 +371,14 @@ impl Store {
         let mut search = serde_json::to_vec_pretty(&report)?;
         search.push(b'\n');
         let request = request(&settings, question, None, vec![], false);
-        self.new_turn(key, run, &settings, &catalog, question, Some(search), request, None)
+        self.new_turn(key, run, &settings, &catalog, Asked::client(question), Some(search), request, None)
     }
 
     /// P1b: one question per declaration the person picked on a "what does it call?" path, each
     /// with that declaration alone as evidence (like `hits: 1`). Nothing is searched; the path
     /// (seed, position, the choices among homonyms) is recorded with each question.
     pub fn ask_path(&self, key: &str, run: &str, question: &str, nodes: &[String], seed: &str, chosen: &Value) -> Result<Value> {
+        refuse_notes(chosen)?;
         if nodes.is_empty() || nodes.len() > MAX_PATH_QUESTIONS {
             return Err(format!("Escolha de 1 a {MAX_PATH_QUESTIONS} pontos do caminho").into());
         }
@@ -319,7 +391,7 @@ impl Store {
             let path = json!({ "seed": seed, "node": id, "index": index + 1, "total": nodes.len(), "chosen": chosen });
             let mut request = request(&settings, question, Some(vec![target]), vec![], false);
             request.picked = true;
-            turns.push(self.new_turn(key, run, &settings, &catalog, question, None, request, Some(("path", path)))?);
+            turns.push(self.new_turn(key, run, &settings, &catalog, Asked::client(question), None, request, Some(("path", path)))?);
         }
         Ok(json!(turns))
     }
@@ -329,12 +401,39 @@ impl Store {
     /// envelope may hold file heads (`header:<path>`), and, with `with_facts`, the question also
     /// carries the current reviewed facts about the gathered declarations.
     /// An investigation from the inventory records its `origin` (the finding it came from).
+    /// A selection in `origin` is checked here, once, before anything is created.
     pub fn ask_gathered(&self, key: &str, run: &str, question: &str, nodes: &[String], with_facts: bool, origin: Option<Value>) -> Result<Value> {
+        let selection = self.accept_selection(key, run, nodes, origin.as_ref())?;
+        self.ask_gathered_parts(key, run, question, &[], nodes, with_facts, origin, selection.as_ref(), &[])
+    }
+
+    /// `ask_gathered` for a question the server added to: the client's text, then what each retry
+    /// added, in order. The prepared question is those texts joined, nothing else. The selection is
+    /// the one accepted at the client's entry (`accept_selection`), not checked again here: the nodes
+    /// a ladder round adds are the server's, not the client's statement. Those are `additions`, in
+    /// the order the rounds added them, and they are the last of `nodes`; each is checked against
+    /// the LACUNA that asked for it before anything is created.
+    #[allow(clippy::too_many_arguments)]
+    pub fn ask_gathered_parts(&self, key: &str, run: &str, original: &str, suffixes: &[Suffix], nodes: &[String], with_facts: bool, origin: Option<Value>,
+        selection: Option<&AcceptedSelection>, additions: &[ServerAddition]) -> Result<Value> {
+        if let Some(origin) = &origin {
+            refuse_notes(origin)?;
+        }
+        // An origin with a selection goes with the record accepted for it, and only then.
+        if selection.is_some() != origin.as_ref().is_some_and(|o| o.get("selection").is_some()) {
+            return Err("A seleção da origem não foi conferida na entrada; nenhuma pergunta foi criada".into());
+        }
+        let asked = Asked { original, suffixes };
+        let joined = asked.prepared();
+        let question = joined.as_str();
         if nodes.is_empty() || nodes.len() > MAX_GATHERED {
             return Err(format!("Junte de 1 a {MAX_GATHERED} declarações").into());
         }
         let settings = self.settings(key)?;
         let catalog = Catalog::load(&self.edition(key, run)?)?;
+        let included: Option<Vec<String>> = selection.map(|s| s.record.received.included.iter().map(|e| e.id.clone()).collect());
+        self.check_additions(key, run, &catalog, nodes, included.as_deref(), additions)
+            .map_err(|e| format!("Complementação recusada ({e}); nenhuma pergunta foi criada"))?;
         let headers: Vec<String> = nodes.iter().filter_map(|id| id.strip_prefix(envelope::HEADER_PREFIX).map(str::to_owned)).collect();
         let targets = nodes
             .iter()
@@ -345,18 +444,137 @@ impl Store {
             return Err("Junte ao menos uma declaração além dos topos de arquivo".into());
         }
         let reviewed = if with_facts { self.reviewed_about(key, run, &targets)? } else { vec![] };
-        // What the selection found goes with the evidence, for the declarations still in the envelope.
-        let notes: Vec<String> = origin.as_ref().and_then(|o| serde_json::from_value::<Vec<envelope::Note>>(o["selection"]["notes"].clone()).ok()).unwrap_or_default()
-            .into_iter().filter(|n| n.id.is_empty() || nodes.contains(&n.id)).map(|n| n.text).collect();
+        // `notes` are refused at the entry: nothing a client sends goes to the model as a note.
         let mut gathered = json!({ "nodes": nodes, "with_facts": with_facts, "reviewed_facts": reviewed.iter().map(|f| &f.id).collect::<Vec<_>>() });
         if let Some(origin) = origin {
             gathered["origin"] = origin;
         }
+        // What the server added, apart from what the client sent; a question with none says nothing.
+        if !additions.is_empty() {
+            gathered["server_additions"] = serde_json::to_value(additions)?;
+        }
         let mut request = request(&settings, question, Some(targets), reviewed, false);
         request.gathered = true;
         request.headers = headers;
-        request.notes = notes;
-        self.new_turn(key, run, &settings, &catalog, question, None, request, Some(("gathered", gathered)))
+        self.new_turn_with(key, run, &settings, &catalog, asked, None, request, Some(("gathered", gathered)), selection)
+    }
+
+    /// The declarations a ladder's LACUNA rounds added, as the question says: each the server's,
+    /// once, after the client's (the selection's included sources, when there is one), in the order
+    /// added; each asked for by a LACUNA of the send it names, and found for it in this edition by
+    /// `ladder::resolve`. The rule is read with nothing excluded by the measure, which only ever
+    /// leaves out: a declaration it gave then is one it gives now.
+    fn check_additions(&self, key: &str, run: &str, catalog: &Catalog, nodes: &[String], included: Option<&[String]>, additions: &[ServerAddition]) -> Result<()> {
+        let ids: Vec<&String> = additions.iter().map(|a| &a.symbol_id).collect();
+        let Some(split) = nodes.len().checked_sub(ids.len()) else { return Err("mais complementações do que declarações".into()) };
+        let (client, added) = nodes.split_at(split);
+        // With a selection, what is not the server's is exactly what the client sent: nothing more.
+        if included.is_some_and(|included| included != client) {
+            return Err("as declarações da cliente não são as da seleção".into());
+        }
+        if additions.is_empty() {
+            return Ok(());
+        }
+        if added.iter().ne(ids.iter().copied()) {
+            return Err("as declarações acrescentadas não são as últimas da pergunta, na ordem".into());
+        }
+        for (n, id) in ids.iter().enumerate() {
+            if ids[..n].contains(id) || client.contains(id) {
+                return Err(format!("{id} já estava na pergunta").into());
+            }
+        }
+        // Round by round: what one send's LACUNA asked for, over what was gathered before it.
+        let mut start = 0;
+        while start < additions.len() {
+            let first = &additions[start];
+            let end = start + additions[start..].iter().take_while(|a| (a.round, &a.from_turn, &a.from_send) == (first.round, &first.from_turn, &first.from_send)).count();
+            let sent = self.turn_dir(key, run, &first.from_turn)?.join("sends").join(safe_id(&first.from_send)?).join("send.json");
+            let summary: Value = serde_json::from_slice(&fs::read(&sent).map_err(|_| format!("envio {}/{} indisponível", first.from_turn, first.from_send))?)?;
+            let (_, lacunas, _) = crate::ladder::outcome(&summary);
+            let names: Vec<String> = lacunas.iter().flat_map(|t| crate::ladder::lacuna_names(t)).collect();
+            let before: Vec<String> = client.iter().chain(&added[..start]).cloned().collect();
+            let found = crate::ladder::resolve(catalog, &names, &before, &[], usize::MAX);
+            for addition in &additions[start..end] {
+                let named = names.contains(&addition.for_name) || addition.for_name.split_once("::").is_some_and(|(t, _)| names.iter().any(|n| n == t));
+                if addition.round == 0 || !named || !found.iter().any(|(id, _)| *id == addition.symbol_id) {
+                    return Err(format!("{} não é o que a LACUNA de {}/{} pediu", addition.symbol_id, first.from_turn, first.from_send).into());
+                }
+            }
+            start = end;
+        }
+        Ok(())
+    }
+
+    /// A selection sent with a question, checked against the suggestion records of this run and its
+    /// edition, before anything is created. None when the origin has no selection. `notes`, anywhere
+    /// in the origin, is refused first.
+    pub fn accept_selection(&self, key: &str, run: &str, nodes: &[String], origin: Option<&Value>) -> Result<Option<AcceptedSelection>> {
+        let Some(origin) = origin else { return Ok(None) };
+        refuse_notes(origin)?;
+        let refuse = |why: String| -> Box<dyn std::error::Error> { format!("Seleção recusada ({why}); nenhuma pergunta foi criada").into() };
+        let kind = origin.get("kind").and_then(Value::as_str);
+        let Some(selection) = origin.get("selection") else {
+            if kind == Some("selection") {
+                return Err(refuse("origem selection sem seleção".into()));
+            }
+            return Ok(None);
+        };
+        if !matches!(kind, Some("selection" | "ladder")) {
+            return Err(refuse("só uma origem selection ou ladder traz seleção".into()));
+        }
+        let input = SelectionInput::from_value(selection).map_err(|e| refuse(e.to_string()))?;
+        self.accept_input(key, run, nodes, input).map(Some).map_err(|e| refuse(e.to_string()))
+    }
+
+    /// The record of a selection: its suggestions read back and checked, then the selection checked
+    /// against them and the edition. The same input gives the same bytes.
+    fn accept_input(&self, key: &str, run: &str, nodes: &[String], input: SelectionInput) -> Result<AcceptedSelection> {
+        let mut records = vec![];
+        for sha256 in &input.suggestions {
+            let suggestion = |why: String| evidence::SelectionRefusal::Suggestion { sha256: sha256.as_str().to_owned(), why };
+            let record = self.verify_suggestion(key, run, sha256.as_str()).map_err(|e| suggestion(e.to_string()))?;
+            if record.rules_version.0 != envelope::RULES_VERSION {
+                return Err(suggestion(format!("regras {} não são as desta versão", record.rules_version.0)).into());
+            }
+            records.push(record);
+        }
+        let catalog = Catalog::load(&self.edition(key, run)?)?;
+        let edition = self.selection_edition(key, run, &catalog, &input)?;
+        let cited: Vec<&SuggestionRecord> = records.iter().collect();
+        evidence::check_selection(&input, nodes, &cited, &edition)?;
+        let record = SelectionRecord::new(edition_origin(&catalog)?, envelope::RULES_VERSION, input, &cited);
+        let bytes = record.to_bytes()?;
+        let sha256 = Sha256Hex::try_from(hash(&bytes))?;
+        Ok(AcceptedSelection { record, bytes, sha256 })
+    }
+
+    /// What the edition says of the sources a selection names: the catalog's data, as a suggestion
+    /// gives them (a file head by the envelope's rule), and the graph's label, as the page shows it.
+    fn selection_edition(&self, key: &str, run: &str, catalog: &Catalog, input: &SelectionInput) -> Result<SelectionEdition> {
+        let graph: v2::Graph = serde_json::from_slice(&self.graph(key, run)?)?;
+        let mut edition = SelectionEdition::default();
+        let ids = [&input.included, &input.removed, &input.left_out, &input.not_joined].into_iter().flatten().map(|e| e.id.as_str());
+        for id in ids {
+            let source = match id.strip_prefix(envelope::HEADER_PREFIX) {
+                Some(path) => envelope::header(catalog, path).and_then(|(start, end)| {
+                    let source = catalog.source_by_path(path)?;
+                    let bytes = String::from_utf8_lossy(catalog.source_bytes(&source.path)?).lines().take(end).map(|l| l.len() + 1).sum();
+                    Some(evidence::EditionSource { name: path.to_owned(), path: path.to_owned(), kind: "header".into(), start_line: start, end_line: end, bytes })
+                }),
+                None => catalog.symbols().get(id).map(|symbol| {
+                    let chunk = &catalog.chunks()[&symbol.chunk_id];
+                    evidence::EditionSource { name: symbol.qualified_name.clone(), path: catalog.sources()[&symbol.source_id].path.clone(), kind: symbol.kind.clone(),
+                        start_line: chunk.start_line, end_line: chunk.end_line, bytes: chunk.end_byte - chunk.start_byte }
+                }),
+            };
+            if let Some(source) = source {
+                edition.sources.insert(id.to_owned(), source);
+            }
+            if let Some(node) = graph.nodes.get(id) {
+                edition.labels.insert(id.to_owned(), (node.label.clone(), node.kind.clone()));
+            }
+        }
+        Ok(edition)
     }
 
     /// What a "Medir tudo" says about each function.
@@ -376,18 +594,23 @@ impl Store {
     /// P5: the envelope suggested for the chosen declarations: what was selected, each with its
     /// role and why, what stayed out and why, and the current reviewed facts about each one.
     pub fn suggest_envelope(&self, key: &str, run: &str, nodes: &[String]) -> Result<Value> {
+        // The measure is read once: what the selection uses and the hash the record names come from
+        // the same bytes.
+        self.suggest_with(key, run, nodes, self.latest_measure_read(key, run))
+    }
+
+    /// A suggestion over a measure already read. A file changed after that read is not what the
+    /// record names; the check before answering finds it, and nothing is answered.
+    fn suggest_with(&self, key: &str, run: &str, nodes: &[String], reading: Result<Option<crate::execution::ReadExecution>>) -> Result<Value> {
         let catalog = Catalog::load(&self.edition(key, run)?)?;
-        let hot = self.hotspots(key, run).ok();
-        let measure = hot.as_ref().and_then(Self::measure_of);
-        let mut candidates = envelope::candidates(&catalog, nodes, measure.as_ref())?;
-        let (found, _, _) = self.inventory_of(key, run)?;
-        envelope::trait_impls(&catalog, &found, nodes, measure.as_ref(), &mut candidates);
-        let mut selection = envelope::select(&catalog, &candidates, measure.as_ref(), envelope::BUDGET_BYTES, MAX_GATHERED);
-        selection.behavior = envelope::behavior(&catalog, &found, &selection);
-        selection.notes = envelope::notes(&selection);
+        let hot = match &reading {
+            Ok(Some(read)) => self.hotspots_of(key, run, &read.record).ok(),
+            _ => None,
+        };
+        let (found, _, _, rules) = self.inventory_with_rules(key, run)?;
+        let (mut out, measured) = Self::suggestion_answer(&catalog, &found, nodes, hot.as_ref(), envelope::BUDGET_BYTES, MAX_GATHERED)?;
         let facts = self.facts(key, run)?;
         let current: Vec<&Value> = facts["facts"].as_array().into_iter().flatten().filter(|f| f["status"] == "current").collect();
-        let mut out = serde_json::to_value(&selection)?;
         for list in ["items", "left_out"] {
             for value in out[list].as_array_mut().into_iter().flatten() {
                 let id = value["id"].as_str().unwrap_or_default().to_owned();
@@ -400,8 +623,176 @@ impl Store {
                 value["facts"] = json!(ids);
             }
         }
-        crate::instrument::annotate_suggestion(&mut out, hot.as_ref().map(|h| &h["coverage"]));
+        let read = measure_read(&reading, measured)?;
+        let builtin = inventory::builtin();
+        let entries = |origin, set: &inventory::RuleSet| set.rules.iter().map(|rule| Ok(InventoryRuleEntry { origin, rule: serde_json::to_value(rule)? })).collect::<Result<Vec<_>>>();
+        let mut applied = entries(InventoryRuleOrigin::Builtin, &builtin)?;
+        applied.extend(entries(InventoryRuleOrigin::Project, &rules)?);
+        let record = SuggestionRecord::new(
+            edition_origin(&catalog)?,
+            envelope::RULES_VERSION,
+            SuggestionInput { nodes: nodes.to_vec(), budget_bytes: envelope::BUDGET_BYTES, max_items: MAX_GATHERED },
+            SuggestionInventoryRules::new(inventory::VERSION, applied)?,
+            read,
+            &out,
+        )?;
+        let bytes = record.to_bytes()?;
+        let sha256 = hash(&bytes);
+        publish_immutable(&self.run_dir(key, run)?.join(SUGGESTIONS), &format!("{sha256}.json"), &bytes)?;
+        // Only what can be read back and checked is answered as recorded.
+        self.verify_suggestion(key, run, &sha256)?;
+        out["suggestion"] = json!(sha256);
         Ok(out)
+    }
+
+    /// What a suggestion answers, but for the facts of each item: the selection over the edition, with
+    /// the inventory found and the measure read (`hot`), its coverage told. It reads no acervo and
+    /// writes nothing. True when the measure was used.
+    fn suggestion_answer(catalog: &Catalog, found: &inventory::Inventory, nodes: &[String], hot: Option<&Value>, budget: usize, max_items: usize) -> Result<(Value, bool)> {
+        let measure = hot.and_then(Self::measure_of);
+        let mut candidates = envelope::candidates(catalog, nodes, measure.as_ref())?;
+        envelope::trait_impls(catalog, found, nodes, measure.as_ref(), &mut candidates);
+        let mut selection = envelope::select(catalog, &candidates, measure.as_ref(), budget, max_items);
+        selection.behavior = envelope::behavior(catalog, found, &selection);
+        selection.notes = envelope::notes(&selection);
+        let mut out = serde_json::to_value(&selection)?;
+        crate::instrument::annotate_suggestion(&mut out, hot.map(|h| &h["coverage"]));
+        Ok((out, measure.is_some()))
+    }
+
+    /// H4 of a question: each suggestion its selection cites, made again by this code from what its
+    /// record names, and compared with the record but for the facts. Told, never enforced, and it
+    /// writes nothing: no suggestion, no question, no record, nothing in the acervo.
+    pub fn reproduce(&self, key: &str, run: &str, turn: &str) -> Result<evidence::Reproduction> {
+        let dir = self.turn_dir(key, run, turn)?;
+        // An older question has no package, and a package with no selection no suggestion behind it.
+        let Ok(bytes) = fs::read(dir.join(EVIDENCE)) else { return Ok(evidence::Reproduction::NotApplicable {}) };
+        let package: EvidencePackage = serde_json::from_slice(&bytes)?;
+        let Some(selection) = &package.selection else { return Ok(evidence::Reproduction::NotApplicable {}) };
+        let catalog = Catalog::load(&self.edition(key, run)?)?;
+        let mut replays = vec![];
+        for sha256 in &selection.suggestions {
+            replays.push(match self.replay_suggestion(key, run, &catalog, sha256)? {
+                None => evidence::SuggestionReplay::Reproduced { suggestion: sha256.clone() },
+                Some(reason) => evidence::SuggestionReplay::NotReplayable { suggestion: sha256.clone(), reason },
+            });
+        }
+        Ok(evidence::Reproduction::of(replays, &package.versions.builder))
+    }
+
+    /// What `GET /api/evidence` answers for one question of one run: what was recorded with it, as
+    /// recorded (its mark, its package, its selection's record), and what is checked now: H1 to H3 as
+    /// a send checks them, H4 as made again, and the latest measure of the edition, which no package
+    /// records. It reads only. A file that cannot be read is null here and refused by the check that
+    /// needs it; it is never taken for a question with nothing to check. H4 tells whether the
+    /// suggestions come again from their references, not whether they were true or enough.
+    pub fn evidence(&self, key: &str, run: &str, turn: &str) -> Result<Value> {
+        let dir = self.turn_dir(key, run, turn)?;
+        let question: Value = serde_json::from_slice(&fs::read(dir.join("question.json"))?)?;
+        let recorded = |name: &str| fs::read(dir.join(name)).ok().and_then(|bytes| serde_json::from_slice::<Value>(&bytes).ok()).unwrap_or(Value::Null);
+        let check = |status: &str, why: Option<String>| json!({ "status": status, "why": why });
+        let not_run = || check("not_run", None);
+        // H1 and H2 as the package's own check gives them, H3 as the send's check gives it after them.
+        let checks = match question.get("evidence") {
+            None => {
+                let older = Some("pergunta anterior às marcas: não tem pacote para conferir".to_owned());
+                json!({ "h1": check("not_applicable", older.clone()), "h2": check("not_applicable", older.clone()), "h3": check("not_applicable", older) })
+            }
+            Some(mark) => match self.check_package(key, run, &dir, &question, mark) {
+                Err(e) if e.to_string().starts_with("H2:") => json!({ "h1": check("passed", None), "h2": check("refused", Some(e.to_string())), "h3": not_run() }),
+                Err(e) => json!({ "h1": check("refused", Some(e.to_string())), "h2": not_run(), "h3": not_run() }),
+                Ok(_) => json!({ "h1": check("passed", None), "h2": check("passed", None), "h3": match self.verify_for_send(key, run, turn) {
+                    Ok(_) => check("passed", None),
+                    Err(e) => check("refused", Some(e.to_string())),
+                } }),
+            },
+        };
+        // H4 needs the package read as one; when it cannot be, there is no H4 to tell, and H1 says why.
+        let h4 = self.reproduce(key, run, turn).ok().map(serde_json::to_value).transpose()?.unwrap_or(Value::Null);
+        let latest = match self.latest_measure_read(key, run) {
+            Ok(Some(read)) => json!({ "read_status": "ok", "execution": read.record["id"], "execution_sha256": read.sha256 }),
+            Ok(None) => json!({ "read_status": "none" }),
+            Err(_) => json!({ "read_status": "unreadable" }),
+        };
+        // What a recorded field does not show although it seems to: a format 1 package's
+        // `measure_diverges` was always written false, without comparing anything, so its false
+        // proves nothing. Format 2 records `measure_divergence`, worked out, and needs no warning.
+        let package = recorded(EVIDENCE);
+        let warnings: Vec<&str> = if package.get("format_version") == Some(&json!(1)) { vec!["measure_diverges_not_computed"] } else { vec![] };
+        Ok(json!({ "turn": turn, "mark": question.get("evidence").cloned().unwrap_or(Value::Null), "package": package,
+            "selection": recorded(SELECTION), "checks": checks, "h4": h4, "latest_measure": latest, "warnings": warnings }))
+    }
+
+    /// One suggestion made again, or why not: its record, then the rules it names, then the
+    /// execution it read, then the suggestion itself.
+    fn replay_suggestion(&self, key: &str, run: &str, catalog: &Catalog, sha256: &Sha256Hex) -> Result<Option<evidence::NotReplayable>> {
+        use evidence::NotReplayable as Not;
+        let run_dir = self.run_dir(key, run)?;
+        let read = fs::read(run_dir.join(SUGGESTIONS).join(format!("{}.json", sha256.as_str())));
+        let Some(record) = read.ok().and_then(|bytes| SuggestionRecord::from_bytes(&bytes, sha256.as_str()).ok()) else { return Ok(Some(Not::SuggestionMissing)) };
+        // The rules: of the selection, and of the inventory, the built-in ones as this code has them.
+        let builtin = inventory::builtin();
+        let entries = |origin, set: &inventory::RuleSet| set.rules.iter().map(|rule| Ok(InventoryRuleEntry { origin, rule: serde_json::to_value(rule)? })).collect::<Result<Vec<_>>>();
+        let builtin_entries = entries(InventoryRuleOrigin::Builtin, &builtin)?;
+        let recorded_builtin: Vec<&InventoryRuleEntry> = record.inventory_rules.rules.iter().filter(|r| r.origin == InventoryRuleOrigin::Builtin).collect();
+        if record.rules_version.0 != envelope::RULES_VERSION || record.inventory_rules.version != inventory::VERSION || recorded_builtin.into_iter().ne(builtin_entries.iter()) {
+            return Ok(Some(Not::RulesVersionDiffers));
+        }
+        // The execution read then, with the bytes it had then.
+        let hot = match &record.measure {
+            SuggestionMeasure::Ok { execution, execution_sha256 } => {
+                let Ok(bytes) = fs::read(run_dir.join("executions").join(safe_id(execution)?).join("execution.json")) else { return Ok(Some(Not::ExecutionMissing)) };
+                if hash(&bytes) != execution_sha256.as_str() {
+                    return Ok(Some(Not::ExecutionDiffers));
+                }
+                self.hotspots_of(key, run, &serde_json::from_slice(&bytes)?).ok()
+            }
+            SuggestionMeasure::NoMeasure {} | SuggestionMeasure::Unreadable {} => None,
+        };
+        // The project's rules as the record copied them, not as the profile has them now.
+        let project: Vec<&InventoryRuleEntry> = record.inventory_rules.rules.iter().filter(|r| r.origin == InventoryRuleOrigin::Project).collect();
+        let project_rules: inventory::RuleSet = serde_json::from_value(json!({ "rules": project.iter().map(|r| &r.rule).collect::<Vec<_>>() }))?;
+        let found = inventory::inventory(catalog, &project_rules)?;
+        let (mut out, measured) = Self::suggestion_answer(catalog, &found, &record.input.nodes, hot.as_ref(), record.input.budget_bytes, record.input.max_items)?;
+        // The facts of each item are the record's, as given: not made again.
+        let recorded_facts = |id: &Value| record.output.items.iter().chain(&record.output.left_out).find(|i| i["id"] == *id).map_or(json!([]), |i| i["facts"].clone());
+        for list in ["items", "left_out"] {
+            for value in out[list].as_array_mut().into_iter().flatten() {
+                value["facts"] = recorded_facts(&value["id"]);
+            }
+        }
+        let measure = match (&record.measure, measured) {
+            (SuggestionMeasure::Ok { .. }, true) => record.measure.clone(),
+            (SuggestionMeasure::Ok { .. }, false) | (SuggestionMeasure::Unreadable {}, _) => SuggestionMeasure::Unreadable {},
+            (SuggestionMeasure::NoMeasure {}, _) => SuggestionMeasure::NoMeasure {},
+        };
+        let mut applied = builtin_entries;
+        applied.extend(project.into_iter().cloned());
+        let again = SuggestionRecord::new(edition_origin(catalog)?, envelope::RULES_VERSION, record.input.clone(), SuggestionInventoryRules::new(inventory::VERSION, applied)?, measure, &out)?;
+        Ok((!evidence::same_but_facts(&record, &again)).then_some(Not::OutputDiffers))
+    }
+
+    fn execution_sha256(&self, key: &str, run: &str, execution: &str) -> Result<Sha256Hex> {
+        let file = self.run_dir(key, run)?.join("executions").join(safe_id(execution)?).join("execution.json");
+        Ok(Sha256Hex::try_from(hash(&fs::read(file)?))?)
+    }
+
+    /// A suggestion's record, if it is what its name says and still fits this run: the bytes are the
+    /// ones the hash names, the edition is the run's, and the execution it used has the same bytes.
+    pub(crate) fn verify_suggestion(&self, key: &str, run: &str, sha256: &str) -> Result<SuggestionRecord> {
+        let sha256 = Sha256Hex::try_from(sha256.to_owned())?;
+        let file = self.run_dir(key, run)?.join(SUGGESTIONS).join(format!("{}.json", sha256.as_str()));
+        let record = SuggestionRecord::from_bytes(&fs::read(file)?, sha256.as_str())?;
+        let catalog = Catalog::load(&self.edition(key, run)?)?;
+        if record.edition_origin != edition_origin(&catalog)? {
+            return Err(format!("Sugestão {} é de outra edition", sha256.as_str()).into());
+        }
+        if let SuggestionMeasure::Ok { execution, execution_sha256 } = &record.measure {
+            if self.execution_sha256(key, run, execution)? != *execution_sha256 {
+                return Err(format!("Sugestão {}: a execução {execution} mudou", sha256.as_str()).into());
+            }
+        }
+        Ok(record)
     }
 
     /// Steps 2 and 3: the operation inventory of a run's edition, with the built-in rules and
@@ -412,6 +803,12 @@ impl Store {
     }
 
     pub(crate) fn inventory_of(&self, key: &str, run: &str) -> Result<(inventory::Inventory, PathBuf, Catalog)> {
+        let (found, profile, catalog, _) = self.inventory_with_rules(key, run)?;
+        Ok((found, profile, catalog))
+    }
+
+    /// The inventory with the project's rules it applied, as they were read for it.
+    fn inventory_with_rules(&self, key: &str, run: &str) -> Result<(inventory::Inventory, PathBuf, Catalog, inventory::RuleSet)> {
         let root = PathBuf::from(self.settings(key)?.root);
         let profile = root.join(PROFILE);
         let rules: inventory::RuleSet = match fs::read(&profile).ok().map(|b| serde_json::from_slice::<Value>(&b)).transpose()? {
@@ -420,7 +817,7 @@ impl Store {
         };
         let catalog = Catalog::load(&self.edition(key, run)?)?;
         let found = inventory::inventory(&catalog, &rules)?;
-        Ok((found, profile, catalog))
+        Ok((found, profile, catalog, rules))
     }
 
     /// An investigation from the inventory: for a loop (its occurrence id) or an operation
@@ -507,7 +904,8 @@ impl Store {
         let settings = self.settings(key)?;
         let catalog = Catalog::load(&self.edition(key, run)?)?;
         let verified = self.verify_for_send(key, run, from)?;
-        let context = verified.context.ok_or("Só perguntas em claims continuam em cadeia")?;
+        let from_query_sha256 = verified.link()["query_sha256"].clone();
+        let context = verified.into_context().ok_or("Só perguntas em claims continuam em cadeia")?;
         let mut targets: Vec<Target> = vec![];
         let mut answers = vec![];
         let mut sends: Vec<PathBuf> = fs::read_dir(self.turn_dir(key, run, from)?.join("sends"))
@@ -546,18 +944,31 @@ impl Store {
         // G6d: on editions that record impl types and field writes, a method target also brings
         // its owner type and the declarations that write the fields it reads.
         let owner_context = catalog.owner_context();
-        let chain = json!({ "from_turn": from, "from_query_sha256": verified.link["query_sha256"], "answers": answers,
+        let chain = json!({ "from_turn": from, "from_query_sha256": from_query_sha256, "answers": answers,
             "targets": targets, "reviewed_facts": reviewed.iter().map(|f| &f.id).collect::<Vec<_>>(),
             "owner_context": owner_context });
         let request = request(&settings, question, Some(targets), reviewed, owner_context);
-        self.new_turn(key, run, &settings, &catalog, question, None, request, Some(("chain", chain)))
+        self.new_turn(key, run, &settings, &catalog, Asked::client(question), None, request, Some(("chain", chain)))
     }
 
     /// Fixes the criteria, prepares and verifies the bundle and, in claims, its claims files.
     /// A refusal is kept with the question. Without `search`, the prepared report is recorded.
+    /// A question that reaches the preparation gets its evidence package, or an error marked on it
+    /// that keeps it from being sent; a question refused before has neither.
     #[allow(clippy::too_many_arguments)]
-    fn new_turn(&self, key: &str, run: &str, settings: &Settings, catalog: &Catalog, question: &str,
+    fn new_turn(&self, key: &str, run: &str, settings: &Settings, catalog: &Catalog, asked: Asked,
         search: Option<Vec<u8>>, request: Request, origin: Option<(&str, Value)>) -> Result<Value> {
+        self.new_turn_with(key, run, settings, catalog, asked, search, request, origin, None)
+    }
+
+    /// `new_turn` for a question asked with a selection accepted at its entry: its record is kept in
+    /// the question's folder, once and for good, and the package names it by hash. A record not kept
+    /// leaves the question with no package, and it is not sent.
+    #[allow(clippy::too_many_arguments)]
+    fn new_turn_with(&self, key: &str, run: &str, settings: &Settings, catalog: &Catalog, asked: Asked,
+        search: Option<Vec<u8>>, request: Request, origin: Option<(&str, Value)>, selection: Option<&AcceptedSelection>) -> Result<Value> {
+        let joined = asked.prepared();
+        let question = joined.as_str();
         let run_dir = self.run_dir(key, run)?;
         fs::create_dir_all(run_dir.join("turns"))?;
         let turns = run_dir.join("turns");
@@ -586,15 +997,18 @@ impl Store {
         let request_bytes = serde_json::to_vec_pretty(&request)?;
         fs::write(dir.join("prepare-request.json"), &request_bytes)?;
         let prepared = dir.join("prepared");
-        let prepare_error = prepare::write(catalog, &request_bytes, &prepared)
-            .and_then(|_| prepare::verify(catalog, &prepared))
-            .err()
-            .map(|e| e.to_string());
+        let written = prepare::write(catalog, &request_bytes, &prepared).and_then(|p| prepare::verify(catalog, &prepared).map(|_| p));
+        let (composition, prepare_error) = match written {
+            Ok(p) => (Some(p.composition), None),
+            Err(e) => (None, Some(e.to_string())),
+        };
         if search.is_none() && prepare_error.is_none() {
             fs::copy(prepared.join("search.json"), dir.join("search.json"))?;
         }
         let format = settings.answer_format;
         let claims_error = match (format, &prepare_error) {
+            // Tests stand a refusal of the claims files in for one that is hard to cause.
+            (AnswerFormat::Claims, None) if failing_at("claims") => Some("claims recusado no teste".to_owned()),
             (AnswerFormat::Claims, None) => {
                 let policy = Policy { allow_inference: settings.allow_inference, allow_hypothesis: settings.allow_hypothesis };
                 let instructions = settings.instructions.clone().unwrap_or_default();
@@ -604,12 +1018,201 @@ impl Store {
         };
         let mut record = json!({ "question": question, "created": stamp(), "prepare_error": prepare_error,
             "criteria_sha256": criteria_sha256, "answer_format": format, "claims_error": claims_error });
+        // The selection's record, inside this question's folder only: a refusal before the folder
+        // existed left nothing behind.
+        let kept = match selection {
+            Some(_) if failing_at("selection") => Err("selection_persistence_failed"),
+            Some(s) => publish_immutable(&dir, SELECTION, &s.bytes).map_err(|_| "selection_persistence_failed"),
+            None => Ok(()),
+        };
+        // The package describes what was prepared and written, so it comes after all of it.
+        let package = match (&composition, &claims_error, kept) {
+            (_, _, Err(code)) => Some(Err(code)),
+            (Some(composition), None, Ok(())) => Some(self.evidence_package(key, run, catalog, &dir, composition, &asked, origin.as_ref(),
+                settings.answer_format == AnswerFormat::Claims, settings.instructions.as_deref(), None, selection.map(|s| (&s.sha256, &s.record)), PackageFormat::WRITTEN)
+                .and_then(|bytes| publish_package(&dir, &bytes))),
+            _ => None,
+        };
         // Where the evidence came from when nothing was searched: a chain step or a picked path.
         if let Some((field, value)) = origin {
             record[field] = value;
         }
+        // What the client asked and what the server added, kept apart: the package has their hashes.
+        record["asked"] = json!({ "original": asked.original, "suffixes": asked.suffixes.iter().map(|s| json!({ "text": s.text, "rule": s.rule, "attempt": s.attempt })).collect::<Vec<_>>() });
+        if let Some(package) = &package {
+            record["evidence"] = match package {
+                Ok(sha256) => json!({ "format_version": u32::from(PackageFormat::WRITTEN), "sha256": sha256 }),
+                Err(code) => json!({ "error": code }),
+            };
+        } else if claims_error.is_some() {
+            // No claims query, no package for it: the mark says so, and the question is not taken
+            // for an older one.
+            record["evidence"] = json!({ "error": "claims_not_prepared" });
+        }
         fs::write(dir.join("question.json"), serde_json::to_vec_pretty(&record)?)?;
+        if let Some(Err(code)) = package {
+            return Err(format!("A pergunta {id} não tem pacote de evidências ({code}); ela não será enviada").into());
+        }
         self.turn(key, run, &id)
+    }
+
+    /// The bytes of the evidence package of a question just prepared, from what was written for it,
+    /// or the stable code of what failed: nothing half made comes out. `format` is the package's
+    /// format: a new question's is the one written now; a package made again keeps the one it has.
+    #[allow(clippy::too_many_arguments)]
+    fn evidence_package(&self, key: &str, run: &str, catalog: &Catalog, dir: &Path, composition: &evidence::Composition, asked: &Asked,
+        origin: Option<&(&str, Value)>, claims: bool, project_instructions: Option<&[String]>, at_question: Option<MeasureAtQuestion>,
+        selection: Option<(&Sha256Hex, &SelectionRecord)>, format: PackageFormat) -> std::result::Result<Vec<u8>, &'static str> {
+        // What a lacuna round added, as the question records it: those fichas are the server's.
+        let additions: Vec<ServerAddition> = match origin.filter(|(field, _)| *field == "gathered").and_then(|(_, value)| value.get("server_additions")) {
+            Some(recorded) => serde_json::from_value(recorded.clone()).map_err(|_| "server_additions_unreadable")?,
+            None => vec![],
+        };
+        let mut composition = composition.clone();
+        for seed in &mut composition.fichas {
+            if seed.symbol_id.as_ref().is_some_and(|id| additions.iter().any(|a| a.symbol_id == *id)) {
+                seed.declared_by = evidence::DeclaredBy::ServerLacuna;
+            }
+        }
+        let composition = &composition;
+        let read = |path: PathBuf| fs::read(path).map_err(|_| "artifact_unreadable");
+        let prepared = dir.join("prepared");
+        let request_bytes = read(prepared.join("request.json"))?;
+        let search = read(prepared.join("search.json"))?;
+        let dossier = read(prepared.join("bundle/dossier.json"))?;
+        let bundle_query = String::from_utf8(read(prepared.join("bundle/query.json"))?).map_err(|_| "artifact_unreadable")?;
+        let (context_bytes, claims_query) = if claims {
+            (Some(read(dir.join(crate::claims::DIR).join("context.json"))?), Some(String::from_utf8(read(dir.join(crate::claims::DIR).join("query.json"))?).map_err(|_| "artifact_unreadable")?))
+        } else {
+            (None, None)
+        };
+        let criteria = match dir.join(CRITERIA).is_file() {
+            true => Some(read(dir.join(CRITERIA))?),
+            false => None,
+        };
+        // The sources the fichas and the quotes are in, as the edition has them.
+        let mut paths: Vec<&str> = composition.fichas.iter().map(|f| f.path.as_str()).collect();
+        paths.extend(composition.reviewed.iter().flat_map(|f| f.citations.iter().map(|c| c.path.as_str())));
+        let mut snapshots: Vec<SnapshotInput> = vec![];
+        for path in paths {
+            if snapshots.iter().any(|s| s.path == path) {
+                continue;
+            }
+            let source = catalog.source_by_path(path).ok_or("snapshot_unavailable")?;
+            let bytes = catalog.source_bytes(path).ok_or("snapshot_unavailable")?;
+            snapshots.push(SnapshotInput { source_id: &source.id, path: &source.path, sha256: &source.sha256, bytes });
+        }
+        // Claims: the context's evidence is what the form is checked against.
+        let context: Option<Value> = context_bytes.as_deref().map(serde_json::from_slice).transpose().map_err(|_| "claims_context_unreadable")?;
+        let items: Vec<ClaimsEvidence> = match &context {
+            Some(context) => context["evidence"].as_array().ok_or("claims_context_unreadable")?.iter().map(|e| Some(ClaimsEvidence {
+                id: e["id"].as_str()?, path: e["path"].as_str()?, start_line: e["start_line"].as_u64()? as usize, end_line: e["end_line"].as_u64()? as usize, excerpt: e["excerpt"].as_str()?,
+            })).collect::<Option<Vec<_>>>().ok_or("claims_context_unreadable")?,
+            None => vec![],
+        };
+        let form = if claims { Form::Claims(&items) } else { Form::Prose };
+        let input = CompositionInput { query_json: &bundle_query, seeds: &composition.fichas, radius: composition.radius, form, snapshots: &snapshots };
+        if failing_at("composition") {
+            return Err("composition_failed");
+        }
+        let composed = evidence::compose(&input).map_err(|_| "composition_failed")?;
+        // Each reviewed fact's line in the acervo, in its exact bytes, when it is there.
+        let lines = self.promotion_lines(key).map_err(|_| "acervo_unreadable")?;
+        let records: Vec<FactRecord> = composition.reviewed.iter()
+            .filter_map(|fact| lines.iter().find(|(id, _)| *id == fact.id).map(|(_, line)| FactRecord { fact_id: &fact.id, bytes: line }))
+            .collect();
+        let suffixes: Vec<SuffixInput> = asked.suffixes.iter().map(|s| SuffixInput { text: &s.text, rule: s.rule, attempt: s.attempt }).collect();
+        let query_json = claims_query.as_deref().unwrap_or(&bundle_query);
+        let query = evidence::build_provenance(&ProvenanceInput {
+            query_json,
+            question: QuestionInput { original: asked.original, suffixes: &suffixes },
+            search: &search,
+            composition,
+            composed: &composed,
+            snapshots: &snapshots,
+            fact_records: &records,
+            project_instructions,
+        }).map_err(|_| "provenance_failed")?;
+        // The measure there was when the question was made, read once: what is named is what was read.
+        // A package made again keeps the one it was made with.
+        let at_question = match at_question {
+            Some(recorded) => recorded,
+            None => match self.latest_measure_read(key, run) {
+                Ok(Some(read)) => MeasureAtQuestion::Ok {
+                    execution: read.record["id"].as_str().ok_or("measure_unidentified")?.to_owned(),
+                    execution_sha256: Sha256Hex::try_from(read.sha256).map_err(|_| "measure_unidentified")?,
+                },
+                Ok(None) => MeasureAtQuestion::NoMeasure {},
+                Err(_) => MeasureAtQuestion::Unreadable {},
+            },
+        };
+        // A selection checked at the entry is named by its record, and rests on its last suggestion's
+        // measure. A package made before selections were checked said only that none was tied to it.
+        let gathered_origin = origin.filter(|(field, _)| *field == "gathered").map(|(_, value)| &value["origin"]);
+        let (selection, selection_basis) = match selection {
+            Some((sha256, record)) => (Some(SelectionReference { record_format: SelectionRecordFormat, record_sha256: sha256.clone(),
+                suggestions: record.suggestions(), declared_by: ServerDeclared::Server }), record.selection_basis()),
+            None => (None, match gathered_origin.is_some_and(|o| o.get("selection").is_some_and(|s| !s.is_null())) {
+                true => MeasureSelectionBasis::NotRecorded {},
+                false => MeasureSelectionBasis::NotApplicable {},
+            }),
+        };
+        let origin_kind = gathered_origin.and_then(|o| o["kind"].as_str()).and_then(|kind| match kind {
+            "selection" => Some(OriginKind::Selection),
+            "ladder" => Some(OriginKind::Ladder),
+            "hot" => Some(OriginKind::Hot),
+            "loop" => Some(OriginKind::Loop),
+            "operation" => Some(OriginKind::Operation),
+            _ => None,
+        });
+        let route = match origin.map(|(field, _)| *field) {
+            Some("gathered") => Route::Gathered,
+            Some("chain") => Route::Chain,
+            Some("path") => Route::Path,
+            _ => Route::Search,
+        };
+        let manifest = catalog.manifest();
+        let report: Value = serde_json::from_slice(&search).map_err(|_| "artifact_unreadable")?;
+        let sha = |bytes: &[u8]| Sha256Hex::try_from(hash(bytes)).map_err(|_| "artifact_unreadable");
+        let package = EvidencePackage {
+            kind: PackageKind::EvidencePackage,
+            format_version: format,
+            versions: Versions { normalization: Normalization::LinesV1, rules: RulesVersion(envelope::RULES_VERSION.to_owned()), builder: crate::builder::identity() },
+            edition: EditionIdentity {
+                origin: edition_origin(catalog).map_err(|_| "edition_unreadable")?,
+                catalog_sha256: Sha256Hex::try_from(report["catalog_sha256"].as_str().unwrap_or_default().to_owned()).map_err(|_| "edition_unreadable")?,
+                extractor: manifest.extractor.clone(),
+                git_head: manifest.git.head.clone(),
+                git_dirty: manifest.git.dirty,
+            },
+            route,
+            origin_kind,
+            representation: if claims { Representation::Claims } else { Representation::Prose },
+            fichas: composed.fichas,
+            units: composed.units,
+            query,
+            // Format 1 wrote false and compared nothing; it is made again as it was. Format 2 compares.
+            measure: match format {
+                PackageFormat::V1 => MeasureReferences { at_question, selection_basis, measure_diverges: Some(false), measure_divergence: None },
+                PackageFormat::V2 => {
+                    let divergence = evidence::measure_divergence(&at_question, &selection_basis);
+                    MeasureReferences { at_question, selection_basis, measure_diverges: None, measure_divergence: Some(divergence) }
+                }
+            },
+            selection,
+            server_additions: additions,
+            bound: BoundArtifacts {
+                request_sha256: sha(&request_bytes)?,
+                search_sha256: sha(&search)?,
+                dossier_sha256: sha(&dossier)?,
+                bundle_query_sha256: sha(bundle_query.as_bytes())?,
+                claims_context_sha256: context_bytes.as_deref().map(sha).transpose()?,
+                criteria_sha256: criteria.as_deref().map(sha).transpose()?,
+            },
+        };
+        let mut bytes = serde_json::to_vec_pretty(&package).map_err(|_| "serialization_failed")?;
+        bytes.push(b'\n');
+        Ok(bytes)
     }
 
     /// An answer pasted by the person (provider `manual`), for a claims question: verified and
@@ -631,15 +1234,20 @@ impl Store {
             return Err("Só perguntas em claims recebem resposta colada".into());
         }
         let verified = self.verify_for_send(key, run, turn)?;
-        let context = verified.context.ok_or("Pergunta em claims sem contexto")?;
+        let (query, link) = (verified.query().to_path_buf(), verified.link().clone());
+        let context = verified.into_context().ok_or("Pergunta em claims sem contexto")?;
         let send = next_send(&dir, provider)?;
         fs::create_dir(&send)?;
         // Preserved as the Claude CLI send does: the query delivered and the answer received.
-        fs::copy(&verified.query, send.join("query.json"))?;
+        fs::copy(&query, send.join("query.json"))?;
         fs::write(send.join("response.txt"), text)?;
         let mut summary = json!({ "state": "completed", "provider": provider, "text": text, "directory": display(&send),
-            "link": verified.link, "pasted": provider == "manual" });
+            "link": link, "pasted": provider == "manual", "purpose": "question" });
         summary["check"] = crate::claims::check(&context, &send, text)?;
+        // Not recorded is not linked: the answer stands only once its send.json is written.
+        if failing_at("send_record") {
+            return Err("O registro do envio não foi gravado; a resposta não está vinculada".into());
+        }
         fs::write(send.join("send.json"), serde_json::to_vec_pretty(&summary)?)?;
         Ok(summary)
     }
@@ -654,9 +1262,20 @@ impl Store {
         if !prepared.join("bundle/query.json").is_file() {
             return Err("Esta pergunta não tem query preparada (o prepare recusou); nada foi enviado".into());
         }
-        let catalog = Catalog::load(&self.edition(key, run)?)?;
-        prepare::verify(&catalog, &prepared)?;
         let question: Value = serde_json::from_slice(&fs::read(dir.join("question.json"))?)?;
+        // A new question carries a mark: its package passes H1 and H2 here, H3 below. An older one
+        // has none, and keeps the checks it always had. A package and its mark, both taken away,
+        // make a new question look older: hashes show consistency, not who wrote a file.
+        let evidence = match question.get("evidence") {
+            Some(mark) => Some(self.check_package(key, run, &dir, &question, mark)?),
+            None => None,
+        };
+        // H3 starts here for a new question: the query made again from the bundle, byte for byte.
+        let h3 = |e: Box<dyn std::error::Error>| -> Box<dyn std::error::Error> {
+            match evidence { Some(_) => format!("H3: {e}").into(), None => e }
+        };
+        let catalog = Catalog::load(&self.edition(key, run)?)?;
+        prepare::verify(&catalog, &prepared).map_err(h3)?;
         let criteria_sha256 = question["criteria_sha256"].as_str().map(str::to_owned);
         if let Some(expected) = &criteria_sha256 {
             if hash(&fs::read(dir.join(CRITERIA))?) != *expected {
@@ -665,7 +1284,7 @@ impl Store {
         }
         // A claims question sends its own query, re-derived from the bundle just verified.
         let context = match question["answer_format"] == "claims" {
-            true => Some(crate::claims::verify(&catalog, &dir)?),
+            true => Some(crate::claims::verify(&catalog, &dir).map_err(h3)?),
             false => None,
         };
         let query_file = match context {
@@ -679,10 +1298,16 @@ impl Store {
             Some(_) => json!({ "context_sha256": hash(&fs::read(dir.join(crate::claims::DIR).join("context.json"))?) }),
             None => Value::Null,
         };
+        // H3, the rest: the package made again by this code from what was prepared is the one stored,
+        // whoever built it. Its builder and the measure taken with the question are not made again.
+        if let Some((_, stored, bytes)) = &evidence {
+            self.rederive_package(key, run, &catalog, &dir, &question, stored, bytes, context.as_ref())?;
+        }
         let mut checks = vec!["prepare::verify"];
         checks.extend(context.is_some().then_some("claims::verify"));
         checks.extend(criteria_sha256.is_some().then_some("criteria_sha256"));
-        let link = json!({
+        checks.extend(evidence.as_ref().map(|_| ["evidence_h1", "evidence_h2", "evidence_h3"]).into_iter().flatten());
+        let mut link = json!({
             "format_version": 1,
             "kind": "studio_send_link",
             "turn": turn,
@@ -697,7 +1322,183 @@ impl Store {
             "checks": checks,
             "verified_unix_ms": now_ms(),
         });
+        // A new question's link names the package checked; an older one has none.
+        if let Some((sha256, _, _)) = evidence {
+            link["evidence_sha256"] = json!(sha256);
+        }
         Ok(Verified { query, context, criteria_sha256, link })
+    }
+
+    /// H1 and H2 of a new question's package: the mark, the bytes, the package with itself and with
+    /// the files of its turn (H1), then its units again from the edition's snapshots (H2). Nothing
+    /// is rewritten; what does not agree is refused as it is.
+    fn check_package(&self, key: &str, run: &str, dir: &Path, question: &Value, mark: &Value) -> Result<(String, EvidencePackage, Vec<u8>)> {
+        let refuse = |level: &str, why: String| -> Box<dyn std::error::Error> { format!("{level}: {why}; nada foi enviado").into() };
+        if let Some(code) = mark.get("error") {
+            return Err(format!("Esta pergunta não tem pacote de evidências ({}); nada foi enviado", code.as_str().unwrap_or("?")).into());
+        }
+        let fields = mark.as_object().ok_or_else(|| refuse("H1", "marca do pacote ilegível".into()))?;
+        // Format 1 or 2: the mark names the format, and the package has to be in that same format.
+        let format = mark["format_version"].as_u64().and_then(|v| u32::try_from(v).ok()).and_then(|v| PackageFormat::try_from(v).ok());
+        let Some(format) = format.filter(|_| fields.len() == 2) else {
+            return Err(refuse("H1", "marca do pacote em formato desconhecido".into()));
+        };
+        let sha256 = Sha256Hex::try_from(mark["sha256"].as_str().unwrap_or_default().to_owned()).map_err(|_| refuse("H1", "hash da marca inválido".into()))?;
+        let bytes = fs::read(dir.join(EVIDENCE)).map_err(|_| refuse("H1", "pacote ausente".into()))?;
+        if hash(&bytes) != sha256.as_str() {
+            return Err(refuse("H1", "o pacote não é o que a marca nomeia".into()));
+        }
+        let package: EvidencePackage = serde_json::from_slice(&bytes).map_err(|e| refuse("H1", format!("pacote ilegível ({e})")))?;
+        let mut again = serde_json::to_vec_pretty(&package)?;
+        again.push(b'\n');
+        if again != bytes {
+            return Err(refuse("H1", "pacote fora da forma em que é gravado".into()));
+        }
+        if package.format_version != format {
+            return Err(refuse("H1", "o formato da marca não é o do pacote".into()));
+        }
+        evidence::check_structure(&package).map_err(|e| refuse("H1", e.to_string()))?;
+        // The versions it names are ones this code knows; the builder is the one recorded, whatever it is.
+        if package.versions.rules.0 != envelope::RULES_VERSION {
+            return Err(refuse("H1", format!("regras {} desconhecidas", package.versions.rules.0)));
+        }
+        // The files of this turn are the ones bound, and only those.
+        let of = |path: PathBuf| fs::read(path).map(|b| hash(&b)).ok();
+        let claims = package.representation == Representation::Claims;
+        let prepared = dir.join("prepared");
+        let bound = &package.bound;
+        let claims_context = of(dir.join(crate::claims::DIR).join("context.json"));
+        let criteria = of(dir.join(CRITERIA));
+        let checks = [
+            ("request", Some(bound.request_sha256.as_str().to_owned()) == of(prepared.join("request.json"))),
+            ("search", Some(bound.search_sha256.as_str().to_owned()) == of(prepared.join("search.json"))),
+            ("dossier", Some(bound.dossier_sha256.as_str().to_owned()) == of(prepared.join("bundle/dossier.json"))),
+            ("bundle_query", Some(bound.bundle_query_sha256.as_str().to_owned()) == of(prepared.join("bundle/query.json"))),
+            // A claims question has its context, a prose one has none: a null is no stand-in for it.
+            ("claims_context", claims == bound.claims_context_sha256.is_some()
+                && bound.claims_context_sha256.as_ref().map(|h| h.as_str().to_owned()) == if claims { claims_context } else { None }),
+            ("criteria", bound.criteria_sha256.as_ref().map(|h| h.as_str().to_owned()) == criteria && question["criteria_sha256"].as_str().map(str::to_owned) == criteria),
+            ("query", Some(package.query.sha256.as_str().to_owned()) == of(if claims { dir.join(crate::claims::DIR).join("query.json") } else { prepared.join("bundle/query.json") })),
+            ("representation", claims == (question["answer_format"] == "claims")),
+        ];
+        if let Some((name, _)) = checks.iter().find(|(_, same)| !same) {
+            return Err(refuse("H1", format!("{name} difere do vinculado no pacote")));
+        }
+        // The question as asked, and the edition the package names.
+        let asked = asked_of(question)?;
+        let prepared_text = question["question"].as_str().unwrap_or_default();
+        let suffixes: Vec<(String, RetryRule, usize)> = package.query.server_suffixes.iter().map(|s| (s.sha256.as_str().to_owned(), s.rule, s.attempt)).collect();
+        let asked_suffixes: Vec<(String, RetryRule, usize)> = asked.1.iter().map(|s| (hash(s.text.as_bytes()), s.rule, s.attempt)).collect();
+        let joined: String = std::iter::once(asked.0.as_str()).chain(asked.1.iter().map(|s| s.text.as_str())).collect();
+        if package.query.prepared_question_sha256.as_str() != hash(prepared_text.as_bytes()) || joined != prepared_text
+            || package.query.person_text.sha256.as_str() != hash(asked.0.as_bytes()) || suffixes != asked_suffixes {
+            return Err(refuse("H1", "a pergunta registrada não é a do pacote".into()));
+        }
+        let origin: Value = serde_json::from_slice(&fs::read(prepared.join("bundle/origin.json"))?)?;
+        let search: Value = serde_json::from_slice(&fs::read(prepared.join("search.json"))?)?;
+        if origin["dossier"]["source_path"] != package.edition.origin.as_str() || search["catalog_sha256"] != package.edition.catalog_sha256.as_str() {
+            return Err(refuse("H1", "a edition do pacote não é a do bundle".into()));
+        }
+        // The selection's record is the one the package names, and says what the question says it sent.
+        let selection_file = dir.join(SELECTION);
+        let included: Option<Vec<String>> = match &package.selection {
+            Some(reference) => {
+                let bytes = fs::read(&selection_file).map_err(|_| refuse("H1", "registro de seleção ausente".into()))?;
+                let record = SelectionRecord::from_bytes(&bytes, reference.record_sha256.as_str()).map_err(|e| refuse("H1", format!("registro de seleção: {e}")))?;
+                if record.suggestions() != reference.suggestions || record.selection_basis() != package.measure.selection_basis {
+                    return Err(refuse("H1", "o registro de seleção não é o que o pacote diz".into()));
+                }
+                let sent = SelectionInput::from_value(&question["gathered"]["origin"]["selection"]).ok();
+                if sent.as_ref() != Some(&record.received) || record.edition_origin != package.edition.origin {
+                    return Err(refuse("H1", "a seleção da pergunta não é a do registro".into()));
+                }
+                Some(record.received.included.iter().map(|e| e.id.clone()).collect())
+            }
+            None if selection_file.exists() => return Err(refuse("H1", "registro de seleção que o pacote não nomeia".into())),
+            None => None,
+        };
+        // What the server added is what the question records, in its order.
+        let recorded: Vec<ServerAddition> = match question["gathered"].get("server_additions") {
+            Some(value) => serde_json::from_value(value.clone()).map_err(|_| refuse("H1", "complementações ilegíveis".into()))?,
+            None => vec![],
+        };
+        if recorded != package.server_additions {
+            return Err(refuse("H1", "as complementações não são as da pergunta".into()));
+        }
+        // H2: from the edition kept with the run, never from the analyzed project.
+        let catalog = self.edition(key, run).and_then(|edition| Catalog::load(&edition)).map_err(|e| refuse("H2", format!("edition indisponível ({e})")))?;
+        // Each one asked for by its LACUNA and found for it in the edition, after the client's.
+        let nodes: Vec<String> = serde_json::from_value(question["gathered"]["nodes"].clone()).unwrap_or_default();
+        self.check_additions(key, run, &catalog, &nodes, included.as_deref(), &package.server_additions).map_err(|e| refuse("H1", format!("complementação: {e}")))?;
+        let mut snapshots: Vec<SnapshotInput> = vec![];
+        for unit in &package.units {
+            if snapshots.iter().any(|s| s.path == unit.path) {
+                continue;
+            }
+            let (Some(source), Some(bytes)) = (catalog.source_by_path(&unit.path), catalog.source_bytes(&unit.path)) else {
+                return Err(refuse("H2", format!("snapshot de {} indisponível", unit.path)));
+            };
+            snapshots.push(SnapshotInput { source_id: &source.id, path: &source.path, sha256: &source.sha256, bytes });
+        }
+        evidence::check_sources(&package, &snapshots).map_err(|e| refuse("H2", e.to_string()))?;
+        Ok((sha256.as_str().to_owned(), package, bytes))
+    }
+
+    /// H3: the package this code makes from what was prepared and recorded is the stored one, except
+    /// for the code that built it and the measure read when the question was made.
+    #[allow(clippy::too_many_arguments)]
+    fn rederive_package(&self, key: &str, run: &str, catalog: &Catalog, dir: &Path, question: &Value, stored: &EvidencePackage,
+        stored_bytes: &[u8], context: Option<&librarian_llm_engine::claims::Context>) -> Result<()> {
+        let refuse = |why: String| -> Box<dyn std::error::Error> { format!("H3: {why}; nada foi enviado").into() };
+        let request: Request = serde_json::from_slice(&fs::read(dir.join("prepared/request.json"))?)?;
+        let composition = prepare::prepare(catalog, &request).map_err(|e| refuse(format!("preparação não refeita ({e})")))?.composition;
+        let (original, suffixes) = asked_of(question)?;
+        let asked = Asked { original: &original, suffixes: &suffixes };
+        let origin = ["gathered", "chain", "path"].into_iter().find(|f| question.get(*f).is_some()).map(|f| (f, question[f].clone()));
+        // The instructions the query was written with: the claims context records them.
+        let recorded: Option<Vec<String>> = context.map(|c| c.project_instructions.clone());
+        let claims = stored.representation == Representation::Claims;
+        // The selection's record made again by this code, from what the client sent, the suggestion
+        // records of the run and the edition: checked as at the entry, against the client's nodes.
+        let selection = match &stored.selection {
+            Some(reference) => {
+                let bytes = fs::read(dir.join(SELECTION))?;
+                let record = SelectionRecord::from_bytes(&bytes, reference.record_sha256.as_str())?;
+                let nodes: Vec<String> = record.received.included.iter().map(|e| e.id.clone()).collect();
+                let again = self.accept_input(key, run, &nodes, record.received.clone()).map_err(|e| refuse(format!("registro de seleção não refeito ({e})")))?;
+                if again.bytes != bytes {
+                    return Err(refuse("o código atual não refaz o registro de seleção".into()));
+                }
+                Some(again)
+            }
+            None => None,
+        };
+        let bytes = self.evidence_package(key, run, catalog, dir, &composition, &asked, origin.as_ref(), claims, recorded.as_deref(), Some(stored.measure.at_question.clone()),
+            selection.as_ref().map(|s| (&s.sha256, &s.record)), stored.format_version)
+            .map_err(|code| refuse(format!("pacote não refeito ({code})")))?;
+        // The builder is the one field allowed to differ: what it built is compared byte for byte.
+        let mut again: EvidencePackage = serde_json::from_slice(&bytes)?;
+        again.versions.builder = stored.versions.builder.clone();
+        let mut again_bytes = serde_json::to_vec_pretty(&again)?;
+        again_bytes.push(b'\n');
+        if again_bytes == stored_bytes {
+            return Ok(());
+        }
+        // Different bytes: the first part that differs names the refusal.
+        let parts: [(&str, bool); 10] = [
+            ("versions", again.versions == stored.versions),
+            ("edition", again.edition == stored.edition),
+            ("route", (again.route, again.origin_kind, again.representation) == (stored.route, stored.origin_kind, stored.representation)),
+            ("fichas", again.fichas == stored.fichas),
+            ("units", again.units == stored.units),
+            ("query", again.query == stored.query),
+            ("measure", again.measure == stored.measure),
+            ("selection", again.selection == stored.selection),
+            ("server_additions", again.server_additions == stored.server_additions),
+            ("bound", again.bound == stored.bound),
+        ];
+        let part = parts.iter().find(|(_, same)| !same).map_or("a forma", |(part, _)| part);
+        Err(refuse(format!("o código atual não refaz {part} do pacote")))
     }
 
     pub(crate) fn settings(&self, key: &str) -> Result<Settings> {
@@ -722,7 +1523,7 @@ impl Store {
         if provider == "manual" {
             return Ok(json!({ "id": id, "query": query, "directory": display(&dir) }));
         }
-        let summary = crate::llm::send(provider, send.request(&dir.join("query.json"), &dir.join("send")))?;
+        let summary = crate::llm::send_lexicon(provider, &send, &dir.join("query.json"), &dir.join("send"))?;
         let checked = match summary["text"].as_str() {
             Some(text) => self.check_text(&catalog, &settings, &dir, text),
             None => json!({ "error": summary["diagnostic"].as_str().unwrap_or("O LLM não devolveu texto") }),
@@ -1170,9 +1971,126 @@ pub fn stamp() -> String {
     )
 }
 
+/// The measure a suggestion used, from the one read it was made from. No measure at all and one
+/// that could not be read, or not used, are different things; only one used is named, by the hash of
+/// the bytes it was read from.
+fn measure_read(reading: &Result<Option<crate::execution::ReadExecution>>, used: bool) -> Result<SuggestionMeasure> {
+    Ok(match reading {
+        Ok(None) => SuggestionMeasure::NoMeasure {},
+        Ok(Some(read)) if used => {
+            let execution = read.record["id"].as_str().ok_or("Medição sem execução identificada: sugestão não registrada")?;
+            SuggestionMeasure::Ok { execution: execution.to_owned(), execution_sha256: Sha256Hex::try_from(read.sha256.clone())? }
+        }
+        Ok(Some(_)) | Err(_) => SuggestionMeasure::Unreadable {},
+    })
+}
+
+#[cfg(test)]
+thread_local! {
+    /// The stage at which a test makes the package of the next question fail, on this thread.
+    static FAIL_EVIDENCE_AT: std::cell::Cell<Option<&'static str>> = const { std::cell::Cell::new(None) };
+}
+
+/// `notes`, at any depth of what a client sent, empty or not, of any type: refused before anything is
+/// created. Notes would reach the model as lines of the evidence; nothing a client writes may.
+pub fn refuse_notes(value: &Value) -> Result<()> {
+    let found = match value {
+        Value::Object(fields) => fields.contains_key("notes") || fields.values().any(|v| refuse_notes(v).is_err()),
+        Value::Array(items) => items.iter().any(|v| refuse_notes(v).is_err()),
+        _ => false,
+    };
+    match found {
+        true => Err("O campo notes não é aceito; nada foi criado nem enviado".into()),
+        false => Ok(()),
+    }
+}
+
+/// A failure tests cause at one stage, for one that is hard to cause on purpose.
+pub(crate) fn failing_at(stage: &str) -> bool {
+    #[cfg(test)]
+    return FAIL_EVIDENCE_AT.with(|f| f.get() == Some(stage));
+    #[cfg(not(test))]
+    {
+        let _ = stage;
+        false
+    }
+}
+
+/// The question as asked, from question.json: the client's text and what the server added. A
+/// question with no record of that is its own text, and nothing added.
+fn asked_of(question: &Value) -> Result<(String, Vec<Suffix>)> {
+    let Some(asked) = question.get("asked") else {
+        return Ok((question["question"].as_str().unwrap_or_default().to_owned(), vec![]));
+    };
+    let original = asked["original"].as_str().ok_or("Pergunta com registro do texto ilegível")?.to_owned();
+    let suffixes = asked["suffixes"].as_array().ok_or("Pergunta com registro dos acréscimos ilegível")?.iter().map(|s| {
+        Ok(Suffix {
+            text: s["text"].as_str().ok_or("Acréscimo ilegível")?.to_owned(),
+            rule: serde_json::from_value(s["rule"].clone())?,
+            attempt: s["attempt"].as_u64().ok_or("Acréscimo ilegível")? as usize,
+        })
+    }).collect::<Result<Vec<_>>>()?;
+    Ok((original, suffixes))
+}
+
+/// Publishes a package beside its question, once, and gives its hash.
+fn publish_package(dir: &Path, bytes: &[u8]) -> std::result::Result<String, &'static str> {
+    if failing_at("persistence") {
+        return Err("persistence_failed");
+    }
+    publish_immutable(dir, EVIDENCE, bytes).map_err(|_| "persistence_failed")?;
+    Ok(hash(bytes))
+}
+
+/// An edition's identity, as a prepared bundle's `origin.json` names it.
+fn edition_origin(catalog: &Catalog) -> Result<String> {
+    Ok(format!("edition:{}", hash(&serde_json::to_vec(catalog.manifest())?)))
+}
+
+/// Publishes `bytes` under `name`, once and for good. A hard link is how: it fails when the name
+/// exists, on every system, where a rename may replace it; and the name only ever appears over a file
+/// already whole and on disk. The temporary file's name is never a record's. Equal bytes already
+/// there are the same record; different ones are an error and stay as they are.
+fn publish_immutable(dir: &Path, name: &str, bytes: &[u8]) -> Result<()> {
+    publish_with(dir, name, bytes, |file, bytes| file.write_all(bytes))
+}
+
+fn publish_with(dir: &Path, name: &str, bytes: &[u8], write: impl FnOnce(&mut fs::File, &[u8]) -> io::Result<()>) -> Result<()> {
+    static NEXT_TEMPORARY: AtomicUsize = AtomicUsize::new(0);
+    fs::create_dir_all(dir)?;
+    let target = dir.join(name);
+    let same = |target: &Path| -> Result<()> {
+        if fs::read(target)? != bytes {
+            return Err(format!("{}: já existe com outros bytes; nada foi sobrescrito", display(target)).into());
+        }
+        Ok(())
+    };
+    if target.exists() {
+        return same(&target);
+    }
+    let temporary = dir.join(format!("{name}.{}-{}.tmp", std::process::id(), NEXT_TEMPORARY.fetch_add(1, Ordering::Relaxed)));
+    let written = (|| {
+        let mut file = OpenOptions::new().write(true).create_new(true).open(&temporary)?;
+        write(&mut file, bytes)?;
+        file.sync_all()?;
+        drop(file);
+        fs::hard_link(&temporary, &target)
+    })();
+    // Whatever happened, the temporary file has no more use: on failure, nothing valid is left.
+    let _ = fs::remove_file(&temporary);
+    match written {
+        Ok(()) => {}
+        // Another writer published first: its bytes have to be these.
+        Err(error) if error.kind() == io::ErrorKind::AlreadyExists => {}
+        Err(error) => return Err(format!("{}: não foi possível publicar: {error}", display(&target)).into()),
+    }
+    same(&target)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use librarian_ingest::evidence::{Incomparable, MeasureDivergence, MeasureSide, NotComparable};
 
     struct Scratch(PathBuf);
     impl Drop for Scratch {
@@ -1488,7 +2406,7 @@ mod tests {
         let origin: Value = serde_json::from_slice(&fs::read(dir.join("prepared/bundle/origin.json")).unwrap()).unwrap();
         assert_eq!(link["selection"], origin["selection"]);
         assert!(link["dossier_origin"].as_str().unwrap().starts_with("edition:"));
-        assert_eq!((&link["claims"], &link["checks"]), (&Value::Null, &json!(["prepare::verify"])));
+        assert_eq!((&link["claims"], &link["checks"]), (&Value::Null, &json!(["prepare::verify", "evidence_h1", "evidence_h2", "evidence_h3"])));
         // A query edited after the question is refused before any send.
         let original = fs::read(&verified.query).unwrap();
         fs::write(&verified.query, b"{}\n").unwrap();
@@ -1573,7 +2491,7 @@ mod tests {
         assert_eq!(link["query_file"], "claims/query.json");
         assert_eq!(link["query_sha256"], hash(turn["query"].as_str().unwrap().as_bytes()));
         assert_ne!(link["query_sha256"], link["bundle"]["query_sha256"]);
-        assert_eq!(link["checks"], json!(["prepare::verify", "claims::verify"]));
+        assert_eq!(link["checks"], json!(["prepare::verify", "claims::verify", "evidence_h1", "evidence_h2", "evidence_h3"]));
         assert!(link["claims"]["context_sha256"].is_string());
 
         // A context edited after the question no longer matches the bundle and is refused.
@@ -1855,10 +2773,11 @@ mod tests {
         let run = run["id"].as_str().unwrap();
         let link = store.verify_for_send(key, run, "01").unwrap().link;
         assert_eq!(link["criteria_sha256"], turn["criteria_sha256"]);
-        assert_eq!(link["checks"], json!(["prepare::verify", "criteria_sha256"]));
+        assert_eq!(link["checks"], json!(["prepare::verify", "criteria_sha256", "evidence_h1", "evidence_h2", "evidence_h3"]));
         let criteria = store.turn_dir(key, run, "01").unwrap().join(CRITERIA);
         fs::write(&criteria, "- Qualquer resposta serve.\n").unwrap();
-        assert!(store.verify_for_send(key, run, "01").err().unwrap().to_string().contains("Critérios"));
+        // A new question binds its criteria in its package: H1 finds them changed first.
+        assert!(store.verify_for_send(key, run, "01").err().unwrap().to_string().contains("H1: criteria"));
     }
 
     #[test]
@@ -3579,5 +4498,3378 @@ librarian-measure memory_mb=100
         // What did not run in the measure still stays out, and with no measure everything can come.
         assert_eq!(found(&catalog, "Idle", &["Shape::area"]), Vec::<String>::new());
         assert_eq!(found(&catalog, "Idle", &[]), ["Idle"]);
+    }
+
+    // The record of a suggestion: what it says, where it is, and what happens when it cannot be written.
+
+    fn record_files(store: &Store, key: &str, run: &str) -> Vec<PathBuf> {
+        let dir = store.run_dir(key, run).unwrap().join(SUGGESTIONS);
+        let Ok(entries) = fs::read_dir(dir) else { return vec![] };
+        let mut files: Vec<PathBuf> = entries.flatten().map(|e| e.path()).collect();
+        files.sort();
+        files
+    }
+
+    fn only_record(store: &Store, key: &str, run: &str, out: &Value) -> (PathBuf, Vec<u8>, SuggestionRecord) {
+        let files = record_files(store, key, run);
+        assert_eq!(files.len(), 1, "{files:?}");
+        let sha = out["suggestion"].as_str().unwrap();
+        assert_eq!(files[0].file_name().unwrap().to_string_lossy(), format!("{sha}.json"));
+        let bytes = fs::read(&files[0]).unwrap();
+        let record = store.verify_suggestion(key, run, sha).unwrap();
+        (files[0].clone(), bytes, record)
+    }
+
+    fn no_measure() -> (Scratch, Store, String, String, String) {
+        let scratch = project();
+        let root = scratch.0.join("project");
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let key = store.open(&display(&root)).unwrap()["key"].as_str().unwrap().to_owned();
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        let node = symbol_id(&store, &key, &run, "ray_from_pixel");
+        (scratch, store, key, run, node)
+    }
+
+    #[test]
+    fn a_suggestion_is_recorded_under_the_hash_of_its_bytes_and_the_record_is_what_was_answered() {
+        let (_scratch, store, key, run) = measured_mix();
+        let node = symbol_id(&store, &key, &run, "roda");
+        let out = store.suggest_envelope(&key, &run, std::slice::from_ref(&node)).unwrap();
+        let (_, bytes, record) = only_record(&store, &key, &run, &out);
+        let sha = out["suggestion"].as_str().unwrap();
+        assert_eq!(hash(&bytes), sha);
+        assert!(!String::from_utf8_lossy(&bytes).contains(sha), "a record holds no hash of itself");
+        assert_eq!(record.to_bytes().unwrap(), bytes);
+        // The output, field by field, is the answer's, and in the same order.
+        let written = serde_json::to_value(&record.output).unwrap();
+        for field in ["items", "left_out", "gaps", "behavior", "measured", "used_bytes", "coverage", "limits"] {
+            assert_eq!(written[field], out[field], "{field}");
+        }
+        assert_eq!(written.as_object().unwrap().len(), 8);
+        assert_eq!(serde_json::to_value(&record.input).unwrap(), json!({ "nodes": [node], "budget_bytes": envelope::BUDGET_BYTES, "max_items": MAX_GATHERED }));
+        assert_eq!(out["budget_bytes"], envelope::BUDGET_BYTES);
+        assert_eq!(record.rules_version.0, envelope::RULES_VERSION);
+        // The same edition a prepared bundle names: the identity is the one already in use.
+        let catalog = Catalog::load(&store.edition(&key, &run).unwrap()).unwrap();
+        assert_eq!(record.edition_origin, edition_origin(&catalog).unwrap());
+    }
+
+    #[test]
+    fn the_answer_only_gains_the_reference_to_its_record() {
+        let (_scratch, store, key, run) = measured_mix();
+        let node = symbol_id(&store, &key, &run, "roda");
+        let out = store.suggest_envelope(&key, &run, std::slice::from_ref(&node)).unwrap();
+        let names: Vec<&String> = out.as_object().unwrap().keys().collect();
+        assert_eq!(names, ["behavior", "budget_bytes", "coverage", "gaps", "items", "left_out", "limits", "measured", "notes", "suggestion", "used_bytes"]);
+        // A record that left a field of the answer out would be refused, so a new one is noticed.
+        let mut with_more = out.clone();
+        with_more.as_object_mut().unwrap().remove("suggestion");
+        with_more["novo"] = json!(1);
+        let rules = SuggestionInventoryRules::new("v", vec![]).unwrap();
+        let input = SuggestionInput { nodes: vec![], budget_bytes: envelope::BUDGET_BYTES, max_items: 1 };
+        assert!(SuggestionRecord::new("edition:x".into(), "r", input, rules, SuggestionMeasure::NoMeasure {}, &with_more).unwrap_err().contains("novo"));
+    }
+
+    #[test]
+    fn notes_are_in_the_answer_and_never_in_the_record() {
+        let (_scratch, store, key, run) = measured_mix();
+        let node = symbol_id(&store, &key, &run, "metodo");
+        let out = store.suggest_envelope(&key, &run, std::slice::from_ref(&node)).unwrap();
+        let notes = out["notes"].as_array().unwrap();
+        assert!(!notes.is_empty(), "{out:#}");
+        let (_, bytes, _) = only_record(&store, &key, &run, &out);
+        let text = String::from_utf8(bytes).unwrap();
+        assert!(!text.contains("\"notes\""));
+        for note in notes {
+            assert!(!text.contains(note["text"].as_str().unwrap()), "{note}");
+        }
+    }
+
+    #[test]
+    fn the_same_suggestion_is_the_same_record_and_nothing_else_enters_its_hash() {
+        let (_scratch, store, key, run, node) = no_measure();
+        let one = store.suggest_envelope(&key, &run, std::slice::from_ref(&node)).unwrap();
+        let (file, bytes, _) = only_record(&store, &key, &run, &one);
+        std::thread::sleep(std::time::Duration::from_millis(1100));
+        let two = store.suggest_envelope(&key, &run, std::slice::from_ref(&node)).unwrap();
+        assert_eq!(one, two);
+        assert_eq!(fs::read(&file).unwrap(), bytes);
+        assert_eq!(record_files(&store, &key, &run).len(), 1);
+        // Another run of the same project at another moment: the same edition, the same record.
+        let other = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        assert_ne!(other, run);
+        let elsewhere = store.suggest_envelope(&key, &other, std::slice::from_ref(&node)).unwrap();
+        assert_eq!(elsewhere["suggestion"], one["suggestion"]);
+        assert_eq!(fs::read(&record_files(&store, &key, &other)[0]).unwrap(), bytes);
+        // Other nodes: another record, beside the first.
+        let more = symbol_id(&store, &key, &run, "Camera");
+        let different = store.suggest_envelope(&key, &run, std::slice::from_ref(&more)).unwrap();
+        assert_ne!(different["suggestion"], one["suggestion"]);
+        assert_eq!(record_files(&store, &key, &run).len(), 2);
+        // The order asked for is part of what was asked.
+        let both = store.suggest_envelope(&key, &run, &[node.clone(), more.clone()]).unwrap();
+        let swapped = store.suggest_envelope(&key, &run, &[more.clone(), node.clone()]).unwrap();
+        assert_ne!(both["suggestion"], swapped["suggestion"]);
+        for (answer, nodes) in [(&both, [node.clone(), more.clone()]), (&swapped, [more, node])] {
+            assert_eq!(store.verify_suggestion(&key, &run, answer["suggestion"].as_str().unwrap()).unwrap().input.nodes, nodes);
+        }
+    }
+
+    #[test]
+    fn a_record_says_the_measure_it_used_and_tells_none_from_unreadable() {
+        // None: nothing to read.
+        let (_scratch, store, key, run, node) = no_measure();
+        let none = store.suggest_envelope(&key, &run, std::slice::from_ref(&node)).unwrap();
+        let (_, _, record) = only_record(&store, &key, &run, &none);
+        assert_eq!(record.measure, SuggestionMeasure::NoMeasure {});
+        assert_eq!(serde_json::to_value(&record.measure).unwrap(), json!({ "read_status": "none" }));
+        assert_eq!(none["measured"], false);
+        // Unreadable: an execution.json that does not parse. The selection is the same as with none,
+        // as it always was; only the record tells them apart.
+        let dir = store.run_dir(&key, &run).unwrap().join("executions/99-quebrada");
+        fs::create_dir_all(&dir).unwrap();
+        fs::write(dir.join("execution.json"), b"{ nao e json").unwrap();
+        let unreadable = store.suggest_envelope(&key, &run, std::slice::from_ref(&node)).unwrap();
+        let record = store.verify_suggestion(&key, &run, unreadable["suggestion"].as_str().unwrap()).unwrap();
+        assert_eq!(serde_json::to_value(&record.measure).unwrap(), json!({ "read_status": "unreadable" }));
+        assert_ne!(unreadable["suggestion"], none["suggestion"]);
+        let without_reference = |v: &Value| { let mut v = v.clone(); v.as_object_mut().unwrap().remove("suggestion"); v };
+        assert_eq!(without_reference(&unreadable), without_reference(&none));
+    }
+
+    #[test]
+    fn with_a_measure_the_record_names_the_execution_used_and_the_hash_of_its_bytes() {
+        let (_scratch, store, key, run) = measured_mix();
+        let node = symbol_id(&store, &key, &run, "roda");
+        let out = store.suggest_envelope(&key, &run, std::slice::from_ref(&node)).unwrap();
+        assert_eq!(out["measured"], true);
+        let (_, _, record) = only_record(&store, &key, &run, &out);
+        // The one the selection read: the hotspots name it, from the same reading of the executions.
+        let used = store.hotspots(&key, &run).unwrap()["execution"].as_str().unwrap().to_owned();
+        let file = store.run_dir(&key, &run).unwrap().join("executions").join(&used).join("execution.json");
+        let SuggestionMeasure::Ok { execution, execution_sha256 } = &record.measure else { panic!("{:?}", record.measure) };
+        assert_eq!(*execution, used);
+        assert_eq!(execution_sha256.as_str(), hash(&fs::read(&file).unwrap()));
+        // Another execution beside it, that is not a measure, is not the one named.
+        let ran = store.execute(&key, &run, "manual", None);
+        if ran.is_ok() {
+            let again = store.suggest_envelope(&key, &run, std::slice::from_ref(&node)).unwrap();
+            let SuggestionMeasure::Ok { execution, .. } = store.verify_suggestion(&key, &run, again["suggestion"].as_str().unwrap()).unwrap().measure else { panic!() };
+            assert_eq!(execution, used);
+        }
+        // An execution changed after the fact is noticed when the record is read back.
+        let mut bytes = fs::read(&file).unwrap();
+        bytes.push(b'\n');
+        fs::write(&file, bytes).unwrap();
+        let error = store.verify_suggestion(&key, &run, out["suggestion"].as_str().unwrap()).unwrap_err().to_string();
+        assert!(error.contains("mudou"), "{error}");
+    }
+
+    #[test]
+    fn the_inventory_rules_can_be_brought_back_from_the_record() {
+        let rule = json!({ "id": "minha", "operation": "database", "match": "call", "names": ["consulta"] });
+        let (_scratch, store, key, root) = project_with(&[("src/lib.rs", "pub fn demo() -> u32 {\n    consulta()\n}\nfn consulta() -> u32 {\n    1\n}\n")], json!({ "inventory": { "rules": [rule] } }));
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        let node = symbol_id(&store, &key, &run, "demo");
+        let out = store.suggest_envelope(&key, &run, std::slice::from_ref(&node)).unwrap();
+        let (_, _, record) = only_record(&store, &key, &run, &out);
+        assert_eq!(record.inventory_rules.version, inventory::VERSION);
+        let of = |origin| -> Vec<Value> { record.inventory_rules.rules.iter().filter(|r| r.origin == origin).map(|r| r.rule.clone()).collect() };
+        assert_eq!(of(InventoryRuleOrigin::Project).len(), 1);
+        assert_eq!(serde_json::to_value(inventory::builtin()).unwrap()["rules"], json!(of(InventoryRuleOrigin::Builtin)));
+        // Read back as rules, they give the inventory the suggestion had.
+        let again: inventory::RuleSet = serde_json::from_value(json!({ "rules": of(InventoryRuleOrigin::Project) })).unwrap();
+        let (found, _, catalog) = store.inventory_of(&key, &run).unwrap();
+        assert_eq!(inventory::inventory(&catalog, &again).unwrap(), found);
+        // The hash is of the rules, and other rules are another record.
+        assert_eq!(record.inventory_rules.sha256.as_str(), hash(serde_json::to_string(&record.inventory_rules.rules).unwrap().as_bytes()));
+        fs::write(root.join(PROFILE), json!({ "inventory": { "rules": [] } }).to_string()).unwrap();
+        let other = store.suggest_envelope(&key, &run, std::slice::from_ref(&node)).unwrap();
+        assert_ne!(other["suggestion"], out["suggestion"]);
+    }
+
+    #[test]
+    fn a_record_changed_on_disk_is_refused_and_never_overwritten() {
+        let (_scratch, store, key, run, node) = no_measure();
+        let out = store.suggest_envelope(&key, &run, std::slice::from_ref(&node)).unwrap();
+        let (file, bytes, _) = only_record(&store, &key, &run, &out);
+        let sha = out["suggestion"].as_str().unwrap();
+        // Any change of a byte.
+        let mut changed = bytes.clone();
+        let at = changed.len() / 2;
+        changed[at] = if changed[at] == b'x' { b'y' } else { b'x' };
+        fs::write(&file, &changed).unwrap();
+        let error = store.verify_suggestion(&key, &run, sha).unwrap_err().to_string();
+        assert!(error.contains("holds bytes of"), "{error}");
+        // The route finds another file where its record goes: an error, and the file stays.
+        let error = store.suggest_envelope(&key, &run, std::slice::from_ref(&node)).unwrap_err().to_string();
+        assert!(error.contains("outros bytes"), "{error}");
+        assert_eq!(fs::read(&file).unwrap(), changed);
+        // A name that is not a hash reads nothing.
+        for name in ["../../run".to_owned(), sha.to_uppercase()] {
+            let error = store.verify_suggestion(&key, &run, &name).unwrap_err().to_string();
+            assert!(error.contains("not a lowercase SHA-256"), "{error}");
+        }
+        // A record that is another record's bytes under this name.
+        fs::write(&file, b"{}\n").unwrap();
+        assert!(store.verify_suggestion(&key, &run, sha).is_err());
+        fs::write(&file, &bytes).unwrap();
+        assert!(store.verify_suggestion(&key, &run, sha).is_ok());
+        // Of another edition: the run's own is what it has to be of.
+        let mut record: SuggestionRecord = serde_json::from_slice(&bytes).unwrap();
+        record.edition_origin = "edition:outra".into();
+        let other = record.to_bytes().unwrap();
+        let other_sha = hash(&other);
+        fs::write(file.with_file_name(format!("{other_sha}.json")), &other).unwrap();
+        let error = store.verify_suggestion(&key, &run, &other_sha).unwrap_err().to_string();
+        assert!(error.contains("outra edition"), "{error}");
+    }
+
+    #[test]
+    fn when_the_record_cannot_be_written_the_route_fails_and_answers_no_suggestion() {
+        let (_scratch, store, key, run, node) = no_measure();
+        // A file where the folder goes: nothing can be published under it.
+        fs::write(store.run_dir(&key, &run).unwrap().join(SUGGESTIONS), b"um arquivo").unwrap();
+        assert!(store.suggest_envelope(&key, &run, std::slice::from_ref(&node)).is_err());
+    }
+
+    #[test]
+    fn a_failure_while_writing_leaves_nothing_that_could_be_read_as_a_record() {
+        let scratch = project();
+        let dir = scratch.0.join("publicar");
+        let error = publish_with(&dir, "a.json", b"inteiro", |file, bytes| {
+            file.write_all(&bytes[..3])?;
+            Err(io::Error::other("disco cheio"))
+        });
+        assert!(error.unwrap_err().to_string().contains("disco cheio"));
+        assert_eq!(fs::read_dir(&dir).unwrap().count(), 0, "neither the name nor the temporary file stays");
+        // And nothing stands in the way of doing it again.
+        publish_immutable(&dir, "a.json", b"inteiro").unwrap();
+        assert_eq!(fs::read(dir.join("a.json")).unwrap(), b"inteiro");
+        assert_eq!(fs::read_dir(&dir).unwrap().count(), 1);
+    }
+
+    #[test]
+    fn publishing_never_replaces_what_is_there_even_past_the_first_look() {
+        let scratch = project();
+        let dir = scratch.0.join("publicar");
+        publish_immutable(&dir, "a.json", b"primeiro").unwrap();
+        publish_immutable(&dir, "a.json", b"primeiro").unwrap();
+        assert!(publish_immutable(&dir, "a.json", b"segundo").unwrap_err().to_string().contains("outros bytes"));
+        assert_eq!(fs::read(dir.join("a.json")).unwrap(), b"primeiro");
+        // Another writer gets there after the first look and before the link, whatever it wrote.
+        let target = dir.join("b.json");
+        let error = publish_with(&dir, "b.json", b"meu", |file, bytes| {
+            fs::write(&target, b"do outro")?;
+            file.write_all(bytes)
+        });
+        assert!(error.unwrap_err().to_string().contains("outros bytes"));
+        assert_eq!(fs::read(&target).unwrap(), b"do outro");
+        let same = dir.join("c.json");
+        publish_with(&dir, "c.json", b"igual", |file, bytes| {
+            fs::write(&same, b"igual")?;
+            file.write_all(bytes)
+        })
+        .unwrap();
+        let mut names: Vec<String> = fs::read_dir(&dir).unwrap().flatten().map(|e| e.file_name().to_string_lossy().into_owned()).collect();
+        names.sort();
+        assert_eq!(names, ["a.json", "b.json", "c.json"], "no temporary file stays");
+    }
+
+    #[test]
+    fn writers_at_the_same_time_end_with_one_whole_record() {
+        let scratch = project();
+        let dir = scratch.0.join("publicar");
+        let bytes = vec![b'x'; 256 * 1024];
+        for round in 0..16 {
+            let name = format!("{round}.json");
+            let results: Vec<_> = std::thread::scope(|scope| {
+                let writers: Vec<_> = (0..8).map(|_| scope.spawn(|| publish_immutable(&dir, &name, &bytes).map_err(|e| e.to_string()))).collect();
+                writers.into_iter().map(|w| w.join().unwrap()).collect()
+            });
+            assert!(results.iter().all(|r| r.is_ok()), "{results:?}");
+            assert_eq!(fs::read(dir.join(&name)).unwrap(), bytes);
+        }
+        assert_eq!(fs::read_dir(&dir).unwrap().count(), 16, "one file a name, no temporary file");
+    }
+
+    #[test]
+    fn suggestions_asked_at_the_same_time_end_with_one_record() {
+        let (_scratch, store, key, run, node) = no_measure();
+        let answers: Vec<Value> = std::thread::scope(|scope| {
+            let asking: Vec<_> = (0..6).map(|_| scope.spawn(|| store.suggest_envelope(&key, &run, std::slice::from_ref(&node)).map_err(|e| e.to_string()).unwrap())).collect();
+            asking.into_iter().map(|a| a.join().unwrap()).collect()
+        });
+        assert!(answers.iter().all(|a| *a == answers[0]));
+        assert_eq!(record_files(&store, &key, &run).len(), 1);
+        only_record(&store, &key, &run, &answers[0]);
+    }
+
+    // The measure a suggestion used is named by the bytes it was read from. A and B are two versions
+    // of one execution.json; the steps run in a fixed order, so nothing depends on timing.
+
+    /// The measured project, its execution file, A's bytes and B's: B adds 1000 to every count.
+    fn two_versions() -> (Scratch, Store, String, String, PathBuf, Vec<u8>, Vec<u8>) {
+        let (scratch, store, key, run) = measured_mix();
+        let id = store.latest_measure(&key, &run).unwrap().unwrap()["id"].as_str().unwrap().to_owned();
+        let file = store.run_dir(&key, &run).unwrap().join("executions").join(id).join("execution.json");
+        let a = fs::read(&file).unwrap();
+        let mut record: Value = serde_json::from_slice(&a).unwrap();
+        for stat in record["summary"]["stats"].as_object_mut().unwrap().values_mut() {
+            if stat["measure"] == "calls" {
+                stat["median"] = json!(stat["median"].as_f64().unwrap() + 1000.);
+            }
+        }
+        let b = serde_json::to_vec_pretty(&record).unwrap();
+        assert_ne!(a, b);
+        (scratch, store, key, run, file, a, b)
+    }
+
+    fn calls_of(out: &Value, id: &str) -> Value {
+        out["items"].as_array().unwrap().iter().find(|e| e["id"] == id).unwrap()["calls"].clone()
+    }
+
+    #[test]
+    fn the_hash_recorded_is_of_the_bytes_the_measure_was_read_from() {
+        let (_scratch, store, key, run, file, a, _) = two_versions();
+        let read = store.latest_measure_read(&key, &run).unwrap().unwrap();
+        // One read gives both: the record is A's and the hash is A's.
+        assert_eq!(read.sha256, hash(&a));
+        let mut parsed: Value = serde_json::from_slice(&a).unwrap();
+        parsed["id"] = read.record["id"].clone();
+        assert_eq!(read.record, parsed);
+        // And it is the one the old reading picked: the rule did not change.
+        assert_eq!(Some(read.record.clone()), store.latest_measure(&key, &run).unwrap());
+        assert_eq!(store.hotspots_of(&key, &run, &read.record).unwrap(), store.hotspots(&key, &run).unwrap());
+        // With the file as it was, the suggestion is answered and names A.
+        let node = symbol_id(&store, &key, &run, "roda");
+        let out = store.suggest_with(&key, &run, std::slice::from_ref(&node), Ok(Some(read))).unwrap();
+        let SuggestionMeasure::Ok { execution_sha256, .. } = store.verify_suggestion(&key, &run, out["suggestion"].as_str().unwrap()).unwrap().measure else { panic!() };
+        assert_eq!(execution_sha256.as_str(), hash(&fs::read(&file).unwrap()));
+        assert_eq!(out, store.suggest_envelope(&key, &run, std::slice::from_ref(&node)).unwrap());
+    }
+
+    #[test]
+    fn a_measure_changed_after_it_was_read_is_never_answered_and_never_given_the_new_hash() {
+        let (_scratch, store, key, run, file, a, b) = two_versions();
+        let node = symbol_id(&store, &key, &run, "roda");
+        // 1. A is read. 2. The file becomes B. 3. The suggestion is made from what was read.
+        let read = store.latest_measure_read(&key, &run).unwrap().unwrap();
+        fs::write(&file, &b).unwrap();
+        let error = store.suggest_with(&key, &run, std::slice::from_ref(&node), Ok(Some(read))).unwrap_err().to_string();
+        // 4. The check before answering finds the change, and nothing is answered.
+        assert!(error.contains("mudou"), "{error}");
+        // 5. What was published is A's record: A's counts, A's hash; B's hash is nowhere in it.
+        let files = record_files(&store, &key, &run);
+        assert_eq!(files.len(), 1);
+        let bytes = fs::read(&files[0]).unwrap();
+        let record: SuggestionRecord = serde_json::from_slice(&bytes).unwrap();
+        let SuggestionMeasure::Ok { execution_sha256, .. } = &record.measure else { panic!("{:?}", record.measure) };
+        assert_eq!(execution_sha256.as_str(), hash(&a));
+        assert!(!String::from_utf8_lossy(&bytes).contains(&hash(&b)));
+        // It is read back as valid only while the execution is A again.
+        let sha = files[0].file_stem().unwrap().to_string_lossy().into_owned();
+        assert!(store.verify_suggestion(&key, &run, &sha).is_err());
+        fs::write(&file, &a).unwrap();
+        let back = store.verify_suggestion(&key, &run, &sha).unwrap();
+        let with_a = store.suggest_envelope(&key, &run, std::slice::from_ref(&node)).unwrap();
+        assert_eq!(with_a["suggestion"], sha.as_str());
+        assert_eq!(serde_json::to_value(&back.output.items).unwrap(), with_a["items"]);
+        // Read after the change, B is used and B is named: other counts, another record.
+        fs::write(&file, &b).unwrap();
+        let with_b = store.suggest_envelope(&key, &run, std::slice::from_ref(&node)).unwrap();
+        let SuggestionMeasure::Ok { execution_sha256, .. } = store.verify_suggestion(&key, &run, with_b["suggestion"].as_str().unwrap()).unwrap().measure else { panic!() };
+        assert_eq!(execution_sha256.as_str(), hash(&b));
+        assert_ne!(calls_of(&with_b, &node), calls_of(&with_a, &node));
+        assert_eq!(calls_of(&with_b, &node).as_f64().unwrap(), calls_of(&with_a, &node).as_f64().unwrap() + 1000.);
+    }
+
+    #[test]
+    fn a_measure_that_is_gone_or_unreadable_by_the_check_is_not_answered() {
+        let (_scratch, store, key, run, file, _, _) = two_versions();
+        let node = symbol_id(&store, &key, &run, "roda");
+        let read = store.latest_measure_read(&key, &run).unwrap().unwrap();
+        fs::remove_file(&file).unwrap();
+        assert!(store.suggest_with(&key, &run, std::slice::from_ref(&node), Ok(Some(read))).is_err());
+        let read = { fs::write(&file, b"{ metade").unwrap(); store.latest_measure_read(&key, &run) };
+        // Read now, it is not a measure: unreadable, and the selection is made without it.
+        assert!(read.is_err());
+        let out = store.suggest_with(&key, &run, std::slice::from_ref(&node), read).unwrap();
+        assert_eq!(out["measured"], false);
+        let record = store.verify_suggestion(&key, &run, out["suggestion"].as_str().unwrap()).unwrap();
+        assert_eq!(record.measure, SuggestionMeasure::Unreadable {});
+    }
+
+    #[test]
+    fn the_states_of_a_reading_give_the_states_of_the_record() {
+        let read = |sha: &str| crate::execution::ReadExecution { record: json!({ "id": "01-tudo" }), sha256: sha.to_owned() };
+        let sha = "a".repeat(64);
+        assert_eq!(measure_read(&Ok(None), false).unwrap(), SuggestionMeasure::NoMeasure {});
+        assert_eq!(measure_read(&Ok(None), true).unwrap(), SuggestionMeasure::NoMeasure {});
+        assert_eq!(measure_read(&Err("ilegível".into()), false).unwrap(), SuggestionMeasure::Unreadable {});
+        // Read and not used: it was there, and is not what the selection rests on.
+        assert_eq!(measure_read(&Ok(Some(read(&sha))), false).unwrap(), SuggestionMeasure::Unreadable {});
+        assert_eq!(measure_read(&Ok(Some(read(&sha))), true).unwrap(), SuggestionMeasure::Ok { execution: "01-tudo".into(), execution_sha256: Sha256Hex::try_from(sha).unwrap() });
+        let mut no_id = read(&"b".repeat(64));
+        no_id.record = json!({});
+        assert!(measure_read(&Ok(Some(no_id)), true).is_err());
+    }
+
+    #[test]
+    fn with_two_measures_the_reading_is_the_one_the_current_rule_picks() {
+        // Both started in the same second (the copy keeps it): the folder reserved later is the latest.
+        let (_scratch, store, key, run, file, a, b) = two_versions();
+        let executions = store.run_dir(&key, &run).unwrap().join("executions");
+        let first = file.parent().unwrap().file_name().unwrap().to_string_lossy().into_owned();
+        let later = executions.join("99-depois-tudo");
+        fs::create_dir_all(&later).unwrap();
+        fs::write(later.join("execution.json"), &b).unwrap();
+        let read = store.latest_measure_read(&key, &run).unwrap().unwrap();
+        assert_eq!((read.record["id"].as_str().unwrap(), read.sha256.as_str()), ("99-depois-tudo", hash(&b).as_str()));
+        assert_eq!(store.latest_measure(&key, &run).unwrap().unwrap()["id"], "99-depois-tudo");
+        let node = symbol_id(&store, &key, &run, "roda");
+        let out = store.suggest_envelope(&key, &run, std::slice::from_ref(&node)).unwrap();
+        let SuggestionMeasure::Ok { execution, execution_sha256 } = store.verify_suggestion(&key, &run, out["suggestion"].as_str().unwrap()).unwrap().measure else { panic!() };
+        assert_eq!((execution.as_str(), execution_sha256.as_str()), ("99-depois-tudo", hash(&b).as_str()));
+        // The other one is still there, untouched, and is not what was read.
+        assert_ne!(first, execution);
+        assert_eq!(fs::read(&file).unwrap(), a);
+    }
+
+    // Which execution is the latest: by when it started, never by how its folder's name sorts.
+
+    /// A record as the selection reads it: id, start, and what makes it eligible.
+    fn execution(id: &str, started: &str, kind: &str) -> Value {
+        let mut x = json!({ "id": id, "started": started, "name": "probe", "command_sha256": "s", "change": null, "instrumentation": null, "summary": { "succeeded": 1 } });
+        match kind {
+            "measure" => x["instrumentation"] = json!({ "functions": [] }),
+            "failed" => x["summary"]["succeeded"] = json!(0),
+            "changed" => x["change"] = json!({ "turn": "01" }),
+            "other_command" => x["name"] = json!("outra"),
+            "other_hash" => x["command_sha256"] = json!("t"),
+            _ => {}
+        }
+        x
+    }
+
+    fn picked(list: &[Value], path: &str) -> Option<String> {
+        let found = match path {
+            "measure" => crate::execution::latest_measure_of(list.to_vec()),
+            _ => crate::execution::baseline_of(list.to_vec(), "probe", "s"),
+        };
+        found.map(|x| x["id"].as_str().unwrap().to_owned())
+    }
+
+    /// Every order of a small list, and the list reversed for a long one.
+    fn orders(list: &[Value]) -> Vec<Vec<Value>> {
+        let mut out = vec![list.to_vec(), list.iter().rev().cloned().collect()];
+        if list.len() <= 4 {
+            fn permute(rest: Vec<Value>, done: Vec<Value>, out: &mut Vec<Vec<Value>>) {
+                if rest.is_empty() {
+                    out.push(done);
+                    return;
+                }
+                for i in 0..rest.len() {
+                    let (mut r, mut d) = (rest.clone(), done.clone());
+                    d.push(r.remove(i));
+                    permute(r, d, out);
+                }
+            }
+            permute(list.to_vec(), vec![], &mut out);
+        }
+        out
+    }
+
+    #[test]
+    fn the_latest_is_the_one_that_started_last_for_the_measure_and_for_the_gate_alike() {
+        for (path, kind) in [("measure", "measure"), ("gate", "plain")] {
+            // 100 executions: 01 to 98 earlier, then 99 and 100.
+            let mut list: Vec<Value> = (1..=98).map(|n| execution(&format!("{n:02}-x"), &format!("20261101-{:06}", n), kind)).collect();
+            // 99 before 100 in time: the name of 99 sorts last, and 100 is the answer.
+            let mut later = list.clone();
+            later.push(execution("99-x", "20261102-000000", kind));
+            later.push(execution("100-x", "20261102-000001", kind));
+            let mut names: Vec<&str> = later.iter().map(|x| x["id"].as_str().unwrap()).collect();
+            names.sort();
+            assert_eq!(*names.last().unwrap(), "99-x", "the folder order is the defect");
+            for order in orders(&later) {
+                assert_eq!(picked(&order, path).as_deref(), Some("100-x"), "{path}");
+            }
+            // 99 after 100 in time: the number does not stand in for the time.
+            list.push(execution("99-x", "20261102-000005", kind));
+            list.push(execution("100-x", "20261102-000001", kind));
+            for order in orders(&list) {
+                assert_eq!(picked(&order, path).as_deref(), Some("99-x"), "{path}");
+            }
+        }
+    }
+
+    #[test]
+    fn within_one_second_the_number_reserved_later_wins_whatever_the_order() {
+        for (path, kind) in [("measure", "measure"), ("gate", "plain")] {
+            let tie = [execution("99-x", "20261102-000000", kind), execution("100-x", "20261102-000000", kind), execution("07-x", "20261101-000000", kind)];
+            for order in orders(&tie) {
+                assert_eq!(picked(&order, path).as_deref(), Some("100-x"), "{path}");
+            }
+            // The same number twice (a folder reserved again gets a suffix): the id settles it.
+            let same = [execution("05-a", "20261102-000000", kind), execution("05-a-2", "20261102-000000", kind)];
+            for order in orders(&same) {
+                assert_eq!(picked(&order, path).as_deref(), Some("05-a-2"), "{path}");
+            }
+            // A start not in the form `stamp` writes is older than any that is.
+            let odd = [execution("50-x", "ontem", kind), execution("02-x", "20200101-000000", kind)];
+            for order in orders(&odd) {
+                assert_eq!(picked(&order, path).as_deref(), Some("02-x"), "{path}");
+            }
+        }
+    }
+
+    #[test]
+    fn only_eligible_executions_are_picked_and_the_rules_are_the_ones_there_were() {
+        let measure_list = [
+            execution("10-x", "20261102-000010", "plain"),
+            execution("11-x", "20261102-000011", "failed"),
+            execution("09-x", "20261102-000009", "measure"),
+            execution("08-x", "20261102-000008", "measure"),
+        ];
+        // The newest are a plain run and a failed measure: neither is a measure that ran.
+        let mut failed_measure = measure_list.to_vec();
+        failed_measure[1]["instrumentation"] = json!({ "functions": [] });
+        for order in orders(&failed_measure) {
+            assert_eq!(picked(&order, "measure").as_deref(), Some("09-x"));
+        }
+        assert_eq!(picked(&[execution("10-x", "20261102-000010", "plain")], "measure"), None);
+        let gate_list = [
+            execution("20-x", "20261102-000020", "measure"),
+            execution("19-x", "20261102-000019", "failed"),
+            execution("18-x", "20261102-000018", "changed"),
+            execution("17-x", "20261102-000017", "other_command"),
+            execution("16-x", "20261102-000016", "other_hash"),
+            execution("15-x", "20261102-000015", "plain"),
+            execution("14-x", "20261102-000014", "plain"),
+        ];
+        for order in orders(&gate_list) {
+            assert_eq!(picked(&order, "gate").as_deref(), Some("15-x"));
+        }
+        assert_eq!(picked(&gate_list[..5], "gate"), None);
+    }
+
+    /// The real measure of a project, copied into folders 02 to 100, each one starting later than
+    /// the one before, except for the two given.
+    fn hundred_measures(store: &Store, key: &str, run: &str, starts_99_100: (&str, &str)) -> PathBuf {
+        let first = store.latest_measure(key, run).unwrap().unwrap();
+        let executions = store.run_dir(key, run).unwrap().join("executions");
+        let bytes = fs::read(executions.join(first["id"].as_str().unwrap()).join("execution.json")).unwrap();
+        for n in 2..=100 {
+            let mut record: Value = serde_json::from_slice(&bytes).unwrap();
+            record["started"] = json!(match n {
+                99 => starts_99_100.0.to_owned(),
+                100 => starts_99_100.1.to_owned(),
+                _ => format!("20991101-{n:06}"),
+            });
+            let dir = executions.join(format!("{n:02}-medir-tudo"));
+            fs::create_dir_all(&dir).unwrap();
+            fs::write(dir.join("execution.json"), serde_json::to_vec_pretty(&record).unwrap()).unwrap();
+        }
+        executions
+    }
+
+    #[test]
+    fn with_a_hundred_measures_the_suggestion_reads_and_names_the_one_that_started_last() {
+        for (starts, expected) in [(("20991102-000000", "20991102-000001"), "100-medir-tudo"), (("20991102-000005", "20991102-000001"), "99-medir-tudo")] {
+            let (_scratch, store, key, run) = measured_mix();
+            let executions = hundred_measures(&store, &key, &run, starts);
+            let read = store.latest_measure_read(&key, &run).unwrap().unwrap();
+            assert_eq!(read.record["id"], expected);
+            // The value and the hash are still one read, of the file that was picked.
+            let file = executions.join(expected).join("execution.json");
+            assert_eq!(read.sha256, hash(&fs::read(&file).unwrap()));
+            let node = symbol_id(&store, &key, &run, "roda");
+            let out = store.suggest_envelope(&key, &run, std::slice::from_ref(&node)).unwrap();
+            let SuggestionMeasure::Ok { execution, execution_sha256 } = store.verify_suggestion(&key, &run, out["suggestion"].as_str().unwrap()).unwrap().measure else { panic!() };
+            assert_eq!((execution.as_str(), execution_sha256.as_str()), (expected, read.sha256.as_str()));
+            assert_eq!(store.hotspots(&key, &run).unwrap()["execution"], expected);
+            // The listing keeps its order, the one of the folders, with nothing added.
+            let listed: Vec<String> = store.executions(&key, &run).unwrap().iter().map(|x| x["id"].as_str().unwrap().to_owned()).collect();
+            let mut folders: Vec<String> = fs::read_dir(&executions).unwrap().flatten().map(|e| e.file_name().to_string_lossy().into_owned()).collect();
+            folders.sort();
+            assert_eq!(listed, folders);
+            assert_eq!(listed.last().unwrap(), "99-medir-tudo");
+            let fields: Vec<String> = store.executions(&key, &run).unwrap()[5].as_object().unwrap().keys().cloned().collect();
+            let mut on_disk: Value = serde_json::from_slice(&fs::read(executions.join(&listed[5]).join("execution.json")).unwrap()).unwrap();
+            on_disk["id"] = json!(listed[5]);
+            assert_eq!(fields, on_disk.as_object().unwrap().keys().cloned().collect::<Vec<_>>());
+            // A change after the read is still found before answering.
+            let read = store.latest_measure_read(&key, &run).unwrap().unwrap();
+            let mut changed = fs::read(&file).unwrap();
+            changed.push(b'\n');
+            fs::write(&file, &changed).unwrap();
+            assert!(store.suggest_with(&key, &run, std::slice::from_ref(&node), Ok(Some(read))).unwrap_err().to_string().contains("mudou"));
+        }
+    }
+
+    #[test]
+    fn with_a_hundred_runs_the_gate_compares_a_change_with_the_run_that_started_last() {
+        let scratch = project();
+        let root = scratch.0.join("project");
+        let git = |args: &[&str]| {
+            let out = std::process::Command::new("git").arg("-C").arg(&root).args(["-c", "user.name=t", "-c", "user.email=t@t"]).args(args).output().unwrap();
+            assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
+        };
+        let profile = json!({ "project_root": ".", "commands": { "probe": { "argv": ["git", "log", "-1", "--format=tformat:librarian-measure answer=42 units"], "repeat": 2 } } });
+        fs::write(root.join(PROFILE), profile.to_string()).unwrap();
+        git(&["init", "-q"]);
+        git(&["config", "core.autocrlf", "false"]);
+        git(&["add", "."]);
+        git(&["commit", "-q", "-m", "x"]);
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let key = store.open(&display(&root)).unwrap()["key"].as_str().unwrap().to_owned();
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        let sha = store.commands(&key).unwrap()["commands"][0]["sha256"].as_str().unwrap().to_owned();
+        store.approve_command(&key, "probe", &sha).unwrap();
+        let first = store.execute(&key, &run, "probe", None).unwrap();
+        let mut settings = store.settings(&key).unwrap();
+        settings.lexicon.groups = vec![vec!["raios".into(), "ray".into()], vec!["direcao".into(), "direction".into()]];
+        (settings.allow_hypothesis, settings.allow_patch) = (true, true);
+        store.save_settings(&key, &settings).unwrap();
+        let turn = store.ask(&key, &run, "Onde a câmera calcula a direção dos raios?").unwrap()["id"].as_str().unwrap().to_owned();
+        let answer = json!({"schema_version": 1, "claims": [{
+            "id": "H1", "kind": "HYPOTHESIS", "text": "Triplicar no lugar de dobrar.",
+            "citations": [{"evidence_id": "E1", "path": "src/lib.rs", "start_line": 5, "end_line": 5, "quote": "        let direction = x * 2.0;"}],
+            "premises": [], "verification_plan": "Medir antes e depois.", "location": null,
+            "edits": [{"path": "src/lib.rs", "op": "replace", "start_line": 5, "end_line": 5, "new_lines": ["        let direction = x * 3.0;"]}]}]});
+        let sent = record_answer(&store, &key, &run, &turn, "manual", &answer.to_string()).unwrap();
+        let send = Path::new(sent["directory"].as_str().unwrap()).file_name().unwrap().to_string_lossy().into_owned();
+        let change = crate::execution::ChangeRef { turn, send, claim: "H1".into() };
+        // Without anything about the order, the gate compares with the one run there is, as before.
+        let plain = store.execute(&key, &run, "probe", Some(&change)).unwrap();
+        assert_eq!(plain["comparison"]["baseline"], first["id"]);
+        assert_eq!(plain["comparison"]["stats"]["answer"]["baseline_median"], 42.0);
+        // A hundred baselines, each with its own number for the answer, so the comparison says which one it read.
+        let executions = store.run_dir(&key, &run).unwrap().join("executions");
+        let record: Value = serde_json::from_slice(&fs::read(executions.join(first["id"].as_str().unwrap()).join("execution.json")).unwrap()).unwrap();
+        for (starts, expected) in [(("20991102-000000", "20991102-000001"), "100-probe"), (("20991102-000005", "20991102-000001"), "99-probe")] {
+            for n in 3..=100 {
+                let mut copy = record.clone();
+                copy["started"] = json!(match n { 99 => starts.0.to_owned(), 100 => starts.1.to_owned(), _ => format!("20991101-{n:06}") });
+                copy["summary"]["stats"]["answer"]["median"] = json!(n as f64);
+                let dir = executions.join(format!("{n:02}-probe"));
+                fs::create_dir_all(&dir).unwrap();
+                fs::write(dir.join("execution.json"), serde_json::to_vec_pretty(&copy).unwrap()).unwrap();
+            }
+            let compared = store.execute(&key, &run, "probe", Some(&change)).unwrap();
+            assert_eq!(compared["comparison"]["baseline"], expected);
+            let number: f64 = expected.split('-').next().unwrap().parse().unwrap();
+            assert_eq!(compared["comparison"]["stats"]["answer"]["baseline_median"], number);
+            // The run this one made carries a change, so it never becomes a baseline itself.
+            fs::remove_dir_all(executions.join(compared["id"].as_str().unwrap())).unwrap();
+        }
+    }
+
+    // The evidence package of each new question: one per question, beside it, named in question.json.
+
+    /// The package of a turn, read back the way any reader would: the mark, the bytes, the hash.
+    fn package_of(store: &Store, key: &str, run: &str, turn: &str) -> (Value, Vec<u8>, EvidencePackage) {
+        let dir = store.turn_dir(key, run, turn).unwrap();
+        let question: Value = serde_json::from_slice(&fs::read(dir.join("question.json")).unwrap()).unwrap();
+        let bytes = fs::read(dir.join(EVIDENCE)).unwrap();
+        assert!(!String::from_utf8_lossy(&bytes).contains(&hash(&bytes)), "a package holds no hash of itself");
+        let package: EvidencePackage = serde_json::from_slice(&bytes).unwrap();
+        // The mark names the package's own format (2 for every new question; 1 in the format 1 fixture).
+        assert_eq!(question["evidence"], json!({ "format_version": u32::from(package.format_version), "sha256": hash(&bytes) }), "{turn}");
+        let mut again = serde_json::to_vec_pretty(&package).unwrap();
+        again.push(b'\n');
+        assert_eq!(again, bytes, "{turn}: the bytes are the package's own");
+        (question, bytes, package)
+    }
+
+    /// Every field of a query file, by path, as the classification names them.
+    fn leaves(value: &Value, path: &str, out: &mut std::collections::BTreeSet<String>) {
+        match value {
+            Value::Object(map) => map.iter().for_each(|(k, v)| leaves(v, &format!("{path}.{k}"), out)),
+            Value::Array(list) if !list.is_empty() => list.iter().for_each(|v| leaves(v, &format!("{path}[]"), out)),
+            _ => {
+                out.insert(path.to_owned());
+            }
+        }
+    }
+
+    fn classified_paths(package: &EvidencePackage) -> std::collections::BTreeSet<String> {
+        package.query.classified().into_iter().map(|f| f.path).collect()
+    }
+
+    /// The package's hashes are of the files this turn has, and of no other turn's.
+    fn bound_to_its_turn(store: &Store, key: &str, run: &str, turn: &str, package: &EvidencePackage) {
+        let dir = store.turn_dir(key, run, turn).unwrap();
+        let of = |path: &str| hash(&fs::read(dir.join(path)).unwrap());
+        let bound = &package.bound;
+        assert_eq!(bound.request_sha256.as_str(), of("prepared/request.json"));
+        assert_eq!(bound.search_sha256.as_str(), of("prepared/search.json"));
+        assert_eq!(bound.dossier_sha256.as_str(), of("prepared/bundle/dossier.json"));
+        assert_eq!(bound.bundle_query_sha256.as_str(), of("prepared/bundle/query.json"));
+        match package.representation {
+            Representation::Claims => {
+                assert_eq!(bound.claims_context_sha256.as_ref().unwrap().as_str(), of("claims/context.json"));
+                assert_eq!(package.query.sha256.as_str(), of("claims/query.json"));
+            }
+            Representation::Prose => {
+                assert_eq!(bound.claims_context_sha256, None);
+                assert_eq!(package.query.sha256.as_str(), of("prepared/bundle/query.json"));
+            }
+        }
+        match dir.join(CRITERIA).is_file() {
+            true => assert_eq!(bound.criteria_sha256.as_ref().unwrap().as_str(), of(CRITERIA)),
+            false => assert_eq!(bound.criteria_sha256, None),
+        }
+    }
+
+    fn opened() -> (Scratch, Store, String, Settings) {
+        let scratch = project();
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let opened = store.open(&display(&scratch.0.join("project"))).unwrap();
+        let key = opened["key"].as_str().unwrap().to_owned();
+        let mut settings: Settings = serde_json::from_value(opened["settings"].clone()).unwrap();
+        settings.lexicon.groups = vec![vec!["raios".into(), "ray".into()], vec!["direcao".into(), "direction".into()]];
+        store.save_settings(&key, &settings).unwrap();
+        (scratch, store, key, settings)
+    }
+
+    #[test]
+    fn a_question_asked_gets_its_package_in_claims_and_in_prose() {
+        let (_scratch, store, key, mut settings) = opened();
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        let asked = store.ask(&key, &run, "Onde a câmera calcula a direção dos raios?").unwrap();
+        let (_, _, claims) = package_of(&store, &key, &run, asked["id"].as_str().unwrap());
+        assert_eq!((claims.route, claims.representation, claims.origin_kind), (Route::Search, Representation::Claims, None));
+        assert_eq!(claims.versions.builder, crate::builder::identity());
+        assert_eq!(claims.versions.rules.0, envelope::RULES_VERSION);
+        assert!(claims.units.iter().all(|u| u.excerpt_sha256.is_some()), "claims units carry their excerpt");
+        bound_to_its_turn(&store, &key, &run, asked["id"].as_str().unwrap(), &claims);
+        let catalog = Catalog::load(&store.edition(&key, &run).unwrap()).unwrap();
+        assert_eq!(claims.edition.origin, edition_origin(&catalog).unwrap());
+        assert_eq!((claims.edition.git_head.clone(), claims.edition.git_dirty), (catalog.manifest().git.head.clone(), catalog.manifest().git.dirty));
+        settings.answer_format = AnswerFormat::Prose;
+        store.save_settings(&key, &settings).unwrap();
+        let prose = store.ask(&key, &run, "Onde a câmera calcula a direção dos raios?").unwrap();
+        let (_, _, package) = package_of(&store, &key, &run, prose["id"].as_str().unwrap());
+        assert_eq!(package.representation, Representation::Prose);
+        assert!(package.units.iter().all(|u| u.excerpt_sha256.is_none()), "prose has no excerpt");
+        bound_to_its_turn(&store, &key, &run, prose["id"].as_str().unwrap(), &package);
+        // Every field of the query the package describes is classified, and nothing else is.
+        let query: Value = serde_json::from_slice(&fs::read(store.turn_dir(&key, &run, prose["id"].as_str().unwrap()).unwrap().join("prepared/bundle/query.json")).unwrap()).unwrap();
+        let mut real = std::collections::BTreeSet::new();
+        leaves(&query, "$", &mut real);
+        assert_eq!(classified_paths(&package), real);
+    }
+
+    /// U6 over the claims query the Studio really writes, in each form its settings give it.
+    #[test]
+    fn every_field_of_every_claims_query_the_studio_writes_is_classified() {
+        let (_scratch, store, key, mut settings) = opened();
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        let forms: [&dyn Fn(&mut Settings); 5] = [
+            &|_| {},
+            &|s| (s.allow_patch, s.allow_hypothesis) = (true, true),
+            &|s| (s.compact_items, s.language) = (true, "en".into()),
+            &|s| s.instructions = Some(vec!["Responda curto.".into(), "Cite as linhas.".into()]),
+            &|s| (s.allow_inference, s.allow_hypothesis, s.allow_patch, s.compact_items) = (true, true, false, false),
+        ];
+        let mut seen = std::collections::BTreeSet::new();
+        for change in forms {
+            change(&mut settings);
+            store.save_settings(&key, &settings).unwrap();
+            let asked = store.ask(&key, &run, "Onde a câmera calcula a direção dos raios?").unwrap();
+            let turn = asked["id"].as_str().unwrap();
+            let (_, _, package) = package_of(&store, &key, &run, turn);
+            assert_eq!(package.representation, Representation::Claims);
+            let query: Value = serde_json::from_slice(&fs::read(store.turn_dir(&key, &run, turn).unwrap().join("claims/query.json")).unwrap()).unwrap();
+            let mut real = std::collections::BTreeSet::new();
+            leaves(&query, "$", &mut real);
+            assert_eq!(classified_paths(&package), real, "{turn}");
+            seen.extend(real);
+        }
+        // The forms above did reach the optional parts of the query.
+        for part in ["$.allow_edits", "$.project_instructions[]", "$.evidence.items[].symbols[].name", "$.policy.allow_inference"] {
+            assert!(seen.contains(part), "{part}");
+        }
+        assert!(!seen.contains("$.evidence.items[].excerpt") || seen.iter().any(|p| p == "$.evidence.items[].id"));
+    }
+
+    #[test]
+    fn each_question_of_a_path_has_its_own_package() {
+        let (_scratch, store, key, _) = opened();
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        let nodes = vec![symbol_id(&store, &key, &run, "ray_from_pixel"), symbol_id(&store, &key, &run, "Camera")];
+        let turns = store.ask_path(&key, &run, "O que isto faz?", &nodes, &nodes[0], &json!([])).unwrap();
+        let ids: Vec<&str> = turns.as_array().unwrap().iter().map(|t| t["id"].as_str().unwrap()).collect();
+        assert_eq!(ids.len(), 2);
+        let mut seen = std::collections::BTreeSet::new();
+        for turn in &ids {
+            let (question, bytes, package) = package_of(&store, &key, &run, turn);
+            assert_eq!(package.route, Route::Path);
+            bound_to_its_turn(&store, &key, &run, turn, &package);
+            assert!(seen.insert(hash(&bytes)), "{turn}: a package is one question's");
+            assert_eq!(question["path"]["node"], package.fichas[0].symbol_id.clone().unwrap());
+        }
+    }
+
+    #[test]
+    fn a_gathered_question_tells_its_origin_and_names_its_checked_selection() {
+        let (_scratch, store, key, _) = opened();
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        let nodes = vec![symbol_id(&store, &key, &run, "ray_from_pixel")];
+        // A selection of the format before is not read as a new one: nothing is created.
+        let older = json!({ "kind": "selection", "summary": "x", "selection": { "format_version": 1, "seeds": [nodes[0]] } });
+        let refused = store.ask_gathered(&key, &run, "O que muda?", &nodes, false, Some(older)).unwrap_err().to_string();
+        assert!(refused.starts_with("Seleção recusada (forma: kind não é selection_record)"), "{refused}");
+        assert!(!store.run_dir(&key, &run).unwrap().join("turns").exists());
+        let mut page = Page::new(&store, &key, &run);
+        page.toggle(&nodes[0]);
+        let answer = page.suggest(&store, &key, &run, &[nodes[0].clone()]);
+        let (origin, nodes) = (page.origin(), page.gathered.clone());
+        let with = store.ask_gathered(&key, &run, "O que muda?", &nodes, false, Some(origin)).unwrap();
+        let (_, _, package) = package_of(&store, &key, &run, with["id"].as_str().unwrap());
+        assert_eq!((package.route, package.origin_kind), (Route::Gathered, Some(OriginKind::Selection)));
+        let suggestion = Sha256Hex::try_from(answer["suggestion"].as_str().unwrap().to_owned()).unwrap();
+        assert_eq!(package.measure.selection_basis, MeasureSelectionBasis::NoMeasure { suggestion: suggestion.clone() });
+        let reference = package.selection.clone().unwrap();
+        assert_eq!((reference.suggestions, reference.declared_by), (vec![suggestion], ServerDeclared::Server));
+        // No measure at the question nor under the suggestion: the same, by the two readings compared.
+        assert_eq!((package.format_version, package.measure.measure_diverges, package.measure.measure_divergence.clone()), (PackageFormat::V2, None, Some(MeasureDivergence::Same {})));
+        // From a hotspot: no selection behind it.
+        let hot = store.ask_gathered(&key, &run, "O que muda?", &nodes, false, Some(json!({ "kind": "hot", "summary": "y" }))).unwrap();
+        let (_, _, package) = package_of(&store, &key, &run, hot["id"].as_str().unwrap());
+        assert_eq!((package.origin_kind, package.measure.selection_basis.clone()), (Some(OriginKind::Hot), MeasureSelectionBasis::NotApplicable {}));
+        // A kind the contract does not know is not taken for one it does.
+        let other = store.ask_gathered(&key, &run, "O que muda?", &nodes, false, Some(json!({ "kind": "outra" }))).unwrap();
+        assert_eq!(package_of(&store, &key, &run, other["id"].as_str().unwrap()).2.origin_kind, None);
+        // Asked with no origin, and searched: nothing to say of a selection.
+        let plain = store.ask_gathered(&key, &run, "O que muda?", &nodes, false, None).unwrap();
+        assert_eq!(package_of(&store, &key, &run, plain["id"].as_str().unwrap()).2.measure.selection_basis, MeasureSelectionBasis::NotApplicable {});
+    }
+
+    #[test]
+    fn what_a_retry_added_is_the_servers_and_the_rest_is_the_clients() {
+        let (_scratch, store, key, _) = opened();
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        let nodes = vec![symbol_id(&store, &key, &run, "ray_from_pixel")];
+        let original = "Como acelerar?";
+        // The ladder's own texts, which a question always got after the client's.
+        let gate = crate::gate_suffix(&["Dobrar: piorou".into()], 1);
+        let mechanical = crate::mechanical_suffix(&["quote_mismatch".into(), "no_location".into()], 2);
+        assert_eq!(gate.text, " Propostas anteriores recusadas pelo portão: Dobrar: piorou. Proponha outras mudanças.");
+        assert_eq!(mechanical.text, " Uma resposta anterior foi recusada na conferência mecânica: quote_mismatch, no_location.");
+        let none = store.ask_gathered_parts(&key, &run, original, &[], &nodes, false, None, None, &[]).unwrap();
+        let one = store.ask_gathered_parts(&key, &run, original, std::slice::from_ref(&gate), &nodes, false, None, None, &[]).unwrap();
+        let two = store.ask_gathered_parts(&key, &run, original, &[gate.clone(), mechanical.clone()], &nodes, false, None, None, &[]).unwrap();
+        for (turn, suffixes) in [(&none, vec![]), (&one, vec![&gate]), (&two, vec![&gate, &mechanical])] {
+            let turn = turn["id"].as_str().unwrap();
+            let (question, _, package) = package_of(&store, &key, &run, turn);
+            let prepared: String = std::iter::once(original).chain(suffixes.iter().map(|s| s.text.as_str())).collect();
+            // The text sent is the joined one, as before; the package keeps the parts apart.
+            assert_eq!(question["question"], prepared.as_str());
+            assert_eq!(package.query.person_text.sha256.as_str(), hash(original.as_bytes()));
+            assert_eq!(package.query.prepared_question_sha256.as_str(), hash(prepared.as_bytes()));
+            let recorded: Vec<(usize, String, RetryRule, usize)> = package.query.server_suffixes.iter().map(|s| (s.order, s.sha256.as_str().to_owned(), s.rule, s.attempt)).collect();
+            let expected: Vec<(usize, String, RetryRule, usize)> = suffixes.iter().enumerate().map(|(n, s)| (n + 1, hash(s.text.as_bytes()), s.rule, s.attempt)).collect();
+            assert_eq!(recorded, expected, "{turn}");
+            let field = package.query.classified().into_iter().find(|f| f.path == "$.question").unwrap();
+            let class = if suffixes.is_empty() { evidence::QueryFieldClass::ClientText } else { evidence::QueryFieldClass::ClientTextWithServerSuffixes };
+            assert_eq!(field.class, class);
+        }
+    }
+
+    #[test]
+    fn the_measure_at_the_question_is_the_one_read_then_or_says_there_was_none_or_it_could_not_be_read() {
+        let (_scratch, store, key, run) = measured_mix();
+        let node = symbol_id(&store, &key, &run, "roda");
+        let asked = store.ask_gathered(&key, &run, "Por que roda?", std::slice::from_ref(&node), false, None).unwrap();
+        let (_, _, package) = package_of(&store, &key, &run, asked["id"].as_str().unwrap());
+        let read = store.latest_measure_read(&key, &run).unwrap().unwrap();
+        assert_eq!(package.measure.at_question, MeasureAtQuestion::Ok { execution: read.record["id"].as_str().unwrap().to_owned(), execution_sha256: Sha256Hex::try_from(read.sha256.clone()).unwrap() });
+        // Unreadable: an execution that does not parse is not the absence of a measure.
+        let broken = store.run_dir(&key, &run).unwrap().join("executions/99-quebrada");
+        fs::create_dir_all(&broken).unwrap();
+        fs::write(broken.join("execution.json"), b"{ metade").unwrap();
+        let unreadable = store.ask_gathered(&key, &run, "Por que roda?", std::slice::from_ref(&node), false, None).unwrap();
+        assert_eq!(package_of(&store, &key, &run, unreadable["id"].as_str().unwrap()).2.measure.at_question, MeasureAtQuestion::Unreadable {});
+        // A measure taken later does not change what an earlier question recorded.
+        let (_, earlier, _) = package_of(&store, &key, &run, asked["id"].as_str().unwrap());
+        fs::remove_dir_all(&broken).unwrap();
+        assert_eq!(package_of(&store, &key, &run, asked["id"].as_str().unwrap()).1, earlier);
+        // None: no measure at all.
+        let (_scratch2, store, key, _) = opened();
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        let asked = store.ask(&key, &run, "Onde a câmera calcula a direção dos raios?").unwrap();
+        assert_eq!(package_of(&store, &key, &run, asked["id"].as_str().unwrap()).2.measure.at_question, MeasureAtQuestion::NoMeasure {});
+    }
+
+    #[test]
+    fn the_projects_instructions_are_those_the_query_carries_or_there_are_none() {
+        let (_scratch, store, key, mut settings) = opened();
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        let none = store.ask(&key, &run, "Onde a câmera calcula a direção dos raios?").unwrap();
+        assert_eq!(package_of(&store, &key, &run, none["id"].as_str().unwrap()).2.query.project_instructions_sha256, None);
+        let given = vec!["Responda curto.".to_owned()];
+        settings.instructions = Some(given.clone());
+        for format in [AnswerFormat::Claims, AnswerFormat::Prose] {
+            settings.answer_format = format;
+            store.save_settings(&key, &settings).unwrap();
+            let asked = store.ask(&key, &run, "Onde a câmera calcula a direção dos raios?").unwrap();
+            let (_, _, package) = package_of(&store, &key, &run, asked["id"].as_str().unwrap());
+            assert_eq!(package.query.project_instructions_sha256.as_ref().unwrap().as_str(), hash(json!(given).to_string().as_bytes()), "{format:?}");
+            let fixed = package.query.fixed_contract_sha256.clone();
+            assert_ne!(Some(&fixed), package.query.project_instructions_sha256.as_ref());
+        }
+    }
+
+    #[test]
+    fn a_reviewed_fact_carries_its_line_in_the_acervo_or_says_it_is_not_there() {
+        let (_scratch, store, key, settings) = opened();
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        store.ask(&key, &run, "Onde a câmera calcula a direção dos raios?").unwrap();
+        let answer = json!({"schema_version": 1, "claims": [{
+            "id": "C1", "kind": "FACT", "text": "`ray_from_pixel` calcula `direction` na linha 5 de src/lib.rs.",
+            "citations": [{"evidence_id": "E1", "path": "src/lib.rs", "start_line": 4, "end_line": 5,
+                "quote": "    pub fn ray_from_pixel(&self, x: f64) -> f64 {\n        let direction = x * 2.0;"}],
+            "premises": [], "verification_plan": null,
+            "location": {"evidence_id": "E1", "path": "src/lib.rs", "symbol_name": "ray_from_pixel",
+                "declaration_line": 4, "operation_start_line": 5, "operation_end_line": 5}}]});
+        record_answer(&store, &key, &run, "01", "manual", &answer.to_string()).unwrap();
+        store.review(&key, &run, "01", "01-manual", "C1", true, "A linha 5 calcula direction.").unwrap();
+        // /api/continue: a chain step with the reviewed fact.
+        let step = store.continue_turn(&key, &run, "01", "Como evitar a multiplicação?").unwrap();
+        let (_, _, package) = package_of(&store, &key, &run, step["id"].as_str().unwrap());
+        assert_eq!(package.route, Route::Chain);
+        let line = store.promotion_lines(&key).unwrap().into_iter().find(|(id, _)| id == "F1").unwrap().1;
+        let fact = &package.query.reviewed_facts[0];
+        assert_eq!((fact.fact_id.as_str(), fact.record_sha256.as_ref().map(|h| h.as_str().to_owned())), ("F1", Some(hash(&line))));
+        assert_eq!(fact.provenance, evidence::ReviewedFactProvenance::AcervoQuotesChecked);
+        let raw = fs::read(store.project_dir(&key).unwrap().join("facts.jsonl")).unwrap();
+        assert!(raw.split(|b| *b == b'\n').any(|l| l == line.as_slice()), "the very line, byte for byte");
+        // The same fact with no line in the acervo: the request carries it, the package says so.
+        let targets = vec![Target { path: "src/lib.rs".into(), symbol_name: "ray_from_pixel".into(), declaration_line: 4 }];
+        let reviewed = store.reviewed_about(&key, &run, &targets).unwrap();
+        fs::write(store.project_dir(&key).unwrap().join("facts.jsonl"), b"").unwrap();
+        let catalog = Catalog::load(&store.edition(&key, &run).unwrap()).unwrap();
+        let turn = store.new_turn(&key, &run, &settings, &catalog, Asked::client("De novo?"), None, request(&settings, "De novo?", Some(targets), reviewed, false), Some(("chain", json!({}))))
+            .unwrap()["id"].as_str().unwrap().to_owned();
+        let fact = package_of(&store, &key, &run, &turn).2.query.reviewed_facts[0].clone();
+        assert_eq!((fact.record_sha256, fact.provenance), (None, evidence::ReviewedFactProvenance::RecordNotAvailable));
+        assert_eq!(fact.citations.len(), 1, "the quotes are still checked against the edition");
+    }
+
+    #[test]
+    fn the_same_question_twice_gives_the_same_package_bytes() {
+        let (_scratch, store, key, _) = opened();
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        let one = store.ask(&key, &run, "Onde a câmera calcula a direção dos raios?").unwrap();
+        let two = store.ask(&key, &run, "Onde a câmera calcula a direção dos raios?").unwrap();
+        assert_ne!(one["id"], two["id"]);
+        assert_eq!(package_of(&store, &key, &run, one["id"].as_str().unwrap()).1, package_of(&store, &key, &run, two["id"].as_str().unwrap()).1);
+        // The fields are grouped, and expanding the groups gives back one entry per place.
+        let (_, _, package) = package_of(&store, &key, &run, one["id"].as_str().unwrap());
+        let expanded = package.query.classified();
+        assert_eq!(evidence::group_fields(expanded.clone()), package.query.fields);
+        assert!(expanded.len() >= package.query.fields.len());
+        // With several fichas a field is at several places, written in one group.
+        let nodes = vec![symbol_id(&store, &key, &run, "ray_from_pixel"), symbol_id(&store, &key, &run, "Camera")];
+        let several = store.ask_gathered(&key, &run, "O que muda?", &nodes, false, None).unwrap();
+        let (_, _, package) = package_of(&store, &key, &run, several["id"].as_str().unwrap());
+        assert!(package.query.classified().len() > package.query.fields.len());
+        assert!(package.query.fields.iter().any(|g| g.places.len() > 1));
+    }
+
+    #[test]
+    fn a_package_that_cannot_be_made_is_marked_and_its_question_is_never_sent() {
+        for (stage, code) in [("composition", "composition_failed"), ("persistence", "persistence_failed")] {
+            let (_scratch, store, key, _) = opened();
+            let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+            FAIL_EVIDENCE_AT.with(|f| f.set(Some(stage)));
+            let error = store.ask(&key, &run, "Onde a câmera calcula a direção dos raios?").unwrap_err().to_string();
+            FAIL_EVIDENCE_AT.with(|f| f.set(None));
+            assert!(error.contains(code), "{error}");
+            // The question is there, prepared, with the error marked and no package.
+            let dir = store.turn_dir(&key, &run, "01").unwrap();
+            let question: Value = serde_json::from_slice(&fs::read(dir.join("question.json")).unwrap()).unwrap();
+            assert_eq!(question["evidence"], json!({ "error": code }));
+            assert!(dir.join("prepared/bundle/query.json").is_file());
+            assert!(!dir.join(EVIDENCE).exists(), "nothing half made is published");
+            // No way to send it: not a send, not a pasted answer.
+            assert!(store.verify_for_send(&key, &run, "01").err().unwrap().to_string().contains(code));
+            assert!(record_answer(&store, &key, &run, "01", "manual", "{}").is_err());
+            // Another question after it is made as usual.
+            let next = store.ask(&key, &run, "Onde a câmera calcula a direção dos raios?").unwrap();
+            package_of(&store, &key, &run, next["id"].as_str().unwrap());
+        }
+    }
+
+    #[test]
+    fn an_older_question_with_no_mark_is_sent_as_before() {
+        let (_scratch, store, key, _) = opened();
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        store.ask(&key, &run, "Onde a câmera calcula a direção dos raios?").unwrap();
+        let dir = store.turn_dir(&key, &run, "01").unwrap();
+        let mut question: Value = serde_json::from_slice(&fs::read(dir.join("question.json")).unwrap()).unwrap();
+        question.as_object_mut().unwrap().remove("evidence");
+        fs::write(dir.join("question.json"), serde_json::to_vec_pretty(&question).unwrap()).unwrap();
+        fs::remove_file(dir.join(EVIDENCE)).unwrap();
+        assert!(store.verify_for_send(&key, &run, "01").is_ok());
+        // A question refused by the preparation has no package and no mark, as before.
+        let refused = store.ask(&key, &run, "xyzzy plugh").unwrap();
+        assert!(!refused["prepare_error"].is_null());
+        let dir = store.turn_dir(&key, &run, refused["id"].as_str().unwrap()).unwrap();
+        let question: Value = serde_json::from_slice(&fs::read(dir.join("question.json")).unwrap()).unwrap();
+        assert!(question.get("evidence").is_none());
+        assert!(!dir.join(EVIDENCE).exists());
+    }
+
+    /// The package the stored inputs of a turn give now: the bytes `new_turn` published, if nothing changed.
+    fn rebuilt(store: &Store, key: &str, run: &str, turn: &str, asked: Asked) -> Vec<u8> {
+        let dir = store.turn_dir(key, run, turn).unwrap();
+        let settings = store.settings(key).unwrap();
+        let catalog = Catalog::load(&store.edition(key, run).unwrap()).unwrap();
+        let request: Request = serde_json::from_slice(&fs::read(dir.join("prepared/request.json")).unwrap()).unwrap();
+        let composition = prepare::prepare(&catalog, &request).unwrap().composition;
+        let question: Value = serde_json::from_slice(&fs::read(dir.join("question.json")).unwrap()).unwrap();
+        let origin = ["gathered", "chain", "path"].into_iter().find(|f| question.get(*f).is_some()).map(|f| (f, question[f].clone()));
+        // The selection's record as kept with the question, read back by the hash of its bytes.
+        let selection = fs::read(dir.join(SELECTION)).ok().map(|bytes| (Sha256Hex::try_from(hash(&bytes)).unwrap(), SelectionRecord::from_bytes(&bytes, &hash(&bytes)).unwrap()));
+        store.evidence_package(key, run, &catalog, &dir, &composition, &asked, origin.as_ref(), settings.answer_format == AnswerFormat::Claims,
+            settings.instructions.as_deref(), None, selection.as_ref().map(|(s, r)| (s, r)), PackageFormat::WRITTEN).unwrap()
+    }
+
+    #[test]
+    fn a_stored_package_is_the_one_its_inputs_give_and_says_what_its_files_say() {
+        let (_scratch, store, key, mut settings) = opened();
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        let nodes = vec![symbol_id(&store, &key, &run, "ray_from_pixel"), symbol_id(&store, &key, &run, "Camera")];
+        let suffixes = [crate::gate_suffix(&["x".into()], 1), crate::mechanical_suffix(&["y".into()], 2)];
+        // The page's envelope: both gathered by hand, a suggestion from the first, kept as they are.
+        let mut page = Page::new(&store, &key, &run);
+        page.toggle(&nodes[0]);
+        page.toggle(&nodes[1]);
+        page.toggle_target(&nodes[1]);
+        page.suggest(&store, &key, &run, &[nodes[0].clone()]);
+        assert_eq!(page.gathered, nodes);
+        let origin = page.origin();
+        for format in [AnswerFormat::Claims, AnswerFormat::Prose] {
+            settings.answer_format = format;
+            store.save_settings(&key, &settings).unwrap();
+            let selection = store.accept_selection(&key, &run, &nodes, Some(&origin)).unwrap();
+            let asked = store.ask_gathered_parts(&key, &run, "O que muda?", &suffixes, &nodes, false, Some(origin.clone()), selection.as_ref(), &[]).unwrap();
+            let turn = asked["id"].as_str().unwrap();
+            let (_, bytes, package) = package_of(&store, &key, &run, turn);
+            assert_eq!(rebuilt(&store, &key, &run, turn, Asked { original: "O que muda?", suffixes: &suffixes }), bytes, "{format:?}");
+            // A stored package changed in any part is not the one its inputs give.
+            let stored: Value = serde_json::from_slice(&bytes).unwrap();
+            let changes: [(&str, Value); 14] = [
+                ("/units/0/text_sha256", json!("0".repeat(64))),
+                ("/units/0/source_sha256", json!("0".repeat(64))),
+                ("/fichas/0/unit", json!("CTX_9")),
+                ("/query/sha256", json!("0".repeat(64))),
+                ("/query/fields/0/class", json!("code")),
+                ("/query/fields/0/origin", json!("client")),
+                ("/query/limits/0/producer", json!("diagnostics")),
+                ("/query/limits/0/rule_version", json!("outra")),
+                ("/query/person_text/sha256", json!(hash(b"outro"))),
+                ("/query/server_suffixes/0/declared_by", json!("client")),
+                ("/query/server_suffixes/0/sha256", json!(hash(b"outro"))),
+                ("/measure/at_question", json!({ "read_status": "unreadable" })),
+                ("/measure/selection_basis", json!({ "read_status": "not_applicable" })),
+                ("/bound/dossier_sha256", json!("0".repeat(64))),
+            ];
+            for (place, value) in changes {
+                let mut changed = stored.clone();
+                *changed.pointer_mut(place).unwrap_or_else(|| panic!("{place}")) = value;
+                let mut changed_bytes = serde_json::to_vec_pretty(&changed).unwrap();
+                changed_bytes.push(b'\n');
+                assert_ne!(changed_bytes, bytes, "{place}");
+            }
+            let mut fewer = stored.clone();
+            fewer["fichas"].as_array_mut().unwrap().pop();
+            assert_ne!(serde_json::to_vec_pretty(&fewer).unwrap(), bytes);
+            let mut swapped = stored.clone();
+            swapped["query"]["server_suffixes"].as_array_mut().unwrap().swap(0, 1);
+            assert_ne!(serde_json::to_vec_pretty(&swapped).unwrap(), bytes);
+            // What it says of fichas and units is what the prepared query and the snapshots say.
+            let dir = store.turn_dir(&key, &run, turn).unwrap();
+            let query: Value = serde_json::from_slice(&fs::read(dir.join("prepared/bundle/query.json")).unwrap()).unwrap();
+            let refs: Vec<&str> = query["evidence"]["selections"].as_array().unwrap().iter().map(|s| s["fact_id"].as_str().unwrap()).collect();
+            assert_eq!(package.fichas.iter().map(|f| f.reference.0.as_str()).collect::<Vec<_>>(), refs);
+            let blocks: Vec<&str> = query["evidence"]["contexts"].as_array().unwrap().iter().map(|b| b["id"].as_str().unwrap()).collect();
+            assert_eq!(package.units.iter().map(|u| u.evidence_id.0.as_str()).collect::<Vec<_>>(), blocks);
+            assert!(package.fichas.iter().all(|f| package.units.iter().any(|u| u.evidence_id == f.unit && u.path == f.path)));
+            let catalog = Catalog::load(&store.edition(&key, &run).unwrap()).unwrap();
+            for unit in &package.units {
+                let bytes = catalog.source_bytes(&unit.path).unwrap();
+                assert_eq!(unit.source_sha256.as_str(), hash(bytes));
+                let window = evidence::normalize_window(bytes, unit.window_start_line, unit.window_end_line, package.representation).unwrap();
+                assert_eq!((window.text_sha256, window.excerpt_sha256), (unit.text_sha256.clone(), unit.excerpt_sha256.clone()));
+            }
+            assert_eq!(package.query.server_suffixes.iter().map(|s| (s.declared_by, s.order)).collect::<Vec<_>>(),
+                [(evidence::ServerRetryDeclared::ServerRetry, 1), (evidence::ServerRetryDeclared::ServerRetry, 2)]);
+            assert_eq!(package.query.person_text.declared_by, evidence::ClientDeclared::Client);
+        }
+    }
+
+    #[test]
+    fn criteria_and_the_projects_commit_are_bound_when_there_are_some() {
+        let (scratch, store, key, mut settings) = opened();
+        // The analyzed project in Git: the edition records its commit, and so does the package.
+        let root = scratch.0.join("project");
+        let git = |args: &[&str]| assert!(std::process::Command::new("git").arg("-C").arg(&root).args(["-c", "user.name=t", "-c", "user.email=t@t"]).args(args).status().unwrap().success());
+        git(&["init", "-q"]);
+        git(&["add", "."]);
+        git(&["commit", "-q", "-m", "x"]);
+        settings.criteria = Some("A resposta cita a linha.".into());
+        store.save_settings(&key, &settings).unwrap();
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        let asked = store.ask(&key, &run, "Onde a câmera calcula a direção dos raios?").unwrap();
+        let turn = asked["id"].as_str().unwrap();
+        let (_, _, package) = package_of(&store, &key, &run, turn);
+        bound_to_its_turn(&store, &key, &run, turn, &package);
+        assert!(package.bound.criteria_sha256.is_some());
+        let catalog = Catalog::load(&store.edition(&key, &run).unwrap()).unwrap();
+        assert!(catalog.manifest().git.head.is_some());
+        assert_eq!(package.edition.git_head, catalog.manifest().git.head);
+    }
+
+    #[test]
+    fn instructions_the_query_does_not_carry_are_not_taken_for_its_own() {
+        let (_scratch, store, key, mut settings) = opened();
+        settings.instructions = Some(vec!["Responda curto.".into()]);
+        store.save_settings(&key, &settings).unwrap();
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        let asked = store.ask(&key, &run, "Onde a câmera calcula a direção dos raios?").unwrap();
+        let turn = asked["id"].as_str().unwrap().to_owned();
+        assert_eq!(rebuilt(&store, &key, &run, &turn, Asked::client("Onde a câmera calcula a direção dos raios?")), package_of(&store, &key, &run, &turn).1);
+        // The project now says other instructions than the claims query was written with.
+        settings.instructions = Some(vec!["Outra.".into()]);
+        store.save_settings(&key, &settings).unwrap();
+        let dir = store.turn_dir(&key, &run, &turn).unwrap();
+        let catalog = Catalog::load(&store.edition(&key, &run).unwrap()).unwrap();
+        let request: Request = serde_json::from_slice(&fs::read(dir.join("prepared/request.json")).unwrap()).unwrap();
+        let composition = prepare::prepare(&catalog, &request).unwrap().composition;
+        let refused = store.evidence_package(&key, &run, &catalog, &dir, &composition, &Asked::client("Onde a câmera calcula a direção dos raios?"), None,
+            settings.answer_format == AnswerFormat::Claims, settings.instructions.as_deref(), None, None, PackageFormat::WRITTEN);
+        assert_eq!(refused, Err("provenance_failed"));
+    }
+
+    #[test]
+    fn each_retry_names_the_rule_that_made_it() {
+        assert_eq!((crate::gate_suffix(&[], 3).rule, crate::gate_suffix(&[], 3).attempt), (RetryRule::GateRefused, 3));
+        assert_eq!((crate::mechanical_suffix(&[], 4).rule, crate::mechanical_suffix(&[], 4).attempt), (RetryRule::MechanicalRefused, 4));
+    }
+
+    #[test]
+    fn only_a_promotion_is_a_facts_line_and_it_is_read_byte_for_byte() {
+        let (_scratch, store, key, _) = opened();
+        let file = store.project_dir(&key).unwrap().join("facts.jsonl");
+        let promoted = r#"{"event":"promoted","id":"F1","statement":"s"}"#;
+        fs::write(&file, format!("{}\n{promoted}\n{}\n", r#"{"event":"revoked","id":"F1","note":"n"}"#, r#"{"event":"promoted","id":"F2"}"#)).unwrap();
+        let lines = store.promotion_lines(&key).unwrap();
+        assert_eq!(lines.iter().map(|(id, _)| id.as_str()).collect::<Vec<_>>(), ["F1", "F2"]);
+        assert_eq!(lines[0].1, promoted.as_bytes());
+        fs::remove_file(&file).unwrap();
+        assert!(store.promotion_lines(&key).unwrap().is_empty());
+    }
+
+    // Step 9: a new question's package passes H1, H2 and H3 before its question is sent, pasted,
+    // reviewed or continued. Each check is shown alone: a forger keeps the rest consistent.
+
+    const RAY: &str = "Onde a câmera calcula a direção dos raios?";
+
+    /// A FACT the edition of the test project confirms.
+    fn ray_fact() -> String {
+        json!({"schema_version": 1, "claims": [{
+            "id": "C1", "kind": "FACT", "text": "`ray_from_pixel` calcula `direction` na linha 5 de src/lib.rs.",
+            "citations": [{"evidence_id": "E1", "path": "src/lib.rs", "start_line": 4, "end_line": 5,
+                "quote": "    pub fn ray_from_pixel(&self, x: f64) -> f64 {\n        let direction = x * 2.0;"}],
+            "premises": [], "verification_plan": null,
+            "location": {"evidence_id": "E1", "path": "src/lib.rs", "symbol_name": "ray_from_pixel",
+                "declaration_line": 4, "operation_start_line": 5, "operation_end_line": 5}}]}).to_string()
+    }
+
+    /// One more question of `format`, with its package; its turn id.
+    fn fresh(store: &Store, key: &str, run: &str, format: AnswerFormat) -> String {
+        let mut settings = store.settings(key).unwrap();
+        settings.answer_format = format;
+        store.save_settings(key, &settings).unwrap();
+        store.ask(key, run, RAY).unwrap()["id"].as_str().unwrap().to_owned()
+    }
+
+    fn opened_run() -> (Scratch, Store, String, String) {
+        let (scratch, store, key, _) = opened();
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        (scratch, store, key, run)
+    }
+
+    /// Changes `question.json` as it is stored.
+    fn remark(store: &Store, key: &str, run: &str, turn: &str, change: impl FnOnce(&mut Value)) {
+        let file = store.turn_dir(key, run, turn).unwrap().join("question.json");
+        let mut question: Value = serde_json::from_slice(&fs::read(&file).unwrap()).unwrap();
+        change(&mut question);
+        fs::write(&file, serde_json::to_vec_pretty(&question).unwrap()).unwrap();
+    }
+
+    /// Rewrites a turn's package as a forger would: well formed, and with the mark naming it.
+    fn forge(store: &Store, key: &str, run: &str, turn: &str, change: impl FnOnce(&mut EvidencePackage)) {
+        let dir = store.turn_dir(key, run, turn).unwrap();
+        let mut package: EvidencePackage = serde_json::from_slice(&fs::read(dir.join(EVIDENCE)).unwrap()).unwrap();
+        change(&mut package);
+        let mut bytes = serde_json::to_vec_pretty(&package).unwrap();
+        bytes.push(b'\n');
+        fs::write(dir.join(EVIDENCE), &bytes).unwrap();
+        remark(store, key, run, turn, |q| q["evidence"]["sha256"] = json!(hash(&bytes)));
+    }
+
+    /// Changes a file of the turn and binds the package to the new bytes, as a forger would.
+    fn rebind(store: &Store, key: &str, run: &str, turn: &str, file: &str, change: impl FnOnce(String) -> String) {
+        let dir = store.turn_dir(key, run, turn).unwrap();
+        let text = change(fs::read_to_string(dir.join(file)).unwrap());
+        fs::write(dir.join(file), &text).unwrap();
+        let sha = Sha256Hex::try_from(hash(text.as_bytes())).unwrap();
+        forge(store, key, run, turn, |p| {
+            match file {
+                "prepared/bundle/query.json" => p.bound.bundle_query_sha256 = sha.clone(),
+                "prepared/request.json" => p.bound.request_sha256 = sha.clone(),
+                _ => {}
+            }
+            if file.ends_with("query.json") && (file.starts_with("claims") == (p.representation == Representation::Claims)) {
+                p.query.sha256 = sha;
+            }
+        });
+    }
+
+    /// Why a send of the turn is refused ("" when it is not), and the package bytes untouched.
+    fn refusal_of(store: &Store, key: &str, run: &str, turn: &str) -> String {
+        let file = store.turn_dir(key, run, turn).unwrap().join(EVIDENCE);
+        let before = fs::read(&file).ok();
+        let why = store.verify_for_send(key, run, turn).err().map(|e| e.to_string()).unwrap_or_default();
+        assert_eq!(fs::read(&file).ok(), before, "a check rewrites nothing");
+        why
+    }
+
+    #[test]
+    fn h1_a_package_agrees_with_its_mark_and_with_the_files_of_its_turn() {
+        let (_scratch, store, key, run) = opened_run();
+        // 1. Whole, in both forms: the link names the package checked.
+        for format in [AnswerFormat::Claims, AnswerFormat::Prose] {
+            let turn = fresh(&store, &key, &run, format);
+            let (question, bytes, _) = package_of(&store, &key, &run, &turn);
+            let link = store.verify_for_send(&key, &run, &turn).unwrap().link;
+            assert_eq!(link["evidence_sha256"], json!(hash(&bytes)));
+            assert_eq!(question["evidence"]["sha256"], link["evidence_sha256"]);
+            assert!(link["checks"].as_array().unwrap().ends_with(&[json!("evidence_h1"), json!("evidence_h2"), json!("evidence_h3")]));
+        }
+        let other = store.ask(&key, &run, &format!("{RAY} Em detalhe.")).unwrap()["id"].as_str().unwrap().to_owned();
+        let other_request = hash(&fs::read(store.turn_dir(&key, &run, &other).unwrap().join("prepared/request.json")).unwrap());
+        type Case = (&'static str, AnswerFormat, Box<dyn Fn(&Store, &str, &str, &str)>, &'static str);
+        let cases: Vec<Case> = vec![
+            // 2–4: the mark and the bytes.
+            ("pacote ausente", AnswerFormat::Claims, Box::new(|s, k, r, t| fs::remove_file(s.turn_dir(k, r, t).unwrap().join(EVIDENCE)).unwrap()), "H1: pacote ausente"),
+            ("pacote adulterado", AnswerFormat::Claims, Box::new(|s, k, r, t| {
+                let file = s.turn_dir(k, r, t).unwrap().join(EVIDENCE);
+                let text = fs::read_to_string(&file).unwrap().replacen("\"route\": \"search\"", "\"route\": \"chain\"", 1);
+                fs::write(file, text).unwrap();
+            }), "H1: o pacote não é o que a marca nomeia"),
+            ("hash da marca", AnswerFormat::Claims, Box::new(|s, k, r, t| remark(s, k, r, t, |q| q["evidence"]["sha256"] = json!(hash(b"x")))), "H1: o pacote não é o que a marca nomeia"),
+            ("hash da marca inválido", AnswerFormat::Claims, Box::new(|s, k, r, t| remark(s, k, r, t, |q| q["evidence"]["sha256"] = json!("zz"))), "H1: hash da marca inválido"),
+            // 5–6: the package's own form.
+            ("campo removido", AnswerFormat::Claims, Box::new(|s, k, r, t| forge_value(s, k, r, t, |p| { p.as_object_mut().unwrap().remove("selection"); })), "H1: pacote ilegível"),
+            ("campo desconhecido", AnswerFormat::Claims, Box::new(|s, k, r, t| forge_value(s, k, r, t, |p| p["extra"] = json!(1))), "H1: pacote"),
+            ("forma de gravação", AnswerFormat::Claims, Box::new(|s, k, r, t| forge_bytes(s, k, r, t, |b| b.extend_from_slice(b"\n"))), "H1: pacote fora da forma"),
+            // 7–9: what it binds.
+            ("request vinculado", AnswerFormat::Claims, Box::new(|s, k, r, t| forge(s, k, r, t, |p| p.bound.request_sha256 = Sha256Hex::try_from(hash(b"x")).unwrap())), "H1: request difere"),
+            ("busca ausente", AnswerFormat::Prose, Box::new(|s, k, r, t| fs::remove_file(s.turn_dir(k, r, t).unwrap().join("prepared/search.json")).unwrap()), "H1: search difere"),
+            ("contexto claims ausente", AnswerFormat::Claims, Box::new(|s, k, r, t| fs::remove_file(s.turn_dir(k, r, t).unwrap().join("claims/context.json")).unwrap()), "H1: claims_context difere"),
+            ("contexto claims nulo", AnswerFormat::Claims, Box::new(|s, k, r, t| forge(s, k, r, t, |p| p.bound.claims_context_sha256 = None)), "H1: claims_context difere"),
+            ("contexto em prosa", AnswerFormat::Prose, Box::new(|s, k, r, t| forge(s, k, r, t, |p| p.bound.claims_context_sha256 = Some(p.bound.dossier_sha256.clone()))), "H1: claims_context difere"),
+            ("critérios inventados", AnswerFormat::Prose, Box::new(|s, k, r, t| forge(s, k, r, t, |p| p.bound.criteria_sha256 = Some(p.bound.dossier_sha256.clone()))), "H1: criteria difere"),
+            ("query de prosa no lugar da de claims", AnswerFormat::Claims, Box::new(|s, k, r, t| forge(s, k, r, t, |p| p.query.sha256 = p.bound.bundle_query_sha256.clone())), "H1: query difere"),
+            ("representação trocada", AnswerFormat::Prose, Box::new(|s, k, r, t| remark(s, k, r, t, |q| q["answer_format"] = json!("claims"))), "H1: representation difere"),
+            ("request de outro turno", AnswerFormat::Claims, { let h = other_request.clone(); Box::new(move |s, k, r, t| forge(s, k, r, t, |p| p.bound.request_sha256 = Sha256Hex::try_from(h.clone()).unwrap())) }, "H1: request difere"),
+            // 10–12: fichas and units.
+            ("unidade removida", AnswerFormat::Claims, Box::new(|s, k, r, t| forge(s, k, r, t, |p| { p.units.pop(); })), "H1: UnknownReference"),
+            ("ficha removida", AnswerFormat::Claims, Box::new(|s, k, r, t| forge(s, k, r, t, |p| { let last = p.units.last().unwrap().evidence_id.clone(); p.fichas.retain(|f| f.unit != last); })), "H1: Unlinked"),
+            ("ficha em unidade inexistente", AnswerFormat::Claims, Box::new(|s, k, r, t| forge(s, k, r, t, |p| p.fichas[0].unit = evidence::UnitId("E99".into()))), "H1: "),
+            ("ficha fora da janela", AnswerFormat::Claims, Box::new(|s, k, r, t| forge(s, k, r, t, |p| { let end = p.units[0].window_end_line; let f = p.fichas.iter_mut().find(|f| f.unit == p.units[0].evidence_id).unwrap(); f.start_line = end + 1; f.end_line = end + 1; })), "H1: FichaOutside"),
+            ("ficha em outro caminho", AnswerFormat::Claims, Box::new(|s, k, r, t| forge(s, k, r, t, |p| p.fichas[0].path = "src/outro.rs".into())), "H1: FichaOutside"),
+            ("unidade duplicada", AnswerFormat::Claims, Box::new(|s, k, r, t| forge(s, k, r, t, |p| { let u = p.units[0].clone(); p.units.push(u); })), "H1: Duplicate"),
+            ("excerpt em prosa", AnswerFormat::Prose, Box::new(|s, k, r, t| forge(s, k, r, t, |p| p.units[0].excerpt_sha256 = Some(p.units[0].text_sha256.clone()))), "H1: Shape"),
+            // 5.4: the edition and the versions it names.
+            ("edition de outra origem", AnswerFormat::Claims, Box::new(|s, k, r, t| forge(s, k, r, t, |p| p.edition.origin = format!("edition:{}", hash(b"x")))), "H1: a edition do pacote"),
+            ("catálogo de outra edition", AnswerFormat::Claims, Box::new(|s, k, r, t| forge(s, k, r, t, |p| p.edition.catalog_sha256 = Sha256Hex::try_from(hash(b"x")).unwrap())), "H1: a edition do pacote"),
+            ("regras desconhecidas", AnswerFormat::Claims, Box::new(|s, k, r, t| forge(s, k, r, t, |p| p.versions.rules = evidence::RulesVersion("outra".into()))), "H1: regras outra desconhecidas"),
+            ("pergunta registrada outra", AnswerFormat::Claims, Box::new(|s, k, r, t| remark(s, k, r, t, |q| q["asked"]["original"] = json!("Outra?"))), "H1: a pergunta registrada não é a do pacote"),
+            // 13–14: marks that are not a package's.
+            ("evidence.error", AnswerFormat::Claims, Box::new(|s, k, r, t| remark(s, k, r, t, |q| q["evidence"] = json!({ "error": "persistence_failed" }))), "não tem pacote de evidências (persistence_failed)"),
+            ("formato desconhecido", AnswerFormat::Claims, Box::new(|s, k, r, t| remark(s, k, r, t, |q| q["evidence"]["format_version"] = json!(3))), "H1: marca do pacote em formato desconhecido"),
+            ("formato em texto", AnswerFormat::Claims, Box::new(|s, k, r, t| remark(s, k, r, t, |q| q["evidence"]["format_version"] = json!("2"))), "H1: marca do pacote em formato desconhecido"),
+            // P1: the mark's format is the package's, and format 2 tells the two measures compared.
+            ("marca formato 1 de pacote formato 2", AnswerFormat::Claims, Box::new(|s, k, r, t| remark(s, k, r, t, |q| q["evidence"]["format_version"] = json!(1))), "H1: o formato da marca não é o do pacote"),
+            ("pacote e marca formato 1 com campo do formato 2", AnswerFormat::Claims, Box::new(|s, k, r, t| {
+                forge(s, k, r, t, |p| p.format_version = PackageFormat::V1);
+                remark(s, k, r, t, |q| q["evidence"]["format_version"] = json!(1));
+            }), "H1: Shape { what: \"measure divergence\""),
+            ("divergência adulterada", AnswerFormat::Claims, Box::new(|s, k, r, t| forge(s, k, r, t, |p| p.measure.measure_divergence = Some(MeasureDivergence::Diverges {}))), "H1: Shape { what: \"measure divergence\""),
+            ("divergência ausente", AnswerFormat::Prose, Box::new(|s, k, r, t| forge(s, k, r, t, |p| p.measure.measure_divergence = None)), "H1: pacote ilegível (measure has measure_diverges (format 1) or measure_divergence (format 2), exactly one"),
+            ("os dois campos", AnswerFormat::Claims, Box::new(|s, k, r, t| forge(s, k, r, t, |p| p.measure.measure_diverges = Some(false))), "H1: pacote ilegível (measure has measure_diverges (format 1) or measure_divergence (format 2), exactly one"),
+            ("measure_diverges no lugar do campo do formato 2", AnswerFormat::Claims, Box::new(|s, k, r, t| forge(s, k, r, t, |p| {
+                p.measure.measure_divergence = None;
+                p.measure.measure_diverges = Some(false);
+            })), "H1: Shape { what: \"measure divergence\""),
+            ("divergência nula no arquivo", AnswerFormat::Claims, Box::new(|s, k, r, t| forge_value(s, k, r, t, |v| v["measure"]["measure_divergence"] = Value::Null)), "H1: pacote ilegível (invalid type: null"),
+            ("marca com campo a mais", AnswerFormat::Claims, Box::new(|s, k, r, t| remark(s, k, r, t, |q| q["evidence"]["extra"] = json!(1))), "H1: marca do pacote em formato desconhecido"),
+            ("marca sem hash", AnswerFormat::Claims, Box::new(|s, k, r, t| remark(s, k, r, t, |q| q["evidence"] = json!({ "format_version": 1, "sha": "x" }))), "H1: hash da marca inválido"),
+            ("marca que não é objeto", AnswerFormat::Claims, Box::new(|s, k, r, t| remark(s, k, r, t, |q| q["evidence"] = json!("ok"))), "H1: marca do pacote ilegível"),
+            ("marca nula", AnswerFormat::Claims, Box::new(|s, k, r, t| remark(s, k, r, t, |q| q["evidence"] = Value::Null)), "H1: marca do pacote ilegível"),
+        ];
+        for (name, format, change, expected) in cases {
+            let turn = fresh(&store, &key, &run, format);
+            assert_eq!(refusal_of(&store, &key, &run, &turn), "", "{name}: whole before");
+            change(&store, &key, &run, &turn);
+            let why = refusal_of(&store, &key, &run, &turn);
+            assert!(why.contains(expected) && why.ends_with("nada foi enviado"), "{name}: {why}");
+        }
+    }
+
+    /// The package as JSON, changed and re-marked: what a hand edit of the file gives.
+    fn forge_value(store: &Store, key: &str, run: &str, turn: &str, change: impl FnOnce(&mut Value)) {
+        forge_bytes(store, key, run, turn, |bytes| {
+            let mut value: Value = serde_json::from_slice(bytes).unwrap();
+            change(&mut value);
+            *bytes = serde_json::to_vec_pretty(&value).unwrap();
+            bytes.push(b'\n');
+        });
+    }
+
+    fn forge_bytes(store: &Store, key: &str, run: &str, turn: &str, change: impl FnOnce(&mut Vec<u8>)) {
+        let file = store.turn_dir(key, run, turn).unwrap().join(EVIDENCE);
+        let mut bytes = fs::read(&file).unwrap();
+        change(&mut bytes);
+        fs::write(&file, &bytes).unwrap();
+        remark(store, key, run, turn, |q| q["evidence"]["sha256"] = json!(hash(&bytes)));
+    }
+
+    #[test]
+    fn h1_an_older_question_keeps_its_checks_and_a_stripped_one_looks_older() {
+        let (_scratch, store, key, run) = opened_run();
+        // 15 and 44: no mark, no package: the checks it always had, and no hash invented.
+        for format in [AnswerFormat::Claims, AnswerFormat::Prose] {
+            let turn = fresh(&store, &key, &run, format);
+            fs::remove_file(store.turn_dir(&key, &run, &turn).unwrap().join(EVIDENCE)).unwrap();
+            remark(&store, &key, &run, &turn, |q| {
+                q.as_object_mut().unwrap().remove("evidence");
+                q.as_object_mut().unwrap().remove("asked");
+            });
+            let link = store.verify_for_send(&key, &run, &turn).unwrap().link;
+            assert!(link.get("evidence_sha256").is_none());
+            assert!(!link["checks"].as_array().unwrap().iter().any(|c| c.as_str().unwrap().starts_with("evidence")));
+            if format == AnswerFormat::Claims {
+                let pasted = store.paste_answer(&key, &run, &turn, &ray_fact()).unwrap();
+                assert!(pasted["link"].get("evidence_sha256").is_none());
+                assert_eq!(pasted["purpose"], "question");
+            }
+        }
+        // The limit, kept honest: without the mark, a package left behind is not looked at.
+        let turn = fresh(&store, &key, &run, AnswerFormat::Claims);
+        remark(&store, &key, &run, &turn, |q| { q.as_object_mut().unwrap().remove("evidence"); });
+        assert!(store.verify_for_send(&key, &run, &turn).unwrap().link.get("evidence_sha256").is_none());
+    }
+
+    #[test]
+    fn h2_units_come_again_from_the_editions_snapshots() {
+        let (_scratch, store, key, run) = opened_run();
+        // 16: whole.
+        let turn = fresh(&store, &key, &run, AnswerFormat::Claims);
+        let (_, _, package) = package_of(&store, &key, &run, &turn);
+        let catalog = Catalog::load(&store.edition(&key, &run).unwrap()).unwrap();
+        let snapshots: Vec<SnapshotInput> = package.units.iter().map(|u| {
+            let source = catalog.source_by_path(&u.path).unwrap();
+            SnapshotInput { source_id: &source.id, path: &source.path, sha256: &source.sha256, bytes: catalog.source_bytes(&u.path).unwrap() }
+        }).collect();
+        assert_eq!(evidence::check_sources(&package, &snapshots), Ok(()));
+        let sha = |b: &[u8]| Sha256Hex::try_from(hash(b)).unwrap();
+        type Case = (&'static str, AnswerFormat, Box<dyn Fn(&mut EvidencePackage)>, &'static str);
+        let cases: Vec<Case> = vec![
+            ("fonte divergente", AnswerFormat::Claims, Box::new(move |p| p.units[0].source_sha256 = sha(b"x")), "H2: SourceDiffers"),
+            ("fonte de outro id", AnswerFormat::Claims, Box::new(|p| p.units[0].source_id = "S99".into()), "H2: SourceDiffers"),
+            ("excerpt alterado", AnswerFormat::Claims, Box::new(move |p| p.units[0].excerpt_sha256 = Some(sha(b"x"))), "H2: TextDiffers"),
+            ("texto alterado", AnswerFormat::Prose, Box::new(move |p| p.units[0].text_sha256 = sha(b"x")), "H2: TextDiffers"),
+            ("texto de claims alterado", AnswerFormat::Claims, Box::new(move |p| p.units[0].text_sha256 = sha(b"x")), "H2: TextDiffers"),
+            ("linhas deslocadas", AnswerFormat::Prose, Box::new(|p| {
+                let unit = &mut p.units[0];
+                (unit.window_start_line, unit.window_end_line, unit.start_line, unit.end_line) = (unit.window_start_line + 1, unit.window_end_line + 1, unit.start_line + 1, unit.end_line + 1);
+                let id = unit.evidence_id.clone();
+                p.fichas.iter_mut().filter(|f| f.unit == id).for_each(|f| (f.start_line, f.end_line) = (f.start_line + 1, f.end_line + 1));
+            }), "H2: "),
+            ("fim de claims deslocado", AnswerFormat::Claims, Box::new(|p| p.units[0].end_line -= 1), "H2: TextDiffers"),
+            ("janela fora do arquivo", AnswerFormat::Prose, Box::new(|p| { p.units[0].window_end_line = 100_000; p.units[0].end_line = 100_000; }), "H2: Normalization"),
+            ("snapshot inexistente", AnswerFormat::Claims, Box::new(|p| {
+                let unit = p.units[0].evidence_id.clone();
+                p.units[0].path = "src/nao.rs".into();
+                p.fichas.iter_mut().filter(|f| f.unit == unit).for_each(|f| f.path = "src/nao.rs".into());
+            }), "H2: snapshot de src/nao.rs indisponível"),
+        ];
+        for (name, format, change, expected) in cases {
+            let turn = fresh(&store, &key, &run, format);
+            forge(&store, &key, &run, &turn, |p| change(p));
+            let why = refusal_of(&store, &key, &run, &turn);
+            assert!(why.contains(expected), "{name}: {why}");
+        }
+        // 17 and 27: the edition's snapshot changed, or the edition gone.
+        let turn = fresh(&store, &key, &run, AnswerFormat::Claims);
+        let edition = store.edition(&key, &run).unwrap();
+        let snapshot = edition.join("snapshots").join(&catalog.source_by_path(&package.units[0].path).unwrap().sha256);
+        let kept = fs::read(&snapshot).unwrap();
+        fs::write(&snapshot, [kept.as_slice(), b"\n"].concat()).unwrap();
+        assert!(refusal_of(&store, &key, &run, &turn).starts_with("H2: edition indisponível"));
+        fs::write(&snapshot, &kept).unwrap();
+        assert_eq!(refusal_of(&store, &key, &run, &turn), "");
+        let away = edition.with_extension("fora");
+        fs::rename(&edition, &away).unwrap();
+        assert!(refusal_of(&store, &key, &run, &turn).starts_with("H2: edition indisponível"));
+        fs::rename(&away, &edition).unwrap();
+        assert_eq!(refusal_of(&store, &key, &run, &turn), "");
+    }
+
+    /// A package of one unit over `bytes`, lines `start..=end`, as `lines-v1` makes it.
+    fn over(package: &EvidencePackage, representation: Representation, bytes: &[u8], start: usize, end: usize) -> EvidencePackage {
+        let mut p = package.clone();
+        p.representation = representation;
+        let window = evidence::normalize_window(bytes, start, end, representation).unwrap();
+        let unit = &mut p.units[0];
+        (unit.window_start_line, unit.window_end_line, unit.start_line, unit.end_line) = (start, end, window.start_line, window.end_line);
+        (unit.text_sha256, unit.excerpt_sha256, unit.source_sha256) = (window.text_sha256, window.excerpt_sha256, Sha256Hex::try_from(hash(bytes)).unwrap());
+        let id = unit.evidence_id.clone();
+        p.units.truncate(1);
+        p.fichas.retain(|f| f.unit == id);
+        p
+    }
+
+    #[test]
+    fn h2_follows_lines_v1_in_each_representation() {
+        let (_scratch, store, key, run) = opened_run();
+        let turn = fresh(&store, &key, &run, AnswerFormat::Claims);
+        let (_, _, package) = package_of(&store, &key, &run, &turn);
+        let unit = &package.units[0];
+        let input = |bytes: &'static [u8], sha: &'static str| [SnapshotInput { source_id: &unit.source_id, path: &unit.path, sha256: sha, bytes }];
+        let leak = |s: String| -> &'static str { Box::leak(s.into_boxed_str()) };
+        // 23: CRLF is the text LF gives; the source is its own bytes.
+        let (crlf, lf): (&[u8], &[u8]) = (b"fn a() {\r\n    1\r\n}\r\n", b"fn a() {\n    1\n}\n");
+        for representation in [Representation::Claims, Representation::Prose] {
+            let p = over(&package, representation, crlf, 1, 3);
+            assert_eq!(evidence::check_sources(&p, &input(crlf, leak(hash(crlf)))), Ok(()));
+            assert_eq!(p.units[0].text_sha256, over(&package, representation, lf, 1, 3).units[0].text_sha256);
+            let mut swapped = p.clone();
+            swapped.units[0].source_sha256 = Sha256Hex::try_from(hash(lf)).unwrap();
+            assert!(matches!(evidence::check_sources(&swapped, &input(lf, leak(hash(lf)))), Ok(())), "same text, its own source");
+            assert!(matches!(evidence::check_sources(&p, &input(lf, leak(hash(lf)))), Err(evidence::PackageCheck::SourceDiffers { .. })));
+        }
+        // 24: a \r\r\n ends one line, as lines-v1 says. Claims drop the stray \r (N5, N6), prose keeps
+        // it: the check agrees with each, and a prose text taken as LF is refused.
+        let rr: &[u8] = b"fn a() {\r\r\n    1\r\n}\r\n";
+        for representation in [Representation::Claims, Representation::Prose] {
+            let p = over(&package, representation, rr, 1, 3);
+            assert_eq!(evidence::check_sources(&p, &input(rr, leak(hash(rr)))), Ok(()));
+            assert_eq!(p.units[0].end_line, 3, "{representation:?}: one line, not two");
+            let as_lf = over(&package, representation, lf, 1, 3).units[0].text_sha256.clone();
+            assert_eq!(as_lf == p.units[0].text_sha256, representation == Representation::Claims, "{representation:?}");
+        }
+        let mut prose_as_lf = over(&package, Representation::Prose, rr, 1, 3);
+        prose_as_lf.units[0].text_sha256 = over(&package, Representation::Prose, lf, 1, 3).units[0].text_sha256.clone();
+        assert!(matches!(evidence::check_sources(&prose_as_lf, &input(rr, leak(hash(rr)))), Err(evidence::PackageCheck::TextDiffers { .. })));
+        // 25: a claims window that N4 leaves empty has no text; prose keeps it.
+        let blank: &[u8] = b"fn a() {}\n\n\n";
+        let mut empty = over(&package, Representation::Prose, blank, 2, 3);
+        assert_eq!(evidence::check_sources(&empty, &input(blank, leak(hash(blank)))), Ok(()));
+        empty.representation = Representation::Claims;
+        empty.units[0].excerpt_sha256 = Some(empty.units[0].text_sha256.clone());
+        assert!(matches!(evidence::check_sources(&empty, &input(blank, leak(hash(blank)))), Err(evidence::PackageCheck::Normalization { .. })));
+        // 26: prose keeps the empty lines at the end of its window; claims drops them.
+        let prose = over(&package, Representation::Prose, blank, 1, 3);
+        assert_eq!(prose.units[0].end_line, 3);
+        assert_ne!(prose.units[0].text_sha256, over(&package, Representation::Prose, blank, 1, 1).units[0].text_sha256);
+        let mut trimmed = prose.clone();
+        trimmed.units[0].text_sha256 = over(&package, Representation::Prose, blank, 1, 1).units[0].text_sha256.clone();
+        assert!(matches!(evidence::check_sources(&trimmed, &input(blank, leak(hash(blank)))), Err(evidence::PackageCheck::TextDiffers { .. })));
+        assert_eq!(over(&package, Representation::Claims, blank, 1, 3).units[0].end_line, 1);
+    }
+
+    #[test]
+    fn h3_the_current_code_makes_the_same_package_and_query_again() {
+        let (_scratch, store, key, run) = opened_run();
+        let sha = |b: &[u8]| Sha256Hex::try_from(hash(b)).unwrap();
+        // 29, 34, 38: a package changed where only making it again tells.
+        type Case = (&'static str, AnswerFormat, Box<dyn Fn(&mut EvidencePackage)>, &'static str);
+        let cases: Vec<Case> = vec![
+            ("campos reordenados", AnswerFormat::Claims, Box::new(|p| p.query.fields.swap(0, 1)), "H3: o código atual não refaz query"),
+            ("campo a menos", AnswerFormat::Prose, Box::new(|p| { p.query.fields.pop(); }), "H3: o código atual não refaz query"),
+            ("limite alterado", AnswerFormat::Claims, Box::new(move |p| p.query.limits[0].text_sha256 = sha(b"x")), "H3: o código atual não refaz query"),
+            ("contrato fixo alterado", AnswerFormat::Claims, Box::new(move |p| p.query.fixed_contract_sha256 = sha(b"x")), "H3: o código atual não refaz query"),
+            ("commit do projeto", AnswerFormat::Claims, Box::new(|p| p.edition.git_head = Some("0".repeat(40))), "H3: o código atual não refaz edition"),
+            ("rota", AnswerFormat::Claims, Box::new(|p| p.route = evidence::Route::Chain), "H3: o código atual não refaz route"),
+            ("fichas invertidas", AnswerFormat::Claims, Box::new(|p| p.fichas.reverse()), "H3: o código atual não refaz fichas"),
+        ];
+        for (name, format, change, expected) in cases {
+            let turn = fresh(&store, &key, &run, format);
+            let (_, _, package) = package_of(&store, &key, &run, &turn);
+            forge(&store, &key, &run, &turn, |p| change(p));
+            let (_, _, forged) = package_of(&store, &key, &run, &turn);
+            if forged == package {
+                continue; // the change is no change for this package
+            }
+            let why = refusal_of(&store, &key, &run, &turn);
+            assert!(why.contains(expected), "{name}: {why}");
+        }
+        // 37: another builder, the same package otherwise: it passes, and is still the stored one.
+        let turn = fresh(&store, &key, &run, AnswerFormat::Claims);
+        forge(&store, &key, &run, &turn, |p| p.versions.builder = evidence::BuilderIdentity::Recorded { git_commit: "0".repeat(40), git_dirty: true });
+        let (_, bytes, package) = package_of(&store, &key, &run, &turn);
+        assert_eq!(store.verify_for_send(&key, &run, &turn).unwrap().link["evidence_sha256"], json!(hash(&bytes)));
+        assert_eq!(package.versions.builder, evidence::BuilderIdentity::Recorded { git_commit: "0".repeat(40), git_dirty: true });
+        // 30, 35, 36: the query files changed, the package bound to them: H1 and H2 pass, H3 does not.
+        let turn = fresh(&store, &key, &run, AnswerFormat::Prose);
+        rebind(&store, &key, &run, &turn, "prepared/bundle/query.json", |t| t.replacen("\"instructions\": [\n    \"", "\"instructions\": [\n    \"Outra. ", 1));
+        assert!(refusal_of(&store, &key, &run, &turn).starts_with("H3: "), "instrução fixa");
+        let turn = fresh(&store, &key, &run, AnswerFormat::Prose);
+        rebind(&store, &key, &run, &turn, "prepared/bundle/query.json", |t| { assert!(t.contains(RAY)); t.replacen(RAY, "Outra?", 1) });
+        assert!(refusal_of(&store, &key, &run, &turn).starts_with("H3: "), "query do bundle");
+        let turn = fresh(&store, &key, &run, AnswerFormat::Claims);
+        rebind(&store, &key, &run, &turn, "claims/query.json", |t| t.replacen(RAY, "Outra?", 1));
+        assert!(refusal_of(&store, &key, &run, &turn).starts_with("H3: "), "query de claims");
+        // 28: whole, the query and the package are made again as they are.
+        let turn = fresh(&store, &key, &run, AnswerFormat::Claims);
+        assert_eq!(refusal_of(&store, &key, &run, &turn), "");
+    }
+
+    /// Makes the question as asked say something else, with its package's hashes following: H1
+    /// agrees, and only making the query again shows it was not what was prepared.
+    fn reask(store: &Store, key: &str, run: &str, turn: &str, change: impl FnOnce(&mut String, &mut Vec<Suffix>)) {
+        let dir = store.turn_dir(key, run, turn).unwrap();
+        let question: Value = serde_json::from_slice(&fs::read(dir.join("question.json")).unwrap()).unwrap();
+        let (mut original, mut suffixes) = asked_of(&question).unwrap();
+        change(&mut original, &mut suffixes);
+        let joined: String = std::iter::once(original.as_str()).chain(suffixes.iter().map(|s| s.text.as_str())).collect();
+        remark(store, key, run, turn, |q| {
+            q["question"] = json!(joined);
+            q["asked"] = json!({ "original": original, "suffixes": suffixes.iter().map(|s| json!({ "text": s.text, "rule": s.rule, "attempt": s.attempt })).collect::<Vec<_>>() });
+        });
+        let sha = |t: &str| Sha256Hex::try_from(hash(t.as_bytes())).unwrap();
+        forge(store, key, run, turn, |p| {
+            p.query.person_text.sha256 = sha(&original);
+            p.query.prepared_question_sha256 = sha(&joined);
+            for (entry, suffix) in p.query.server_suffixes.iter_mut().zip(&suffixes) {
+                (entry.sha256, entry.rule, entry.attempt) = (sha(&suffix.text), suffix.rule, suffix.attempt);
+            }
+        });
+    }
+
+    #[test]
+    fn h3_the_question_as_asked_is_the_one_prepared() {
+        let (_scratch, store, key, run) = opened_run();
+        let nodes = vec![symbol_id(&store, &key, &run, "ray_from_pixel")];
+        let suffixes = [crate::gate_suffix(&["x".into()], 1), crate::mechanical_suffix(&["y".into()], 2)];
+        let ask = || store.ask_gathered_parts(&key, &run, "O que muda?", &suffixes, &nodes, false, None, None, &[]).unwrap()["id"].as_str().unwrap().to_owned();
+        // The ladder's question, with what the server added, is checked and linked to its package.
+        let turn = ask();
+        let (_, bytes, _) = package_of(&store, &key, &run, &turn);
+        assert_eq!(store.verify_for_send(&key, &run, &turn).unwrap().link["evidence_sha256"], json!(hash(&bytes)));
+        type Change = Box<dyn Fn(&mut String, &mut Vec<Suffix>)>;
+        let cases: [(&str, Change); 3] = [
+            ("31 texto da pessoa", Box::new(|o, _| o.push('!'))),
+            ("32 acréscimo alterado", Box::new(|_, s| s[0].text.push('!'))),
+            ("33 ordem trocada", Box::new(|_, s| s.swap(0, 1))),
+        ];
+        for (name, change) in cases {
+            let turn = ask();
+            reask(&store, &key, &run, &turn, |o, s| change(o, s));
+            let why = refusal_of(&store, &key, &run, &turn);
+            assert!(why.starts_with("H3: "), "{name}: {why}");
+        }
+        // The rule is the server's declaration: the package must say the one recorded (H1); that the
+        // text is the one the rule writes is checked with the ladder's inputs, not here.
+        let turn = ask();
+        forge(&store, &key, &run, &turn, |p| p.query.server_suffixes[0].rule = RetryRule::MechanicalRefused);
+        assert!(refusal_of(&store, &key, &run, &turn).starts_with("H1: a pergunta registrada"));
+        // Without the forger's care, H1 already sees it.
+        let turn = ask();
+        remark(&store, &key, &run, &turn, |q| q["asked"]["suffixes"].as_array_mut().unwrap().swap(0, 1));
+        assert!(refusal_of(&store, &key, &run, &turn).starts_with("H1: a pergunta registrada"));
+    }
+
+    #[test]
+    fn a_send_is_linked_to_the_package_checked_and_says_what_it_was_for() {
+        let (_scratch, store, key, run) = opened_run();
+        let turn = fresh(&store, &key, &run, AnswerFormat::Claims);
+        let (_, bytes, _) = package_of(&store, &key, &run, &turn);
+        let choice = || crate::llm::Choice { modelfile: None, modelfile_name: None, claude_model: None, skills: vec![] };
+        // 39: by a provider and by paste, the link has the hash of the package checked.
+        let verified = store.verify_for_send(&key, &run, &turn).unwrap();
+        let dir = next_send(&store.turn_dir(&key, &run, &turn).unwrap(), "test").unwrap();
+        let sent = crate::llm::send_question("test", &choice(), &verified, &dir).unwrap();
+        let recorded: Value = serde_json::from_slice(&fs::read(dir.join("send.json")).unwrap()).unwrap();
+        assert_eq!((&recorded["link"]["evidence_sha256"], &recorded["purpose"]), (&json!(hash(&bytes)), &json!("question")));
+        assert_eq!(recorded["link"], verified.link);
+        assert_eq!(sent["link"], recorded["link"]);
+        let pasted = store.paste_answer(&key, &run, &turn, &ray_fact()).unwrap();
+        assert_eq!((&pasted["link"]["evidence_sha256"], &pasted["purpose"]), (&json!(hash(&bytes)), &json!("question")));
+        // 45: the lexicon sends with no package and says so.
+        let lexicon = store.suggest_lexicon(&key, &run, "test", crate::lexicon::LANGUAGES[0], choice()).unwrap();
+        assert_eq!(lexicon["send"]["purpose"], "lexicon");
+        assert!(lexicon["send"]["link"].is_null());
+        assert!(!Path::new(lexicon["directory"].as_str().unwrap()).join(EVIDENCE).exists());
+        // 47: a send whose record is not written is not confirmed, and earlier records stay.
+        let sends = store.turn_dir(&key, &run, &turn).unwrap().join("sends");
+        let before: Vec<_> = fs::read_dir(&sends).unwrap().map(|e| e.unwrap().path()).collect();
+        let kept: Vec<_> = before.iter().map(|d| fs::read(d.join("send.json")).unwrap()).collect();
+        FAIL_EVIDENCE_AT.with(|f| f.set(Some("send_record")));
+        let pasted = store.paste_answer(&key, &run, &turn, &ray_fact());
+        let dir = next_send(&store.turn_dir(&key, &run, &turn).unwrap(), "test").unwrap();
+        let provider = crate::llm::send_question("test", &choice(), &store.verify_for_send(&key, &run, &turn).unwrap(), &dir);
+        FAIL_EVIDENCE_AT.with(|f| f.set(None));
+        assert!(pasted.unwrap_err().to_string().contains("não está vinculada"));
+        assert!(provider.is_err());
+        let after: Vec<_> = fs::read_dir(&sends).unwrap().map(|e| e.unwrap().path()).collect();
+        assert!(after.iter().filter(|d| !before.contains(d)).all(|d| !d.join("send.json").exists()));
+        assert_eq!(before.iter().map(|d| fs::read(d.join("send.json")).unwrap()).collect::<Vec<_>>(), kept);
+    }
+
+    #[test]
+    fn a_question_reaches_a_model_only_through_its_check() {
+        // 46: one way to send a question, taking what only the check makes; the free send is private.
+        let llm = include_str!("llm.rs");
+        assert!(llm.contains("pub fn send_question(provider: &str, choice: &Choice, verified: &crate::store::Verified, dir: &Path)"));
+        assert!(llm.contains("\nfn send(provider: &str, request: Send, purpose: &str)") && !llm.contains("pub fn send("));
+        assert!(llm.contains("\n    fn request<'a>"), "a request is made only here");
+        let store = include_str!("store.rs");
+        let verified = &store[store.find("pub struct Verified {").unwrap() + "pub struct Verified {".len()..];
+        let verified = &verified[..verified.find("\n}").unwrap()];
+        assert!(!verified.contains("pub "), "{verified}");
+        assert_eq!(store.matches(concat!("Ok(Verified", " {")).count(), 1, "made in one place");
+        for source in [include_str!("main.rs"), store, include_str!("facts.rs")] {
+            assert!(!source.contains(concat!("llm::", "send(")) && !source.contains(concat!(".", "request(")));
+        }
+    }
+
+    #[test]
+    fn a_changed_package_stops_every_route_that_uses_its_question() {
+        let (_scratch, store, key, run) = opened_run();
+        let turn = fresh(&store, &key, &run, AnswerFormat::Claims);
+        store.paste_answer(&key, &run, &turn, &ray_fact()).unwrap();
+        let tampered = |turn: &str| forge(&store, &key, &run, turn, |p| p.units[0].text_sha256 = Sha256Hex::try_from(hash(b"x")).unwrap());
+        let sends = |turn: &str| fs::read_dir(store.turn_dir(&key, &run, turn).unwrap().join("sends")).map(|d| d.count()).unwrap_or(0);
+        // 42 first, while the send is there: the approval stops at gate 2; a rejection is only recorded.
+        tampered(&turn);
+        let review = store.review(&key, &run, &turn, "01-manual", "C1", true, "A linha 5 calcula direction.");
+        assert!(review.unwrap_err().to_string().starts_with("Portão 2: a pergunta não confere mais: H2:"));
+        assert!(store.facts(&key, &run).unwrap()["facts"].as_array().unwrap().is_empty());
+        // 40: /api/send stops before any provider runs.
+        let body = json!({ "key": key, "run": run, "turn": turn, "provider": "ollama" });
+        assert!(crate::send_value(&store, &body).unwrap_err().to_string().starts_with("H2:"));
+        assert_eq!(sends(&turn), 1);
+        // 41: /api/paste.
+        assert!(store.paste_answer(&key, &run, &turn, &ray_fact()).unwrap_err().to_string().starts_with("H2:"));
+        assert_eq!(sends(&turn), 1);
+        // 43: /api/continue checks the question it continues from, and makes no new one.
+        let turns = store.turns(&key, &run).unwrap().as_array().unwrap().len();
+        assert!(store.continue_turn(&key, &run, &turn, "E o que vem depois?").unwrap_err().to_string().starts_with("H2:"));
+        assert_eq!(store.turns(&key, &run).unwrap().as_array().unwrap().len(), turns);
+        // Whole, the same routes go on: a continuation has its own package.
+        let whole = fresh(&store, &key, &run, AnswerFormat::Claims);
+        store.paste_answer(&key, &run, &whole, &ray_fact()).unwrap();
+        let next = store.continue_turn(&key, &run, &whole, "E o que vem depois?").unwrap();
+        let next = next["id"].as_str().unwrap();
+        let (_, bytes, package) = package_of(&store, &key, &run, next);
+        assert_eq!(package.route, evidence::Route::Chain);
+        assert_eq!(store.verify_for_send(&key, &run, next).unwrap().link["evidence_sha256"], json!(hash(&bytes)));
+        // A send linked to another package than the one checked now is not promoted.
+        let promoted = store.review(&key, &run, &whole, "01-manual", "C1", true, "A linha 5 calcula direction.").unwrap();
+        assert_eq!(promoted["fact_id"], "F1");
+        let file = store.turn_dir(&key, &run, &whole).unwrap().join("sends/01-manual/send.json");
+        let mut summary: Value = serde_json::from_slice(&fs::read(&file).unwrap()).unwrap();
+        summary["link"]["evidence_sha256"] = json!(hash(b"x"));
+        fs::write(&file, serde_json::to_vec_pretty(&summary).unwrap()).unwrap();
+        store.review(&key, &run, &whole, "01-manual", "C1", false, "Revisão.").unwrap();
+        let again = store.review(&key, &run, &whole, "01-manual", "C1", true, "A linha 5 calcula direction.");
+        assert!(again.unwrap_err().to_string().contains("o pacote de evidências da pergunta não é o vinculado ao envio"));
+    }
+
+    #[test]
+    fn a_claims_question_without_its_claims_files_is_never_sent() {
+        // 48: no claims query, no package, and an error mark that no reader takes for a package.
+        let (_scratch, store, key, run) = opened_run();
+        FAIL_EVIDENCE_AT.with(|f| f.set(Some("claims")));
+        let asked = store.ask(&key, &run, RAY);
+        FAIL_EVIDENCE_AT.with(|f| f.set(None));
+        let turn = asked.unwrap()["id"].as_str().unwrap().to_owned();
+        let dir = store.turn_dir(&key, &run, &turn).unwrap();
+        let question: Value = serde_json::from_slice(&fs::read(dir.join("question.json")).unwrap()).unwrap();
+        assert!(question["claims_error"].is_string());
+        assert_eq!(question["evidence"], json!({ "error": "claims_not_prepared" }));
+        assert!(!dir.join(EVIDENCE).exists() && !dir.join("claims/query.json").exists());
+        assert!(dir.join("prepared/bundle/query.json").is_file(), "the bundle was prepared");
+        let refused = |store: &Store| {
+            assert!(store.verify_for_send(&key, &run, &turn).err().unwrap().to_string().contains("claims_not_prepared"));
+            let body = json!({ "key": key, "run": run, "turn": turn, "provider": "ollama" });
+            assert!(crate::send_value(store, &body).is_err());
+            assert!(store.paste_answer(&key, &run, &turn, &ray_fact()).is_err());
+            assert!(store.continue_turn(&key, &run, &turn, "E depois?").is_err());
+            assert!(!dir.join("sends").exists());
+        };
+        refused(&store);
+        // Stripped of its mark it looks older, and the older checks still find no claims query.
+        remark(&store, &key, &run, &turn, |q| { q.as_object_mut().unwrap().remove("evidence"); });
+        assert!(store.verify_for_send(&key, &run, &turn).is_err());
+        assert!(store.paste_answer(&key, &run, &turn, &ray_fact()).is_err());
+        assert!(!dir.join("sends").exists());
+    }
+
+    #[test]
+    fn each_part_a_package_binds_is_checked_on_its_own() {
+        let (_scratch, store, key, run) = opened_run();
+        let x = || Sha256Hex::try_from(hash(b"x")).unwrap();
+        type Case = (&'static str, AnswerFormat, Box<dyn Fn(&Store, &str, &str, &str)>, &'static str);
+        let cases: Vec<Case> = vec![
+            ("dossiê vinculado", AnswerFormat::Claims, Box::new(move |s, k, r, t| forge(s, k, r, t, |p| p.bound.dossier_sha256 = x())), "H1: dossier difere"),
+            ("query do bundle vinculada", AnswerFormat::Claims, Box::new(move |s, k, r, t| forge(s, k, r, t, |p| p.bound.bundle_query_sha256 = x())), "H1: bundle_query difere"),
+            ("contexto claims ausente e nulo", AnswerFormat::Claims, Box::new(|s, k, r, t| {
+                fs::remove_file(s.turn_dir(k, r, t).unwrap().join("claims/context.json")).unwrap();
+                forge(s, k, r, t, |p| p.bound.claims_context_sha256 = None);
+            }), "H1: claims_context difere"),
+            ("texto da pessoa no pacote", AnswerFormat::Claims, Box::new(move |s, k, r, t| forge(s, k, r, t, |p| p.query.person_text.sha256 = x())), "H1: a pergunta registrada"),
+            ("registro do texto sem a pergunta", AnswerFormat::Claims, Box::new(|s, k, r, t| {
+                remark(s, k, r, t, |q| q["asked"]["original"] = json!("Outra?"));
+                forge(s, k, r, t, |p| p.query.person_text.sha256 = Sha256Hex::try_from(hash(b"Outra?")).unwrap());
+            }), "H1: a pergunta registrada"),
+            ("ficha duplicada", AnswerFormat::Claims, Box::new(|s, k, r, t| forge(s, k, r, t, |p| { let f = p.fichas[0].clone(); p.fichas.push(f); })), "H1: Duplicate"),
+            ("fim da prosa antes da janela", AnswerFormat::Prose, Box::new(|s, k, r, t| forge(s, k, r, t, |p| p.units[0].end_line -= 1)), "H1: Shape"),
+            ("início fora da janela", AnswerFormat::Claims, Box::new(|s, k, r, t| forge(s, k, r, t, |p| p.units[0].start_line += 1)), "H1: Shape"),
+            ("classe code sem a unidade", AnswerFormat::Claims, Box::new(|s, k, r, t| forge(s, k, r, t, |p| { p.query.code.units.pop(); })), "H1: Unlinked"),
+            // The bytes of the query, beyond what its fields say, are the prepared ones (H3).
+            ("query do bundle com outros bytes", AnswerFormat::Prose, Box::new(|s, k, r, t| rebind(s, k, r, t, "prepared/bundle/query.json", |q| format!("{} \n", q.trim_end()))), "H3: "),
+        ];
+        for (name, format, change, expected) in cases {
+            let turn = fresh(&store, &key, &run, format);
+            change(&store, &key, &run, &turn);
+            let why = refusal_of(&store, &key, &run, &turn);
+            assert!(why.contains(expected), "{name}: {why}");
+        }
+        // An older question edited after it was asked keeps being refused by the checks it had.
+        let turn = fresh(&store, &key, &run, AnswerFormat::Prose);
+        fs::remove_file(store.turn_dir(&key, &run, &turn).unwrap().join(EVIDENCE)).unwrap();
+        remark(&store, &key, &run, &turn, |q| { q.as_object_mut().unwrap().remove("evidence"); });
+        let file = store.turn_dir(&key, &run, &turn).unwrap().join("prepared/bundle/query.json");
+        let text = fs::read_to_string(&file).unwrap();
+        fs::write(&file, format!("{} \n", text.trim_end())).unwrap();
+        assert!(store.verify_for_send(&key, &run, &turn).is_err());
+    }
+
+    #[test]
+    fn what_the_question_was_made_with_is_kept_and_not_read_again() {
+        let (_scratch, store, key, mut settings) = opened();
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        // The instructions the claims query was written with, not the project's now.
+        settings.instructions = Some(vec!["Responda curto.".into()]);
+        store.save_settings(&key, &settings).unwrap();
+        let turn = store.ask(&key, &run, RAY).unwrap()["id"].as_str().unwrap().to_owned();
+        settings.instructions = Some(vec!["Outra.".into()]);
+        store.save_settings(&key, &settings).unwrap();
+        assert_eq!(refusal_of(&store, &key, &run, &turn), "");
+        // The measure read with the question is the one it names; a check does not read it again.
+        // What it names is not made again either: that is the limit of H3 for this part.
+        forge(&store, &key, &run, &turn, |p| p.measure.at_question = MeasureAtQuestion::Unreadable {});
+        assert_eq!(refusal_of(&store, &key, &run, &turn), "");
+    }
+
+    /// The page's envelope as web/index.html keeps it (`toggleGathered`, `toggleTarget`, `includeBulk`,
+    /// the join button, `absorbSuggestion` and `selectionOnRecord`), written again step for step, so a
+    /// test sends what the page sends and not what the server's own check would make.
+    struct Page {
+        sources: Vec<(String, Value)>,
+        decisions: Vec<(String, Value)>,
+        gaps: Vec<Value>,
+        gathered: Vec<String>,
+        seeds: Vec<String>,
+        suggestions: Vec<Value>,
+        last: Option<Value>,
+        nodes: Value,
+    }
+
+    impl Page {
+        fn new(store: &Store, key: &str, run: &str) -> Self {
+            let graph: Value = serde_json::from_slice(&store.graph(key, run).unwrap()).unwrap();
+            Page { sources: vec![], decisions: vec![], gaps: vec![], gathered: vec![], seeds: vec![], suggestions: vec![], last: None, nodes: graph["nodes"].clone() }
+        }
+        fn source(&self, id: &str) -> Option<&Value> {
+            self.sources.iter().find(|(k, _)| k == id).map(|(_, v)| v)
+        }
+        /// A Map's `set`: a known key keeps its place.
+        fn set(&mut self, id: &str, value: Value) {
+            match self.sources.iter_mut().find(|(k, _)| k == id) {
+                Some((_, v)) => *v = value,
+                None => self.sources.push((id.to_owned(), value)),
+            }
+        }
+        fn decide(&mut self, id: &str, decision: &str, scope: &str) {
+            let d = json!({ "decision": decision, "scope": scope });
+            match self.decisions.iter_mut().find(|(k, _)| k == id) {
+                Some((_, v)) => *v = d,
+                None => self.decisions.push((id.to_owned(), d)),
+            }
+        }
+        fn decision(&self, id: &str) -> Option<&Value> {
+            self.decisions.iter().find(|(k, _)| k == id).map(|(_, v)| v)
+        }
+        /// `manualSource`: what the graph shows of a source, nothing more.
+        fn manual(&self, id: &str) -> Value {
+            let node = self.nodes.get(id);
+            json!({ "id": id, "name": node.map_or(json!(id), |n| n["label"].clone()), "path": null, "kind": node.map_or(Value::Null, |n| n["kind"].clone()),
+                "start_line": null, "end_line": null, "role": null, "bytes": null, "calls": null, "reasons": [], "facts": [], "left_out_why": null, "kept_out": null, "provenance": "manual" })
+        }
+        fn toggle(&mut self, id: &str) {
+            let removing = self.gathered.iter().any(|g| g == id);
+            if removing { self.gathered.retain(|g| g != id) } else { self.gathered.push(id.to_owned()) }
+            if self.source(id).is_none() {
+                let manual = self.manual(id);
+                self.set(id, manual);
+            }
+            self.decide(id, if removing { "removed" } else { "included" }, "single");
+            if removing { self.seeds.retain(|g| g != id) } else if self.last.is_none() { self.seeds.push(id.to_owned()) }
+        }
+        fn toggle_target(&mut self, id: &str) {
+            if self.seeds.iter().any(|s| s == id) { self.seeds.retain(|s| s != id) } else { self.seeds.push(id.to_owned()) }
+        }
+        fn bulk(&mut self, ids: &[String]) {
+            for id in ids {
+                if self.source(id).is_none() {
+                    let manual = self.manual(id);
+                    self.set(id, manual);
+                }
+                self.decide(id, "included", "bulk");
+            }
+        }
+        fn learn(&mut self, e: &Value, provenance: &str) {
+            let id = e["id"].as_str().unwrap();
+            let before = self.source(id).cloned();
+            let given = |v: Option<&Value>| v.filter(|v| !v.is_null()).cloned();
+            let mut reasons: Vec<Value> = before.as_ref().map_or(vec![], |b| b["reasons"].as_array().unwrap().clone());
+            let new: Vec<Value> = e["reasons"].as_array().unwrap().iter().filter(|r| !reasons.contains(r)).cloned().collect();
+            reasons.extend(new);
+            let left_out = given(e.get("left_out")).unwrap_or(Value::Null);
+            let value = json!({ "id": id, "name": e["name"], "path": e["path"], "kind": e["kind"], "start_line": e["start_line"], "end_line": e["end_line"], "role": e["role"],
+                "bytes": e["bytes"], "calls": given(e.get("calls")).unwrap_or(Value::Null), "facts": given(e.get("facts")).unwrap_or(json!([])), "reasons": reasons,
+                "left_out_why": before.as_ref().and_then(|b| given(b.get("left_out_why"))).unwrap_or(left_out.clone()), "kept_out": left_out,
+                "provenance": before.as_ref().and_then(|b| given(b.get("provenance"))).unwrap_or(json!(provenance)) });
+            self.set(id, value);
+        }
+        /// `absorbSuggestion`, and the hash the route answered with.
+        fn absorb(&mut self, s: &Value, nodes: &[String]) {
+            for e in s["items"].as_array().unwrap() {
+                self.learn(e, "suggested");
+            }
+            for e in s["left_out"].as_array().unwrap() {
+                self.learn(e, "left_out");
+            }
+            let new: Vec<Value> = s["gaps"].as_array().unwrap().iter().filter(|g| !self.gaps.contains(g)).cloned().collect();
+            self.gaps.extend(new);
+            self.last = Some(json!({ "suggested_from": nodes, "budget_bytes": s["budget_bytes"], "suggested_bytes": s["used_bytes"], "measured": s["measured"] }));
+            self.suggestions.push(s["suggestion"].clone());
+        }
+        fn suggest(&mut self, store: &Store, key: &str, run: &str, nodes: &[String]) -> Value {
+            let answer = store.suggest_envelope(key, run, nodes).unwrap();
+            self.absorb(&answer, nodes);
+            answer
+        }
+        /// The join button: what the suggestion adds that is not in and was not taken out.
+        fn join(&mut self, s: &Value) {
+            let to_join: Vec<String> = s["items"].as_array().unwrap().iter().map(|i| i["id"].as_str().unwrap().to_owned())
+                .filter(|id| !self.gathered.contains(id) && self.decision(id).is_none_or(|d| d["decision"] != "removed")).collect();
+            self.bulk(&to_join);
+            self.gathered.extend(to_join);
+        }
+        /// `selectionOnRecord`.
+        fn record(&self) -> Value {
+            let decided = |e: &Value| {
+                let mut e = e.clone();
+                let fields = e.as_object_mut().unwrap();
+                fields.remove("kept_out");
+                let d = self.decision(fields["id"].as_str().unwrap());
+                fields.insert("decision".into(), d.map_or(Value::Null, |d| d["decision"].clone()));
+                fields.insert("decision_scope".into(), d.map_or(Value::Null, |d| d["scope"].clone()));
+                e
+            };
+            let removed = |e: &Value| self.decision(e["id"].as_str().unwrap()).is_some_and(|d| d["decision"] == "removed");
+            let others: Vec<&Value> = self.sources.iter().filter(|(id, _)| !self.gathered.contains(id)).map(|(_, v)| v).collect();
+            let included: Vec<Value> = self.gathered.iter().map(|id| decided(self.source(id).unwrap())).collect();
+            let last = self.last.as_ref().unwrap();
+            json!({ "kind": "selection_record", "format_version": 2, "suggestions": self.suggestions, "seeds": self.seeds,
+                "suggested_from": last["suggested_from"], "measured": last["measured"], "budget_bytes": last["budget_bytes"], "suggested_bytes": last["suggested_bytes"],
+                "included_bytes": included.iter().map(|e| e["bytes"].as_u64().unwrap_or(0)).sum::<u64>(), "included": included,
+                "removed": others.iter().filter(|e| removed(e)).map(|e| decided(e)).collect::<Vec<_>>(),
+                "left_out": others.iter().filter(|e| !removed(e) && !e["kept_out"].is_null()).map(|e| { let mut d = decided(e); d["why"] = e["kept_out"].clone(); d }).collect::<Vec<_>>(),
+                "not_joined": others.iter().filter(|e| !removed(e) && e["kept_out"].is_null()).map(|e| decided(e)).collect::<Vec<_>>(),
+                "gaps": self.gaps })
+        }
+        fn origin(&self) -> Value {
+            json!({ "kind": "selection", "summary": "x", "selection": self.record() })
+        }
+    }
+
+    /// A request as the page sends it: through the socket, the parser, the route and `handle`, and
+    /// read back from the bytes answered. The server side runs apart, so a long answer never blocks.
+    fn api(store: &Store, path: &str, body: &Value) -> (u16, Value) {
+        api_with(store, "POST", path, body)
+    }
+
+    /// `api` with another method: GET with the query in `path`, DELETE with a body.
+    fn api_with(store: &Store, method: &str, path: &str, body: &Value) -> (u16, Value) {
+        use std::io::{Read, Write};
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let text = if body.is_null() { String::new() } else { body.to_string() };
+        let mut client = std::net::TcpStream::connect(listener.local_addr().unwrap()).unwrap();
+        write!(client, "{method} {path} HTTP/1.1\r\nHost: 127.0.0.1:0\r\nContent-Length: {}\r\n\r\n{text}", text.len()).unwrap();
+        let raw = std::thread::scope(|scope| {
+            scope.spawn(|| {
+                let (server, _) = listener.accept().unwrap();
+                let request = crate::http::read(&server).unwrap();
+                let app = crate::App { port: 0, viewer: PathBuf::new(), store: Store { dir: store.dir.clone(), modelfiles: store.modelfiles.clone() }, graph: std::sync::Mutex::new(None) };
+                crate::http::write(&server, &crate::handle(&app, &request)).unwrap();
+            });
+            let mut raw = vec![];
+            client.read_to_end(&mut raw).unwrap();
+            raw
+        });
+        let text = String::from_utf8(raw).unwrap();
+        let (head, body) = text.split_once("\r\n\r\n").unwrap();
+        (head.split(' ').nth(1).unwrap().parse().unwrap(), serde_json::from_str(body).unwrap_or(Value::String(body.to_owned())))
+    }
+
+    /// Every file under the run's questions and suggestions, with its bytes.
+    fn files_of(store: &Store, key: &str, run: &str) -> Vec<(PathBuf, Vec<u8>)> {
+        fn walk(dir: &Path, out: &mut Vec<(PathBuf, Vec<u8>)>) {
+            for entry in fs::read_dir(dir).into_iter().flatten().flatten() {
+                let path = entry.path();
+                if path.is_dir() { walk(&path, out) } else { out.push((path.clone(), fs::read(&path).unwrap())) }
+            }
+        }
+        let mut out = vec![];
+        let run_dir = store.run_dir(key, run).unwrap();
+        walk(&run_dir.join("turns"), &mut out);
+        walk(&run_dir.join(SUGGESTIONS), &mut out);
+        out.sort();
+        out
+    }
+
+    /// A declaration gathered by hand, a suggestion from it joined whole, and what it added (its owner
+    /// type) taken out again: one source in `included`, by hand, and one in `removed`, suggested.
+    fn gathered_page() -> (Scratch, Store, String, String, Page) {
+        let (scratch, store, key, _) = opened();
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        let (ray, camera) = (symbol_id(&store, &key, &run, "ray_from_pixel"), symbol_id(&store, &key, &run, "Camera"));
+        let mut page = Page::new(&store, &key, &run);
+        page.toggle(&ray);
+        let answer = page.suggest(&store, &key, &run, std::slice::from_ref(&ray));
+        page.join(&answer);
+        assert_eq!(page.gathered, [ray.clone(), camera.clone()], "the suggestion this project gives");
+        page.toggle(&camera);
+        let record = page.record();
+        assert_eq!((record["included"][0]["provenance"].as_str(), record["removed"][0]["provenance"].as_str()), (Some("manual"), Some("suggested")));
+        (scratch, store, key, run, page)
+    }
+
+    #[test]
+    fn the_pages_selection_is_accepted_and_kept_with_its_question() {
+        let (_scratch, store, key, run, page) = gathered_page();
+        let body = json!({ "key": key, "run": run, "question": "O que muda?", "nodes": page.gathered, "with_facts": false, "origin": page.origin() });
+        let (status, turn) = api(&store, "/api/gathered-question", &body);
+        assert_eq!(status, 200, "{turn}");
+        let id = turn["id"].as_str().unwrap();
+        let dir = store.turn_dir(&key, &run, id).unwrap();
+        let (question, _, package) = package_of(&store, &key, &run, id);
+        // Kept beside the question, by the hash of its exact bytes, which the package names.
+        let bytes = fs::read(dir.join(SELECTION)).unwrap();
+        let reference = package.selection.clone().unwrap();
+        assert_eq!(reference.record_sha256.as_str(), hash(&bytes));
+        let record = SelectionRecord::from_bytes(&bytes, &hash(&bytes)).unwrap();
+        assert_eq!(serde_json::to_value(reference.record_format).unwrap(), json!(2));
+        assert_eq!(reference.suggestions, page.suggestions.iter().map(|s| Sha256Hex::try_from(s.as_str().unwrap().to_owned()).unwrap()).collect::<Vec<_>>());
+        assert_eq!(Some(record.received.clone()), SelectionInput::from_value(&question["gathered"]["origin"]["selection"]).ok());
+        // What the server checked is kept apart from what only the client says.
+        let written: Value = serde_json::from_slice(&bytes).unwrap();
+        assert_eq!(written["checked_by_server"]["declared_by"], "server");
+        assert_eq!(written["declared_by_client"]["declared_by"], "client");
+        assert_eq!(written["checked_by_server"]["checks"], json!(["shape", "included_is_nodes", "partition", "seeds_included", "edition", "suggestions", "absorption", "included_bytes"]));
+        assert_eq!(written["declared_by_client"]["seeds"], json!(page.seeds));
+        assert!(!String::from_utf8_lossy(&bytes).contains("\"created\""), "no clock in a record named by its hash");
+        // The same selection again: the same bytes, a second copy in its own question.
+        let (_, again) = api(&store, "/api/gathered-question", &body);
+        assert_eq!(fs::read(store.turn_dir(&key, &run, again["id"].as_str().unwrap()).unwrap().join(SELECTION)).unwrap(), bytes);
+        // Kept once and for good: equal bytes are the same record, so publishing them again is no change.
+        publish_immutable(&dir, SELECTION, &bytes).unwrap();
+        assert!(store.verify_for_send(&key, &run, id).is_ok());
+    }
+
+    #[test]
+    fn a_selection_is_refused_before_anything_is_created() {
+        let (_scratch, store, key, run, page) = gathered_page();
+        let origin = page.origin();
+        let refused = |origin: &Value, nodes: &[String]| -> String {
+            let before = files_of(&store, &key, &run);
+            let (status, body) = api(&store, "/api/gathered-question", &json!({ "key": key, "run": run, "question": "O que muda?", "nodes": nodes, "with_facts": false, "origin": origin }));
+            assert_eq!(files_of(&store, &key, &run), before, "nothing created or changed");
+            assert_eq!(status, 400, "{body}");
+            body.to_string()
+        };
+        // Its nodes in another order are not its included sources.
+        let mut reversed = page.gathered.clone();
+        reversed.reverse();
+        if reversed != page.gathered {
+            assert!(refused(&origin, &reversed).contains("included não é a lista de nodes"));
+        }
+        let change = |edit: &dyn Fn(&mut Value)| { let mut o = origin.clone(); edit(&mut o["selection"]); o };
+        assert!(refused(&change(&|s| s["format_version"] = json!(1)), &page.gathered).contains("format_version não é 2"));
+        assert!(refused(&change(&|s| { s.as_object_mut().unwrap().remove("format_version"); }), &page.gathered).contains("format_version não é 2"));
+        assert!(refused(&change(&|s| s["included"][0]["role"] = json!("dono")), &page.gathered).contains("forma"));
+        // The suggestions it cites must be this run's records, as written.
+        let record_file = |sha: &str| store.run_dir(&key, &run).unwrap().join(SUGGESTIONS).join(format!("{sha}.json"));
+        let cited = page.suggestions[0].as_str().unwrap().to_owned();
+        let stored = fs::read(record_file(&cited)).unwrap();
+        assert!(refused(&change(&|s| s["suggestions"][0] = json!("abc")), &page.gathered).contains("forma"));
+        assert!(refused(&change(&|s| s["suggestions"][0] = json!("0".repeat(64))), &page.gathered).contains(&format!("sugestão {}", "0".repeat(64))));
+        // A file named by a hash its bytes do not have.
+        let other = "1".repeat(64);
+        fs::write(record_file(&other), &stored).unwrap();
+        assert!(refused(&change(&|s| s["suggestions"][0] = json!(other)), &page.gathered).contains("holds bytes of"));
+        fs::remove_file(record_file(&other)).unwrap();
+        // A record of another edition, or of other rules, written as a record is and named by its own
+        // hash; one of another format, which does not read as a record.
+        let typed = SuggestionRecord::from_bytes(&stored, &cited).unwrap();
+        let mut other_edition = typed.clone();
+        other_edition.edition_origin = "edition:outra".into();
+        let mut other_rules = typed.clone();
+        other_rules.rules_version = RulesVersion("envelope-0".into());
+        let mut other_format: Value = serde_json::from_slice(&stored).unwrap();
+        other_format["format_version"] = json!(2);
+        let format_bytes = { let mut b = serde_json::to_vec_pretty(&other_format).unwrap(); b.push(b'\n'); b };
+        for (bytes, why) in [(other_edition.to_bytes().unwrap(), "é de outra edition"), (other_rules.to_bytes().unwrap(), "regras envelope-0"), (format_bytes, "malformed suggestion record")] {
+            let sha = hash(&bytes);
+            fs::write(record_file(&sha), &bytes).unwrap();
+            assert!(refused(&change(&|s| s["suggestions"][0] = json!(sha)), &page.gathered).contains(why), "{why}");
+            fs::remove_file(record_file(&sha)).unwrap();
+        }
+        // A record of another run of the same edition is not this run's.
+        let other_run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        let before = files_of(&store, &key, &other_run);
+        let (status, body) = api(&store, "/api/gathered-question", &json!({ "key": key, "run": other_run, "question": "O que muda?", "nodes": page.gathered, "origin": origin }));
+        assert_eq!((status, files_of(&store, &key, &other_run) == before), (400, true), "{body}");
+        assert!(body.to_string().contains(&format!("sugestão {cited}")), "{body}");
+        // An origin that says selection has one; one with a selection says selection or ladder.
+        assert!(refused(&json!({ "kind": "selection", "summary": "x" }), &page.gathered).contains("origem selection sem seleção"));
+        assert!(refused(&json!({ "kind": "hot", "summary": "x", "selection": origin["selection"] }), &page.gathered).contains("só uma origem selection ou ladder"));
+        assert!(refused(&json!({ "kind": "selection", "summary": "x", "selection": null }), &page.gathered).contains("não é um objeto"));
+    }
+
+    #[test]
+    fn the_selection_record_is_checked_before_a_send_and_made_again() {
+        let (_scratch, store, key, run, page) = gathered_page();
+        let turn = store.ask_gathered(&key, &run, "O que muda?", &page.gathered, false, Some(page.origin())).unwrap()["id"].as_str().unwrap().to_owned();
+        let file = store.turn_dir(&key, &run, &turn).unwrap().join(SELECTION);
+        let kept = fs::read(&file).unwrap();
+        assert_eq!(refusal_of(&store, &key, &run, &turn), "");
+        // Bytes changed under the same name: not the record the package names.
+        let mut changed = kept.clone();
+        changed.insert(1, b' ');
+        fs::write(&file, &changed).unwrap();
+        assert!(refusal_of(&store, &key, &run, &turn).starts_with("H1: registro de seleção: o registro"), "{}", refusal_of(&store, &key, &run, &turn));
+        fs::remove_file(&file).unwrap();
+        assert!(refusal_of(&store, &key, &run, &turn).starts_with("H1: registro de seleção ausente"));
+        fs::write(&file, &kept).unwrap();
+        assert_eq!(refusal_of(&store, &key, &run, &turn), "");
+        // The question saying it sent another selection.
+        remark(&store, &key, &run, &turn, |q| q["gathered"]["origin"]["selection"]["seeds"] = json!([]));
+        assert!(refusal_of(&store, &key, &run, &turn).starts_with("H1: a seleção da pergunta não é a do registro"));
+        remark(&store, &key, &run, &turn, |q| q["gathered"]["origin"]["selection"]["seeds"] = json!(page.seeds));
+        // A record rewritten whole and bound by the forger: H1 agrees, the code does not make it again.
+        let mut forged = SelectionRecord::from_bytes(&kept, &hash(&kept)).unwrap();
+        forged.checked_by_server.included_bytes += 1;
+        let bytes = forged.to_bytes().unwrap();
+        fs::write(&file, &bytes).unwrap();
+        forge(&store, &key, &run, &turn, |p| p.selection.as_mut().unwrap().record_sha256 = Sha256Hex::try_from(hash(&bytes)).unwrap());
+        assert_eq!(refusal_of(&store, &key, &run, &turn), "H3: o código atual não refaz o registro de seleção; nada foi enviado");
+        // A suggestion it cites, gone since: the record cannot be made again.
+        fs::write(&file, &kept).unwrap();
+        forge(&store, &key, &run, &turn, |p| p.selection.as_mut().unwrap().record_sha256 = Sha256Hex::try_from(hash(&kept)).unwrap());
+        assert_eq!(refusal_of(&store, &key, &run, &turn), "");
+        let suggestion = store.run_dir(&key, &run).unwrap().join(SUGGESTIONS).join(format!("{}.json", page.suggestions[0].as_str().unwrap()));
+        let saved = fs::read(&suggestion).unwrap();
+        fs::remove_file(&suggestion).unwrap();
+        assert!(refusal_of(&store, &key, &run, &turn).starts_with("H3: registro de seleção não refeito"));
+        fs::write(&suggestion, saved).unwrap();
+        // A package naming the record's suggestions in another way than the record does.
+        forge(&store, &key, &run, &turn, |p| p.selection.as_mut().unwrap().suggestions.insert(0, Sha256Hex::try_from("0".repeat(64)).unwrap()));
+        assert_eq!(refusal_of(&store, &key, &run, &turn), "H1: o registro de seleção não é o que o pacote diz; nada foi enviado");
+        forge(&store, &key, &run, &turn, |p| { p.selection.as_mut().unwrap().suggestions.remove(0); });
+        assert_eq!(refusal_of(&store, &key, &run, &turn), "");
+        // A record of another edition, bound by the forger.
+        let mut elsewhere = SelectionRecord::from_bytes(&kept, &hash(&kept)).unwrap();
+        elsewhere.edition_origin = "edition:outra".into();
+        let bytes = elsewhere.to_bytes().unwrap();
+        fs::write(&file, &bytes).unwrap();
+        forge(&store, &key, &run, &turn, |p| p.selection.as_mut().unwrap().record_sha256 = Sha256Hex::try_from(hash(&bytes)).unwrap());
+        assert_eq!(refusal_of(&store, &key, &run, &turn), "H1: a seleção da pergunta não é a do registro; nada foi enviado");
+        fs::write(&file, &kept).unwrap();
+        forge(&store, &key, &run, &turn, |p| p.selection.as_mut().unwrap().record_sha256 = Sha256Hex::try_from(hash(&kept)).unwrap());
+        assert_eq!(refusal_of(&store, &key, &run, &turn), "");
+        // A record no package names, or a package naming none with a basis that needs one.
+        forge(&store, &key, &run, &turn, |p| p.selection = None);
+        assert!(refusal_of(&store, &key, &run, &turn).starts_with("H1: Shape { what: \"selection basis\""));
+        // A forger who also makes the comparison of the two measures agree with the basis (format 2).
+        forge(&store, &key, &run, &turn, |p| p.measure.selection_basis = MeasureSelectionBasis::NotApplicable {});
+        assert!(refusal_of(&store, &key, &run, &turn).starts_with("H1: Shape { what: \"measure divergence\""));
+        forge(&store, &key, &run, &turn, |p| p.measure.measure_divergence = Some(MeasureDivergence::NotApplicable {}));
+        assert!(refusal_of(&store, &key, &run, &turn).starts_with("H1: registro de seleção que o pacote não nomeia"));
+    }
+
+    #[test]
+    fn a_file_head_is_checked_by_the_envelopes_rule() {
+        // A file whose head (its imports) comes before the first declaration: the suggestion brings it.
+        let lib = "use std::fmt;\nuse std::io;\n\npub struct Camera;\n\nimpl Camera {\n    pub fn ray_from_pixel(&self, x: f64) -> f64 {\n        let direction = x * 2.0;\n        direction\n    }\n}\n";
+        let (_scratch, store, key, _root) = project_with(&[("src/lib.rs", lib)], json!({ "project_root": "." }));
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        let ray = symbol_id(&store, &key, &run, "ray_from_pixel");
+        let mut page = Page::new(&store, &key, &run);
+        page.toggle(&ray);
+        let answer = page.suggest(&store, &key, &run, std::slice::from_ref(&ray));
+        page.join(&answer);
+        assert!(page.gathered.iter().any(|id| id == "header:src/lib.rs"), "{:?}", page.gathered);
+        let head = page.record()["included"].as_array().unwrap().iter().find(|e| e["id"] == "header:src/lib.rs").unwrap().clone();
+        assert_eq!((head["start_line"].as_u64(), head["end_line"].as_u64(), head["bytes"].as_u64()), (Some(1), Some(2), Some(14 + 13)));
+        let turn = store.ask_gathered(&key, &run, "O que muda?", &page.gathered, false, Some(page.origin())).unwrap();
+        assert!(package_of(&store, &key, &run, turn["id"].as_str().unwrap()).2.selection.is_some());
+        assert_eq!(refusal_of(&store, &key, &run, turn["id"].as_str().unwrap()), "");
+    }
+
+    #[test]
+    fn a_selection_record_is_never_overwritten() {
+        let (_scratch, store, key, run, page) = gathered_page();
+        let turn = store.ask_gathered(&key, &run, "O que muda?", &page.gathered, false, Some(page.origin())).unwrap()["id"].as_str().unwrap().to_owned();
+        let dir = store.turn_dir(&key, &run, &turn).unwrap();
+        let kept = fs::read(dir.join(SELECTION)).unwrap();
+        assert!(publish_immutable(&dir, SELECTION, b"{}\n").is_err());
+        assert_eq!(fs::read(dir.join(SELECTION)).unwrap(), kept);
+    }
+
+    #[test]
+    fn a_selection_record_not_kept_leaves_its_question_with_no_package() {
+        let (_scratch, store, key, run, page) = gathered_page();
+        FAIL_EVIDENCE_AT.with(|f| f.set(Some("selection")));
+        let error = store.ask_gathered(&key, &run, "O que muda?", &page.gathered, false, Some(page.origin())).unwrap_err().to_string();
+        FAIL_EVIDENCE_AT.with(|f| f.set(None));
+        assert!(error.contains("selection_persistence_failed"), "{error}");
+        let dir = store.turn_dir(&key, &run, "01").unwrap();
+        let question: Value = serde_json::from_slice(&fs::read(dir.join("question.json")).unwrap()).unwrap();
+        assert_eq!(question["evidence"], json!({ "error": "selection_persistence_failed" }));
+        assert!(!dir.join(EVIDENCE).exists() && !dir.join(SELECTION).exists());
+        assert!(store.verify_for_send(&key, &run, "01").err().unwrap().to_string().contains("selection_persistence_failed"));
+        assert!(!dir.join("sends").exists());
+    }
+
+    #[test]
+    fn older_packages_and_questions_stay_as_they_were() {
+        let (_scratch, store, key, run, page) = gathered_page();
+        let settings = store.settings(&key).unwrap();
+        let catalog = Catalog::load(&store.edition(&key, &run).unwrap()).unwrap();
+        // A question of the step before: a format 1 selection taken as it came, no record, `not_recorded`.
+        let targets = vec![target_of(&catalog, catalog.symbols(), &page.gathered[0]).unwrap()];
+        let mut older = request(&settings, "O que muda?", Some(targets), vec![], false);
+        older.gathered = true;
+        let origin = json!({ "kind": "selection", "summary": "x", "selection": { "format_version": 1, "seeds": [page.gathered[0]] } });
+        let gathered = json!({ "nodes": [page.gathered[0]], "with_facts": false, "reviewed_facts": [], "origin": origin });
+        let turn = store.new_turn(&key, &run, &settings, &catalog, Asked::client("O que muda?"), None, older, Some(("gathered", gathered))).unwrap()["id"].as_str().unwrap().to_owned();
+        let (_, _, package) = package_of(&store, &key, &run, &turn);
+        assert_eq!((package.selection, package.measure.selection_basis), (None, MeasureSelectionBasis::NotRecorded {}));
+        // A plain one, with no mark at all.
+        let plain = store.ask(&key, &run, "Onde a câmera calcula a direção dos raios?").unwrap()["id"].as_str().unwrap().to_owned();
+        remark(&store, &key, &run, &plain, |q| { q.as_object_mut().unwrap().remove("evidence"); });
+        fs::remove_file(store.turn_dir(&key, &run, &plain).unwrap().join(EVIDENCE)).unwrap();
+        let before = files_of(&store, &key, &run);
+        // New questions, with and without a selection, and their checks, rewrite none of them.
+        store.ask_gathered(&key, &run, "O que muda?", &page.gathered, false, Some(page.origin())).unwrap();
+        for id in [&turn, &plain] {
+            assert_eq!(refusal_of(&store, &key, &run, id), "", "{id}");
+        }
+        let after = files_of(&store, &key, &run);
+        assert!(before.iter().all(|file| after.contains(file)), "every earlier file is there, byte for byte");
+    }
+
+    #[test]
+    fn notes_are_refused_wherever_a_client_could_send_them() {
+        let (_scratch, store, key, run, page) = gathered_page();
+        let gathered = |origin: Value| json!({ "key": key, "run": run, "question": "O que muda?", "nodes": page.gathered, "with_facts": false, "origin": origin });
+        let ladder = |origin: Value| json!({ "key": key, "run": run, "question": "O que muda?", "nodes": page.gathered, "with_facts": false, "origin": origin,
+            "gate": ["probe"], "models": [{ "provider": "test" }], "retries": 0, "lacuna_rounds": 0 });
+        let with = |place: &str, value: Value| {
+            let mut origin = page.origin();
+            match place {
+                "selection" => origin["selection"]["notes"] = value,
+                "entry" => origin["selection"]["included"][0]["notes"] = value,
+                "reason" => origin["selection"]["included"][0]["reasons"][0]["notes"] = value,
+                _ => origin["notes"] = value,
+            }
+            origin
+        };
+        let mut cases: Vec<(&str, Value)> = vec![];
+        for value in [json!(""), json!("uma nota"), json!([]), json!(["uma"]), json!({}), json!({ "id": "", "text": "x" }), Value::Null] {
+            for place in ["selection", "entry", "reason", "origin"] {
+                cases.push(("/api/gathered-question", gathered(with(place, value.clone()))));
+                cases.push(("/api/ladder", ladder(with(place, value.clone()))));
+            }
+            let mut top = gathered(page.origin());
+            top["notes"] = value.clone();
+            cases.push(("/api/gathered-question", top));
+            let mut top = ladder(page.origin());
+            top["models"][0]["notes"] = value.clone();
+            cases.push(("/api/ladder", top));
+            cases.push(("/api/path-questions", json!({ "key": key, "run": run, "question": "x", "nodes": [page.gathered[0]], "seed": page.gathered[0], "chosen": { "notes": value } })));
+            cases.push(("/api/path-questions", json!({ "key": key, "run": run, "question": "x", "nodes": [page.gathered[0]], "seed": page.gathered[0], "chosen": {}, "notes": value })));
+            cases.push(("/api/gathered-question", gathered(json!({ "kind": "hot", "summary": "x", "notes": value }))));
+        }
+        let before = files_of(&store, &key, &run);
+        for (path, body) in &cases {
+            let (status, answer) = api(&store, path, body);
+            assert_eq!((status, answer["error"].as_str().unwrap_or_default()), (400, "O campo notes não é aceito; nada foi criado nem enviado"), "{path} {body}");
+        }
+        // No question, no record, no package, no send, no execution.
+        assert_eq!(files_of(&store, &key, &run), before);
+        assert!(!store.run_dir(&key, &run).unwrap().join("executions").exists());
+        // Without notes, the same requests are taken.
+        assert_eq!(api(&store, "/api/gathered-question", &gathered(page.origin())).0, 200);
+        assert!(refuse_notes(&json!({ "nota": 1, "a": [{ "b": "notes" }] })).is_ok(), "the word as a value is not the field");
+        // The check of a selection, which the ladder calls itself, refuses them too, wherever they are.
+        let mut origin = page.origin();
+        origin["notes"] = json!([]);
+        assert_eq!(store.accept_selection(&key, &run, &page.gathered, Some(&origin)).err().map(|e| e.to_string()).as_deref(), Some("O campo notes não é aceito; nada foi criado nem enviado"));
+        // And so does a round, which the ladder asks with an origin it already took.
+        let before = files_of(&store, &key, &run);
+        let round = store.ask_gathered_parts(&key, &run, "x", &[], &page.gathered, false, Some(json!({ "kind": "hot", "notes": "x" })), None, &[]);
+        assert_eq!(round.err().map(|e| e.to_string()).as_deref(), Some("O campo notes não é aceito; nada foi criado nem enviado"));
+        let path = store.ask_path(&key, &run, "x", std::slice::from_ref(&page.gathered[0]), &page.gathered[0], &json!({ "a": { "notes": [] } }));
+        assert_eq!(path.err().map(|e| e.to_string()).as_deref(), Some("O campo notes não é aceito; nada foi criado nem enviado"));
+        assert_eq!(files_of(&store, &key, &run), before);
+    }
+
+    /// A project with a gate command, approved, and its run.
+    fn with_a_gate() -> (Scratch, Store, String, String) {
+        let camera = "pub struct Camera;\n\nimpl Camera {\n    pub fn ray_from_pixel(&self, x: f64) -> f64 {\n        let direction = x * 2.0;\n        direction\n    }\n}\n";
+        let profile = json!({ "project_root": ".", "commands": { "probe": { "argv": ["git", "status", "--short"], "repeat": 1 } } });
+        let (scratch, store, key, _root) = project_with(&[("src/lib.rs", camera)], profile);
+        approve(&store, &key, "probe");
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        (scratch, store, key, run)
+    }
+
+    #[test]
+    fn the_ladder_checks_the_clients_selection_once_before_anything_runs() {
+        let (_scratch, store, key, run) = with_a_gate();
+        let ray = symbol_id(&store, &key, &run, "ray_from_pixel");
+        let mut page = Page::new(&store, &key, &run);
+        page.toggle(&ray);
+        let answer = page.suggest(&store, &key, &run, std::slice::from_ref(&ray));
+        page.join(&answer);
+        let body = |selection: Value, nodes: &[String]| json!({ "key": key, "run": run, "question": "Como acelerar?", "nodes": nodes, "with_facts": false,
+            "gate": ["probe"], "models": [{ "provider": "test" }], "retries": 0, "lacuna_rounds": 0, "origin": { "kind": "ladder", "summary": "x", "selection": selection } });
+        // Refused: no baseline ran, no question was made.
+        let mut wrong = page.record();
+        wrong["included_bytes"] = json!(wrong["included_bytes"].as_u64().unwrap() + 1);
+        let before = files_of(&store, &key, &run);
+        let (status, refused) = api(&store, "/api/ladder", &body(wrong, &page.gathered));
+        assert_eq!(status, 400, "{refused}");
+        assert!(refused["error"].as_str().unwrap().contains("included_bytes não é a soma"), "{refused}");
+        assert_eq!(files_of(&store, &key, &run), before);
+        assert!(store.executions(&key, &run).unwrap().is_empty(), "no baseline ran");
+        // Taken: the baseline, then the question with the client's record.
+        let (status, done) = api(&store, "/api/ladder", &body(page.record(), &page.gathered));
+        assert_eq!(status, 200, "{done}");
+        assert_eq!(done["steps"][0]["outcome"], "baseline");
+        let (_, _, package) = package_of(&store, &key, &run, done["turn"].as_str().unwrap());
+        assert_eq!(package.origin_kind, Some(OriginKind::Ladder));
+        assert!(package.selection.is_some());
+        assert!(package.server_additions.is_empty(), "the rounds' additions are the next step's");
+    }
+
+    #[test]
+    fn the_rounds_of_the_ladder_go_with_the_clients_record_and_not_its_nodes() {
+        let (_scratch, store, key, run, page) = gathered_page();
+        let mut origin = page.origin();
+        origin["kind"] = json!("ladder");
+        let accepted = store.accept_selection(&key, &run, &page.gathered, Some(&origin)).unwrap().unwrap();
+        // The first question, and a LACUNA answered to it that asks for `Camera`.
+        let first = store.ask_gathered_parts(&key, &run, "Como acelerar?", &[], &page.gathered, false, Some(origin.clone()), Some(&accepted), &[]).unwrap()["id"].as_str().unwrap().to_owned();
+        record_answer(&store, &key, &run, &first, "manual", &lacuna_answer("Falta ver `Camera` para responder.")).unwrap();
+        // Checked once: the suggestion read at the entry may be gone, and the rounds still go on.
+        let suggestion = store.run_dir(&key, &run).unwrap().join(SUGGESTIONS).join(format!("{}.json", page.suggestions[0].as_str().unwrap()));
+        let saved = fs::read(&suggestion).unwrap();
+        fs::remove_file(&suggestion).unwrap();
+        // A round with what the server added for that LACUNA, as the ladder adds it.
+        let catalog = Catalog::load(&store.edition(&key, &run).unwrap()).unwrap();
+        let additions = additions_for(&catalog, &first, "01-manual", 1, &["Camera".into()], &page.gathered);
+        let added = additions[0].symbol_id.clone();
+        let mut nodes = page.gathered.clone();
+        nodes.extend(additions.iter().map(|a| a.symbol_id.clone()));
+        let suffix = crate::gate_suffix(&["x".into()], 1);
+        // A node beyond the client's that is not recorded as the server's is not taken for the client's.
+        let unrecorded = store.ask_gathered_parts(&key, &run, "Como acelerar?", std::slice::from_ref(&suffix), &nodes, false, Some(origin.clone()), Some(&accepted), &[]);
+        assert_eq!(unrecorded.err().map(|e| e.to_string()).as_deref(), Some("Complementação recusada (as declarações da cliente não são as da seleção); nenhuma pergunta foi criada"));
+        let round = store.ask_gathered_parts(&key, &run, "Como acelerar?", std::slice::from_ref(&suffix), &nodes, false, Some(origin.clone()), Some(&accepted), &additions).unwrap();
+        let turn = round["id"].as_str().unwrap();
+        fs::write(&suggestion, saved).unwrap();
+        // The record is the client's statement as sent: the added node is in no list and has no decision.
+        let (question, _, package) = package_of(&store, &key, &run, turn);
+        assert_eq!(question["gathered"]["nodes"], json!(nodes));
+        let record = SelectionRecord::from_bytes(&fs::read(store.turn_dir(&key, &run, turn).unwrap().join(SELECTION)).unwrap(), package.selection.as_ref().unwrap().record_sha256.as_str()).unwrap();
+        // `Camera` is one the client took out: the record says that still, and nothing more.
+        assert_eq!(fs::read(store.turn_dir(&key, &run, turn).unwrap().join(SELECTION)).unwrap(), accepted.bytes, "the record kept is the one accepted at the entry");
+        for addition in &additions {
+            assert!(record.received.included.iter().all(|e| e.id != addition.symbol_id));
+            assert!(record.declared_by_client.decisions.iter().all(|d| d.id != addition.symbol_id || d.decision == evidence::Decision::Removed));
+        }
+        assert_eq!(record.received.included.iter().map(|e| e.id.clone()).collect::<Vec<_>>(), page.gathered);
+        // The package: the additions as made, their fichas the server's, the client's the client's.
+        assert_eq!(package.server_additions, additions);
+        for ficha in package.fichas.iter().filter(|f| f.symbol_id.is_some()) {
+            let id = ficha.symbol_id.as_ref().unwrap();
+            let expected = if *id == added || additions.iter().any(|a| a.symbol_id == *id) { evidence::DeclaredBy::ServerLacuna } else { evidence::DeclaredBy::Client };
+            assert_eq!(ficha.declared_by, expected, "{id}");
+        }
+        assert!(package.fichas.iter().any(|f| f.declared_by == evidence::DeclaredBy::Client));
+        // And it is checked before a send, against the client's nodes, not the round's.
+        assert_eq!(refusal_of(&store, &key, &run, turn), "");
+        // A round that would carry a selection it was not given, or none for the one it says, is not made.
+        assert!(store.ask_gathered_parts(&key, &run, "x", &[], &nodes, false, Some(origin.clone()), None, &additions).unwrap_err().to_string().contains("não foi conferida"));
+        assert!(store.ask_gathered_parts(&key, &run, "x", &[], &nodes, false, None, Some(&accepted), &additions).unwrap_err().to_string().contains("não foi conferida"));
+    }
+
+    /// A claims answer with one LACUNA and nothing else.
+    fn lacuna_answer(text: &str) -> String {
+        json!({ "schema_version": 1, "claims": [{ "id": "C1", "kind": "LACUNA", "text": text, "citations": [], "premises": [], "verification_plan": null, "location": null }] }).to_string()
+    }
+
+    /// What a lacuna round adds for these names, as the ladder adds it: `ladder::resolve` over what
+    /// is gathered, nothing measured, with the round and the send that asked.
+    fn additions_for(catalog: &Catalog, turn: &str, send: &str, round: usize, names: &[String], gathered: &[String]) -> Vec<ServerAddition> {
+        crate::ladder::resolve(catalog, names, gathered, &[], crate::ladder::lacuna_room(gathered.len())).into_iter().map(|(id, name)| ServerAddition {
+            declared_by: evidence::ServerLacunaDeclared::ServerLacuna, round, from_turn: turn.into(), from_send: send.into(), symbol_id: id, for_name: name,
+            reason: evidence::AdditionReason::LacunaName, decided_by_rule: evidence::AdditionRule::LadderResolve,
+        }).collect()
+    }
+
+    /// A project with a gate command and declarations a LACUNA can name, its run, and the page's
+    /// envelope over `ray_from_pixel` alone, from one suggestion.
+    fn ladder_project() -> (Scratch, Store, String, String, Page) {
+        let lib = "pub struct Camera;\n\nimpl Camera {\n    pub fn ray_from_pixel(&self, x: f64) -> f64 {\n        let direction = x * 2.0;\n        direction\n    }\n}\n\npub fn helper() -> f64 {\n    1.0\n}\n\npub fn scale(x: f64) -> f64 {\n    x * 3.0\n}\n";
+        let profile = json!({ "project_root": ".", "commands": { "probe": { "argv": ["git", "status", "--short"], "repeat": 1 } } });
+        let (scratch, store, key, _root) = project_with(&[("src/lib.rs", lib)], profile);
+        approve(&store, &key, "probe");
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        let ray = symbol_id(&store, &key, &run, "ray_from_pixel");
+        let mut page = Page::new(&store, &key, &run);
+        page.toggle(&ray);
+        page.suggest(&store, &key, &run, std::slice::from_ref(&ray));
+        (scratch, store, key, run, page)
+    }
+
+    #[test]
+    fn the_ladder_records_what_its_lacuna_rounds_add_and_only_that() {
+        let (_scratch, store, key, run, page) = ladder_project();
+        let id = |name: &str| symbol_id(&store, &key, &run, name);
+        // Each question answered with a LACUNA, as a person pastes one: no model is called.
+        let answers = json!({
+            "01": lacuna_answer("Faltam `helper` e `scale` para responder."),
+            "02": lacuna_answer("Falta `Camera`, e ainda `helper`."),
+            "03": lacuna_answer("Falta `helper`."),
+        });
+        let body = json!({ "key": key, "run": run, "question": "Como acelerar?", "nodes": page.gathered, "with_facts": false, "gate": ["probe"],
+            "models": [{ "provider": "test", "answers": answers }], "retries": 0, "lacuna_rounds": 3,
+            "origin": { "kind": "ladder", "summary": "x", "selection": page.record() } });
+        let (status, done) = api(&store, "/api/ladder", &body);
+        assert_eq!(status, 200, "{done}");
+        let outcomes: Vec<&str> = done["steps"].as_array().unwrap().iter().map(|s| s["outcome"].as_str().unwrap()).collect();
+        assert_eq!(outcomes, ["baseline", "lacuna", "lacuna", "lacuna"], "{done:#}");
+        assert_eq!(done["turn"], "03");
+        let addition = |round: usize, turn: &str, symbol: String, name: &str| ServerAddition {
+            declared_by: evidence::ServerLacunaDeclared::ServerLacuna, round, from_turn: turn.into(), from_send: "01-manual".into(), symbol_id: symbol, for_name: name.into(),
+            reason: evidence::AdditionReason::LacunaName, decided_by_rule: evidence::AdditionRule::LadderResolve,
+        };
+        // Round 1 adds what the LACUNA of 01 asked for, in the order resolved; round 2 what that of 02
+        // asked for and was not there yet (`helper` was): `Camera` and its `impl`.
+        let first_round = vec![addition(1, "01", id("helper"), "helper"), addition(1, "01", id("scale"), "scale")];
+        let impl_camera = store.graph(&key, &run).ok().and_then(|_| {
+            let catalog = Catalog::load(&store.edition(&key, &run).unwrap()).unwrap();
+            catalog.symbols().values().find(|s| s.qualified_name == "impl Camera").map(|s| s.id.clone())
+        }).unwrap();
+        let mut both_rounds = first_round.clone();
+        both_rounds.extend([addition(2, "02", id("Camera"), "Camera"), addition(2, "02", impl_camera, "Camera")]);
+        let selection_of = |turn: &str| package_of(&store, &key, &run, turn).2.selection.unwrap().record_sha256;
+        for (turn, expected) in [("01", vec![]), ("02", first_round), ("03", both_rounds)] {
+            let (question, bytes, package) = package_of(&store, &key, &run, turn);
+            assert_eq!(package.server_additions, expected, "{turn}");
+            let nodes: Vec<String> = page.gathered.iter().cloned().chain(expected.iter().map(|a| a.symbol_id.clone())).collect();
+            assert_eq!(question["gathered"]["nodes"], json!(nodes), "{turn}");
+            assert_eq!(question["gathered"].get("server_additions").is_some(), !expected.is_empty(), "{turn}: a question with none says nothing");
+            // The client's declaration is the client's; what the server added is the server's.
+            for ficha in package.fichas.iter().filter(|f| f.symbol_id.is_some()) {
+                let added = expected.iter().any(|a| Some(&a.symbol_id) == ficha.symbol_id.as_ref());
+                assert_eq!(ficha.declared_by, if added { evidence::DeclaredBy::ServerLacuna } else { evidence::DeclaredBy::Client }, "{turn} {}", ficha.reference.0);
+            }
+            // Every question goes with the record the client's selection was accepted as.
+            assert_eq!(selection_of(turn), selection_of("01"));
+            assert_eq!(rebuilt(&store, &key, &run, turn, Asked::client("Como acelerar?")), bytes, "{turn}: made again, the same bytes");
+            assert_eq!(refusal_of(&store, &key, &run, turn), "", "{turn}");
+        }
+        assert!(store.turn_dir(&key, &run, "04").is_err(), "a name already there is not added again");
+    }
+
+    #[test]
+    fn an_addition_the_lacuna_did_not_ask_for_is_never_recorded() {
+        let (_scratch, store, key, run, page) = ladder_project();
+        let mut origin = page.origin();
+        origin["kind"] = json!("ladder");
+        let accepted = store.accept_selection(&key, &run, &page.gathered, Some(&origin)).unwrap();
+        let first = store.ask_gathered_parts(&key, &run, "x", &[], &page.gathered, false, Some(origin.clone()), accepted.as_ref(), &[]).unwrap()["id"].as_str().unwrap().to_owned();
+        record_answer(&store, &key, &run, &first, "manual", &lacuna_answer("Faltam `helper` e `scale`.")).unwrap();
+        let catalog = Catalog::load(&store.edition(&key, &run).unwrap()).unwrap();
+        let good = additions_for(&catalog, &first, "01-manual", 1, &["helper".into(), "scale".into()], &page.gathered);
+        assert_eq!(good.len(), 2);
+        let ids = |additions: &[ServerAddition]| page.gathered.iter().cloned().chain(additions.iter().map(|a| a.symbol_id.clone())).collect::<Vec<_>>();
+        let refused = |nodes: Vec<String>, additions: Vec<ServerAddition>| -> String {
+            let before = files_of(&store, &key, &run);
+            let why = store.ask_gathered_parts(&key, &run, "x", &[], &nodes, false, Some(origin.clone()), accepted.as_ref(), &additions).err().map(|e| e.to_string()).unwrap_or_default();
+            assert_eq!(files_of(&store, &key, &run), before, "nothing made");
+            why
+        };
+        let changed = |edit: &dyn Fn(&mut Vec<ServerAddition>)| { let mut a = good.clone(); edit(&mut a); a };
+        // Out of the order added, twice, or one of the client's: not what a round adds.
+        let mut swapped = ids(&good);
+        swapped.swap(1, 2);
+        assert!(refused(swapped, good.clone()).contains("não são as últimas da pergunta"));
+        let twice = changed(&|a| { let x = a[0].clone(); a.push(x); });
+        assert!(refused(ids(&twice), twice).contains("já estava na pergunta"));
+        let clients = changed(&|a| a[0].symbol_id = page.gathered[0].clone());
+        let mut nodes = page.gathered.clone();
+        nodes.extend(clients.iter().map(|a| a.symbol_id.clone()));
+        assert_eq!(refused(nodes, clients), format!("Complementação recusada ({} já estava na pergunta); nenhuma pergunta foi criada", page.gathered[0]));
+        // Not asked for by that LACUNA, not found for the name, not from a send there is, round zero.
+        let unasked = changed(&|a| a[1].for_name = "outro".into());
+        assert!(refused(ids(&unasked), unasked).contains("não é o que a LACUNA de 01/01-manual pediu"));
+        let camera = symbol_id(&store, &key, &run, "Camera");
+        let unfound = changed(&|a| a[1].symbol_id = camera.clone());
+        assert!(refused(ids(&unfound), unfound).contains("não é o que a LACUNA"));
+        let unsent = changed(&|a| for x in a.iter_mut() { x.from_send = "02-manual".into(); });
+        assert!(refused(ids(&unsent), unsent).contains("envio 01/02-manual indisponível"));
+        let zero = changed(&|a| for x in a.iter_mut() { x.round = 0; });
+        assert!(refused(ids(&zero), zero).contains("não é o que a LACUNA"));
+        // A node beyond the client's with no record of who added it.
+        assert!(refused(ids(&good), vec![]).contains("as declarações da cliente não são as da seleção"));
+        // The real ones are taken.
+        let round = store.ask_gathered_parts(&key, &run, "x", &[], &ids(&good), false, Some(origin.clone()), accepted.as_ref(), &good).unwrap()["id"].as_str().unwrap().to_owned();
+        assert_eq!(package_of(&store, &key, &run, &round).2.server_additions, good);
+    }
+
+    #[test]
+    fn additions_changed_after_the_question_are_refused_before_a_send() {
+        let (_scratch, store, key, run, page) = ladder_project();
+        let mut origin = page.origin();
+        origin["kind"] = json!("ladder");
+        let accepted = store.accept_selection(&key, &run, &page.gathered, Some(&origin)).unwrap();
+        let first = store.ask_gathered_parts(&key, &run, "x", &[], &page.gathered, false, Some(origin.clone()), accepted.as_ref(), &[]).unwrap()["id"].as_str().unwrap().to_owned();
+        record_answer(&store, &key, &run, &first, "manual", &lacuna_answer("Faltam `helper` e `scale`.")).unwrap();
+        let catalog = Catalog::load(&store.edition(&key, &run).unwrap()).unwrap();
+        let good = additions_for(&catalog, &first, "01-manual", 1, &["helper".into(), "scale".into()], &page.gathered);
+        let nodes: Vec<String> = page.gathered.iter().cloned().chain(good.iter().map(|a| a.symbol_id.clone())).collect();
+        let turn = store.ask_gathered_parts(&key, &run, "x", &[], &nodes, false, Some(origin.clone()), accepted.as_ref(), &good).unwrap()["id"].as_str().unwrap().to_owned();
+        assert_eq!(refusal_of(&store, &key, &run, &turn), "");
+        let as_value = |a: &[ServerAddition]| serde_json::to_value(a).unwrap();
+        // The question saying other additions than its package.
+        remark(&store, &key, &run, &turn, |q| q["gathered"]["server_additions"].as_array_mut().unwrap().reverse());
+        assert_eq!(refusal_of(&store, &key, &run, &turn), "H1: as complementações não são as da pergunta; nada foi enviado");
+        remark(&store, &key, &run, &turn, |q| q["gathered"]["server_additions"] = as_value(&good));
+        assert_eq!(refusal_of(&store, &key, &run, &turn), "");
+        // Both changed alike, to what the LACUNA did not ask for: its check refuses it.
+        let mut other = good.clone();
+        other[1].for_name = "outro".into();
+        remark(&store, &key, &run, &turn, |q| q["gathered"]["server_additions"] = as_value(&other));
+        forge(&store, &key, &run, &turn, |p| p.server_additions = other.clone());
+        assert!(refusal_of(&store, &key, &run, &turn).starts_with("H1: complementação: "), "{}", refusal_of(&store, &key, &run, &turn));
+        remark(&store, &key, &run, &turn, |q| q["gathered"]["server_additions"] = as_value(&good));
+        forge(&store, &key, &run, &turn, |p| p.server_additions = good.clone());
+        assert_eq!(refusal_of(&store, &key, &run, &turn), "");
+        // An added declaration's ficha said to be the client's.
+        forge(&store, &key, &run, &turn, |p| { p.fichas.iter_mut().find(|f| f.declared_by == evidence::DeclaredBy::ServerLacuna).unwrap().declared_by = evidence::DeclaredBy::Client; });
+        assert!(refusal_of(&store, &key, &run, &turn).starts_with("H1: Shape { what: \"ficha declared_by\""));
+        forge(&store, &key, &run, &turn, |p| for f in p.fichas.iter_mut() { if good.iter().any(|a| Some(&a.symbol_id) == f.symbol_id.as_ref()) { f.declared_by = evidence::DeclaredBy::ServerLacuna; } });
+        assert_eq!(refusal_of(&store, &key, &run, &turn), "");
+        // Additions taken out of both the question and the package, the nodes kept: the client's
+        // part would hold the server's declarations.
+        remark(&store, &key, &run, &turn, |q| { q["gathered"].as_object_mut().unwrap().remove("server_additions"); });
+        forge(&store, &key, &run, &turn, |p| { p.server_additions.clear(); for f in p.fichas.iter_mut() { f.declared_by = if f.kind == evidence::FichaKind::ReviewedFact { f.declared_by } else { evidence::DeclaredBy::Client }; } });
+        assert!(refusal_of(&store, &key, &run, &turn).starts_with("H1: complementação: as declarações da cliente não são as da seleção"), "{}", refusal_of(&store, &key, &run, &turn));
+        remark(&store, &key, &run, &turn, |q| q["gathered"]["server_additions"] = as_value(&good));
+        forge(&store, &key, &run, &turn, |p| { p.server_additions = good.clone(); for f in p.fichas.iter_mut() { if good.iter().any(|a| Some(&a.symbol_id) == f.symbol_id.as_ref()) { f.declared_by = evidence::DeclaredBy::ServerLacuna; } } });
+        assert_eq!(refusal_of(&store, &key, &run, &turn), "");
+        // The send whose LACUNA asked for them, gone: what it asked for can no longer be shown.
+        let sent = store.turn_dir(&key, &run, &first).unwrap().join("sends/01-manual/send.json");
+        let kept = fs::read(&sent).unwrap();
+        fs::remove_file(&sent).unwrap();
+        assert!(refusal_of(&store, &key, &run, &turn).starts_with("H1: complementação: envio 01/01-manual indisponível"));
+        fs::write(&sent, kept).unwrap();
+        // The package made from the question's record: the additions and the fichas, byte for byte.
+        let (_, bytes, _) = package_of(&store, &key, &run, &turn);
+        assert_eq!(rebuilt(&store, &key, &run, &turn, Asked::client("x")), bytes);
+    }
+
+    #[test]
+    fn a_question_without_additions_is_made_as_before() {
+        // A question of the ladder with nothing added, and a gathered one with no origin: no record of
+        // additions, every ficha the client's, as before this step.
+        let (_scratch, store, key, run, page) = ladder_project();
+        for origin in [None, Some(page.origin())] {
+            let turn = store.ask_gathered(&key, &run, "x", &page.gathered, false, origin).unwrap()["id"].as_str().unwrap().to_owned();
+            let (question, _, package) = package_of(&store, &key, &run, &turn);
+            assert!(question["gathered"].get("server_additions").is_none());
+            assert!(package.server_additions.is_empty());
+            assert!(package.fichas.iter().all(|f| f.declared_by == evidence::DeclaredBy::Client), "{:?}", package.fichas);
+        }
+        // The client cannot send additions: the route takes none, and a body that names them adds none.
+        let (status, turn) = api(&store, "/api/gathered-question", &json!({ "key": key, "run": run, "question": "x", "nodes": page.gathered,
+            "server_additions": [{ "symbol_id": "x" }] }));
+        assert_eq!(status, 200, "{turn}");
+        assert!(package_of(&store, &key, &run, turn["id"].as_str().unwrap()).2.server_additions.is_empty());
+    }
+
+    // Passo 12: the route matrix of the plan (section 6), one row at a time, through the API.
+
+    /// A FACT about `ray_from_pixel` that passes the mechanical check in the project of `project()`.
+    fn fact_answer(id: &str) -> String {
+        json!({"schema_version": 1, "claims": [{
+            "id": id, "kind": "FACT", "text": "`ray_from_pixel` calcula `direction` na linha 5 de src/lib.rs.",
+            "citations": [{"evidence_id": "E1", "path": "src/lib.rs", "start_line": 4, "end_line": 5,
+                "quote": "    pub fn ray_from_pixel(&self, x: f64) -> f64 {\n        let direction = x * 2.0;"}],
+            "premises": [], "verification_plan": null,
+            "location": {"evidence_id": "E1", "path": "src/lib.rs", "symbol_name": "ray_from_pixel",
+                "declaration_line": 4, "operation_start_line": 5, "operation_end_line": 5}}]}).to_string()
+    }
+
+    /// The turn ids of a run, as the page reads them.
+    fn turn_ids(store: &Store, key: &str, run: &str) -> Vec<String> {
+        let (status, turns) = api_with(store, "GET", &format!("/api/turns?key={key}&run={run}"), &Value::Null);
+        assert_eq!(status, 200, "{turns}");
+        turns.as_array().unwrap().iter().map(|t| t["id"].as_str().unwrap().to_owned()).collect()
+    }
+
+    /// A question made by a route: its mark names its package, and H1 to H3 pass on it now.
+    fn a_valid_package(store: &Store, key: &str, run: &str, turn: &str) {
+        let (question, bytes, _) = package_of(store, key, run, turn);
+        assert_eq!(question["evidence"], json!({ "format_version": 2, "sha256": hash(&bytes) }), "{turn}");
+        assert_eq!(refusal_of(store, key, run, turn), "", "{turn}");
+    }
+
+    #[test]
+    fn b1_every_route_that_makes_a_question_makes_a_valid_package() {
+        // ask, gathered (with and without a selection), path (one question per point) and continue.
+        let (_scratch, store, key, run, page) = gathered_page();
+        let mut made: Vec<String> = vec![];
+        let (status, asked) = api(&store, "/api/ask", &json!({ "key": key, "run": run, "question": "Onde a câmera calcula a direção dos raios?" }));
+        assert_eq!(status, 200, "{asked}");
+        made.push(asked["id"].as_str().unwrap().into());
+        for origin in [Value::Null, page.origin()] {
+            let (status, turn) = api(&store, "/api/gathered-question", &json!({ "key": key, "run": run, "question": "O que muda?", "nodes": page.gathered, "origin": origin }));
+            assert_eq!(status, 200, "{turn}");
+            made.push(turn["id"].as_str().unwrap().into());
+        }
+        let camera = symbol_id(&store, &key, &run, "Camera");
+        let (status, path) = api(&store, "/api/path-questions", &json!({ "key": key, "run": run, "question": "x", "nodes": [page.gathered[0], camera], "seed": page.gathered[0], "chosen": {} }));
+        assert_eq!((status, path.as_array().map(Vec::len)), (200, Some(2)), "{path}");
+        made.extend(path.as_array().unwrap().iter().map(|t| t["id"].as_str().unwrap().to_owned()));
+        let (status, _) = api(&store, "/api/paste", &json!({ "key": key, "run": run, "turn": made[0], "text": fact_answer("C1") }));
+        assert_eq!(status, 200);
+        let (status, step) = api(&store, "/api/continue", &json!({ "key": key, "run": run, "turn": made[0], "question": "Como evitar a multiplicação?" }));
+        assert_eq!(status, 200, "{step}");
+        made.push(step["id"].as_str().unwrap().into());
+        for turn in &made {
+            a_valid_package(&store, &key, &run, turn);
+        }
+        // One package per question: the two points of the path have two.
+        assert_ne!(package_of(&store, &key, &run, &made[3]).1, package_of(&store, &key, &run, &made[4]).1);
+        assert_eq!(turn_ids(&store, &key, &run), made);
+        // The ladder: every question it makes, the rounds too.
+        let (_scratch2, store, key, run, page) = ladder_project();
+        let answers = json!({ "01": lacuna_answer("Falta `helper`."), "02": lacuna_answer("Falta `helper`.") });
+        let (status, done) = api(&store, "/api/ladder", &json!({ "key": key, "run": run, "question": "Como acelerar?", "nodes": page.gathered, "gate": ["probe"],
+            "models": [{ "provider": "test", "answers": answers }], "retries": 0, "lacuna_rounds": 1, "origin": { "kind": "ladder", "summary": "x", "selection": page.record() } }));
+        assert_eq!(status, 200, "{done}");
+        assert_eq!(turn_ids(&store, &key, &run), ["01", "02"]);
+        for turn in ["01", "02"] {
+            a_valid_package(&store, &key, &run, turn);
+        }
+    }
+
+    #[test]
+    fn send_paste_review_and_continue_check_the_question_first_and_send_nothing_when_it_fails() {
+        let (_scratch, store, key, run, _page) = gathered_page();
+        let (_, asked) = api(&store, "/api/ask", &json!({ "key": key, "run": run, "question": "Onde a câmera calcula a direção dos raios?" }));
+        let turn = asked["id"].as_str().unwrap().to_owned();
+        let sends = |store: &Store| fs::read_dir(store.turn_dir(&key, &run, &turn).unwrap().join("sends")).map(|d| d.count()).unwrap_or(0);
+        let evidence = hash(&fs::read(store.turn_dir(&key, &run, &turn).unwrap().join(EVIDENCE)).unwrap());
+        // /api/send: the question checked, then sent (to the test provider, which answers nothing)
+        // and linked to the package checked.
+        let send = json!({ "key": key, "run": run, "turn": turn, "provider": "test" });
+        let (status, sent) = api(&store, "/api/send", &send);
+        assert_eq!(status, 200, "{sent}");
+        assert!(sent["directory"].as_str().unwrap().ends_with("01-test"), "{sent}");
+        assert_eq!((&sent["link"]["evidence_sha256"], &sent["purpose"]), (&json!(evidence), &json!("question")));
+        assert_eq!(sent["link"]["checks"], json!(["prepare::verify", "claims::verify", "evidence_h1", "evidence_h2", "evidence_h3"]));
+        // A provider that does not send is refused before anything, the question untouched.
+        let (status, refused) = api(&store, "/api/send", &json!({ "key": key, "run": run, "turn": turn, "provider": "claude-api" }));
+        assert_eq!(status, 501, "{refused}");
+        // /api/paste: the same check and link.
+        let (status, pasted) = api(&store, "/api/paste", &json!({ "key": key, "run": run, "turn": turn, "text": fact_answer("C1") }));
+        assert_eq!(status, 200, "{pasted}");
+        assert_eq!((&pasted["link"]["evidence_sha256"], &pasted["purpose"]), (&json!(evidence), &json!("question")));
+        // /api/review: an approval passes the gates, the package among them.
+        let review = |send: &str, decision: &str| api(&store, "/api/review", &json!({ "key": key, "run": run, "turn": turn, "send": send, "claim": "C1", "decision": decision, "note": "A linha 5 calcula direction." }));
+        let (status, approved) = review("02-manual", "approved");
+        assert_eq!(status, 200, "{approved}");
+        assert_eq!(approved["fact_id"], "F1");
+        assert_eq!(api(&store, "/api/paste", &json!({ "key": key, "run": run, "turn": turn, "text": fact_answer("C1") })).0, 200);
+        let before = sends(&store);
+        // The package changed after the question: every route that uses it refuses, and nothing is sent.
+        forge(&store, &key, &run, &turn, |p| p.units[0].text_sha256 = Sha256Hex::try_from("0".repeat(64)).unwrap());
+        let why = |(status, body): (u16, Value)| { assert_eq!(status, 400, "{body}"); body["error"].as_str().unwrap().to_owned() };
+        assert!(why(api(&store, "/api/send", &send)).starts_with("H2: TextDiffers"));
+        assert!(why(api(&store, "/api/paste", &json!({ "key": key, "run": run, "turn": turn, "text": fact_answer("C1") }))).starts_with("H2: TextDiffers"));
+        assert_eq!(sends(&store), before, "no send was made");
+        assert!(why(review("03-manual", "approved")).starts_with("Portão 2: a pergunta não confere mais: H2: TextDiffers"));
+        // A rejection is only recorded: it promotes nothing, so it needs no check (Passo 9).
+        assert_eq!(review("03-manual", "rejected").0, 200);
+        let turns = turn_ids(&store, &key, &run);
+        assert!(why(api(&store, "/api/continue", &json!({ "key": key, "run": run, "turn": turn, "question": "E depois?" }))).starts_with("H2: TextDiffers"));
+        assert_eq!(turn_ids(&store, &key, &run), turns, "no question was made");
+    }
+
+    #[test]
+    fn listing_and_deleting_questions_keep_each_package_with_its_question() {
+        let (_scratch, store, key, run, page) = ladder_project();
+        let answers = json!({ "01": lacuna_answer("Falta `helper`."), "02": lacuna_answer("Falta `helper`.") });
+        let (status, _) = api(&store, "/api/ladder", &json!({ "key": key, "run": run, "question": "Como acelerar?", "nodes": page.gathered, "gate": ["probe"],
+            "models": [{ "provider": "test", "answers": answers }], "retries": 0, "lacuna_rounds": 1, "origin": { "kind": "ladder", "summary": "x", "selection": page.record() } }));
+        assert_eq!(status, 200);
+        // Listed as the page reads them; the package is not part of the listing.
+        let (_, listed) = api_with(&store, "GET", &format!("/api/turns?key={key}&run={run}"), &Value::Null);
+        assert_eq!(listed.as_array().unwrap().len(), 2);
+        assert!(listed[0].get("evidence").is_none());
+        // Deleted, with its package and its selection's record.
+        let dir = store.turn_dir(&key, &run, "02").unwrap();
+        assert!(dir.join(EVIDENCE).is_file() && dir.join(SELECTION).is_file());
+        let (status, left) = api_with(&store, "DELETE", "/api/turn", &json!({ "key": key, "run": run, "turn": "02" }));
+        assert_eq!(status, 200, "{left}");
+        assert_eq!(left.as_array().unwrap().iter().map(|t| t["id"].clone()).collect::<Vec<_>>(), [json!("01")]);
+        assert!(!dir.exists());
+        // A number is never handed out again.
+        let (_, next) = api(&store, "/api/gathered-question", &json!({ "key": key, "run": run, "question": "x", "nodes": page.gathered, "origin": page.origin() }));
+        assert_eq!(next["id"], "03");
+        // The question a lacuna round came from, deleted: what it added can no longer be shown (Passo 11).
+        let (_scratch2, store, key, run, page) = ladder_project();
+        let (status, _) = api(&store, "/api/ladder", &json!({ "key": key, "run": run, "question": "Como acelerar?", "nodes": page.gathered, "gate": ["probe"],
+            "models": [{ "provider": "test", "answers": answers }], "retries": 0, "lacuna_rounds": 1, "origin": { "kind": "ladder", "summary": "x", "selection": page.record() } }));
+        assert_eq!(status, 200);
+        assert_eq!(refusal_of(&store, &key, &run, "02"), "");
+        assert_eq!(api_with(&store, "DELETE", "/api/turn", &json!({ "key": key, "run": run, "turn": "01" })).0, 200);
+        assert!(refusal_of(&store, &key, &run, "02").starts_with("H1: complementação: Pergunta desconhecida: 01"), "{}", refusal_of(&store, &key, &run, "02"));
+    }
+
+    #[test]
+    fn routes_that_make_no_question_make_no_package() {
+        // The suggestion keeps its record and makes no question.
+        let (_scratch, store, key, run, page) = gathered_page();
+        let turns = |store: &Store, key: &str, run: &str| store.run_dir(key, run).unwrap().join("turns").read_dir().map(|d| d.count()).unwrap_or(0);
+        let before = turns(&store, &key, &run);
+        let (status, suggested) = api(&store, "/api/envelope/suggest", &json!({ "key": key, "run": run, "nodes": [page.gathered[0]] }));
+        assert_eq!(status, 200, "{suggested}");
+        assert!(store.verify_suggestion(&key, &run, suggested["suggestion"].as_str().unwrap()).is_ok());
+        // The performance question proposes, and makes no question.
+        let (status, _) = api(&store, "/api/performance-question", &json!({ "key": key, "run": run, "question": "Quais funções pesam?" }));
+        assert_eq!(status, 200);
+        // The lexicon is not a question: its request is written apart, with no package (excluded by the plan).
+        let (status, lexicon) = api(&store, "/api/lexicon/suggest", &json!({ "key": key, "run": run, "provider": "manual", "language": crate::lexicon::LANGUAGES[0] }));
+        assert_eq!(status, 200, "{lexicon}");
+        assert_eq!(turns(&store, &key, &run), before);
+        let lexicon_dir = store.project_dir(&key).unwrap().join("lexicon");
+        let written: Vec<PathBuf> = fs::read_dir(&lexicon_dir).unwrap().flatten().flat_map(|d| fs::read_dir(d.path()).unwrap().flatten().map(|f| f.path())).collect();
+        assert!(!written.is_empty() && written.iter().all(|f| !f.ends_with(EVIDENCE) && !f.ends_with(SELECTION)), "{written:?}");
+        // An investigation from the inventory proposes evidence and makes no question.
+        let scratch = project();
+        let root = scratch.0.join("project");
+        fs::write(root.join("src/scan.rs"), "fn norm(v: f64) -> f64 {\n    v.sqrt()\n}\n\npub fn scan(xs: &[f64]) -> f64 {\n    let mut t = 0.0;\n    for x in xs {\n        t += norm(*x);\n    }\n    t\n}\n").unwrap();
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let key = store.open(&display(&root)).unwrap()["key"].as_str().unwrap().to_owned();
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        let found = store.inventory(&key, &run).unwrap();
+        let target = found["inventory"]["loops"].as_array().unwrap().iter().find(|l| l["symbol_name"] == "scan").unwrap()["occurrence"].clone();
+        let (status, proposed) = api(&store, "/api/inventory/investigate", &json!({ "key": key, "run": run, "target": target }));
+        assert_eq!(status, 200, "{proposed}");
+        assert_eq!(proposed["items"][0]["name"], "scan");
+        assert_eq!(turns(&store, &key, &run), 0);
+    }
+
+    // Passo 13: H4, the suggestion made again from what its record names.
+
+    /// A suggestion record kept under its own hash in the run, as the route keeps one, and its hash.
+    fn keep_record(store: &Store, key: &str, run: &str, record: &SuggestionRecord) -> Sha256Hex {
+        let bytes = record.to_bytes().unwrap();
+        let sha = hash(&bytes);
+        fs::write(store.run_dir(key, run).unwrap().join(SUGGESTIONS).join(format!("{sha}.json")), &bytes).unwrap();
+        Sha256Hex::try_from(sha).unwrap()
+    }
+
+    /// What a route answers for a record: the answer the page absorbs.
+    fn answer_of(record: &SuggestionRecord, sha: &Sha256Hex) -> Value {
+        let mut answer = serde_json::to_value(&record.output).unwrap();
+        answer["budget_bytes"] = json!(record.input.budget_bytes);
+        answer["suggestion"] = json!(sha.as_str());
+        answer
+    }
+
+    fn record_of(store: &Store, key: &str, run: &str, sha: &str) -> SuggestionRecord {
+        SuggestionRecord::from_bytes(&fs::read(store.run_dir(key, run).unwrap().join(SUGGESTIONS).join(format!("{sha}.json"))).unwrap(), sha).unwrap()
+    }
+
+    fn reasons(found: &evidence::Reproduction) -> Vec<evidence::NotReplayable> {
+        match found {
+            evidence::Reproduction::NotReplayable { suggestions, .. } => suggestions.iter().filter_map(|s| match s {
+                evidence::SuggestionReplay::NotReplayable { reason, .. } => Some(*reason),
+                evidence::SuggestionReplay::Reproduced { .. } => None,
+            }).collect(),
+            other => panic!("not replayable expected: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn h4_reproduces_the_suggestions_of_a_selection_and_says_the_facts_are_the_records() {
+        let (_scratch, store, key, run, page) = gathered_page();
+        let turn = store.ask_gathered(&key, &run, "O que muda?", &page.gathered, false, Some(page.origin())).unwrap()["id"].as_str().unwrap().to_owned();
+        let sha = Sha256Hex::try_from(page.suggestions[0].as_str().unwrap().to_owned()).unwrap();
+        let reproduced = evidence::Reproduction::Reproduced { suggestions: vec![evidence::SuggestionReplay::Reproduced { suggestion: sha.clone() }], facts: evidence::FactsInReplay::RecordedNotReproduced };
+        assert_eq!(store.reproduce(&key, &run, &turn).unwrap(), reproduced);
+        assert_eq!(serde_json::to_value(&reproduced).unwrap(), json!({ "status": "reproduced", "suggestions": [{ "status": "reproduced", "suggestion": sha.as_str() }], "facts": "recorded_not_reproduced" }));
+        // It writes nothing: no suggestion, no question, no record, nothing in the acervo.
+        let acervo = store.project_dir(&key).unwrap().join("facts.jsonl");
+        let before = (files_of(&store, &key, &run), fs::read(&acervo).ok());
+        store.reproduce(&key, &run, &turn).unwrap();
+        assert_eq!((files_of(&store, &key, &run), fs::read(&acervo).ok()), before);
+        // Only the facts differ: still reproduced, the facts being the record's and said not made again.
+        let mut other_facts = record_of(&store, &key, &run, sha.as_str());
+        for item in other_facts.output.items.iter_mut() {
+            item["facts"] = json!(["F9"]);
+        }
+        assert!(evidence::same_but_facts(&record_of(&store, &key, &run, sha.as_str()), &other_facts));
+        let mut with_more = other_facts.clone();
+        with_more.output.used_bytes += 1;
+        assert!(!evidence::same_but_facts(&other_facts, &with_more), "everything else is compared");
+        let mut renamed = other_facts.clone();
+        renamed.output.items[0]["role"] = json!("support");
+        assert!(!evidence::same_but_facts(&other_facts, &renamed));
+    }
+
+    #[test]
+    fn h4_is_not_applicable_where_no_suggestion_is_behind_the_question() {
+        let (_scratch, store, key, run, page) = gathered_page();
+        let asked = store.ask(&key, &run, "Onde a câmera calcula a direção dos raios?").unwrap()["id"].as_str().unwrap().to_owned();
+        let plain = store.ask_gathered(&key, &run, "x", &page.gathered, false, None).unwrap()["id"].as_str().unwrap().to_owned();
+        let hot = store.ask_gathered(&key, &run, "x", &page.gathered, false, Some(json!({ "kind": "hot", "summary": "x" }))).unwrap()["id"].as_str().unwrap().to_owned();
+        // An older question, with no mark and no package.
+        let older = store.ask(&key, &run, "Onde a câmera calcula a direção dos raios?").unwrap()["id"].as_str().unwrap().to_owned();
+        remark(&store, &key, &run, &older, |q| { q.as_object_mut().unwrap().remove("evidence"); });
+        fs::remove_file(store.turn_dir(&key, &run, &older).unwrap().join(EVIDENCE)).unwrap();
+        for turn in [&asked, &plain, &hot, &older] {
+            assert_eq!(store.reproduce(&key, &run, turn).unwrap(), evidence::Reproduction::NotApplicable {}, "{turn}");
+        }
+        assert_eq!(serde_json::to_value(evidence::Reproduction::NotApplicable {}).unwrap(), json!({ "status": "not_applicable" }));
+    }
+
+    #[test]
+    fn h4_tells_each_reason_a_suggestion_cannot_be_made_again_and_never_simulates_one() {
+        // A suggestion made with a measure: it names the execution it read.
+        let (_scratch, store, key, run) = measured_mix();
+        let node = symbol_id(&store, &key, &run, "roda");
+        let mut page = Page::new(&store, &key, &run);
+        page.toggle(&node);
+        let answer = page.suggest(&store, &key, &run, std::slice::from_ref(&node));
+        let sha = Sha256Hex::try_from(answer["suggestion"].as_str().unwrap().to_owned()).unwrap();
+        let record = record_of(&store, &key, &run, sha.as_str());
+        let SuggestionMeasure::Ok { execution, .. } = record.measure.clone() else { panic!("{:?}", record.measure) };
+        let turn = store.ask_gathered(&key, &run, "Por que roda?", &page.gathered, false, Some(page.origin())).unwrap()["id"].as_str().unwrap().to_owned();
+        assert!(matches!(store.reproduce(&key, &run, &turn).unwrap(), evidence::Reproduction::Reproduced { .. }));
+        let (_, _, package) = package_of(&store, &key, &run, &turn);
+        let cite = |sha: &Sha256Hex| forge(&store, &key, &run, &turn, |p| p.selection.as_mut().unwrap().suggestions = vec![sha.clone()]);
+        let reason = || reasons(&store.reproduce(&key, &run, &turn).unwrap());
+        // Rules of another version, of the selection or of the inventory: told, never run.
+        type Change = Box<dyn Fn(&mut SuggestionRecord)>;
+        let changes: Vec<Change> = vec![
+            Box::new(|r| r.rules_version = RulesVersion("envelope-0".into())),
+            Box::new(|r| r.inventory_rules = SuggestionInventoryRules::new("operation-inventory-v0", r.inventory_rules.rules.clone()).unwrap()),
+            Box::new(|r| {
+                let mut rules = r.inventory_rules.rules.clone();
+                let builtin = rules.iter().position(|e| e.origin == InventoryRuleOrigin::Builtin).unwrap();
+                rules.remove(builtin);
+                r.inventory_rules = SuggestionInventoryRules::new(inventory::VERSION, rules).unwrap();
+            }),
+        ];
+        for change in &changes {
+            let mut other = record.clone();
+            change(&mut other);
+            cite(&keep_record(&store, &key, &run, &other));
+            assert_eq!(reason(), [evidence::NotReplayable::RulesVersionDiffers]);
+        }
+        // Same rules, another output: told apart from a version that differs.
+        let mut other = record.clone();
+        other.output.used_bytes += 1;
+        cite(&keep_record(&store, &key, &run, &other));
+        assert_eq!(reason(), [evidence::NotReplayable::OutputDiffers]);
+        // The record itself missing, or not the bytes its name says.
+        cite(&Sha256Hex::try_from("0".repeat(64)).unwrap());
+        assert_eq!(reason(), [evidence::NotReplayable::SuggestionMissing]);
+        let file = store.run_dir(&key, &run).unwrap().join(SUGGESTIONS).join(format!("{}.json", sha.as_str()));
+        let kept = fs::read(&file).unwrap();
+        cite(&sha);
+        fs::write(&file, b"{}").unwrap();
+        assert_eq!(reason(), [evidence::NotReplayable::SuggestionMissing]);
+        fs::write(&file, &kept).unwrap();
+        // The execution it read, changed or gone: no replay with another measure, or with none.
+        let executed = store.run_dir(&key, &run).unwrap().join("executions").join(&execution).join("execution.json");
+        let original = fs::read(&executed).unwrap();
+        fs::write(&executed, [original.as_slice(), b" "].concat()).unwrap();
+        assert_eq!(reason(), [evidence::NotReplayable::ExecutionDiffers]);
+        fs::remove_file(&executed).unwrap();
+        assert_eq!(reason(), [evidence::NotReplayable::ExecutionMissing]);
+        fs::write(&executed, &original).unwrap();
+        assert!(matches!(store.reproduce(&key, &run, &turn).unwrap(), evidence::Reproduction::Reproduced { .. }));
+        // Several cited, each told in its order; the code the question was made with is named.
+        cite(&sha);
+        forge(&store, &key, &run, &turn, |p| p.selection.as_mut().unwrap().suggestions = vec![sha.clone(), Sha256Hex::try_from("0".repeat(64)).unwrap()]);
+        let found = store.reproduce(&key, &run, &turn).unwrap();
+        let builder = package.versions.builder.clone();
+        assert_eq!(found, evidence::Reproduction::NotReplayable {
+            suggestions: vec![evidence::SuggestionReplay::Reproduced { suggestion: sha.clone() },
+                evidence::SuggestionReplay::NotReplayable { suggestion: Sha256Hex::try_from("0".repeat(64)).unwrap(), reason: evidence::NotReplayable::SuggestionMissing }],
+            facts: evidence::FactsInReplay::RecordedNotReproduced, builder_at_question: builder.clone(),
+            code_recoverable: matches!(builder, evidence::BuilderIdentity::Recorded { git_dirty: false, .. }) });
+        let value = serde_json::to_value(&found).unwrap();
+        assert_eq!(value["suggestions"][1], json!({ "status": "not_replayable", "suggestion": "0".repeat(64), "reason": "suggestion_missing" }));
+        for (reason, name) in [(evidence::NotReplayable::SuggestionMissing, "suggestion_missing"), (evidence::NotReplayable::ExecutionMissing, "execution_missing"),
+            (evidence::NotReplayable::ExecutionDiffers, "execution_differs"), (evidence::NotReplayable::RulesVersionDiffers, "rules_version_differs"),
+            (evidence::NotReplayable::OutputDiffers, "output_differs")] {
+            assert_eq!(serde_json::to_value(reason).unwrap(), json!(name));
+        }
+    }
+
+    #[test]
+    fn h4_makes_a_suggestion_again_with_the_rules_its_record_copied_not_the_profiles_now() {
+        // A project rule the suggestion used: the behavior it found is the rule's.
+        let rule = json!({ "id": "minha", "operation": "database", "match": "call", "names": ["consulta"] });
+        let (_scratch, store, key, root) = project_with(&[("src/lib.rs", "pub fn demo() -> u32 {\n    consulta()\n}\nfn consulta() -> u32 {\n    1\n}\n")], json!({ "inventory": { "rules": [rule] } }));
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        let node = symbol_id(&store, &key, &run, "demo");
+        let mut page = Page::new(&store, &key, &run);
+        page.toggle(&node);
+        let answer = page.suggest(&store, &key, &run, std::slice::from_ref(&node));
+        assert!(answer["behavior"].as_array().unwrap().iter().any(|b| b["detail"] == "database"), "{answer:#}");
+        let turn = store.ask_gathered(&key, &run, "x", &page.gathered, false, Some(page.origin())).unwrap()["id"].as_str().unwrap().to_owned();
+        // The profile no longer has the rule: the record's copy is what is made again.
+        fs::write(root.join(PROFILE), json!({ "inventory": { "rules": [] } }).to_string()).unwrap();
+        assert!(store.suggest_envelope(&key, &run, std::slice::from_ref(&node)).unwrap()["behavior"].as_array().unwrap().iter().all(|b| b["detail"] != "database"));
+        assert!(matches!(store.reproduce(&key, &run, &turn).unwrap(), evidence::Reproduction::Reproduced { .. }));
+    }
+
+    #[test]
+    fn h4_is_told_and_never_stops_a_question_that_passes_h1_to_h3() {
+        // A record of the same rules whose output this code does not make: a selection over it is valid
+        // against it (H1 to H3 pass), and H4 says the suggestion is not made again.
+        let (_scratch, store, key, run, _) = gathered_page();
+        let ray = symbol_id(&store, &key, &run, "ray_from_pixel");
+        let real = store.suggest_envelope(&key, &run, std::slice::from_ref(&ray)).unwrap();
+        let mut other = record_of(&store, &key, &run, real["suggestion"].as_str().unwrap());
+        other.output.used_bytes += 7;
+        let sha = keep_record(&store, &key, &run, &other);
+        let mut page = Page::new(&store, &key, &run);
+        page.toggle(&ray);
+        page.absorb(&answer_of(&other, &sha), std::slice::from_ref(&ray));
+        let turn = store.ask_gathered(&key, &run, "O que muda?", &page.gathered, false, Some(page.origin())).unwrap()["id"].as_str().unwrap().to_owned();
+        assert_eq!(refusal_of(&store, &key, &run, &turn), "");
+        assert_eq!(reasons(&store.reproduce(&key, &run, &turn).unwrap()), [evidence::NotReplayable::OutputDiffers]);
+        // The send goes on H1 to H3: H4 is not one of its checks.
+        let verified = store.verify_for_send(&key, &run, &turn).unwrap();
+        assert_eq!(verified.link()["checks"], json!(["prepare::verify", "claims::verify", "evidence_h1", "evidence_h2", "evidence_h3"]));
+        assert!(record_answer(&store, &key, &run, &turn, "manual", &fact_answer("C1")).is_ok());
+    }
+
+    // Passo 14: GET /api/evidence, what was recorded with a question and what is checked now.
+
+    /// The route's answer for a question, and every file the studio keeps, before and after: asking
+    /// it writes nothing anywhere (package, selection, question, suggestions, sends, acervo, executions).
+    fn evidence_of(store: &Store, key: &str, run: &str, turn: &str) -> (u16, Value) {
+        fn every_file(dir: &Path, out: &mut Vec<(PathBuf, Vec<u8>)>) {
+            for entry in fs::read_dir(dir).into_iter().flatten().flatten() {
+                let path = entry.path();
+                if path.is_dir() { every_file(&path, out) } else { out.push((path.clone(), fs::read(&path).unwrap())) }
+            }
+        }
+        let mut before = vec![];
+        every_file(&store.dir, &mut before);
+        let answer = api_with(store, "GET", &format!("/api/evidence?key={key}&run={run}&turn={turn}"), &Value::Null);
+        let mut after = vec![];
+        every_file(&store.dir, &mut after);
+        before.sort();
+        after.sort();
+        assert_eq!(after, before, "asking for the evidence of {turn} wrote nothing");
+        answer
+    }
+
+    fn recorded(store: &Store, key: &str, run: &str, turn: &str, name: &str) -> Value {
+        serde_json::from_slice(&fs::read(store.turn_dir(key, run, turn).unwrap().join(name)).unwrap()).unwrap()
+    }
+
+    fn statuses(answer: &Value) -> [String; 3] {
+        ["h1", "h2", "h3"].map(|h| answer["checks"][h]["status"].as_str().unwrap().to_owned())
+    }
+
+    fn h4_reasons(answer: &Value) -> Vec<String> {
+        answer["h4"]["suggestions"].as_array().unwrap().iter().filter_map(|s| s["reason"].as_str().map(str::to_owned)).collect()
+    }
+
+    #[test]
+    fn evidence_shows_what_was_recorded_with_each_question_and_what_is_checked_now() {
+        let (_scratch, store, key, run, page) = gathered_page();
+        let with = store.ask_gathered(&key, &run, "O que muda?", &page.gathered, false, Some(page.origin())).unwrap()["id"].as_str().unwrap().to_owned();
+        let asked = store.ask(&key, &run, "Onde a câmera calcula a direção dos raios?").unwrap()["id"].as_str().unwrap().to_owned();
+        // A question with a selection: as recorded, all three checks passed now, its suggestion made again.
+        let (status, answer) = evidence_of(&store, &key, &run, &with);
+        assert_eq!(status, 200, "{answer}");
+        assert_eq!(answer["turn"], json!(with));
+        assert_eq!(answer["package"], recorded(&store, &key, &run, &with, EVIDENCE));
+        assert_eq!(answer["selection"], recorded(&store, &key, &run, &with, SELECTION));
+        assert_eq!(answer["mark"], recorded(&store, &key, &run, &with, "question.json")["evidence"]);
+        assert_eq!(statuses(&answer), ["passed", "passed", "passed"]);
+        assert_eq!(answer["checks"]["h1"]["why"], Value::Null);
+        assert_eq!(answer["h4"], json!({ "status": "reproduced", "facts": "recorded_not_reproduced",
+            "suggestions": [{ "status": "reproduced", "suggestion": page.suggestions[0] }] }));
+        assert_eq!(answer["latest_measure"], json!({ "read_status": "none" }));
+        // A format 2 package: the two readings compared (no measure on either side), no format 1 field,
+        // and so no warning about one.
+        assert_eq!(answer["package"]["format_version"], json!(2));
+        assert_eq!(answer["package"]["measure"]["measure_divergence"], json!({ "status": "same" }));
+        assert_eq!(answer["package"]["measure"].get("measure_diverges"), None);
+        assert_eq!(answer["warnings"], json!([]));
+        // The same answer when asked again.
+        assert_eq!(evidence_of(&store, &key, &run, &with).1, answer);
+        // Another question of the same run: its own package, no selection, H4 not applicable.
+        let (_, other) = evidence_of(&store, &key, &run, &asked);
+        assert_eq!(other["package"], recorded(&store, &key, &run, &asked, EVIDENCE));
+        assert_ne!(other["package"], answer["package"]);
+        assert_eq!((&other["selection"], &other["h4"]), (&Value::Null, &json!({ "status": "not_applicable" })));
+        assert_eq!(statuses(&other), ["passed", "passed", "passed"]);
+        // A question, a run or a project that is not there: the route's usual refusal, nothing else.
+        let (status, missing) = evidence_of(&store, &key, &run, "99");
+        assert_eq!((status, missing["error"].as_str()), (400, Some("Pergunta desconhecida: 99")));
+        assert_eq!(api_with(&store, "GET", &format!("/api/evidence?key={key}&run=nada&turn={with}"), &Value::Null).0, 400);
+        assert_eq!(api_with(&store, "GET", &format!("/api/evidence?key={key}&run={run}"), &Value::Null).0, 400);
+    }
+
+    #[test]
+    fn evidence_tells_an_older_question_an_unreadable_file_and_a_changed_package_apart() {
+        let (_scratch, store, key, run, page) = gathered_page();
+        // An older question, with no mark and no package: nothing to check, which is not a check passed.
+        let older = store.ask(&key, &run, "Onde a câmera calcula a direção dos raios?").unwrap()["id"].as_str().unwrap().to_owned();
+        remark(&store, &key, &run, &older, |q| { q.as_object_mut().unwrap().remove("evidence"); });
+        fs::remove_file(store.turn_dir(&key, &run, &older).unwrap().join(EVIDENCE)).unwrap();
+        let (_, answer) = evidence_of(&store, &key, &run, &older);
+        assert_eq!((&answer["mark"], &answer["package"], &answer["h4"]), (&Value::Null, &Value::Null, &json!({ "status": "not_applicable" })));
+        assert_eq!(statuses(&answer), ["not_applicable", "not_applicable", "not_applicable"]);
+        assert_eq!(answer["warnings"], json!([]), "no package, nothing it could seem to say");
+        // A package changed after the question: H1 passes, H2 refuses, H3 is not run; H4 is still told.
+        let changed = store.ask_gathered(&key, &run, "O que muda?", &page.gathered, false, Some(page.origin())).unwrap()["id"].as_str().unwrap().to_owned();
+        forge(&store, &key, &run, &changed, |p| p.units[0].text_sha256 = Sha256Hex::try_from("0".repeat(64)).unwrap());
+        let (_, answer) = evidence_of(&store, &key, &run, &changed);
+        assert_eq!(statuses(&answer), ["passed", "refused", "not_run"]);
+        assert!(answer["checks"]["h2"]["why"].as_str().unwrap().starts_with("H2: TextDiffers"));
+        assert_eq!(answer["h4"]["status"], "reproduced", "H4 says nothing of the package's integrity");
+        // A package that is not one: null as recorded, refused by H1, and no H4 rather than "not applicable".
+        let unreadable = store.ask_gathered(&key, &run, "O que muda?", &page.gathered, false, Some(page.origin())).unwrap()["id"].as_str().unwrap().to_owned();
+        fs::write(store.turn_dir(&key, &run, &unreadable).unwrap().join(EVIDENCE), b"isto nao e um pacote").unwrap();
+        let (_, answer) = evidence_of(&store, &key, &run, &unreadable);
+        assert_eq!((&answer["package"], &answer["h4"]), (&Value::Null, &Value::Null));
+        assert_eq!(statuses(&answer), ["refused", "not_run", "not_run"]);
+        assert!(answer["checks"]["h1"]["why"].as_str().unwrap().starts_with("H1: o pacote não é o que a marca nomeia"));
+        // A selection's record that is not one: null as recorded, refused by H1; the suggestions are still made again.
+        let record = store.ask_gathered(&key, &run, "O que muda?", &page.gathered, false, Some(page.origin())).unwrap()["id"].as_str().unwrap().to_owned();
+        fs::write(store.turn_dir(&key, &run, &record).unwrap().join(SELECTION), b"{").unwrap();
+        let (_, answer) = evidence_of(&store, &key, &run, &record);
+        assert_eq!(answer["selection"], Value::Null);
+        assert_eq!(statuses(&answer), ["refused", "not_run", "not_run"]);
+        assert!(answer["checks"]["h1"]["why"].as_str().unwrap().starts_with("H1: registro de seleção: o registro"));
+        assert_eq!(answer["h4"]["status"], "reproduced");
+        // A question whose package could not be made: its mark says so, and H1 refuses with it.
+        FAIL_EVIDENCE_AT.with(|f| f.set(Some("composition")));
+        let failed = store.ask_gathered(&key, &run, "O que muda?", &page.gathered, false, None).unwrap_err().to_string();
+        FAIL_EVIDENCE_AT.with(|f| f.set(None));
+        let failed = failed.split_whitespace().nth(2).unwrap().to_owned();
+        let (_, answer) = evidence_of(&store, &key, &run, &failed);
+        assert_eq!((&answer["mark"], &answer["package"]), (&json!({ "error": "composition_failed" }), &Value::Null));
+        assert_eq!(statuses(&answer), ["refused", "not_run", "not_run"]);
+        assert!(answer["checks"]["h1"]["why"].as_str().unwrap().contains("composition_failed"));
+    }
+
+    #[test]
+    fn evidence_tells_each_h4_reason_and_never_as_a_failure_of_the_package() {
+        // A selection over a suggestion made with a measure.
+        let (_scratch, store, key, run) = measured_mix();
+        let node = symbol_id(&store, &key, &run, "roda");
+        let mut page = Page::new(&store, &key, &run);
+        page.toggle(&node);
+        let answer = page.suggest(&store, &key, &run, std::slice::from_ref(&node));
+        let sha = Sha256Hex::try_from(answer["suggestion"].as_str().unwrap().to_owned()).unwrap();
+        let record = record_of(&store, &key, &run, sha.as_str());
+        let SuggestionMeasure::Ok { execution, execution_sha256 } = record.measure.clone() else { panic!("{:?}", record.measure) };
+        let turn = store.ask_gathered(&key, &run, "Por que roda?", &page.gathered, false, Some(page.origin())).unwrap()["id"].as_str().unwrap().to_owned();
+        let (_, now) = evidence_of(&store, &key, &run, &turn);
+        assert_eq!((statuses(&now), now["h4"]["status"].as_str()), (["passed", "passed", "passed"].map(String::from), Some("reproduced")));
+        let latest = store.latest_measure_read(&key, &run).unwrap().unwrap();
+        assert_eq!(now["latest_measure"], json!({ "read_status": "ok", "execution": latest.record["id"], "execution_sha256": latest.sha256 }));
+        assert_eq!((latest.record["id"].as_str(), latest.sha256.as_str()), (Some(execution.as_str()), execution_sha256.as_str()));
+        // The execution read then, changed or gone: H4 says which, and H3, which reads it too, refuses on its own.
+        let executed = store.run_dir(&key, &run).unwrap().join("executions").join(&execution).join("execution.json");
+        let original = fs::read(&executed).unwrap();
+        fs::write(&executed, [original.as_slice(), b" "].concat()).unwrap();
+        let (_, answer) = evidence_of(&store, &key, &run, &turn);
+        assert_eq!(h4_reasons(&answer), ["execution_differs"]);
+        assert_eq!(statuses(&answer), ["passed", "passed", "refused"]);
+        fs::remove_file(&executed).unwrap();
+        assert_eq!(h4_reasons(&evidence_of(&store, &key, &run, &turn).1), ["execution_missing"]);
+        // The latest measure that cannot be read is told as such, not as no measure at all.
+        fs::write(&executed, b"{ metade").unwrap();
+        assert_eq!(evidence_of(&store, &key, &run, &turn).1["latest_measure"], json!({ "read_status": "unreadable" }));
+        fs::write(&executed, &original).unwrap();
+        // The suggestion's record gone.
+        let file = store.run_dir(&key, &run).unwrap().join(SUGGESTIONS).join(format!("{}.json", sha.as_str()));
+        let kept = fs::read(&file).unwrap();
+        fs::remove_file(&file).unwrap();
+        let (_, answer) = evidence_of(&store, &key, &run, &turn);
+        assert_eq!(h4_reasons(&answer), ["suggestion_missing"]);
+        assert_eq!(answer["h4"]["status"], "not_replayable");
+        fs::write(&file, &kept).unwrap();
+        // Rules of another version, cited by a package changed to cite them: H1 refuses the change, H4 the rules.
+        let mut other = record.clone();
+        other.rules_version = RulesVersion("envelope-0".into());
+        let other_sha = keep_record(&store, &key, &run, &other);
+        forge(&store, &key, &run, &turn, |p| p.selection.as_mut().unwrap().suggestions = vec![other_sha.clone()]);
+        let (_, answer) = evidence_of(&store, &key, &run, &turn);
+        assert_eq!(h4_reasons(&answer), ["rules_version_differs"]);
+        assert_eq!(statuses(&answer), ["refused", "not_run", "not_run"]);
+        let builder = package_of(&store, &key, &run, &turn).2.versions.builder;
+        assert_eq!(answer["h4"]["builder_at_question"], serde_json::to_value(&builder).unwrap());
+    }
+
+    #[test]
+    fn evidence_of_a_suggestion_this_code_does_not_make_is_told_and_the_send_still_passes() {
+        let (_scratch, store, key, run, _) = gathered_page();
+        let ray = symbol_id(&store, &key, &run, "ray_from_pixel");
+        let real = store.suggest_envelope(&key, &run, std::slice::from_ref(&ray)).unwrap();
+        let mut other = record_of(&store, &key, &run, real["suggestion"].as_str().unwrap());
+        other.output.used_bytes += 7;
+        let sha = keep_record(&store, &key, &run, &other);
+        let mut page = Page::new(&store, &key, &run);
+        page.toggle(&ray);
+        page.absorb(&answer_of(&other, &sha), std::slice::from_ref(&ray));
+        let turn = store.ask_gathered(&key, &run, "O que muda?", &page.gathered, false, Some(page.origin())).unwrap()["id"].as_str().unwrap().to_owned();
+        let (_, answer) = evidence_of(&store, &key, &run, &turn);
+        assert_eq!(statuses(&answer), ["passed", "passed", "passed"]);
+        assert_eq!(h4_reasons(&answer), ["output_differs"]);
+        assert!(store.verify_for_send(&key, &run, &turn).is_ok(), "H4 is not a check of the send");
+    }
+
+    #[test]
+    fn evidence_of_several_suggestions_and_of_a_ladder_round_keeps_each_part_apart() {
+        // Two suggestions cited: each made again, in the order cited.
+        let (_scratch, store, key, run, _) = gathered_page();
+        let (ray, camera) = (symbol_id(&store, &key, &run, "ray_from_pixel"), symbol_id(&store, &key, &run, "Camera"));
+        let mut page = Page::new(&store, &key, &run);
+        page.toggle(&ray);
+        let first = page.suggest(&store, &key, &run, std::slice::from_ref(&ray));
+        page.join(&first);
+        page.toggle_target(&camera);
+        page.suggest(&store, &key, &run, &[ray.clone(), camera.clone()]);
+        assert_eq!(page.suggestions.len(), 2);
+        assert_ne!(page.suggestions[0], page.suggestions[1]);
+        let turn = store.ask_gathered(&key, &run, "O que muda?", &page.gathered, false, Some(page.origin())).unwrap()["id"].as_str().unwrap().to_owned();
+        let (_, answer) = evidence_of(&store, &key, &run, &turn);
+        assert_eq!(answer["h4"]["suggestions"], json!(page.suggestions.iter().map(|s| json!({ "status": "reproduced", "suggestion": s })).collect::<Vec<_>>()));
+        assert_eq!(statuses(&answer), ["passed", "passed", "passed"]);
+        // A ladder round: the client's selection, the server's additions, each where it belongs.
+        let (_scratch2, store, key, run, page) = ladder_project();
+        let answers = json!({ "01": lacuna_answer("Falta `helper`."), "02": lacuna_answer("Falta `helper`.") });
+        let (status, _) = api(&store, "/api/ladder", &json!({ "key": key, "run": run, "question": "Como acelerar?", "nodes": page.gathered, "gate": ["probe"],
+            "models": [{ "provider": "test", "answers": answers }], "retries": 0, "lacuna_rounds": 1, "origin": { "kind": "ladder", "summary": "x", "selection": page.record() } }));
+        assert_eq!(status, 200);
+        let (_, round) = evidence_of(&store, &key, &run, "02");
+        let helper = symbol_id(&store, &key, &run, "helper");
+        assert_eq!(round["package"]["server_additions"].as_array().unwrap().iter().map(|a| a["symbol_id"].clone()).collect::<Vec<_>>(), [json!(helper)]);
+        assert_eq!(round["selection"], recorded(&store, &key, &run, "01", SELECTION), "the client's record, the same in every round");
+        assert!(round["selection"]["received"]["included"].as_array().unwrap().iter().all(|e| e["id"] != json!(helper)));
+        assert_eq!(statuses(&round), ["passed", "passed", "passed"]);
+        assert_eq!(round["h4"]["status"], "reproduced");
+    }
+
+    #[test]
+    fn routes_without_a_selection_make_none() {
+        let (_scratch, store, key, run, page) = gathered_page();
+        let none = |turn: &str| {
+            let (_, _, package) = package_of(&store, &key, &run, turn);
+            assert_eq!((package.selection, package.measure.selection_basis), (None, MeasureSelectionBasis::NotApplicable {}), "{turn}");
+            assert!(!store.turn_dir(&key, &run, turn).unwrap().join(SELECTION).exists(), "{turn}");
+        };
+        let (status, asked) = api(&store, "/api/ask", &json!({ "key": key, "run": run, "question": "Onde a câmera calcula a direção dos raios?" }));
+        assert_eq!(status, 200, "{asked}");
+        none(asked["id"].as_str().unwrap());
+        let (status, path) = api(&store, "/api/path-questions", &json!({ "key": key, "run": run, "question": "x", "nodes": [page.gathered[0]], "seed": page.gathered[0], "chosen": {} }));
+        assert_eq!(status, 200, "{path}");
+        none(path[0]["id"].as_str().unwrap());
+        for origin in [Value::Null, json!({ "kind": "hot", "summary": "y" })] {
+            let (status, turn) = api(&store, "/api/gathered-question", &json!({ "key": key, "run": run, "question": "x", "nodes": [page.gathered[0]], "origin": origin }));
+            assert_eq!(status, 200, "{turn}");
+            none(turn["id"].as_str().unwrap());
+        }
+        // A chain step from an answer that passed: its own package, with no selection.
+        let answer = json!({"schema_version": 1, "claims": [{
+            "id": "C1", "kind": "FACT", "text": "`ray_from_pixel` calcula `direction` na linha 5 de src/lib.rs.",
+            "citations": [{"evidence_id": "E1", "path": "src/lib.rs", "start_line": 4, "end_line": 5,
+                "quote": "    pub fn ray_from_pixel(&self, x: f64) -> f64 {\n        let direction = x * 2.0;"}],
+            "premises": [], "verification_plan": null,
+            "location": {"evidence_id": "E1", "path": "src/lib.rs", "symbol_name": "ray_from_pixel",
+                "declaration_line": 4, "operation_start_line": 5, "operation_end_line": 5}}]});
+        record_answer(&store, &key, &run, asked["id"].as_str().unwrap(), "manual", &answer.to_string()).unwrap();
+        let (status, step) = api(&store, "/api/continue", &json!({ "key": key, "run": run, "turn": asked["id"], "question": "Como evitar a multiplicação?" }));
+        assert_eq!(status, 200, "{step}");
+        none(step["id"].as_str().unwrap());
+        // The performance question and an investigation make no question with a selection.
+        let before = files_of(&store, &key, &run);
+        api(&store, "/api/performance-question", &json!({ "key": key, "run": run, "question": "Quais funções pesam?" }));
+        assert!(files_of(&store, &key, &run).iter().all(|(path, _)| !path.ends_with(SELECTION) || before.iter().any(|(p, _)| p == path)));
+        // A suggestion is still recorded, as before.
+        let (status, suggested) = api(&store, "/api/envelope/suggest", &json!({ "key": key, "run": run, "nodes": [page.gathered[0]] }));
+        assert_eq!(status, 200, "{suggested}");
+        assert!(store.verify_suggestion(&key, &run, suggested["suggestion"].as_str().unwrap()).is_ok());
+    }
+
+    // P1: `measure_divergence` (format 2) and format 1 kept as it was.
+
+    /// A gathered question from a selection over `roda`'s suggestion, made after `between` runs on
+    /// the store. Returns the turn.
+    fn selected_question(store: &Store, key: &str, run: &str, between: impl FnOnce()) -> String {
+        let node = symbol_id(store, key, run, "roda");
+        let mut page = Page::new(store, key, run);
+        page.toggle(&node);
+        page.suggest(store, key, run, std::slice::from_ref(&node));
+        between();
+        store.ask_gathered(key, run, "Por que roda?", &page.gathered, false, Some(page.origin())).unwrap()["id"].as_str().unwrap().to_owned()
+    }
+
+    /// The execution `basis` copied as a later one, `id`, in the same second: the folder reserved later wins.
+    fn later_measure(store: &Store, key: &str, run: &str, basis: &str, id: &str) {
+        let executions = store.run_dir(key, run).unwrap().join("executions");
+        let mut later: Value = serde_json::from_slice(&fs::read(executions.join(basis).join("execution.json")).unwrap()).unwrap();
+        later["id"] = json!(id);
+        fs::create_dir_all(executions.join(id)).unwrap();
+        fs::write(executions.join(id).join("execution.json"), serde_json::to_vec_pretty(&later).unwrap()).unwrap();
+    }
+
+    #[test]
+    fn a_question_whose_selection_rested_on_an_earlier_measure_records_that_it_diverges_and_is_still_sent() {
+        // The audit's probe: the suggestion read 01-contagem-tudo, the question 99-depois.
+        let (_scratch, store, key, run) = measured_mix();
+        let turn = selected_question(&store, &key, &run, || later_measure(&store, &key, &run, "01-contagem-tudo", "99-depois"));
+        let (question, bytes, package) = package_of(&store, &key, &run, &turn);
+        assert_eq!((package.format_version, &question["evidence"]["format_version"]), (PackageFormat::V2, &json!(2)));
+        let MeasureAtQuestion::Ok { execution: at, .. } = &package.measure.at_question else { panic!("{:?}", package.measure.at_question) };
+        let MeasureSelectionBasis::Ok { execution: basis, .. } = &package.measure.selection_basis else { panic!("{:?}", package.measure.selection_basis) };
+        assert_eq!((at.as_str(), basis.as_str()), ("99-depois", "01-contagem-tudo"));
+        assert_eq!((package.measure.measure_diverges, package.measure.measure_divergence.clone()), (None, Some(MeasureDivergence::Diverges {})));
+        // H1 to H3 pass, H4 is told apart, and there is no format 1 warning.
+        let (_, now) = evidence_of(&store, &key, &run, &turn);
+        assert_eq!(statuses(&now), ["passed", "passed", "passed"]);
+        assert_eq!((&now["h4"]["status"], &now["warnings"]), (&json!("reproduced"), &json!([])));
+        assert_eq!(now["package"]["measure"]["measure_divergence"], json!({ "status": "diverges" }));
+        // The divergence blocks nothing: the question is sent, linked to this package.
+        let (status, sent) = api(&store, "/api/send", &json!({ "key": key, "run": run, "turn": turn, "provider": "test" }));
+        assert_eq!(status, 200, "{sent}");
+        assert_eq!(sent["link"]["evidence_sha256"], json!(hash(&bytes)));
+        assert_eq!(sent["link"]["checks"], json!(["prepare::verify", "claims::verify", "evidence_h1", "evidence_h2", "evidence_h3"]));
+        // H3 made the same package again: the stored bytes did not change.
+        assert_eq!(package_of(&store, &key, &run, &turn).1, bytes);
+    }
+
+    #[test]
+    fn each_state_of_the_comparison_comes_from_a_real_question_and_is_made_again_by_h3() {
+        // Same measure on both sides.
+        let (_scratch, store, key, run) = measured_mix();
+        let same = selected_question(&store, &key, &run, || {});
+        // No selection.
+        let node = symbol_id(&store, &key, &run, "roda");
+        let plain = store.ask_gathered(&key, &run, "Por que roda?", std::slice::from_ref(&node), false, None).unwrap()["id"].as_str().unwrap().to_owned();
+        // The question's measure unreadable: an execution that does not parse is the latest.
+        let broken = store.run_dir(&key, &run).unwrap().join("executions/99-quebrada");
+        let at_unreadable = selected_question(&store, &key, &run, || {
+            fs::create_dir_all(&broken).unwrap();
+            fs::write(broken.join("execution.json"), b"{ metade").unwrap();
+        });
+        // The suggestion's measure unreadable, the question's read once the broken one is gone.
+        let mut page = Page::new(&store, &key, &run);
+        page.toggle(&node);
+        page.suggest(&store, &key, &run, std::slice::from_ref(&node));
+        fs::remove_dir_all(&broken).unwrap();
+        let basis_unreadable = store.ask_gathered(&key, &run, "Por que roda?", &page.gathered, false, Some(page.origin())).unwrap()["id"].as_str().unwrap().to_owned();
+        let reason = |side, read_status| NotComparable { side, read_status };
+        let expected = [
+            (&same, MeasureDivergence::Same {}),
+            (&plain, MeasureDivergence::NotApplicable {}),
+            (&at_unreadable, MeasureDivergence::NotComparable { reasons: vec![reason(MeasureSide::AtQuestion, Incomparable::Unreadable)] }),
+            (&basis_unreadable, MeasureDivergence::NotComparable { reasons: vec![reason(MeasureSide::SelectionBasis, Incomparable::Unreadable)] }),
+        ];
+        for (turn, divergence) in expected {
+            let (_, bytes, package) = package_of(&store, &key, &run, turn);
+            assert_eq!(package.measure.measure_divergence, Some(divergence.clone()), "{turn}");
+            assert_eq!(package.measure.measure_divergence, Some(evidence::measure_divergence(&package.measure.at_question, &package.measure.selection_basis)), "{turn}");
+            // H1 to H3 pass, and H3 made the same bytes again.
+            assert_eq!(refusal_of(&store, &key, &run, turn), "", "{turn}");
+            assert_eq!(package_of(&store, &key, &run, turn).1, bytes, "{turn}");
+        }
+        // The reasons as written: which side, and why.
+        let (_, _, package) = package_of(&store, &key, &run, &basis_unreadable);
+        assert_eq!(serde_json::to_value(package.measure.measure_divergence).unwrap(),
+            json!({ "status": "not_comparable", "reasons": [{ "side": "selection_basis", "read_status": "unreadable" }] }));
+    }
+
+    #[test]
+    fn a_format_2_divergence_changed_consistently_is_refused_and_one_changed_to_agree_is_made_again() {
+        let (_scratch, store, key, run) = measured_mix();
+        let turn = selected_question(&store, &key, &run, || later_measure(&store, &key, &run, "01-contagem-tudo", "99-depois"));
+        let reason = |side, read_status| NotComparable { side, read_status };
+        // Each other state, written with the mark made again: H1 refuses it.
+        for wrong in [MeasureDivergence::Same {}, MeasureDivergence::NotApplicable {},
+            MeasureDivergence::NotComparable { reasons: vec![reason(MeasureSide::AtQuestion, Incomparable::Unreadable)] },
+            MeasureDivergence::NotComparable { reasons: vec![] }] {
+            forge(&store, &key, &run, &turn, |p| p.measure.measure_divergence = Some(wrong.clone()));
+            assert!(refusal_of(&store, &key, &run, &turn).starts_with("H1: Shape { what: \"measure divergence\""), "{wrong:?}");
+        }
+        forge(&store, &key, &run, &turn, |p| p.measure.measure_divergence = Some(MeasureDivergence::Diverges {}));
+        assert_eq!(refusal_of(&store, &key, &run, &turn), "");
+        // The question's measure changed and the state made to agree with it: H1 passes, and H3 keeps
+        // the measure as recorded (it is not read again; a limitation since the Passo 9).
+        forge(&store, &key, &run, &turn, |p| {
+            let MeasureSelectionBasis::Ok { execution, execution_sha256, .. } = p.measure.selection_basis.clone() else { panic!() };
+            p.measure.at_question = MeasureAtQuestion::Ok { execution, execution_sha256 };
+            p.measure.measure_divergence = Some(MeasureDivergence::Same {});
+        });
+        assert_eq!(refusal_of(&store, &key, &run, &turn), "");
+        // A reason changed in a not comparable package: the side, or the cause.
+        let (_scratch2, store, key, run) = measured_mix();
+        let broken = store.run_dir(&key, &run).unwrap().join("executions/99-quebrada");
+        let turn = selected_question(&store, &key, &run, || {
+            fs::create_dir_all(&broken).unwrap();
+            fs::write(broken.join("execution.json"), b"{ metade").unwrap();
+        });
+        assert_eq!(refusal_of(&store, &key, &run, &turn), "");
+        for wrong in [vec![reason(MeasureSide::SelectionBasis, Incomparable::Unreadable)], vec![reason(MeasureSide::AtQuestion, Incomparable::NotRecorded)],
+            vec![reason(MeasureSide::AtQuestion, Incomparable::Unreadable), reason(MeasureSide::SelectionBasis, Incomparable::Unreadable)]] {
+            forge(&store, &key, &run, &turn, |p| p.measure.measure_divergence = Some(MeasureDivergence::NotComparable { reasons: wrong.clone() }));
+            assert!(refusal_of(&store, &key, &run, &turn).starts_with("H1: Shape { what: \"measure divergence\""), "{wrong:?}");
+        }
+    }
+
+    /// The format 1 store written by the code before format 2 (P1), copied to a scratch folder. The
+    /// files are text: a checkout that wrote CRLF gets back the LF they were written with.
+    fn format_1_store() -> (Scratch, Store, Value) {
+        let scratch = project();
+        fn copy(from: &Path, to: &Path) {
+            fs::create_dir_all(to).unwrap();
+            for entry in fs::read_dir(from).unwrap().flatten() {
+                let (a, b) = (entry.path(), to.join(entry.file_name()));
+                if a.is_dir() { copy(&a, &b) } else { fs::write(&b, String::from_utf8(fs::read(&a).unwrap()).unwrap().replace("\r\n", "\n")).unwrap(); }
+            }
+        }
+        let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/evidence-v1");
+        copy(&fixture, &scratch.0.join("v1"));
+        let manifest: Value = serde_json::from_slice(&fs::read(scratch.0.join("v1/manifest.json")).unwrap()).unwrap();
+        let store = Store { dir: scratch.0.join("v1/studio"), modelfiles: scratch.0.join("modelfiles") };
+        (scratch, store, manifest)
+    }
+
+    #[test]
+    fn a_format_1_package_written_before_format_2_passes_h1_to_h3_as_it_was_and_keeps_its_bytes() {
+        let (_scratch, store, manifest) = format_1_store();
+        let (key, run) = (manifest["key"].as_str().unwrap(), manifest["run"].as_str().unwrap());
+        // The packages as the earlier code wrote them: these bytes, pinned here.
+        let pinned = [("01", "b7fa86ffa485ad8f0167a9c1a7b3aedfdcbee752fcdf8780e26752fa93dcf9b1"), ("02", "b0147ed7a7305492994e8a0bcfa35a9832e78893f628cc13f401886869c9c9ac")];
+        assert_eq!((manifest["divergent"].as_str(), manifest["plain"].as_str()), (Some("01"), Some("02")));
+        for (turn, sha) in pinned {
+            let (question, bytes, package) = package_of(&store, key, run, turn);
+            assert_eq!((hash(&bytes).as_str(), &question["evidence"]), (sha, &json!({ "format_version": 1, "sha256": sha })), "{turn}");
+            assert_eq!((package.format_version, package.measure.measure_diverges, &package.measure.measure_divergence), (PackageFormat::V1, Some(false), &None), "{turn}");
+            // H1 to H3 pass, by the format 1 rule; nothing is rewritten (`evidence_of` compares every
+            // file of the store before and after).
+            assert_eq!(refusal_of(&store, key, run, turn), "", "{turn}");
+            let (_, now) = evidence_of(&store, key, run, turn);
+            assert_eq!(statuses(&now), ["passed", "passed", "passed"], "{turn}");
+            // What the earlier code answered: the same checks, the same H4, the same measure.
+            let old = &manifest["old_code"][turn];
+            assert_eq!((&now["checks"], &now["h4"], &now["package"]["measure"]), (&old["checks"], &old["h4"], &old["measure"]), "{turn}");
+            // Its false proves nothing, and the answer says so.
+            assert_eq!(now["warnings"], json!(["measure_diverges_not_computed"]), "{turn}");
+            assert_eq!(package_of(&store, key, run, turn).1, bytes, "{turn}");
+        }
+        // The divergent one: its two measures differ, yet format 1 wrote false, and is checked as format 1.
+        let (_, _, package) = package_of(&store, key, run, "01");
+        assert_eq!(evidence::measure_divergence(&package.measure.at_question, &package.measure.selection_basis), MeasureDivergence::Diverges {});
+        let (status, sent) = api(&store, "/api/send", &json!({ "key": key, "run": run, "turn": "01", "provider": "test" }));
+        assert_eq!((status, &sent["link"]["evidence_sha256"]), (200, &json!(pinned[0].1)), "{sent}");
+    }
+
+    #[test]
+    fn a_format_1_package_is_made_again_by_its_own_rule_and_not_read_as_format_2() {
+        let (_scratch, store, manifest) = format_1_store();
+        let (key, run) = (manifest["key"].as_str().unwrap(), manifest["run"].as_str().unwrap());
+        // A format 1 package saying true: that format never wrote it, and H3 makes false again.
+        forge(&store, key, run, "01", |p| p.measure.measure_diverges = Some(true));
+        assert_eq!(refusal_of(&store, key, run, "01"), "H3: o código atual não refaz measure do pacote; nada foi enviado");
+        forge(&store, key, run, "01", |p| p.measure.measure_diverges = Some(false));
+        assert_eq!(refusal_of(&store, key, run, "01"), "");
+        // Turned into format 2 with the state worked out, and its mark with it: H3 makes format 2 again,
+        // which this package's question did not have when it was written.
+        forge(&store, key, run, "02", |p| {
+            p.format_version = PackageFormat::V2;
+            p.measure.measure_diverges = None;
+            p.measure.measure_divergence = Some(evidence::measure_divergence(&p.measure.at_question, &p.measure.selection_basis));
+        });
+        remark(&store, key, run, "02", |q| q["evidence"]["format_version"] = json!(2));
+        assert_eq!(refusal_of(&store, key, run, "02"), "");
+        // The mark alone says 2: refused before anything else.
+        let (_scratch, store, _) = format_1_store();
+        remark(&store, key, run, "01", |q| q["evidence"]["format_version"] = json!(2));
+        assert_eq!(refusal_of(&store, key, run, "01"), "H1: o formato da marca não é o do pacote; nada foi enviado");
+        // H2 as before: a unit whose text the snapshot does not give is refused by H2, in format 1 too.
+        let (_scratch, store, _) = format_1_store();
+        forge(&store, key, run, "01", |p| p.units[0].text_sha256 = Sha256Hex::try_from("0".repeat(64)).unwrap());
+        assert!(refusal_of(&store, key, run, "01").starts_with("H2: TextDiffers"));
     }
 }

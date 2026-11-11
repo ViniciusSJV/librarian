@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "extractor": "librarian-ingest/0.8.0;syn/3.0.5;rustpython-parser/0.4.0;rust-structural-v6;python-structural-v4",
+  "config": {
+    "project": "project",
+    "inputs": [
+      "src",
+      "Cargo.toml"
+    ]
+  },
+  "git": {
+    "head": "603cac413dc133adf0ea09ad1ff6d5e4511a3bac",
+    "dirty": false
+  },
+  "files": {
+    "chunks.jsonl": "0eff19f739e5e43728661fb029078996bf61d63c5bfb9629f941d68e02673d29",
+    "diagnostics.json": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "sources.jsonl": "3fd924ac231abf21ad7b8892d9abfe2a8967c85f99e1a611eb74b69c44779ef8",
+    "symbols.jsonl": "159821076131fea4c92fb6d9a0c2a39f60f0b28f460bad536fba9e42422325e0"
+  },
+  "source_count": 4,
+  "symbol_count": 24,
+  "diagnostic_count": 0,
+  "limits": [
+    "Structural declarations only; no behavioral claims or executed-test evidence.",
+    "Rust: no macro expansion, cfg evaluation, cross-file name resolution or call graph.",
+    "Python: no import resolution, dynamic dispatch, decorator evaluation or runtime behavior; files that do not parse are diagnostics.",
+    "Fields: Rust named struct fields; Python class-body assignments and self.<name> assignments in __init__. Python module variables: names assigned at module level, declared by their first assignment.",
+    "Calls, attribute accesses, base classes, names used as values, keyword arguments and patterns link to same-named declarations as candidates; receivers and types are not resolved.",
+    "Rust: struct literals, the fields they fill, field writes (x.f = ..., x.f += ...) and the type written in an impl are candidates by name.",
+    "A plain name is a use only when it is not bound in its function (parameters, assignments, patterns) and matches a declaration; names in macros, getattr or strings are not seen.",
+    "Python: a plain name used as a value or written links only to the top-level declaration of its own file when there is one (module scope); otherwise to every same-named declaration. Imports are not followed.",
+    "Python module writes: assignment to a name declared global, and to an item of a module name (x[k] = v); mutating calls (x.update(...)) are reads of the name.",
+    "Rust: a closure passed to for_each, map, filter, fold and the like on a written iterator chain (iter(), par_bridge(), a range, ...) is a loop; one passed to a method on anything else (Option::map) is not.",
+    "Rust: a method call receiver gets a receiver_type when its type is written: self in an impl, an annotated parameter or let, T::f(..), T { .. }, a field or the element of a collection field declared in the same file, a tuple variant pattern of an enum declared in the same file; the base of a field access or write gets one the same way. A later binding of a name replaces the earlier in the whole function; blocks are not scopes.",
+    "Loops and with blocks are structure: being inside one says nothing about how many times or for how long the code runs.",
+    "Python: parameters, `x in name` comparisons and names bound to a list literal, list comprehension, list(...) or sorted(...) in a function are recorded as written; a list built otherwise (append, a call's result) is not seen as a list.",
+    "A name with more than 8 same-language declarations of a candidate kind gets no candidate edges; the occurrence records the count.",
+    "Test markers are observations (Rust #[test]; Python test*/Test* names), not evidence that tests ran.",
+    "File-local scopes; ordinary comments are preserved in snapshots, not attached to declarations.",
+    "Files read individually; no atomic repository snapshot or Git/author authentication.",
+    "Parse failures preserve bytes and diagnostics; completeness requires inspecting diagnostics.",
+    "Hashes establish consistency, not authenticity; manifest is not signed."
+  ]
+}

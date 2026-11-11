@@ -1,0 +1,37 @@
+pub fn roda() -> u32 {
+    1
+}
+pub fn contada_sem_rodar() -> u32 {
+    2
+}
+pub trait Forma {
+    fn area(&self) -> f64;
+    fn nome(&self) -> u32 {
+        3
+    }
+}
+pub struct C;
+impl C {
+    pub fn metodo(&self) -> u32 {
+        4
+    }
+}
+pub const fn constante() -> u32 {
+    5
+}
+pub fn ja_conta() -> u32 {
+    crate::count!();
+    6
+}
+pub fn ja_conta_sem_linha() -> u32 {
+    crate::count!();
+    7
+}
+#[test]
+fn um_teste() {}
+pub const PRINTED: &str = "
+librarian-measure calls=10 at=src/lib.rs:1
+librarian-measure calls=7 at=src/lib.rs:15
+librarian-measure calls=5 at=src/lib.rs:23
+librarian-measure calls=3 at=src/app.py:4
+";

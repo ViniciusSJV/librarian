@@ -1,0 +1,324 @@
+{
+  "kind": "suggestion_record",
+  "format_version": 1,
+  "edition_origin": "edition:1a9cdc6b1b2e12b56925a3f106faae550a26ebb7bdb3cb68a17f57c4a7ee928b",
+  "rules_version": "envelope-1",
+  "input": {
+    "nodes": [
+      "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9:function:0:30"
+    ],
+    "budget_bytes": 6144,
+    "max_items": 16
+  },
+  "inventory_rules": {
+    "version": "operation-inventory-v1",
+    "sha256": "6caf792c94464c30f4ba54538102e6d8a34481d7ecb061f81a384545a97cf0ff",
+    "rules": [
+      {
+        "origin": "builtin",
+        "rule": {
+          "description": "Função matemática da biblioteca padrão",
+          "id": "math.call",
+          "language": "python",
+          "match": "call",
+          "names": [
+            "sqrt",
+            "sin",
+            "cos",
+            "tan",
+            "asin",
+            "acos",
+            "atan",
+            "atan2",
+            "radians",
+            "degrees",
+            "hypot",
+            "exp",
+            "log",
+            "pow"
+          ],
+          "operation": "math",
+          "receivers": [
+            "",
+            "math",
+            "np",
+            "numpy"
+          ]
+        }
+      },
+      {
+        "origin": "builtin",
+        "rule": {
+          "description": "Método matemático de número",
+          "id": "math.method",
+          "language": "rust",
+          "match": "call",
+          "names": [
+            "sqrt",
+            "powi",
+            "powf",
+            "sin",
+            "cos",
+            "tan",
+            "asin",
+            "acos",
+            "atan2",
+            "hypot",
+            "exp",
+            "ln",
+            "abs"
+          ],
+          "operation": "math",
+          "receivers": []
+        }
+      },
+      {
+        "origin": "builtin",
+        "rule": {
+          "description": "Abre ou lê arquivo",
+          "id": "file.open",
+          "language": "python",
+          "match": "call",
+          "names": [
+            "open",
+            "read_text",
+            "write_text",
+            "read_bytes",
+            "write_bytes"
+          ],
+          "operation": "file",
+          "receivers": []
+        }
+      },
+      {
+        "origin": "builtin",
+        "rule": {
+          "description": "Abre ou lê arquivo",
+          "id": "file.fs",
+          "language": "rust",
+          "match": "call",
+          "names": [
+            "open",
+            "create",
+            "read_to_string",
+            "read",
+            "write"
+          ],
+          "operation": "file",
+          "receivers": [
+            "File",
+            "fs"
+          ]
+        }
+      },
+      {
+        "origin": "builtin",
+        "rule": {
+          "description": "Requisição HTTP",
+          "id": "network.http",
+          "language": "python",
+          "match": "call",
+          "names": [
+            "get",
+            "post",
+            "put",
+            "patch",
+            "delete",
+            "request"
+          ],
+          "operation": "network",
+          "receivers": [
+            "requests",
+            "httpx",
+            "client"
+          ]
+        }
+      },
+      {
+        "origin": "builtin",
+        "rule": {
+          "description": "Abre uma URL",
+          "id": "network.urlopen",
+          "language": "python",
+          "match": "call",
+          "names": [
+            "urlopen"
+          ],
+          "operation": "network",
+          "receivers": []
+        }
+      },
+      {
+        "origin": "builtin",
+        "rule": {
+          "description": "Espera parada",
+          "id": "process.sleep",
+          "match": "call",
+          "names": [
+            "sleep"
+          ],
+          "operation": "sleep",
+          "receivers": [
+            "time",
+            "asyncio",
+            "thread",
+            ""
+          ]
+        }
+      },
+      {
+        "origin": "builtin",
+        "rule": {
+          "description": "Processo externo",
+          "id": "process.subprocess",
+          "language": "python",
+          "match": "call",
+          "names": [
+            "run",
+            "Popen",
+            "check_output",
+            "check_call",
+            "call"
+          ],
+          "operation": "process",
+          "receivers": [
+            "subprocess"
+          ]
+        }
+      },
+      {
+        "origin": "builtin",
+        "rule": {
+          "description": "Cria ou toma uma trava",
+          "id": "lock.python",
+          "language": "python",
+          "match": "call",
+          "names": [
+            "Lock",
+            "RLock",
+            "Semaphore",
+            "BoundedSemaphore",
+            "acquire"
+          ],
+          "operation": "lock",
+          "receivers": []
+        }
+      },
+      {
+        "origin": "builtin",
+        "rule": {
+          "description": "Toma uma trava",
+          "id": "lock.rust",
+          "language": "rust",
+          "match": "call",
+          "names": [
+            "lock"
+          ],
+          "operation": "lock",
+          "receivers": []
+        }
+      },
+      {
+        "origin": "builtin",
+        "rule": {
+          "description": "Escreve um nome do módulo",
+          "id": "state.module_write",
+          "match": "module_write",
+          "operation": "state"
+        }
+      },
+      {
+        "origin": "builtin",
+        "rule": {
+          "description": "Procura com in numa lista: percorre a lista",
+          "id": "collection.list_membership",
+          "language": "python",
+          "match": "list_membership",
+          "operation": "list_scan"
+        }
+      }
+    ]
+  },
+  "measure": {
+    "read_status": "ok",
+    "execution": "01-contagem-tudo",
+    "execution_sha256": "ab6d02ad5c12b0731cc3335f54753edc8857df4635904822d6c8e82902120782"
+  },
+  "output": {
+    "items": [
+      {
+        "bytes": 30,
+        "calls": 10.0,
+        "coverage_state": "counted_and_ran",
+        "end_line": 3,
+        "exclusion_reason": null,
+        "facts": [],
+        "id": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9:function:0:30",
+        "kind": "function",
+        "name": "roda",
+        "path": "src/lib.rs",
+        "reasons": [
+          {
+            "code": "chosen",
+            "for_target": "roda"
+          }
+        ],
+        "role": "target",
+        "start_line": 1,
+        "zero_evidence": null
+      }
+    ],
+    "left_out": [],
+    "gaps": [],
+    "behavior": [],
+    "measured": true,
+    "used_bytes": 30,
+    "coverage": {
+      "by_language": {
+        "python": {
+          "counted": 1,
+          "counted_and_ran": 1,
+          "counted_no_passes": 0,
+          "no_coverage": 8,
+          "total": 9
+        },
+        "rust": {
+          "counted": 5,
+          "counted_and_ran": 3,
+          "counted_no_passes": 2,
+          "no_coverage": 5,
+          "total": 10
+        }
+      },
+      "counted": 6,
+      "counted_and_ran": 4,
+      "counted_no_passes": 2,
+      "excluded": {
+        "already_counts": 1,
+        "const_fn": 1,
+        "language_not_supported": 8,
+        "no_body": 1,
+        "skipped_path": 1,
+        "test": 1
+      },
+      "instrumented": 4,
+      "limits": [
+        "Sem cobertura quer dizer que esta medição não observou a função; não quer dizer que ela não rodou.",
+        "Contada e sem passagens quer dizer que esta medição não observou passagens positivas, não que ela não rodou: o programa pode zerar as contagens durante a execução, ou não imprimir uma linha.",
+        "Contadas inclui quem imprimiu uma contagem sem ter recebido a instrução; por isso o número pode passar o de instrumentadas."
+      ],
+      "no_coverage": 13,
+      "partial": true,
+      "reasons_recorded": true,
+      "total": 19,
+      "zero_evidence": {
+        "no_line": 2
+      }
+    },
+    "limits": [
+      "Suggested envelope: written names only (owner, field writes, calls, callers, type names, file heads); nothing was resolved by a compiler, and what is not written by name is not found.",
+      "Callers and types are added only when the written name matches one declaration; homonyms are left out.",
+      "Behavior covers loops, inventory operations, field writes and tests the graph sees; conditions, alternative paths and invariants are not extracted, and calls inside macros are not seen."
+    ]
+  }
+}

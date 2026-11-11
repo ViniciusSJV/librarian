@@ -1,0 +1,4 @@
+librarian-measure calls=10 at=src/lib.rs:1
+librarian-measure calls=7 at=src/lib.rs:15
+librarian-measure calls=5 at=src/lib.rs:23
+librarian-measure calls=3 at=src/app.py:4

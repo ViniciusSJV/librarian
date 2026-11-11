@@ -1,0 +1,43 @@
+{
+  "callees": true,
+  "depth": 0,
+  "gathered": true,
+  "hits": 1,
+  "instructions": [
+    "Instrução do projeto."
+  ],
+  "notes": [
+    "Uma nota.",
+    "Uma nota."
+  ],
+  "numbered_lines": true,
+  "owner_context": true,
+  "question": "O que ler devolve?",
+  "radius": 0,
+  "reviewed_facts": [
+    {
+      "authorship": "revisão humana no Librarian Studio",
+      "citations": [
+        {
+          "end_line": 6,
+          "path": "src/d.rs",
+          "quote": "        self.x",
+          "start_line": 6
+        }
+      ],
+      "end_line": 6,
+      "id": "F1",
+      "line": 6,
+      "path": "src/d.rs",
+      "statement": "ler devolve o campo x."
+    }
+  ],
+  "targets": [
+    {
+      "declaration_line": 5,
+      "path": "src/d.rs",
+      "symbol_name": "ler"
+    }
+  ],
+  "top": 1
+}

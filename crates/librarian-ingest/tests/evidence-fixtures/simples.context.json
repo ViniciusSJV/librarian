@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "policy": {
+    "allow_inference": false,
+    "allow_hypothesis": false
+  },
+  "evidence": [
+    {
+      "id": "E1",
+      "path": "src/b.rs",
+      "start_line": 1,
+      "end_line": 1,
+      "excerpt": "fn outra() {}",
+      "symbols": [
+        {
+          "name": "outra",
+          "declaration_line": 1,
+          "name_column": 4,
+          "end_line": 1
+        }
+      ]
+    }
+  ],
+  "require_location": true,
+  "limits": [
+    "Chain step: declarations named by mechanically checked answers to an earlier question; nothing was searched.",
+    "Name candidates are not resolved types/calls/fields/imports. No macros, cfg or decorator evaluation, compiler or runtime proof.",
+    "Graph expands only the first hit. Source nodes are leaves. Depth bounded to 0..3, 48 nodes, 96 edges.",
+    "Excerpts limited to 4000 UTF-8 bytes each and 16000 total. Truncation is explicit; hashes/lines refer to full chunks.",
+    "Fichas descrevem onde estão declarações; não respondem à pergunta nem afirmam comportamento."
+  ],
+  "strict_text": true,
+  "precise_location": true,
+  "name_gaps": true
+}

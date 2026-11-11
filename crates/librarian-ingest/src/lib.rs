@@ -1,6 +1,7 @@
 //! Immutable file-backed source editions. Hashes check consistency, not authenticity.
 pub mod cli;
 pub mod envelope;
+pub mod evidence;
 pub mod inventory;
 mod extractors;
 pub mod graph;

@@ -1,0 +1,23 @@
+{
+  "answer_format": "claims",
+  "asked": {
+    "original": "Por que roda?",
+    "suffixes": []
+  },
+  "claims_error": null,
+  "created": "20261111-145426",
+  "criteria_sha256": null,
+  "evidence": {
+    "format_version": 1,
+    "sha256": "b0147ed7a7305492994e8a0bcfa35a9832e78893f628cc13f401886869c9c9ac"
+  },
+  "gathered": {
+    "nodes": [
+      "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9:function:0:30"
+    ],
+    "reviewed_facts": [],
+    "with_facts": false
+  },
+  "prepare_error": null,
+  "question": "Por que roda?"
+}

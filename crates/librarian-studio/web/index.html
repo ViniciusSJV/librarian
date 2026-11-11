@@ -138,6 +138,8 @@
   .chip { display: inline-block; margin: 2px 4px 2px 0; padding: 0 7px; border: 1px solid var(--border); border-radius: 999px; font-size: 11px; }
   .chip.hit { border-color: var(--cat-symbol); }
   .chip.miss { color: var(--text-muted); text-decoration: line-through; }
+  .evidence-body { overflow-wrap: anywhere; font-size: 12px; }
+  .evidence-body ul { margin: 4px 0; padding-left: 16px; }
   .verdict { font-weight: 600; }
   .verdict.passed { color: var(--cat-occurrence); }
   .claims { margin: 6px 0 0; padding-left: 18px; }
@@ -1373,6 +1375,57 @@ const STRINGS = {
   'turn.resend': ['Enviar de novo…', 'Send again…'],
   'turn.sendFirst': ['Enviar…', 'Send…'],
   'turn.evidence': ['Evidência: {n} declarações', 'Evidence: {n} declarations'],
+  'evidence.title': ['Pacote de evidências e conferências', 'Evidence package and checks'],
+  'evidence.loading': ['Lendo o pacote…', 'Reading the package…'],
+  'evidence.checks': ['Conferências de agora', 'Checks made now'],
+  'evidence.checksNote': ['H1 a H3 são conferidos antes de cada envio, e um envio só sai com os três. H4 só informa.', 'H1 to H3 are checked before every send, and a send goes only with all three. H4 only tells.'],
+  'evidence.h1': ['H1 integridade', 'H1 integrity'],
+  'evidence.h2': ['H2 fonte', 'H2 source'],
+  'evidence.h3': ['H3 rederivação', 'H3 rederivation'],
+  'evidence.status.passed': ['conferido', 'checked'],
+  'evidence.status.refused': ['recusado', 'refused'],
+  'evidence.status.not_run': ['não conferido: um nível anterior recusou', 'not checked: an earlier level refused'],
+  'evidence.status.not_applicable': ['não se aplica', 'not applicable'],
+  'evidence.h4': ['H4 reprodução da sugestão', 'H4 reproduction of the suggestion'],
+  'evidence.h4.reproduced': ['as sugestões citadas foram refeitas iguais, exceto os facts', 'the cited suggestions were made again the same, but for the facts'],
+  'evidence.h4.not_replayable': ['ao menos uma sugestão citada não foi refeita como registrada', 'at least one cited suggestion was not made again as recorded'],
+  'evidence.h4.not_applicable': ['não há sugestão por trás desta pergunta', 'no suggestion is behind this question'],
+  'evidence.h4.none': ['não calculado: o pacote não pôde ser lido (veja H1)', 'not computed: the package could not be read (see H1)'],
+  'evidence.h4.one': ['refeita igual, exceto os facts', 'made again the same, but for the facts'],
+  'evidence.h4.reason.suggestion_missing': ['registro da sugestão ausente', 'suggestion record missing'],
+  'evidence.h4.reason.execution_missing': ['a execução lida não existe mais', 'the execution read is gone'],
+  'evidence.h4.reason.execution_differs': ['a execução lida mudou', 'the execution read changed'],
+  'evidence.h4.reason.rules_version_differs': ['regras de outra versão', 'rules of another version'],
+  'evidence.h4.reason.output_differs': ['mesmas regras, sugestão refeita diferente', 'same rules, suggestion made again differs'],
+  'evidence.h4.facts': ['Os facts de cada item vêm do registro e não foram refeitos: H4 não diz nada do conteúdo atual desses fatos.', 'Each item\x27s facts come from the record and were not made again: H4 says nothing of those facts\x27 content now.'],
+  'evidence.h4.builder': ['Código da pergunta: {builder}; recuperável: {recoverable}.', 'Code of the question: {builder}; recoverable: {recoverable}.'],
+  'evidence.h4Note': ['H4 diz se a sugestão se refaz a partir das referências; não diz que ela é verdadeira, suficiente ou correta, e não impede o envio.', 'H4 tells whether the suggestion comes again from its references; not that it is true, enough or right, and it does not stop a send.'],
+  'evidence.noPackage': ['Sem pacote gravado.', 'No package recorded.'],
+  'evidence.mark': ['Marca da pergunta: {mark}', 'Question\x27s mark: {mark}'],
+  'evidence.recorded': ['Gravado com a pergunta', 'Recorded with the question'],
+  'evidence.package': ['Rota {route} · origem {origin} · forma {representation} · normalização {normalization} · regras {rules} · código {builder}', 'Route {route} · origin {origin} · form {representation} · normalization {normalization} · rules {rules} · code {builder}'],
+  'evidence.fichas': ['Fichas ({n})', 'Fichas ({n})'],
+  'evidence.classes': ['Classes dos campos da query ({n})', 'Classes of the query\x27s fields ({n})'],
+  'evidence.classLine': ['{class} · origem {origin} · produtor {producer} · {provenance} · {places} lugares', '{class} · origin {origin} · producer {producer} · {provenance} · {places} places'],
+  'evidence.question': ['Texto da pessoa: declared_by {person}; acréscimos do servidor: {suffixes}', 'Person\x27s text: declared_by {person}; server\x27s additions: {suffixes}'],
+  'evidence.additions': ['Complementações do servidor ({n})', 'Server additions ({n})'],
+  'evidence.addition': ['{symbol} · pedido como {name} · rodada {round} · de {turn}/{send}', '{symbol} · asked as {name} · round {round} · from {turn}/{send}'],
+  'evidence.selection': ['Seleção: registro {sha} · {n} sugestões · vínculo declared_by {by}', 'Selection: record {sha} · {n} suggestions · link declared_by {by}'],
+  'evidence.client': ['Declarado pela cliente (não verificado como ação humana): {decisions} decisões, {manual} fontes manuais', 'Declared by the client (not verified as a human action): {decisions} decisions, {manual} manual sources'],
+  'evidence.measure': ['Medição gravada: na pergunta {at}; da seleção {basis}; measure_diverges gravado: {diverges}', 'Recorded measure: at the question {at}; of the selection {basis}; measure_diverges recorded: {diverges}'],
+  'evidence.measure2': ['Medição gravada: na pergunta {at}; da seleção {basis}', 'Recorded measure: at the question {at}; of the selection {basis}'],
+  'evidence.divergence': ['Comparação das duas medições, gravada no formato 2: {state}', 'The two measures compared, recorded in format 2: {state}'],
+  'evidence.divergence.same': ['a mesma medição nos dois lados', 'the same measure on both sides'],
+  'evidence.divergence.diverges': ['medições diferentes: a seleção se apoiou numa medição que não é a registrada na pergunta (isso não bloqueia o envio)', 'different measures: the selection rested on a measure other than the one recorded with the question (this does not block sending)'],
+  'evidence.divergence.not_comparable': ['não dá para comparar: {reasons}', 'cannot be compared: {reasons}'],
+  'evidence.divergence.not_applicable': ['não se aplica: a pergunta não tem seleção', 'not applicable: the question has no selection'],
+  'evidence.side.at_question': ['a medição da pergunta', 'the measure of the question'],
+  'evidence.side.selection_basis': ['a medição em que a seleção se apoiou', 'the measure the selection rested on'],
+  'evidence.cause.unreadable': ['não pôde ser lida', 'could not be read'],
+  'evidence.cause.not_recorded': ['não foi registrada', 'was not recorded'],
+  'evidence.latest': ['Medição mais recente da edition, lida agora e não gravada: {latest}', 'Latest measure of the edition, read now and not recorded: {latest}'],
+  'evidence.warning.measure_diverges_not_computed': ['Aviso: measure_diverges ainda não é calculado e é gravado sempre como false; esse false não prova que as medições sejam iguais.', 'Warning: measure_diverges is not computed yet and is always recorded false; that false does not prove the measures are the same.'],
+  'evidence.limits': ['Os hashes provam consistência entre os arquivos, não autoria: apagar o pacote e a marca faz a pergunta parecer anterior às marcas. Nada aqui diz que uma resposta é verdadeira.', 'Hashes prove consistency between the files, not authorship: removing the package and its mark makes the question look older than marks. Nothing here says an answer is true.'],
   'turn.more': ['Mais ações', 'More actions'],
   'turn.expand': ['Abrir a pergunta', 'Open the question'],
   'turn.collapse': ['Recolher a pergunta', 'Fold the question'],
@@ -2305,7 +2358,7 @@ function toggleTarget(id) {
   seeds = seeds.includes(id) ? seeds.filter(g => g !== id) : [...seeds, id];
   renderGathered();
 }
-const newSelection = () => ({ sources: new Map(), decisions: new Map(), gaps: [] });
+const newSelection = () => ({ sources: new Map(), decisions: new Map(), gaps: [], suggestions: [] });
 const manualSource = id => { const n = state.nodes[state.index.get(id)];
   return { id, name: n?.label ?? id, path: null, kind: n?.kind ?? null, start_line: null, end_line: null, role: null, bytes: null, calls: null, reasons: [], facts: [], left_out_why: null, kept_out: null, provenance: 'manual' }; };
 // One action of the person over many sources: joining a suggestion, or asking for one and taking it whole.
@@ -2447,10 +2500,12 @@ function reasonText(r) {
 // Learns what a suggestion says about each source, keeping what earlier ones said: a new suggestion
 // may not mention a source that stays in the envelope. How a source first came (`provenance`) and
 // why a selection first kept it out (`left_out_why`) do not change; whether it is kept out now
-// (`kept_out`) follows the latest suggestion that mentions it. Never `notes`: in a question's
-// origin they would go to the model (see ask_gathered).
+// (`kept_out`) follows the latest suggestion that mentions it. Never `notes`: the server refuses
+// them. The hash the route answered with goes with the record, in the order absorbed: the server
+// checks the record against those suggestions.
 function absorbSuggestion(s, nodes) {
   selection ??= newSelection();
+  selection.suggestions.push(s.suggestion);
   const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
   const learn = (e, provenance) => {
     const before = selection.sources.get(e.id);
@@ -2463,7 +2518,8 @@ function absorbSuggestion(s, nodes) {
   selection.gaps = [...selection.gaps, ...s.gaps.filter(g => !selection.gaps.some(o => same(o, g)))];
   Object.assign(selection, { suggested_from: nodes, budget_bytes: s.budget_bytes, suggested_bytes: s.used_bytes, measured: s.measured });
 }
-// origin.selection, format 1: every source known, each in exactly one list. `included` is the
+// origin.selection, format 2: the suggestions it came from, by the hash the route gave each, in the
+// order absorbed; then every source known, each in exactly one list. `included` is the
 // envelope as it is sent, in its order, the same ids as the question's nodes; `removed` the person
 // took out; `left_out` the selection kept out (`why`); `not_joined` were suggested and never
 // brought in. Being in a list is the state now. Each source carries role, reasons, lines, bytes and
@@ -2479,7 +2535,7 @@ function selectionOnRecord() {
   const removed = e => selection.decisions.get(e.id)?.decision === 'removed';
   const others = [...selection.sources.values()].filter(e => !gathered.includes(e.id));
   const included = gathered.map(id => decided(selection.sources.get(id)));
-  return { format_version: 1, seeds, suggested_from: selection.suggested_from, measured: selection.measured, budget_bytes: selection.budget_bytes, suggested_bytes: selection.suggested_bytes,
+  return { kind: 'selection_record', format_version: 2, suggestions: selection.suggestions, seeds, suggested_from: selection.suggested_from, measured: selection.measured, budget_bytes: selection.budget_bytes, suggested_bytes: selection.suggested_bytes,
     included_bytes: included.reduce((sum, e) => sum + (e.bytes ?? 0), 0), included,
     removed: others.filter(removed).map(decided),
     left_out: others.filter(e => !removed(e) && e.kept_out).map(e => ({ ...decided(e), why: e.kept_out })),
@@ -2770,6 +2826,7 @@ function renderTurn(turn) {
       el('p', { className: 'muted', textContent: t('turn.sentHow') }),
       turn.answer_format === 'claims' ? el('p', { className: 'muted', textContent: t('turn.claimsHow') }) : null,
       el('pre', { textContent: turn.query })) : null,
+    evidenceView(turn),
     ...replies,
     turn.comparison ? compareView(turn.comparison) : null,
     turn.pending ? el('div', { className: 'bubble reply muted', textContent: t('turn.sending', { provider: turn.pending }) }) : null,
@@ -2779,6 +2836,85 @@ function renderTurn(turn) {
       chain, send, copyButton,
       el('span', { className: 'row', style: 'margin-left: auto; gap: 6px' }, more,
         el('button', { textContent: '⋯', title: t('turn.more'), onclick: () => { more.hidden = !more.hidden; } }))));
+}
+
+// The question's evidence package as recorded, and what the server checks of it now (GET /api/evidence).
+// Read when opened, and only read. H1 to H3 are what a send checks; H4 only tells.
+function evidenceView(turn) {
+  const box = el('div', { className: 'evidence-body' });
+  const details = el('details', { className: 'evidence', open: Boolean(turn.evidenceOpen) }, el('summary', { textContent: t('evidence.title') }), box);
+  details.dataset.turn = turn.id;
+  const show = data => box.replaceChildren(...evidenceParts(data));
+  const load = async () => {
+    box.replaceChildren(el('p', { className: 'muted', textContent: t('evidence.loading') }));
+    try {
+      turn.evidence = await api('GET', `/api/evidence?${query({ key: studio.project.key, run: studio.run, turn: turn.id })}`);
+      show(turn.evidence);
+    } catch (e) { box.replaceChildren(el('p', { className: 'error', textContent: e.message })); }
+  };
+  details.addEventListener('toggle', () => { turn.evidenceOpen = details.open; if (details.open) load(); });
+  if (turn.evidenceOpen && turn.evidence) show(turn.evidence);
+  return details;
+}
+function evidenceParts(data) {
+  const short = sha => sha ? String(sha).slice(0, 12) : '—';
+  const reading = m => !m ? '—' : m.read_status === 'ok' ? `ok ${m.execution} ${short(m.execution_sha256)}` : m.suggestion ? `${m.read_status} (${short(m.suggestion)})` : m.read_status;
+  const builder = b => !b ? '—' : b.status === 'recorded' ? `${short(b.git_commit)}${b.git_dirty ? ' dirty' : ''}` : b.status;
+  const check = h => {
+    const c = data.checks[h];
+    return el('li', {}, el('span', { className: `verdict ${c.status === 'passed' ? 'passed' : c.status === 'refused' ? 'error' : ''}`, textContent: `${t('evidence.' + h)}: ${t('evidence.status.' + c.status)}` }),
+      c.why ? el('div', { className: 'muted mono', textContent: c.why }) : null);
+  };
+  const h4 = data.h4;
+  const out = [
+    el('strong', { textContent: t('evidence.checks') }),
+    el('div', { className: 'muted', textContent: t('evidence.checksNote') }),
+    el('ul', {}, ...['h1', 'h2', 'h3'].map(check),
+      el('li', {}, el('span', { textContent: `${t('evidence.h4')}: ${h4 ? t('evidence.h4.' + h4.status) : t('evidence.h4.none')}` }),
+        h4?.suggestions?.length ? el('ul', {}, ...h4.suggestions.map(s => el('li', { className: 'mono', textContent: `${short(s.suggestion)} · ${s.reason ? t('evidence.h4.reason.' + s.reason) : t('evidence.h4.one')}` }))) : null,
+        h4?.facts ? el('div', { className: 'muted', textContent: t('evidence.h4.facts') }) : null,
+        h4?.builder_at_question ? el('div', { className: 'muted', textContent: t('evidence.h4.builder', { builder: builder(h4.builder_at_question), recoverable: h4.code_recoverable }) }) : null)),
+    el('div', { className: 'muted', textContent: t('evidence.h4Note') }),
+    ...data.warnings.map(w => el('p', { className: 'error', textContent: t('evidence.warning.' + w) })),
+    el('strong', { textContent: t('evidence.recorded') }),
+  ];
+  const p = data.package;
+  if (!p) {
+    out.push(el('p', { className: 'muted', textContent: t('evidence.noPackage') }));
+    if (data.mark) out.push(el('p', { className: 'mono', textContent: t('evidence.mark', { mark: JSON.stringify(data.mark) }) }));
+  } else {
+    out.push(el('div', { textContent: t('evidence.package', { route: p.route, origin: p.origin_kind ?? '—', representation: p.representation,
+      normalization: p.versions?.normalization, rules: p.versions?.rules, builder: builder(p.versions?.builder) }) }));
+    // Every ficha with who declared it, always shown.
+    out.push(el('details', { open: true }, el('summary', { textContent: t('evidence.fichas', { n: p.fichas.length }) }),
+      el('ul', {}, ...p.fichas.map(f => el('li', {}, el('span', { className: 'mono', textContent: `${f.ref} · ${f.kind} · ${f.path}:${f.start_line}–${f.end_line} · ${f.role ?? '—'} ` }),
+        el('span', { className: 'tag', textContent: `declared_by ${f.declared_by}` }))))));
+    const fields = p.query?.fields ?? [];
+    out.push(el('details', {}, el('summary', { textContent: t('evidence.classes', { n: fields.length }) }),
+      el('ul', {}, ...fields.map(g => el('li', { className: 'mono', title: g.path, textContent: t('evidence.classLine', { class: g.class, origin: g.origin, producer: g.producer, provenance: g.provenance, places: g.places.length }) })))));
+    out.push(el('div', { textContent: t('evidence.question', { person: p.query?.person_text?.declared_by,
+      suffixes: (p.query?.server_suffixes ?? []).map(s => `${s.rule} (declared_by ${s.declared_by})`).join(', ') || '—' }) }));
+    if (p.server_additions?.length) out.push(el('details', { open: true }, el('summary', { textContent: t('evidence.additions', { n: p.server_additions.length }) }),
+      el('ul', {}, ...p.server_additions.map(a => el('li', {}, el('span', { className: 'mono', textContent: t('evidence.addition', { symbol: a.symbol_id, name: a.for_name, round: a.round, turn: a.from_turn, send: a.from_send }) + ' ' }),
+        el('span', { className: 'tag', textContent: `declared_by ${a.declared_by}` }))))));
+    if (p.selection) {
+      out.push(el('div', { textContent: t('evidence.selection', { sha: short(p.selection.record_sha256), n: p.selection.suggestions.length, by: p.selection.declared_by }) }));
+      const client = data.selection?.declared_by_client;
+      if (client) out.push(el('div', { className: 'muted', textContent: t('evidence.client', { decisions: client.decisions.length, manual: client.manual.length }) + ` · declared_by ${client.declared_by}` }));
+    }
+    if (p.format_version === 1) {
+      // Format 1: the value as recorded, with the warning above that it proves nothing.
+      out.push(el('div', { textContent: t('evidence.measure', { at: reading(p.measure.at_question), basis: reading(p.measure.selection_basis), diverges: p.measure.measure_diverges }) }));
+    } else {
+      const d = p.measure.measure_divergence ?? {};
+      const reasons = (d.reasons ?? []).map(r => `${t('evidence.side.' + r.side)} ${t('evidence.cause.' + r.read_status)}`).join('; ');
+      out.push(el('div', { textContent: t('evidence.measure2', { at: reading(p.measure.at_question), basis: reading(p.measure.selection_basis) }) }));
+      out.push(el('div', { className: 'evidence-divergence', textContent: t('evidence.divergence', { state: t('evidence.divergence.' + d.status, { reasons }) }) }));
+    }
+  }
+  out.push(el('div', { textContent: t('evidence.latest', { latest: reading(data.latest_measure) }) }));
+  out.push(el('p', { className: 'muted', textContent: t('evidence.limits') }));
+  return out;
 }
 
 async function deleteTurn(turn) {

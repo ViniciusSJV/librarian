@@ -27,6 +27,13 @@ const APPROVALS: &str = "commands.jsonl";
 const MEASURE: &str = "librarian-measure";
 const MAX_REPEAT: usize = 20;
 const MAX_TIMEOUT_S: u64 = 3600;
+/// An execution as it was read: its record, with `id`, and the hash of the bytes that record came
+/// from. What used the record can name those bytes, and no others.
+pub(crate) struct ReadExecution {
+    pub record: Value,
+    pub sha256: String,
+}
+
 /// Text kept in execution.json per stream; the files keep everything.
 const TAIL: usize = 4000;
 const LIMITS: &str = "Tempo de parede de um processo nesta máquina, com o que mais estiver rodando nela; não vale para outra máquina nem prova a causa de uma diferença. O Librarian não sabe o que o comando faz: guarda só os argumentos, o código de saída, o tempo e as linhas librarian-measure que o próprio projeto imprime.";
@@ -279,9 +286,7 @@ impl Store {
         if let (Some(c), Some(diff)) = (change, &diff) {
             record["change"] = json!({ "turn": c.turn, "send": c.send, "claim": c.claim,
                 "diff_sha256": hash(diff.as_bytes()), "files": copy.touched });
-            let baseline = self.executions(key, run)?.into_iter().rev()
-                .find(|x| x["name"] == name && x["command_sha256"] == sha256.as_str() && x["change"].is_null()
-                    && x["instrumentation"].is_null() && x["summary"]["succeeded"].as_u64() > Some(0));
+            let baseline = baseline_of(self.executions(key, run)?, name, &sha256);
             baseline_stats = baseline.as_ref().map(|b| b["summary"]["stats"].clone());
             record["comparison"] = match baseline {
                 Some(b) => compare(&b, &record),
@@ -345,10 +350,14 @@ impl Store {
         Ok(record)
     }
 
-    /// The latest successful "Medir tudo" of `run`, if any.
+    /// The latest successful "Medir tudo" of `run`, by when it started, if any.
     pub(crate) fn latest_measure(&self, key: &str, run: &str) -> Result<Option<Value>> {
-        Ok(self.executions(key, run)?.into_iter().rev()
-            .find(|x| !x["instrumentation"].is_null() && x["summary"]["succeeded"].as_u64() > Some(0)))
+        Ok(self.latest_measure_read(key, run)?.map(|read| read.record))
+    }
+
+    /// `latest_measure`, with the hash of the bytes its record was read from: the same rule picks it.
+    pub(crate) fn latest_measure_read(&self, key: &str, run: &str) -> Result<Option<ReadExecution>> {
+        Ok(latest_of(self.executions_read(key, run)?.into_iter().filter(|x| is_measure(&x.record)), |x| &x.record))
     }
 
     /// How the latest "Medir tudo" was made: what it inserted in the copy and what the program
@@ -367,8 +376,13 @@ impl Store {
     /// "Onde pesa": the latest successful "Medir tudo" of `run`, as a ranking.
     pub fn hotspots(&self, key: &str, run: &str) -> Result<Value> {
         let latest = self.latest_measure(key, run)?.ok_or("Ainda não há medição de tudo nesta edition: rode Medir tudo")?;
+        self.hotspots_of(key, run, &latest)
+    }
+
+    /// The ranking of one measure already read: nothing here reads the execution again.
+    pub(crate) fn hotspots_of(&self, key: &str, run: &str, latest: &Value) -> Result<Value> {
         let catalog = Catalog::load(&self.edition(key, run)?)?;
-        let mut hot = crate::instrument::hotspots(&catalog, &latest);
+        let mut hot = crate::instrument::hotspots(&catalog, latest);
         // What is costly by its kind, not by how often its function runs: an inventory operation
         // other than arithmetic (a lock, a sleep, I/O) inside a loop of a function that ran.
         let (found, _, _) = self.inventory_of(key, run)?;
@@ -392,14 +406,21 @@ impl Store {
 
     /// Executions recorded for `run`, oldest first; each carries its folder name as `id`.
     pub fn executions(&self, key: &str, run: &str) -> Result<Vec<Value>> {
+        Ok(self.executions_read(key, run)?.into_iter().map(|read| read.record).collect())
+    }
+
+    /// `executions`, each with the hash of the very bytes it was read from: one read of the file
+    /// gives both, so the hash can only be of what was read.
+    fn executions_read(&self, key: &str, run: &str) -> Result<Vec<ReadExecution>> {
         let dir = self.run_dir(key, run)?.join("executions");
         let Ok(entries) = fs::read_dir(&dir) else { return Ok(vec![]) };
         let mut names: Vec<_> = entries.flatten().map(|e| e.path()).filter(|p| p.join("execution.json").is_file()).collect();
         names.sort();
         names.iter().map(|p| {
-            let mut x: Value = serde_json::from_slice(&fs::read(p.join("execution.json"))?)?;
+            let bytes = fs::read(p.join("execution.json"))?;
+            let mut x: Value = serde_json::from_slice(&bytes)?;
             x["id"] = json!(p.file_name().map(|n| n.to_string_lossy().into_owned()));
-            Ok(x)
+            Ok(ReadExecution { record: x, sha256: hash(&bytes) })
         }).collect()
     }
 
@@ -518,6 +539,43 @@ impl ChangeRef {
 /// Paths a unified diff writes, from its `+++ b/` headers.
 fn diff_files(diff: &str) -> Vec<String> {
     diff.lines().filter_map(|l| l.strip_prefix("+++ b/")).map(|p| p.trim().to_owned()).collect()
+}
+
+/// A "Medir tudo" that can be read: instrumented, and with a repetition that ran.
+fn is_measure(x: &Value) -> bool {
+    !x["instrumentation"].is_null() && x["summary"]["succeeded"].as_u64() > Some(0)
+}
+
+/// Where an execution stands in time, for picking the latest of several; listing them keeps the
+/// order of their folders. `started` is UTC to the second, as `stamp` writes it, so two equal ones
+/// do not say which came first. The number of the folder does: it is the count of recorded
+/// executions plus one, taken under the lock that lets one execution run at a time, and `started`
+/// is stamped right after. The id settles what is left. A `started` not in that form comes
+/// before any that is: nothing is made up for it.
+fn chronology(x: &Value) -> (Option<&str>, Option<u64>, &str) {
+    let started = x["started"].as_str().filter(|s| s.len() == 15 && s.bytes().enumerate().all(|(i, b)| if i == 8 { b == b'-' } else { b.is_ascii_digit() }));
+    let id = x["id"].as_str().unwrap_or_default();
+    let number = id.split('-').next().and_then(|n| n.parse().ok());
+    (started, number, id)
+}
+
+/// The latest of `items` by `chronology`, whatever order they come in.
+fn latest_of<T>(items: impl IntoIterator<Item = T>, record: impl Fn(&T) -> &Value) -> Option<T> {
+    items.into_iter().max_by(|a, b| chronology(record(a)).cmp(&chronology(record(b))))
+}
+
+/// The measure `latest_measure` picks among these records: kept apart so that tests can give it any list.
+#[cfg(test)]
+pub(crate) fn latest_measure_of(executions: Vec<Value>) -> Option<Value> {
+    latest_of(executions.into_iter().filter(is_measure), |x| x)
+}
+
+/// What a change to `name` is compared with: the latest run, by when it started, of the same
+/// command (same hash), with no change and no instrumentation, that ran.
+pub(crate) fn baseline_of(executions: Vec<Value>, name: &str, sha256: &str) -> Option<Value> {
+    let eligible = executions.into_iter().filter(|x| x["name"] == name && x["command_sha256"] == sha256 && x["change"].is_null()
+        && x["instrumentation"].is_null() && x["summary"]["succeeded"].as_u64() > Some(0));
+    latest_of(eligible, |x| x)
 }
 
 /// A change's numbers next to its baseline's. Ranges that overlap say the difference is

@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "policy": {
+    "allow_inference": false,
+    "allow_hypothesis": false
+  },
+  "evidence": [
+    {
+      "id": "E1",
+      "path": "src/lib.rs",
+      "start_line": 1,
+      "end_line": 3,
+      "excerpt": "pub fn roda() -> u32 {\n    1\n}",
+      "symbols": [
+        {
+          "name": "roda",
+          "declaration_line": 1,
+          "name_column": 8,
+          "end_line": 3
+        }
+      ]
+    }
+  ],
+  "require_location": true,
+  "limits": [
+    "Gathered step: declarations the person gathered one by one; nothing was searched.",
+    "Name candidates are not resolved types/calls/fields/imports. No macros, cfg or decorator evaluation, compiler or runtime proof.",
+    "Graph expands only the first hit. Source nodes are leaves. Depth bounded to 0..3, 48 nodes, 96 edges.",
+    "Excerpts limited to 4000 UTF-8 bytes each and 16000 total. Truncation is explicit; hashes/lines refer to full chunks.",
+    "Fichas descrevem onde estão declarações; não respondem à pergunta nem afirmam comportamento."
+  ],
+  "strict_text": true,
+  "precise_location": true,
+  "name_gaps": true,
+  "compact_items": true
+}

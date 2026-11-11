@@ -1,6 +1,7 @@
 //! Bridge from a verified edition and its lexical search to a validated query bundle.
 //! Facts here are structural records (where a declaration is), never answers to the question.
 use crate::{
+    evidence::{Composition, DeclaredBy, FichaKind, FichaReason, FichaRef, FichaSeed, LimitInput, LimitProducer, LimitProvenance, ReasonCode, ReasonStatus, TaggedLimit},
     graph::Graph,
     hash,
     owner::{owner_context, Added},
@@ -110,6 +111,8 @@ pub struct Prepared {
     pub search: Vec<u8>,
     pub dossier: String,
     pub query: PreparedQuery,
+    /// How the query was composed, which its bytes do not say on their own. Nothing written reads it.
+    pub composition: Composition,
 }
 
 pub fn prepare(catalog: &Catalog, request: &Request) -> Result<Prepared> {
@@ -183,6 +186,7 @@ pub fn prepare(catalog: &Catalog, request: &Request) -> Result<Prepared> {
     let profile = &catalog.manifest.extractor;
     let mut sources: Vec<(String, &crate::Source)> = vec![];
     let mut facts = vec![];
+    let mut seeds = vec![];
     for (index, hit) in report.hits.iter().take(chosen).enumerate() {
         let symbol = &catalog.symbols[&hit.symbol_id];
         let source = &catalog.sources[&symbol.source_id];
@@ -212,6 +216,28 @@ pub fn prepare(catalog: &Catalog, request: &Request) -> Result<Prepared> {
             "line": chunk.start_line,
             "end_line": chunk.end_line,
         }));
+        let authorship = format!("{profile}: registro estrutural da edition verificada");
+        let added: Vec<&Added> = report.owner_context.iter().flat_map(|c| &c.added).filter(|a| a.symbol_id == hit.symbol_id).collect();
+        let reasons = added_reasons(&added);
+        seeds.push(FichaSeed {
+            reference: FichaRef(format!("E{}", index + 1)),
+            kind: FichaKind::Symbol,
+            symbol_id: Some(hit.symbol_id.clone()),
+            chunk_id: Some(symbol.chunk_id.clone()),
+            source_id: source.id.clone(),
+            source_sha256: source.sha256.clone(),
+            source_kind: source.language.clone(),
+            git_commit: catalog.manifest.git.head.clone(),
+            path: source.path.clone(),
+            start_line: chunk.start_line,
+            end_line: chunk.end_line,
+            statement,
+            authorship,
+            // A search's reasons say which terms matched, and no code of the contract says that.
+            reason_status: if reasons.is_empty() { ReasonStatus::NotRecorded } else { ReasonStatus::ServerRecorded },
+            reasons,
+            declared_by: if added.is_empty() && (request.gathered || request.picked) { DeclaredBy::Client } else { DeclaredBy::Server },
+        });
     }
     // A file's head is a range of lines, not a declaration: it follows the declarations.
     if !request.headers.is_empty() && !request.gathered {
@@ -231,14 +257,34 @@ pub fn prepare(catalog: &Catalog, request: &Request) -> Result<Prepared> {
                 key
             }
         };
+        let statement = format!("Topo de {path}, linhas {start}–{end}: as linhas antes da primeira declaração do arquivo (imports e definições do módulo).");
+        let authorship = format!("{profile}: registro estrutural da edition verificada");
         facts.push(json!({
             "id": format!("E{}", chosen + n + 1),
-            "statement": format!("Topo de {path}, linhas {start}–{end}: as linhas antes da primeira declaração do arquivo (imports e definições do módulo)."),
-            "authorship": format!("{profile}: registro estrutural da edition verificada"),
+            "statement": statement,
+            "authorship": authorship,
             "source_id": source_key,
             "line": start,
             "end_line": end,
         }));
+        seeds.push(FichaSeed {
+            reference: FichaRef(format!("E{}", chosen + n + 1)),
+            kind: FichaKind::FileHead,
+            symbol_id: None,
+            chunk_id: None,
+            source_id: source.id.clone(),
+            source_sha256: source.sha256.clone(),
+            source_kind: source.language.clone(),
+            git_commit: catalog.manifest.git.head.clone(),
+            path: source.path.clone(),
+            start_line: start,
+            end_line: end,
+            statement,
+            authorship,
+            reasons: vec![],
+            reason_status: ReasonStatus::NotRecorded,
+            declared_by: DeclaredBy::Client,
+        });
     }
     for fact in &request.reviewed_facts {
         let inside = report.hits.iter().take(chosen).any(|h| {
@@ -251,10 +297,10 @@ pub fn prepare(catalog: &Catalog, request: &Request) -> Result<Prepared> {
             check_quote(catalog, &quote.path, quote.start_line, quote.end_line, &quote.quote)
                 .map_err(|e| format!("{}: {e}", fact.id))?;
         }
-        let key = sources
+        let (key, source) = sources
             .iter()
             .find(|(_, s)| s.path == fact.path)
-            .map(|(k, _)| k.clone())
+            .map(|(k, s)| (k.clone(), *s))
             .ok_or("Reviewed fact source missing")?;
         facts.push(json!({
             "id": fact.id,
@@ -264,6 +310,24 @@ pub fn prepare(catalog: &Catalog, request: &Request) -> Result<Prepared> {
             "line": fact.line,
             "end_line": fact.end_line,
         }));
+        seeds.push(FichaSeed {
+            reference: FichaRef(fact.id.clone()),
+            kind: FichaKind::ReviewedFact,
+            symbol_id: None,
+            chunk_id: None,
+            source_id: source.id.clone(),
+            source_sha256: source.sha256.clone(),
+            source_kind: source.language.clone(),
+            git_commit: catalog.manifest.git.head.clone(),
+            path: source.path.clone(),
+            start_line: fact.line,
+            end_line: fact.end_line,
+            statement: fact.statement.clone(),
+            authorship: fact.authorship.clone(),
+            reasons: vec![],
+            reason_status: ReasonStatus::NotRecorded,
+            declared_by: DeclaredBy::Server,
+        });
     }
     let sources: Vec<Value> = sources
         .iter()
@@ -279,52 +343,69 @@ pub fn prepare(catalog: &Catalog, request: &Request) -> Result<Prepared> {
             })
         })
         .collect();
-    let mut unknowns: Vec<String> = report.limits.clone();
-    unknowns.push(
+    let mut limits = report_limits(catalog, request, &report);
+    let tagged = |text: String, producer, input, provenance| TaggedLimit { text, producer, input, rule_version: None, provenance };
+    let (fixed, generated) = (LimitProvenance::SystemFixed, LimitProvenance::SystemGenerated);
+    limits.push(tagged(
         "Fichas descrevem onde estão declarações; não respondem à pergunta nem afirmam comportamento."
             .into(),
-    );
+        LimitProducer::FichaNature,
+        LimitInput::None,
+        fixed,
+    ));
     if let Some(context) = &report.owner_context {
-        unknowns.push(
+        let owner = |text: String, provenance| tagged(text, LimitProducer::OwnerContext, LimitInput::SearchReport, provenance);
+        limits.push(owner(
             "Contexto do dono: o tipo é a declaração que contém o método ou o tipo cujo nome ela escreve, e quem escreve os campos vem de atribuições pelo próprio receptor (por exemplo `self.campo = …`) e de literais do tipo; nada foi resolvido pelo compilador."
                 .into(),
-        );
+            fixed,
+        ));
         if context.not_followed_total > 0 {
-            unknowns.push(format!(
+            limits.push(owner(format!(
                 "{} escritas de campos lidos por outro receptor (por exemplo `x.campo = …`) não foram seguidas: o tipo do receptor não é conhecido. Estão listadas no search.json.",
                 context.not_followed_total
-            ));
+            ), generated));
         }
         if context.added.iter().any(|a| a.reason == "called") {
-            unknowns.push(
+            limits.push(owner(
                 "Declarações chamadas pelo alvo entram quando a chamada tem uma só declaração com esse nome, ou uma no mesmo bloco pelo próprio receptor; homônimos ficam de fora. Nada foi resolvido pelo compilador."
                     .into(),
-            );
+                fixed,
+            ));
         }
         if context.truncated {
-            unknowns.push(format!("Contexto do dono truncado em {} declarações.", crate::owner::MAX_ADDED));
+            limits.push(owner(format!("Contexto do dono truncado em {} declarações.", crate::owner::MAX_ADDED), generated));
         }
-        unknowns.extend(context.notes.iter().cloned());
+        limits.extend(context.notes.iter().map(|note| owner(note.clone(), generated)));
     }
     if !request.reviewed_facts.is_empty() {
-        unknowns.push(
+        limits.push(tagged(
             "Fichas F são afirmações de uma pergunta anterior revisadas por uma pessoa, com os trechos conferidos contra esta edition; não são registros estruturais."
                 .into(),
-        );
-    }
-    if !request.headers.is_empty() {
-        unknowns.push(
-            "Topos de arquivo são faixas de linhas antes da primeira declaração, não declarações: servem para ver e mudar imports."
-                .into(),
-        );
-    }
-    if !catalog.diagnostics.is_empty() {
-        unknowns.push(format!(
-            "Edition com {} diagnósticos: extração incompleta em algumas fontes.",
-            catalog.diagnostics.len()
+            LimitProducer::ReviewedNote,
+            LimitInput::Request,
+            fixed,
         ));
     }
-    unknowns.extend(request.notes.iter().cloned());
+    if !request.headers.is_empty() {
+        limits.push(tagged(
+            "Topos de arquivo são faixas de linhas antes da primeira declaração, não declarações: servem para ver e mudar imports."
+                .into(),
+            LimitProducer::HeaderNote,
+            LimitInput::Request,
+            fixed,
+        ));
+    }
+    if !catalog.diagnostics.is_empty() {
+        limits.push(tagged(
+            format!("Edition com {} diagnósticos: extração incompleta em algumas fontes.", catalog.diagnostics.len()),
+            LimitProducer::Diagnostics,
+            LimitInput::Edition,
+            generated,
+        ));
+    }
+    limits.extend(request.notes.iter().map(|note| tagged(note.clone(), LimitProducer::RequestNotes, LimitInput::Client, LimitProvenance::UnverifiedClientText)));
+    let unknowns: Vec<&str> = limits.iter().map(|limit| limit.text.as_str()).collect();
     let dossier = serde_json::to_string_pretty(&json!({
         "id": format!("{}:{}", if request.targets.is_some() { "chain" } else { "search" }, hash(&search)),
         "unknowns": unknowns,
@@ -352,7 +433,55 @@ pub fn prepare(catalog: &Catalog, request: &Request) -> Result<Prepared> {
         search,
         dossier,
         query,
+        composition: Composition { radius: request.radius, fichas: seeds, limits, reviewed: request.reviewed_facts.clone(), instructions: request.instructions.clone() },
     })
+}
+
+/// What wrote each line the search report brought, by where the report puts it: in a step, the kind
+/// of step comes first, then what owner context says, and the called-declarations line comes last;
+/// in a search, the profile's lines come first, then the line of `exclude_tests`. A line whose text
+/// is written once in the code is fixed; the rule of each is the version the report or the profile
+/// goes by.
+fn report_limits(catalog: &Catalog, request: &Request, report: &crate::search::SearchReport) -> Vec<TaggedLimit> {
+    let last = report.limits.len().saturating_sub(1);
+    let of_profile = catalog.registry.search_limits.len();
+    report
+        .limits
+        .iter()
+        .enumerate()
+        .map(|(index, text)| {
+            let (producer, input, rule, provenance) = match (request.targets.is_some(), index) {
+                (true, i) if request.callees && i == last => (LimitProducer::Callees, LimitInput::Request, None, LimitProvenance::SystemFixed),
+                (true, 0) => (LimitProducer::StepKind, LimitInput::Route, Some(&report.version), LimitProvenance::SystemFixed),
+                (true, 1) if report.owner_context.is_some() => (LimitProducer::OwnerStep, LimitInput::Request, Some(&report.version), LimitProvenance::SystemGenerated),
+                (false, i) if i >= of_profile => (LimitProducer::ExcludeTests, LimitInput::Request, Some(&report.version), LimitProvenance::SystemFixed),
+                _ => (LimitProducer::ProfileSearch, LimitInput::EditionProfile, Some(&catalog.manifest.extractor), LimitProvenance::SystemFixed),
+            };
+            TaggedLimit { text: text.clone(), producer, input, rule_version: rule.cloned(), provenance }
+        })
+        .collect()
+}
+
+/// The reasons the owner context recorded for a declaration. A reason with no code in the contract
+/// is left out, never turned into another.
+fn added_reasons(added: &[&Added]) -> Vec<FichaReason> {
+    added
+        .iter()
+        .filter_map(|added| {
+            let code = match added.reason.as_str() {
+                "owner_type" => ReasonCode::OwnerType,
+                "field_writer" => ReasonCode::FieldWriter,
+                "called" => ReasonCode::Called,
+                _ => return None,
+            };
+            Some(FichaReason {
+                code,
+                for_target: added.for_target.clone(),
+                fields: added.fields.clone(),
+                lines: added.evidence.iter().map(|e| e.start_line).collect(),
+            })
+        })
+        .collect()
 }
 
 /// Why an owner-context declaration is in the step, with the lines where the link is written.

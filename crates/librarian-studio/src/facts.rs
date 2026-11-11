@@ -30,7 +30,7 @@ impl Store {
         // The verified context resolves the claim as the check read it; a rejection does not
         // need the question to verify, and then records the claim as the model wrote it.
         let verified = self.verify_for_send(key, run, turn);
-        let context = verified.as_ref().ok().and_then(|v| v.context.as_ref());
+        let context = verified.as_ref().ok().and_then(|v| v.context());
         let (claim, response_sha256, resolutions) = preserved_claim(&send_dir, claim_id, context)?;
         let claim_sha256 = hash(&serde_json::to_vec(&claim)?);
         let active = self.active_fact(key, |f| f["run"] == run && f["turn"] == turn && f["send"] == send && f["claim_id"] == claim_id)?;
@@ -162,6 +162,20 @@ impl Store {
         }))
     }
 
+    /// Each promotion in the acervo, by its fact id, with the exact bytes of its line (no line end).
+    /// A missing acervo has none.
+    pub(crate) fn promotion_lines(&self, key: &str) -> Result<Vec<(String, Vec<u8>)>> {
+        let Ok(bytes) = fs::read(self.project_dir(key)?.join(FACTS)) else { return Ok(vec![]) };
+        Ok(bytes
+            .split(|b| *b == b'\n')
+            .filter(|line| !line.is_empty())
+            .filter_map(|line| {
+                let event: Value = serde_json::from_slice(line).ok()?;
+                (event["event"] == "promoted").then(|| Some((event["id"].as_str()?.to_owned(), line.to_vec()))).flatten()
+            })
+            .collect())
+    }
+
     fn facts_log(&self, key: &str) -> Result<Vec<Value>> {
         read_jsonl(&self.project_dir(key)?.join(FACTS))
     }
@@ -188,15 +202,19 @@ fn gates(verified: Result<Verified>, send_dir: &Path, claim: &Claim) -> Result<V
         return Err("Portão 2: envio sem vínculo com o bundle (anterior à L3); pergunte e envie de novo".into());
     }
     let verified = verified.map_err(|e| format!("Portão 2: a pergunta não confere mais: {e}"))?;
-    if verified.link["query_sha256"] != link["query_sha256"] {
+    if verified.link()["query_sha256"] != link["query_sha256"] {
         return Err("Portão 2: a query da pergunta não é mais a que foi enviada".into());
+    }
+    // The package checked now is the one the send was linked to (none, for an older question).
+    if verified.link()["evidence_sha256"] != link["evidence_sha256"] {
+        return Err("Portão 2: o pacote de evidências da pergunta não é o vinculado ao envio".into());
     }
     let sent = ["query.json", "attempt/query.json"].iter().map(|f| send_dir.join(f)).find(|p| p.is_file())
         .ok_or("Portão 2: a query enviada não foi preservada")?;
     if link["query_sha256"].as_str() != Some(hash(&fs::read(sent)?).as_str()) {
         return Err("Portão 2: a query preservada no envio difere do vínculo".into());
     }
-    let context = verified.context.ok_or("Portão 1: só perguntas em claims têm conferência mecânica")?;
+    let context = verified.into_context().ok_or("Portão 1: só perguntas em claims têm conferência mecânica")?;
     let text = fs::read_to_string(response_path(send_dir)?)?;
     let report = claims::check(&context, &crate::claims::resolved(&context, &text).0)?;
     if report.mechanical_status != "passed" {

@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "policy": {
+    "allow_inference": false,
+    "allow_hypothesis": true
+  },
+  "evidence": [
+    {
+      "id": "CTX_1",
+      "path": "src/d.rs",
+      "start_line": 1,
+      "end_line": 3,
+      "excerpt": "struct Ponto {\n    x: u8,\n}",
+      "symbols": [
+        {
+          "name": "Ponto",
+          "declaration_line": 1,
+          "name_column": 8,
+          "end_line": 3
+        },
+        {
+          "name": "x",
+          "declaration_line": 2,
+          "name_column": 5,
+          "end_line": 2
+        }
+      ]
+    },
+    {
+      "id": "CTX_2",
+      "path": "src/d.rs",
+      "start_line": 5,
+      "end_line": 10,
+      "excerpt": "    fn ler(&self) -> u8 {\n        self.x\n    }\n    fn gravar(&mut self) {\n        self.x = 1;\n    }",
+      "symbols": [
+        {
+          "name": "ler",
+          "declaration_line": 5,
+          "name_column": 8,
+          "end_line": 7
+        },
+        {
+          "name": "gravar",
+          "declaration_line": 8,
+          "name_column": 8,
+          "end_line": 10
+        }
+      ]
+    }
+  ],
+  "require_location": true,
+  "limits": [
+    "Gathered step: declarations the person gathered one by one; nothing was searched.",
+    "Owner context: a method target brings the type its container is or names and the declarations that write the fields it reads, by written names; writes through other receivers are counted, not added; at most 8 additions.",
+    "Name candidates are not resolved types/calls/fields/imports. No macros, cfg or decorator evaluation, compiler or runtime proof.",
+    "Graph expands only the first hit. Source nodes are leaves. Depth bounded to 0..3, 48 nodes, 96 edges.",
+    "Excerpts limited to 4000 UTF-8 bytes each and 16000 total. Truncation is explicit; hashes/lines refer to full chunks.",
+    "Called declarations: a target also brings what it calls when the call has one declaration of that name, or one in its own container reached through its receiver; homonyms are not added. Written names only, nothing resolved by a compiler.",
+    "Fichas descrevem onde estão declarações; não respondem à pergunta nem afirmam comportamento.",
+    "Contexto do dono: o tipo é a declaração que contém o método ou o tipo cujo nome ela escreve, e quem escreve os campos vem de atribuições pelo próprio receptor (por exemplo `self.campo = …`) e de literais do tipo; nada foi resolvido pelo compilador.",
+    "Fichas F são afirmações de uma pergunta anterior revisadas por uma pessoa, com os trechos conferidos contra esta edition; não são registros estruturais.",
+    "Uma nota."
+  ],
+  "project_instructions": [
+    "Instrução do projeto."
+  ],
+  "strict_text": true,
+  "precise_location": true,
+  "reviewed_facts": [
+    {
+      "id": "F1",
+      "statement": "ler devolve o campo x.",
+      "authorship": "revisão humana no Librarian Studio",
+      "path": "src/d.rs",
+      "start_line": 6,
+      "end_line": 6
+    }
+  ],
+  "allow_edits": true,
+  "name_gaps": true
+}

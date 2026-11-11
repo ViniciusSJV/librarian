@@ -1,0 +1,34 @@
+{
+  "dossier": {
+    "file": "dossier.json",
+    "id": "chain:4435f9ea5205595e66e1afa5c3b27bcd6cb055c56f6d98f296478094bd85a175",
+    "sha256": "fbd36a6e59c4103db6a581aa185c18abc4620a8b28a9aab7c454670c6e1320e5",
+    "source_path": "edition:1a9cdc6b1b2e12b56925a3f106faae550a26ebb7bdb3cb68a17f57c4a7ee928b"
+  },
+  "export_finished_unix_ms": 1794408866562,
+  "format_version": 1,
+  "kind": "validated_query_export",
+  "limits": [
+    "Não autentica execução nem comprova bytes compilados.",
+    "Não é snapshot atômico das fontes.",
+    "Não valida semanticamente fichas ou respostas.",
+    "Nenhum envio HTTP realizado; rubrica e avaliação ainda não vinculadas."
+  ],
+  "query": {
+    "bytes": 2661,
+    "file": "query.json",
+    "sha256": "05f93df23e6373830aaa011fa36b09d0f6c596654f9b4674f236031830a0685c"
+  },
+  "question": {
+    "file": "question.txt",
+    "sha256": "3d7be19beee9362a38a84388d4b7936e77801ee4dafaf81e02a3ddf31842cd4d",
+    "source_path": "request.json"
+  },
+  "selection": {
+    "context": 0,
+    "fact_ids": [
+      "E1"
+    ]
+  },
+  "validation_scope": "Conferência anterior à exportação pelo Graph Engine e pelo callback de fontes do consumidor. Não é conferência no momento de um envio posterior."
+}

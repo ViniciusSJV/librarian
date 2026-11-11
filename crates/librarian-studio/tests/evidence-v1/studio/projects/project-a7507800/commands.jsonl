@@ -1,0 +1,1 @@
+{"approved":"20261111-145426","argv":["git","grep","-h","librarian-measure","--","src/lib.rs"],"format_version":1,"name":"contagem","outputs":[],"repeat":1,"sha256":"b132c1dc33c0a69bf6f6195686038930b368e16acbecee8a94481eb92f2c8abc","timeout_s":600}

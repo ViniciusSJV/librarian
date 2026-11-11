@@ -1,0 +1,28 @@
+{
+  "name": "project",
+  "root": "C:\\Users\\beatl\\AppData\\Local\\Temp\\librarian-studio-29544-0\\project",
+  "inputs": [
+    "src",
+    "Cargo.toml"
+  ],
+  "lexicon": {
+    "groups": [],
+    "stop_words": []
+  },
+  "instructions": null,
+  "top": 5,
+  "depth": 2,
+  "hits": 1,
+  "radius": 0,
+  "numbered_lines": false,
+  "accept_diagnostics": false,
+  "criteria": null,
+  "imported_from": "C:\\Users\\beatl\\AppData\\Local\\Temp\\librarian-studio-29544-0\\project\\librarian.json",
+  "answer_format": "claims",
+  "language": "",
+  "compact_items": true,
+  "allow_inference": false,
+  "allow_hypothesis": false,
+  "allow_patch": false,
+  "exclude_tests": false
+}

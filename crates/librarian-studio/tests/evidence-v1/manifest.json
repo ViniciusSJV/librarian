@@ -1,0 +1,80 @@
+{
+  "divergent": "01",
+  "key": "project-a7507800",
+  "old_code": {
+    "01": {
+      "checks": {
+        "h1": {
+          "status": "passed",
+          "why": null
+        },
+        "h2": {
+          "status": "passed",
+          "why": null
+        },
+        "h3": {
+          "status": "passed",
+          "why": null
+        }
+      },
+      "evidence_sha256": "b7fa86ffa485ad8f0167a9c1a7b3aedfdcbee752fcdf8780e26752fa93dcf9b1",
+      "h4": {
+        "facts": "recorded_not_reproduced",
+        "status": "reproduced",
+        "suggestions": [
+          {
+            "status": "reproduced",
+            "suggestion": "74dcbcf9f8613c69275528051ec52e621140ca056f2d09ae1efea2599923d090"
+          }
+        ]
+      },
+      "measure": {
+        "at_question": {
+          "execution": "99-depois",
+          "execution_sha256": "e8db2c07e4d3103b71697ab91a38bbaf1ffbfcdaa4c96dc2d71834dbc75739cc",
+          "read_status": "ok"
+        },
+        "measure_diverges": false,
+        "selection_basis": {
+          "execution": "01-contagem-tudo",
+          "execution_sha256": "ab6d02ad5c12b0731cc3335f54753edc8857df4635904822d6c8e82902120782",
+          "read_status": "ok",
+          "suggestion": "74dcbcf9f8613c69275528051ec52e621140ca056f2d09ae1efea2599923d090"
+        }
+      }
+    },
+    "02": {
+      "checks": {
+        "h1": {
+          "status": "passed",
+          "why": null
+        },
+        "h2": {
+          "status": "passed",
+          "why": null
+        },
+        "h3": {
+          "status": "passed",
+          "why": null
+        }
+      },
+      "evidence_sha256": "b0147ed7a7305492994e8a0bcfa35a9832e78893f628cc13f401886869c9c9ac",
+      "h4": {
+        "status": "not_applicable"
+      },
+      "measure": {
+        "at_question": {
+          "execution": "99-depois",
+          "execution_sha256": "e8db2c07e4d3103b71697ab91a38bbaf1ffbfcdaa4c96dc2d71834dbc75739cc",
+          "read_status": "ok"
+        },
+        "measure_diverges": false,
+        "selection_basis": {
+          "read_status": "not_applicable"
+        }
+      }
+    }
+  },
+  "plain": "02",
+  "run": "20261111-145426"
+}

@@ -1,0 +1,21 @@
+{
+  "depth": 0,
+  "gathered": true,
+  "hits": 1,
+  "numbered_lines": true,
+  "question": "What do they do?",
+  "radius": 0,
+  "targets": [
+    {
+      "declaration_line": 1,
+      "path": "src/a.rs",
+      "symbol_name": "um"
+    },
+    {
+      "declaration_line": 8,
+      "path": "src/a.rs",
+      "symbol_name": "tres"
+    }
+  ],
+  "top": 1
+}

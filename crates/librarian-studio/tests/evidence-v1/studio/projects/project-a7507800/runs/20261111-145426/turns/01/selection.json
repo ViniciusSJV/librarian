@@ -1,0 +1,94 @@
+{
+  "kind": "selection_record",
+  "format_version": 2,
+  "edition_origin": "edition:1a9cdc6b1b2e12b56925a3f106faae550a26ebb7bdb3cb68a17f57c4a7ee928b",
+  "rules_version": "envelope-1",
+  "checked_by_server": {
+    "declared_by": "server",
+    "checks": [
+      "shape",
+      "included_is_nodes",
+      "partition",
+      "seeds_included",
+      "edition",
+      "suggestions",
+      "absorption",
+      "included_bytes"
+    ],
+    "suggestions": [
+      {
+        "sha256": "74dcbcf9f8613c69275528051ec52e621140ca056f2d09ae1efea2599923d090",
+        "measure": {
+          "read_status": "ok",
+          "execution": "01-contagem-tudo",
+          "execution_sha256": "ab6d02ad5c12b0731cc3335f54753edc8857df4635904822d6c8e82902120782"
+        }
+      }
+    ],
+    "included_bytes": 30
+  },
+  "declared_by_client": {
+    "declared_by": "client",
+    "suggestion_order": [
+      "74dcbcf9f8613c69275528051ec52e621140ca056f2d09ae1efea2599923d090"
+    ],
+    "seeds": [
+      "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9:function:0:30"
+    ],
+    "decisions": [
+      {
+        "id": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9:function:0:30",
+        "decision": "included",
+        "decision_scope": "single"
+      }
+    ],
+    "manual": [
+      "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9:function:0:30"
+    ]
+  },
+  "received": {
+    "kind": "selection_record",
+    "format_version": 2,
+    "suggestions": [
+      "74dcbcf9f8613c69275528051ec52e621140ca056f2d09ae1efea2599923d090"
+    ],
+    "seeds": [
+      "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9:function:0:30"
+    ],
+    "suggested_from": [
+      "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9:function:0:30"
+    ],
+    "measured": true,
+    "budget_bytes": 6144,
+    "suggested_bytes": 30,
+    "included_bytes": 30,
+    "included": [
+      {
+        "id": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9:function:0:30",
+        "name": "roda",
+        "path": "src/lib.rs",
+        "kind": "function",
+        "start_line": 1,
+        "end_line": 3,
+        "role": "target",
+        "bytes": 30,
+        "calls": 10.0,
+        "reasons": [
+          {
+            "code": "chosen",
+            "for_target": "roda"
+          }
+        ],
+        "facts": [],
+        "left_out_why": null,
+        "provenance": "manual",
+        "decision": "included",
+        "decision_scope": "single"
+      }
+    ],
+    "removed": [],
+    "left_out": [],
+    "not_joined": [],
+    "gaps": []
+  }
+}

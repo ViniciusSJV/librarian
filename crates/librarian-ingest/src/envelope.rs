@@ -11,6 +11,11 @@ use crate::{graph::v2, graph::Evidence, inventory::Inventory, owner, Catalog, Re
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
+/// The version of the rules below, as a suggestion's record names it. A change in what `select`,
+/// `candidates` or `behavior` decide for the same input is a new version; on its own it does not
+/// bring back the rules it names.
+pub const RULES_VERSION: &str = "envelope-1";
+
 /// The code a selection may carry, in bytes. The chosen declarations always go, even past it.
 pub const BUDGET_BYTES: usize = 6 * 1024;
 

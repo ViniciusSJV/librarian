@@ -1,0 +1,223 @@
+{
+  "approved": "20261111-145426",
+  "argv": [
+    "git",
+    "grep",
+    "-h",
+    "librarian-measure",
+    "--",
+    "src/lib.rs"
+  ],
+  "command_sha256": "b132c1dc33c0a69bf6f6195686038930b368e16acbecee8a94481eb92f2c8abc",
+  "copy": "C:\\Users\\beatl\\AppData\\Local\\Temp\\librarian-copies\\project-a7507800\\20261111-145426--medir-tudo",
+  "edition": "edition:1a9cdc6b1b2e12b56925a3f106faae550a26ebb7bdb3cb68a17f57c4a7ee928b",
+  "finished": "20261111-145426",
+  "format_version": 1,
+  "git_head": "603cac413dc133adf0ea09ad1ff6d5e4511a3bac",
+  "id": "99-depois",
+  "instrumentation": {
+    "diff_sha256": "03bc9c3e314c5d87ce275544bc50a86614d1041518ce374e143059e284754739",
+    "excluded": [
+      {
+        "reason": "language_not_supported",
+        "symbol": "src:04791d82dd15fdd480f084d7ef65a10789fa5012cb7935f76080763444d48a00:f2721fe94ff7aa2907adb1ab0eb35ff36789a6c41167894a91aed3efeb1980d4:function:0:37"
+      },
+      {
+        "reason": "language_not_supported",
+        "symbol": "src:04791d82dd15fdd480f084d7ef65a10789fa5012cb7935f76080763444d48a00:f2721fe94ff7aa2907adb1ab0eb35ff36789a6c41167894a91aed3efeb1980d4:function:109:146"
+      },
+      {
+        "reason": "language_not_supported",
+        "symbol": "src:04791d82dd15fdd480f084d7ef65a10789fa5012cb7935f76080763444d48a00:f2721fe94ff7aa2907adb1ab0eb35ff36789a6c41167894a91aed3efeb1980d4:function:148:205"
+      },
+      {
+        "reason": "language_not_supported",
+        "symbol": "src:04791d82dd15fdd480f084d7ef65a10789fa5012cb7935f76080763444d48a00:f2721fe94ff7aa2907adb1ab0eb35ff36789a6c41167894a91aed3efeb1980d4:function:207:272"
+      },
+      {
+        "reason": "language_not_supported",
+        "symbol": "src:04791d82dd15fdd480f084d7ef65a10789fa5012cb7935f76080763444d48a00:f2721fe94ff7aa2907adb1ab0eb35ff36789a6c41167894a91aed3efeb1980d4:function:274:290"
+      },
+      {
+        "reason": "language_not_supported",
+        "symbol": "src:04791d82dd15fdd480f084d7ef65a10789fa5012cb7935f76080763444d48a00:f2721fe94ff7aa2907adb1ab0eb35ff36789a6c41167894a91aed3efeb1980d4:function:292:322"
+      },
+      {
+        "reason": "language_not_supported",
+        "symbol": "src:04791d82dd15fdd480f084d7ef65a10789fa5012cb7935f76080763444d48a00:f2721fe94ff7aa2907adb1ab0eb35ff36789a6c41167894a91aed3efeb1980d4:function:39:69"
+      },
+      {
+        "reason": "language_not_supported",
+        "symbol": "src:04791d82dd15fdd480f084d7ef65a10789fa5012cb7935f76080763444d48a00:f2721fe94ff7aa2907adb1ab0eb35ff36789a6c41167894a91aed3efeb1980d4:function:71:107"
+      },
+      {
+        "reason": "language_not_supported",
+        "symbol": "src:04791d82dd15fdd480f084d7ef65a10789fa5012cb7935f76080763444d48a00:f2721fe94ff7aa2907adb1ab0eb35ff36789a6c41167894a91aed3efeb1980d4:method:337:381"
+      },
+      {
+        "reason": "skipped_path",
+        "symbol": "src:7834277705468c6625a8710ba67b25319eb9db258ad2a3c92e15c87793723dcf:992ea0a5a832383fa7c7ce0978f36b647c551ff27e8e3a65ec49e664484c3b87:function:0:30"
+      },
+      {
+        "reason": "const_fn",
+        "symbol": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9:function:241:282"
+      },
+      {
+        "reason": "already_counts",
+        "symbol": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9:function:283:338"
+      },
+      {
+        "reason": "already_counts",
+        "symbol": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9:function:339:404"
+      },
+      {
+        "reason": "test",
+        "symbol": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9:function:405:429"
+      },
+      {
+        "reason": "no_body",
+        "symbol": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9:trait_method:97:119"
+      }
+    ],
+    "files": [
+      "src/lib.rs"
+    ],
+    "functions": [
+      {
+        "line": 1,
+        "name": "roda",
+        "path": "src/lib.rs",
+        "symbol": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9:function:0:30"
+      },
+      {
+        "line": 4,
+        "name": "contada_sem_rodar",
+        "path": "src/lib.rs",
+        "symbol": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9:function:31:74"
+      },
+      {
+        "line": 9,
+        "name": "Forma::nome",
+        "path": "src/lib.rs",
+        "symbol": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9:trait_method:124:163"
+      },
+      {
+        "line": 15,
+        "name": "impl C::metodo",
+        "path": "src/lib.rs",
+        "symbol": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9:method:193:238"
+      }
+    ],
+    "skipped": {
+      "caminho deixado de fora": 1,
+      "const fn": 1,
+      "já conta": 2,
+      "sem corpo": 1,
+      "teste": 1
+    },
+    "statement": "crate::count!();"
+  },
+  "limits": "Tempo de parede de um processo nesta máquina, com o que mais estiver rodando nela; não vale para outra máquina nem prova a causa de uma diferença. O Librarian não sabe o que o comando faz: guarda só os argumentos, o código de saída, o tempo e as linhas librarian-measure que o próprio projeto imprime.",
+  "machine": {
+    "arch": "x86_64",
+    "host": "DESKTOP-8GVBJKQ",
+    "os": "windows",
+    "parallelism": 24
+  },
+  "name": "contagem",
+  "outputs": [],
+  "repeat": 1,
+  "runs": [
+    {
+      "exit_code": 0,
+      "index": 1,
+      "measures": [
+        {
+          "at": "src/lib.rs:1",
+          "name": "calls",
+          "unit": null,
+          "value": 10.0
+        },
+        {
+          "at": "src/lib.rs:15",
+          "name": "calls",
+          "unit": null,
+          "value": 7.0
+        },
+        {
+          "at": "src/lib.rs:23",
+          "name": "calls",
+          "unit": null,
+          "value": 5.0
+        },
+        {
+          "at": "src/app.py:4",
+          "name": "calls",
+          "unit": null,
+          "value": 3.0
+        }
+      ],
+      "outputs": {},
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_tail": "",
+      "stdout_sha256": "8026b95db3303ac615a073aa813a66b6becac92275b1fe2ad35bc19cbb232808",
+      "stdout_tail": "librarian-measure calls=10 at=src/lib.rs:1\nlibrarian-measure calls=7 at=src/lib.rs:15\nlibrarian-measure calls=5 at=src/lib.rs:23\nlibrarian-measure calls=3 at=src/app.py:4\n",
+      "timed_out": false,
+      "wall_ms": 22.638
+    }
+  ],
+  "sources_line_endings_only": [],
+  "sources_verified": 3,
+  "started": "20261111-145426",
+  "summary": {
+    "attempted": 1,
+    "outputs": {},
+    "stats": {
+      "calls@src/app.py:4": {
+        "at": "src/app.py:4",
+        "max": 3.0,
+        "measure": "calls",
+        "median": 3.0,
+        "min": 3.0,
+        "n": 1,
+        "unit": null
+      },
+      "calls@src/lib.rs:1": {
+        "at": "src/lib.rs:1",
+        "max": 10.0,
+        "measure": "calls",
+        "median": 10.0,
+        "min": 10.0,
+        "n": 1,
+        "unit": null
+      },
+      "calls@src/lib.rs:15": {
+        "at": "src/lib.rs:15",
+        "max": 7.0,
+        "measure": "calls",
+        "median": 7.0,
+        "min": 7.0,
+        "n": 1,
+        "unit": null
+      },
+      "calls@src/lib.rs:23": {
+        "at": "src/lib.rs:23",
+        "max": 5.0,
+        "measure": "calls",
+        "median": 5.0,
+        "min": 5.0,
+        "n": 1,
+        "unit": null
+      },
+      "wall_ms": {
+        "max": 22.638,
+        "median": 22.638,
+        "min": 22.638,
+        "n": 1,
+        "unit": "ms"
+      }
+    },
+    "succeeded": 1
+  },
+  "timeout_s": 600
+}

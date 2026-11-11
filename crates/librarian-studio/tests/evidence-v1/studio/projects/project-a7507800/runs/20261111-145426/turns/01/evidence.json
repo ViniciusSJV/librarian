@@ -1,0 +1,1160 @@
+{
+  "kind": "evidence_package",
+  "format_version": 1,
+  "versions": {
+    "normalization": "lines-v1",
+    "rules": "envelope-1",
+    "builder": {
+      "status": "unknown"
+    }
+  },
+  "edition": {
+    "origin": "edition:1a9cdc6b1b2e12b56925a3f106faae550a26ebb7bdb3cb68a17f57c4a7ee928b",
+    "catalog_sha256": "1a9cdc6b1b2e12b56925a3f106faae550a26ebb7bdb3cb68a17f57c4a7ee928b",
+    "extractor": "librarian-ingest/0.8.0;syn/3.0.5;rustpython-parser/0.4.0;rust-structural-v6;python-structural-v4",
+    "git_head": "603cac413dc133adf0ea09ad1ff6d5e4511a3bac",
+    "git_dirty": false
+  },
+  "route": "gathered",
+  "origin_kind": "selection",
+  "representation": "claims",
+  "fichas": [
+    {
+      "ref": "E1",
+      "kind": "symbol",
+      "unit": "E1",
+      "symbol_id": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9:function:0:30",
+      "chunk_id": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9:function:0:30",
+      "path": "src/lib.rs",
+      "start_line": 1,
+      "end_line": 3,
+      "role": null,
+      "reasons": [],
+      "reason_status": "not_recorded",
+      "declared_by": "client"
+    }
+  ],
+  "units": [
+    {
+      "evidence_id": "E1",
+      "source_id": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9",
+      "source_sha256": "ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9",
+      "path": "src/lib.rs",
+      "window_start_line": 1,
+      "window_end_line": 3,
+      "start_line": 1,
+      "end_line": 3,
+      "text_sha256": "427fc2485ff1bfad5dabf69ecd993746232856af2f9bc1083eda54f700a5c2e7",
+      "excerpt_sha256": "427fc2485ff1bfad5dabf69ecd993746232856af2f9bc1083eda54f700a5c2e7"
+    }
+  ],
+  "query": {
+    "sha256": "385814b76b4010553790fa15998ddb8d1505fbda0bfd675248dcd7993c02d244",
+    "code": {
+      "units": [
+        "E1"
+      ],
+      "provenance": "edition_verified"
+    },
+    "person_text": {
+      "sha256": "3d7be19beee9362a38a84388d4b7936e77801ee4dafaf81e02a3ddf31842cd4d",
+      "declared_by": "client",
+      "provenance": "unverified_client_text"
+    },
+    "server_suffixes": [],
+    "prepared_question_sha256": "3d7be19beee9362a38a84388d4b7936e77801ee4dafaf81e02a3ddf31842cd4d",
+    "limits": [
+      {
+        "index": 0,
+        "text_sha256": "3877a987b9ddf61a197f546df46f00f3b588db271a33b6df0523f78a8ae2eaba",
+        "producer": "step_kind",
+        "input": "route",
+        "rule_version": "chain-step-v1",
+        "basis": null,
+        "class": "system_text",
+        "provenance": "system_fixed"
+      },
+      {
+        "index": 1,
+        "text_sha256": "e1b330832d77dfd9ae886b82920834fbd7d7216f9299bd467f6013738179538b",
+        "producer": "profile_search",
+        "input": "edition_profile",
+        "rule_version": "librarian-ingest/0.8.0;syn/3.0.5;rustpython-parser/0.4.0;rust-structural-v6;python-structural-v4",
+        "basis": null,
+        "class": "system_text",
+        "provenance": "system_fixed"
+      },
+      {
+        "index": 2,
+        "text_sha256": "24eeddd6daafa29bb10bcb3a5defb323feb7fec86179229b9b31c0bda1cdd69c",
+        "producer": "profile_search",
+        "input": "edition_profile",
+        "rule_version": "librarian-ingest/0.8.0;syn/3.0.5;rustpython-parser/0.4.0;rust-structural-v6;python-structural-v4",
+        "basis": null,
+        "class": "system_text",
+        "provenance": "system_fixed"
+      },
+      {
+        "index": 3,
+        "text_sha256": "677c49aac98207475b3b1badf7bb4a4405b847e5a33dd723312379477e11d3d0",
+        "producer": "profile_search",
+        "input": "edition_profile",
+        "rule_version": "librarian-ingest/0.8.0;syn/3.0.5;rustpython-parser/0.4.0;rust-structural-v6;python-structural-v4",
+        "basis": null,
+        "class": "system_text",
+        "provenance": "system_fixed"
+      },
+      {
+        "index": 4,
+        "text_sha256": "fc5f66e73907abf97d2bb2c057613d62eda59dd1f3c79e3d73c44c5384d2931e",
+        "producer": "ficha_nature",
+        "input": "none",
+        "rule_version": null,
+        "basis": null,
+        "class": "system_text",
+        "provenance": "system_fixed"
+      }
+    ],
+    "reviewed_facts": [],
+    "fixed_contract_sha256": "82282ef5d78b7d02add2b314f5ff6a48a38798a1a5a32a9a464748d13077c79b",
+    "project_instructions_sha256": null,
+    "fields": [
+      {
+        "path": "$.evidence.items[].end_line",
+        "class": "code",
+        "origin": "edition",
+        "producer": "claims_context",
+        "rule_version": "lines-v1",
+        "provenance": "edition_verified",
+        "places": [
+          [
+            null,
+            "E1",
+            "06d033ece6645de592db973644cf7357255f24536ff7b03c3b2ace10736f7636"
+          ]
+        ]
+      },
+      {
+        "path": "$.evidence.items[].id",
+        "class": "structure",
+        "origin": "server",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_generated",
+        "places": [
+          [
+            null,
+            "E1",
+            "b5b76a4693c10eceb15342a085c6b44e283a4f9779b6c9dc79719e01f46ecdc6"
+          ]
+        ]
+      },
+      {
+        "path": "$.evidence.items[].path",
+        "class": "code",
+        "origin": "edition",
+        "producer": "claims_context",
+        "rule_version": "lines-v1",
+        "provenance": "edition_verified",
+        "places": [
+          [
+            null,
+            "E1",
+            "7587ab147dd0e26249ac883d66a62329f8cfe5e5a056b64844553a10ca604948"
+          ]
+        ]
+      },
+      {
+        "path": "$.evidence.items[].start_line",
+        "class": "code",
+        "origin": "edition",
+        "producer": "claims_context",
+        "rule_version": "lines-v1",
+        "provenance": "edition_verified",
+        "places": [
+          [
+            null,
+            "E1",
+            "080a9ed428559ef602668b4c00f114f1a11c3f6b02a435f0bdc154578e4d7f22"
+          ]
+        ]
+      },
+      {
+        "path": "$.evidence.items[].symbols[].declaration_line",
+        "class": "derived_from_edition",
+        "origin": "edition",
+        "producer": "claims_context",
+        "rule_version": null,
+        "provenance": "system_generated",
+        "places": [
+          [
+            null,
+            "E1",
+            "080a9ed428559ef602668b4c00f114f1a11c3f6b02a435f0bdc154578e4d7f22"
+          ]
+        ]
+      },
+      {
+        "path": "$.evidence.items[].symbols[].end_line",
+        "class": "derived_from_edition",
+        "origin": "edition",
+        "producer": "claims_context",
+        "rule_version": null,
+        "provenance": "system_generated",
+        "places": [
+          [
+            null,
+            "E1",
+            "06d033ece6645de592db973644cf7357255f24536ff7b03c3b2ace10736f7636"
+          ]
+        ]
+      },
+      {
+        "path": "$.evidence.items[].symbols[].name",
+        "class": "derived_from_edition",
+        "origin": "edition",
+        "producer": "claims_context",
+        "rule_version": null,
+        "provenance": "system_generated",
+        "places": [
+          [
+            null,
+            "E1",
+            "d3455c4c8ebe4d505d83393573fdb6db17a790c4b1813496a9f73c193e651260"
+          ]
+        ]
+      },
+      {
+        "path": "$.evidence.items[].symbols[].name_column",
+        "class": "derived_from_edition",
+        "origin": "edition",
+        "producer": "claims_context",
+        "rule_version": null,
+        "provenance": "system_generated",
+        "places": [
+          [
+            null,
+            "E1",
+            "a8f2ecf6c811b67c050190173c8b89ce2c99b7993d29235ff3bf656b6a2c505e"
+          ]
+        ]
+      },
+      {
+        "path": "$.evidence.limits[]",
+        "class": "limit",
+        "origin": "server",
+        "producer": "limit_entries",
+        "rule_version": null,
+        "provenance": "system_generated",
+        "places": [
+          [
+            null,
+            null,
+            "beb7e749de267e4c386db5f6ccfd9927511fb1e13b87db9575dc074c191ac803"
+          ]
+        ]
+      },
+      {
+        "path": "$.evidence.line_map[].evidence_id",
+        "class": "structure",
+        "origin": "server",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_generated",
+        "places": [
+          [
+            null,
+            "E1",
+            "b5b76a4693c10eceb15342a085c6b44e283a4f9779b6c9dc79719e01f46ecdc6"
+          ]
+        ]
+      },
+      {
+        "path": "$.evidence.line_map[].lines[].number",
+        "class": "code",
+        "origin": "edition",
+        "producer": "claims_context",
+        "rule_version": "lines-v1",
+        "provenance": "edition_verified",
+        "places": [
+          [
+            null,
+            "E1",
+            "a615eeaee21de5179de080de8c3052c8da901138406ba71c38c032845f7d54f4"
+          ]
+        ]
+      },
+      {
+        "path": "$.evidence.line_map[].lines[].text",
+        "class": "code",
+        "origin": "edition",
+        "producer": "claims_context",
+        "rule_version": "lines-v1",
+        "provenance": "edition_verified",
+        "places": [
+          [
+            null,
+            "E1",
+            "dbf6c70f445aae01a29f81c14f1aa49c97d41298472e7c462f138770aacc8c6d"
+          ]
+        ]
+      },
+      {
+        "path": "$.instructions[]",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.policy.allow_hypothesis",
+        "class": "project_settings",
+        "origin": "project",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "project_declared",
+        "places": [
+          [
+            null,
+            null,
+            "456e2e3fa05ee1e2f4e529558008ce162bbd388a9dd4a923c79543a4a1dba618"
+          ]
+        ]
+      },
+      {
+        "path": "$.policy.allow_inference",
+        "class": "project_settings",
+        "origin": "project",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "project_declared",
+        "places": [
+          [
+            null,
+            null,
+            "456e2e3fa05ee1e2f4e529558008ce162bbd388a9dd4a923c79543a4a1dba618"
+          ]
+        ]
+      },
+      {
+        "path": "$.precise_location",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.question",
+        "class": "client_text",
+        "origin": "client",
+        "producer": "client",
+        "rule_version": null,
+        "provenance": "unverified_client_text",
+        "places": [
+          [
+            null,
+            null,
+            "3f87904bd6c911059269cd090465f7c996056c7d9e39ab2b7320607a20296ca6"
+          ]
+        ]
+      },
+      {
+        "path": "$.require_location",
+        "class": "derived_from_edition",
+        "origin": "edition",
+        "producer": "claims_context",
+        "rule_version": null,
+        "provenance": "system_generated",
+        "places": [
+          [
+            null,
+            null,
+            "1c28f2eb0958c3d15db1f0f0e7f2b8998ca2b8f67ab426a1fbb3d561fe76fad9"
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.additionalProperties",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.items.additionalProperties",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.items.properties.citations.items.additionalProperties",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.items.properties.citations.items.properties.end_line.minimum",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.items.properties.citations.items.properties.end_line.type",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.items.properties.citations.items.properties.evidence_id.minLength",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.items.properties.citations.items.properties.evidence_id.type",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.items.properties.citations.items.properties.path.minLength",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.items.properties.citations.items.properties.path.type",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.items.properties.citations.items.properties.quote.type",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.items.properties.citations.items.properties.start_line.minimum",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.items.properties.citations.items.properties.start_line.type",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.items.properties.citations.items.required[]",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.items.properties.citations.items.type",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.items.properties.citations.type",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.items.properties.id.minLength",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.items.properties.id.type",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.items.properties.kind.enum[]",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.items.properties.kind.type",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.items.properties.location.anyOf[].type",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.items.properties.location.anyOf[].additionalProperties",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.items.properties.location.anyOf[].properties.declaration_line.minimum",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.items.properties.location.anyOf[].properties.declaration_line.type",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.items.properties.location.anyOf[].properties.evidence_id.minLength",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.items.properties.location.anyOf[].properties.evidence_id.type",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.items.properties.location.anyOf[].properties.operation_end_line.minimum",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.items.properties.location.anyOf[].properties.operation_end_line.type",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.items.properties.location.anyOf[].properties.operation_start_line.minimum",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.items.properties.location.anyOf[].properties.operation_start_line.type",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.items.properties.location.anyOf[].properties.path.minLength",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.items.properties.location.anyOf[].properties.path.type",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.items.properties.location.anyOf[].properties.symbol_name.minLength",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.items.properties.location.anyOf[].properties.symbol_name.type",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.items.properties.location.anyOf[].required[]",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.items.properties.premises.items.minLength",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.items.properties.premises.items.type",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.items.properties.premises.type",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.items.properties.text.minLength",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.items.properties.text.type",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.items.properties.verification_plan.type[]",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.items.required[]",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.items.type",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.minItems",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.claims.type",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.schema_version.enum[]",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.properties.schema_version.type",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.required[]",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.response_schema.type",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "path": "$.strict_text",
+        "class": "fixed_contract",
+        "origin": "contract",
+        "producer": "claims_engine",
+        "rule_version": null,
+        "provenance": "system_fixed",
+        "places": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      }
+    ]
+  },
+  "measure": {
+    "at_question": {
+      "read_status": "ok",
+      "execution": "99-depois",
+      "execution_sha256": "e8db2c07e4d3103b71697ab91a38bbaf1ffbfcdaa4c96dc2d71834dbc75739cc"
+    },
+    "selection_basis": {
+      "read_status": "ok",
+      "suggestion": "74dcbcf9f8613c69275528051ec52e621140ca056f2d09ae1efea2599923d090",
+      "execution": "01-contagem-tudo",
+      "execution_sha256": "ab6d02ad5c12b0731cc3335f54753edc8857df4635904822d6c8e82902120782"
+    },
+    "measure_diverges": false
+  },
+  "selection": {
+    "record_format": 2,
+    "record_sha256": "fb2d88f9f4922975b8a58ad74b78d736467dbe6fa2305c6efd52314857b24345",
+    "suggestions": [
+      "74dcbcf9f8613c69275528051ec52e621140ca056f2d09ae1efea2599923d090"
+    ],
+    "declared_by": "server"
+  },
+  "server_additions": [],
+  "bound": {
+    "request_sha256": "5c53d3cdc4bde32749138f0f96d693e9ebded39a967121426afb52bcb5ede767",
+    "search_sha256": "4435f9ea5205595e66e1afa5c3b27bcd6cb055c56f6d98f296478094bd85a175",
+    "dossier_sha256": "fbd36a6e59c4103db6a581aa185c18abc4620a8b28a9aab7c454670c6e1320e5",
+    "bundle_query_sha256": "05f93df23e6373830aaa011fa36b09d0f6c596654f9b4674f236031830a0685c",
+    "claims_context_sha256": "96a1b02d86ec36230f9e5f59f1449aebc4cde2617e29f6145167ac2fd5d7e094",
+    "criteria_sha256": null
+  }
+}

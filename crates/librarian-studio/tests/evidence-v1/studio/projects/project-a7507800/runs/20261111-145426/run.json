@@ -1,0 +1,20 @@
+{
+  "diagnostics": 0,
+  "edges": 59,
+  "elapsed_ms": 80,
+  "git": {
+    "dirty": false,
+    "head": "603cac413dc133adf0ea09ad1ff6d5e4511a3bac"
+  },
+  "graph_sha256": "1c1d39bbec5f7d8bb4f6f278c43babca7bda17c7ca7201f2646aaa8df434ac35",
+  "id": "20261111-145426",
+  "inputs": [
+    "src",
+    "Cargo.toml"
+  ],
+  "nodes": 57,
+  "root": "C:\\Users\\beatl\\AppData\\Local\\Temp\\librarian-studio-29544-0\\project",
+  "sources": 4,
+  "symbols": 24,
+  "verified": "edition recarregada do disco e grafo v2 conferido contra os snapshots"
+}

@@ -179,7 +179,11 @@ const base = (items, more) => ({ items, left_out: [], gaps: [], behavior: [], me
   // O registro da seleção é o mesmo: o estado é só para a pessoa.
   const records = await sim.evaluate(([full, bare, id]) => { const once = s => { __t.gathered = [id]; __t.seeds = [id]; __t.absorbSuggestion(s, [id]); return JSON.stringify(__t.selectionOnRecord()); }; return [once(full), once(bare)]; }, [answer, stripped, seed]);
   ok('origin.selection não leva nenhum campo de cobertura', !/coverage_state|exclusion_reason|zero_evidence/.test(records[0]));
-  ok('origin.selection é igual com e sem os campos', records[0] === records[1]);
+  // Formato 2: cada absorção acrescenta o hash da sugestão, na ordem; fora isso, o registro é o mesmo.
+  const [first, second] = records.map(r => JSON.parse(r));
+  const sem = r => JSON.stringify({ ...r, suggestions: undefined });
+  ok('origin.selection é igual com e sem os campos', sem(first) === sem(second) && JSON.stringify(second.suggestions) === JSON.stringify([...first.suggestions, answer.suggestion]),
+    `${first.suggestions.length} e ${second.suggestions.length} sugestões`);
 
   // Em inglês, com a página nesse idioma antes de abrir o projeto.
   const english = await start(browser, B, RENDERER, run, errors, counter, undefined, undefined, 'en');

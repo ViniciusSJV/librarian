@@ -1,0 +1,29 @@
+def sem_chave(x):
+    return ajuda(x)
+
+def ajuda(x):
+    return x + 1
+
+def com_dict(x):
+    return {"a": x}
+
+def com_fstring(x):
+    return f"{x}"
+
+def comentario_com_chave(x):
+    # um { aqui
+    return x
+
+def condicional(x):
+    if x:
+        return {1: x}
+    return {}
+
+def stub(x): ...
+
+def test_algo():
+    assert {}
+
+class K:
+    def em_classe(self):
+        return {"b": 1}

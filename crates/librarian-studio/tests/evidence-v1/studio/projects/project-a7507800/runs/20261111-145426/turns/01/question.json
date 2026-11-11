@@ -1,0 +1,72 @@
+{
+  "answer_format": "claims",
+  "asked": {
+    "original": "Por que roda?",
+    "suffixes": []
+  },
+  "claims_error": null,
+  "created": "20261111-145426",
+  "criteria_sha256": null,
+  "evidence": {
+    "format_version": 1,
+    "sha256": "b7fa86ffa485ad8f0167a9c1a7b3aedfdcbee752fcdf8780e26752fa93dcf9b1"
+  },
+  "gathered": {
+    "nodes": [
+      "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9:function:0:30"
+    ],
+    "origin": {
+      "kind": "selection",
+      "selection": {
+        "budget_bytes": 6144,
+        "format_version": 2,
+        "gaps": [],
+        "included": [
+          {
+            "bytes": 30,
+            "calls": 10.0,
+            "decision": "included",
+            "decision_scope": "single",
+            "end_line": 3,
+            "facts": [],
+            "id": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9:function:0:30",
+            "kind": "function",
+            "left_out_why": null,
+            "name": "roda",
+            "path": "src/lib.rs",
+            "provenance": "manual",
+            "reasons": [
+              {
+                "code": "chosen",
+                "for_target": "roda"
+              }
+            ],
+            "role": "target",
+            "start_line": 1
+          }
+        ],
+        "included_bytes": 30,
+        "kind": "selection_record",
+        "left_out": [],
+        "measured": true,
+        "not_joined": [],
+        "removed": [],
+        "seeds": [
+          "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9:function:0:30"
+        ],
+        "suggested_bytes": 30,
+        "suggested_from": [
+          "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9:function:0:30"
+        ],
+        "suggestions": [
+          "74dcbcf9f8613c69275528051ec52e621140ca056f2d09ae1efea2599923d090"
+        ]
+      },
+      "summary": "x"
+    },
+    "reviewed_facts": [],
+    "with_facts": false
+  },
+  "prepare_error": null,
+  "question": "Por que roda?"
+}

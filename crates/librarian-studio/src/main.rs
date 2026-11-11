@@ -1,6 +1,7 @@
 //! Librarian Studio: local server for the page in web/index.html. Select a project, generate its
 //! verified graph, ask questions that light the graph, and send prepared queries to an LLM.
 //! Listens on 127.0.0.1 only; requests from other origins are refused.
+mod builder;
 mod claims;
 mod execution;
 mod facts;
@@ -14,7 +15,10 @@ mod store;
 mod values;
 
 use http::{Request, Response};
-use librarian_ingest::graph::v2;
+use librarian_ingest::{
+    evidence::{AdditionReason, AdditionRule, RetryRule, ServerAddition, ServerLacunaDeclared},
+    graph::v2,
+};
 use serde_json::{json, Value};
 use std::{
     net::TcpListener,
@@ -138,6 +142,7 @@ fn route(app: &App, req: &Request) -> Result<Response> {
         ("POST", "/api/path-questions") => {
             // P1b: one question per point picked on a "what does it call?" path.
             let body = req.json()?;
+            store::refuse_notes(&body)?;
             let nodes: Vec<String> = serde_json::from_value(body["nodes"].clone())?;
             ok(store.ask_path(&field(&body, "key")?, &field(&body, "run")?, &field(&body, "question")?, &nodes,
                 &field(&body, "seed")?, &body["chosen"])?)
@@ -145,6 +150,7 @@ fn route(app: &App, req: &Request) -> Result<Response> {
         ("POST", "/api/gathered-question") => {
             // P4: one question over the declarations the person gathered one by one.
             let body = req.json()?;
+            store::refuse_notes(&body)?;
             let nodes: Vec<String> = serde_json::from_value(body["nodes"].clone())?;
             let with_facts = body["with_facts"].as_bool().unwrap_or(false);
             let origin = body.get("origin").filter(|o| !o.is_null()).cloned();
@@ -168,6 +174,8 @@ fn route(app: &App, req: &Request) -> Result<Response> {
             body: store.graph(param("key")?, param("run")?)?,
         }),
         ("GET", "/api/turns") => ok(store.turns(param("key")?, param("run")?)?),
+        // A question's package as recorded, H1 to H3 as checked now, H4 as made again now: reading only.
+        ("GET", "/api/evidence") => ok(store.evidence(param("key")?, param("run")?, param("turn")?)?),
         ("POST", "/api/ask") => {
             let body = req.json()?;
             let question = field(&body, "question")?;
@@ -289,7 +297,8 @@ fn graph(app: &App, key: &str, run: &str) -> Result<Arc<v2::Graph>> {
 /// Re-verifies the question immediately before every send; the send records the link (L3).
 fn send(store: &Store, body: &Value) -> Result<Response> {
     let provider = body["provider"].as_str().unwrap_or("");
-    if !provider.is_empty() && !implemented(provider) {
+    // Tests reach the route with the provider that pastes an answer (see `send_value`).
+    if !provider.is_empty() && !implemented(provider) && !(cfg!(test) && provider == "test") {
         return Ok(Response::error(501, format!("Provedor sem envio implementado: {provider}")));
     }
     Ok(Response::json(200, &send_value(store, body)?))
@@ -302,17 +311,22 @@ fn send_value(store: &Store, body: &Value) -> Result<Value> {
     else {
         return Err("Informe key, run, turn e provider".into());
     };
-    if !implemented(provider) {
+    let testing = cfg!(test) && provider == "test";
+    if !implemented(provider) && !testing {
         return Err(format!("Provedor sem envio implementado: {provider}").into());
     }
     let verified = store.verify_for_send(key, run, turn)?;
+    // Tests with `answers` stand an answer pasted as a person would for a provider's, by the question
+    // it answers, after the check every send has: the same files after it. Without them, the send
+    // goes on to `llm`'s test provider. No model is called either way.
+    #[cfg(test)]
+    if testing && body.get("answers").is_some() {
+        return store.paste_answer(key, run, turn, body["answers"][turn].as_str().unwrap_or_default());
+    }
     let choice = choice(store, body)?;
     let destination = store::next_send(&store.turn_dir(key, run, turn)?, provider)?;
-    let mut request = choice.request(&verified.query, &destination);
-    request.criteria_sha256 = verified.criteria_sha256.as_deref();
-    request.link = Some(&verified.link);
-    let mut summary = llm::send(provider, request)?;
-    if let (Some(context), Some(text)) = (&verified.context, summary["text"].as_str()) {
+    let mut summary = llm::send_question(provider, &choice, &verified, &destination)?;
+    if let (Some(context), Some(text)) = (verified.context(), summary["text"].as_str()) {
         summary["check"] = claims::check(context, &destination, text)?;
         std::fs::write(destination.join("send.json"), serde_json::to_vec_pretty(&summary)?)?;
     }
@@ -322,6 +336,8 @@ fn send_value(store: &Store, body: &Value) -> Result<Value> {
 /// The ladder (see ladder.rs): `models` in order, the gate's commands, and how many times a
 /// LACUNA may gather what it asks for. Baselines missing for a gate command are run first.
 fn ladder(store: &Store, body: &Value) -> Result<Value> {
+    // Before anything runs or is created: no `notes`, anywhere in what the client sent.
+    store::refuse_notes(body)?;
     let field = |name: &str| -> Result<String> { body[name].as_str().map(str::to_owned).ok_or_else(|| format!("Informe {name}").into()) };
     let (key, run, question) = (field("key")?, field("run")?, field("question")?);
     let mut nodes: Vec<String> = serde_json::from_value(body["nodes"].clone())?;
@@ -335,6 +351,9 @@ fn ladder(store: &Store, body: &Value) -> Result<Value> {
     if models.is_empty() || gate.is_empty() {
         return Err("A escada precisa de ao menos um modelo e um comando no portão".into());
     }
+    // The client's selection is checked once, over the nodes it sent, before any baseline runs or
+    // any round starts. The rounds go with this record; the nodes a LACUNA adds are the server's.
+    let selection = store.accept_selection(&key, &run, &nodes, origin.as_ref())?;
     let mut steps = vec![];
     let executions = store.executions(&key, &run)?;
     for name in &gate {
@@ -346,10 +365,17 @@ fn ladder(store: &Store, body: &Value) -> Result<Value> {
         }
     }
     let catalog = librarian_ingest::Catalog::load(&store.edition(&key, &run)?)?;
-    let mut turn = store.ask_gathered(&key, &run, &question, &nodes, with_facts, origin.clone())?["id"].as_str().ok_or("pergunta sem id")?.to_owned();
+    // Every question of the ladder goes with the record accepted at its entry, the rounds too, and
+    // with what the server added so far, in the order added.
+    let ask = |suffix: &[store::Suffix], nodes: &[String], additions: &[ServerAddition]| -> Result<String> {
+        Ok(store.ask_gathered_parts(&key, &run, &question, suffix, nodes, with_facts, origin.clone(), selection.as_ref(), additions)?["id"].as_str().ok_or("pergunta sem id")?.to_owned())
+    };
+    let mut additions: Vec<ServerAddition> = vec![];
+    let mut turn = ask(&[], &nodes, &additions)?;
     for model in &models {
         let (mut asked, mut tried) = (0, 0);
-        let mut current = question.clone();
+        // What a retry added to the client's question, kept apart from it.
+        let mut suffix: Option<store::Suffix> = None;
         loop {
             let mut request = model.clone();
             for (k, v) in [("key", &key), ("run", &run), ("turn", &turn)] {
@@ -401,8 +427,8 @@ fn ladder(store: &Store, body: &Value) -> Result<Value> {
                 if tried < retries {
                     tried += 1;
                     // What was proposed, so the next try does not repeat it.
-                    current = format!("{question} Propostas anteriores recusadas pelo portão: {}. Proponha outras mudanças.", refused.join(" | "));
-                    turn = store.ask_gathered(&key, &run, &current, &nodes, with_facts, origin.clone())?["id"].as_str().ok_or("pergunta sem id")?.to_owned();
+                    suffix = Some(gate_suffix(&refused, tried as usize));
+                    turn = ask(suffix.as_slice(), &nodes, &additions)?;
                     continue;
                 }
                 break;
@@ -419,9 +445,15 @@ fn ladder(store: &Store, body: &Value) -> Result<Value> {
                 if added.is_empty() {
                     break;
                 }
-                nodes.extend(added.into_iter().map(|(id, _)| id));
-                turn = store.ask_gathered(&key, &run, &current, &nodes, with_facts, origin.clone())?["id"].as_str().ok_or("pergunta sem id")?.to_owned();
+                // Each one the server's, with the round, the send whose LACUNA asked for it and the
+                // name that found it: the questions from now on carry them apart from the client's.
                 asked += 1;
+                additions.extend(added.iter().map(|(id, name)| ServerAddition {
+                    declared_by: ServerLacunaDeclared::ServerLacuna, round: asked as usize, from_turn: turn.clone(), from_send: send.clone(),
+                    symbol_id: id.clone(), for_name: name.clone(), reason: AdditionReason::LacunaName, decided_by_rule: AdditionRule::LadderResolve,
+                }));
+                nodes.extend(added.into_iter().map(|(id, _)| id));
+                turn = ask(suffix.as_slice(), &nodes, &additions)?;
                 continue;
             }
             steps.push(ladder::step(model, &turn, &send, if lacunas.is_empty() { "refused" } else { "lacuna" },
@@ -430,14 +462,25 @@ fn ladder(store: &Store, body: &Value) -> Result<Value> {
             // the local one is not retried (it is the free first step, not the one that must pass).
             if lacunas.is_empty() && tried < retries && model["provider"] != "ollama" {
                 tried += 1;
-                current = format!("{question} Uma resposta anterior foi recusada na conferência mecânica: {}.", codes.join(", "));
-                turn = store.ask_gathered(&key, &run, &current, &nodes, with_facts, origin.clone())?["id"].as_str().ok_or("pergunta sem id")?.to_owned();
+                suffix = Some(mechanical_suffix(&codes, tried as usize));
+                turn = ask(suffix.as_slice(), &nodes, &additions)?;
                 continue;
             }
             break;
         }
     }
     Ok(json!({ "passed": false, "turn": turn, "nodes": nodes, "steps": steps }))
+}
+
+/// What a gate refusal adds to the client's question: what was proposed, so the next try does not
+/// repeat it. Its text is the one the question always got.
+pub(crate) fn gate_suffix(refused: &[String], attempt: usize) -> store::Suffix {
+    store::Suffix { text: format!(" Propostas anteriores recusadas pelo portão: {}. Proponha outras mudanças.", refused.join(" | ")), rule: RetryRule::GateRefused, attempt }
+}
+
+/// What a refusal of the mechanical check adds to the client's question: which rules failed.
+pub(crate) fn mechanical_suffix(codes: &[String], attempt: usize) -> store::Suffix {
+    store::Suffix { text: format!(" Uma resposta anterior foi recusada na conferência mecânica: {}.", codes.join(", ")), rule: RetryRule::MechanicalRefused, attempt }
 }
 
 /// Providers that actually send; "manual" and the listed-but-pending ones do not.

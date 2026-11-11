@@ -1,0 +1,111 @@
+{
+  "version": "chain-step-v1",
+  "catalog_sha256": "1a9cdc6b1b2e12b56925a3f106faae550a26ebb7bdb3cb68a17f57c4a7ee928b",
+  "lexicon_sha256": "",
+  "question": "Por que roda?",
+  "terms": [],
+  "status": "gathered",
+  "hits": [
+    {
+      "symbol_id": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9:function:0:30",
+      "name": "roda",
+      "path": "src/lib.rs",
+      "source_sha256": "ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9",
+      "start_line": 1,
+      "end_line": 3,
+      "chunk_id": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9:function:0:30",
+      "chunk_sha256": "427fc2485ff1bfad5dabf69ecd993746232856af2f9bc1083eda54f700a5c2e7",
+      "score": 0,
+      "reasons": [],
+      "excerpt": "pub fn roda() -> u32 {\n    1\n}",
+      "excerpt_truncated": false
+    }
+  ],
+  "graph": {
+    "nodes": [
+      {
+        "id": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9",
+        "kind": "source",
+        "label": "src/lib.rs"
+      },
+      {
+        "id": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9:function:0:30",
+        "kind": "function",
+        "label": "roda"
+      },
+      {
+        "id": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9:occurrence:declared_return:17:20",
+        "kind": "declared_return",
+        "label": "u32"
+      },
+      {
+        "id": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9:occurrence:type_reference:17:20",
+        "kind": "type_reference",
+        "label": "u32"
+      }
+    ],
+    "edges": [
+      {
+        "from": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9",
+        "to": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9:function:0:30",
+        "kind": "declares",
+        "resolution": "structural",
+        "evidence": {
+          "source_id": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9",
+          "path": "src/lib.rs",
+          "source_sha256": "ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9",
+          "start_byte": 0,
+          "end_byte": 30,
+          "start_line": 1,
+          "end_line": 3,
+          "excerpt_sha256": "427fc2485ff1bfad5dabf69ecd993746232856af2f9bc1083eda54f700a5c2e7"
+        }
+      },
+      {
+        "from": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9:function:0:30",
+        "to": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9:occurrence:declared_return:17:20",
+        "kind": "declared_return",
+        "resolution": "syntax_only",
+        "evidence": {
+          "source_id": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9",
+          "path": "src/lib.rs",
+          "source_sha256": "ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9",
+          "start_byte": 17,
+          "end_byte": 20,
+          "start_line": 1,
+          "end_line": 1,
+          "excerpt_sha256": "d7649d428b9ff33d188ecbf38a7e4d8fd167fa01b2e10fe9a8f9308e52f1d7cc"
+        }
+      },
+      {
+        "from": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9:function:0:30",
+        "to": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9:occurrence:type_reference:17:20",
+        "kind": "type_reference",
+        "resolution": "syntax_only",
+        "evidence": {
+          "source_id": "src:b1a35a68f14e696205874893c07fd24fdb88882b47c23cc0e0c80a30c7d53759:ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9",
+          "path": "src/lib.rs",
+          "source_sha256": "ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9",
+          "start_byte": 17,
+          "end_byte": 20,
+          "start_line": 1,
+          "end_line": 1,
+          "excerpt_sha256": "d7649d428b9ff33d188ecbf38a7e4d8fd167fa01b2e10fe9a8f9308e52f1d7cc"
+        }
+      }
+    ],
+    "depth": 2,
+    "max_nodes": 48,
+    "max_edges": 96,
+    "truncated": false,
+    "label_bytes_limit": 256,
+    "labels_truncated": 0
+  },
+  "diagnostics": 0,
+  "limits": [
+    "Gathered step: declarations the person gathered one by one; nothing was searched.",
+    "Name candidates are not resolved types/calls/fields/imports. No macros, cfg or decorator evaluation, compiler or runtime proof.",
+    "Graph expands only the first hit. Source nodes are leaves. Depth bounded to 0..3, 48 nodes, 96 edges.",
+    "Excerpts limited to 4000 UTF-8 bytes each and 16000 total. Truncation is explicit; hashes/lines refer to full chunks."
+  ]
+}

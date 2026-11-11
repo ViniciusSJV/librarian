@@ -1,0 +1,14 @@
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -1,1 +1,1 @@
+-pub fn roda() -> u32 {
++pub fn roda() -> u32 { crate::count!();
+@@ -4,1 +4,1 @@
+-pub fn contada_sem_rodar() -> u32 {
++pub fn contada_sem_rodar() -> u32 { crate::count!();
+@@ -9,1 +9,1 @@
+-    fn nome(&self) -> u32 {
++    fn nome(&self) -> u32 { crate::count!();
+@@ -15,1 +15,1 @@
+-    pub fn metodo(&self) -> u32 {
++    pub fn metodo(&self) -> u32 { crate::count!();

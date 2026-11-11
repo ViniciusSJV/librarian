@@ -1,0 +1,69 @@
+{
+  "facts": [
+    {
+      "authorship": "librarian-ingest/0.8.0;syn/3.0.5;rustpython-parser/0.4.0;rust-structural-v6;python-structural-v4: registro estrutural da edition verificada",
+      "end_line": 3,
+      "id": "E1",
+      "line": 1,
+      "source_id": "S1",
+      "statement": "function `roda` declarado em src/lib.rs, linhas 1–3."
+    }
+  ],
+  "id": "chain:4435f9ea5205595e66e1afa5c3b27bcd6cb055c56f6d98f296478094bd85a175",
+  "sources": [
+    {
+      "content": "code",
+      "git_commit": "603cac413dc133adf0ea09ad1ff6d5e4511a3bac",
+      "id": "S1",
+      "kind": "rust",
+      "lines": [
+        "pub fn roda() -> u32 {",
+        "    1",
+        "}",
+        "pub fn contada_sem_rodar() -> u32 {",
+        "    2",
+        "}",
+        "pub trait Forma {",
+        "    fn area(&self) -> f64;",
+        "    fn nome(&self) -> u32 {",
+        "        3",
+        "    }",
+        "}",
+        "pub struct C;",
+        "impl C {",
+        "    pub fn metodo(&self) -> u32 {",
+        "        4",
+        "    }",
+        "}",
+        "pub const fn constante() -> u32 {",
+        "    5",
+        "}",
+        "pub fn ja_conta() -> u32 {",
+        "    crate::count!();",
+        "    6",
+        "}",
+        "pub fn ja_conta_sem_linha() -> u32 {",
+        "    crate::count!();",
+        "    7",
+        "}",
+        "#[test]",
+        "fn um_teste() {}",
+        "pub const PRINTED: &str = \"",
+        "librarian-measure calls=10 at=src/lib.rs:1",
+        "librarian-measure calls=7 at=src/lib.rs:15",
+        "librarian-measure calls=5 at=src/lib.rs:23",
+        "librarian-measure calls=3 at=src/app.py:4",
+        "\";"
+      ],
+      "path": "src/lib.rs",
+      "sha256": "ee2fdf4627810c923afa1978d099cf083e2e179e8f3033c86c46df3cdca8fce9"
+    }
+  ],
+  "unknowns": [
+    "Gathered step: declarations the person gathered one by one; nothing was searched.",
+    "Name candidates are not resolved types/calls/fields/imports. No macros, cfg or decorator evaluation, compiler or runtime proof.",
+    "Graph expands only the first hit. Source nodes are leaves. Depth bounded to 0..3, 48 nodes, 96 edges.",
+    "Excerpts limited to 4000 UTF-8 bytes each and 16000 total. Truncation is explicit; hashes/lines refer to full chunks.",
+    "Fichas descrevem onde estão declarações; não respondem à pergunta nem afirmam comportamento."
+  ]
+}
