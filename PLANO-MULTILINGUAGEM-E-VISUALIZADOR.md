@@ -1599,7 +1599,7 @@ Nos 8 envios de mudança da gravação do vídeo 12, das 24 propostas só 1 saiu
 
 ## Evidence Builder no Studio: etapas 0 a 7 (05/11/2026)
 
-**"Etapa" nesta seção é a etapa desta frente**, sem relação com a ETAPA 2 do início deste plano nem com as etapas do roteiro de 30/10. As decisões abaixo vieram de pedidos do usuário que não estão no repositório; por isso ficam registradas aqui por inteiro. O que já vale na tela está no [STUDIO.md](STUDIO.md); o contrato do registro, em [Registro da seleção](STUDIO.md#registro-da-seleção-originselection-formato-1).
+**"Etapa" nesta seção é a etapa desta frente**, sem relação com a ETAPA 2 do início deste plano nem com as etapas do roteiro de 30/10. As decisões abaixo vieram de pedidos do usuário que não estão no repositório; por isso ficam registradas aqui por inteiro. O que já vale na tela está no [STUDIO.md](STUDIO.md); o contrato do registro, em [Registro da seleção](STUDIO.md#registro-da-seleção-originselection-formato-2).
 
 | Etapa | Conteúdo | Estado |
 |---|---|---|
@@ -1607,7 +1607,7 @@ Nos 8 envios de mudança da gravação do vídeo 12, das 24 propostas só 1 saiu
 | 1 | Diagnóstico visual e contratos | Feita, sem alterar arquivos |
 | 2 | Correções e remoções aprovadas | **Feita:** `99f69f3` |
 | 3 | "Onde pesa" | Passos 1 e 2 concluídos (`47337e9`, baterias em `9659de5`); Passo 3 encerrado no backend, pela opção A; Passo 4 concluído, nas entregas 4A e 4B; **Passos 6 e 7 feitos (`94089d3`)**; Passo 5 adiado para a etapa própria |
-| 4 | Evidence Builder | Não iniciada |
+| 4 | Evidence Builder | **Em andamento, sem commit:** Passos 0 a 15 feitos; P1 validada no Windows; P2 e P3 (documentação e errata) aguardando avaliação; P4 (Ubuntu), publicação e CI pendentes. Veja [Etapa 4](#etapa-4-evidence-builder) |
 | 5 | Pacote e revisão, C1 e C2 | Não iniciada |
 | 6 | Fact Builder e portão | Não iniciada |
 | 7 | Verificação | Não iniciada |
@@ -1924,9 +1924,13 @@ Parecer: apto com ressalvas, sem bloqueador técnico. Decisões do usuário e o 
 
 **Validação final, em build novo, em sequência:** `cargo test --workspace --locked`, 245 aprovados, 0 falhas, 2 ignorados; gabarito `2714b840…`; `rodar.js`, 285 de 285; `etapa2.js` 66; `etapa2b.js` 75; `etapa2-modelo.js`, 350 passos e 0 ocorrências; 1.688 `send.json` antes e depois. `web/index.html` não mudou.
 
-**Próxima atividade:** a escolha é do usuário. Nada depois disto está autorizado: nem a [Etapa 4](#etapa-4-evidence-builder) nem a [evolução visual](#evolução-visual-cidade-e-fluxograma-planejada-em-06112026). O estado da publicação está na [seção 16 do contexto](CONTEXTO-CONTINUIDADE.md#16-passos-6-e-7-feitos-06112026).
+**Próxima atividade:** a escolha é do usuário. Nada depois disto está autorizado: nem a [Etapa 4](#etapa-4-evidence-builder) nem a [evolução visual](#evolução-visual-cidade-e-fluxograma-planejada-em-06112026). O estado da publicação está na [seção 16 do contexto](CONTEXTO-CONTINUIDADE.md#16-passos-6-e-7-feitos-06112026). *(Situação de 06/11/2026. A Etapa 4 foi autorizada em 07/11/2026: veja [Andamento da Etapa 4](#andamento-da-etapa-4-07112026-a-11112026).)*
 
 ### Etapa 4: Evidence Builder
+
+**Situação em 11/11/2026: em andamento, não encerrada.** A Etapa 4 foi autorizada em 07/11/2026 com um contrato próprio: o **pacote de evidências** de cada pergunta nova, a seleção conferida pelo servidor e as conferências H1 a H4, com uma visualização mínima. Não foi a tela descrita no plano de 05/11, que segue abaixo como estava. O contrato em vigor está no [STUDIO.md](STUDIO.md#pacote-de-evidências-etapa-4), e o andamento, em [Andamento da Etapa 4](#andamento-da-etapa-4-07112026-a-11112026).
+
+#### Plano de tela de 05/11/2026 (não implementado nesta etapa)
 
 Evolução do fluxo atual, não um produto paralelo. Abre no espaço central, no padrão de `#pathView`; ao fechar, a cidade volta ao estado anterior; as três colunas ficam; a lista de fontes é o centro da experiência.
 
@@ -1939,6 +1943,52 @@ Evolução do fluxo atual, não um produto paralelo. Abre no espaço central, no
 - Remover `investigationView` e `investigation.ticked`, o segundo estado de seleção, junto com a lista de fontes duplicada do compositor. Ao abrir um achado no Builder, preservar a cadeia de chamadas como motivo e procedência. O inventário continua alimentando o anel vermelho da cidade.
 - Hoje o inventário não registra motivos nem o que foi desmarcado.
 - D15: botão fixo cobre linhas em janela baixa.
+
+Esses três itens herdados **não foram feitos** na Etapa 4 que foi implementada, e continuam pendentes.
+
+#### Andamento da Etapa 4 (07/11/2026 a 11/11/2026)
+
+O contrato foi consolidado e aprovado em 07/11/2026, com três decisões do usuário: o `builder` identificado por `build.rs` (1A); a ordem cronológica, e não lexicográfica, para a medição mais recente e para a linha de base do portão (2A); e o texto acrescentado pelo servidor em novas tentativas registrado à parte, como `server_retry`, em ordem (3A). Cada passo foi autorizado e avaliado separadamente. **Nada desta etapa tem commit**: o trabalho está na árvore de trabalho sobre `60d4d50`.
+
+| Passo | Conteúdo | Situação |
+|---|---|---|
+| 0 | Linha de base: H3 histórico (29/10: 113 aprovadas e 23 recusadas; 04 a 07/11: 22 e 0), queries, gabarito, baterias | Concluído; em `.studio/arquivo-copias/linha-base-etapa4-20261107`, fora do Git |
+| 1 | Contrato e tipos (`librarian-ingest/src/evidence.rs`) | Concluído |
+| 2 | Normalização `lines-v1`, com vetores e reimplementação independente | Concluído |
+| 3 | Construção pura de fichas e unidades (U1 a U5), sem mudar os bytes da query | Concluído |
+| 4 | Proveniência dos campos da query, limites e fatos revisados (U6) | Concluído |
+| 5 | Registro de sugestões endereçado por hash | Concluído |
+| 6 | Identidade do código (`builder`) | Concluído |
+| 7 | Medição na pergunta e ordem cronológica (decisão 2A) | Concluído |
+| 8 | Pacote gravado no funil de toda pergunta nova, com a marca | Concluído |
+| 9 | H1 a H3 antes de cada envio, vínculo `evidence_sha256`, envio por propósito | Concluído |
+| 10 | Seleção no formato 2, conferida pelo servidor; `notes` recusadas | Concluído |
+| 11 | Escada: `server_additions` (`server_lacuna`) | Concluído |
+| 12 | Cobertura das rotas por testes de API | Concluído |
+| 13 | Independência de linguagem (cerca B11) e H4 | Concluído; a cerca B11 foi corrigida depois, para checkout com CRLF |
+| 14 | `GET /api/evidence` e visualização mínima na conversa | Concluído |
+| 15 | Auditoria final | Feita em 11/11/2026. Encontrou `measure_diverges` sempre gravado `false`, sem cálculo, e documentos desatualizados; dela saíram as pendências P1 a P4 |
+| P1 | Pacote formato 2, com `measure_divergence`; formato 1 lido e refeito como era | Implementada e validada **no Windows** (432 testes, 31 de 31 mutações detectadas, 310 verificações de tela, 159 pacotes reais conferidos sem recusa); aguarda a avaliação do usuário |
+| P2 | Documentação: `STUDIO.md`, `CLAIMS.md`, README do Studio, este plano e o contexto | Em conclusão nesta execução, aguardando avaliação |
+| P3 | Errata do relatório do Passo 14 (abaixo) | Em conclusão nesta execução, aguardando avaliação |
+| P4 | Validação no Ubuntu | **Pendente**: não rodou em 11/11/2026 porque o DNS da máquina estava fora |
+| — | Commit, push e CI | **Pendentes**: sem autorização; o CI só roda depois da publicação |
+
+**Pendências que impedem declarar a etapa encerrada:** P4; o CI verde em Ubuntu e Windows depois da publicação (critério B12); e a avaliação da P1, da P2 e da P3.
+
+**Risco registrado na P2:** a fixture congelada do formato 1 (`crates/librarian-studio/tests/evidence-v1/`) tem caminhos de até 178 caracteres, contra 124 do maior caminho anterior do repositório. No Windows, sem `core.longpaths`, um clone numa pasta com mais de cerca de 80 caracteres falharia ao criar esses arquivos. Mudar os caminhos exige proposta e aprovação próprias.
+
+**Sequência prevista, cada item com autorização própria:** avaliação da P1 a P3 → P4 → commit e push → CI verde → encerramento da Etapa 4 → só então a auditoria funcional do frontend; a reformulação do fluxo e a [evolução visual](#evolução-visual-cidade-e-fluxograma-planejada-em-06112026) vêm depois.
+
+#### Errata do relatório do Passo 14 (P3, 11/11/2026)
+
+Refere-se ao relatório de validação do Passo 14 da Etapa 4, entregue na conversa de trabalho em 11/11/2026; esse relatório não está no repositório, e o texto dele não muda. As seções C e F listavam **cinco** arquivos alterados (`main.rs`, `store.rs`, `index.html`, `tela-evidencia.js` e `rodar.js`), e a seção G dizia que, **dos 25 arquivos acumulados**, só `main.rs`, `store.rs` e `index.html` tinham mudado. As duas coisas estão certas; faltou dizer o critério da seção G:
+
+- os 25 arquivos eram a lista dos alterados em relação ao HEAD no fim do Passo 13;
+- `rodar.js` estava igual ao HEAD antes do Passo 14 e por isso não fazia parte dessa lista;
+- `tela-evidencia.js` era um arquivo novo;
+- o Passo 14 tocou cinco arquivos: três da lista e dois fora dela;
+- depois dele, o conjunto acumulado passou a ter 27 arquivos.
 
 ### Etapa 5: pacote e revisão
 

@@ -176,6 +176,10 @@ o envio, nada é enviado (`input_rejected`). A resposta mostra "Vínculo: enviou
 …) conferida contra a edition antes do envio". O vínculo é registro do studio, não
 assinatura. Envios feitos antes dele não têm `link`.
 
+Numa pergunta com [pacote de evidências](#pacote-de-evidências-etapa-4), a conferência
+antes do envio inclui o pacote: H1, H2 e H3. Se algum recusa, nada é enviado, e a
+mensagem diz o nível. O `link` grava então o `evidence_sha256` do pacote conferido.
+
 | Opção | O que faz |
 | --- | --- |
 | Nenhum (só preparar para copiar) | Não envia. Abre a `query.json` exata; **Copiar query** leva para a área de transferência. Em claims, a caixa **Resposta colada** recebe a resposta trazida de fora: a pergunta é reconferida, a resposta é ligada à query pelo hash e passa pela mesma conferência mecânica. Aparece como "Resposta colada", porque o studio não sabe quem a escreveu. |
@@ -573,7 +577,7 @@ A seleção e o estado não usam o mesmo critério: a seleção lê a mediana da
 **Limite:** uma falha ao ler a medição chega à sugestão como `measured: false` e `coverage: null`, e o painel diz "Sem medição", enquanto Onde pesa diz que não conseguiu ler a medição.
 
 Essas listas e os estados não vão ao modelo. A pergunta grava o estado final da seleção, com o orçamento, o que
-ficou de fora, o que você tirou e as lacunas: veja [Registro da seleção](#registro-da-seleção-originselection-formato-1).
+ficou de fora, o que você tirou e as lacunas: veja [Registro da seleção](#registro-da-seleção-originselection-formato-2).
 
 O **topo do arquivo** é uma faixa de linhas, não uma declaração: entra como ficha só na pergunta
 juntada, e a mudança proposta pode editar essas linhas (por exemplo, acrescentar um import). Sem
@@ -883,7 +887,7 @@ flowchart TD
         C[criteria-before.md + hash]
         B[search: léxico, ranking e vizinhança]
         P[prepare + verify: fichas E1..En e query conferida]
-        V[verify-prepared antes de cada envio]
+        V[verify-prepared e H1-H3 do pacote antes de cada envio]
     end
     subgraph L[LLMs]
         O[Ollama: ollama create com o Modelfile + api/generate]
@@ -926,9 +930,13 @@ apaga).
   runs/<AAAAMMDD-HHMMSS>/
     edition/  graph-v2.json  run.json
     executions/<NN>-<comando>/     execution.json, stdout-N.txt, stderr-N.txt
+    suggestions/<sha256>.json      registros de sugestão, pelo hash dos próprios bytes (nunca sobrescritos)
     last-turn.txt                  maior número de pergunta já usado (não é reutilizado)
     turns/<NN>/
-      question.json                pergunta, data, formato, hash dos critérios, recusas, registro da seleção
+      question.json                pergunta, data, formato, hash dos critérios, recusas, origem enviada,
+                                   o que foi pedido (`asked`) e a marca do pacote (`evidence`)
+      evidence.json                pacote de evidências da pergunta (desde a Etapa 4)
+      selection.json               registro da seleção conferida pelo servidor (formato 2), quando houver
       criteria-before.md           critérios gravados antes da resposta
       search.json                  o que o léxico tocou e a vizinhança
       prepare-request.json         pedido autocontido do prepare
@@ -941,11 +949,21 @@ apaga).
 
 Para começar do zero, apague a pasta do projeto em `.studio/projects/`.
 
-## Registro da seleção (`origin.selection`, formato 1)
+## Registro da seleção (`origin.selection`, formato 2)
 
-Contrato do registro implementado em `99f69f3`.
+Contrato do registro: formato 1 implementado em `99f69f3`; formato 2 desde a Etapa 4 (Passo 10).
 
-Fica em `question.json`, em `gathered.origin.selection`. É montado pela página (`selectionOnRecord`, em `web/index.html`) no momento em que a pergunta é preparada. O servidor guarda sem interpretar e, desse objeto, lê apenas `notes`.
+A página monta o registro (`selectionOnRecord`, em `web/index.html`) no momento em que a pergunta é preparada, e o envia em `origin.selection`, que fica em `question.json`, em `gathered.origin.selection`, como foi enviado. **O servidor confere o registro antes de criar qualquer pergunta**, em `/api/gathered-question` e na entrada de `/api/ladder`, contra os registros de sugestão da execução (`runs/<run>/suggestions/`) e contra a edition:
+
+- forma, listas e códigos, com campo desconhecido recusado;
+- `included` igual a `nodes`, na mesma ordem;
+- partição sem repetição e `seeds` dentro de `included`;
+- ids, caminhos, linhas, `kind` e bytes iguais aos da edition;
+- cada hash de `suggestions` existe na execução e confere;
+- o que as sugestões citadas dão, absorvidas na ordem enviada, é o que o registro diz (`role`, `calls`, `facts`, `why`, motivos, lacunas, orçamento);
+- `included_bytes` igual à soma.
+
+O que não confere é recusado com o motivo, e nenhuma pergunta é criada. O que passa vira `turns/<NN>/selection.json`, com o que o servidor conferiu (`checked_by_server`, inclusive a medição de cada sugestão citada), o que o cliente declarou (`declared_by_client`: ordem das sugestões, `decision`, `decision_scope`, fontes `manual`) e o registro recebido. O pacote de evidências nomeia esse arquivo pelo hash. O servidor **não afirma** que alguém clicou, viu ou decidiu algo: decisões e ordem continuam declarações do cliente.
 
 **Não confundir** com `selection` de `origin.json` e de `send.link`, que descreve o bundle preparado e é outra estrutura.
 
@@ -973,7 +991,7 @@ Fica em `question.json`, em `gathered.origin.selection`. É montado pela página
 1. **Partição total.** Toda fonte conhecida está em exatamente uma destas listas: `included`, `removed`, `left_out`, `not_joined`.
 2. **`included` é o estado de inclusão e é o envio.** Mesmos ids e mesma ordem de `gathered.nodes`.
 3. **Origem, estado e decisão são coisas separadas.** A lista diz o estado atual. `provenance` diz de onde a fonte veio. `decision` diz a última ação da pessoa.
-4. **Sem `notes`.** A presença desse campo faz o servidor mandar as notas ao modelo (`store.rs`, `ask_gathered`). A página nunca o escreve. Um cliente que o escrever liga as notas: a proteção é da página, não do servidor.
+4. **Sem `notes`.** O servidor recusa `notes` em qualquer forma e em qualquer profundidade do corpo inteiro de `/api/gathered-question`, `/api/ladder` e `/api/path-questions` (`refuse_notes`, em `store.rs`), antes de criar ou rodar qualquer coisa. Até o Passo 10 da Etapa 4, a proteção era só da página; registros antigos com `notes` continuam como foram gravados (veja [Registros antigos](#registros-antigos)).
 5. **O que o modelo recebeu é a query.** O registro explica a seleção; a prova do envio é `claims/query.json` e `sends/*/query.json`.
 
 ### As quatro listas
@@ -1031,7 +1049,9 @@ Marcar ou desmarcar uma fonte como alvo (`+alvo`) não é registrado em `decisio
 
 | Campo | Tipo | Obrigatório | Significado |
 |---|---|---|---|
-| `format_version` | `1` | Sim | Ausente significa registro antigo |
+| `kind` | `"selection_record"` | Sim | Formato 2: o nome do artefato, para que o número não seja lido como o de outro |
+| `format_version` | `2` | Sim | `1` ou ausente é registro antigo: recusado numa pergunta nova, nunca reescrito numa antiga |
+| `suggestions` | hashes | Sim | Formato 2: os registros de sugestão citados, na ordem em que foram absorvidos |
 | `seeds` | ids | Sim | Alvos atuais, todos em `included`. Vazio só em estado que a página não deixa enviar |
 | `suggested_from` | ids | Sim | De onde partiu a última sugestão; pode não coincidir com `seeds` |
 | `measured` | booleano | Sim | Existe medição nesta edition. **Não diz nada sobre cobertura** (veja [Medição: capacidade não é cobertura](#medição-capacidade-não-é-cobertura)) |
@@ -1096,16 +1116,113 @@ Não há migração. Formas encontradas nas raízes verificadas (arquivo `rodada
 
 Nenhum registro antigo tem `format_version`, e o campo é o que distingue o formato novo. O formato entrou em commit só em `99f69f3`, então 1 é o primeiro valor.
 
+**Formato 1 depois da Etapa 4.** Os registros de formato 1 já gravados em `question.json` ficam como estão: não são migrados, reescritos nem conferidos de novo. Uma pergunta nova com registro de formato 1, ou sem `kind`, é recusada na entrada (`Seleção recusada (forma: kind não é selection_record)`), e nada é criado.
+
 ### Compatibilidade
 
 | Consumidor | Situação |
 |---|---|
 | Tela, com registros sem `selection` | Comprovada: renderizados nos testes |
 | Tela, com registros `{notes}` | Comprovada: renderizados nos testes, sem erro de página |
-| Servidor, preparando pacote com o formato novo | Comprovada: servidor real, sem notas, `nodes` = `included`, registro gravado = registro calculado |
+| Servidor, preparando pacote com o formato 1 (antes da Etapa 4) | Comprovada: servidor real, sem notas, `nodes` = `included`, registro gravado = registro calculado |
+| Servidor, conferindo o formato 2 (Etapa 4) | Comprovada por testes de API e mutações, e pelas baterias de tela com a página real |
 | Forma intermediária | Não comprovada: sem registros |
-| Scripts arquivados (`cond.js`, `gen.js`, `foco.js` escrevem `{notes}`; `q.js` imprime `origin`) | Não comprovada: não reexecutados; o servidor não mudou nesse ponto |
+| Scripts arquivados (`cond.js`, `gen.js`, `foco.js` escrevem `{notes}`; `q.js` imprime `origin`) | Desde a Etapa 4, o servidor recusa `{notes}`: esses scripts não criariam perguntas. Não reexecutados |
 | Consumidores futuros | Não comprovada: dependem de este contrato ser adotado |
+
+## Pacote de evidências (Etapa 4)
+
+Toda pergunta nova que chega à preparação ganha um **pacote de evidências**, em `turns/<NN>/evidence.json`. É o registro, feito pelo servidor, de onde veio cada parte da query preparada e de como ela se liga à edition, sem horários e sem copiar trechos: só hashes.
+
+**O pacote não é:** o envelope do envio (o `SYSTEM` e as skills ficam de fora), o que o modelo leu, a verdade de algum fato, a qualidade ou a suficiência da seleção, nem a prova de que uma pessoa agiu. Uma pergunta recusada antes da preparação não tem pacote; a recusa continua registrada em `question.json`.
+
+### O que ele registra
+
+| Parte | Conteúdo |
+|---|---|
+| `kind`, `format_version` | `"evidence_package"` e o formato (1 ou 2, abaixo) |
+| `versions` | `normalization: "lines-v1"` (como o texto de uma unidade sai do snapshot), `rules` (versão das regras do envelope, hoje `envelope-1`) e `builder`: o commit e o `git_dirty` do Librarian que montou o pacote, gravados na compilação por `build.rs`, ou `status: "unknown"` sem Git |
+| `edition` | `edition:<hash>`, hash do catálogo, extractor, `git_head` e `git_dirty` do projeto analisado |
+| `route`, `origin_kind`, `representation` | Por onde a pergunta veio, a origem declarada e claims ou prosa |
+| `fichas` | O que foi escolhido, com linhas, papel, motivos e `declared_by` (`client`, ou `server_lacuna` para o que a Escada acrescentou) |
+| `units` | O texto que entra na query, por hashes: `source_sha256` (bytes da fonte), `text_sha256` (as linhas numeradas) e, em claims, `excerpt_sha256`. Toda ficha aponta para uma unidade, e toda unidade tem ficha |
+| `query` | Hash da query e a classe de cada campo dela: código, fatos revisados, limites (com produtor e versão), texto da pessoa (`declared_by: "client"`), acréscimos do servidor em novas tentativas (`declared_by: "server_retry"`, em ordem), contrato fixo e instruções do projeto |
+| `measure` | A medição lida quando a pergunta foi gravada (`at_question`), aquela em que a seleção se apoiou (`selection_basis`) e o que se diz das duas (depende do formato, abaixo). A medição mais recente da edition não é gravada |
+| `selection` | O `selection.json` da pergunta pelo hash, e as sugestões citadas, `declared_by: "server"` |
+| `server_additions` | O que uma rodada de lacuna da Escada acrescentou: rodada, pergunta e envio de origem, motivo e regra (`ladder::resolve`) |
+| `bound` | Hashes dos arquivos da pergunta: pedido, busca, dossiê, query do bundle, contexto de claims e critérios |
+
+### Vínculos
+
+- `question.json` guarda a **marca** `evidence: { format_version, sha256 }`. Se a construção falhou, guarda `evidence: { error }`, e o envio é recusado.
+- `selection.json` fica ao lado do pacote. Os registros de sugestão ficam em `runs/<run>/suggestions/<sha256>.json`, um por conteúdo, e nunca são sobrescritos.
+- Cada envio de pergunta grava no `link` do `send.json` o `evidence_sha256` do pacote conferido, as conferências feitas (`evidence_h1`, `evidence_h2`, `evidence_h3`) e `purpose: "question"`. O léxico grava `purpose: "lexicon"` e não tem pacote.
+- Uma pergunta anterior às marcas (sem `evidence` em `question.json`) segue a conferência de antes, sem pacote e sem migração.
+
+### Formatos 1 e 2
+
+| | Formato 1 | Formato 2 |
+|---|---|---|
+| Quem grava | O código anterior à P1 (até 11/11/2026). Esses pacotes nunca são reescritos | Toda pergunta nova |
+| Campo em `measure` | `measure_diverges` | `measure_divergence` |
+| O que o campo diz | Sempre `false`, gravado **sem comparar nada**. Esse `false` não prova que as duas medições sejam iguais | As duas medições comparadas (tabela abaixo) |
+| Conferência | Lido, conferido e refeito (H3) pela regra antiga | Refeito com a comparação |
+| Consulta e tela | O valor como gravado, com o aviso `measure_diverges_not_computed` | O estado e, quando houver, os motivos |
+
+A marca e o pacote precisam declarar **o mesmo formato**: se não, H1 recusa ("o formato da marca não é o do pacote"). Cada formato tem só o seu campo em `measure`: um pacote sem nenhum dos dois, com os dois, ou com o do outro formato é recusado em H1.
+
+**`measure_divergence`.** A identidade de uma medição é `read_status`, `execution` e `execution_sha256` (o hash dos bytes de `execution.json`). A sugestão que a nomeou não faz parte dela.
+
+| Estado | Quando |
+|---|---|
+| `same` | As duas nomeiam a mesma execução com os mesmos bytes, ou as duas dizem que não havia medição (`none`) |
+| `diverges` | Execução ou bytes diferentes, ou um lado `ok` e o outro `none` |
+| `not_comparable` | Um lado não pôde ser lido (`unreadable`) ou a seleção não tem a medição registrada (`not_recorded`). `reasons` diz qual lado (`at_question` ou `selection_basis`) e por quê, o da pergunta primeiro |
+| `not_applicable` | A pergunta não tem seleção |
+
+A divergência é informativa: **não bloqueia o envio**. O cálculo usa só o que está gravado, e H1 confere que o estado gravado é o das duas leituras.
+
+### Conferências H1 a H4
+
+| Nível | O que confere | Depende de | No portão de envio |
+|---|---|---|---|
+| **H1, integridade** | A marca, os bytes e a forma do pacote, a coerência interna (inclusive o formato e, no formato 2, o estado da comparação), os arquivos da pergunta, a pergunta registrada, a edition, o registro da seleção e as complementações da Escada | Registros e hashes | Sim |
+| **H2, fonte** | Cada unidade refeita do snapshot da edition guardada com a execução, por `lines-v1`. Nunca lê o projeto analisado | A edition | Sim |
+| **H3, rederivação** | O código atual refaz a query e o pacote **no formato gravado** e compara byte a byte. Só o `builder` pode diferir | O código do Librarian | Sim |
+| **H4, reprodução** | Refaz cada sugestão citada pela seleção a partir do registro dela: regras, edition, inventário e a execução lida | Regras, edition, execução | **Não: só informa** |
+
+H4 diz `reproduced`, `not_applicable` (sem seleção ou sem pacote) ou `not_replayable`, com o motivo de cada sugestão: `suggestion_missing`, `execution_missing`, `execution_differs`, `rules_version_differs` ou `output_differs`. Nesse caso, informa o `builder` da pergunta e se o código é recuperável (commit sem mudanças não gravadas). H4 compara sem os fatos de cada item (`facts: "recorded_not_reproduced"`), que dependem do acervo. **H4 reproduz a sugestão, não a decisão da pessoa nem a verdade do que ela diz**, e nunca compila código antigo.
+
+### Portão de envio
+
+Antes de enviar, colar uma resposta, continuar em cadeia ou aprovar um item de uma pergunta com pacote, o servidor confere H1, H2 e H3, nessa ordem: `/api/send` e `/api/ladder` (pelo envio), `/api/paste`, `/api/continue` (a pergunta de origem) e `/api/review` (a aprovação, pelos portões). A recusa diz o nível (`H1: …; nada foi enviado`), e nada é regravado nem corrigido. Recusar um item em `/api/review` só é registrado, sem conferência. A conferência é refeita a cada envio.
+
+### Consultar: `GET /api/evidence`
+
+`GET /api/evidence?key=<projeto>&run=<execução>&turn=<pergunta>`. **Só lê**: nada é gravado, nem nos arquivos da pergunta. Parâmetro ausente, execução ou pergunta desconhecida respondem 400.
+
+| Campo | O que é |
+|---|---|
+| `turn`, `mark`, `package`, `selection` | **O que foi gravado, como foi gravado**: a marca, o pacote e o registro da seleção. Arquivo ilegível vem `null` |
+| `checks.h1`, `checks.h2`, `checks.h3` | **Conferido agora**, pelo caminho do envio, sem enviar: `{status, why}`, com `passed`, `refused`, `not_run` (um nível anterior recusou) ou `not_applicable` (pergunta anterior às marcas) |
+| `h4` | **Feito de novo agora**, como acima; `null` se o pacote não pôde ser lido |
+| `latest_measure` | A medição mais recente da edition, lida agora e não gravada: `ok`, `none` ou `unreadable` |
+| `warnings` | `["measure_diverges_not_computed"]` num pacote de formato 1; vazio nos demais |
+
+### Na conversa
+
+Cada pergunta tem a seção recolhida **Pacote de evidências e conferências**, que busca `/api/evidence` quando é aberta. Ela mostra H1 a H3 conferidos agora e H4 à parte, com a nota de que H4 só informa; os avisos; as fichas com `declared_by` sempre visível; as classes dos campos da query; o texto da pessoa e os acréscimos do servidor; as complementações; a seleção e as declarações do cliente; a medição gravada (no formato 1, o valor e o aviso; no formato 2, o estado e os motivos); a medição mais recente, à parte; e os limites. Em português e inglês, no tema escuro e em tela estreita. A tela diz "conferido", nunca "aprovado".
+
+### Limites do pacote
+
+- Os hashes provam consistência entre os arquivos, não autoria. Apagar o pacote e a marca faz uma pergunta nova parecer anterior às marcas, e converter um pacote de formato 1 em formato 2 de forma coerente, com a marca, passa nas conferências.
+- `at_question` não é relido na conferência: um valor alterado de forma coerente, com o estado da comparação, passa (limitação aceita desde o Passo 9).
+- Pacotes de formato 1 mantêm a limitação de `measure_diverges`: o `false` deles nunca foi calculado.
+- H4 refaz a sugestão com as regras de inventário gravadas no registro, mas o mapa de medição anotado nela vem de `hotspots_of`, cuja parte estrutural usa as regras de inventário do perfil atual. H4 informa o `builder` da pergunta, não o de quem consulta.
+- A medição escrita no texto da pergunta não é conferida; o texto da pessoa é declaração.
+- `SYSTEM`, skills, CLI e léxico ficam fora do pacote; tentativas recusadas não têm pacote.
+- A anomalia `\r\r\n` (o `excerpt` guarda o `\r`, o `line_map` não) fica registrada pelos dois hashes, sem correção.
+- A exceção `trait_impls` (nomes de Rust no núcleo do envelope) continua, nomeada no teste de independência de linguagem.
 
 ## Limites
 
@@ -1294,6 +1411,6 @@ Aceitos na Etapa 2, e nenhum foi agravado por ela. Ficam para a [Etapa 5](PLANO-
 - **Juntar durante o carregamento da investigação se perde sem aviso.** Enquanto a resposta não chega, o inspetor ainda aceita juntar; quando ela chega, o envelope é substituído pela investigação.
 - **Duas investigações no mesmo grafo:** vence a que responde por último, não a pedida por último. `sameRun` protege contra troca de grafo, não contra isso.
 - **Sem proteção de grafo (`sameRun`), risco não reproduzido:** `askFacts`, `askHotFacts`, `continueTurn`, `askPath`, `drawPath` e outros caminhos sem a guarda.
-- **Sem histórico de decisões:** só a última ação fica registrada (veja [Registro da seleção](#registro-da-seleção-originselection-formato-1)).
+- **Sem histórico de decisões:** só a última ação fica registrada (veja [Registro da seleção](#registro-da-seleção-originselection-formato-2)).
 
 O cartão de desempenho e **Separar** ainda enviam sem revisão do pacote (também [Etapa 5](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#etapa-5-pacote-e-revisão)).

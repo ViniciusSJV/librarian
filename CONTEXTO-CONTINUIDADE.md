@@ -1,5 +1,7 @@
 # Contexto de continuidade do Librarian
 
+**Atualização de 11/11/2026: a Etapa 4 (Evidence Builder) está em andamento e não está encerrada, com todo o trabalho sem commit sobre `60d4d50` ([seção 17](#17-etapa-4-evidence-builder-07112026-a-11112026): comece por ela).** O texto abaixo, até a seção 16, descreve o estado de 06/11/2026.
+
 Conferido no repositório em 06/11/2026, com os Passos 1 e 2 da Etapa 3 da frente do Studio concluídos, o Passo 3 encerrado no backend ([seção 12](#12-passo-3-encerrado-e-sequência-da-etapa-3-06112026)), o Passo 4 concluído, nas entregas 4A e 4B ([seção 14](#14-4b-concluída-e-encerrada-06112026)), e os Passos 6 e 7 feitos, em `94089d3` (**[seção 16](#16-passos-6-e-7-feitos-06112026): comece por ela**). Documento de transferência entre sessões. Não substitui o plano: as tabelas completas estão em [PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md), da linha 1116 em diante, e o andamento desta frente em [Evidence Builder no Studio](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evidence-builder-no-studio-etapas-0-a-7-05112026).
 
 **Como ler as marcas:** **[confirmado]** foi verificado agora no repositório ou nos dados gravados. **[registrado]** vem do plano ou da memória de trabalho, sem nova verificação. **[hipótese]** não foi demonstrado. **[não confirmado]** não pôde ser verificado.
@@ -376,7 +378,7 @@ A resolve o que foi perguntado, com custo alto. B não tem piora registrada e n�
 
 **Atualização de 06/11/2026: os Passos 1 e 2 da Etapa 3 estão concluídos, e o Passo 3 está encerrado no backend, pela opção A ([seção 12](#12-passo-3-encerrado-e-sequência-da-etapa-3-06112026)); as entregas 4A e 4B do Passo 4 estão concluídas e encerradas ([seção 13](#13-4a-concluída-e-encerrada-06112026) e [seção 14](#14-4b-concluída-e-encerrada-06112026)), e os Passos 6 e 7 foram feitos ([seção 16](#16-passos-6-e-7-feitos-06112026)).** Já estão implementados: cobertura por função; ordem por contagem observada, com o tempo como referência; sem `FREQUENT` nem alvo automático; `count_kind` por origem; `counted_no_passes` e `zero_evidence`; resolução do alvo antes da medição, por símbolo; e, no cartão, a origem da resposta decidida por `execution`. O contrato está no [STUDIO.md](STUDIO.md#medição-capacidade-não-é-cobertura), e as baterias de tela desta etapa estão em [crates/librarian-studio/tests/tela](crates/librarian-studio/tests/tela/README.md), junto com `etapa2c.js`: fora do `cargo test`, porque precisam de um ambiente e de dados que não estão no Git. O texto abaixo guarda o contexto de antes disso.
 
-**Etapas 0, 1 e 2 feitas; a Etapa 3, "Onde pesa", está em andamento, com os Passos 1 a 4 concluídos, os Passos 6 e 7 feitos, e o Passo 5 adiado para a etapa própria.** As decisões estão no plano, em [Evidence Builder no Studio](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evidence-builder-no-studio-etapas-0-a-7-05112026), e prevalecem sobre esta seção, que guarda o contexto anterior a elas. O contrato do registro e as limitações estão no [STUDIO.md](STUDIO.md#registro-da-seleção-originselection-formato-1).
+**Etapas 0, 1 e 2 feitas; a Etapa 3, "Onde pesa", está em andamento, com os Passos 1 a 4 concluídos, os Passos 6 e 7 feitos, e o Passo 5 adiado para a etapa própria.** As decisões estão no plano, em [Evidence Builder no Studio](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evidence-builder-no-studio-etapas-0-a-7-05112026), e prevalecem sobre esta seção, que guarda o contexto anterior a elas. O contrato do registro e as limitações estão no [STUDIO.md](STUDIO.md#registro-da-seleção-originselection-formato-2). **A Etapa 4 está em andamento desde 07/11/2026: veja a [seção 17](#17-etapa-4-evidence-builder-07112026-a-11112026).**
 
 ### Por que esta evolução
 
@@ -464,8 +466,8 @@ As investigações da seção 7, e também: ordenar a seleção por tempo; troca
    - `git status -sb`
    - `git log --oneline origin/main..HEAD`, que lista o que ainda não foi publicado. Com a publicação da [seção 15](#15-publicação-da-4a-da-4b-e-da-apresentação-06112026), ele vem vazio, salvo trabalho posterior, como o da [seção 16](#16-passos-6-e-7-feitos-06112026).
    - Antes de qualquer limpeza de temporários, verifique os dados: `sha256sum -c MANIFESTO.sha256 --quiet` em `.studio/arquivo-copias/rodadas-20261104` e a existência de `root` e `rootpy` no scratchpad. Não remova, sobrescreva nem reorganize nada sem aprovação.
-3. **Leia a seção [Evidence Builder no Studio](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evidence-builder-no-studio-etapas-0-a-7-05112026) do plano** e o [contrato no STUDIO.md](STUDIO.md#registro-da-seleção-originselection-formato-1). Antes de usar as baterias de tela, confira se o scratchpad citado na seção 3 ainda existe. Se não existir, restaure pelo `LEIA-ME.md` do arquivo de preservação, sabendo que esse caminho ainda não foi testado.
-4. **O Passo 4 da Etapa 3 está concluído, nas entregas 4A e 4B ([seção 13](#13-4a-concluída-e-encerrada-06112026) e [seção 14](#14-4b-concluída-e-encerrada-06112026)), os Passos 6 e 7 foram feitos ([seção 16](#16-passos-6-e-7-feitos-06112026)), e nenhuma atividade seguinte está autorizada. Não inicie a evolução da cidade, o resumo "N de M", o fallback único nem a Etapa 4 sem autorização do usuário** ([seção 12](#12-passo-3-encerrado-e-sequência-da-etapa-3-06112026)). Apresente testes, diff e resultados antes do commit de cada etapa, e aguarde.
+3. **Leia a seção [Evidence Builder no Studio](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evidence-builder-no-studio-etapas-0-a-7-05112026) do plano** e o [contrato no STUDIO.md](STUDIO.md#registro-da-seleção-originselection-formato-2). Antes de usar as baterias de tela, confira se o scratchpad citado na seção 3 ainda existe. Se não existir, restaure pelo `LEIA-ME.md` do arquivo de preservação, sabendo que esse caminho ainda não foi testado.
+4. **A Etapa 3 segue como na [seção 16](#16-passos-6-e-7-feitos-06112026), e a Etapa 4 está em andamento, sem commit ([seção 17](#17-etapa-4-evidence-builder-07112026-a-11112026)). Nada além do que a seção 17 lista como próximo está autorizado. Não inicie a evolução da cidade, o resumo "N de M", o fallback único nem a auditoria funcional do frontend sem autorização do usuário.** Apresente testes, diff e resultados antes do commit de cada etapa, e aguarde.
 5. **Não faça push** sem pedido.
 6. **Não retome investigações suspensas** sem evidência nova e decisão do usuário. Experimento novo exige hipótese e critérios fixados antes, e o usuário costuma decidir etapa por etapa.
 7. **Relate os resultados com honestidade:** o que falhou, o que não foi testado e o que é só hipótese. Corrija números errados, inclusive os seus e os do usuário: este trabalho já teve correções assim (B com "+34%" de memória, orçamento de "16 KB").
@@ -758,9 +760,70 @@ As limitações aceitas estão no [resultado](PLANO-MULTILINGUAGEM-E-VISUALIZADO
 
 | Pendência | Situação |
 |---|---|
-| Etapa 4 e evolução visual | Não autorizadas |
+| Etapa 4 e evolução visual | Não autorizadas em 06/11/2026. A Etapa 4 foi autorizada em 07/11/2026: veja a [seção 17](#17-etapa-4-evidence-builder-07112026-a-11112026). A evolução visual continua não autorizada |
 | "N de M", fallback único, filtro de 5% | Decisão própria, sem etapa |
 | Falha de leitura como "Sem medição" na sugestão | Limitação aceita; a solução exige distinguir no backend |
 | Custo de `/api/commands` sem `instrument` | Registrado, sem correção; a leitura só de `sources.jsonl` ficou fora do escopo, por decisão do usuário |
 | Nota com mais de um comando: soma em dobro e verbo no singular | Registrado, sem correção |
 | Perfil v8 no plano, capas antigas, rotas no README do Studio, comentário perto da linha 4139 de `index.html` | Documentais ou cosméticas, para revisão separada |
+
+## 17. Etapa 4: Evidence Builder (07/11/2026 a 11/11/2026)
+
+**Comece por aqui. A Etapa 4 está em andamento e não está encerrada. Todo o trabalho dela está na árvore de trabalho, sem commit, sobre `60d4d50`, que é também `origin/main`.** O contrato em vigor está no [STUDIO.md](STUDIO.md#pacote-de-evidências-etapa-4); o andamento passo a passo, as decisões e a errata do Passo 14, no [plano](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#andamento-da-etapa-4-07112026-a-11112026).
+
+### Como retomar
+
+1. `git status -sb`: deve mostrar o trabalho da Etapa 4 sem commit, e nada no índice. Os arquivos não rastreados esperados são `crates/librarian-ingest/src/evidence.rs`, `crates/librarian-ingest/tests/evidence-fixtures/`, `crates/librarian-studio/build.rs`, `crates/librarian-studio/src/builder.rs`, `crates/librarian-studio/tests/evidence-v1/` e `crates/librarian-studio/tests/tela/tela-evidencia.js`. **Não descarte, reverta nem reorganize nada.** Se o estado for outro, pare e pergunte.
+2. Aguarde a instrução do usuário. A P1, a P2 e a P3 aguardam avaliação; nada depois delas está autorizado.
+
+### O que a Etapa 4 entregou [registrado]
+
+- **Pacote de evidências** (`turns/<NN>/evidence.json`) em toda pergunta nova que chega à preparação, com a marca `evidence: { format_version, sha256 }` em `question.json`. Perguntas anteriores às marcas seguem a conferência antiga, sem migração.
+- **Seleção no servidor:** `origin.selection` no formato 2 é conferido contra os registros de sugestão (`runs/<run>/suggestions/<sha256>.json`) e a edition antes de criar a pergunta, e vira `turns/<NN>/selection.json`. `notes` são recusadas em qualquer parte do corpo dessas rotas.
+- **Escada:** o que uma rodada de lacuna acrescenta fica em `server_additions`, com fichas `declared_by: "server_lacuna"`.
+- **Conferências:** H1 (integridade), H2 (fonte, pela edition guardada) e H3 (rederivação pelo código atual, no formato gravado) rodam antes de enviar, colar, continuar ou aprovar; o `send.json` grava o `evidence_sha256`. H4 refaz a sugestão e **só informa**.
+- **Envio por propósito:** pergunta (`send_question`, só com a conferência feita) e léxico (`send_lexicon`, sem pacote).
+- **Identidade do código:** `build.rs` grava o commit e o `git_dirty` do Librarian, ou `unknown`.
+- **Medição:** a medição mais recente e a linha de base do portão são escolhidas por ordem cronológica, e não pela ordem dos nomes das pastas.
+- **Consulta:** `GET /api/evidence?key&run&turn`, só leitura, separa o que foi gravado do que foi conferido agora; a conversa mostra o mesmo em "Pacote de evidências e conferências", em português e inglês.
+
+### Formatos do pacote
+
+- **Formato 1:** gravado até 11/11/2026, antes da P1. Tem `measure_diverges`, sempre `false` e nunca calculado. Continua sendo lido, conferido e refeito pela regra antiga, e aparece com o aviso `measure_diverges_not_computed`. **Esse `false` não prova que as medições sejam iguais.**
+- **Formato 2:** toda pergunta nova. Tem `measure_divergence`, com `same`, `diverges`, `not_comparable` (com o lado e o motivo) ou `not_applicable`. A divergência não bloqueia o envio.
+- A marca e o pacote precisam declarar o mesmo formato.
+- Uma fixture congelada de formato 1, gravada pelo código anterior à P1, fica em `crates/librarian-studio/tests/evidence-v1/`, com os hashes fixados nos testes.
+
+### Situação das pendências da auditoria
+
+| Item | Situação em 11/11/2026 |
+|---|---|
+| Passos 0 a 15 | Feitos; o 15 foi a auditoria final, que gerou P1 a P4 |
+| P1, formato 2 | Implementada e validada no Windows; aguarda avaliação |
+| P2, documentação | Feita nesta atualização; aguarda avaliação |
+| P3, errata do Passo 14 | Registrada no plano; aguarda avaliação |
+| P4, Ubuntu | Pendente: o DNS da máquina estava fora |
+| Commit, push e CI | Pendentes, sem autorização |
+
+**Sequência prevista, cada item com autorização própria:** avaliação da P1 a P3 → P4 → commit e push → CI verde no Ubuntu e no Windows → encerramento da Etapa 4 → auditoria funcional do frontend → reformulação do fluxo e evolução visual da cidade.
+
+### Limites que continuam [registrado]
+
+- Os hashes provam consistência, não autoria nem verdade. H4 não comprova afirmações.
+- `at_question` não é relido na conferência (desde o Passo 9).
+- Formato 1 mantém a limitação de `measure_diverges`.
+- A fixture de formato 1 tem caminhos de até 178 caracteres: no Windows, sem `core.longpaths`, um clone numa pasta funda pode falhar. Avaliado na P2; nenhuma mudança sem aprovação.
+- Os itens herdados da Etapa 2 (remover `investigationView`, motivos no inventário, D15) não foram feitos.
+
+### Onde estão os dados [registrado]
+
+- **Linha de base imutável:** `.studio/arquivo-copias/linha-base-etapa4-20261107` (com `MANIFESTO.sha256`), fora do Git. Não altere.
+- **Baterias da Etapa 2 atualizadas para o formato 2:** `.studio/arquivo-copias/baterias-passo10-20261110`. As cópias anteriores continuam intactas.
+- **Relatórios, checkpoints, diffs e logs de cada passo:** no scratchpad da sessão `df77c0d0-d1b8-4cd1-97d0-ad87f1add956`, que é temporário. O checkpoint mais recente do código é `checkpoint-p1`.
+
+### Cuidados que esta etapa ensinou
+
+- **CRLF:** o CI do Windows faz checkout com `core.autocrlf=true`, e o `.gitattributes` não tem regra para `*.rs`. Valide também numa cópia com checkout CRLF (commit em LF, clone com `core.autocrlf=true`). No Git Bash, `grep` só vê o CR com `-U`.
+- **Mutações:** só contam as detectadas por asserção, numa cópia descartável, cada uma com o seu próprio `CARGO_TARGET_DIR`.
+- **Baterias de tela:** gravam perguntas nas raízes; rode em cópias, nunca nas raízes que o H3 histórico e o manifesto leem.
+- **Validação em paralelo:** nunca rode duas cadeias de validação ao mesmo tempo sobre as mesmas pastas. Em 11/11/2026 isso invalidou uma rodada inteira, que foi descartada e refeita.

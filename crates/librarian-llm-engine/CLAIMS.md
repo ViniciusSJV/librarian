@@ -319,6 +319,36 @@ com linhas que se sobrepõem, ou o mesmo lugar com outro tipo.
 A função não confere nada: quem chama decide quais respostas entram, e o studio
 inclui as recusadas, marcadas. Concordância é sinal, não prova.
 
+## No Studio: o pacote de evidências
+
+O Librarian Studio é o consumidor deste contrato. Desde a Etapa 4, ele grava, para cada
+pergunta nova, o "registro separado do consumidor" citado acima: o
+[pacote de evidências](../../STUDIO.md#pacote-de-evidências-etapa-4), com hashes, seleção,
+origem de cada campo da query e as duas medições. Este módulo continua sem ler caminhos e
+sem conferir proveniência; quem faz isso é o Studio, e só com o que ficou registrado.
+
+| | Situação |
+|---|---|
+| **Verificado antes de cada envio** (H1 a H3) | Os arquivos da pergunta conferem entre si e com o pacote (H1); cada trecho sai de novo do snapshot da edition (H2); o código atual refaz a mesma query e o mesmo pacote (H3) |
+| **Refeito, só como informação** (H4) | Se a sugestão que originou a seleção sai de novo das referências gravadas. Não impede o envio |
+| **Registrado, sem verificação** | O texto da pessoa, a ordem das sugestões e as decisões do cliente (`declared_by: "client"`); a medição lida quando a pergunta foi gravada (`at_question`), que a conferência não relê |
+| **Fora do escopo** | A verdade das afirmações, a suficiência das evidências, o que o modelo leu, `SYSTEM` e skills, e a prova de que uma pessoa agiu |
+
+Por isso:
+
+- **Integridade não é verdade.** Hashes e conferências mostram que os artefatos são
+  consistentes entre si, não que um fato é verdadeiro nem que alguém os escreveu.
+- **Proveniência rastreável não é evidência suficiente.** Saber de onde veio cada trecho não
+  diz que os trechos bastam para responder.
+- **H4 não comprova afirmações.** Reproduz a sugestão a partir do histórico disponível; não diz
+  que ela é correta, e não reproduz os fatos do acervo (`recorded_not_reproduced`).
+- **A reprodução depende do que foi gravado** e das versões que o pacote nomeia (`lines-v1`,
+  as regras, o `builder`). Sem o registro, a execução ou a mesma versão das regras, H4 diz
+  `not_replayable`, e H3 pode recusar quando o código muda.
+- **Formato 1 preserva a semântica antiga, inclusive a limitação:** o `measure_diverges`
+  desses pacotes foi gravado `false` sem comparar nada, e o Studio mostra o aviso
+  `measure_diverges_not_computed`. O formato 2 grava a comparação (`measure_divergence`).
+
 ## CLI e preservação
 
 Na raiz do Librarian, com destinos novos:
