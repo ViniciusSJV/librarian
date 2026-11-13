@@ -34,9 +34,17 @@ pub(super) fn check(context: &Context, claim: &Claim) -> Vec<&'static str> {
     let names = |span: &str| {
         claim.citations.iter().any(|c| c.path == span || c.evidence_id == span)
     };
+    // A LACUNA cites nothing and names what is missing (`name_gaps`): a backticked name passes when
+    // the evidence shows it somewhere, usually in a call ("`intersect_world`", "`World::intersect_world`").
+    let lacuna = matches!(claim.kind, super::Kind::Lacuna);
+    let seen: HashSet<&str> = if lacuna {
+        context.evidence.iter().flat_map(|e| identifiers(&e.excerpt)).collect()
+    } else {
+        HashSet::new()
+    };
     let uncited_code = backticked(&claim.text).into_iter().any(|span| {
         let span = span.trim();
-        !span.is_empty() && !names(span) && !appears(&cited, span)
+        !span.is_empty() && !names(span) && !appears(&cited, span) && !(lacuna && seen_name(&seen, span))
     });
     if uncited_code {
         issues.push("text_quotes_uncited_code");
@@ -93,6 +101,15 @@ fn misplaced_name(context: &Context, claim: &Claim) -> bool {
                 (start..=end).take(MAX_RANGE).filter_map(source).any(|line| identifiers(line).iter().any(|n| named.contains(n)))
             })
     })
+}
+
+/// `span` is only a name (`intersect_world`, `World::intersect_world`, `comps.schlick()`) and its
+/// last identifier occurs in the evidence. Code with operators, spaces or arguments is not a name.
+fn seen_name(seen: &HashSet<&str>, span: &str) -> bool {
+    let bare = span.strip_suffix("()").unwrap_or(span);
+    let parts: Vec<&str> = bare.split("::").flat_map(|p| p.split('.')).collect();
+    let word = |p: &&str| !p.is_empty() && p.chars().all(|c| c.is_alphanumeric() || c == '_');
+    parts.iter().all(word) && parts.last().is_some_and(|last| seen.contains(last))
 }
 
 /// Identifiers of at least three characters: shorter ones (`a`, `de`, `x`) match prose too often.

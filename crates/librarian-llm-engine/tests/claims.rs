@@ -497,6 +497,35 @@ fn strict_text_rejects_lines_and_code_the_claim_does_not_cite() {
 }
 
 #[test]
+fn strict_text_lets_a_lacuna_name_in_backticks_what_the_evidence_calls() {
+    // A real Sonnet answer (studio, chain turn): the LACUNAs follow name_gaps and write
+    // `World::intersect_world`, `Material::lighting`... in backticks. They cite nothing, yet the
+    // names are in the evidence, where shade_hit and color_at call them.
+    let c: Context = serde_json::from_str(include_str!("fixtures/world-chain-context.json")).unwrap();
+    assert!(c.strict_text && c.name_gaps);
+    let sonnet = include_str!("fixtures/world-chain-sonnet.txt");
+    assert_eq!(claims::check(&c, sonnet).unwrap().mechanical_status, "passed");
+
+    // Still rejected in a LACUNA: a name the evidence never shows, and code that is not a name.
+    let mut r: Value = serde_json::from_str(sonnet).unwrap();
+    let lacuna = r["claims"].as_array().unwrap().iter().position(|c| c["kind"] == "LACUNA").unwrap();
+    for text in [
+        "Falta a declaração de `World::invented_function`.",
+        "Falta ver se `self.inverses[i]` é usado.",
+        "Falta ver `intersect_world(ray)`.",
+    ] {
+        r["claims"][lacuna]["text"] = json!(text);
+        assert_eq!(codes(&c, &r), ["text_quotes_uncited_code"], "{text}");
+    }
+    // Names seen in the evidence, with or without owner and call parentheses.
+    r["claims"][lacuna]["text"] = json!("Faltam `intersect_world`, `comps.schlick()` e `World::reflected_color`.");
+    assert!(codes(&c, &r).is_empty());
+    // A FACT must still cite what it quotes, even a name seen elsewhere in the evidence.
+    r["claims"][0]["text"] = json!("shade_hit chama `reflected_color` na linha 48.");
+    assert_eq!(codes(&c, &r), ["text_quotes_uncited_code"]);
+}
+
+#[test]
 fn strict_text_rejects_a_line_that_does_not_hold_the_code_the_sentence_names() {
     // The qwen answer of the 30/10 rehearsal: the whole loop is cited (44–57), so line 46 is
     // covered, but `zone_of` is on line 51, not on line 46.

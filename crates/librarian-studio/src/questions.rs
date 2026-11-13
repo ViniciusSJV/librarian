@@ -71,6 +71,25 @@ fn asked_targets(question: &str, functions: &[Candidate]) -> Vec<String> {
     targets
 }
 
+/// The functions of the edition the question names by qualified name (`World::intersect_world`),
+/// each settled on exactly one declaration; a name missing or matching several adds nothing.
+pub fn named_functions(question: &str, catalog: &Catalog) -> Vec<String> {
+    let mut functions: Vec<Candidate> = catalog.symbols().values().filter(|s| KINDS.contains(&s.kind.as_str()))
+        .map(|s| Candidate { symbol: s.id.clone(), name: short(&s.qualified_name).to_owned(), path: catalog.sources().get(&s.source_id).map_or(String::new(), |src| src.path.clone()) })
+        .collect();
+    functions.sort_by(|a, b| (&a.name, &a.path, &a.symbol).cmp(&(&b.name, &b.path, &b.symbol)));
+    let mut found: Vec<String> = vec![];
+    for name in asked_targets(question, &functions) {
+        let part = resolve_text(&name, Some(&name), &functions);
+        if let (Some("resolved"), Some(symbol)) = (part["status"].as_str(), part["symbol"].as_str()) {
+            if !found.iter().any(|s| s == symbol) {
+                found.push(symbol.to_owned());
+            }
+        }
+    }
+    found
+}
+
 /// A name's parts around its last separator (`::` in Rust, `.` in Python).
 fn split_last(name: &str) -> Option<(&str, &str)> {
     name.rsplit_once("::").or_else(|| name.rsplit_once('.'))

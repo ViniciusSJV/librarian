@@ -1534,8 +1534,8 @@ const STRINGS = {
   'inventory.countRepeated': ['{n} nome(s) chamado(s) mais de uma vez', '{n} name(s) called more than once'],
   'inventory.countOps': ['{n} operação(ões): {kinds}', '{n} operation(s): {kinds}'],
   'investigate.button': ['Investigar', 'Investigate'],
-  'help.investigate': ['Prepara uma pergunta sobre este achado: o bibliotecário escolhe a evidência (a declaração do laço ou da operação, cada passo da cadeia e o campo que a regra casou), diz por que cada item entrou e propõe uma pergunta no campo abaixo, no modo Localizar. Você confere, desmarca o que não quiser, edita a pergunta e pergunta. Nada é enviado antes disso.',
-    'Prepares a question about this finding: the librarian picks the evidence (the loop\x27s or the operation\x27s declaration, each step of the chain and the field the rule matched), says why each item is there and proposes a question in the field below, in Locate mode. You check it, untick what you do not want, edit the question and ask. Nothing is sent before that.'],
+  'help.investigate': ['Prepara uma pergunta sobre este achado: o bibliotecário escolhe a evidência (a declaração do laço ou da operação, cada passo da cadeia e o campo que a regra casou), e diz por que cada item entrou; a pergunta vai no modo Localizar. Você confere, desmarca o que não quiser, escreve a pergunta e pergunta. Nada é enviado antes disso.',
+    'Prepares a question about this finding: the librarian picks the evidence (the loop\x27s or the operation\x27s declaration, each step of the chain and the field the rule matched), and says why each item is there; the question goes in Locate mode. You check it, untick what you do not want, write the question and ask. Nothing is sent before that.'],
   'investigate.title': ['Investigação do inventário', 'Investigation from the inventory'],
   'investigate.cancel': ['Cancelar', 'Cancel'],
   'investigate.ticked': ['{n} de {total} declarações na evidência', '{n} of {total} declarations in the evidence'],
@@ -1547,11 +1547,7 @@ const STRINGS = {
   'investigate.direct': ['no próprio laço: {op}', 'in the loop itself: {op}'],
   'investigate.chain': ['pela cadeia {steps} → {op}', 'through {steps} → {op}'],
   'investigate.loopChain': ['pela cadeia {steps} → o laço {head} ({where})', 'through {steps} → the loop {head} ({where})'],
-  'investigate.loopQuestion': ['O que acontece a cada volta do laço {head} de {symbol} ({where})? Siga cada chamada feita dentro dele nas declarações entregues e diga, citando as linhas, o que roda uma vez por volta do laço e o que roda uma vez só.',
-    'What happens on each pass of the loop {head} of {symbol} ({where})? Follow each call made inside it in the delivered declarations and say, citing the lines, what runs once per pass of the loop and what runs only once.'],
   'investigate.found': ['O que o inventário achou (para você conferir; não vai na pergunta):', 'What the inventory found (for you to check; not sent in the question):'],
-  'investigate.opQuestion': ['O que {text} faz em {symbol} ({where})? Diga, citando as linhas, o que ela lê ou escreve e em que condições roda.',
-    'What does {text} do in {symbol} ({where})? Say, citing the lines, what it reads or writes and under which conditions it runs.'],
   'investigate.reason.loop': ['tem o laço da linha {line}', 'holds the loop on line {line}'],
   'investigate.reason.operation': ['tem a operação da linha {line} ({rule})', 'holds the operation on line {line} ({rule})'],
   'investigate.reason.step': ['chamada por {from} na linha {line}', 'called by {from} on line {line}'],
@@ -4432,8 +4428,8 @@ const includeBulk = ids => ids.forEach(id => {
   selection.decisions.set(id, { decision: 'included', scope: 'bulk' });
 });
 // An investigation from the inventory: the finding, the evidence the librarian proposes (each
-// item with why, all ticked) and a proposed question in the composer. Asking sends exactly the
-// ticked items, and the question records the finding it came from.
+// item with why, all ticked). The question is the person's own: nothing is written in the composer.
+// Asking sends exactly the ticked items, and the question records the finding it came from.
 let investigation = null;
 
 // ---- F5: entries that restart the draft (spec 2.4.1, 3.6, 3.7, T6, T8). Each asks first when the
@@ -4812,7 +4808,6 @@ async function investigate(target, button) {
         // The finding asks in Locate mode: recorded in the draft (5.4) as a requirement of the question,
         // never as the policy. Preparing with another policy asks first (T26).
         draft.required_mode = 'locate';
-        $('#question').value = proposedQuestion(data);
       });
     if (!done) return;
     draft.entry = { kind: 'finding', summary: findingSummary(investigation) };
@@ -4844,12 +4839,6 @@ function findingLines(data) {
     ...f.loops_through_calls.map(c => t('investigate.loopChain', { steps: steps(c), head: oneLine(c.head).slice(0, 60), where: `${c.path}:${c.line}` }) + whole(c)),
   ];
 }
-function proposedQuestion(data) {
-  const f = data.finding;
-  return data.kind === 'loop'
-    ? t('investigate.loopQuestion', { head: oneLine(f.head).slice(0, 100), symbol: f.symbol_name, where: `${f.path}:${f.line}` })
-    : t('investigate.opQuestion', { text: oneLine(f.text).slice(0, 100), symbol: f.symbol_name, where: `${f.path}:${f.line}` });
-}
 function reasonOf(r) {
   return { loop: () => t('investigate.reason.loop', { line: r.line }), operation: () => t('investigate.reason.operation', { rule: r.rule, line: r.line }),
     step: () => t('investigate.reason.step', { from: r.from, line: r.line }), matched: () => t('investigate.reason.matched', { rule: r.rule, line: r.line }) }[r.code]?.() ?? r.code;
@@ -4866,7 +4855,7 @@ function investigationView() {
     el('div', { className: 'row', style: 'gap: 4px' },
       el('strong', { textContent: t('investigate.title') }), helpButton(t('help.investigate')),
       el('button', { className: 'link', style: 'margin-left: auto', textContent: t('investigate.cancel'),
-        onclick: () => { investigation = null; gatheredFolded = false; $('#question').value = ''; renderGathered(); inspect(); } })),
+        onclick: () => { investigation = null; gatheredFolded = false; renderGathered(); inspect(); } })),
     el('div', { style: 'font-size: 12px', textContent: `${findingSummary(investigation)} · ${t('investigate.ticked', { n: investigation.ticked.size, total: investigation.items.length })}` }),
     investigation.kind !== 'loop' ? '' : el('div', { className: 'muted', style: 'font-size: 12px; margin-top: 4px' },
       t('investigate.found'), el('ul', { style: 'margin: 2px 0 0 16px; padding: 0' }, ...findingLines(investigation).map(l => el('li', { textContent: l })))),

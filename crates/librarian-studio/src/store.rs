@@ -940,13 +940,26 @@ impl Store {
         if targets.is_empty() {
             return Err(format!("Nenhuma resposta da pergunta {from} passa na conferência mecânica com location; nada para continuar").into());
         }
+        // The functions the new question names by qualified name come too: asking to go deeper
+        // into `World::intersect_world` must bring its declaration, not only what was answered.
+        let mut named = vec![];
+        for symbol in crate::questions::named_functions(question, &catalog) {
+            let target = target_of(&catalog, catalog.symbols(), &symbol)?;
+            if !targets.contains(&target) {
+                named.push(target.clone());
+                targets.push(target);
+            }
+        }
         let reviewed = self.reviewed_about(key, run, &targets)?;
         // G6d: on editions that record impl types and field writes, a method target also brings
         // its owner type and the declarations that write the fields it reads.
         let owner_context = catalog.owner_context();
-        let chain = json!({ "from_turn": from, "from_query_sha256": from_query_sha256, "answers": answers,
+        let mut chain = json!({ "from_turn": from, "from_query_sha256": from_query_sha256, "answers": answers,
             "targets": targets, "reviewed_facts": reviewed.iter().map(|f| &f.id).collect::<Vec<_>>(),
             "owner_context": owner_context });
+        if !named.is_empty() {
+            chain["named_in_question"] = json!(named);
+        }
         let request = request(&settings, question, Some(targets), reviewed, owner_context);
         self.new_turn(key, run, &settings, &catalog, Asked::client(question), None, request, Some(("chain", chain)))
     }
@@ -2694,6 +2707,44 @@ mod tests {
         store.save_settings(&key, &settings).unwrap();
         store.ask(&key, &run, "direção dos raios").unwrap();
         assert!(store.continue_turn(&key, &run, "04", "E?").err().unwrap().to_string().contains("claims"));
+    }
+
+    #[test]
+    fn a_chain_step_also_brings_the_functions_its_question_names_by_qualified_name() {
+        let scratch = project();
+        // Two `trace`: only the qualified name settles which one.
+        fs::write(scratch.0.join("project/src/lib.rs"), "pub struct Camera;\n\nimpl Camera {\n    pub fn ray_from_pixel(&self, x: f64) -> f64 {\n        let direction = x * 2.0;\n        direction\n    }\n\n    pub fn trace(&self) -> f64 {\n        1.0\n    }\n}\n\npub struct World;\n\nimpl World {\n    pub fn trace(&self) -> f64 {\n        0.0\n    }\n}\n").unwrap();
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let opened = store.open(&display(&scratch.0.join("project"))).unwrap();
+        let key = opened["key"].as_str().unwrap().to_owned();
+        let mut settings: Settings = serde_json::from_value(opened["settings"].clone()).unwrap();
+        settings.lexicon.groups = vec![vec!["raios".into(), "ray".into()], vec!["direcao".into(), "direction".into()]];
+        store.save_settings(&key, &settings).unwrap();
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        store.ask(&key, &run, "Onde a câmera calcula a direção dos raios?").unwrap();
+        let answer = json!({"schema_version": 1, "claims": [{
+            "id": "C1", "kind": "FACT", "text": "`ray_from_pixel` calcula `direction` na linha 5 de src/lib.rs.",
+            "citations": [{"evidence_id": "E1", "path": "src/lib.rs", "start_line": 4, "end_line": 5,
+                "quote": "    pub fn ray_from_pixel(&self, x: f64) -> f64 {\n        let direction = x * 2.0;"}],
+            "premises": [], "verification_plan": null,
+            "location": {"evidence_id": "E1", "path": "src/lib.rs", "symbol_name": "ray_from_pixel",
+                "declaration_line": 4, "operation_start_line": 5, "operation_end_line": 5}}]});
+        record_answer(&store, &key, &run, "01", "manual", &answer.to_string()).unwrap();
+        let from_answer = json!({"path": "src/lib.rs", "symbol_name": "ray_from_pixel", "declaration_line": 4});
+        let camera_trace = json!({"path": "src/lib.rs", "symbol_name": "trace", "declaration_line": 9});
+
+        // Named whole: it joins the targets and its declaration is in the evidence.
+        let step = store.continue_turn(&key, &run, "01", "Aprofunde Camera::trace e Nada::existe.").unwrap();
+        assert_eq!(step["prepare_error"], Value::Null);
+        assert_eq!(step["chain"]["targets"], json!([from_answer, camera_trace]));
+        assert_eq!(step["chain"]["named_in_question"], json!([camera_trace]));
+        assert!(step["query"].as_str().unwrap().contains("        1.0"));
+        // Already a target, a bare last part or a homonym: nothing more, and no record of it.
+        for question in ["Aprofunde Camera::ray_from_pixel.", "Aprofunde trace.", "E agora?"] {
+            let step = store.continue_turn(&key, &run, "01", question).unwrap();
+            assert_eq!(step["chain"]["targets"], json!([from_answer]), "{question}");
+            assert!(step["chain"].get("named_in_question").is_none(), "{question}");
+        }
     }
 
     #[test]
