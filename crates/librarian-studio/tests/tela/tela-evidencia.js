@@ -149,6 +149,7 @@ const luminance = css => { const [r, g, b] = css.match(/\d+/g).map(Number).map(v
 
   // Tela estreita.
   const narrow = await start(browser, errors, counter, { size: { width: 390, height: 844 }, scheme: 'dark' });
+  await narrow.click('#colSwitch [data-col="question"]');
   shown = await open(narrow, made);
   ok('estreita: sem rolagem horizontal na seção nem na página', shown.wide <= 1 && shown.page <= 1, `seção ${shown.wide}, página ${shown.page}`);
   ok('estreita: declared_by visível', shown.visible && shown.tags.length >= data.package.fichas.length);

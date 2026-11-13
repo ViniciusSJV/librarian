@@ -8,7 +8,7 @@ const { PYTHON } = require('./ambiente');
 const pede = nome => { const v = process.env[nome]; if (!v) { console.error(`Falta a variável de ambiente ${nome}: veja README.md`); process.exit(2); } return v; };
 const STUDIO = pede('LIBRARIAN_TESTE_STUDIO'), RAIZ_RS = pede('LIBRARIAN_TESTE_RAIZ_RS'), RAIZ_PY = pede('LIBRARIAN_TESTE_RAIZ_PY'), COPIAS = pede('LIBRARIAN_TESTE_COPIAS'), SAIDA = pede('LIBRARIAN_TESTE_SAIDA');
 const REPO = path.resolve(__dirname, '../../../..'), PAGINA = 'crates/librarian-studio/web/index.html';
-const BATERIAS = ['tela-cartao', 'tela-zero', 'tela-origem', 'tela-nomes', 'tela-passo2', 'tela-4a', 'tela-4b', 'tela-passo6', 'etapa2c', 'tela-evidencia'];
+const BATERIAS = ['tela-cartao', 'tela-zero', 'tela-origem', 'tela-nomes', 'tela-passo2', 'tela-4a', 'tela-4b', 'tela-passo6', 'etapa2c', 'tela-evidencia', 'tela-estado', 'tela-navegacao', 'tela-inspecao', 'tela-centro', 'tela-builder', 'tela-rascunho', 'tela-perfil', 'tela-conversa', 'tela-projeto', 'tela-revisao'];
 const sai = motivo => { console.error(motivo); process.exit(2); };
 
 for (const raiz of [RAIZ_RS, RAIZ_PY]) {

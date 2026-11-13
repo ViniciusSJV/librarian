@@ -3,12 +3,18 @@
 const { chromium, RENDERER, CHAVE_RENDERER, CHAVE_PYTHON } = require('./ambiente');
 const fs = require('fs');
 const [, , OUT, PY] = process.argv;
-const HOOK = "window.__t = { state, studio, t, get hot() { return hot; }, get gathered() { return gathered; }, get seeds() { return seeds; }, get selection() { return selection; }, get suggestion() { return suggestion; }, get investigation() { return investigation; }, get gatherFacts() { return gatherFacts; }, loadRun, showTab, optimize, investigate, suggestEnvelope, renderGathered, setMode, toggleGathered, selectionOnRecord, selectNode };\n  if (location.hash === '#debug')";
+const HOOK = "window.__t = { state, studio, t, get hot() { return hot; }, get gathered() { return gathered; }, get seeds() { return seeds; }, get selection() { return selection; }, get suggestion() { return suggestion; }, get investigation() { return investigation; }, get gatherFacts() { return gatherFacts; }, loadRun, showTab, optimize, investigate, suggestEnvelope, renderGathered, toggleGathered, selectionOnRecord, selectNode };\n  if (location.hash === '#debug')";
 const RS = 'http://127.0.0.1:8841', PB = 'http://127.0.0.1:8842';
 const rp = RENDERER, rr = '20261104-014710', r3 = '20261104-020244', pr = '20261029-053623', rk = CHAVE_RENDERER, pk = CHAVE_PYTHON;
 const INV = 'impl Matrix<4>::inverse', STAMP = Date.now();
 const checks = [];
 const ok = (d, name, pass, detail = '') => { checks.push({ d, name, pass: Boolean(pass), detail: String(detail) }); console.log(`${pass ? 'PASSA' : 'FALHA'}  [${d}] ${name}${detail !== '' ? '  -> ' + String(detail).slice(0, 170) : ''}`); };
+// F5 (9.2.7): sobre um rascunho não vazio, Otimizar e Investigar pedem para substituir; aqui a bateria confirma.
+const substitui = (page, fn, arg) => page.evaluate(async ([src, a]) => {
+  const d = document.querySelector('#askDialog'); let feito = false;
+  const p = (0, eval)(`(${src})`)(a).finally(() => { feito = true; });
+  while (!feito) { if (d.open && document.querySelector('#askTitle').textContent === __t.t('builder.replaceTitle')) document.querySelector('#askOk').click(); await new Promise(z => setTimeout(z, 20)); }
+  return p; }, [fn.toString(), arg]);
 const get = async (B, p) => { const r = await fetch(B + p); return { status: r.status, body: await r.json().catch(() => null) }; };
 
 async function open(browser, B, project, run) {
@@ -29,10 +35,22 @@ async function open(browser, B, project, run) {
   return { page, log, close: () => page.context().close() };
 }
 let serial = 0;
+// F7: devolve a política do projeto a Localizar pelo seletor (a operação explícita), para a raiz terminar como começou.
+const voltaLocalizar = async p => {
+  if (!await p.evaluate(() => __t.studio.project.settings.allow_patch || __t.studio.project.settings.allow_hypothesis)) return;
+  await p.click('#modeSeg [data-mode="locate"]');
+  await p.waitForFunction(() => document.querySelector('#askDialog').open, null, { timeout: 30000 });
+  await p.click('#askOk');
+  await p.waitForFunction(() => !__t.studio.project.settings.allow_patch && !__t.studio.project.settings.allow_hypothesis, null, { timeout: 30000 });
+};
 const prepare = async (p, B, key, run, base) => {
   const question = `${base} ${STAMP} ${++serial}`;
   await p.evaluate(() => { document.querySelector('#ladderOn').checked = false; const s = document.querySelector('#provider'); s.value = 'manual'; s.dispatchEvent(new Event('change')); });
   await p.fill('#question', question); await p.click('#ask');
+  // F7 (T26): um rascunho de Otimizar (modo necessário Melhorar) com a política em Localizar pede para alterar a
+  // política antes de preparar; a bateria confirma (no F6, o mesmo caso gravava o perfil sem perguntar).
+  await p.waitForTimeout(600);
+  if (await p.evaluate(() => document.querySelector('#askDialog').open && document.querySelector('#askTitle').textContent === __t.t('mode.neededTitle'))) await p.click('#askOk');
   await p.waitForFunction(q => __t.studio.turns.some(t => t.question === q), question, { timeout: 60000 });
   await p.waitForTimeout(300);
   return (await get(B, `/api/turns?key=${encodeURIComponent(key)}&run=${run}`)).body.find(t => t.question === question);
@@ -76,7 +94,7 @@ const join = p => p.evaluate(() => [...document.querySelectorAll('#suggestion bu
 
   // ---- Bloqueador 2.
   a = await open(browser, RS, rp, rr); p = a.page;
-  await p.evaluate(async ([t, n]) => { await __t.optimize(__t.hot.rows.find(r => r.name === n)); await __t.investigate(t, document.createElement('button')); }, [loop.occurrence, INV]);
+  await substitui(p, async ([t, n]) => { await __t.optimize(__t.hot.rows.find(r => r.name === n)); await __t.investigate(t, document.createElement('button')); }, [loop.occurrence, INV]);
   ok('B2', 'investigar zera os fatos ligados por um Otimizar anterior', await p.evaluate(() => __t.gatherFacts === false));
   const t2 = await prepare(p, RS, rk, rr, 'B2');
   ok('B2', 'servidor real: nenhum fato no pacote', a.log.prepared.at(-1).with_facts === false && (JSON.parse(t2.query).evidence.reviewed_facts?.length ?? 0) === 0, `with_facts=${a.log.prepared.at(-1).with_facts}`);
@@ -84,6 +102,7 @@ const join = p => p.evaluate(() => [...document.querySelectorAll('#suggestion bu
   a = await open(browser, RS, rp, rr); p = a.page;
   await p.evaluate(async n => { await __t.optimize(__t.hot.rows.find(r => r.name === n)); }, INV);
   const t2b = await prepare(p, RS, rk, rr, 'B2 otimizar');
+  await voltaLocalizar(p);
   ok('B2', 'Otimizar continua levando fatos, com o controle à vista', a.log.prepared.at(-1).with_facts === true && (JSON.parse(t2b.query).evidence.reviewed_facts?.length ?? 0) > 0, `${JSON.parse(t2b.query).evidence.reviewed_facts?.length} fatos`);
   await a.close();
 
@@ -215,7 +234,7 @@ const join = p => p.evaluate(() => [...document.querySelectorAll('#suggestion bu
 
   // ---- Bloqueio 3: Otimizar com investigação aberta.
   a = await open(browser, RS, rp, rr); p = a.page;
-  const stuck = await p.evaluate(async ([t, n]) => {
+  const stuck = await substitui(p, async ([t, n]) => {
     await __t.investigate(t, document.createElement('button'));
     const r = __t.hot.rows.find(x => x.name === 'impl World::color_at'); __t.selectNode(__t.state.index.get(r.symbol)); __t.showTab('map');
     await new Promise(z => setTimeout(z, 150));
@@ -231,11 +250,12 @@ const join = p => p.evaluate(() => [...document.querySelectorAll('#suggestion bu
   // ---- Item 5.
   a = await open(browser, RS, rp, rr); p = a.page;
   await p.evaluate(async n => { const r = __t.hot.rows.find(x => x.name === n); await __t.optimize(r); __t.toggleGathered(r.symbol); }, INV);
-  await p.fill('#question', 'sem alvo'); await p.click('#ask'); await p.waitForTimeout(150);
-  const shown = await p.evaluate(() => ({ t: document.querySelector('#llmNote').innerText, c: document.querySelector('#llmNote').className }));
+  // F7 (3.11, rota 1): sem alvo, o botão fica desabilitado e o caminho previsto diz por quê (antes: clicar mostrava a nota).
+  await p.fill('#question', 'sem alvo'); await p.waitForTimeout(150);
+  const shown = await p.evaluate(() => ({ t: document.querySelector('#route').textContent, d: document.querySelector('#ask').disabled }));
   await p.evaluate(() => { [...document.querySelectorAll('#gathered .chip.env')].find(k => k.querySelector('button.target')).querySelector('button.target').click(); });
-  const gone = await p.evaluate(() => ({ t: document.querySelector('#llmNote').innerText, c: document.querySelector('#llmNote').className, alvos: __t.seeds.length }));
-  ok('Item 5', 'a nota aparece sem alvo e some ao escolher um', /Nenhum alvo/.test(shown.t) && shown.c === 'error' && !/Nenhum alvo/.test(gone.t) && gone.c !== 'error' && gone.alvos === 1, gone.t.slice(0, 50));
+  const gone = await p.evaluate(() => ({ t: document.querySelector('#route').textContent, d: document.querySelector('#ask').disabled, alvos: __t.seeds.length }));
+  ok('Item 5', 'sem alvo o botão fica desabilitado com o motivo, e escolher um alvo o habilita', /^Escolha um alvo no Builder/.test(shown.t) && shown.d === true && !/Escolha um alvo/.test(gone.t) && gone.d === false && gone.alvos === 1, gone.t.slice(0, 50));
   await a.close();
 
   // ---- Item 6.

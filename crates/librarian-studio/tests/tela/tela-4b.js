@@ -234,7 +234,11 @@ const base = (items, more) => ({ items, left_out: [], gaps: [], behavior: [], me
   const dark = await start(browser, B, RENDERER, run, errors, counter, { width: 420, height: 800 }, 'dark');
   await dark.waitForFunction(() => __t.hot, null, { timeout: 120000 });
   await dark.waitForTimeout(500);
+  await dark.click('#colSwitch [data-col="question"]');
   await clickSuggest(dark, seed);
+  // F5: o painel da sugestão fica no Builder, no Centro; a pessoa chega a ele por "Abrir no Builder".
+  await dark.click('#draftOpen');
+  ok('tela estreita: o painel da sugestão está à vista, no Builder', await dark.evaluate(() => { const d = document.querySelector('#suggestion'); return Boolean(d && d.getClientRects().length && d.offsetParent !== null); }));
   // O painel já transborda nessa largura sem os estados, por outras linhas: a medida é não piorar.
   const overflow = () => dark.evaluate(() => { const d = document.querySelector('#suggestion'); d.querySelectorAll('details').forEach(x => { x.open = true; }); return d.scrollWidth - d.clientWidth; });
   const withStates = await overflow();

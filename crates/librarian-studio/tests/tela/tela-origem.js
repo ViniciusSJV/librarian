@@ -6,6 +6,12 @@ const OUT = process.argv[2];
 const B = 'http://127.0.0.1:8841', project = RENDERER, run = '20261104-020244';
 const HOOK = "window.__t = { state, studio, t, showTab, loadRun, optimize, openPath, callsText, runsText, camera, canvas, get hot() { return hot; }, get city() { return city; } }; if (location.hash === '#debug')";
 const ok = (n, pass, d = '') => { console.log(`${pass ? 'PASSA' : 'FALHA'}  ${n}${d ? '  -> ' + d : ''}`); if (!pass) process.exitCode = 1; };
+// F5 (9.2.7): sobre um rascunho não vazio, Otimizar e Investigar pedem para substituir; aqui a bateria confirma.
+const substitui = (page, fn, arg) => page.evaluate(async ([src, a]) => {
+  const d = document.querySelector('#askDialog'); let feito = false;
+  const p = (0, eval)(`(${src})`)(a).finally(() => { feito = true; });
+  while (!feito) { if (d.open && document.querySelector('#askTitle').textContent === __t.t('builder.replaceTitle')) document.querySelector('#askOk').click(); await new Promise(z => setTimeout(z, 20)); }
+  return p; }, [fn.toString(), arg]);
 const CASES = [
   { kind: 'entry_calls', name: 'impl Tuple::dot', rank: /^[\d.]+ vezes$/, runs: /^roda [\d.]+ vezes$/, tip: /^[\d.]+ chamadas · /, env: /[\d.]+ chamadas/, box: /[\d.]+ × · /, notBox: /≤|na linha|contagem:/ },
   { kind: 'own_counter', name: 'impl Matrix<4>::inverse', rank: /^[\d.]+ vezes na linha \d+$/, runs: /^passa [\d.]+ vezes pela linha \d+, de um contador do próprio projeto \(pode não ser quantas vezes roda\)$/, tip: /^[\d.]+ passagens pela linha contada · /, env: /[\d.]+ passagens pela linha contada/, box: /[\d.]+ × na linha \d+ · / },
@@ -54,7 +60,7 @@ const CASES = [
     ok(`${c.kind}: origem de ${c.name}`, s.kind === c.kind, s.kind);
     ok(`${c.kind}: ranking`, c.rank.test(s.rank), s.rank);
     ok(`${c.kind}: Separar`, s.option?.endsWith(s.rank), s.option);
-    await page.evaluate(n => __t.optimize(__t.hot.rows.find(r => r.name === n)), c.name);
+    await substitui(page, n => __t.optimize(__t.hot.rows.find(r => r.name === n)), c.name);
     await page.waitForTimeout(700);
     const asked = await page.evaluate(() => ({ q: document.querySelector('#question').value, env: document.querySelector('#gathered').innerText + ' ' + (document.querySelector('#suggestion')?.innerText ?? '') }));
     ok(`${c.kind}: pergunta ao modelo`, asked.q.includes(`mostra: ${c.name} ${s.runs}`), asked.q.slice(0, 170));

@@ -5,6 +5,12 @@ const OUT = process.argv[2];
 const B = 'http://127.0.0.1:8841', project = RENDERER, run = '20261104-020244';
 const HOOK = "window.__t = { state, studio, t, showTab, loadRun, renderHot, optimize, openPath, callsText, runsText, countedLines, get hot() { return hot; }, get city() { return city; } }; if (location.hash === '#debug')";
 const ok = (n, pass, d = '') => { console.log(`${pass ? 'PASSA' : 'FALHA'}  ${n}${d ? '  -> ' + d : ''}`); if (!pass) process.exitCode = 1; };
+// F5 (9.2.7): sobre um rascunho não vazio, Otimizar e Investigar pedem para substituir; aqui a bateria confirma.
+const substitui = (page, fn, arg) => page.evaluate(async ([src, a]) => {
+  const d = document.querySelector('#askDialog'); let feito = false;
+  const p = (0, eval)(`(${src})`)(a).finally(() => { feito = true; });
+  while (!feito) { if (d.open && document.querySelector('#askTitle').textContent === __t.t('builder.replaceTitle')) document.querySelector('#askOk').click(); await new Promise(z => setTimeout(z, 20)); }
+  return p; }, [fn.toString(), arg]);
 (async () => {
   const browser = await chromium.launch({ channel: 'chrome', headless: true });
   const page = await (await browser.newContext({ viewport: { width: 1500, height: 1000 } })).newPage();
@@ -39,7 +45,7 @@ const ok = (n, pass, d = '') => { console.log(`${pass ? 'PASSA' : 'FALHA'}  ${n}
   const asked = await page.evaluate(() => ({ q: document.querySelector('#question').value, env: document.querySelector('#gathered').innerText + ' ' + (document.querySelector('#suggestion')?.innerText ?? '') }));
   ok('Otimizar: a pergunta ao modelo não chama a linha de chamadas da função', /passa [\d.]+ vezes pela linha \d+, uma de 2 linhas contadas \(pode não ser quantas vezes roda\)/.test(asked.q) && !/roda [\d.]+ vezes/.test(asked.q), asked.q.slice(0, 190));
   ok('sugestão: "maior contagem entre as linhas"', /maior contagem entre as linhas: [\d.]+/.test(asked.env));
-  await page.evaluate(n => __t.optimize(__t.hot.rows.find(r => r.name === n)), 'impl Tuple::dot');
+  await substitui(page, n => __t.optimize(__t.hot.rows.find(r => r.name === n)), 'impl Tuple::dot');
   await page.waitForTimeout(800);
   const single = await page.evaluate(() => ({ q: document.querySelector('#question').value, env: document.querySelector('#gathered').innerText + ' ' + (document.querySelector('#suggestion')?.innerText ?? '') }));
   ok('Otimizar, uma linha: pergunta como antes', single.q.startsWith('A contagem do Librarian (Medir tudo) mostra: impl Tuple::dot roda 6.410.258 vezes'), single.q.slice(0, 110));

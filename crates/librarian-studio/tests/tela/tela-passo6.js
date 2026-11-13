@@ -4,7 +4,7 @@ const { chromium } = require('./ambiente');
 const { spawnSync } = require('child_process');
 const fs = require('fs'), path = require('path');
 const OUT = process.argv[2], B = 'http://127.0.0.1:8842';
-const HOOK = "window.__t = { state, studio, t, showTab, loadRun, setMode, renderGathered, get hotStatus() { return hotStatus; }, get suggestion() { return suggestion; }, set suggestion(v) { suggestion = v; }, get gathered() { return gathered; }, set gathered(v) { gathered = v; }, get seeds() { return seeds; }, set seeds(v) { seeds = v; } }; if (location.hash === '#debug')";
+const HOOK = "window.__t = { state, studio, t, showTab, loadRun, renderGathered, get hotStatus() { return hotStatus; }, get suggestion() { return suggestion; }, set suggestion(v) { suggestion = v; }, get gathered() { return gathered; }, set gathered(v) { gathered = v; }, get seeds() { return seeds; }, set seeds(v) { seeds = v; } }; if (location.hash === '#debug')";
 const ok = (n, pass, d = '') => { console.log(`${pass ? 'PASSA' : 'FALHA'}  ${n}${d ? '  -> ' + String(d).slice(0, 260) : ''}`); if (!pass) process.exitCode = 1; };
 const call = async (m, p, body) => { const r = await fetch(B + p, { method: m, headers: { 'content-type': 'application/json' }, body: body && JSON.stringify(body) }); return { status: r.status, body: await r.json().catch(() => null) }; };
 const must = async (...a) => { const r = await call(...a); if (r.status >= 400) throw new Error(`${a[1]}: ${r.status} ${JSON.stringify(r.body)}`); return r.body; };
@@ -13,7 +13,7 @@ const PRINTED = 'librarian-measure calls=7 at=src/app.py:1\nlibrarian-measure ca
 const LIB = 'pub fn roda() -> u32 {\n    nao_roda()\n}\npub fn nao_roda() -> u32 {\n    1\n}\npub const P: &str = "\nlibrarian-measure calls=7 at=src/lib.rs:1\n";\n';
 const grep = file => ({ argv: ['git', 'grep', '-h', 'librarian-measure', '--', file], repeat: 1 });
 const NO_INSTRUMENT = /não declara um instrument/, NO_SOURCE = 'Não disponível neste projeto: a contagem por função só é inserida em fontes Rust, e esta edition não tem nenhuma.';
-const MANUAL = /«manual» imprimiu contagens manuais em 2 linha\(s\)\. Elas ficam fora de Onde pesa: veja-as em Investigar/;
+const MANUAL = /«manual» imprimiu contagens manuais em 2 linha\(s\)\. Elas ficam fora de Onde pesa: veja-as em Explorar › Inventário/;
 const SAYS_NONE = 'esta edition não tem essa medição';
 
 const make = (name, files, profile) => {
@@ -99,11 +99,12 @@ const panel = async (page, label) => {
   ok('D6, conversa: não diz simplesmente que não há medição', !turns.includes(SAYS_NONE), turns.slice(-300));
   ok('D6, conversa: aponta as contagens manuais e Investigar', /«manual» imprimiu contagens manuais em 2 linhas/.test(turns) && /Investigar/.test(turns), turns.slice(-300));
   p = await panel(page, 'plan_route');
-  ok('D6, painel: aponta as contagens manuais, sem dizer "Sem medição"', /contagens manuais em Investigar/.test(p.text) && !p.text.includes('Sem medição nesta edition'), p.text.slice(0, 200));
+  ok('D6, painel: aponta as contagens manuais, sem dizer "Sem medição"', /contagens manuais em Explorar › Inventário/.test(p.text) && !p.text.includes('Sem medição nesta edition'), p.text.slice(0, 200));
   ok('invariante: a sugestão continua sem medição, para a seleção', p.measured === false && p.coverage === null, JSON.stringify([p.measured, p.coverage]));
   ok('invariante: nenhum estado de cobertura por item sem medição', !/sem cobertura|passagens observadas/.test(p.text));
   // Investigar mostra de fato o que a tela aponta.
   await page.evaluate(() => __t.showTab('inventory'));
+  await page.click('.subnav [data-view="inventory"]');
   await page.click('#inventoryBuild');
   await page.waitForFunction(() => /medido|Medida por origem/.test(document.querySelector('#inventoryList, #inventory, [data-panel="inventory"]')?.innerText ?? document.body.innerText), null, { timeout: 60000 });
   const shown = await page.evaluate(() => document.body.innerText);
@@ -113,9 +114,9 @@ const panel = async (page, label) => {
   // Em inglês, e trocando o idioma com a tela aberta.
   const en = await open(browser, py, a.run, errors, counter, { lang: 'en' });
   st = await hotState(en);
-  ok('em inglês: motivo e nota', /only goes into Rust sources/.test(st.text) && /«manual» printed manual counts on 2 line\(s\)\. They stay out of Where the time goes: see them in Investigate/.test(st.text) && !/contagens|Não disponível/.test(st.text), st.text);
+  ok('em inglês: motivo e nota', /only goes into Rust sources/.test(st.text) && /«manual» printed manual counts on 2 line\(s\)\. They stay out of Where the time goes: see them in Explore › Inventory/.test(st.text) && !/contagens|Não disponível/.test(st.text), st.text);
   p = await panel(en, 'plan_route');
-  ok('em inglês: painel', /There are manual counts in Investigate/.test(p.text) && !/Sem Medir/.test(p.text), p.text.slice(0, 200));
+  ok('em inglês: painel', /There are manual counts in Explore › Inventory/.test(p.text) && !/Sem Medir/.test(p.text), p.text.slice(0, 200));
   await en.click('[data-lang="pt"]');
   await en.waitForTimeout(200);
   st = await hotState(en);
@@ -168,6 +169,7 @@ const panel = async (page, label) => {
   p = await panel(page, 'plan_route');
   ok('auditoria: o painel não aponta contagens manuais', p.text.includes('Sem medição nesta edition') && !/manuais/.test(p.text), p.text.slice(0, 160));
   await page.evaluate(() => __t.showTab('inventory'));
+  await page.click('.subnav [data-view="inventory"]');
   await page.click('#inventoryBuild');
   await page.waitForFunction(() => !document.querySelector('#inventorySearch').hidden, null, { timeout: 60000 });
   const failed = await page.evaluate(() => document.body.innerText);

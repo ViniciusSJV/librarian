@@ -53,6 +53,51 @@ partir das medições e do grafo, e a pessoa junta, tira ou aceita. Desde a Etap
 
 Detalhes no [STUDIO.md](../../STUDIO.md#pacote-de-evidências-etapa-4).
 
+## Especificação funcional do frontend
+
+A reformulação funcional do Studio está em andamento, em etapas. A organização tem três
+colunas: à esquerda a navegação (áreas Projeto, Explorar, Régua e Acervo, e as ferramentas
+Léxico, Configurações, Modelfiles e Abrir arquivos); no centro a cidade como base, com o
+fluxograma, o Evidence Builder, a revisão e a comparação como vistas sobrepostas; à direita a
+linha do tempo da pergunta e o compositor.
+
+Até o F4 foram implementados a nova estrutura de navegação, a exploração e a inspeção, e as
+vistas do espaço central (a cidade e o fluxograma, com a barra de vistas). O F5 pôs o Evidence
+Builder no centro, como vista: a lista de fontes saiu do compositor, e a seleção aparece nas
+quatro listas do formato 2. O F6 guarda o rascunho do Builder no navegador, por projeto e run, e o
+restaura ao recarregar e ao voltar à run (restaurar a run ativa ao recarregar fica para o F9). O
+F7 separa o compositor da gravação do perfil: o modo passa a ser a política gravada em cada projeto,
+alterada só por uma operação própria; Salvar é a única outra gravação, sempre explícita e com a
+lista do que muda; os critérios do compositor são os do rascunho. O F8 reformulou a conversa: a
+linha do tempo da run, os estados de cada pergunta lidos do registro, a política e os critérios
+que a pergunta usou ao lado dos atuais, cada envio em três camadas (o que chegou, o que o Librarian
+conferiu, o que você decide), as execuções e os fatos de cada pergunta, Copiar diff, e respostas de
+outra run ou projeto que nunca aparecem como da run aberta. O F9 trouxe a área Projeto com o resumo
+de estado do projeto, a run escolhida guardada por projeto (recarregar volta a ela, com a pergunta
+ativa e o rascunho), a confirmação antes de sair de um projeto com alterações não salvas e o aviso do
+navegador ao recarregar com elas; a Régua com a versão de cada comando, a linha de base em vigor e os
+links para a pergunta e para Onde pesa; e o Acervo com filtro por estado, ida à pergunta de origem
+(também em outra run) e a declaração de um fato juntada ao rascunho. O F9 foi auditado, fechado e
+aprovado: cada item do resumo carrega à parte e uma falha na leitura do grafo é dita no lugar dele;
+a aprovação de outra versão de um comando e o Python com medição continuam parciais, por dependerem
+do servidor. O F10 trouxe a revisão antes do envio, em três operações separadas: Preparar (pelo
+Builder ou por um achado) cria a pergunta sem enviá-la e abre a Revisão, uma vista do centro com o
+que o envio vai entregar, o que o servidor confere agora e o que esta revisão não confere; só o botão
+Enviar envia. Separar e Conferir fatos criam perguntas independentes, revisadas em lote, e "Enviar
+as marcadas" envia cada uma sozinha, uma por vez. "Aprovar todos…" mostra antes os FACTs que serão
+aprovados e os que não serão, com o motivo, e depois o resultado de cada um. A revisão continua
+parcial (depende do servidor: identidade com o envio, SYSTEM e skills, recusa por fato revogado).
+A comparação e as ferramentas continuam previstas para etapas posteriores (F11 e F12). O frontend
+novo não está concluído, e o `STUDIO.md` ainda descreve a página anterior à reformulação.
+
+A [especificação funcional do Studio](../../docs/ESPECIFICACAO-FUNCIONAL-STUDIO.md) é a
+referência dessa implementação, feita em passos com autorização própria. Ela separa o que já
+existia, o que foi aprovado e o que depende de mudanças no servidor.
+
+O [estado da implementação](../../docs/ESTADO-IMPLEMENTACAO-STUDIO.md) registra o que dessa
+especificação já foi implementado e verificado, etapa por etapa: os testes, as decisões aprovadas
+e as pendências. Ele não autoriza nenhuma etapa; cada uma continua com autorização própria.
+
 ## API
 
 A tabela lista as rotas principais; a lista completa está em `src/main.rs`.
