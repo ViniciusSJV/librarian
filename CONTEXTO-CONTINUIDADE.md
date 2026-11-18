@@ -1,5 +1,7 @@
 # Contexto de continuidade do Librarian
 
+**Ponto de retomada (18/11/2026): [seção 20](#20-encerramento-do-piloto-1-e-retomada-pelo-piloto-1b-18112026).** O Piloto 1 está encerrado e documentado. A próxima sessão começa pelo Piloto 1b.
+
 **Atualização de 18/11/2026, depois da publicação de `d949f91`: o Piloto Python 1 (Healthchecks) foi executado sem mudar código, e a direção para uma infraestrutura de evidências com vários consumidores foi registrada ([seção 19](#19-piloto-python-1-e-direção-multiagente-18112026): comece por ela).** A próxima prioridade é o Piloto 1b, ainda não iniciado.
 
 **Atualização de 18/11/2026: a consolidação (E1 a E5, simplificação do Studio e proteção da escada) foi publicada sobre `27f7bdd` ([seção 18](#18-consolidação-evidence-builder-independente-simplificação-e-proteção-da-escada-17112026-e-18112026): comece por ela).** As seções 1 a 17 descrevem estados anteriores; onde divergem, vale a 18. Em especial, o Evidence Builder agora é um crate (`librarian-evidence`), e a tabela da seção 2 está desatualizada nesse ponto.
@@ -931,3 +933,72 @@ Nenhuma bateria foi dada como aprovada por remoção: os testes de rodada não f
 2. **G1 fica para a Fase 2**, depois de medir o impacto no corpus Rust.
 3. **A autoria dos fatos e a promoção por item são da Fase 3.** Não mudar o formato dos fatos sem especificação.
 4. **Não adicionar framework de agentes aos crates centrais.** Não implementar a interface pública nem o extrator Java antes das fases deles.
+
+## 20. Encerramento do Piloto 1 e retomada pelo Piloto 1b (18/11/2026)
+
+### Estado publicado [confirmado em 18/11]
+
+- **Branch e sincronização:** `main`, sincronizada com `origin/main`, árvore limpa.
+- **Código-base do piloto:** `d949f91`. **Último commit de código:** `d949f91`, que é o mesmo.
+- **Registro documental do piloto:** `cf33147`. Feito **depois** do piloto, não é implementação: entre `d949f91` e `cf33147` só mudaram documentos (o único arquivo sob `crates/` é o README do `librarian-evidence`).
+- **Piloto 1 (Healthchecks):** concluído.
+  - Relatório permanente: [docs/reports/PILOTO-1-HEALTHCHECKS.md](docs/reports/PILOTO-1-HEALTHCHECKS.md).
+  - Direção arquitetural: [docs/ARQUITETURA-EVIDENCIAS-MULTIAGENTE.md](docs/ARQUITETURA-EVIDENCIAS-MULTIAGENTE.md).
+- **Próxima prioridade:** Piloto 1b (Fase 1 do plano). **Nenhuma parte dele foi iniciada.**
+- **Nenhum agente nem orquestrador implementado.**
+
+### Arquitetura aprovada [registrado]
+
+- O Librarian continua em Rust, independente de linguagem, modelo, agente e orquestrador.
+- O consumidor declara as evidências de que precisa; o Librarian constrói e fornece pacotes rastreáveis.
+- A coordenação dos agentes fica fora do Librarian.
+
+### Ler antes de começar
+
+1. Este documento: as seções 19 e 20.
+2. O [plano, seção "Piloto Python 1 e direção multiagente"](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#piloto-python-1-e-direção-multiagente-18112026), com o roadmap e os critérios de aceite do 1b.
+3. [docs/reports/PILOTO-1-HEALTHCHECKS.md](docs/reports/PILOTO-1-HEALTHCHECKS.md), sobretudo a seção 6 (limitações) e a reutilização em Q6.
+4. [docs/ARQUITETURA-EVIDENCIAS-MULTIAGENTE.md](docs/ARQUITETURA-EVIDENCIAS-MULTIAGENTE.md).
+5. A documentação dos componentes:
+   - [Ingest](crates/librarian-ingest/README.md): inclui o grafo `v2` que o Studio usa, em `crates/librarian-ingest/src/graph/`.
+   - [Graph Engine](crates/librarian-graph-engine/WORKFLOW-V0.1.md): dossiês e query preparada.
+   - [Evidence Builder](crates/librarian-evidence/README.md).
+6. O histórico Git recente (`git log --oneline -6`).
+
+### Piloto 1b: correções de confiabilidade
+
+Fazer nesta ordem.
+
+**1. P1: recuperação de fatos decorados.**
+
+- Ponto de partida: `target_of` em `crates/librarian-studio/src/store.rs` (perto da linha 1360). Hoje usa `chunk.start_line`; em Python, o trecho começa no decorador. Quem consome: `reviewed_about` (perto da linha 789) e `suggest_with`.
+- Corrigir para a linha real de declaração do símbolo, a mesma que o envelope informa em `declaration_line`.
+- Teste de regressão em Python: função decorada com fato promovido, que precisa ser recuperado pela pergunta com `with_facts` e pela sugestão de envelope.
+- Verificar à parte o comportamento com atributos Rust (`#[...]`), sem supor que seja igual.
+- Preservar a compatibilidade com o ray tracer: os fatos e os testes existentes continuam iguais.
+
+**2. G3: omissões de chamadas ambíguas.**
+
+- Pontos de partida:
+  - `/api/calls` chama `Graph::calls_from` em `crates/librarian-ingest/src/graph/v2.rs`. Uma ocorrência sem aresta `name_candidate` não gera link.
+  - O teto está em `crates/librarian-ingest/src/graph.rs`: acima de `max_candidates`, o nó guarda só `ambiguous_candidates` e nenhuma aresta é desenhada.
+- Tornar as omissões explícitas na resposta, com o motivo e a contagem de candidatos.
+- Preservar a incerteza e não escolher relação arbitrariamente.
+
+**3. Q6: repetição da investigação.**
+
+- Gerar uma nova edition do Healthchecks (`6c05a7a`, clone em `Projetos/pilotos/healthchecks`, projeto `healthchecks-25597e41` no `.studio` local) depois das correções.
+- Repetir a pergunta Q6 com as mesmas sete declarações e `with_facts`.
+- Comparar se F2, F4, F5 e F6 voltam e se o F6 deixa de ser repetido.
+- Medir o tamanho do pacote e os tokens.
+- Comparar com a linha de base: 46,2 KB, 11.667 tokens, 8 de 12 fatos e 1 fato novo. O texto da pergunta está no turn 14 da run `20261118-061046`.
+
+### Restrições da próxima sessão
+
+- **Não antecipar G1.**
+- **Não implementar:** Evidence Request, formato 3, API pública HTTP/JSON, extrator Java, agentes especializados, orquestrador nem integração com LangGraph. Esses itens pertencem às fases 2 a 8 do plano.
+- **Mudar o escopo do 1b só com justificativa e decisão do usuário.**
+
+### Primeira atividade técnica recomendada
+
+Escrever o teste de regressão do P1 **antes** da correção: uma função Python decorada, com fato promovido, que hoje não é recuperada. O teste deve falhar com o código atual, pela diferença entre `chunk.start_line` e a linha do `def`. Só então mudar `target_of`, e rodar a suíte inteira com o corpus Rust.
