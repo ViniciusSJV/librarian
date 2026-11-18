@@ -273,6 +273,37 @@ pub struct Calls {
     pub truncated: bool,
     pub nodes: Vec<UsedNode>,
     pub links: Vec<CallLink>,
+    /// G3: the call occurrences of the walked symbols that are not in `links`, each with why.
+    /// Absence from `links` is not absence of a call: these are calls the graph observed.
+    pub unresolved: Vec<UnresolvedCall>,
+}
+
+/// A call occurrence the walk knows and does not present as a link.
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+pub struct UnresolvedCall {
+    /// The symbol whose body writes the call.
+    pub from: String,
+    pub occurrence: String,
+    pub occurrence_kind: String,
+    /// The written text, e.g. `ch.notify(flip)` or `handlers[0]`.
+    pub text: String,
+    /// `above_candidate_limit`: more same-named declarations than the profile links; the graph
+    /// keeps only their count, and none is chosen. `no_candidate_in_project`: no declaration of the
+    /// project matches the occurrence (its name, when one is written); this does not say the call is
+    /// external. `node_limit`: a link the graph has, left out by `max_nodes`; not an ambiguity.
+    pub reason: String,
+    /// How many declarations the written name matched: the recorded count above the limit, 0 with
+    /// no candidate, the link's own count at the node limit.
+    pub candidates: usize,
+    /// `node_limit` only: the link left out, as it would have been (`resolution`, `to`, `candidate_edge`).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub resolution: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub to: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub candidate_edge: Option<String>,
+    /// Where the call is written: the edge observing it, or the candidate edge left out.
+    pub evidence: Evidence,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
@@ -301,13 +332,13 @@ impl Graph {
             return Err("The seed must be a symbol; depth 1..6, nodes 1..300".into());
         }
         let mut candidates_from: BTreeMap<&str, Vec<&Edge>> = BTreeMap::new();
-        let mut observed: BTreeMap<&str, Vec<&str>> = BTreeMap::new();
+        let mut observed: BTreeMap<&str, Vec<&Edge>> = BTreeMap::new();
         let mut parent: BTreeMap<&str, &str> = BTreeMap::new();
         let mut declared: BTreeMap<&str, &Evidence> = BTreeMap::new();
         for e in &self.edges {
             match e.kind.as_str() {
                 "name_candidate" => candidates_from.entry(&e.from).or_default().push(e),
-                "observes" => observed.entry(&e.from).or_default().push(&e.to),
+                "observes" => observed.entry(&e.from).or_default().push(e),
                 "contains" => {
                     parent.insert(&e.to, &e.from);
                 }
@@ -336,18 +367,40 @@ impl Graph {
         let mut layer_of: BTreeMap<String, usize> = BTreeMap::from([(seed.to_owned(), 0)]);
         let mut followed: std::collections::BTreeSet<String> = std::collections::BTreeSet::from([seed.to_owned()]);
         let mut links = vec![];
+        let mut unresolved = vec![];
         let mut truncated = false;
         let mut frontier = vec![seed.to_owned()];
         for layer in 1..=depth {
             let mut next = vec![];
             for caller in &frontier {
                 let Some((kinds, receiver)) = syntax.languages.get(&self.nodes[caller].language) else { continue };
-                for occurrence in observed.get(caller.as_str()).into_iter().flatten() {
+                for observation in observed.get(caller.as_str()).into_iter().flatten() {
+                    let occurrence = &observation.to.as_str();
                     let written = &self.nodes[*occurrence];
                     if !kinds.contains(&written.kind.as_str()) {
                         continue;
                     }
                     let edges = candidates_from.get(occurrence).cloned().unwrap_or_default();
+                    // No candidate edge: what the graph recorded says why, and nothing is chosen.
+                    if edges.is_empty() {
+                        let (reason, candidates) = match written.ambiguous_candidates {
+                            Some(count) => ("above_candidate_limit", count),
+                            None => ("no_candidate_in_project", 0),
+                        };
+                        unresolved.push(UnresolvedCall {
+                            from: caller.clone(),
+                            occurrence: (*occurrence).to_owned(),
+                            occurrence_kind: written.kind.clone(),
+                            text: written.label.clone(),
+                            reason: reason.into(),
+                            candidates,
+                            resolution: None,
+                            to: None,
+                            candidate_edge: None,
+                            evidence: observation.evidence.clone(),
+                        });
+                        continue;
+                    }
                     let own = receiver.is_some_and(|r| written.label.starts_with(&format!("{r}.")));
                     let same: Vec<&Edge> = edges.iter().copied().filter(|e| container(&e.to) == container(caller)).collect();
                     let pick = chosen.get(*occurrence).and_then(|c| edges.iter().find(|e| &e.to == c));
@@ -361,6 +414,19 @@ impl Graph {
                         if !layer_of.contains_key(&edge.to) {
                             if nodes.len() >= max_nodes {
                                 truncated = true;
+                                // The link exists; only its presentation is left out.
+                                unresolved.push(UnresolvedCall {
+                                    from: caller.clone(),
+                                    occurrence: (*occurrence).to_owned(),
+                                    occurrence_kind: written.kind.clone(),
+                                    text: written.label.clone(),
+                                    reason: "node_limit".into(),
+                                    candidates: edges.len(),
+                                    resolution: Some(resolution.into()),
+                                    to: Some(edge.to.clone()),
+                                    candidate_edge: Some(edge.id.clone()),
+                                    evidence: edge.evidence.clone(),
+                                });
                                 continue;
                             }
                             layer_of.insert(edge.to.clone(), layer);
@@ -385,6 +451,6 @@ impl Graph {
             }
             frontier = next;
         }
-        Ok(Calls { seed: seed.into(), depth, max_nodes, truncated, nodes, links })
+        Ok(Calls { seed: seed.into(), depth, max_nodes, truncated, nodes, links, unresolved })
     }
 }

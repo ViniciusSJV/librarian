@@ -175,6 +175,13 @@
   #pathBar .check span { white-space: nowrap; }
   #pathDepth { width: auto; min-width: 56px; }
   #pathNote { margin: 6px 14px; }
+  #pathUnresolved { margin: 0 14px 6px; }
+  #pathUnresolved > summary { cursor: pointer; color: var(--text-secondary); }
+  #pathUnresolvedBody { max-height: 34vh; overflow: auto; padding: 4px 0 0 14px; }
+  #pathUnresolvedBody h4 { margin: 8px 0 2px; font-size: 13px; }
+  #pathUnresolvedBody p { margin: 0 0 4px; }
+  #pathUnresolvedBody ul { margin: 0 0 6px; padding-left: 18px; }
+  #pathUnresolvedBody li { margin: 1px 0; }
   #pathCanvas { flex: 1; overflow: auto; padding: 8px 14px 14px; }
   #pathCanvas svg { display: block; }
   #pathCanvas text { fill: var(--text-primary); font: 12px system-ui, -apple-system, "Segoe UI", sans-serif; }
@@ -709,6 +716,8 @@
         <button id="pathClose" data-i18n="path.close"></button>
       </div>
       <p id="pathNote" class="muted"></p>
+      <!-- G3: call occurrences the graph knows and the flowchart does not draw, by reason. -->
+      <details id="pathUnresolved" hidden><summary></summary><div id="pathUnresolvedBody"></div></details>
       <!-- The point selected in the flowchart can join the draft without leaving the view (spec 2.3, Q5). -->
       <div id="pathPoint" class="row" hidden><span id="pathPointName" class="mono"></span><button type="button" id="pathPointJoin"></button></div>
       <div id="pathCanvas"></div>
@@ -1178,7 +1187,19 @@ const STRINGS = {
   'path.callsTitle': ['O que ele chama: {name}', 'What it calls: {name}'],
   'path.callsSearching': ['Seguindo as chamadas…', 'Following the calls…'],
   'path.callsAllHidden': ['As {n} chamadas encontradas foram escondidas pelos filtros acima.', 'The {n} calls found were hidden by the filters above.'],
-  'path.callsNone': ['Nenhuma chamada encontrada: este ponto não escreve chamadas para outras declarações do acervo, ou elas têm mais de 8 homônimos.', 'No call found: this point writes no calls to other declarations in the collection, or they have more than 8 homonyms.'],
+  'path.callsNone': ['Nenhuma chamada a desenhar: este ponto não liga chamadas a declarações do acervo. As que ele escreve e não foram desenhadas estão em "Chamadas não apresentadas", quando houver.', 'No call to draw: this point links no calls to declarations in the collection. The ones it writes that were not drawn are under "Calls not shown", when there are any.'],
+  'path.unresolved.summary': ['Chamadas não apresentadas: {n} ({parts}). Não aparecer no desenho não quer dizer que a chamada não existe.', 'Calls not shown: {n} ({parts}). Not being drawn does not mean the call does not exist.'],
+  'path.unresolved.count.above_candidate_limit': ['{n} acima do limite de homônimos', '{n} above the homonym limit'],
+  'path.unresolved.count.no_candidate_in_project': ['{n} sem candidato no projeto', '{n} with no candidate in the project'],
+  'path.unresolved.count.node_limit': ['{n} omitida(s) pelo limite de pontos', '{n} left out by the point limit'],
+  'path.unresolved.title.above_candidate_limit': ['Acima do limite de homônimos ({n})', 'Above the homonym limit ({n})'],
+  'path.unresolved.title.no_candidate_in_project': ['Sem candidato no projeto ({n})', 'No candidate in the project ({n})'],
+  'path.unresolved.title.node_limit': ['Omitidas pelo limite de pontos ({n})', 'Left out by the point limit ({n})'],
+  'path.unresolved.why.above_candidate_limit': ['Ambiguidade: o nome combina com mais declarações do que o grafo liga, e ele guarda só a quantidade. Nenhuma foi escolhida.', 'Ambiguity: the name matches more declarations than the graph links, and it keeps only how many. None was chosen.'],
+  'path.unresolved.why.no_candidate_in_project': ['Nenhuma declaração do projeto corresponde a esta chamada (pelo nome escrito, quando há um). Isso não diz que a chamada é externa nem que ela não acontece.', 'No declaration of the project matches this call (by its written name, when there is one). This does not say the call is external, nor that it does not happen.'],
+  'path.unresolved.why.node_limit': ['Limite de apresentação, não ambiguidade: o grafo liga estas chamadas, mas o desenho atingiu o teto de {max} pontos. Reduza a profundidade para vê-las.', 'Presentation limit, not ambiguity: the graph links these calls, but the drawing reached the cap of {max} points. Reduce the depth to see them.'],
+  'path.unresolved.candidates': ['{n} candidatos', '{n} candidates'],
+  'path.unresolved.target': ['seria {label}', 'would be {label}'],
   'path.callsNodeTitle': ['{label}\n{kind} · {location}\nclique: inspecionar · duplo clique: ver o que este chama', '{label}\n{kind} · {location}\nclick: inspect · double click: see what this calls'],
   'path.callsSummary': ['{nodes} pontos e {links} chamadas até a profundidade {depth}.', '{nodes} points and {links} calls up to depth {depth}.'],
   'path.callsAmbiguous': [' {n} chamada(s) tracejada(s): o nome combina com homônimos e o caminho para ali até você escolher.', ' {n} dashed call(s): the name matches homonyms and the path stops there until you choose.'],
@@ -7497,6 +7518,7 @@ async function drawPath() {
   const note = $('#pathNote'), canvas = $('#pathCanvas'), calls = callsMode();
   const drawing = ++pathDrawing, same = sameRun(), current = () => same() && drawing === pathDrawing;
   $('#pathDetail').hidden = true;
+  renderUnresolved(null);
   setPathState('loading');
   const seed = state.nodes[state.index.get(pathSeed)];
   $('#pathTitle').textContent = t(calls ? 'path.callsTitle' : 'path.title', { name: seed?.label ?? pathSeed });
@@ -7527,6 +7549,8 @@ async function drawPath() {
     if (calls && measuredOn()) {
       for (const l of full.links) if (l.resolution === 'chosen' && !pathChosen[l.occurrence] && pathMeasured[l.occurrence] === l.to) l.resolution = 'measured';
     }
+    // Before any early return: a point with no link drawn can still write calls.
+    if (calls) renderUnresolved(full);
     const data = filterPath(full);
     if (!data.links.length && full.links.length) {
       note.textContent = t(calls ? 'path.callsAllHidden' : 'path.allHidden', { n: full.links.length });
@@ -7550,6 +7574,39 @@ async function drawPath() {
     note.textContent = error.message;
     setPathState('error');
   }
+}
+
+// G3: the calls /api/calls reports in `unresolved`, grouped by its reason, as the server gave them:
+// nothing is resolved, chosen or classified here. Collapsed: a count by reason, then each occurrence.
+const UNRESOLVED_REASONS = ['above_candidate_limit', 'no_candidate_in_project', 'node_limit'];
+function renderUnresolved(data) {
+  const box = $('#pathUnresolved'), list = data?.unresolved ?? [];
+  box.hidden = !list.length;
+  if (!list.length) { $('#pathUnresolvedBody').replaceChildren(); return; }
+  const by = new Map(UNRESOLVED_REASONS.map(r => [r, list.filter(u => u.reason === r)]));
+  // A reason this page does not know yet is still shown, under its own code.
+  for (const u of list) if (!by.has(u.reason)) by.set(u.reason, list.filter(x => x.reason === u.reason));
+  const label = id => state.nodes[state.index.get(id)]?.label ?? id;
+  const said = (key, fallback, params) => STRINGS[key] ? t(key, params) : fallback;
+  const parts = [...by].filter(([, items]) => items.length)
+    .map(([r, items]) => said(`path.unresolved.count.${r}`, `${items.length} ${r}`, { n: items.length })).join(' · ');
+  box.querySelector('summary').textContent = t('path.unresolved.summary', { n: list.length, parts });
+  const item = u => el('li', {},
+    el('code', { textContent: u.text.slice(0, 100) }), ' · ',
+    el('a', { href: '#', textContent: shortName(label(u.from)), title: label(u.from), onclick: e => {
+      e.preventDefault();
+      const i = state.index.get(u.from);
+      if (i != null) selectNode(i);
+    } }),
+    el('span', { className: 'muted mono', textContent: ` ${u.evidence.path}:${u.evidence.start_line}` }),
+    u.reason === 'above_candidate_limit' ? el('span', { className: 'muted', textContent: ` · ${t('path.unresolved.candidates', { n: u.candidates })}` }) : null,
+    u.reason === 'node_limit' ? el('span', { className: 'muted', textContent: ` · ${t('path.unresolved.target', { label: label(u.to) })} · `
+      + (STRINGS[`path.resolution.${u.resolution}`] ? t(`path.resolution.${u.resolution}`, { n: u.candidates }) : u.resolution) }) : null);
+  $('#pathUnresolvedBody').replaceChildren(...[...by].filter(([, items]) => items.length).flatMap(([r, items]) => [
+    el('h4', { textContent: said(`path.unresolved.title.${r}`, `${r} (${items.length})`, { n: items.length }) }),
+    el('p', { className: 'muted', textContent: said(`path.unresolved.why.${r}`, '', { max: data.max_nodes }) }),
+    el('ul', {}, ...items.map(item)),
+  ]));
 }
 
 const shortName = label => label.split(/::|\./).pop() || label;
@@ -7715,6 +7772,7 @@ function closePathView({ keep = false } = {}) {
   $('#pathCanvas').replaceChildren();
   $('#pathNote').textContent = '';
   $('#pathDetail').hidden = true;
+  renderUnresolved(null);
   showCenter('city', { keep });
 }
 $('#pathResetChoices').onclick = () => { pathChosen = {}; drawPath(); };
