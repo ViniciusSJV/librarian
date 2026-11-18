@@ -1,0 +1,111 @@
+{
+  "diagnostic": null,
+  "dossier_origin": "edition:2b414d79070a571a47754ac0e1200beed0a01342e12257e987eed0faff8837bf",
+  "endpoint": "http://127.0.0.1:11434/api/generate",
+  "evidence_rechecked": true,
+  "explicit_options": {},
+  "files": {
+    "query": "query.json",
+    "request": "request.json",
+    "response": "response.bin",
+    "text": "response.txt"
+  },
+  "format_version": 1,
+  "http_elapsed_ms": 53125.9539,
+  "http_finished_unix_ms": 1795035221056,
+  "http_started_unix_ms": 1795035167930,
+  "http_status": 200,
+  "integration": {
+    "bundle": {
+      "dossier_sha256": "85902d0dcb75c5f19a409dcfa28897129c40a9eb6fe340d039c5b5650d874267",
+      "origin_sha256": "bdbb6d1912052dc0f677f1b1c6b6b5964812ab7709cd0329cbf89ff9e9accd75",
+      "query_sha256": "33ac3c1c8b0214239105699b004f7d021475c56ed9d853a009340a9bbb529502"
+    },
+    "checks": [
+      "prepare::verify",
+      "claims::verify",
+      "evidence_h1",
+      "evidence_h2",
+      "evidence_h3"
+    ],
+    "claims": {
+      "context_sha256": "7d6ba934d48a071c0a8c9d07899cb3222b6dcbf30e772966157a7ce73c2ec119"
+    },
+    "criteria_sha256": null,
+    "dossier_origin": "edition:2b414d79070a571a47754ac0e1200beed0a01342e12257e987eed0faff8837bf",
+    "evidence_sha256": "72ff0a1014b556f43c2076ffc8593ff16b37e093e719578513bc2a769be873f7",
+    "format_version": 1,
+    "kind": "studio_send_link",
+    "query_file": "claims/query.json",
+    "query_sha256": "4fb5f8503faa35f971d3ae7f421edc2da5d0a33793d5b5481434083109929b06",
+    "selection": {
+      "context": 0,
+      "fact_ids": [
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E5",
+        "E6",
+        "E7",
+        "F2",
+        "F4",
+        "F5",
+        "F6",
+        "F18",
+        "F19",
+        "F20",
+        "F21",
+        "F22",
+        "F23",
+        "F24",
+        "F25",
+        "F26"
+      ]
+    },
+    "turn": "01",
+    "verified_unix_ms": 1795035167426
+  },
+  "max_response_bytes": 1048576,
+  "query_bytes": 47777,
+  "query_sha256": "4fb5f8503faa35f971d3ae7f421edc2da5d0a33793d5b5481434083109929b06",
+  "query_source_path": "\\\\?\\C:\\Users\\beatl\\AppData\\Local\\Temp\\claude\\09139e964f85837f\\c2d74a42-2372-4db9-9c84-8fc3b436eb57\\scratchpad\\q6\\root\\.studio\\projects\\healthchecks-25597e41\\runs\\20261118-205150\\turns\\01\\claims\\query.json",
+  "request_bytes": 56016,
+  "request_id": "STUDIO_1795035167922",
+  "request_sha256": "5cc79bf99b10e6f4a9def050915b1f1ea19e7e97923f6d5bdeb6a52370db7dc7",
+  "requested_model": "librarian-verificavel-qwen3coder",
+  "response_body_complete": true,
+  "response_bytes_preserved": 63773,
+  "response_sha256": "f6ae32d64d857ab46ce492370315d39a3d0207d30808c969aec59f01000b68a5",
+  "selection": {
+    "context": 0,
+    "fact_ids": [
+      "E1",
+      "E2",
+      "E3",
+      "E4",
+      "E5",
+      "E6",
+      "E7",
+      "F2",
+      "F4",
+      "F5",
+      "F6",
+      "F18",
+      "F19",
+      "F20",
+      "F21",
+      "F22",
+      "F23",
+      "F24",
+      "F25",
+      "F26"
+    ]
+  },
+  "semantic_evaluation": "pending",
+  "state": "completed",
+  "structured_output": true,
+  "text_sha256": "789acb0b1686b53abb7e15fe21c4ca4786dfc91c5abd87a807000dd81eb931cd",
+  "timeout_ms": 300000,
+  "validation_scope": "Conferência nesta invocação antes do envio; sem snapshot atômico nem autenticação."
+}

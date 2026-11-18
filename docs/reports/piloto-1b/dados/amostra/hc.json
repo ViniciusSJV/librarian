@@ -1,0 +1,161 @@
+{
+ "pool": 1956,
+ "rows": [
+  {
+   "text": "cron_form.is_valid()",
+   "at": "hc/front/views.py:623",
+   "owner": "update_timeout",
+   "answer": "no_candidate_in_project (0)",
+   "targets": []
+  },
+  {
+   "text": "profile.choose_next_report_date()",
+   "at": "hc/api/management/commands/sendreports.py:57",
+   "owner": "Command.handle_one_report",
+   "answer": "unique (1)",
+   "targets": [
+    "Profile.choose_next_report_date (hc/accounts/models.py:365)"
+   ]
+  },
+  {
+   "text": "check.save(update_fields=(\"status\", \"last_start\", \"alert_after\"))",
+   "at": "hc/api/views.py:579",
+   "owner": "pause",
+   "answer": "unique (1)",
+   "targets": [
+    "save (hc/integrations/github/views.py:92)"
+   ]
+  },
+  {
+   "text": "totp.provisioning_uri(name=request.user.email, issuer_name=settings.SITE_NAME)",
+   "at": "hc/accounts/views.py:779",
+   "owner": "add_totp",
+   "answer": "no_candidate_in_project (0)",
+   "targets": []
+  },
+  {
+   "text": "messages.warning(\r",
+   "at": "hc/integrations/slack/views.py:107",
+   "owner": "add_complete",
+   "answer": "no_candidate_in_project (0)",
+   "targets": []
+  },
+  {
+   "text": "form.is_valid()",
+   "at": "hc/integrations/pd/views.py:46",
+   "owner": "add",
+   "answer": "no_candidate_in_project (0)",
+   "targets": []
+  },
+  {
+   "text": "self.seats.acquire(timeout=1)",
+   "at": "hc/api/management/commands/sendalerts.py:102",
+   "owner": "Command.process_one_flip",
+   "answer": "no_candidate_in_project (0)",
+   "targets": []
+  },
+  {
+   "text": "apps.get_model(\"api\", \"Check\")",
+   "at": "hc/api/migrations/0048_auto_20190102_0737.py:12",
+   "owner": "remove_anon_checks",
+   "answer": "no_candidate_in_project (0)",
+   "targets": []
+  },
+  {
+   "text": "Profile.objects.filter(reports_allowed=False).update(reports=\"off\")",
+   "at": "hc/accounts/migrations/0036_fill_profile_reports.py:13",
+   "owner": "fill_reports_field",
+   "answer": "no_candidate_in_project (0)",
+   "targets": []
+  },
+  {
+   "text": "logger.error(msg_with_extras)",
+   "at": "hc/integrations/signal/transport.py:101",
+   "owner": "Signal.send",
+   "answer": "unique (1)",
+   "targets": [
+    "error (hc/api/decorators.py:21)"
+   ]
+  },
+  {
+   "text": "hashlib.sha1(salted_encoded).hexdigest()",
+   "at": "hc/api/models.py:1541",
+   "owner": "TokenBucket.authorize_ntfy",
+   "answer": "no_candidate_in_project (0)",
+   "targets": []
+  },
+  {
+   "text": "apps.get_model(\"accounts\", \"Project\")",
+   "at": "hc/accounts/migrations/0020_auto_20190112_1950.py:12",
+   "owner": "set_badge_key",
+   "answer": "no_candidate_in_project (0)",
+   "targets": []
+  },
+  {
+   "text": "q.filter(recent_signup | recent_login | recent_activity)",
+   "at": "hc/accounts/management/commands/sendinactivitynotices.py:24",
+   "owner": "has_projects_with_active_members",
+   "answer": "no_candidate_in_project (0)",
+   "targets": []
+  },
+  {
+   "text": "ch.save()",
+   "at": "hc/api/migrations/0067_last_error_values.py:23",
+   "owner": "fill_last_errors",
+   "answer": "unique (1)",
+   "targets": [
+    "save (hc/integrations/github/views.py:92)"
+   ]
+  },
+  {
+   "text": "check.cloaked_url()",
+   "at": "hc/integrations/slack/transport.py:52",
+   "owner": "Slackalike.payload",
+   "answer": "unique (1)",
+   "targets": [
+    "Check.cloaked_url (hc/api/models.py:275)"
+   ]
+  },
+  {
+   "text": "Profile.objects.all()",
+   "at": "hc/accounts/migrations/0018_auto_20190112_1426.py:28",
+   "owner": "create_projects",
+   "answer": "no_candidate_in_project (0)",
+   "targets": []
+  },
+  {
+   "text": "Profile.objects.for_user(self.channel.project.owner)",
+   "at": "hc/integrations/email/transport.py:84",
+   "owner": "Email.notify",
+   "answer": "unique (1)",
+   "targets": [
+    "ProfileManager.for_user (hc/accounts/models.py:62)"
+   ]
+  },
+  {
+   "text": "result.replace(\"\\r\", \" \").replace(\"\\n\", \" \")",
+   "at": "hc/integrations/webhook/transport.py:59",
+   "owner": "Webhook.prepare",
+   "answer": "unique (1)",
+   "targets": [
+    "replace (hc/lib/string.py:10)"
+   ]
+  },
+  {
+   "text": "register.simple_block_tag(takes_context=True)",
+   "at": "hc/front/templatetags/asciitable.py:90",
+   "owner": "row",
+   "answer": "no_candidate_in_project (0)",
+   "targets": []
+  },
+  {
+   "text": "TokenBucket.authorize_pushover(user_key)",
+   "at": "hc/integrations/po/transport.py:62",
+   "owner": "Pushover.notify",
+   "answer": "unique (1)",
+   "targets": [
+    "TokenBucket.authorize_pushover (hc/api/models.py:1530)"
+   ]
+  }
+ ]
+}

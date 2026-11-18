@@ -1,0 +1,362 @@
+{
+  "check": {
+    "claims": [
+      {
+        "citations": [
+          {
+            "end_line": 35,
+            "evidence_id": "CTX_1",
+            "path": "hc/api/urls.py",
+            "quote": "    path(\"fail\", views.ping, {\"action\": \"fail\"}),",
+            "start_line": 35
+          },
+          {
+            "end_line": 33,
+            "evidence_id": "CTX_1",
+            "path": "hc/api/urls.py",
+            "quote": "uuid_urls = [",
+            "start_line": 33
+          }
+        ],
+        "id": "C1",
+        "kind": "FACT",
+        "location": {
+          "declaration_line": 33,
+          "evidence_id": "CTX_1",
+          "operation_end_line": 35,
+          "operation_start_line": 35,
+          "path": "hc/api/urls.py",
+          "symbol_name": "uuid_urls"
+        },
+        "premises": [],
+        "text": "A entrada de uuid_urls que define a ação fail é path(\"fail\", views.ping, {\"action\": \"fail\"}).",
+        "verification_plan": null
+      },
+      {
+        "citations": [
+          {
+            "end_line": 538,
+            "evidence_id": "CTX_3",
+            "path": "hc/api/models.py",
+            "quote": "                    self.create_flip(new_status, reason=reason)",
+            "start_line": 538
+          },
+          {
+            "end_line": 535,
+            "evidence_id": "CTX_3",
+            "path": "hc/api/models.py",
+            "quote": "                new_status = \"down\" if action == \"fail\" else \"up\"",
+            "start_line": 535
+          },
+          {
+            "end_line": 493,
+            "evidence_id": "CTX_3",
+            "path": "hc/api/models.py",
+            "quote": "    def ping(",
+            "start_line": 493
+          },
+          {
+            "end_line": 538,
+            "evidence_id": "CTX_3",
+            "path": "hc/api/models.py",
+            "quote": "                new_status = \"down\" if action == \"fail\" else \"up\"\n                if self.status != new_status:\n                    reason = \"fail\" if action == \"fail\" else \"\"\n                    self.create_flip(new_status, reason=reason)",
+            "start_line": 535
+          }
+        ],
+        "id": "C2",
+        "kind": "FACT",
+        "location": {
+          "declaration_line": 493,
+          "evidence_id": "CTX_3",
+          "operation_end_line": 538,
+          "operation_start_line": 535,
+          "path": "hc/api/models.py",
+          "symbol_name": "ping"
+        },
+        "premises": [],
+        "text": "Em Check.ping, quando a ação é \"fail\", o status muda e um Flip é criado com motivo fail.",
+        "verification_plan": null
+      },
+      {
+        "citations": [
+          {
+            "end_line": 672,
+            "evidence_id": "CTX_4",
+            "path": "hc/api/models.py",
+            "quote": "        flip.save()",
+            "start_line": 672
+          },
+          {
+            "end_line": 652,
+            "evidence_id": "CTX_4",
+            "path": "hc/api/models.py",
+            "quote": "    def create_flip(",
+            "start_line": 652
+          },
+          {
+            "end_line": 672,
+            "evidence_id": "CTX_4",
+            "path": "hc/api/models.py",
+            "quote": "    def create_flip(\n        self, new_status: str, reason: str = \"\", mark_as_processed: bool = False\n    ) -> None:\n        \"\"\"Create a Flip object for this check.\n\n        Flip objects record check status changes, and have two uses:\n        - for sending notifications asynchronously (create a flip object in\n          wwww process, a separate \"sendalerts\" process picks it up and processes it)\n        - for downtime statistics calculation. The Check.downtimes() method\n          analyzes the flips and calculates downtime counts and durations per\n          month.\n        \"\"\"\n\n        flip = Flip(owner=self)\n        flip.created = now()\n        if mark_as_processed:\n            flip.processed = flip.created\n        flip.old_status = self.status\n        flip.new_status = new_status\n        flip.reason = reason\n        flip.save()",
+            "start_line": 652
+          }
+        ],
+        "id": "C3",
+        "kind": "FACT",
+        "location": {
+          "declaration_line": 652,
+          "evidence_id": "CTX_4",
+          "operation_end_line": 672,
+          "operation_start_line": 652,
+          "path": "hc/api/models.py",
+          "symbol_name": "create_flip"
+        },
+        "premises": [],
+        "text": "create_flip grava um objeto Flip com os campos old_status, new_status, reason e created.",
+        "verification_plan": null
+      },
+      {
+        "citations": [
+          {
+            "end_line": 119,
+            "evidence_id": "CTX_7",
+            "path": "hc/api/management/commands/sendalerts.py",
+            "quote": "        f = self.executor.submit(notify, flip)",
+            "start_line": 119
+          },
+          {
+            "end_line": 118,
+            "evidence_id": "CTX_7",
+            "path": "hc/api/management/commands/sendalerts.py",
+            "quote": "        statsd.incr(\"hc.sendalerts.processFlip\")",
+            "start_line": 118
+          },
+          {
+            "end_line": 91,
+            "evidence_id": "CTX_7",
+            "path": "hc/api/management/commands/sendalerts.py",
+            "quote": "    def process_one_flip(self) -> bool:",
+            "start_line": 91
+          },
+          {
+            "end_line": 119,
+            "evidence_id": "CTX_7",
+            "path": "hc/api/management/commands/sendalerts.py",
+            "quote": "        statsd.incr(\"hc.sendalerts.processFlip\")\n        f = self.executor.submit(notify, flip)",
+            "start_line": 118
+          }
+        ],
+        "id": "C4",
+        "kind": "FACT",
+        "location": {
+          "declaration_line": 91,
+          "evidence_id": "CTX_7",
+          "operation_end_line": 119,
+          "operation_start_line": 118,
+          "path": "hc/api/management/commands/sendalerts.py",
+          "symbol_name": "process_one_flip"
+        },
+        "premises": [],
+        "text": "O Flip é submetido ao executor com self.executor.submit(notify, flip).",
+        "verification_plan": null
+      },
+      {
+        "citations": [
+          {
+            "end_line": 43,
+            "evidence_id": "CTX_6",
+            "path": "hc/api/management/commands/sendalerts.py",
+            "quote": "        error = ch.notify(flip)",
+            "start_line": 43
+          },
+          {
+            "end_line": 41,
+            "evidence_id": "CTX_6",
+            "path": "hc/api/management/commands/sendalerts.py",
+            "quote": "    for ch in channels:",
+            "start_line": 41
+          },
+          {
+            "end_line": 24,
+            "evidence_id": "CTX_6",
+            "path": "hc/api/management/commands/sendalerts.py",
+            "quote": "def notify(flip: Flip) -> str | None:",
+            "start_line": 24
+          },
+          {
+            "end_line": 43,
+            "evidence_id": "CTX_6",
+            "path": "hc/api/management/commands/sendalerts.py",
+            "quote": "    for ch in channels:\n        notify_start = time.time()\n        error = ch.notify(flip)",
+            "start_line": 41
+          }
+        ],
+        "id": "C5",
+        "kind": "FACT",
+        "location": {
+          "declaration_line": 24,
+          "evidence_id": "CTX_6",
+          "operation_end_line": 43,
+          "operation_start_line": 41,
+          "path": "hc/api/management/commands/sendalerts.py",
+          "symbol_name": "notify"
+        },
+        "premises": [],
+        "text": "Para cada canal é chamado o método ch.notify(flip).",
+        "verification_plan": null
+      }
+    ],
+    "extracted_from_fence": false,
+    "limits": "Conferência mecânica: a resposta aponta para linhas reais da edition no formato pedido. O sentido continua pendente; accepted é sempre false.",
+    "report": {
+      "accepted": false,
+      "issues": [
+        {
+          "claim_id": "C3",
+          "code": "location_operation_includes_declaration"
+        }
+      ],
+      "mechanical_status": "rejected",
+      "schema_version": 1,
+      "semantic_status": "pending"
+    },
+    "resolutions": [
+      {
+        "claim_id": "C1",
+        "code": "declaration_citation_added",
+        "end_line": 33,
+        "evidence_id": "CTX_1",
+        "start_line": 33
+      },
+      {
+        "claim_id": "C2",
+        "code": "declaration_citation_added",
+        "end_line": 493,
+        "evidence_id": "CTX_3",
+        "start_line": 493
+      },
+      {
+        "claim_id": "C2",
+        "code": "operation_citation_added",
+        "end_line": 538,
+        "evidence_id": "CTX_3",
+        "start_line": 535
+      },
+      {
+        "claim_id": "C3",
+        "code": "operation_citation_added",
+        "end_line": 672,
+        "evidence_id": "CTX_4",
+        "start_line": 652
+      },
+      {
+        "claim_id": "C4",
+        "code": "declaration_citation_added",
+        "end_line": 91,
+        "evidence_id": "CTX_7",
+        "start_line": 91
+      },
+      {
+        "claim_id": "C4",
+        "code": "operation_citation_added",
+        "end_line": 119,
+        "evidence_id": "CTX_7",
+        "start_line": 118
+      },
+      {
+        "claim_id": "C5",
+        "code": "declaration_citation_added",
+        "end_line": 24,
+        "evidence_id": "CTX_6",
+        "start_line": 24
+      },
+      {
+        "claim_id": "C5",
+        "code": "operation_citation_added",
+        "end_line": 43,
+        "evidence_id": "CTX_6",
+        "start_line": 41
+      }
+    ],
+    "response_sha256": "789acb0b1686b53abb7e15fe21c4ca4786dfc91c5abd87a807000dd81eb931cd"
+  },
+  "created": "20261118-205341",
+  "criteria_sha256": null,
+  "diagnostic": null,
+  "directory": "C:\\Users\\beatl\\AppData\\Local\\Temp\\claude\\09139e964f85837f\\c2d74a42-2372-4db9-9c84-8fc3b436eb57\\scratchpad\\q6\\root\\.studio\\projects\\healthchecks-25597e41\\runs\\20261118-205150\\turns\\01\\sends\\01-ollama",
+  "elapsed_ms": 53644,
+  "input": {
+    "estimated_tokens": 13651,
+    "note": null,
+    "num_ctx": 32768,
+    "prompt_tokens": 12119,
+    "query_bytes": 47777,
+    "truncation_suspected": false
+  },
+  "language": "pt",
+  "link": {
+    "bundle": {
+      "dossier_sha256": "85902d0dcb75c5f19a409dcfa28897129c40a9eb6fe340d039c5b5650d874267",
+      "origin_sha256": "bdbb6d1912052dc0f677f1b1c6b6b5964812ab7709cd0329cbf89ff9e9accd75",
+      "query_sha256": "33ac3c1c8b0214239105699b004f7d021475c56ed9d853a009340a9bbb529502"
+    },
+    "checks": [
+      "prepare::verify",
+      "claims::verify",
+      "evidence_h1",
+      "evidence_h2",
+      "evidence_h3"
+    ],
+    "claims": {
+      "context_sha256": "7d6ba934d48a071c0a8c9d07899cb3222b6dcbf30e772966157a7ce73c2ec119"
+    },
+    "criteria_sha256": null,
+    "dossier_origin": "edition:2b414d79070a571a47754ac0e1200beed0a01342e12257e987eed0faff8837bf",
+    "evidence_sha256": "72ff0a1014b556f43c2076ffc8593ff16b37e093e719578513bc2a769be873f7",
+    "format_version": 1,
+    "kind": "studio_send_link",
+    "query_file": "claims/query.json",
+    "query_sha256": "4fb5f8503faa35f971d3ae7f421edc2da5d0a33793d5b5481434083109929b06",
+    "selection": {
+      "context": 0,
+      "fact_ids": [
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E5",
+        "E6",
+        "E7",
+        "F2",
+        "F4",
+        "F5",
+        "F6",
+        "F18",
+        "F19",
+        "F20",
+        "F21",
+        "F22",
+        "F23",
+        "F24",
+        "F25",
+        "F26"
+      ]
+    },
+    "turn": "01",
+    "verified_unix_ms": 1795035167426
+  },
+  "model": "librarian-verificavel-qwen3coder",
+  "modelfile": "verificavel-qwen3coder",
+  "modelfile_sha256": "64bf8c2d6eaafb59efb6f2fed0dc19fa498cf5886639612f8ad859e9fb4bc03a",
+  "profile": "qwen3coder",
+  "provider": "ollama",
+  "purpose": "question",
+  "query_sha256": "4fb5f8503faa35f971d3ae7f421edc2da5d0a33793d5b5481434083109929b06",
+  "response_sha256": "f6ae32d64d857ab46ce492370315d39a3d0207d30808c969aec59f01000b68a5",
+  "semantic_evaluation": "pending",
+  "skills": [],
+  "state": "completed",
+  "structured_output": true,
+  "task": "verificavel",
+  "text": "{\n  \"claims\": [\n    {\n      \"citations\": [\n        {\n          \"end_line\": 35,\n          \"evidence_id\": \"CTX_1\",\n          \"path\": \"hc/api/urls.py\",\n          \"quote\": \"    path(\\\"fail\\\", views.ping, {\\\"action\\\": \\\"fail\\\"}),\",\n          \"start_line\": 35\n        }\n      ],\n      \"id\": \"C1\",\n      \"kind\": \"FACT\",\n      \"location\": {\n        \"declaration_line\": 33,\n        \"evidence_id\": \"CTX_1\",\n        \"operation_end_line\": 35,\n        \"operation_start_line\": 35,\n        \"path\": \"hc/api/urls.py\",\n        \"symbol_name\": \"uuid_urls\"\n      },\n      \"premises\": [],\n      \"text\": \"A entrada de uuid_urls que define a ação fail é path(\\\"fail\\\", views.ping, {\\\"action\\\": \\\"fail\\\"}).\",\n      \"verification_plan\": null\n    },\n    {\n      \"citations\": [\n        {\n          \"end_line\": 538,\n          \"evidence_id\": \"CTX_3\",\n          \"path\": \"hc/api/models.py\",\n          \"quote\": \"                    self.create_flip(new_status, reason=reason)\",\n          \"start_line\": 538\n        },\n        {\n          \"end_line\": 535,\n          \"evidence_id\": \"CTX_3\",\n          \"path\": \"hc/api/models.py\",\n          \"quote\": \"                new_status = \\\"down\\\" if action == \\\"fail\\\" else \\\"up\\\"\",\n          \"start_line\": 535\n        }\n      ],\n      \"id\": \"C2\",\n      \"kind\": \"FACT\",\n      \"location\": {\n        \"declaration_line\": 493,\n        \"evidence_id\": \"CTX_3\",\n        \"operation_end_line\": 538,\n        \"operation_start_line\": 535,\n        \"path\": \"hc/api/models.py\",\n        \"symbol_name\": \"ping\"\n      },\n      \"premises\": [],\n      \"text\": \"Em Check.ping, quando a ação é \\\"fail\\\", o status muda e um Flip é criado com motivo fail.\",\n      \"verification_plan\": null\n    },\n    {\n      \"citations\": [\n        {\n          \"end_line\": 672,\n          \"evidence_id\": \"CTX_4\",\n          \"path\": \"hc/api/models.py\",\n          \"quote\": \"        flip.save()\",\n          \"start_line\": 672\n        },\n        {\n          \"end_line\": 652,\n          \"evidence_id\": \"CTX_4\",\n          \"path\": \"hc/api/models.py\",\n          \"quote\": \"    def create_flip(\",\n          \"start_line\": 652\n        }\n      ],\n      \"id\": \"C3\",\n      \"kind\": \"FACT\",\n      \"location\": {\n        \"declaration_line\": 652,\n        \"evidence_id\": \"CTX_4\",\n        \"operation_end_line\": 672,\n        \"operation_start_line\": 652,\n        \"path\": \"hc/api/models.py\",\n        \"symbol_name\": \"create_flip\"\n      },\n      \"premises\": [],\n      \"text\": \"create_flip grava um objeto Flip com os campos old_status, new_status, reason e created.\",\n      \"verification_plan\": null\n    },\n    {\n      \"citations\": [\n        {\n          \"end_line\": 119,\n          \"evidence_id\": \"CTX_7\",\n          \"path\": \"hc/api/management/commands/sendalerts.py\",\n          \"quote\": \"        f = self.executor.submit(notify, flip)\",\n          \"start_line\": 119\n        },\n        {\n          \"end_line\": 118,\n          \"evidence_id\": \"CTX_7\",\n          \"path\": \"hc/api/management/commands/sendalerts.py\",\n          \"quote\": \"        statsd.incr(\\\"hc.sendalerts.processFlip\\\")\",\n          \"start_line\": 118\n        }\n      ],\n      \"id\": \"C4\",\n      \"kind\": \"FACT\",\n      \"location\": {\n        \"declaration_line\": 91,\n        \"evidence_id\": \"CTX_7\",\n        \"operation_end_line\": 119,\n        \"operation_start_line\": 118,\n        \"path\": \"hc/api/management/commands/sendalerts.py\",\n        \"symbol_name\": \"process_one_flip\"\n      },\n      \"premises\": [],\n      \"text\": \"O Flip é submetido ao executor com self.executor.submit(notify, flip).\",\n      \"verification_plan\": null\n    },\n    {\n      \"citations\": [\n        {\n          \"end_line\": 43,\n          \"evidence_id\": \"CTX_6\",\n          \"path\": \"hc/api/management/commands/sendalerts.py\",\n          \"quote\": \"        error = ch.notify(flip)\",\n          \"start_line\": 43\n        },\n        {\n          \"end_line\": 41,\n          \"evidence_id\": \"CTX_6\",\n          \"path\": \"hc/api/management/commands/sendalerts.py\",\n          \"quote\": \"    for ch in channels:\",\n          \"start_line\": 41\n        }\n      ],\n      \"id\": \"C5\",\n      \"kind\": \"FACT\",\n      \"location\": {\n        \"declaration_line\": 24,\n        \"evidence_id\": \"CTX_6\",\n        \"operation_end_line\": 43,\n        \"operation_start_line\": 41,\n        \"path\": \"hc/api/management/commands/sendalerts.py\",\n        \"symbol_name\": \"notify\"\n      },\n      \"premises\": [],\n      \"text\": \"Para cada canal é chamado o método ch.notify(flip).\",\n      \"verification_plan\": null\n    }\n  ],\n  \"schema_version\": 1\n}"
+}

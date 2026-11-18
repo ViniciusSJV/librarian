@@ -1,0 +1,96 @@
+{
+ "pool": 515,
+ "rows": [
+  {
+   "text": "self.e2.dot(origin_cross_e1)",
+   "at": "src/triangle.rs:63",
+   "owner": "impl Intersectable for Triangle::local_intersect",
+   "answer": "unique (1)",
+   "targets": [
+    "impl Tuple::dot (src/tuple.rs:127)"
+   ]
+  },
+  {
+   "text": "checkers.color_at(point)",
+   "at": "src/patterns.rs:338",
+   "owner": "impl Incuse for Patterns::color_at",
+   "answer": "homonym (7)",
+   "targets": [
+    "impl Incuse for Stripe::color_at (src/patterns.rs:175)",
+    "impl Incuse for LinearGradient::color_at (src/patterns.rs:202)",
+    "impl Incuse for Ring::color_at (src/patterns.rs:229)",
+    "impl Incuse for Checkers::color_at (src/patterns.rs:255)",
+    "impl Incuse for Patterns::color_at (src/patterns.rs:333)",
+    "Incuse::color_at (src/patterns.rs:19)",
+    "impl World::color_at (src/world.rs:109)"
+   ]
+  },
+  {
+   "text": "self.z.powi(2)",
+   "at": "src/tuple.rs:120",
+   "owner": "impl Tuple::length",
+   "answer": "no_candidate_in_project (0)",
+   "targets": []
+  },
+  {
+   "text": "objects.sort_by(|left, right| {\r",
+   "at": "src/obj.rs:141",
+   "owner": "build_bvh",
+   "answer": "no_candidate_in_project (0)",
+   "targets": []
+  },
+  {
+   "text": "direction.is_vector()",
+   "at": "src/ray.rs:12",
+   "owner": "impl Ray::new",
+   "answer": "unique (1)",
+   "targets": [
+    "impl Tuple::is_vector (src/tuple.rs:25)"
+   ]
+  },
+  {
+   "text": "ordered.get(median_index).copied().unwrap_or(0)",
+   "at": "src/camera.rs:130",
+   "owner": "impl Camera::benchmark_render",
+   "answer": "no_candidate_in_project (0)",
+   "targets": []
+  },
+  {
+   "text": "self.maximum.y.max(point.y)",
+   "at": "src/bounds.rs:28",
+   "owner": "impl Bounds::add_point",
+   "answer": "no_candidate_in_project (0)",
+   "targets": []
+  },
+  {
+   "text": "d.get()",
+   "at": "src/count.rs:63",
+   "owner": "impl Drop for Guard::drop",
+   "answer": "no_candidate_in_project (0)",
+   "targets": []
+  },
+  {
+   "text": "world.groups.push(mirror_teapot)",
+   "at": "src/bin/librarian_measure_mesh.rs:75",
+   "owner": "main",
+   "answer": "no_candidate_in_project (0)",
+   "targets": []
+  },
+  {
+   "text": "ray.direction.y.equivalent(0.)",
+   "at": "src/cone.rs:34",
+   "owner": "impl Cone::intersect_caps",
+   "answer": "homonym (8)",
+   "targets": [
+    "impl Equivalence<Color> for Color::equivalent (src/color.rs:34)",
+    "impl Equivalence<Matrix<2>> for Matrix<2>::equivalent (src/matrix.rs:210)",
+    "impl Equivalence<Matrix<3>> for Matrix<3>::equivalent (src/matrix.rs:220)",
+    "impl Equivalence<Matrix<4>> for Matrix<4>::equivalent (src/matrix.rs:236)",
+    "impl Equivalence<f64> for f64::equivalent (src/equivalent.rs:12)",
+    "Equivalence::equivalent (src/equivalent.rs:4)",
+    "impl Equivalence<Tuple> for Tuple::equivalent (src/tuple.rs:42)",
+    "impl Equivalence<Camera> for Camera::equivalent (src/camera.rs:211)"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,788 @@
+[
+ {
+  "id": "F1",
+  "owner": "ping_by_slug",
+  "statement": "Na view ping_by_slug, o Check é identificado por meio dos parâmetros slug e project__ping_key, obtido com Check.objects.get(slug=slug, project__ping_key=ping_key).",
+  "ranges": [
+   [
+    277,
+    277
+   ]
+  ],
+  "calls": [
+   {
+    "text": "Check.objects.get(slug=slug, project__ping_key=ping_key)",
+    "line": 277,
+    "kind": "method_call_observed",
+    "resolution": "homonym",
+    "candidates": 8,
+    "targets": [
+     "get [function] hc/lib/curl.py:210",
+     "ListChannelsTestCase.get [method] hc/api/tests/test_list_channels.py:18",
+     "GetBadgesTestCase.get [method] hc/api/tests/test_get_badges.py:23",
+     "ListChecksTestCase.get [method] hc/api/tests/test_list_checks.py:39",
+     "AuthTestCase.get [method] hc/api/tests/test_auth.py:9",
+     "GetCheckTestCase.get [method] hc/api/tests/test_get_check.py:37",
+     "GetFlipsTestCase.get [method] hc/api/tests/test_get_flips.py:32",
+     "GetPingsTestCase.get [method] hc/api/tests/test_get_pings.py:38"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "F2",
+  "owner": "ping",
+  "statement": "Na view ping, a requisição é encerrada com erro se exitstatus for maior que 255.",
+  "ranges": [
+   [
+    211,
+    211
+   ],
+   [
+    212,
+    212
+   ],
+   [
+    210,
+    212
+   ]
+  ],
+  "calls": [
+   {
+    "text": "HttpResponseBadRequest",
+    "line": 212,
+    "kind": "call_observed",
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   }
+  ]
+ },
+ {
+  "id": "F3",
+  "owner": "ping_by_slug",
+  "statement": "Na view ping_by_slug, a requisição é encerrada com erro se slug não estiver em minúsculo.",
+  "ranges": [
+   [
+    272,
+    272
+   ],
+   [
+    273,
+    273
+   ],
+   [
+    272,
+    273
+   ]
+  ],
+  "calls": [
+   {
+    "text": "slug.lower()",
+    "line": 272,
+    "kind": "method_call_observed",
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   },
+   {
+    "text": "HttpResponseBadRequest",
+    "line": 273,
+    "kind": "call_observed",
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   }
+  ]
+ },
+ {
+  "id": "F4",
+  "owner": "ping",
+  "statement": "Na view ping, a ação é alterada para \"fail\" se exitstatus for maior que 0.",
+  "ranges": [
+   [
+    230,
+    230
+   ],
+   [
+    231,
+    231
+   ],
+   [
+    230,
+    231
+   ]
+  ],
+  "calls": []
+ },
+ {
+  "id": "F5",
+  "owner": "ping",
+  "statement": "Na view ping, a ação é alterada para \"ign\" se o método HTTP for diferente de POST e check.methods for igual a \"POST\".",
+  "ranges": [
+   [
+    233,
+    233
+   ],
+   [
+    234,
+    234
+   ],
+   [
+    233,
+    234
+   ]
+  ],
+  "calls": []
+ },
+ {
+  "id": "F6",
+  "owner": "ping",
+  "statement": "Na view ping, o sinal é registrado com a chamada check.ping(remote_addr, scheme, method, ua, body, action, rid, exitstatus).",
+  "ranges": [
+   [
+    255,
+    255
+   ]
+  ],
+  "calls": [
+   {
+    "text": "check.ping(remote_addr, scheme, method, ua, body, action, rid, exitstatus)",
+    "line": 255,
+    "kind": "method_call_observed",
+    "resolution": "homonym",
+    "candidates": 2,
+    "targets": [
+     "ping [function] hc/api/views.py:196",
+     "Check.ping [method] hc/api/models.py:493"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "F7",
+  "owner": "ping_by_slug",
+  "statement": "Na view ping_by_slug, o sinal é registrado com a chamada ping(request, check.code, check, action, exitstatus).",
+  "ranges": [
+   [
+    300,
+    300
+   ]
+  ],
+  "calls": [
+   {
+    "text": "ping",
+    "line": 300,
+    "kind": "call_observed",
+    "resolution": "homonym",
+    "candidates": 2,
+    "targets": [
+     "ping [function] hc/api/views.py:196",
+     "Check.ping [method] hc/api/models.py:493"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "F8",
+  "owner": "Check.going_down_after",
+  "statement": "O método going_down_after calcula o tempo em que o check vai ficar down, chamando get_grace_start() e somando o valor de grace ao resultado.",
+  "ranges": [
+   [
+    345,
+    349
+   ]
+  ],
+  "calls": [
+   {
+    "text": "self.get_grace_start()",
+    "line": 345,
+    "kind": "method_call_observed",
+    "resolution": "unique",
+    "candidates": 1,
+    "targets": [
+     "Check.get_grace_start [method] hc/api/models.py:300"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "F9",
+  "owner": "authorize.wrapper",
+  "statement": "quando nenhum projeto corresponde à chave de API, a função wrapper retorna um erro com a mensagem \"wrong api key\" e código 401.",
+  "ranges": [
+   [
+    59,
+    61
+   ]
+  ],
+  "calls": [
+   {
+    "text": "Project.objects.for_api_key(api_key, accept_rw=True, accept_ro=False)",
+    "line": 59,
+    "kind": "method_call_observed",
+    "resolution": "unique",
+    "candidates": 1,
+    "targets": [
+     "ProjectManager.for_api_key [method] hc/accounts/models.py:404"
+    ]
+   },
+   {
+    "text": "error",
+    "line": 61,
+    "kind": "call_observed",
+    "resolution": "unique",
+    "candidates": 1,
+    "targets": [
+     "error [function] hc/api/decorators.py:21"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "F10",
+  "owner": "authorize.wrapper",
+  "statement": "antes de chamar a view, a função wrapper grava o projeto correspondente à chave em request.project, define request.readonly como False e atribui o resultado de _get_api_version(request) a request.v.",
+  "ranges": [
+   [
+    63,
+    66
+   ]
+  ],
+  "calls": [
+   {
+    "text": "_get_api_version",
+    "line": 65,
+    "kind": "call_observed",
+    "resolution": "unique",
+    "candidates": 1,
+    "targets": [
+     "_get_api_version [function] hc/api/decorators.py:25"
+    ]
+   },
+   {
+    "text": "f",
+    "line": 66,
+    "kind": "call_observed",
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   }
+  ]
+ },
+ {
+  "id": "F11",
+  "owner": "_update",
+  "statement": "Quando o tipo do spec é simple, os campos kind e timeout do Check recebem valores.",
+  "ranges": [
+   [
+    372,
+    375
+   ]
+  ],
+  "calls": [
+   {
+    "text": "update_fields.update((\"kind\", \"timeout\"))",
+    "line": 375,
+    "kind": "method_call_observed",
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   }
+  ]
+ },
+ {
+  "id": "F12",
+  "owner": "_update",
+  "statement": "O campo grace é atribuído quando o valor de spec.grace não é None.",
+  "ranges": [
+   [
+    394,
+    413
+   ]
+  ],
+  "calls": [
+   {
+    "text": "getattr",
+    "line": 410,
+    "kind": "call_observed",
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   },
+   {
+    "text": "setattr",
+    "line": 412,
+    "kind": "call_observed",
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   },
+   {
+    "text": "update_fields.add(key)",
+    "line": 413,
+    "kind": "method_call_observed",
+    "resolution": "above_candidate_limit",
+    "candidates": 29,
+    "targets": []
+   }
+  ]
+ },
+ {
+  "id": "F13",
+  "owner": "_update",
+  "statement": "O campo alert_after recebe o valor retornado por check.going_down_after().",
+  "ranges": [
+   [
+    415,
+    416
+   ]
+  ],
+  "calls": [
+   {
+    "text": "check.going_down_after()",
+    "line": 415,
+    "kind": "method_call_observed",
+    "resolution": "unique",
+    "candidates": 1,
+    "targets": [
+     "Check.going_down_after [method] hc/api/models.py:339"
+    ]
+   },
+   {
+    "text": "update_fields.add(\"alert_after\")",
+    "line": 416,
+    "kind": "method_call_observed",
+    "resolution": "above_candidate_limit",
+    "candidates": 29,
+    "targets": []
+   }
+  ]
+ },
+ {
+  "id": "F14",
+  "owner": "_update",
+  "statement": "O Check é gravado com save() sem argumentos quando check._state.adding é verdadeiro, e com update_fields quando é falso.",
+  "ranges": [
+   [
+    417,
+    422
+   ]
+  ],
+  "calls": [
+   {
+    "text": "check.save()",
+    "line": 418,
+    "kind": "method_call_observed",
+    "resolution": "unique",
+    "candidates": 1,
+    "targets": [
+     "save [function] hc/integrations/github/views.py:92"
+    ]
+   },
+   {
+    "text": "check.save(update_fields=update_fields)",
+    "line": 422,
+    "kind": "method_call_observed",
+    "resolution": "unique",
+    "candidates": 1,
+    "targets": [
+     "save [function] hc/integrations/github/views.py:92"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "F15",
+  "owner": "Command.handle_going_down",
+  "statement": "Em handle_going_down, o Check a ser examinado é escolhido ao filtrar checks com alert_after no passado e status diferente de \"down\", ordenando por alert_after e pegando o primeiro.",
+  "ranges": [
+   [
+    135,
+    137
+   ]
+  ],
+  "calls": [
+   {
+    "text": "now",
+    "line": 135,
+    "kind": "call_observed",
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   },
+   {
+    "text": "Check.objects.filter(alert_after__lt=now())",
+    "line": 135,
+    "kind": "method_call_observed",
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   },
+   {
+    "text": "Check.objects.filter(alert_after__lt=now()).exclude(status=\"down\")",
+    "line": 135,
+    "kind": "method_call_observed",
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   },
+   {
+    "text": "q.order_by(\"alert_after\")",
+    "line": 137,
+    "kind": "method_call_observed",
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   },
+   {
+    "text": "q.order_by(\"alert_after\").first()",
+    "line": 137,
+    "kind": "method_call_observed",
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   }
+  ]
+ },
+ {
+  "id": "F16",
+  "owner": "Command.handle_going_down",
+  "statement": "Quando get_status não devolve \"down\", handle_going_down atualiza alert_after com o valor retornado por going_down_after() e retorna True.",
+  "ranges": [
+   [
+    144,
+    145
+   ],
+   [
+    153,
+    156
+   ]
+  ],
+  "calls": [
+   {
+    "text": "check.get_status()",
+    "line": 145,
+    "kind": "method_call_observed",
+    "resolution": "unique",
+    "candidates": 1,
+    "targets": [
+     "Check.get_status [method] hc/api/models.py:355"
+    ]
+   },
+   {
+    "text": "check.going_down_after()",
+    "line": 155,
+    "kind": "method_call_observed",
+    "resolution": "unique",
+    "candidates": 1,
+    "targets": [
+     "Check.going_down_after [method] hc/api/models.py:339"
+    ]
+   },
+   {
+    "text": "q.update(alert_after=check.going_down_after())",
+    "line": 155,
+    "kind": "method_call_observed",
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   }
+  ]
+ },
+ {
+  "id": "F17",
+  "owner": "Command.handle_going_down",
+  "statement": "Quando get_status devolve \"down\", handle_going_down atualiza o status do check para \"down\" e cria um objeto Flip com os detalhes do evento.",
+  "ranges": [
+   [
+    164,
+    165
+   ],
+   [
+    170,
+    177
+   ],
+   [
+    164,
+    177
+   ]
+  ],
+  "calls": [
+   {
+    "text": "q.update(alert_after=None, status=\"down\")",
+    "line": 165,
+    "kind": "method_call_observed",
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   },
+   {
+    "text": "Flip",
+    "line": 170,
+    "kind": "call_observed",
+    "resolution": "unique",
+    "candidates": 1,
+    "targets": [
+     "Flip [class] hc/api/models.py:1361"
+    ]
+   },
+   {
+    "text": "flip.save()",
+    "line": 175,
+    "kind": "method_call_observed",
+    "resolution": "unique",
+    "candidates": 1,
+    "targets": [
+     "save [function] hc/integrations/github/views.py:92"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "F18",
+  "owner": "Command.process_one_flip",
+  "statement": "Em process_one_flip, o Flip a processar é escolhido com Flip.objects.filter(processed=None).first().",
+  "ranges": [
+   [
+    105,
+    105
+   ]
+  ],
+  "calls": [
+   {
+    "text": "Flip.objects.filter(processed=None)",
+    "line": 105,
+    "kind": "method_call_observed",
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   },
+   {
+    "text": "Flip.objects.filter(processed=None).first()",
+    "line": 105,
+    "kind": "method_call_observed",
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   }
+  ]
+ },
+ {
+  "id": "F19",
+  "owner": "Command.process_one_flip",
+  "statement": "Em process_one_flip, o Flip é marcado como processado com q.update(processed=now()).",
+  "ranges": [
+   [
+    112,
+    112
+   ]
+  ],
+  "calls": [
+   {
+    "text": "now",
+    "line": 112,
+    "kind": "call_observed",
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   },
+   {
+    "text": "q.update(processed=now())",
+    "line": 112,
+    "kind": "method_call_observed",
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   }
+  ]
+ },
+ {
+  "id": "F20",
+  "owner": "Command.process_one_flip",
+  "statement": "Em process_one_flip, o Flip é submetido ao executor com self.executor.submit(notify, flip).",
+  "ranges": [
+   [
+    119,
+    119
+   ]
+  ],
+  "calls": [
+   {
+    "text": "self.executor.submit(notify, flip)",
+    "line": 119,
+    "kind": "method_call_observed",
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   }
+  ]
+ },
+ {
+  "id": "F21",
+  "owner": "notify",
+  "statement": "Na função notify, os canais são obtidos com flip.select_channels().",
+  "ranges": [
+   [
+    35,
+    35
+   ]
+  ],
+  "calls": [
+   {
+    "text": "flip.select_channels()",
+    "line": 35,
+    "kind": "method_call_observed",
+    "resolution": "unique",
+    "candidates": 1,
+    "targets": [
+     "Flip.select_channels [method] hc/api/models.py:1391"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "F22",
+  "owner": "notify",
+  "statement": "Na função notify, para cada canal é chamado o método ch.notify(flip).",
+  "ranges": [
+   [
+    43,
+    43
+   ]
+  ],
+  "calls": [
+   {
+    "text": "ch.notify(flip)",
+    "line": 43,
+    "kind": "method_call_observed",
+    "resolution": "above_candidate_limit",
+    "candidates": 33,
+    "targets": []
+   }
+  ]
+ },
+ {
+  "id": "F23",
+  "owner": "Channel.notify",
+  "statement": "Channel.notify chama o transporte com o objeto Notification criado.",
+  "ranges": [
+   [
+    1173,
+    1173
+   ]
+  ],
+  "calls": [
+   {
+    "text": "self.transport.notify(flip, notification=n)",
+    "line": 1173,
+    "kind": "method_call_observed",
+    "resolution": "above_candidate_limit",
+    "candidates": 33,
+    "targets": []
+   }
+  ]
+ },
+ {
+  "id": "F24",
+  "owner": "Channel.notify",
+  "statement": "Quando o transporte levanta TransportError, Channel.notify atualiza as variáveis disabled e error.",
+  "ranges": [
+   [
+    1176,
+    1176
+   ],
+   [
+    1177,
+    1177
+   ],
+   [
+    1176,
+    1177
+   ]
+  ],
+  "calls": []
+ },
+ {
+  "id": "F25",
+  "owner": "Channel.notify",
+  "statement": "Channel.notify atualiza os campos error do Notification e os campos last_notify, last_notify_duration, last_error, disabled do Channel no final.",
+  "ranges": [
+   [
+    1179,
+    1179
+   ],
+   [
+    1185,
+    1185
+   ],
+   [
+    1179,
+    1185
+   ]
+  ],
+  "calls": [
+   {
+    "text": "Notification.objects.filter(id=n.id)",
+    "line": 1179,
+    "kind": "method_call_observed",
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   },
+   {
+    "text": "Notification.objects.filter(id=n.id).update(error=error)",
+    "line": 1179,
+    "kind": "method_call_observed",
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   },
+   {
+    "text": "Channel.objects.filter(id=self.id)",
+    "line": 1180,
+    "kind": "method_call_observed",
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   },
+   {
+    "text": "Channel.objects.filter(id=self.id).update(\r",
+    "line": 1180,
+    "kind": "method_call_observed",
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   },
+   {
+    "text": "now",
+    "line": 1182,
+    "kind": "call_observed",
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   }
+  ]
+ },
+ {
+  "id": "F26",
+  "owner": "uuid_urls",
+  "statement": "A entrada de uuid_urls que define a ação fail é path(\"fail\", views.ping, {\"action\": \"fail\"}).",
+  "ranges": [
+   [
+    35,
+    35
+   ]
+  ],
+  "calls": [
+   {
+    "text": "path",
+    "line": 35,
+    "kind": "call_observed",
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   }
+  ]
+ }
+]

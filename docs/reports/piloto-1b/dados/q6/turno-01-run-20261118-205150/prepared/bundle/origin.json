@@ -1,0 +1,53 @@
+{
+  "dossier": {
+    "file": "dossier.json",
+    "id": "chain:797be17ca2d68195bcc1d68adb696aeeeee0a0fa4821ad6380d8dd69c4c6912c",
+    "sha256": "85902d0dcb75c5f19a409dcfa28897129c40a9eb6fe340d039c5b5650d874267",
+    "source_path": "edition:2b414d79070a571a47754ac0e1200beed0a01342e12257e987eed0faff8837bf"
+  },
+  "export_finished_unix_ms": 1795035121915,
+  "format_version": 1,
+  "kind": "validated_query_export",
+  "limits": [
+    "Não autentica execução nem comprova bytes compilados.",
+    "Não é snapshot atômico das fontes.",
+    "Não valida semanticamente fichas ou respostas.",
+    "Nenhum envio HTTP realizado; rubrica e avaliação ainda não vinculadas."
+  ],
+  "query": {
+    "bytes": 84163,
+    "file": "query.json",
+    "sha256": "33ac3c1c8b0214239105699b004f7d021475c56ed9d853a009340a9bbb529502"
+  },
+  "question": {
+    "file": "question.txt",
+    "sha256": "f27e9104c0a0388438fe22b37bde2b88da4c9c5973d8c8695258785f8299686b",
+    "source_path": "request.json"
+  },
+  "selection": {
+    "context": 0,
+    "fact_ids": [
+      "E1",
+      "E2",
+      "E3",
+      "E4",
+      "E5",
+      "E6",
+      "E7",
+      "F2",
+      "F4",
+      "F5",
+      "F6",
+      "F18",
+      "F19",
+      "F20",
+      "F21",
+      "F22",
+      "F23",
+      "F24",
+      "F25",
+      "F26"
+    ]
+  },
+  "validation_scope": "Conferência anterior à exportação pelo Graph Engine e pelo callback de fontes do consumidor. Não é conferência no momento de um envio posterior."
+}

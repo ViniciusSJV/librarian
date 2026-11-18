@@ -1,0 +1,43 @@
+{
+  "answer_format": "claims",
+  "asked": {
+    "original": "Quando um job chama a URL de falha de um Check (/fail no fim da URL de ping por UUID), que caminho o sinal percorre até a notificação dos canais? Diga qual entrada de uuid_urls define a ação fail; em Check.ping, em que condição o status muda e um Flip é criado com motivo fail; o que create_flip grava; e como esse Flip chega a Channel.notify. Os fatos revisados que acompanham a pergunta já cobrem parte do caminho: não os repita, use-os só para orientar, e traga itens novos apenas sobre o que eles não cobrem. Faça um item por comportamento. Cada citação deve copiar exatamente o texto das linhas indicadas, e cada linha citada deve ter código. Não escreva números de linha no texto. Afirme só o que os trechos mostram; declare como lacuna o que faltar para ligar as etapas.",
+    "suffixes": []
+  },
+  "claims_error": null,
+  "created": "20261118-205203",
+  "criteria_sha256": null,
+  "evidence": {
+    "format_version": 2,
+    "sha256": "72ff0a1014b556f43c2076ffc8593ff16b37e093e719578513bc2a769be873f7"
+  },
+  "gathered": {
+    "nodes": [
+      "src:fa22d2fae035de90e4ec4ef78a8efeb9e5b6066cab5005f391a92a0a36acddc4:3d2ae942810dcea8caecb3aecbdd019040bfc39108110d74af49ae8b5fc97975:variable:666:905",
+      "src:627a48233053768114a51eadccf97aadd78ac0fc450648e2b5da871ba305777e:d0121156422dcefcd2035b4c7f2222f23eba84765c7abf28520153d051ca673d:function:6860:9238",
+      "src:8ce3e55438349ca1cfd362c1daa62b1f586496f894fd70587817115292f75e4d:d03082adb2aacfd44f96bb0df8339a145b4979fee4277225c3a4b8612d1493e6:method:19528:22942",
+      "src:8ce3e55438349ca1cfd362c1daa62b1f586496f894fd70587817115292f75e4d:d03082adb2aacfd44f96bb0df8339a145b4979fee4277225c3a4b8612d1493e6:method:26242:27095",
+      "src:04fd8532fcf9ba2615bc6ac62bffcbaee859b92e9af51ab808de06275c96a4f1:97769054348c8f590cabd15a0e44140664305d224bad550e9548ec2e674770e9:method:3008:4196",
+      "src:04fd8532fcf9ba2615bc6ac62bffcbaee859b92e9af51ab808de06275c96a4f1:97769054348c8f590cabd15a0e44140664305d224bad550e9548ec2e674770e9:function:609:1968",
+      "src:8ce3e55438349ca1cfd362c1daa62b1f586496f894fd70587817115292f75e4d:d03082adb2aacfd44f96bb0df8339a145b4979fee4277225c3a4b8612d1493e6:method:43568:44760"
+    ],
+    "reviewed_facts": [
+      "F2",
+      "F4",
+      "F5",
+      "F6",
+      "F18",
+      "F19",
+      "F20",
+      "F21",
+      "F22",
+      "F23",
+      "F24",
+      "F25",
+      "F26"
+    ],
+    "with_facts": true
+  },
+  "prepare_error": null,
+  "question": "Quando um job chama a URL de falha de um Check (/fail no fim da URL de ping por UUID), que caminho o sinal percorre até a notificação dos canais? Diga qual entrada de uuid_urls define a ação fail; em Check.ping, em que condição o status muda e um Flip é criado com motivo fail; o que create_flip grava; e como esse Flip chega a Channel.notify. Os fatos revisados que acompanham a pergunta já cobrem parte do caminho: não os repita, use-os só para orientar, e traga itens novos apenas sobre o que eles não cobrem. Faça um item por comportamento. Cada citação deve copiar exatamente o texto das linhas indicadas, e cada linha citada deve ter código. Não escreva números de linha no texto. Afirme só o que os trechos mostram; declare como lacuna o que faltar para ligar as etapas."
+}

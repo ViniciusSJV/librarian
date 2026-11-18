@@ -1,0 +1,19 @@
+Hash agregado do .studio original, projeto healthchecks-25597e41 (copia usada como raiz da Q6).
+
+sha256 agregado: 61cd25c106887c553db891d24cee2e76f862891756cb35eed73f62ec0c5ca3d5
+arquivos: 932
+
+Substitui a lista copy.sha256 (uma linha "hash *caminho" por arquivo, cerca
+de 170 KB), removida em 18/11/2026 depois de conferida. O agregado e a contagem
+foram calculados sobre a lista normalizada e conferidos contra o .studio atual
+em 18/11/2026 com o comando abaixo, que deu o mesmo hash.
+
+Comando (Git Bash, na raiz do repositorio do Librarian):
+
+  cd .studio && find projects/healthchecks-25597e41 -type f -print0     | xargs -0 sha256sum | sed 's/ \*/  /' | LC_ALL=C sort -k2 | sha256sum
+
+Normalizacao: cada linha fica "hash  caminho" (dois espacos, sem o marcador
+binario "*"), com o caminho relativo a .studio, e as linhas sao ordenadas pelo
+caminho em ordem de bytes (LC_ALL=C). As quatro listas originais (p1 antes, p1
+depois, copia da Q6 e original depois da Q6) tinham marcadores diferentes
+("*projects/", "*projects/*", "**projects/") e o mesmo conteudo normalizado.

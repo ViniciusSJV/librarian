@@ -1,0 +1,527 @@
+{
+  "facts": [
+    {
+      "id": "F1",
+      "symbol": "ping_by_slug",
+      "declaration_line": 265,
+      "status": "current"
+    },
+    {
+      "id": "F2",
+      "symbol": "ping",
+      "declaration_line": 198,
+      "status": "current"
+    },
+    {
+      "id": "F3",
+      "symbol": "ping_by_slug",
+      "declaration_line": 265,
+      "status": "current"
+    },
+    {
+      "id": "F4",
+      "symbol": "ping",
+      "declaration_line": 198,
+      "status": "current"
+    },
+    {
+      "id": "F5",
+      "symbol": "ping",
+      "declaration_line": 198,
+      "status": "current"
+    },
+    {
+      "id": "F6",
+      "symbol": "ping",
+      "declaration_line": 198,
+      "status": "current"
+    },
+    {
+      "id": "F7",
+      "symbol": "ping_by_slug",
+      "declaration_line": 265,
+      "status": "current"
+    },
+    {
+      "id": "F8",
+      "symbol": "going_down_after",
+      "declaration_line": 339,
+      "status": "current"
+    },
+    {
+      "id": "F9",
+      "symbol": "wrapper",
+      "declaration_line": 35,
+      "status": "current"
+    },
+    {
+      "id": "F10",
+      "symbol": "wrapper",
+      "declaration_line": 35,
+      "status": "current"
+    },
+    {
+      "id": "F11",
+      "symbol": "_update",
+      "declaration_line": 332,
+      "status": "current"
+    },
+    {
+      "id": "F12",
+      "symbol": "_update",
+      "declaration_line": 332,
+      "status": "current"
+    },
+    {
+      "id": "F13",
+      "symbol": "_update",
+      "declaration_line": 332,
+      "status": "current"
+    },
+    {
+      "id": "F14",
+      "symbol": "_update",
+      "declaration_line": 332,
+      "status": "current"
+    },
+    {
+      "id": "F15",
+      "symbol": "handle_going_down",
+      "declaration_line": 123,
+      "status": "current"
+    },
+    {
+      "id": "F16",
+      "symbol": "handle_going_down",
+      "declaration_line": 123,
+      "status": "current"
+    },
+    {
+      "id": "F17",
+      "symbol": "handle_going_down",
+      "declaration_line": 123,
+      "status": "current"
+    },
+    {
+      "id": "F18",
+      "symbol": "process_one_flip",
+      "declaration_line": 91,
+      "status": "current"
+    },
+    {
+      "id": "F19",
+      "symbol": "process_one_flip",
+      "declaration_line": 91,
+      "status": "current"
+    },
+    {
+      "id": "F20",
+      "symbol": "process_one_flip",
+      "declaration_line": 91,
+      "status": "current"
+    },
+    {
+      "id": "F21",
+      "symbol": "notify",
+      "declaration_line": 24,
+      "status": "current"
+    },
+    {
+      "id": "F22",
+      "symbol": "notify",
+      "declaration_line": 24,
+      "status": "current"
+    },
+    {
+      "id": "F23",
+      "symbol": "notify",
+      "declaration_line": 1152,
+      "status": "current"
+    },
+    {
+      "id": "F24",
+      "symbol": "notify",
+      "declaration_line": 1152,
+      "status": "current"
+    },
+    {
+      "id": "F25",
+      "symbol": "notify",
+      "declaration_line": 1152,
+      "status": "current"
+    },
+    {
+      "id": "F26",
+      "symbol": "uuid_urls",
+      "declaration_line": 33,
+      "status": "current"
+    }
+  ],
+  "suggest_ping": {
+    "facts": [
+      "F2",
+      "F4",
+      "F5",
+      "F6"
+    ],
+    "items": [
+      {
+        "id": "function:6860:9238",
+        "facts": [
+          "F2",
+          "F4",
+          "F5",
+          "F6"
+        ]
+      },
+      {
+        "id": "header:hc/api/views.py",
+        "facts": []
+      },
+      {
+        "id": "function:6723:6854",
+        "facts": []
+      },
+      {
+        "id": "function:1509:1702",
+        "facts": []
+      },
+      {
+        "id": "function:1410:1503",
+        "facts": []
+      },
+      {
+        "id": "function:8104:8196",
+        "facts": []
+      }
+    ]
+  },
+  "suggest_ping_by_slug": {
+    "facts": [
+      "F1",
+      "F3",
+      "F7"
+    ],
+    "items": [
+      {
+        "id": "function:9244:10677",
+        "facts": [
+          "F1",
+          "F3",
+          "F7"
+        ]
+      },
+      {
+        "id": "header:hc/api/views.py",
+        "facts": []
+      },
+      {
+        "id": "method:13402:13555",
+        "facts": []
+      },
+      {
+        "id": "function:3063:4509",
+        "facts": []
+      },
+      {
+        "id": "method:15959:16102",
+        "facts": []
+      }
+    ]
+  },
+  "q6_with_facts": {
+    "turn": "15",
+    "prepare_error": null,
+    "reviewed_facts": [
+      "F2",
+      "F4",
+      "F5",
+      "F6",
+      "F18",
+      "F19",
+      "F20",
+      "F21",
+      "F22",
+      "F23",
+      "F24",
+      "F25",
+      "F26"
+    ],
+    "targets": [
+      {
+        "declaration_line": 33,
+        "path": "hc/api/urls.py",
+        "symbol_name": "uuid_urls"
+      },
+      {
+        "declaration_line": 198,
+        "path": "hc/api/views.py",
+        "symbol_name": "ping"
+      },
+      {
+        "declaration_line": 493,
+        "path": "hc/api/models.py",
+        "symbol_name": "ping"
+      },
+      {
+        "declaration_line": 652,
+        "path": "hc/api/models.py",
+        "symbol_name": "create_flip"
+      },
+      {
+        "declaration_line": 91,
+        "path": "hc/api/management/commands/sendalerts.py",
+        "symbol_name": "process_one_flip"
+      },
+      {
+        "declaration_line": 24,
+        "path": "hc/api/management/commands/sendalerts.py",
+        "symbol_name": "notify"
+      },
+      {
+        "declaration_line": 1152,
+        "path": "hc/api/models.py",
+        "symbol_name": "notify"
+      }
+    ],
+    "query_bytes": 47777
+  },
+  "q6_recorded": {
+    "reviewed_facts": [
+      "F18",
+      "F19",
+      "F20",
+      "F21",
+      "F22",
+      "F23",
+      "F24",
+      "F25"
+    ]
+  },
+  "evidence": {
+    "10": {
+      "h1": "passed",
+      "h2": "passed",
+      "h3": "passed",
+      "h4": "not_applicable",
+      "raw_keys": [
+        "checks",
+        "h4",
+        "latest_measure",
+        "mark",
+        "package",
+        "selection",
+        "turn",
+        "warnings"
+      ]
+    },
+    "11": {
+      "h1": "passed",
+      "h2": "passed",
+      "h3": "passed",
+      "h4": "not_applicable",
+      "raw_keys": [
+        "checks",
+        "h4",
+        "latest_measure",
+        "mark",
+        "package",
+        "selection",
+        "turn",
+        "warnings"
+      ]
+    },
+    "12": {
+      "h1": "passed",
+      "h2": "passed",
+      "h3": "passed",
+      "h4": "not_applicable",
+      "raw_keys": [
+        "checks",
+        "h4",
+        "latest_measure",
+        "mark",
+        "package",
+        "selection",
+        "turn",
+        "warnings"
+      ]
+    },
+    "13": {
+      "h1": "passed",
+      "h2": "passed",
+      "h3": "passed",
+      "h4": "not_applicable",
+      "raw_keys": [
+        "checks",
+        "h4",
+        "latest_measure",
+        "mark",
+        "package",
+        "selection",
+        "turn",
+        "warnings"
+      ]
+    },
+    "14": {
+      "h1": "passed",
+      "h2": "passed",
+      "h3": "passed",
+      "h4": "not_applicable",
+      "raw_keys": [
+        "checks",
+        "h4",
+        "latest_measure",
+        "mark",
+        "package",
+        "selection",
+        "turn",
+        "warnings"
+      ]
+    },
+    "01": {
+      "h1": "passed",
+      "h2": "passed",
+      "h3": "passed",
+      "h4": "not_applicable",
+      "raw_keys": [
+        "checks",
+        "h4",
+        "latest_measure",
+        "mark",
+        "package",
+        "selection",
+        "turn",
+        "warnings"
+      ]
+    },
+    "02": {
+      "h1": "passed",
+      "h2": "passed",
+      "h3": "passed",
+      "h4": "not_applicable",
+      "raw_keys": [
+        "checks",
+        "h4",
+        "latest_measure",
+        "mark",
+        "package",
+        "selection",
+        "turn",
+        "warnings"
+      ]
+    },
+    "03": {
+      "h1": "passed",
+      "h2": "passed",
+      "h3": "passed",
+      "h4": "not_applicable",
+      "raw_keys": [
+        "checks",
+        "h4",
+        "latest_measure",
+        "mark",
+        "package",
+        "selection",
+        "turn",
+        "warnings"
+      ]
+    },
+    "04": {
+      "h1": "passed",
+      "h2": "passed",
+      "h3": "passed",
+      "h4": "not_applicable",
+      "raw_keys": [
+        "checks",
+        "h4",
+        "latest_measure",
+        "mark",
+        "package",
+        "selection",
+        "turn",
+        "warnings"
+      ]
+    },
+    "05": {
+      "h1": "passed",
+      "h2": "passed",
+      "h3": "passed",
+      "h4": "not_applicable",
+      "raw_keys": [
+        "checks",
+        "h4",
+        "latest_measure",
+        "mark",
+        "package",
+        "selection",
+        "turn",
+        "warnings"
+      ]
+    },
+    "06": {
+      "h1": "passed",
+      "h2": "passed",
+      "h3": "passed",
+      "h4": "not_applicable",
+      "raw_keys": [
+        "checks",
+        "h4",
+        "latest_measure",
+        "mark",
+        "package",
+        "selection",
+        "turn",
+        "warnings"
+      ]
+    },
+    "07": {
+      "h1": "passed",
+      "h2": "passed",
+      "h3": "passed",
+      "h4": "not_applicable",
+      "raw_keys": [
+        "checks",
+        "h4",
+        "latest_measure",
+        "mark",
+        "package",
+        "selection",
+        "turn",
+        "warnings"
+      ]
+    },
+    "08": {
+      "h1": "passed",
+      "h2": "passed",
+      "h3": "passed",
+      "h4": "not_applicable",
+      "raw_keys": [
+        "checks",
+        "h4",
+        "latest_measure",
+        "mark",
+        "package",
+        "selection",
+        "turn",
+        "warnings"
+      ]
+    },
+    "09": {
+      "h1": "passed",
+      "h2": "passed",
+      "h3": "passed",
+      "h4": "not_applicable",
+      "raw_keys": [
+        "checks",
+        "h4",
+        "latest_measure",
+        "mark",
+        "package",
+        "selection",
+        "turn",
+        "warnings"
+      ]
+    }
+  }
+}

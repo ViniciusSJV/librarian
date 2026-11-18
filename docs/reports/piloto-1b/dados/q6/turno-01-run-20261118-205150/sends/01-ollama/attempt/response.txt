@@ -1,0 +1,153 @@
+{
+  "claims": [
+    {
+      "citations": [
+        {
+          "end_line": 35,
+          "evidence_id": "CTX_1",
+          "path": "hc/api/urls.py",
+          "quote": "    path(\"fail\", views.ping, {\"action\": \"fail\"}),",
+          "start_line": 35
+        }
+      ],
+      "id": "C1",
+      "kind": "FACT",
+      "location": {
+        "declaration_line": 33,
+        "evidence_id": "CTX_1",
+        "operation_end_line": 35,
+        "operation_start_line": 35,
+        "path": "hc/api/urls.py",
+        "symbol_name": "uuid_urls"
+      },
+      "premises": [],
+      "text": "A entrada de uuid_urls que define a ação fail é path(\"fail\", views.ping, {\"action\": \"fail\"}).",
+      "verification_plan": null
+    },
+    {
+      "citations": [
+        {
+          "end_line": 538,
+          "evidence_id": "CTX_3",
+          "path": "hc/api/models.py",
+          "quote": "                    self.create_flip(new_status, reason=reason)",
+          "start_line": 538
+        },
+        {
+          "end_line": 535,
+          "evidence_id": "CTX_3",
+          "path": "hc/api/models.py",
+          "quote": "                new_status = \"down\" if action == \"fail\" else \"up\"",
+          "start_line": 535
+        }
+      ],
+      "id": "C2",
+      "kind": "FACT",
+      "location": {
+        "declaration_line": 493,
+        "evidence_id": "CTX_3",
+        "operation_end_line": 538,
+        "operation_start_line": 535,
+        "path": "hc/api/models.py",
+        "symbol_name": "ping"
+      },
+      "premises": [],
+      "text": "Em Check.ping, quando a ação é \"fail\", o status muda e um Flip é criado com motivo fail.",
+      "verification_plan": null
+    },
+    {
+      "citations": [
+        {
+          "end_line": 672,
+          "evidence_id": "CTX_4",
+          "path": "hc/api/models.py",
+          "quote": "        flip.save()",
+          "start_line": 672
+        },
+        {
+          "end_line": 652,
+          "evidence_id": "CTX_4",
+          "path": "hc/api/models.py",
+          "quote": "    def create_flip(",
+          "start_line": 652
+        }
+      ],
+      "id": "C3",
+      "kind": "FACT",
+      "location": {
+        "declaration_line": 652,
+        "evidence_id": "CTX_4",
+        "operation_end_line": 672,
+        "operation_start_line": 652,
+        "path": "hc/api/models.py",
+        "symbol_name": "create_flip"
+      },
+      "premises": [],
+      "text": "create_flip grava um objeto Flip com os campos old_status, new_status, reason e created.",
+      "verification_plan": null
+    },
+    {
+      "citations": [
+        {
+          "end_line": 119,
+          "evidence_id": "CTX_7",
+          "path": "hc/api/management/commands/sendalerts.py",
+          "quote": "        f = self.executor.submit(notify, flip)",
+          "start_line": 119
+        },
+        {
+          "end_line": 118,
+          "evidence_id": "CTX_7",
+          "path": "hc/api/management/commands/sendalerts.py",
+          "quote": "        statsd.incr(\"hc.sendalerts.processFlip\")",
+          "start_line": 118
+        }
+      ],
+      "id": "C4",
+      "kind": "FACT",
+      "location": {
+        "declaration_line": 91,
+        "evidence_id": "CTX_7",
+        "operation_end_line": 119,
+        "operation_start_line": 118,
+        "path": "hc/api/management/commands/sendalerts.py",
+        "symbol_name": "process_one_flip"
+      },
+      "premises": [],
+      "text": "O Flip é submetido ao executor com self.executor.submit(notify, flip).",
+      "verification_plan": null
+    },
+    {
+      "citations": [
+        {
+          "end_line": 43,
+          "evidence_id": "CTX_6",
+          "path": "hc/api/management/commands/sendalerts.py",
+          "quote": "        error = ch.notify(flip)",
+          "start_line": 43
+        },
+        {
+          "end_line": 41,
+          "evidence_id": "CTX_6",
+          "path": "hc/api/management/commands/sendalerts.py",
+          "quote": "    for ch in channels:",
+          "start_line": 41
+        }
+      ],
+      "id": "C5",
+      "kind": "FACT",
+      "location": {
+        "declaration_line": 24,
+        "evidence_id": "CTX_6",
+        "operation_end_line": 43,
+        "operation_start_line": 41,
+        "path": "hc/api/management/commands/sendalerts.py",
+        "symbol_name": "notify"
+      },
+      "premises": [],
+      "text": "Para cada canal é chamado o método ch.notify(flip).",
+      "verification_plan": null
+    }
+  ],
+  "schema_version": 1
+}

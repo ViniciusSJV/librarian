@@ -1,0 +1,217 @@
+{
+  "sendalerts.notify d1": {
+    "links": 5,
+    "nodes": 5,
+    "truncated": false,
+    "compatible_with_before": true,
+    "unresolved": {
+      "no_candidate_in_project": 10,
+      "above_candidate_limit": 1
+    },
+    "samples": [
+      "no_candidate_in_project 0 close_old_connections @hc/api/management/commands/sendalerts.py:30",
+      "no_candidate_in_project 0 now @hc/api/management/commands/sendalerts.py:39",
+      "no_candidate_in_project 0 str @hc/api/management/commands/sendalerts.py:45",
+      "no_candidate_in_project 0 now @hc/api/management/commands/sendalerts.py:54",
+      "above_candidate_limit 33 ch.notify(flip) @hc/api/management/commands/sendalerts.py:43",
+      "no_candidate_in_project 0 logs.append(f\"  {code8} ({ch.kind}) Error in {secs:.1f}s: {error}\") @hc/api/management/commands/sendalerts.py:47",
+      "no_candidate_in_project 0 statsd.incr(f\"hc.notifications.{ch.kind}.fail\") @hc/api/management/commands/sendalerts.py:48",
+      "no_candidate_in_project 0 logs.append(f\"  {code8} ({ch.kind}) OK in {secs:.1f}s\") @hc/api/management/commands/sendalerts.py:50",
+      "no_candidate_in_project 0 statsd.incr(f\"hc.notifications.{ch.kind}.success\") @hc/api/management/commands/sendalerts.py:51",
+      "no_candidate_in_project 0 statsd.timing(\"hc.sendalerts.dwellTime\", send_start - flip.created) @hc/api/management/commands/sendalerts.py:53",
+      "no_candidate_in_project 0 statsd.timing(\"hc.sendalerts.sendTime\", now() - send_start) @hc/api/management/commands/sendalerts.py:54"
+    ],
+    "no_overlap": true
+  },
+  "sendalerts.notify d3": {
+    "links": 17,
+    "nodes": 15,
+    "truncated": false,
+    "compatible_with_before": true,
+    "unresolved": {
+      "no_candidate_in_project": 28,
+      "above_candidate_limit": 2
+    },
+    "no_overlap": true
+  },
+  "sendalerts.notify d6": {
+    "links": 45,
+    "nodes": 34,
+    "truncated": false,
+    "compatible_with_before": true,
+    "unresolved": {
+      "no_candidate_in_project": 55,
+      "above_candidate_limit": 3
+    },
+    "no_overlap": true
+  },
+  "process_one_flip d1": {
+    "links": 0,
+    "nodes": 1,
+    "truncated": false,
+    "compatible_with_before": true,
+    "unresolved": {
+      "no_candidate_in_project": 11
+    },
+    "samples": [
+      "no_candidate_in_project 0 now @hc/api/management/commands/sendalerts.py:112",
+      "no_candidate_in_project 0 self.seats.acquire(timeout=1) @hc/api/management/commands/sendalerts.py:102",
+      "no_candidate_in_project 0 Flip.objects.filter(processed=None) @hc/api/management/commands/sendalerts.py:105",
+      "no_candidate_in_project 0 Flip.objects.filter(processed=None).first() @hc/api/management/commands/sendalerts.py:105",
+      "no_candidate_in_project 0 self.seats.release() @hc/api/management/commands/sendalerts.py:107",
+      "no_candidate_in_project 0 Flip.objects.filter(id=flip.id, processed=None) @hc/api/management/commands/sendalerts.py:111",
+      "no_candidate_in_project 0 q.update(processed=now()) @hc/api/management/commands/sendalerts.py:112",
+      "no_candidate_in_project 0 self.seats.release() @hc/api/management/commands/sendalerts.py:114",
+      "no_candidate_in_project 0 statsd.incr(\"hc.sendalerts.processFlip\") @hc/api/management/commands/sendalerts.py:118",
+      "no_candidate_in_project 0 self.executor.submit(notify, flip) @hc/api/management/commands/sendalerts.py:119",
+      "no_candidate_in_project 0 f.add_done_callback(self.on_notify_done) @hc/api/management/commands/sendalerts.py:120"
+    ],
+    "no_overlap": true
+  },
+  "process_one_flip d3": {
+    "links": 0,
+    "nodes": 1,
+    "truncated": false,
+    "compatible_with_before": true,
+    "unresolved": {
+      "no_candidate_in_project": 11
+    },
+    "no_overlap": true
+  },
+  "process_one_flip d6": {
+    "links": 0,
+    "nodes": 1,
+    "truncated": false,
+    "compatible_with_before": true,
+    "unresolved": {
+      "no_candidate_in_project": 11
+    },
+    "no_overlap": true
+  },
+  "views.ping d1": {
+    "links": 48,
+    "nodes": 14,
+    "truncated": false,
+    "compatible_with_before": true,
+    "unresolved": {
+      "no_candidate_in_project": 10
+    },
+    "samples": [
+      "no_candidate_in_project 0 HttpResponseNotFound @hc/api/views.py:209",
+      "no_candidate_in_project 0 HttpResponseBadRequest @hc/api/views.py:212",
+      "no_candidate_in_project 0 len @hc/api/views.py:222",
+      "no_candidate_in_project 0 HttpResponseBadRequest @hc/api/views.py:252",
+      "no_candidate_in_project 0 UUID @hc/api/views.py:253",
+      "no_candidate_in_project 0 HttpResponse @hc/api/views.py:257",
+      "no_candidate_in_project 0 str @hc/api/views.py:259",
+      "no_candidate_in_project 0 remote_addr.split(\",\") @hc/api/views.py:216",
+      "no_candidate_in_project 0 remote_addr.split(\".\") @hc/api/views.py:221",
+      "no_candidate_in_project 0 remote_addr.split(\":\") @hc/api/views.py:223"
+    ],
+    "no_overlap": true
+  },
+  "views.ping d3": {
+    "links": 49,
+    "nodes": 14,
+    "truncated": false,
+    "compatible_with_before": true,
+    "unresolved": {
+      "no_candidate_in_project": 16
+    },
+    "no_overlap": true
+  },
+  "views.ping d6": {
+    "links": 49,
+    "nodes": 14,
+    "truncated": false,
+    "compatible_with_before": true,
+    "unresolved": {
+      "no_candidate_in_project": 16
+    },
+    "no_overlap": true
+  },
+  "Check.ping d1": {
+    "links": 16,
+    "nodes": 16,
+    "truncated": false,
+    "compatible_with_before": true,
+    "unresolved": {
+      "no_candidate_in_project": 7
+    },
+    "samples": [
+      "no_candidate_in_project 0 now @hc/api/models.py:512",
+      "no_candidate_in_project 0 len @hc/api/models.py:558",
+      "no_candidate_in_project 0 len @hc/api/models.py:559",
+      "no_candidate_in_project 0 transaction.atomic() @hc/api/models.py:508",
+      "no_candidate_in_project 0 Check.objects.select_for_update() @hc/api/models.py:511",
+      "no_candidate_in_project 0 models.F(\"n_pings\") @hc/api/models.py:542",
+      "no_candidate_in_project 0 body.decode(errors=\"replace\").lower() @hc/api/models.py:543"
+    ],
+    "no_overlap": true
+  },
+  "Check.ping d3": {
+    "links": 43,
+    "nodes": 30,
+    "truncated": false,
+    "compatible_with_before": true,
+    "unresolved": {
+      "no_candidate_in_project": 61,
+      "above_candidate_limit": 1
+    },
+    "no_overlap": true
+  },
+  "Check.ping d6": {
+    "links": 61,
+    "nodes": 38,
+    "truncated": false,
+    "compatible_with_before": true,
+    "unresolved": {
+      "no_candidate_in_project": 67,
+      "above_candidate_limit": 1
+    },
+    "no_overlap": true
+  },
+  "Channel.notify d1": {
+    "links": 2,
+    "nodes": 3,
+    "truncated": false,
+    "compatible_with_before": true,
+    "unresolved": {
+      "no_candidate_in_project": 6,
+      "above_candidate_limit": 2
+    },
+    "samples": [
+      "no_candidate_in_project 0 now @hc/api/models.py:1171",
+      "no_candidate_in_project 0 now @hc/api/models.py:1182",
+      "above_candidate_limit 14 self.transport.is_noop(flip.new_status) @hc/api/models.py:1153",
+      "above_candidate_limit 33 self.transport.notify(flip, notification=n) @hc/api/models.py:1173",
+      "no_candidate_in_project 0 Notification.objects.filter(id=n.id) @hc/api/models.py:1179",
+      "no_candidate_in_project 0 Notification.objects.filter(id=n.id).update(error=error) @hc/api/models.py:1179",
+      "no_candidate_in_project 0 Channel.objects.filter(id=self.id) @hc/api/models.py:1180",
+      "no_candidate_in_project 0 Channel.objects.filter(id=self.id).update(\r\n            last_notify=start,\r\n            last_notify_duration=now() - start,\r\n            last_error=error,\r\n            disabled=disabled,\r\n        ) @hc/api/models.py:1180"
+    ],
+    "no_overlap": true
+  },
+  "Channel.notify d3": {
+    "links": 19,
+    "nodes": 19,
+    "truncated": false,
+    "compatible_with_before": true,
+    "unresolved": {
+      "no_candidate_in_project": 23,
+      "above_candidate_limit": 3
+    },
+    "no_overlap": true
+  },
+  "Channel.notify d6": {
+    "links": 30,
+    "nodes": 21,
+    "truncated": false,
+    "compatible_with_before": true,
+    "unresolved": {
+      "no_candidate_in_project": 28,
+      "above_candidate_limit": 3
+    },
+    "no_overlap": true
+  }
+}

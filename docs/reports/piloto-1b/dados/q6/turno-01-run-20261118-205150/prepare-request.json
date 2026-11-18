@@ -1,0 +1,400 @@
+{
+  "question": "Quando um job chama a URL de falha de um Check (/fail no fim da URL de ping por UUID), que caminho o sinal percorre até a notificação dos canais? Diga qual entrada de uuid_urls define a ação fail; em Check.ping, em que condição o status muda e um Flip é criado com motivo fail; o que create_flip grava; e como esse Flip chega a Channel.notify. Os fatos revisados que acompanham a pergunta já cobrem parte do caminho: não os repita, use-os só para orientar, e traga itens novos apenas sobre o que eles não cobrem. Faça um item por comportamento. Cada citação deve copiar exatamente o texto das linhas indicadas, e cada linha citada deve ter código. Não escreva números de linha no texto. Afirme só o que os trechos mostram; declare como lacuna o que faltar para ligar as etapas.",
+  "lexicon": {
+    "groups": [],
+    "stop_words": []
+  },
+  "top": 5,
+  "depth": 2,
+  "hits": 1,
+  "radius": 0,
+  "numbered_lines": true,
+  "instructions": null,
+  "accept_diagnostics": false,
+  "targets": [
+    {
+      "path": "hc/api/urls.py",
+      "symbol_name": "uuid_urls",
+      "declaration_line": 33
+    },
+    {
+      "path": "hc/api/views.py",
+      "symbol_name": "ping",
+      "declaration_line": 198
+    },
+    {
+      "path": "hc/api/models.py",
+      "symbol_name": "ping",
+      "declaration_line": 493
+    },
+    {
+      "path": "hc/api/models.py",
+      "symbol_name": "create_flip",
+      "declaration_line": 652
+    },
+    {
+      "path": "hc/api/management/commands/sendalerts.py",
+      "symbol_name": "process_one_flip",
+      "declaration_line": 91
+    },
+    {
+      "path": "hc/api/management/commands/sendalerts.py",
+      "symbol_name": "notify",
+      "declaration_line": 24
+    },
+    {
+      "path": "hc/api/models.py",
+      "symbol_name": "notify",
+      "declaration_line": 1152
+    }
+  ],
+  "reviewed_facts": [
+    {
+      "id": "F2",
+      "statement": "Na view ping, a requisição é encerrada com erro se exitstatus for maior que 255.",
+      "authorship": "revisão humana no Librarian Studio",
+      "path": "hc/api/views.py",
+      "line": 210,
+      "end_line": 212,
+      "citations": [
+        {
+          "path": "hc/api/views.py",
+          "start_line": 211,
+          "end_line": 211,
+          "quote": "    if exitstatus is not None and exitstatus > 255:"
+        },
+        {
+          "path": "hc/api/views.py",
+          "start_line": 212,
+          "end_line": 212,
+          "quote": "        return HttpResponseBadRequest(\"invalid url format\")"
+        },
+        {
+          "path": "hc/api/views.py",
+          "start_line": 198,
+          "end_line": 198,
+          "quote": "def ping("
+        },
+        {
+          "path": "hc/api/views.py",
+          "start_line": 210,
+          "end_line": 212,
+          "quote": "\n    if exitstatus is not None and exitstatus > 255:\n        return HttpResponseBadRequest(\"invalid url format\")"
+        }
+      ]
+    },
+    {
+      "id": "F4",
+      "statement": "Na view ping, a ação é alterada para \"fail\" se exitstatus for maior que 0.",
+      "authorship": "revisão humana no Librarian Studio",
+      "path": "hc/api/views.py",
+      "line": 230,
+      "end_line": 231,
+      "citations": [
+        {
+          "path": "hc/api/views.py",
+          "start_line": 230,
+          "end_line": 230,
+          "quote": "    if exitstatus is not None and exitstatus > 0:"
+        },
+        {
+          "path": "hc/api/views.py",
+          "start_line": 231,
+          "end_line": 231,
+          "quote": "        action = \"fail\""
+        },
+        {
+          "path": "hc/api/views.py",
+          "start_line": 198,
+          "end_line": 198,
+          "quote": "def ping("
+        },
+        {
+          "path": "hc/api/views.py",
+          "start_line": 230,
+          "end_line": 231,
+          "quote": "    if exitstatus is not None and exitstatus > 0:\n        action = \"fail\""
+        }
+      ]
+    },
+    {
+      "id": "F5",
+      "statement": "Na view ping, a ação é alterada para \"ign\" se o método HTTP for diferente de POST e check.methods for igual a \"POST\".",
+      "authorship": "revisão humana no Librarian Studio",
+      "path": "hc/api/views.py",
+      "line": 233,
+      "end_line": 234,
+      "citations": [
+        {
+          "path": "hc/api/views.py",
+          "start_line": 233,
+          "end_line": 233,
+          "quote": "    if check.methods == \"POST\" and method != \"POST\":"
+        },
+        {
+          "path": "hc/api/views.py",
+          "start_line": 234,
+          "end_line": 234,
+          "quote": "        action = \"ign\""
+        },
+        {
+          "path": "hc/api/views.py",
+          "start_line": 198,
+          "end_line": 198,
+          "quote": "def ping("
+        },
+        {
+          "path": "hc/api/views.py",
+          "start_line": 233,
+          "end_line": 234,
+          "quote": "    if check.methods == \"POST\" and method != \"POST\":\n        action = \"ign\""
+        }
+      ]
+    },
+    {
+      "id": "F6",
+      "statement": "Na view ping, o sinal é registrado com a chamada check.ping(remote_addr, scheme, method, ua, body, action, rid, exitstatus).",
+      "authorship": "revisão humana no Librarian Studio",
+      "path": "hc/api/views.py",
+      "line": 255,
+      "end_line": 255,
+      "citations": [
+        {
+          "path": "hc/api/views.py",
+          "start_line": 255,
+          "end_line": 255,
+          "quote": "    check.ping(remote_addr, scheme, method, ua, body, action, rid, exitstatus)"
+        },
+        {
+          "path": "hc/api/views.py",
+          "start_line": 198,
+          "end_line": 198,
+          "quote": "def ping("
+        }
+      ]
+    },
+    {
+      "id": "F18",
+      "statement": "Em process_one_flip, o Flip a processar é escolhido com Flip.objects.filter(processed=None).first().",
+      "authorship": "revisão humana no Librarian Studio",
+      "path": "hc/api/management/commands/sendalerts.py",
+      "line": 105,
+      "end_line": 105,
+      "citations": [
+        {
+          "path": "hc/api/management/commands/sendalerts.py",
+          "start_line": 105,
+          "end_line": 105,
+          "quote": "        flip = Flip.objects.filter(processed=None).first()"
+        },
+        {
+          "path": "hc/api/management/commands/sendalerts.py",
+          "start_line": 91,
+          "end_line": 91,
+          "quote": "    def process_one_flip(self) -> bool:"
+        }
+      ]
+    },
+    {
+      "id": "F19",
+      "statement": "Em process_one_flip, o Flip é marcado como processado com q.update(processed=now()).",
+      "authorship": "revisão humana no Librarian Studio",
+      "path": "hc/api/management/commands/sendalerts.py",
+      "line": 112,
+      "end_line": 112,
+      "citations": [
+        {
+          "path": "hc/api/management/commands/sendalerts.py",
+          "start_line": 112,
+          "end_line": 112,
+          "quote": "        num_updated = q.update(processed=now())"
+        },
+        {
+          "path": "hc/api/management/commands/sendalerts.py",
+          "start_line": 91,
+          "end_line": 91,
+          "quote": "    def process_one_flip(self) -> bool:"
+        }
+      ]
+    },
+    {
+      "id": "F20",
+      "statement": "Em process_one_flip, o Flip é submetido ao executor com self.executor.submit(notify, flip).",
+      "authorship": "revisão humana no Librarian Studio",
+      "path": "hc/api/management/commands/sendalerts.py",
+      "line": 119,
+      "end_line": 119,
+      "citations": [
+        {
+          "path": "hc/api/management/commands/sendalerts.py",
+          "start_line": 119,
+          "end_line": 119,
+          "quote": "        f = self.executor.submit(notify, flip)"
+        },
+        {
+          "path": "hc/api/management/commands/sendalerts.py",
+          "start_line": 91,
+          "end_line": 91,
+          "quote": "    def process_one_flip(self) -> bool:"
+        }
+      ]
+    },
+    {
+      "id": "F21",
+      "statement": "Na função notify, os canais são obtidos com flip.select_channels().",
+      "authorship": "revisão humana no Librarian Studio",
+      "path": "hc/api/management/commands/sendalerts.py",
+      "line": 35,
+      "end_line": 35,
+      "citations": [
+        {
+          "path": "hc/api/management/commands/sendalerts.py",
+          "start_line": 35,
+          "end_line": 35,
+          "quote": "    channels = flip.select_channels()"
+        },
+        {
+          "path": "hc/api/management/commands/sendalerts.py",
+          "start_line": 24,
+          "end_line": 24,
+          "quote": "def notify(flip: Flip) -> str | None:"
+        }
+      ]
+    },
+    {
+      "id": "F22",
+      "statement": "Na função notify, para cada canal é chamado o método ch.notify(flip).",
+      "authorship": "revisão humana no Librarian Studio",
+      "path": "hc/api/management/commands/sendalerts.py",
+      "line": 43,
+      "end_line": 43,
+      "citations": [
+        {
+          "path": "hc/api/management/commands/sendalerts.py",
+          "start_line": 43,
+          "end_line": 43,
+          "quote": "        error = ch.notify(flip)"
+        },
+        {
+          "path": "hc/api/management/commands/sendalerts.py",
+          "start_line": 24,
+          "end_line": 24,
+          "quote": "def notify(flip: Flip) -> str | None:"
+        }
+      ]
+    },
+    {
+      "id": "F23",
+      "statement": "Channel.notify chama o transporte com o objeto Notification criado.",
+      "authorship": "revisão humana no Librarian Studio",
+      "path": "hc/api/models.py",
+      "line": 1173,
+      "end_line": 1173,
+      "citations": [
+        {
+          "path": "hc/api/models.py",
+          "start_line": 1152,
+          "end_line": 1152,
+          "quote": "    def notify(self, flip: Flip, is_test: bool = False) -> str:"
+        },
+        {
+          "path": "hc/api/models.py",
+          "start_line": 1173,
+          "end_line": 1173,
+          "quote": "            self.transport.notify(flip, notification=n)"
+        }
+      ]
+    },
+    {
+      "id": "F24",
+      "statement": "Quando o transporte levanta TransportError, Channel.notify atualiza as variáveis disabled e error.",
+      "authorship": "revisão humana no Librarian Studio",
+      "path": "hc/api/models.py",
+      "line": 1176,
+      "end_line": 1177,
+      "citations": [
+        {
+          "path": "hc/api/models.py",
+          "start_line": 1152,
+          "end_line": 1152,
+          "quote": "    def notify(self, flip: Flip, is_test: bool = False) -> str:"
+        },
+        {
+          "path": "hc/api/models.py",
+          "start_line": 1176,
+          "end_line": 1176,
+          "quote": "            disabled = True if e.permanent else disabled"
+        },
+        {
+          "path": "hc/api/models.py",
+          "start_line": 1177,
+          "end_line": 1177,
+          "quote": "            error = e.message"
+        },
+        {
+          "path": "hc/api/models.py",
+          "start_line": 1176,
+          "end_line": 1177,
+          "quote": "            disabled = True if e.permanent else disabled\n            error = e.message"
+        }
+      ]
+    },
+    {
+      "id": "F25",
+      "statement": "Channel.notify atualiza os campos error do Notification e os campos last_notify, last_notify_duration, last_error, disabled do Channel no final.",
+      "authorship": "revisão humana no Librarian Studio",
+      "path": "hc/api/models.py",
+      "line": 1179,
+      "end_line": 1185,
+      "citations": [
+        {
+          "path": "hc/api/models.py",
+          "start_line": 1152,
+          "end_line": 1152,
+          "quote": "    def notify(self, flip: Flip, is_test: bool = False) -> str:"
+        },
+        {
+          "path": "hc/api/models.py",
+          "start_line": 1179,
+          "end_line": 1179,
+          "quote": "        Notification.objects.filter(id=n.id).update(error=error)"
+        },
+        {
+          "path": "hc/api/models.py",
+          "start_line": 1185,
+          "end_line": 1185,
+          "quote": "        )"
+        },
+        {
+          "path": "hc/api/models.py",
+          "start_line": 1179,
+          "end_line": 1185,
+          "quote": "        Notification.objects.filter(id=n.id).update(error=error)\n        Channel.objects.filter(id=self.id).update(\n            last_notify=start,\n            last_notify_duration=now() - start,\n            last_error=error,\n            disabled=disabled,\n        )"
+        }
+      ]
+    },
+    {
+      "id": "F26",
+      "statement": "A entrada de uuid_urls que define a ação fail é path(\"fail\", views.ping, {\"action\": \"fail\"}).",
+      "authorship": "revisão humana no Librarian Studio",
+      "path": "hc/api/urls.py",
+      "line": 35,
+      "end_line": 35,
+      "citations": [
+        {
+          "path": "hc/api/urls.py",
+          "start_line": 35,
+          "end_line": 35,
+          "quote": "    path(\"fail\", views.ping, {\"action\": \"fail\"}),"
+        },
+        {
+          "path": "hc/api/urls.py",
+          "start_line": 33,
+          "end_line": 33,
+          "quote": "uuid_urls = ["
+        }
+      ]
+    }
+  ],
+  "gathered": true
+}
