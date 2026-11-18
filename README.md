@@ -156,9 +156,9 @@ cargo run --locked -p librarian-ingest --bin librarian_ingest -- investigate inv
 
 ## What has been measured
 
-One case, in a Rust ray tracer: caching an inverse matrix cut the inversions in a frame from 597,067 to 233,487, with the same image and the tests passing. With the same envelope and gate, Claude Haiku and Sonnet reached the same result, at about US$ 0.01 and US$ 0.10 ([record](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#passo-4--mudança-aprovada-vira-fato-e-os-custos-por-modelo-31102026)).
+One case, in a Rust ray tracer: caching an inverse matrix cut the inversions in a frame from 597,067 to 233,487, with the same image and the tests passing. With the same envelope and gate, Claude Haiku and Sonnet reached the same result, at about US$ 0.01 and US$ 0.10 ([record](docs/historico/PLANO-ate-18-11.md#passo-4--mudança-aprovada-vira-fato-e-os-custos-por-modelo-31102026)).
 
-Librarian did not always win. On 2026-11-01, before the current selection rules, on a scene taking 9.3 s at 2K, with the same image in every case ([record](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#vídeo-11--a-pessoa-pergunta-o-librarian-mede-separa-e-sobe-a-escada-01112026)):
+Librarian did not always win. On 2026-11-01, before the current selection rules, on a scene taking 9.3 s at 2K, with the same image in every case ([record](docs/historico/PLANO-ate-18-11.md#vídeo-11--a-pessoa-pergunta-o-librarian-mede-separa-e-sobe-a-escada-01112026)):
 
 | Path | Final time | Cost |
 |---|---|---|
@@ -166,7 +166,7 @@ Librarian did not always win. On 2026-11-01, before the current selection rules,
 | Librarian, first 3 rounds | 3.0 s | US$ 0.056 |
 | Librarian, long cycle | 2.6 s | about US$ 0.34 |
 
-Role-based selection also [did not get more changes approved](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evidence-builder--escolher-as-fontes-pelo-que-explicam-04112026) than the hand-picked envelope, in any case. What it brought was automatic selection, a smaller query and a record of what was left out. These are few projects, and the same envelope has varied between 4/6 and 8/8 approvals: read these numbers as observations, not guarantees.
+Role-based selection also [did not get more changes approved](docs/historico/PLANO-ate-18-11.md#evidence-builder--escolher-as-fontes-pelo-que-explicam-04112026) than the hand-picked envelope, in any case. What it brought was automatic selection, a smaller query and a record of what was left out. These are few projects, and the same envelope has varied between 4/6 and 8/8 approvals: read these numbers as observations, not guarantees.
 
 In Python, [Pilot 1 (Healthchecks)](docs/reports/PILOTO-1-HEALTHCHECKS.md) ingested 657 files with no diagnostics and rebuilt four workflows of a Django application with local Qwen3-Coder. Of the 65 items the model proposed, 26 became facts after semantic review by the agent that ran the pilot. That review was not a human approval. The pilot also found real limitations in relations and reuse, recorded in the report.
 
@@ -201,7 +201,7 @@ Librarian is evolving into an **evidence infrastructure** for many consumers: ag
 
 ## Documentation
 
-The project's internal documentation is in Portuguese: [Studio](STUDIO.md) · [Workflow](WORKFLOW.md) · [Testing](TESTME.md) · [Plan and measurements](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md) · [Python pilot 1](docs/reports/PILOTO-1-HEALTHCHECKS.md) · [Architecture for many consumers](docs/ARQUITETURA-EVIDENCIAS-MULTIAGENTE.md) · [History](HISTORICO.md)
+The project's internal documentation is in Portuguese: [Studio](STUDIO.md) · [Workflow](WORKFLOW.md) · [Testing](TESTME.md) · [Current state](ESTADO-ATUAL.md) · [Roadmap](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md) · [Plan and measurements until 2026-11-18](docs/historico/PLANO-ate-18-11.md) · [Python pilot 1](docs/reports/PILOTO-1-HEALTHCHECKS.md) · [Architecture for many consumers](docs/ARQUITETURA-EVIDENCIAS-MULTIAGENTE.md) · [History](HISTORICO.md)
 
 ## License
 

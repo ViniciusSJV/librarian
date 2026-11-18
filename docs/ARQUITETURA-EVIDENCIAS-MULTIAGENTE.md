@@ -1,6 +1,6 @@
 # Arquitetura de evidências para múltiplos consumidores
 
-**Direção registrada em 18/11/2026. Nada aqui está implementado.** Este documento registra para onde o Librarian evolui e por quê. A sequência das fases e o que está autorizado ficam no [plano](../PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#piloto-python-1-e-direção-multiagente-18112026). A base factual é o [Piloto Python 1 (Healthchecks)](reports/PILOTO-1-HEALTHCHECKS.md) e a extração do Evidence Builder como crate independente ([`librarian-evidence`](../crates/librarian-evidence/README.md)).
+**Direção registrada em 18/11/2026. Nada aqui está implementado.** Este documento registra para onde o Librarian evolui e por quê. A sequência das fases e o que está autorizado ficam no [plano](../PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#roadmap). A base factual é o [Piloto Python 1 (Healthchecks)](reports/PILOTO-1-HEALTHCHECKS.md) e a extração do Evidence Builder como crate independente ([`librarian-evidence`](../crates/librarian-evidence/README.md)).
 
 ## 1. A mudança de propósito
 

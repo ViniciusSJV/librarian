@@ -121,5 +121,5 @@ Para conferir, compare com o original.
 | `etapa2c.js` | `465f4d1b-0d17-4dff-903f-d3077bb3c8f4` | `39ee0a736e32e7cabce2cc34948c0df9d4b708614d332eac31c07d119c51ac07` |
 
 `etapa2.js` e `etapa2b.js` não estão aqui: seguem no scratchpad da sessão `465f4d1b` e, na mesma versão, no
-arquivo de preservação, descrito no [plano](../../../../PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md). O `etapa2c.js`
+arquivo de preservação, descrito no [plano até 18/11](../../../../docs/historico/PLANO-ate-18-11.md). O `etapa2c.js`
 desse arquivo é anterior ao daqui: a busca do par de funções foi ajustada depois.

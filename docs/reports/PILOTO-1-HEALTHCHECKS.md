@@ -101,7 +101,7 @@ Cada elo leva a evidência que o sustenta:
    - slug com maiúscula → 400 (**F3**) [teste];
    - busca por `slug` e `project__ping_key` (**F1**) [teste];
    - com `?create=1`, cria o Check (auto-provisionamento, código 278–293) [teste `test_it_auto_provisions_missing_check`];
-   - delega a `ping(request, check.code, check, …)` (**F7**) [grafo] [teste].
+   - delega a `ping(request, check.code, check, …)` (**F7**) [nome] [teste]. **[Corrigido em 18/11/2026: o grafo não dá aresta única aqui; dá homônimo de 2, `views.ping` e `Check.ping`. Por isso o elo é [nome], e a chamada que o F7 afirma depende de um link ambíguo (relatório 03 do Piloto 1b, Parte E).]**
 3. **`ping`.**
    - busca por `code` quando `check is None` [nome, ORM]; 404 se o Check não existir [teste];
    - `exitstatus > 255` → 400 (**F2**) [teste];
@@ -331,7 +331,7 @@ A pergunta Q6 atravessou o workflow de ponta a ponta para um ping de falha. Foi 
 
 ## 9. Próximos passos
 
-A sequência está no [plano, Piloto Python 1 e direção multiagente](../../PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#piloto-python-1-e-direção-multiagente-18112026). A prioridade imediata é o **Piloto 1b**:
+A sequência está no [plano, roadmap](../../PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#roadmap). A prioridade imediata é o **Piloto 1b**:
 
 1. Corrigir P1, com teste de regressão para uma função Python decorada e verificação separada dos atributos Rust (`#[...]`).
 2. Fazer `/api/calls` mostrar o que omitiu (G3).

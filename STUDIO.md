@@ -7,6 +7,8 @@ projeto, gera o grafo, faz perguntas, vê acender no grafo o que o léxico alcan
 envia a query conferida a um LLM, ou só vê o que seria enviado. Ele substitui o antigo
 PLAYME.
 
+> **Estado em 18/11/2026:** boa parte deste manual descreve a página anterior à reformulação do frontend (F0–F10, `f7d2131`) e à simplificação de 17/11. Atualizá-lo é a pendência 20 do [estado da implementação](docs/ESTADO-IMPLEMENTACAO-STUDIO.md), prevista para o F13.
+
 ## Iniciar
 
 Requisitos:
@@ -1412,7 +1414,7 @@ Uma linha com zero diz só que a medição não observou passagens por ela: veja
 
 #### O que a Etapa 2 não resolve
 
-Reproduzido num projeto com 2 funções em Rust e 2 em Python, e no `renderer`. **O mapa fica para a [etapa própria de evolução visual](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evolução-visual-cidade-e-fluxograma-planejada-em-06112026). O resumo de cobertura "N de M" depende de decisão específica. O [Passo 4 da Etapa 3](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#escopo-registrado-do-passo-4), concluído nas entregas 4A e 4B, levou os estados à tela Onde pesa e ao painel da sugestão. As ressalvas abaixo continuam valendo, salvo onde o próprio item diz o contrário.**
+Reproduzido num projeto com 2 funções em Rust e 2 em Python, e no `renderer`. **O mapa fica para a [etapa própria de evolução visual](docs/historico/PLANO-ate-18-11.md#evolução-visual-cidade-e-fluxograma-planejada-em-06112026). O resumo de cobertura "N de M" depende de decisão específica. O [Passo 4 da Etapa 3](docs/historico/PLANO-ate-18-11.md#escopo-registrado-do-passo-4), concluído nas entregas 4A e 4B, levou os estados à tela Onde pesa e ao painel da sugestão. As ressalvas abaixo continuam valendo, salvo onde o próprio item diz o contrário.**
 
 - **Mapa:** com medição, mostra só as funções com contagem acima de zero. Arquivos sem cobertura somem, sem aviso.
 - **"Onde pesa":** diz "N funções contadas", sem dizer de quantas. No `renderer`: 236 contadas de 487 no grafo; 251 sem contagem (214 testes, 17 em caminhos excluídos, 12 sem corpo, 8 que já contavam).
@@ -1443,7 +1445,7 @@ Reproduzido num projeto com 2 funções em Rust e 2 em Python, e no `renderer`. 
 
 ### Envelope e investigação
 
-Aceitos na Etapa 2, e nenhum foi agravado por ela. Ficam para a [Etapa 5](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#etapa-5-pacote-e-revisão).
+Aceitos na Etapa 2, e nenhum foi agravado por ela. Ficam para a [Etapa 5](docs/historico/PLANO-ate-18-11.md#etapa-5-pacote-e-revisão).
 
 - **Juntar durante o carregamento da investigação se perde sem aviso.** Enquanto a resposta não chega, o inspetor ainda aceita juntar; quando ela chega, o envelope é substituído pela investigação.
 - **Duas investigações no mesmo grafo:** vence a que responde por último, não a pedida por último. `sameRun` protege contra troca de grafo, não contra isso.

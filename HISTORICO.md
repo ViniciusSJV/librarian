@@ -33,5 +33,5 @@ o [`41f447e`](https://github.com/ViniciusSJV/librarian/tree/41f447e/tools/playme
 execuções antigas ficaram em `ai/consultas/` do renderer, fora do Git.
 
 O caminho atual está no [STUDIO](STUDIO.md) e no [WORKFLOW](WORKFLOW.md), e o roteiro de evolução no
-[plano](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md). A captura de execução será refeita no
+[plano](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md) (histórico até 18/11 em [docs/historico](docs/historico/PLANO-ate-18-11.md)). A captura de execução será refeita no
 Librarian, de forma genérica e multiplataforma, quando a fase de performance começar.

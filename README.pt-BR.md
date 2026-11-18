@@ -156,9 +156,9 @@ O `search` termina com o código 2 quando nada é encontrado.
 
 ## O que já foi medido
 
-Um caso, em um ray tracer em Rust: guardar uma matriz inversa reduziu as inversões num frame de 597.067 para 233.487, com a mesma imagem e os testes passando. Com o mesmo envelope e o mesmo portão, Claude Haiku e Sonnet chegaram ao mesmo resultado, a cerca de US$ 0,01 e US$ 0,10 ([registro](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#passo-4--mudança-aprovada-vira-fato-e-os-custos-por-modelo-31102026)).
+Um caso, em um ray tracer em Rust: guardar uma matriz inversa reduziu as inversões num frame de 597.067 para 233.487, com a mesma imagem e os testes passando. Com o mesmo envelope e o mesmo portão, Claude Haiku e Sonnet chegaram ao mesmo resultado, a cerca de US$ 0,01 e US$ 0,10 ([registro](docs/historico/PLANO-ate-18-11.md#passo-4--mudança-aprovada-vira-fato-e-os-custos-por-modelo-31102026)).
 
-O Librarian não ganhou sempre. Em 01/11/2026, antes das regras de seleção atuais, numa cena de 9,3 s em 2K e com a mesma imagem em todos os casos ([registro](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#vídeo-11--a-pessoa-pergunta-o-librarian-mede-separa-e-sobe-a-escada-01112026)):
+O Librarian não ganhou sempre. Em 01/11/2026, antes das regras de seleção atuais, numa cena de 9,3 s em 2K e com a mesma imagem em todos os casos ([registro](docs/historico/PLANO-ate-18-11.md#vídeo-11--a-pessoa-pergunta-o-librarian-mede-separa-e-sobe-a-escada-01112026)):
 
 | Caminho | Tempo final | Custo |
 |---|---|---|
@@ -166,7 +166,7 @@ O Librarian não ganhou sempre. Em 01/11/2026, antes das regras de seleção atu
 | Librarian, 3 primeiras rodadas | 3,0 s | US$ 0,056 |
 | Librarian, ciclo longo | 2,6 s | cerca de US$ 0,34 |
 
-A seleção por papéis também [não aprovou mais mudanças](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evidence-builder--escolher-as-fontes-pelo-que-explicam-04112026) que o envelope escolhido à mão, em nenhum caso. O que ela trouxe foi a seleção automática, uma query menor e o registro do que ficou de fora. São poucos projetos, e o mesmo envelope já variou entre 4/6 e 8/8 aprovações: leia esses números como observações, não como garantia.
+A seleção por papéis também [não aprovou mais mudanças](docs/historico/PLANO-ate-18-11.md#evidence-builder--escolher-as-fontes-pelo-que-explicam-04112026) que o envelope escolhido à mão, em nenhum caso. O que ela trouxe foi a seleção automática, uma query menor e o registro do que ficou de fora. São poucos projetos, e o mesmo envelope já variou entre 4/6 e 8/8 aprovações: leia esses números como observações, não como garantia.
 
 Em Python, o [Piloto 1 (Healthchecks)](docs/reports/PILOTO-1-HEALTHCHECKS.md) ingeriu 657 arquivos sem diagnóstico e reconstruiu quatro workflows de uma aplicação Django com o Qwen3-Coder local. Dos 65 itens que o modelo propôs, 26 viraram fatos depois da revisão semântica do agente que conduziu o piloto. Essa revisão não foi uma aprovação humana. O piloto também encontrou limitações reais de relação e de reutilização, registradas no relatório.
 
@@ -201,7 +201,7 @@ O Librarian evolui para uma **infraestrutura de evidências** usada por vários 
 
 ## Documentação
 
-[Studio](STUDIO.md) · [Workflow](WORKFLOW.md) · [Como testar](TESTME.md) · [Plano e medições](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md) · [Piloto Python 1](docs/reports/PILOTO-1-HEALTHCHECKS.md) · [Arquitetura para vários consumidores](docs/ARQUITETURA-EVIDENCIAS-MULTIAGENTE.md) · [Histórico](HISTORICO.md)
+[Studio](STUDIO.md) · [Workflow](WORKFLOW.md) · [Como testar](TESTME.md) · [Estado atual](ESTADO-ATUAL.md) · [Roadmap](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md) · [Plano e medições até 18/11/2026](docs/historico/PLANO-ate-18-11.md) · [Piloto Python 1](docs/reports/PILOTO-1-HEALTHCHECKS.md) · [Arquitetura para vários consumidores](docs/ARQUITETURA-EVIDENCIAS-MULTIAGENTE.md) · [Histórico](HISTORICO.md)
 
 ## Licença
 

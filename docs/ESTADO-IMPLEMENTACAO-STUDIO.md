@@ -1,6 +1,6 @@
 # Estado da implementação do novo Librarian Studio
 
-**Situação em 13/11/2026 (fechamento documental do F10):** as etapas **F0 a F10** da reformulação do frontend estão concluídas. F0 a F8 foram aprovadas pelo usuário nas sessões seguintes a cada uma; o **F9 (Projeto, Régua e Acervo)**, com o fechamento de 13/11 (seção 12.13), foi **aprovado no início da sessão do F10**. O **F10 (Revisão parcial e lotes)** foi implementado e verificado em 13/11/2026 (seção 13) e registrado como concluído neste fechamento documental, pedido pelo usuário; as decisões de implementação do F10 (13.7) não tiveram aprovação específica. Continuam **parciais**, por dependerem do servidor, a revisão (D3, D4, D7), a aprovação de outra versão de um comando, o Python com medição e parte do 9.10.1. **Nenhuma etapa foi commitada nem publicada.** **O F11 não foi iniciado**; segundo o usuário, ele é a próxima etapa autorizada, a começar em sessão própria, com prompt próprio (seção 19).
+**Situação em 13/11/2026 (fechamento documental do F10):** as etapas **F0 a F10** da reformulação do frontend estão concluídas. F0 a F8 foram aprovadas pelo usuário nas sessões seguintes a cada uma; o **F9 (Projeto, Régua e Acervo)**, com o fechamento de 13/11 (seção 12.13), foi **aprovado no início da sessão do F10**. O **F10 (Revisão parcial e lotes)** foi implementado e verificado em 13/11/2026 (seção 13) e registrado como concluído neste fechamento documental, pedido pelo usuário; as decisões de implementação do F10 (13.7) não tiveram aprovação específica. Continuam **parciais**, por dependerem do servidor, a revisão (D3, D4, D7), a aprovação de outra versão de um comando, o Python com medição e parte do 9.10.1. **Nenhuma etapa foi commitada nem publicada.** **[Estado corrigido em 18/11/2026: F0–F10 foram commitados e publicados em `f7d2131`.]** **O F11 não foi iniciado**; segundo o usuário, ele é a próxima etapa autorizada, a começar em sessão própria, com prompt próprio (seção 19).
 
 ## Marcas usadas aqui
 
@@ -48,7 +48,7 @@ Em caso de divergência sobre **comportamento esperado**, vale a especificação
 
 - **Branch:** `main`.
 - **HEAD:** `9bc92b0` ("docs: atualiza documentação da etapa 4"), o mesmo da origem: `git log origin/main..HEAD` vem vazio.
-- **Commit e push:** nenhum desde F0. **Todo o trabalho de F0 a F10 está só na árvore de trabalho local.** As alterações abaixo são o acumulado de todas as etapas, não só do F10.
+- **Commit e push:** nenhum desde F0. **[Estado corrigido em 18/11/2026: F0–F10 commitados e publicados em `f7d2131`.]** **Todo o trabalho de F0 a F10 está só na árvore de trabalho local.** As alterações abaixo são o acumulado de todas as etapas, não só do F10.
 - **Alterações locais** (`git status --short`), todas intencionais: 10 modificados e 12 não rastreados (no início do F10 eram 10 e 11; o F10 acrescentou `tela-revisao.js`).
 
 ```text
@@ -1626,7 +1626,7 @@ Em ordem cronológica (11/11/2026 até a linha 12; 12/11/2026 a partir da 13; na
 | 62 | Juntar a declaração durante investigação, entrada que recomeça ou conflito entre abas: conferido só por sonda; declaração ambígua sem caso real (0 em 30 grafos) | Auditoria do F9 (12.10, investigações 5 e 6) | **Resolvida no fechamento do F9**: investigação e conflito com bateria (9d); ambiguidade com caso sintético declarado (9c), porque não há caso real | F9 | Não (resolvida) |
 | 63 | A contraprova da `tela-projeto` contra o F8 só aborta no caso 1; a verificação 1 da `tela-centro` passou a aceitar dois resultados | Auditoria do F9 (12.10) | **Resolvida em parte no fechamento**: a verificação 1 da `tela-centro` voltou a ser exata (duas verificações). A contraprova da `tela-projeto` contra a página anterior está em 12.13.7 | F9 | Não |
 | 64 | 9.10.1 completo: escada com "provedor de teste" (não existe no Studio) e Comparação (F12) | Auditoria do F9 (12.10, investigação 3) | **Parcial, por decisão** (12.13.6): sem provedor de teste na interface; a escada continua abortada ou simulada nas baterias | F12, F13 | Não (decidida) |
-| 65 | O servidor compara a linha do fato com o início do trecho (`store.rs`, `target_of`): fatos ligados na sugestão e `reviewed_about` não acham funções Python decoradas | Fechamento do F9 (12.13.3) | Achado, não corrigido (backend fora do escopo) | Backend, sem etapa | Sim (se e quando corrigir) |
+| 65 | O servidor compara a linha do fato com o início do trecho (`store.rs`, `target_of`): fatos ligados na sugestão e `reviewed_about` não acham funções Python decoradas | Fechamento do F9 (12.13.3) | **Corrigida pelo P1 do Piloto 1b (`987d7a8`, 18/11/2026)**; antes: achado, não corrigido (backend fora do escopo) | Backend, sem etapa | Sim (se e quando corrigir) |
 | 66 | Juntar a declaração de um fato desatualizado é recusado com o motivo do servidor (antes dizia "não está no grafo", ou juntava se a linha coincidisse com o início) | Fechamento do F9 (12.13.3) | **Resolvida:** aprovada com o F9 (13.1) | F9 | Não (resolvida) |
 | 67 | O texto do compositor para critérios do rascunho difere do citado na 3.12 ("não salvos como padrão; ficam no rascunho") | Fechamento do F9 (12.13.5) | **Resolvida:** aceito com o F9 (13.1) | — | Não (resolvida) |
 | 68 | Na troca de run, a cidade da run anterior sai da cena antes de o grafo novo chegar | Fechamento do F9 (12.13.5) | **Resolvida:** aprovada com o F9 (13.1) | F9 | Não (resolvida) |
@@ -1758,4 +1758,4 @@ O hash do binário de release muda entre marcos, embora o código Rust seja o me
 - Continuam com as outras etapas: **F12** ("Comparar", Copiar diff na Comparação e a Comparação do 9.10.1), **F13** (pendências 9, 20, 24, 40, 50, 71, 72 e 75, e 58, 62 e 64 na aceitação) e o backend (pendência 39; a 54, se for por backend; a 65).
 - **À espera de decisão do usuário:** as decisões do F10 (70); o achado do servidor (65); o ponteiro da Revisão guardada (74); onde manter o Playwright das baterias (69).
 - **Pendências de classificação** (sem etapa na especificação): 43, 44, 45 e 47 (do F8).
-- **Commit:** nada de F0 a F10 foi commitado. A consolidação do commit depende de autorização do usuário.
+- **Commit:** nada de F0 a F10 foi commitado. **[Estado corrigido em 18/11/2026: commitados e publicados em `f7d2131`.]** A consolidação do commit depende de autorização do usuário.

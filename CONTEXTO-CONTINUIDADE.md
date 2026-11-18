@@ -1,6 +1,6 @@
 # Contexto de continuidade do Librarian
 
-**Ponto de retomada (18/11/2026): [seção 20](#20-encerramento-do-piloto-1-e-retomada-pelo-piloto-1b-18112026).** O Piloto 1 está encerrado e documentado. A próxima sessão começa pelo Piloto 1b.
+**O estado atual não fica mais aqui: comece por [ESTADO-ATUAL.md](ESTADO-ATUAL.md).** Desde 18/11/2026 este arquivo é um diário datado: cada seção descreve o estado na data dela e não é atualizada depois. Onde uma seção diverge do ESTADO-ATUAL, vale o ESTADO-ATUAL. A última seção é a [21](#21-piloto-1b-p1-g3-partes-b-c-e-e-e-q6-18112026).
 
 **Atualização de 18/11/2026, depois da publicação de `d949f91`: o Piloto Python 1 (Healthchecks) foi executado sem mudar código, e a direção para uma infraestrutura de evidências com vários consumidores foi registrada ([seção 19](#19-piloto-python-1-e-direção-multiagente-18112026): comece por ela).** A próxima prioridade é o Piloto 1b, ainda não iniciado.
 
@@ -8,7 +8,7 @@
 
 **Atualização de 11/11/2026: a Etapa 4 (Evidence Builder) está em andamento e não está encerrada, com todo o trabalho sem commit sobre `60d4d50` ([seção 17](#17-etapa-4-evidence-builder-07112026-a-11112026): comece por ela).** O texto abaixo, até a seção 16, descreve o estado de 06/11/2026.
 
-Conferido no repositório em 06/11/2026, com os Passos 1 e 2 da Etapa 3 da frente do Studio concluídos, o Passo 3 encerrado no backend ([seção 12](#12-passo-3-encerrado-e-sequência-da-etapa-3-06112026)), o Passo 4 concluído, nas entregas 4A e 4B ([seção 14](#14-4b-concluída-e-encerrada-06112026)), e os Passos 6 e 7 feitos, em `94089d3` (**[seção 16](#16-passos-6-e-7-feitos-06112026): comece por ela**). Documento de transferência entre sessões. Não substitui o plano: as tabelas completas estão em [PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md), da linha 1116 em diante, e o andamento desta frente em [Evidence Builder no Studio](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evidence-builder-no-studio-etapas-0-a-7-05112026).
+Conferido no repositório em 06/11/2026, com os Passos 1 e 2 da Etapa 3 da frente do Studio concluídos, o Passo 3 encerrado no backend ([seção 12](#12-passo-3-encerrado-e-sequência-da-etapa-3-06112026)), o Passo 4 concluído, nas entregas 4A e 4B ([seção 14](#14-4b-concluída-e-encerrada-06112026)), e os Passos 6 e 7 feitos, em `94089d3` (**[seção 16](#16-passos-6-e-7-feitos-06112026): comece por ela**). Documento de transferência entre sessões. Não substitui o plano: as tabelas completas estão no plano até 18/11, [docs/historico/PLANO-ate-18-11.md](docs/historico/PLANO-ate-18-11.md), da linha 1116 em diante, e o andamento desta frente em [Evidence Builder no Studio](docs/historico/PLANO-ate-18-11.md#evidence-builder-no-studio-etapas-0-a-7-05112026).
 
 **Como ler as marcas:** **[confirmado]** foi verificado agora no repositório ou nos dados gravados. **[registrado]** vem do plano ou da memória de trabalho, sem nova verificação. **[hipótese]** não foi demonstrado. **[não confirmado]** não pôde ser verificado.
 
@@ -22,15 +22,7 @@ Lema do projeto: *condensar fatos a partir de vapores de nuances*. Princípio de
 
 ### Onde cada parte está no código [confirmado]
 
-| Nome usado na conversa | Onde está de fato |
-|---|---|
-| Acervo e edition | `crates/librarian-ingest` |
-| Grafo usado pelo Studio | `crates/librarian-ingest/src/graph/` (contrato `v2`) |
-| Crate `librarian-graph-engine` | Dossiês e query preparada. O Studio **não depende dele diretamente**: o Cargo do Studio lista só `librarian-ingest` e `librarian-llm-engine`. **Depende dele de forma transitiva:** `prepare.rs`, em `librarian-ingest`, usa `prepare_query_formatted`, `LineFormat`, `PreparedQuery` e `Source` para montar a query. O grafo que o Studio desenha não vem desse crate. Sua referência (`WORKFLOW-V0.1.md`) é do fluxo formal de dossiês 0.1 |
-| Evidence Builder (seleção) | Não é um crate: `crates/librarian-ingest/src/envelope.rs` |
-| LLM Engine | `crates/librarian-llm-engine`, com o contrato em `CLAIMS.md` |
-| Escada e portão | `crates/librarian-studio/src/ladder.rs`, `main.rs` e `execution.rs` |
-| Interface | Um único `crates/librarian-studio/web/index.html` |
+A tabela que estava aqui ficou desatualizada em 17/11, quando o Evidence Builder virou o crate `librarian-evidence`. O mapa atual está em [ESTADO-ATUAL.md](ESTADO-ATUAL.md#onde-cada-parte-está); a tabela de 06/11 continua em `git show aae51d7:CONTEXTO-CONTINUIDADE.md`, linhas 25 a 33.
 
 Ao ler "Graph Engine" em pedidos e documentos, confirme se é o grafo de `librarian-ingest` ou o crate de dossiês.
 
@@ -323,7 +315,7 @@ A resolve o que foi perguntado, com custo alto. B não tem piora registrada e n�
 - Resultado inconclusivo não vira conclusão.
 - A troca entre medidas é decisão humana.
 
-**Frente do Studio:** as decisões das etapas 0 a 7 estão no plano, em [Evidence Builder no Studio](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evidence-builder-no-studio-etapas-0-a-7-05112026). Aquela seção prevalece sobre a seção 9 deste arquivo.
+**Frente do Studio:** as decisões das etapas 0 a 7 estão no plano, em [Evidence Builder no Studio](docs/historico/PLANO-ate-18-11.md#evidence-builder-no-studio-etapas-0-a-7-05112026). Aquela seção prevalece sobre a seção 9 deste arquivo.
 
 **Trabalho:** conversa e documentação em português; commits em português, sem acentos (o `99f69f3` tem acentos e prefixo porque o usuário escreveu assim a mensagem); documentação validada antes do commit; código aprovado segue até commit local; push só quando pedido.
 
@@ -384,7 +376,7 @@ A resolve o que foi perguntado, com custo alto. B não tem piora registrada e n�
 
 **Atualização de 06/11/2026: os Passos 1 e 2 da Etapa 3 estão concluídos, e o Passo 3 está encerrado no backend, pela opção A ([seção 12](#12-passo-3-encerrado-e-sequência-da-etapa-3-06112026)); as entregas 4A e 4B do Passo 4 estão concluídas e encerradas ([seção 13](#13-4a-concluída-e-encerrada-06112026) e [seção 14](#14-4b-concluída-e-encerrada-06112026)), e os Passos 6 e 7 foram feitos ([seção 16](#16-passos-6-e-7-feitos-06112026)).** Já estão implementados: cobertura por função; ordem por contagem observada, com o tempo como referência; sem `FREQUENT` nem alvo automático; `count_kind` por origem; `counted_no_passes` e `zero_evidence`; resolução do alvo antes da medição, por símbolo; e, no cartão, a origem da resposta decidida por `execution`. O contrato está no [STUDIO.md](STUDIO.md#medição-capacidade-não-é-cobertura), e as baterias de tela desta etapa estão em [crates/librarian-studio/tests/tela](crates/librarian-studio/tests/tela/README.md), junto com `etapa2c.js`: fora do `cargo test`, porque precisam de um ambiente e de dados que não estão no Git. O texto abaixo guarda o contexto de antes disso.
 
-**Etapas 0, 1 e 2 feitas; a Etapa 3, "Onde pesa", está em andamento, com os Passos 1 a 4 concluídos, os Passos 6 e 7 feitos, e o Passo 5 adiado para a etapa própria.** As decisões estão no plano, em [Evidence Builder no Studio](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evidence-builder-no-studio-etapas-0-a-7-05112026), e prevalecem sobre esta seção, que guarda o contexto anterior a elas. O contrato do registro e as limitações estão no [STUDIO.md](STUDIO.md#registro-da-seleção-originselection-formato-2). **A Etapa 4 está em andamento desde 07/11/2026: veja a [seção 17](#17-etapa-4-evidence-builder-07112026-a-11112026).**
+**Etapas 0, 1 e 2 feitas; a Etapa 3, "Onde pesa", está em andamento, com os Passos 1 a 4 concluídos, os Passos 6 e 7 feitos, e o Passo 5 adiado para a etapa própria.** As decisões estão no plano, em [Evidence Builder no Studio](docs/historico/PLANO-ate-18-11.md#evidence-builder-no-studio-etapas-0-a-7-05112026), e prevalecem sobre esta seção, que guarda o contexto anterior a elas. O contrato do registro e as limitações estão no [STUDIO.md](STUDIO.md#registro-da-seleção-originselection-formato-2). **A Etapa 4 está em andamento desde 07/11/2026: veja a [seção 17](#17-etapa-4-evidence-builder-07112026-a-11112026).**
 
 ### Por que esta evolução
 
@@ -467,12 +459,12 @@ As investigações da seção 7, e também: ordenar a seleção por tempo; troca
 
 ## 10. Instruções para a nova sessão
 
-1. **Leia este arquivo inteiro.** Depois, no plano, da linha 1116 em diante, quando precisar de tabelas completas.
+1. **Leia este arquivo inteiro.** Depois, no plano até 18/11 ([docs/historico/PLANO-ate-18-11.md](docs/historico/PLANO-ate-18-11.md)), da linha 1116 em diante, quando precisar de tabelas completas.
 2. **Confirme o estado, sem confiar neste texto:**
    - `git status -sb`
    - `git log --oneline origin/main..HEAD`, que lista o que ainda não foi publicado. Com a publicação da [seção 15](#15-publicação-da-4a-da-4b-e-da-apresentação-06112026), ele vem vazio, salvo trabalho posterior, como o da [seção 16](#16-passos-6-e-7-feitos-06112026).
    - Antes de qualquer limpeza de temporários, verifique os dados: `sha256sum -c MANIFESTO.sha256 --quiet` em `.studio/arquivo-copias/rodadas-20261104` e a existência de `root` e `rootpy` no scratchpad. Não remova, sobrescreva nem reorganize nada sem aprovação.
-3. **Leia a seção [Evidence Builder no Studio](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evidence-builder-no-studio-etapas-0-a-7-05112026) do plano** e o [contrato no STUDIO.md](STUDIO.md#registro-da-seleção-originselection-formato-2). Antes de usar as baterias de tela, confira se o scratchpad citado na seção 3 ainda existe. Se não existir, restaure pelo `LEIA-ME.md` do arquivo de preservação, sabendo que esse caminho ainda não foi testado.
+3. **Leia a seção [Evidence Builder no Studio](docs/historico/PLANO-ate-18-11.md#evidence-builder-no-studio-etapas-0-a-7-05112026) do plano** e o [contrato no STUDIO.md](STUDIO.md#registro-da-seleção-originselection-formato-2). Antes de usar as baterias de tela, confira se o scratchpad citado na seção 3 ainda existe. Se não existir, restaure pelo `LEIA-ME.md` do arquivo de preservação, sabendo que esse caminho ainda não foi testado.
 4. **A Etapa 3 segue como na [seção 16](#16-passos-6-e-7-feitos-06112026), e a Etapa 4 está em andamento, sem commit ([seção 17](#17-etapa-4-evidence-builder-07112026-a-11112026)). Nada além do que a seção 17 lista como próximo está autorizado. Não inicie a evolução da cidade, o resumo "N de M", o fallback único nem a auditoria funcional do frontend sem autorização do usuário.** Apresente testes, diff e resultados antes do commit de cada etapa, e aguarde.
 5. **Não faça push** sem pedido.
 6. **Não retome investigações suspensas** sem evidência nova e decisão do usuário. Experimento novo exige hipótese e critérios fixados antes, e o usuário costuma decidir etapa por etapa.
@@ -541,14 +533,14 @@ O histórico local foi reescrito antes da primeira publicação, só em document
 
 **Para reconstruir o contexto na próxima sessão:**
 
-1. Leia este arquivo, a [seção do plano](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evidence-builder-no-studio-etapas-0-a-7-05112026) e a memória de trabalho, que guarda as preferências de commit do usuário.
+1. Leia este arquivo, a [seção do plano](docs/historico/PLANO-ate-18-11.md#evidence-builder-no-studio-etapas-0-a-7-05112026) e a memória de trabalho, que guarda as preferências de commit do usuário.
 2. Rode `git fetch origin`, `git status -sb` e `git log --oneline origin/main..HEAD`. Com a publicação feita, a lista vem vazia e `git rev-parse HEAD origin/main` dá o mesmo hash, salvo trabalho posterior. Sem ela, a lista traz estes 14 commits e o que traz este registro.
 3. Nunca use force push, e não publique sem pedido do usuário.
 4. O que está autorizado depois deste registro está na seção 12.
 
 ## 12. Passo 3 encerrado e sequência da Etapa 3 (06/11/2026)
 
-**Decisão formal do usuário: opção A. O Passo 3 está encerrado como entregue, concluído no backend, e não será ampliado com a apresentação visual dos estados.** A decisão não mudou código. O registro completo está no [plano](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#passo-3-encerrado-pela-opção-a-06112026).
+**Decisão formal do usuário: opção A. O Passo 3 está encerrado como entregue, concluído no backend, e não será ampliado com a apresentação visual dos estados.** A decisão não mudou código. O registro completo está no [plano](docs/historico/PLANO-ate-18-11.md#passo-3-encerrado-pela-opção-a-06112026).
 
 **Por que não a opção B:** ela levaria o estado por função à tela da sugestão. Isso misturaria a responsabilidade do backend, que fornece os estados, com a da interface, que os apresenta, e essa apresentação é do Passo 4. A falta na tela é uma pendência do Passo 4, não um motivo para reabrir o Passo 3. A entrega 4B do Passo 4 planeja esse painel para o futuro: ela não reabre o Passo 3 nem implementa a opção B retroativamente.
 
@@ -575,14 +567,14 @@ As limitações da seção 11 continuam valendo.
 
 ### Sequência e autorizações
 
-A sequência vem da tabela do §11 do diagnóstico da Etapa 3, aprovado na sessão `661d7681`, cuja transcrição fica fora do repositório. O plano guarda a [tabela completa](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#sequência-dos-passos). Ela é a sequência aprovada, e **não autoriza a implementação de nenhum passo**.
+A sequência vem da tabela do §11 do diagnóstico da Etapa 3, aprovado na sessão `661d7681`, cuja transcrição fica fora do repositório. O plano guarda a [tabela completa](docs/historico/PLANO-ate-18-11.md#sequência-dos-passos). Ela é a sequência aprovada, e **não autoriza a implementação de nenhum passo**.
 
 | Trabalho | Estado | O que falta |
 |---|---|---|
-| Passo 4: 4A, estados na tela Onde pesa, e 4B, estados no painel da sugestão | 4A e 4B concluídas e encerradas ([escopo](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#escopo-registrado-do-passo-4), [resultado da 4A](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#resultado-da-4a-06112026) e [resultado da 4B](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#resultado-da-4b-06112026)) | Nada; as pendências estão na [seção 14](#14-4b-concluída-e-encerrada-06112026) |
+| Passo 4: 4A, estados na tela Onde pesa, e 4B, estados no painel da sugestão | 4A e 4B concluídas e encerradas ([escopo](docs/historico/PLANO-ate-18-11.md#escopo-registrado-do-passo-4), [resultado da 4A](docs/historico/PLANO-ate-18-11.md#resultado-da-4a-06112026) e [resultado da 4B](docs/historico/PLANO-ate-18-11.md#resultado-da-4b-06112026)) | Nada; as pendências estão na [seção 14](#14-4b-concluída-e-encerrada-06112026) |
 | Resumo "N de M" | Fora do escopo definido do Passo 4 | Decisão específica; não está autorizado |
 | Fallback único da tabela do §11 | Fora de 4A e de 4B; pendência sem etapa atribuída | Não implementar nem atribuir a outra etapa |
-| Passo 5: cidade e fluxograma | Adiado para uma [etapa própria de evolução visual](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evolução-visual-cidade-e-fluxograma-planejada-em-06112026) | Autorização e os pontos em aberto listados lá |
+| Passo 5: cidade e fluxograma | Adiado para uma [etapa própria de evolução visual](docs/historico/PLANO-ate-18-11.md#evolução-visual-cidade-e-fluxograma-planejada-em-06112026) | Autorização e os pontos em aberto listados lá |
 | Passo 6: conversa e Python | Feito, em `94089d3` ([seção 16](#16-passos-6-e-7-feitos-06112026)) | Nada |
 
 **Encerramento e autorização de 06/11/2026:** a revisão documental do Passo 3 está encerrada, e o Passo 4 da Etapa 3 está autorizado para execução numa sessão posterior, com as entregas 4A e 4B separadas. O nome oficial é Passo 4 da Etapa 3, para não confundir com a Etapa 4 (Evidence Builder) do plano. **A 4A foi revisada e encerrada; a 4B continua autorizada e é a próxima atividade.** A autorização não vale para o Passo 6, a evolução da cidade, o mapa, o fluxograma, o resumo "N de M", a instrumentação, a arquitetura de evidências, uma Fase 5 nem refatorações fora do escopo. A evolução da cidade continua sendo uma iniciativa futura, sem etapa atribuída. **Atualização: a 4B também foi encerrada ([seção 14](#14-4b-concluída-e-encerrada-06112026)), e o Passo 4 está concluído.** Esta autorização não alcança nada além dele.
@@ -602,7 +594,7 @@ A sequência vem da tabela do §11 do diagnóstico da Etapa 3, aprovado na sess�
 
 **Registro do encerramento da 4A. Depois dele, a 4B também foi encerrada: o estado atual está na [seção 14](#14-4b-concluída-e-encerrada-06112026), e o que aqui fala da 4B como futura é histórico.**
 
-**A entrega 4A do Passo 4 da Etapa 3 está concluída, revisada e encerrada. A próxima atividade é a 4B, autorizada e não iniciada.** O registro completo está no [plano](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#resultado-da-4a-06112026).
+**A entrega 4A do Passo 4 da Etapa 3 está concluída, revisada e encerrada. A próxima atividade é a 4B, autorizada e não iniciada.** O registro completo está no [plano](docs/historico/PLANO-ate-18-11.md#resultado-da-4a-06112026).
 
 **Git:** commit `1908658`, sobre `f6f3958`. Era local no encerramento e foi publicado depois: veja a [seção 15](#15-publicação-da-4a-da-4b-e-da-apresentação-06112026). Mensagem: `feat(studio): conclui visualizacao de cobertura da 4A`.
 
@@ -613,7 +605,7 @@ Só `web/index.html` mudou. Backend, API, contrato de cobertura, instrumentaçã
 - **Ranking:** as mesmas linhas, com o título "Top 20 · Maior contagem observada, com o tempo instrumentado como referência" e uma nota dizendo que não são todas as funções com passagens observadas.
 - **Duas listas recolhidas, sem quantidades:** "Contadas sem passagens observadas" (`counted_no_passes`, com o motivo de `zero_evidence`) e "Sem cobertura" (`no_coverage`, com o motivo de `exclusion_reason`). As duas vêm de `coverage.functions`, em `/api/hotspots`, e mantêm o estado aberto ou fechado quando a pessoa escolhe uma função em Separar.
 - **Correção semântica depois da revisão:** a nota de `counted_no_passes` falava em contador zerado, o que não explica `no_line`. O texto final é "A medição não registrou passagens por estas funções. Isso não prova que elas não executaram: ausência de contagem observada não é prova de ausência de execução." Em inglês: "The measurement recorded no passes through these functions. This does not prove they did not execute: absence of observed counts is not proof of absence of execution."
-- **"236 funções contadas pelo Librarian" não mudou:** 236 é quem recebeu a instrução, e `coverage.counted` (244) soma quem imprimiu contagem própria sem recebê-la. Veja o [plano](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#resultado-da-4a-06112026).
+- **"236 funções contadas pelo Librarian" não mudou:** 236 é quem recebeu a instrução, e `coverage.counted` (244) soma quem imprimiu contagem própria sem recebê-la. Veja o [plano](docs/historico/PLANO-ate-18-11.md#resultado-da-4a-06112026).
 
 ### Testes
 
@@ -629,11 +621,11 @@ Só `web/index.html` mudou. Backend, API, contrato de cobertura, instrumentaçã
 
 ### Limitações e pendências
 
-As limitações estão no [plano](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#resultado-da-4a-06112026). Seguem pendentes, cada uma com decisão ou autorização própria: o resumo "N de M", o fallback único, o filtro de 5%, a evolução da cidade e do fluxograma, e o Passo 6. A limitação de `calls: null` em `origin.selection` continua sem passo atribuído.
+As limitações estão no [plano](docs/historico/PLANO-ate-18-11.md#resultado-da-4a-06112026). Seguem pendentes, cada uma com decisão ou autorização própria: o resumo "N de M", o fallback único, o filtro de 5%, a evolução da cidade e do fluxograma, e o Passo 6. A limitação de `calls: null` em `origin.selection` continua sem passo atribuído.
 
 ### Como retomar
 
-1. Faça a conferência da [seção 10](#10-instruções-para-a-nova-sessão) e leia, no plano, o [escopo do Passo 4](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#escopo-registrado-do-passo-4) e o [resultado da 4A](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#resultado-da-4a-06112026).
+1. Faça a conferência da [seção 10](#10-instruções-para-a-nova-sessão) e leia, no plano, o [escopo do Passo 4](docs/historico/PLANO-ate-18-11.md#escopo-registrado-do-passo-4) e o [resultado da 4A](docs/historico/PLANO-ate-18-11.md#resultado-da-4a-06112026).
 2. A 4B é o painel da sugestão e usa o `coverage_state` que cada item de `/api/envelope/suggest` já traz (`instrument.rs:467`). Essa rota não traz `coverage.functions` (`instrument.rs:474`), e o painel não deve depender de `/api/hotspots`. O painel está em `index.html`: procure `envelope.out.`.
 3. **Cuidado para a 4B:** sem medição, o item vem com `no_coverage` e motivo nulo. O texto não pode dizer que a medição não cobriu a função quando não houve medição.
 4. **Baterias de tela:** veja o [README](crates/librarian-studio/tests/tela/README.md), rodam em mais de 10 minutos e gravam na raiz, por isso use cópias. Os dados são temporários:
@@ -647,7 +639,7 @@ As limitações estão no [plano](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#resulta
 
 ## 14. 4B concluída e encerrada (06/11/2026)
 
-**A entrega 4B do Passo 4 da Etapa 3 está concluída, revisada e encerrada. Com ela, o Passo 4 está concluído.** O registro completo está no [plano](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#resultado-da-4b-06112026). **Nenhuma atividade seguinte está autorizada.** Na [sequência aprovada](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#sequência-dos-passos), o próximo é o Passo 6, não iniciado, que aguarda revisão e autorização; o Passo 5 segue adiado para a etapa própria de evolução visual, e o Passo 7 não tinha sido iniciado. **Atualização: os Passos 6 e 7 foram feitos depois, na [seção 16](#16-passos-6-e-7-feitos-06112026).**
+**A entrega 4B do Passo 4 da Etapa 3 está concluída, revisada e encerrada. Com ela, o Passo 4 está concluído.** O registro completo está no [plano](docs/historico/PLANO-ate-18-11.md#resultado-da-4b-06112026). **Nenhuma atividade seguinte está autorizada.** Na [sequência aprovada](docs/historico/PLANO-ate-18-11.md#sequência-dos-passos), o próximo é o Passo 6, não iniciado, que aguarda revisão e autorização; o Passo 5 segue adiado para a etapa própria de evolução visual, e o Passo 7 não tinha sido iniciado. **Atualização: os Passos 6 e 7 foram feitos depois, na [seção 16](#16-passos-6-e-7-feitos-06112026).**
 
 **Git:** commit `3b64f66`, sobre `1908658`. Era local no encerramento e foi publicado depois: veja a [seção 15](#15-publicação-da-4a-da-4b-e-da-apresentação-06112026). Mensagem: `feat(studio): conclui estados de cobertura no painel da sugestao`.
 
@@ -707,13 +699,13 @@ Um commit posterior traz esta revisão documental, cujo hash não cabe aqui: con
 
 ## 16. Passos 6 e 7 feitos (06/11/2026)
 
-**Comece por aqui. Os Passos 6 e 7 da Etapa 3 estão feitos e verificados: o código e os testes estão em `94089d3`, sobre `311f5dd`, e estes documentos, no commit seguinte, cujo hash não cabe aqui.** Para saber o que já foi publicado, rode `git log --oneline origin/main..HEAD`, sem confiar neste texto. O registro completo está no [plano](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#resultado-dos-passos-6-e-7-06112026).
+**Comece por aqui. Os Passos 6 e 7 da Etapa 3 estão feitos e verificados: o código e os testes estão em `94089d3`, sobre `311f5dd`, e estes documentos, no commit seguinte, cujo hash não cabe aqui.** Para saber o que já foi publicado, rode `git log --oneline origin/main..HEAD`, sem confiar neste texto. O registro completo está no [plano](docs/historico/PLANO-ate-18-11.md#resultado-dos-passos-6-e-7-06112026).
 
 ### Como retomar
 
 1. `git status -sb`: não deve mostrar arquivos sem commit. Se houver, pare e pergunte.
 2. **Aguarde a instrução do usuário.** Não há etapa técnica autorizada.
-3. A escolha do que vem é do usuário: [Etapa 4, Evidence Builder](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#etapa-4-evidence-builder), ou a [evolução visual](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evolução-visual-cidade-e-fluxograma-planejada-em-06112026). **Nenhuma das duas está autorizada.**
+3. A escolha do que vem é do usuário: [Etapa 4, Evidence Builder](docs/historico/PLANO-ate-18-11.md#etapa-4-evidence-builder), ou a [evolução visual](docs/historico/PLANO-ate-18-11.md#evolução-visual-cidade-e-fluxograma-planejada-em-06112026). **Nenhuma das duas está autorizada.**
 
 ### O que mudou
 
@@ -738,7 +730,7 @@ Um commit posterior traz esta revisão documental, cujo hash não cabe aqui: con
 
 ### Auditoria dos Passos 6 e 7
 
-Os testes acima são da validação final, em build novo, depois da correção de R1, com as baterias em sequência. O registro completo está no [plano](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#auditoria-dos-passos-6-e-7-06112026).
+Os testes acima são da validação final, em build novo, depois da correção de R1, com as baterias em sequência. O registro completo está no [plano](docs/historico/PLANO-ate-18-11.md#auditoria-dos-passos-6-e-7-06112026).
 
 | Ressalva | Tratamento |
 |---|---|
@@ -762,7 +754,7 @@ Raízes e dados estão descritos no [README](crates/librarian-studio/tests/tela/
 
 ### O que continua pendente
 
-As limitações aceitas estão no [resultado](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#resultado-dos-passos-6-e-7-06112026).
+As limitações aceitas estão no [resultado](docs/historico/PLANO-ate-18-11.md#resultado-dos-passos-6-e-7-06112026).
 
 | Pendência | Situação |
 |---|---|
@@ -775,7 +767,7 @@ As limitações aceitas estão no [resultado](PLANO-MULTILINGUAGEM-E-VISUALIZADO
 
 ## 17. Etapa 4: Evidence Builder (07/11/2026 a 11/11/2026)
 
-**Comece por aqui. A Etapa 4 está em andamento e não está encerrada. Todo o trabalho dela está na árvore de trabalho, sem commit, sobre `60d4d50`, que é também `origin/main`.** O contrato em vigor está no [STUDIO.md](STUDIO.md#pacote-de-evidências-etapa-4); o andamento passo a passo, as decisões e a errata do Passo 14, no [plano](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#andamento-da-etapa-4-07112026-a-11112026).
+**[Estado corrigido em 18/11/2026: a Etapa 4 está encerrada e publicada, em `09e7e53` e `9bc92b0`. O texto desta seção descreve 11/11.]** **Comece por aqui. A Etapa 4 está em andamento e não está encerrada. Todo o trabalho dela está na árvore de trabalho, sem commit, sobre `60d4d50`, que é também `origin/main`.** O contrato em vigor está no [STUDIO.md](STUDIO.md#pacote-de-evidências-etapa-4); o andamento passo a passo, as decisões e a errata do Passo 14, no [plano](docs/historico/PLANO-ate-18-11.md#andamento-da-etapa-4-07112026-a-11112026).
 
 ### Como retomar
 
@@ -895,7 +887,7 @@ Nenhuma bateria foi dada como aprovada por remoção: os testes de rodada não f
 
 ### Onde estão os dados
 
-- `.studio/` deste repositório só tem `projects/renderer-9b78f3a9` com a run `20261118-020654`. As raízes de 04/11 e `.studio/arquivo-copias` citadas nas seções anteriores **não estão mais nesta máquina**.
+- `.studio/` deste repositório só tem `projects/renderer-9b78f3a9` com a run `20261118-020654`. **[Estado corrigido em 18/11/2026: depois desta seção, o piloto acrescentou `projects/healthchecks-25597e41`.]** As raízes de 04/11 e `.studio/arquivo-copias` citadas nas seções anteriores **não estão mais nesta máquina**.
 - Cópias de segurança feitas antes de cada mudança: `scratchpad\backup-e1e5` (sessão `a7716d82`, 17/11) e `scratchpad\backup-inicio-18-11` (sessão `02fdc43f`, 18/11: patch da árvore, patch do índice, os não rastreados e as fontes do Studio).
 
 ## 19. Piloto Python 1 e direção multiagente (18/11/2026)
@@ -906,7 +898,7 @@ Nenhuma bateria foi dada como aprovada por remoção: os testes de rodada não f
 
 - **Resultado completo do piloto:** [docs/reports/PILOTO-1-HEALTHCHECKS.md](docs/reports/PILOTO-1-HEALTHCHECKS.md). Traz os números, os quatro workflows com a evidência de cada elo, as 14 perguntas, o acervo, a reutilização e as limitações G1 a G8, P1 a P4 e as do Ingest, da verificação e do LLM.
 - **Direção arquitetural:** [docs/ARQUITETURA-EVIDENCIAS-MULTIAGENTE.md](docs/ARQUITETURA-EVIDENCIAS-MULTIAGENTE.md). Traz os papéis, os pacotes pela necessidade do consumidor, o ciclo de complementação, o contrato público, os orquestradores externos, os extratores, o papel do Studio, a rastreabilidade e os 14 princípios.
-- **Roadmap das fases 1 a 8 e Piloto 1b com critérios de aceite:** [plano, última seção](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#piloto-python-1-e-direção-multiagente-18112026).
+- **Roadmap das fases 1 a 8 e Piloto 1b com critérios de aceite:** [plano, última seção](docs/historico/PLANO-ate-18-11.md#piloto-python-1-e-direção-multiagente-18112026).
 
 ### O essencial [confirmado]
 
@@ -944,7 +936,7 @@ Nenhuma bateria foi dada como aprovada por remoção: os testes de rodada não f
 - **Piloto 1 (Healthchecks):** concluído.
   - Relatório permanente: [docs/reports/PILOTO-1-HEALTHCHECKS.md](docs/reports/PILOTO-1-HEALTHCHECKS.md).
   - Direção arquitetural: [docs/ARQUITETURA-EVIDENCIAS-MULTIAGENTE.md](docs/ARQUITETURA-EVIDENCIAS-MULTIAGENTE.md).
-- **Próxima prioridade:** Piloto 1b (Fase 1 do plano). **Nenhuma parte dele foi iniciada.**
+- **Próxima prioridade:** Piloto 1b (Fase 1 do plano). **Nenhuma parte dele foi iniciada.** **[Estado corrigido: P1 e G3 foram commitados depois desta seção, e a Q6 foi refeita; veja a seção 21.]**
 - **Nenhum agente nem orquestrador implementado.**
 
 ### Arquitetura aprovada [registrado]
@@ -956,7 +948,7 @@ Nenhuma bateria foi dada como aprovada por remoção: os testes de rodada não f
 ### Ler antes de começar
 
 1. Este documento: as seções 19 e 20.
-2. O [plano, seção "Piloto Python 1 e direção multiagente"](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#piloto-python-1-e-direção-multiagente-18112026), com o roadmap e os critérios de aceite do 1b.
+2. O [plano, seção "Piloto Python 1 e direção multiagente"](docs/historico/PLANO-ate-18-11.md#piloto-python-1-e-direção-multiagente-18112026), com o roadmap e os critérios de aceite do 1b.
 3. [docs/reports/PILOTO-1-HEALTHCHECKS.md](docs/reports/PILOTO-1-HEALTHCHECKS.md), sobretudo a seção 6 (limitações) e a reutilização em Q6.
 4. [docs/ARQUITETURA-EVIDENCIAS-MULTIAGENTE.md](docs/ARQUITETURA-EVIDENCIAS-MULTIAGENTE.md).
 5. A documentação dos componentes:
@@ -1002,3 +994,15 @@ Fazer nesta ordem.
 ### Primeira atividade técnica recomendada
 
 Escrever o teste de regressão do P1 **antes** da correção: uma função Python decorada, com fato promovido, que hoje não é recuperada. O teste deve falhar com o código atual, pela diferença entre `chunk.start_line` e a linha do `def`. Só então mudar `target_of`, e rodar a suíte inteira com o corpus Rust.
+
+## 21. Piloto 1b: P1, G3, Partes B, C e E, e Q6 (18/11/2026)
+
+**Estado nesta data.** Os relatórios completos estão em [docs/reports/piloto-1b/](docs/reports/piloto-1b/), com os dados em `dados/`. O estado vigente fica no [ESTADO-ATUAL.md](ESTADO-ATUAL.md).
+
+- **P1 (`987d7a8`, `fix(studio)`):** `target_of` usa a linha da declaração, e não o início do trecho com os decoradores. Fatos de funções Python decoradas voltam com `with_facts` e na sugestão de envelope: `ping` traz F2, F4, F5 e F6; `ping_by_slug` traz F1, F3 e F7. Com isso, a pendência 65 do EST está resolvida. Relatório: [01-g3.md](docs/reports/piloto-1b/01-g3.md) e [02](docs/reports/piloto-1b/02-fechamento-g3-e-diagnostico.md), Parte A.
+- **G3 (`aae51d7`, `feat(graph)`):** `/api/calls` devolve `unresolved` com três motivos (`above_candidate_limit`, `no_candidate_in_project`, `node_limit`), e a vista "o que chama?" tem a seção "Chamadas não apresentadas". Decisão A: chamada sem nome (`handlers[0]`) também é `no_candidate_in_project` (DEC-28 no [DECISOES.md](DECISOES.md)). Suíte: **456 aprovados, 0 falhas, 2 ignorados** (eram 446 na seção 18). O `node_limit` só foi visto num projeto sintético. Relatório: [01-g3.md](docs/reports/piloto-1b/01-g3.md).
+- **Parte B (tipos):** há duas regras de resolução que não concordam. "O que chama?" não usa tipo; o inventário usa `receiver_type`, só em Rust. Python não liga variável a tipo nos níveis N1–N8. Relatório: [02](docs/reports/piloto-1b/02-fechamento-g3-e-diagnostico.md), Parte B.
+- **Parte C (precisão, sem correção):** Healthchecks, 4 de 8 links únicos da amostra errados (método ligado a função solta); dos 442 links únicos de método, 197 vão para função solta. Ray tracer, nenhum erro. Relatório: [02](docs/reports/piloto-1b/02-fechamento-g3-e-diagnostico.md), Parte C.
+- **Parte D (inventário dos MDs) e Parte E (acervo × grafo):** 3 fatos afirmam chamadas que o grafo liga errado (F1, F14, F17) e 2 que ele liga de forma ambígua (F6, F7). `ping_by_slug → ping` é homônimo de 2, não [grafo]. Relatório: [03-inventario-e-auditoria.md](docs/reports/piloto-1b/03-inventario-e-auditoria.md).
+- **Q6 (run `20261118-205150`), avaliada pelo usuário em 18/11:** entrega sim (13 fatos, +3,9% de tokens); reutilização não (F20, F22 e F26 entregues e repetidos; só a repetição do F6 sumiu); resposta reprovada na C3 (`location_operation_includes_declaration`); C2 semanticamente incorreta com citação válida; nenhuma LACUNA sobre o elo pelo banco. Relatório: [04-q6.md](docs/reports/piloto-1b/04-q6.md).
+- **Depois:** consolidação documental (passo 1.2): [ESTADO-ATUAL.md](ESTADO-ATUAL.md), [DECISOES.md](DECISOES.md), plano reduzido ao roadmap e [docs/historico/](docs/historico/).

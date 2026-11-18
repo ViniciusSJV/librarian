@@ -71,7 +71,7 @@ retorno bruto, texto e estado.
 
 - **Linhas numeradas.** Com `prepare.numbered_lines`, cada linha do contexto leva a linha
   original do arquivo. Registro de uma execução da L1, em prosa
-  ([plano](../../PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#l1--resultado-20102026)): a resposta
+  ([plano](../../docs/historico/PLANO-ate-18-11.md#l1--resultado-20102026)): a resposta
   da câmera passou a citar a linha 86 de `src/camera.rs`, onde antes citava "linha 11", a
   posição dentro do trecho; ela não nomeou a função e copiou o objeto `{number, text}`
   como evidência, e a avaliação semântica não foi feita. Uma execução não mede tendência.
@@ -88,6 +88,6 @@ retorno bruto, texto e estado.
   `send_ollama` continua passando `None`.
 
 A fase L (limites do LLM Engine) está registrada no
-[plano](../../PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#fase-l--limites-do-llm-engine). Origem do crate,
+[plano](../../docs/historico/PLANO-ate-18-11.md#fase-l--limites-do-llm-engine). Origem do crate,
 validação da extração (27/09/2026) e experimentos anteriores estão no
 [HISTORICO](../../HISTORICO.md).

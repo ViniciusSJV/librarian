@@ -13,7 +13,7 @@
 
 Onde esta especificação diverge desses pontos, vale a simplificação.
 
-**Documentos relacionados:** o funcionamento atual está no [STUDIO.md](../STUDIO.md); os detalhes técnicos do servidor, no [README do Studio](../crates/librarian-studio/README.md); as etapas do Evidence Builder (incluindo as Etapas 5, 6 e 7 citadas aqui), no [plano](../PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evidence-builder-no-studio-etapas-0-a-7-05112026).
+**Documentos relacionados:** o funcionamento atual está no [STUDIO.md](../STUDIO.md); os detalhes técnicos do servidor, no [README do Studio](../crates/librarian-studio/README.md); as etapas do Evidence Builder (incluindo as Etapas 5, 6 e 7 citadas aqui), no [plano](historico/PLANO-ate-18-11.md#evidence-builder-no-studio-etapas-0-a-7-05112026).
 
 ## Marcas
 
