@@ -499,6 +499,8 @@
             <label class="check"><input id="numbered" type="checkbox"><span><span data-i18n="settings.numbered"></span><button type="button" class="help" data-help-key="help.numbered">?</button></span></label>
             <label class="check"><input id="excludeTests" type="checkbox"><span><span data-i18n="settings.excludeTests"></span><button type="button" class="help" data-help-key="help.excludeTests">?</button></span></label>
             <label class="check"><input id="acceptDiag" type="checkbox"><span><span data-i18n="settings.acceptDiag"></span><button type="button" class="help" data-help-key="help.acceptDiag">?</button></span></label>
+            <!-- D4: the consumption format and the language are the consumer's; the objective (Localizar or Melhorar) is the mode, in the composer. -->
+            <label class="field"><span><span data-i18n="settings.language"></span><button type="button" class="help" data-help-key="help.language">?</button></span><select id="language"><option value="pt" data-i18n="language.pt"></option><option value="en" data-i18n="language.en"></option></select></label>
             <label class="field" data-i18n-title="settings.format.title"><span><span data-i18n="settings.format"></span><button type="button" class="help" data-help-key="help.format">?</button></span><select id="answerFormat"><option value="claims" data-i18n="settings.format.claims"></option><option value="prose" data-i18n="settings.format.prose"></option></select></label>
             <label class="check"><input id="allowInference" type="checkbox"><span><span data-i18n="settings.inference"></span><button type="button" class="help" data-help-key="help.inference">?</button></span></label>
             <!-- Hypothesis and patch are the policy of the mode, changed only by its own operation (spec 3.13). -->
@@ -744,15 +746,13 @@
         <div class="row"><button type="button" id="criteriaSave" class="primary" data-i18n="criteria.save"></button><button type="button" id="criteriaUndo" data-i18n="criteria.undo"></button><button type="button" id="criteriaCancel" data-i18n="common.cancel"></button></div>
       </div>
       <textarea id="question" rows="3" data-i18n-placeholder="composer.placeholder" disabled></textarea>
+      <!-- Who answers (a profile of the model library): read by the Package view when it sends. -->
       <div class="picker">
         <select id="provider" data-i18n-title="composer.llm"></select>
         <span id="claudeModelRow"><select id="claudeModel" data-i18n-title="composer.claudeModel"></select></span>
-        <span id="modelfileRow" class="row" style="flex-wrap: nowrap; gap: 4px"><select id="modelfile" title="Modelfile"></select><button id="editModelfile" data-i18n="composer.edit"></button></span>
         <button type="button" class="help" id="llmHelp" data-help-key="help.llm">?</button>
-        <span id="skillsRow" class="row" style="gap: 6px" hidden></span>
       </div>
       <span id="modelfileSummary" class="muted mono"></span>
-      <label class="check" id="ladderRow" hidden><input type="checkbox" id="ladderOn"> <span id="ladderText"></span><button type="button" class="help" data-help-key="help.ladder">?</button></label>
       <!-- The expected path of the action button (spec 3.11). -->
       <p id="route" class="muted" aria-live="polite"></p>
       <div class="row" id="askRow">
@@ -775,13 +775,13 @@
   <ul id="browseList" class="list" style="max-height: 55vh"></ul>
 </dialog>
 
+<!-- The model library, read only: the profiles, the default of each action and each Modelfile as a send renders it. -->
 <dialog id="modelfileDialog">
-  <div class="row" style="justify-content: space-between"><h2 style="margin: 0">Modelfiles</h2><button data-close data-i18n="common.close"></button></div>
-  <div class="row" style="margin-top: 10px; flex-wrap: nowrap"><select id="mfSelect"></select><button id="mfNew" data-i18n="mf.new"></button></div>
-  <label class="field"><span data-i18n="mf.name"></span><input id="mfName" type="text" spellcheck="false"></label>
-  <label class="field"><span data-i18n="mf.content"></span><textarea id="mfContent" class="code" rows="18" spellcheck="false"></textarea></label>
+  <div class="row" style="justify-content: space-between"><h2 style="margin: 0" data-i18n="area.modelfiles"></h2><button data-close data-i18n="common.close"></button></div>
+  <div id="mfLibrary" class="muted" style="font-size: 12px"></div>
+  <div class="row" style="margin-top: 10px; flex-wrap: nowrap"><select id="mfSelect"></select></div>
+  <label class="field"><span data-i18n="mf.content"></span><textarea id="mfContent" class="code" rows="18" spellcheck="false" readonly></textarea></label>
   <p class="muted"><span data-i18n="mf.info1"></span> <code id="mfModel"></code> <span data-i18n="mf.info2"></span></p>
-  <div class="row"><button id="mfSave" class="primary" data-i18n="mf.save"></button><span id="mfNote" class="muted"></span></div>
 </dialog>
 
 <!-- In-page replacement for prompt() and confirm(): see modal() in the script. -->
@@ -904,8 +904,7 @@ const STRINGS = {
   'help.lexicon': ['O dicionário de sinônimos do bibliotecário. Você pergunta por usuário, mas na estante o livro se chama user: o léxico faz essa ponte. Sem ele, uma pergunta em português não encontra nomes em inglês. stop_words são palavras que ele ignora, como de e o.',
     'The librarian\'s synonym dictionary. You ask about usuário, but on the shelf the book is called user: the lexicon builds that bridge. Without it, a question in Portuguese does not find names in English. stop_words are words the librarian ignores, such as the and of.'],
   'lexicon.suggest': ['Sugerir léxico com o LLM', 'Suggest lexicon with the LLM'],
-  'lexicon.suggest.info': ['Os termos vêm do código da edition; o LLM escolhido aqui só propõe as palavras da pergunta (no Ollama, com o Modelfile <code>lexico</code>, a menos que você escolha outro <code>lexico-…</code>). As palavras vêm em português, ou em inglês quando o nome do Modelfile termina em <code>-en</code>. O pedido leva também as palavras das suas perguntas que não acharam nada, para virar stop word ou grupo. Cada grupo e cada stop word é conferido, e nada entra no léxico sem você aplicar.',
-    'The terms come from the edition\'s code; the LLM chosen here only proposes the question words (in Ollama, with the <code>lexico</code> Modelfile, unless you choose another <code>lexico-…</code>). The words come in Portuguese, or in English when the Modelfile name ends in <code>-en</code>. The request also carries the words of your questions that found nothing, to become a stop word or a group. Each group and each stop word is checked, and nothing enters the lexicon unless you apply it.'],
+  'lexicon.suggest.info': ["Os termos vêm do código da edition; o perfil escolhido aqui só propõe as palavras da pergunta, com a tarefa léxico da biblioteca de modelos. As palavras vêm no idioma do projeto (Configurações). O pedido leva também as palavras das suas perguntas que não acharam nada, para virar stop word ou grupo. Cada grupo e cada stop word é conferido, e nada entra no léxico sem você aplicar.", "The terms come from the edition's code; the profile chosen here only proposes the question words, with the library's lexicon task. The words come in the project's language (Settings). The request also carries the words of your questions that found nothing, to become a stop word or a group. Each group and each stop word is checked, and nothing enters the lexicon unless you apply it."],
   'lexicon.manual': ['Com <strong>Nenhum</strong> (o Studio não chama ninguém): copie o pedido, leve a outro chat e cole a resposta aqui.',
     'With <strong>None</strong> (the Studio calls no one): copy the request, take it to another chat and paste the answer here.'],
   'lexicon.copy': ['Copiar pedido', 'Copy request'],
@@ -955,7 +954,7 @@ const STRINGS = {
   'help.format': ['Claims: quem responde entrega itens curtos, cada um com a página e o trecho copiado do livro, e o bibliotecário confere tudo na estante. Prosa: quem responde escreve um texto livre, como uma resenha, e a conferência fica toda com você. A escolha fica anotada em cada consulta.',
     'Claims: whoever answers delivers short items, each with the page and the excerpt copied from the book, and the librarian checks everything on the shelf. Prose: whoever answers writes free text, like a review, and the checking is all yours. The choice is recorded in each consultation.'],
   'settings.format.claims': ['Claims: JSON conferido contra a edition', 'Claims: JSON checked against the edition'],
-  'settings.format.prose': ['Prosa: query do Graph Engine, conferência à mão', 'Prose: Graph Engine query, checked by hand'],
+  'settings.format.prose': ["Prosa (legado): sem conferência mecânica, só para projetos que já a usavam", "Prose (legacy): no mechanical check, only for projects that already used it"],
   'settings.inference': ['Claims: permitir INFERENCE (exige premissas)', 'Claims: allow INFERENCE (requires premises)'],
   'help.inference': ['Inferência é tirar uma conclusão juntando o que está escrito (se o livro diz A e B, então C). Desligado, quem responde só pode repetir o que está nas páginas. Ligado, pode concluir, mas precisa mostrar de quais páginas partiu. Quem julga a conclusão é você.',
     'Inference is drawing a conclusion by putting together what is written (if the book says A and B, then C). Off, whoever answers can only repeat what is on the pages. On, they may conclude, but must show which pages they started from. You judge the conclusion.'],
@@ -1148,7 +1147,7 @@ const STRINGS = {
   'gather.isTarget': ['alvo', 'target'],
   'gather.makeTarget': ['+alvo', '+target'],
   'help.target': ['O alvo é o que a pergunta investiga, e é dele que uma sugestão parte. Clique para marcar ou desmarcar.', 'The target is what the question investigates, and what a suggestion starts from. Click to set or unset it.'],
-  'gather.noTarget': ['Nenhum alvo selecionado. Escolha um alvo no Builder (+alvo numa fonte incluída) antes de sugerir ou perguntar.', 'No target selected. Choose a target in the Builder (+target on an included source) before suggesting or asking.'],
+  'gather.noTarget': ["Nenhum alvo selecionado. Escolha um alvo na Seleção (+alvo numa fonte incluída) antes de sugerir ou preparar.", "No target selected. Choose a target in the Selection (+target on an included source) before suggesting or preparing."],
   'envelope.close': ['Fechar', 'Close'],
   'envelope.truncated': ['Mais itens ficaram de fora (limite de {n}).', 'More items were left out (limit of {n}).'],
   'envelope.headerName': ['topo do arquivo', 'head of the file'],
@@ -1197,14 +1196,7 @@ const STRINGS = {
   'path.choose': ['Seguir por este', 'Follow this one'],
   'path.unchoose': ['Desfazer escolha', 'Undo choice'],
   'path.resetChoices': ['Limpar escolhas', 'Clear choices'],
-  'path.ask': ['Perguntar sobre estes pontos ({n})', 'Ask about these points ({n})'],
-  'path.askTitle': ['Perguntar sobre o caminho', 'Ask about the path'],
-  'path.askMessage': ['Uma pergunta para cada um dos {n} pontos seguidos (sem testes e sem homônimos não escolhidos), cada uma só com o trecho daquele ponto. Com um LLM escolhido, elas são enviadas uma depois da outra.\n\n{list}',
-    'One question for each of the {n} followed points (no tests, no unchosen homonyms), each with only that point\'s snippet. With an LLM chosen, they are sent one after the other.\n\n{list}'],
-  'path.askDefault': ['O que este trecho faz, e em que linha?', 'What does this snippet do, and on which line?'],
-  'path.askOk': ['Perguntar ({n})', 'Ask ({n})'],
-  'path.sending': ['Enviando {index} de {total}: {name}…', 'Sending {index} of {total}: {name}…'],
-  'path.sent': ['{total} perguntas do caminho enviadas.', '{total} path questions sent.'],
+  'path.ask': ["Juntar os pontos marcados à Seleção ({n})", "Join the marked points to the Selection ({n})"],
   'path.turnTag': ['caminho ← {seed} ({index}/{total})', 'path ← {seed} ({index}/{total})'],
   'path.turnSummary': [' Evidência: {node}, escolhido por você no caminho; nada foi buscado. Escolhas entre homônimos no caminho: {chosen}.', ' Evidence: {node}, picked by you on the path; nothing was searched. Choices among homonyms on the path: {chosen}.'],
   'help.pathTurn': ['Esta pergunta veio de "O que ele chama?": você montou o caminho, e o bibliotecário fez uma pergunta para cada ponto, com só o trecho daquele ponto. Um modelo pequeno acerta mais com um trecho por vez. O caminho foi seguido pelo nome escrito e pelas suas escolhas, não por um compilador.',
@@ -1235,37 +1227,23 @@ const STRINGS = {
   'help.llm': ['Quem vai ler a pasta e responder. Nenhum: o Studio não chama ninguém; o bibliotecário só prepara a pasta, para você copiar e levar a outro chat (ChatGPT, outro Claude). Depois, cole a resposta na pergunta para conferir. Ollama: um leitor que trabalha na sua máquina, sem custo. Claude: um leitor de fora, pela sua conta, com o custo mostrado em cada resposta.',
     'Who will read the folder and answer. None: the Studio calls no one; the librarian only prepares the folder, for you to copy and take to another chat (ChatGPT, another Claude). Then paste the answer into the question to check it. Ollama: a reader working on your machine, at no cost. Claude: an outside reader, on your account, with the cost shown on each answer.'],
   'composer.claudeModel': ['Modelo do Claude', 'Claude model'],
-  'help.modelfile': ['O crachá do especialista: qual leitor chamar e as orientações fixas que ele recebe. Tenha um para cada tarefa (analista, léxico, performance). No Claude, só as orientações valem.',
-    'The specialist\'s badge: which reader to call and the fixed guidance it receives. Keep one per task (analyst, lexicon, performance). In Claude, only the guidance applies.'],
-  'composer.edit': ['Editar', 'Edit'],
   'composer.ask': ['Perguntar', 'Ask'],
-  'composer.askManual': ['Perguntar (sem enviar)', 'Ask (without sending)'],
-  'composer.askSend': ['Perguntar · {target}', 'Ask · {target}'],
-  'composer.askGathered': ['Perguntar com o envelope ({n}) · {target}', 'Ask with the envelope ({n}) · {target}'],
+  'composer.askManual': ["Preparar o pacote (busca)", "Prepare the package (search)"],
+  'composer.askSend': ["Preparar o pacote (busca)", "Prepare the package (search)"],
   'composer.llm': ['Quem responde', 'Who answers'],
-  'composer.defaultSystem': ['SYSTEM padrão do studio.', 'Studio default SYSTEM.'],
-  'provider.manual': ['Nenhum (só preparar para copiar)', 'None (only prepare to copy)'],
-  'provider.ollama': ['Ollama local: qwen, DeepSeek… (Modelfile)', 'Local Ollama: qwen, DeepSeek… (Modelfile)'],
-  'provider.claude-cli': ['Claude (Claude Code CLI)', 'Claude (Claude Code CLI)'],
   'provider.short.manual': ['Nenhum', 'None'],
   'llm.manual': ['Nada é enviado: a query preparada aparece na conversa para copiar e enviar à mão.', 'Nothing is sent: the prepared query shows in the conversation to copy and send by hand.'],
-  'llm.ollama': ['Ollama em {endpoint}. O Modelfile vira o modelo {model} antes do envio.', 'Ollama at {endpoint}. The Modelfile becomes the model {model} before sending.'],
+  'llm.ollama': ["Ollama em {endpoint}. O Modelfile da tarefa, montado da biblioteca, vira o modelo {model} antes do envio.", "Ollama at {endpoint}. The task's Modelfile, rendered from the library, becomes the model {model} before sending."],
   'llm.ollamaDown': ['Ollama não respondeu em {endpoint} quando a página abriu{missing}.', 'Ollama did not answer at {endpoint} when the page opened{missing}.'],
   'llm.ollamaMissing': [' (executável não encontrado)', ' (executable not found)'],
   'llm.claude': ['Claude Code CLI sem ferramentas nem sessão: {path}. Cobra pela sua conta.', 'Claude Code CLI with no tools or session: {path}. Billed to your account.'],
   'llm.claudeMissing': ['Claude Code CLI não encontrado: defina LIBRARIAN_CLAUDE com o caminho do claude.exe e reinicie o studio.', 'Claude Code CLI not found: set LIBRARIAN_CLAUDE to the path of claude.exe and restart the studio.'],
-  'mf.noFrom': ['sem FROM', 'no FROM'],
-  'mf.system': ['SYSTEM {n} linha(s)', 'SYSTEM {n} line(s)'],
-  'mf.noSystem': ['sem SYSTEM', 'no SYSTEM'],
-  'mf.claudeOnly': ['{system} (FROM e PARAMETER não valem no Claude)', '{system} (FROM and PARAMETER do not apply in Claude)'],
-  'mf.none': ['nenhum (Claude: SYSTEM padrão)', 'none (Claude: default SYSTEM)'],
 
   // chain
   'chain.title': ['Continuar em cadeia', 'Continue in a chain'],
-  'chain.message': ['Próxima pergunta, a partir das respostas conferidas da pergunta {id}. Escolha abaixo o modo e quem responde nesta etapa.',
-    'Next question, starting from the checked answers of question {id}. Choose below the mode and who answers this step.'],
+  'chain.message': ["Próxima pergunta, a partir das respostas conferidas da pergunta {id}. Escolha abaixo o modo. A pergunta é preparada e abre no Pacote; o envio é feito lá.", "Next question, starting from the checked answers of question {id}. Choose the mode below. The question is prepared and opens in the Package; the send is made there."],
   'chain.placeholder': ['Por exemplo: como deixar esta função mais rápida?', 'For example: how can this function be made faster?'],
-  'chain.ok': ['Perguntar', 'Ask'],
+  'chain.ok': ["Preparar", "Prepare"],
   'chain.required': ['Escreva a próxima pergunta.', 'Write the next question.'],
   'chain.button': ['Continuar em cadeia', 'Continue in a chain'],
   'chain.button.title': ['Nova pergunta sobre as funções que as respostas aprovadas na mecânica apontaram, com os fatos revisados', 'New question about the functions the mechanically approved answers pointed to, with the reviewed facts'],
@@ -1302,8 +1280,7 @@ const STRINGS = {
   'turn.prepareError': ['Query não preparada: {error}', 'Query not prepared: {error}'],
   'turn.claimsError': ['Query de claims não montada: {error}', 'Claims query not built: {error}'],
   'turn.sent': ['O que é enviado ao LLM ({file}, {bytes} bytes, ~{tokens} tokens)', 'What is sent to the LLM ({file}, {bytes} bytes, ~{tokens} tokens)'],
-  'turn.sentHow': ['No Ollama vai como prompt e o SYSTEM vem do Modelfile; no Claude vai por stdin e o SYSTEM vira o system prompt. Conferida contra a edition imediatamente antes de cada envio.',
-    'In Ollama it goes as the prompt and SYSTEM comes from the Modelfile; in Claude it goes through stdin and SYSTEM becomes the system prompt. Checked against the edition right before each send.'],
+  'turn.sentHow': ["No Ollama vai como prompt e o SYSTEM vem da tarefa, montada da biblioteca de modelos; no Claude vai por stdin e o SYSTEM vira o system prompt. Conferida contra a edition imediatamente antes de cada envio.", "In Ollama it goes as the prompt and SYSTEM comes from the task, rendered from the model library; in Claude it goes through stdin and SYSTEM becomes the system prompt. Checked against the edition right before each send."],
   'turn.claimsHow': ['Formato claims: a evidência são as janelas do bundle conferido, com os símbolos da edition. Cada resposta passa pela conferência mecânica.', 'Claims format: the evidence is the windows of the checked bundle, with the edition\'s symbols. Each answer goes through the mechanical check.'],
   'turn.sending': ['Enviando para {provider}…', 'Sending to {provider}…'],
   'turn.show': ['Mostrar o que seria enviado', 'Show what would be sent'],
@@ -1317,10 +1294,9 @@ const STRINGS = {
   'delete.message': ['Apagar a pergunta "{question}"{sends}? Os arquivos dela em .studio também são apagados.', 'Delete the question "{question}"{sends}? Its files in .studio are deleted too.'],
   'delete.sends': [' e {n} resposta(s)', ' and {n} answer(s)'],
   'context.title': ['A query pode não caber', 'The query may not fit'],
-  'context.message': ['A query tem ~{tokens} tokens estimados e {limit}. O Ollama corta a entrada que não cabe, sem erro, e a resposta não verá toda a evidência.\n\nReduza "hits" ou aumente num_ctx no Modelfile. Enviar mesmo assim?',
-    'The query has ~{tokens} estimated tokens and {limit}. Ollama cuts the input that does not fit, without an error, and the answer will not see all the evidence.\n\nReduce "hits" or raise num_ctx in the Modelfile. Send anyway?'],
-  'context.limit': ['o Modelfile {name} tem num_ctx {ctx}', 'the Modelfile {name} has num_ctx {ctx}'],
-  'context.noLimit': ['o Modelfile {name} não define num_ctx (o padrão do Ollama é pequeno)', 'the Modelfile {name} does not set num_ctx (the Ollama default is small)'],
+  'context.message': ["A query tem ~{tokens} tokens estimados e {limit}. O Ollama corta a entrada que não cabe, sem erro, e a resposta não verá toda a evidência.\n\nReduza \"hits\" ou aumente num_ctx no catálogo de modelos. Enviar mesmo assim?", "The query has ~{tokens} estimated tokens and {limit}. Ollama cuts the input that does not fit, without an error, and the answer will not see all the evidence.\n\nReduce \"hits\" or raise num_ctx in the model catalog. Send anyway?"],
+  'context.limit': ["o perfil {name} tem num_ctx {ctx}", "the profile {name} has num_ctx {ctx}"],
+  'context.noLimit': ["o perfil {name} não define num_ctx (o padrão do Ollama é pequeno)", "the profile {name} does not set num_ctx (the Ollama default is small)"],
   'context.ok': ['Enviar mesmo assim', 'Send anyway'],
   'paste.placeholder': ['Cole aqui a resposta em claims (o JSON, com ou sem cerca ```json)', 'Paste the claims answer here (the JSON, with or without a ```json fence)'],
   'paste.button': ['Conferir resposta colada', 'Check pasted answer'],
@@ -1412,14 +1388,9 @@ const STRINGS = {
   'browse.pick': ['Usar esta pasta', 'Use this folder'],
   'browse.project': ['  ·  projeto {marker}', '  ·  project {marker}'],
   'browse.choose': ['Escolha uma unidade ou pasta inicial.', 'Choose a drive or a starting folder.'],
-  'mf.new': ['Novo…', 'New…'],
-  'mf.name': ['Nome (letras, números, - e _)', 'Name (letters, digits, - and _)'],
-  'mf.content': ['Conteúdo', 'Content'],
-  'mf.info1': ['No Ollama, o Modelfile vira o modelo', 'In Ollama, the Modelfile becomes the model'],
+  'mf.content': ["Modelfile montado do catálogo (só leitura)", "Modelfile rendered from the catalog (read only)"],
+  'mf.info1': ["No Ollama, o Modelfile montado vira o modelo", "In Ollama, the rendered Modelfile becomes the model"],
   'mf.info2': ['com <code>ollama create</code> a cada envio, e a cópia usada fica guardada. No Claude, só o <code>SYSTEM</code> é usado.', 'through <code>ollama create</code> on every send, and the copy used is kept. In Claude, only <code>SYSTEM</code> is used.'],
-  'mf.placeholderModel': ['librarian-<nome>', 'librarian-<name>'],
-  'mf.save': ['Salvar', 'Save'],
-  'mf.saved': ['Salvo em modelfiles/{name}.Modelfile.', 'Saved to modelfiles/{name}.Modelfile.'],
   'hot.title': ["Onde pesa","Where the time goes"],
   'hot.measure': ["Medir tudo","Measure everything"],
   'hot.measuring': ["Contando cada função numa cópia…","Counting every function in a copy…"],
@@ -1467,11 +1438,8 @@ const STRINGS = {
   'hot.optimizeCalled': ["; do que ela chama, as de maior contagem observada: {list}","; of what it calls, those with the largest observed count: {list}"],
   'hot.turnTag': ["onde pesa: {summary}","where the time goes: {summary}"],
   'help.hot': ["O projeto diz como contar uma passagem por uma função (instrument no librarian.json); o Librarian põe essa instrução no começo de cada função, numa cópia, e roda o comando aprovado. A contagem é exata em cada linha. Só na instrução que o Librarian pôs na entrada da função ela é o número de chamadas; um contador do próprio projeto conta as passagens pela linha dele, e uma função com mais de uma linha contada fica com a maior. O tempo é inclusivo e inflado pela contagem, o que pode mudar a ordem entre as funções.","The project says how to count a pass through a function (instrument in librarian.json); the Librarian puts that statement at the start of every function, in a copy, and runs the approved command. Each line's count is exact. Only on the statement the Librarian put at the function's entry is it the number of calls; the project's own counter counts the passes through its line, and a function with more than one counted line keeps the largest. Time is inclusive and inflated by the counting, which can change the order between functions."],
-  'help.hotSeparate': ['Para cada função que chama a função escolhida, a linha que a chama vira uma pergunta pequena a {model}, só com aquela declaração. As perguntas são preparadas sem envio e abrem a Revisão do lote: você confere e envia as marcadas, uma por vez. As respostas são fatos conferidos mecanicamente; você os aprova um a um na conversa ou com "Aprovar todos…", que mostra antes o que entra e o que não entra.', 'For each function that calls the chosen one, the line that calls it becomes a small question to {model}, with that declaration only. The questions are prepared without sending and open the batch review: you check them and send the ticked ones, one at a time. Answers are mechanically checked facts; you approve them one by one in the conversation or with "Approve all…", which first shows what goes in and what does not.'],
-  'help.hotOptimize': ["Monta o envelope sugerido para esta função, com os fatos aprovados, e uma pergunta só com o que foi contado; a escada fica marcada. Você confere e pergunta.","Builds the suggested envelope for this function, with the reviewed facts, and a question made only of what was counted; the ladder is ticked. You check and ask."],
-  'composer.askLadder': ['Rodar a escada ({n}) · {model}', 'Run the ladder ({n}) · {model}'],
-  'ladder.on': ["Escada: {model}, com o portão em cada mudança","Ladder: {model}, with the gate on each change"],
-  'help.ladder': ["A pergunta vai ao modelo da escada, indicado ao lado. Uma mudança passa no portão quando os comandos aprovados rodam com ela, as saídas ficam iguais, alguma contagem cai e nenhuma sobe. Das que passam, fica a de maior ganho. Nada muda o pacote sozinho: uma LACUNA ou uma resposta recusada aparece no registro, sem novo envio, e você decide o que perguntar de novo.","The question goes to the ladder's model, named next to it. A change passes the gate when the approved commands run with it, outputs stay the same, some count drops and none grows. Of those that pass, the largest gain stays. Nothing changes the package on its own: a LACUNA or a refused answer shows in the record, with no new send, and you decide what to ask next."],
+  'help.hotSeparate': ["Para cada função que chama a função escolhida, a linha que a chama vira uma pergunta pequena a {model}, só com aquela declaração. As perguntas são preparadas sem envio e abrem os pacotes do lote: você confere e envia os marcados, um por vez. As respostas são fatos conferidos mecanicamente; você os aprova um a um na conversa ou com \"Aprovar todos…\", que mostra antes o que entra e o que não entra.", "For each function that calls the chosen one, the line that calls it becomes a small question to {model}, with that declaration only. The questions are prepared without sending and open the batch packages: you check them and send the ticked ones, one at a time. Answers are mechanically checked facts; you approve them one by one in the conversation or with \"Approve all…\", which first shows what goes in and what does not."],
+  'help.hotOptimize': ["Monta na Seleção o envelope sugerido para esta função, com os fatos aprovados, e uma pergunta só com o que foi contado. Você confere, prepara e envia no Pacote, pela escada se quiser.", "Builds in the Selection the suggested envelope for this function, with the reviewed facts, and a question made only of what was counted. You check, prepare and send in the Package, through the ladder if you want."],
   'ladder.noGate': ["Aprove ao menos um comando na Régua: ele é o portão.","Approve at least one command in the Ruler: it is the gate."],
   'ladder.running': ["Escada em andamento; portão: {gate}. As respostas aparecem na conversa.","Ladder running; gate: {gate}. Answers show in the conversation."],
   'ladder.passed': ["passou no portão, a de maior ganho","passed the gate, the largest gain"],
@@ -1552,7 +1520,6 @@ const STRINGS = {
   'investigate.reason.operation': ['tem a operação da linha {line} ({rule})', 'holds the operation on line {line} ({rule})'],
   'investigate.reason.step': ['chamada por {from} na linha {line}', 'called by {from} on line {line}'],
   'investigate.reason.matched': ['casou com a regra {rule} (linha {line})', 'matched rule {rule} (line {line})'],
-  'composer.askInvestigation': ['Perguntar com a evidência ({n}) · {target}', 'Ask with the evidence ({n}) · {target}'],
   'inventory.noRun': ['Gere o grafo para montar o inventário.', 'Generate the graph to build the inventory.'],
   // Navigation (spec 1.1 to 1.3).
   'nav.aria': ['Navegação do Studio', 'Studio navigation'],
@@ -1567,7 +1534,7 @@ const STRINGS = {
   'area.facts': ['Acervo', 'Facts'],
   'area.lexicon': ['Léxico', 'Lexicon'],
   'area.settings': ['Configurações', 'Settings'],
-  'area.modelfiles': ['Modelfiles', 'Modelfiles'],
+  'area.modelfiles': ["Modelos", "Models"],
   'area.files': ['Abrir arquivos', 'Open files'],
   'area.lexiconEmpty': ['vazio', 'empty'],
   'explore.aria': ['Vistas de Explorar', 'Explore views'],
@@ -1603,16 +1570,16 @@ const STRINGS = {
   'center.replaceMessage': ['O fluxograma aberto ({name}) tem escolhas de homônimos ({n}), que serão descartadas.', 'The open flowchart ({name}) has homonym choices ({n}), which will be discarded.'],
   'center.replaceOk': ['Substituir', 'Replace'],
   // F5: Evidence Builder (spec 2.4, 3.1 to 3.9, 7.1, 7.3).
-  'builder.title': ['Evidence Builder', 'Evidence Builder'],
+  'builder.title': ["Seleção", "Selection"],
   'help.builder': ['Aqui se montam as fontes de uma pergunta: o que vai ao modelo, o que você tirou, o que a sugestão deixou de fora e o que foi sugerido e não trazido. O compositor, à direita, cuida do texto, do modo e de quem responde. Nada aqui grava no servidor: o registro da seleção só é feito quando a pergunta é preparada.',
     'This is where the sources of one question are put together: what goes to the model, what you took out, what the suggestion left out and what was suggested and not brought in. The composer, on the right, holds the text, the mode and who answers. Nothing here writes to the server: the selection is recorded only when the question is prepared.'],
   'builder.clear': ['Limpar rascunho', 'Clear draft'],
-  'builder.close': ['Fechar o Builder (o rascunho continua)', 'Close the Builder (the draft stays)'],
-  'builder.tab': ['Builder ({n})', 'Builder ({n})'],
-  'builder.tabFinding': ['Builder: achado', 'Builder: finding'],
+  'builder.close': ["Fechar a Seleção (o rascunho continua)", "Close the Selection (the draft stays)"],
+  'builder.tab': ["Seleção ({n})", "Selection ({n})"],
+  'builder.tabFinding': ["Seleção: achado", "Selection: finding"],
   'builder.tabLoading': ['carregando…', 'loading…'],
-  'col.builder': ['Centro: Builder ({n})', 'Center: Builder ({n})'],
-  'col.builderFinding': ['Centro: Builder (achado)', 'Center: Builder (finding)'],
+  'col.builder': ["Centro: Seleção ({n})", "Center: Selection ({n})"],
+  'col.builderFinding': ["Centro: Seleção (achado)", "Center: Selection (finding)"],
   'builder.state.empty': ['Junte uma fonte pela inspeção ou use Otimizar', 'Gather a source from the inspection or use Optimize'],
   'builder.state.sources': ['{n} fonte(s) incluída(s) · alvo: {target}', '{n} source(s) included · target: {target}'],
   'builder.state.loading': ['Carregando: {entry}…', 'Loading: {entry}…'],
@@ -1670,7 +1637,7 @@ const STRINGS = {
   'builder.via.optimize': ['Otimizar', 'Optimize'],
   'builder.via.change': ['Pedir esta mudança', 'Request this change'],
   'builder.via.suggestion': ['sugestão', 'suggestion'],
-  'builder.via.builder': ['Builder', 'Builder'],
+  'builder.via.builder': ["Seleção", "Selection"],
   'builder.via.manual': ['à mão', 'by hand'],
   'builder.info.structural': ['Estrutural', 'Structural'],
   'builder.info.measured': ['Medido', 'Measured'],
@@ -1681,9 +1648,9 @@ const STRINGS = {
   'builder.findingLabel': ['Achado do inventário: itens marcados, sem registro de seleção no servidor', 'Inventory finding: ticked items, no selection record on the server'],
   'draft.line': ['Rascunho: {n} fonte(s) · alvo {target}', 'Draft: {n} source(s) · target {target}'],
   'draft.lineFinding': ['Achado do inventário: {n} item(ns) marcado(s), sem registro de seleção', 'Inventory finding: {n} item(s) ticked, no selection record'],
-  'draft.lineEmpty': ['Builder: sem fontes', 'Builder: no sources'],
+  'draft.lineEmpty': ["Seleção: sem fontes", "Selection: no sources"],
   'draft.lineLoading': ['Rascunho: carregando {entry}…', 'Draft: loading {entry}…'],
-  'draft.open': ['Abrir no Builder', 'Open in the Builder'],
+  'draft.open': ["Abrir na Seleção", "Open in the Selection"],
   'head.draft': ['Rascunho: {n} fonte(s) · {where}', 'Draft: {n} source(s) · {where}'],
   'head.draftCriteria': ['critérios próprios, não salvos como padrão', 'own criteria, not saved as the default'],
   'head.draftFinding': ['Rascunho: achado do inventário · {where}', 'Draft: inventory finding · {where}'],
@@ -1691,8 +1658,8 @@ const STRINGS = {
   'head.draftPageOnly': ['só nesta página', 'this page only'],
   'head.draftConflict': ['Rascunho alterado em outra aba', 'Draft changed in another tab'],
   'head.draftNotApplied': ['Rascunho guardado não aplicado', 'Kept draft not applied'],
-  'head.draftTitleKept': ['Abrir o Builder. O rascunho fica guardado neste navegador, por projeto e run; não é registro: a pergunta, a seleção e o pacote são sempre os do servidor.', 'Open the Builder. The draft is kept in this browser, per project and run; it is not a record: the question, the selection and the package are always the server\'s.'],
-  'head.draftTitlePage': ['Abrir o Builder. O rascunho está só nesta página: recarregar ou fechar a página o perde, e o navegador avisa antes.', 'Open the Builder. The draft is only in this page: reloading or closing the page loses it, and the browser asks first.'],
+  'head.draftTitleKept': ["Abrir a Seleção. O rascunho fica guardado neste navegador, por projeto e run; não é registro: a pergunta, a seleção e o pacote são sempre os do servidor.", "Open the Selection. The draft is kept in this browser, per project and run; it is not a record: the question, the selection and the package are always the server's."],
+  'head.draftTitlePage': ["Abrir a Seleção. O rascunho está só nesta página: recarregar ou fechar a página o perde, e o navegador avisa antes.", "Open the Selection. The draft is only in this page: reloading or closing the page loses it, and the browser asks first."],
   // F6: the draft kept in this browser (spec 3.9, 5.5 to 5.8).
   'draft.restored': ['Rascunho restaurado deste navegador ({date})', 'Draft restored from this browser ({date})'],
   'draft.unknown': ['Rascunho em formato desconhecido: não aplicado. Guardar o mantém como está, sem aplicar; Descartar o apaga deste navegador.', 'Draft in an unknown format: not applied. Keep leaves it as it is, unapplied; Discard removes it from this browser.'],
@@ -1703,7 +1670,7 @@ const STRINGS = {
   'draft.pageOnlyUntil': ['O rascunho desta página fica só nesta página até você descartar o guardado.', 'This page\'s draft stays only in this page until you discard the kept one.'],
   'draft.noNames': ['nenhuma fonte', 'no sources'],
   'draft.conflict': ['Rascunho alterado em outra aba: só leitura até você escolher. Nada é mesclado.', 'Draft changed in another tab: read-only until you choose. Nothing is merged.'],
-  'draft.locked': ['Rascunho alterado em outra aba: escolha no Builder qual versão fica antes de mudar ou preparar.', 'Draft changed in another tab: choose in the Builder which version stays before changing or preparing it.'],
+  'draft.locked': ["Rascunho alterado em outra aba: escolha na Seleção qual versão fica antes de mudar ou preparar.", "Draft changed in another tab: choose in the Selection which version stays before changing or preparing it."],
   'draft.loadTheirs': ['Carregar a versão da outra aba', 'Load the other tab\'s version'],
   'draft.keepMine': ['Manter a minha (sobrescrever)', 'Keep mine (overwrite)'],
   'draft.keep': ['Guardar', 'Keep'],
@@ -1721,11 +1688,10 @@ const STRINGS = {
   'draft.leftKept': ['O rascunho da run {run} ficou guardado neste navegador.', 'The draft of run {run} stays kept in this browser.'],
   'draft.leftPage': ['O rascunho da run {run} ficou só nesta página.', 'The draft of run {run} stays only in this page.'],
   'draft.leftTheirs': ['O rascunho da run {run} foi alterado em outra aba: ficou guardada a versão daquela aba.', 'The draft of run {run} was changed in another tab: that tab\'s version stays kept.'],
-  'draft.noteConflict': ['Rascunho alterado em outra aba: escolha no Builder.', 'Draft changed in another tab: choose in the Builder.'],
-  'draft.noteNotApplied': ['Há um rascunho guardado que não foi aplicado: veja no Builder.', 'A kept draft was not applied: see the Builder.'],
+  'draft.noteConflict': ["Rascunho alterado em outra aba: escolha na Seleção.", "Draft changed in another tab: choose in the Selection."],
+  'draft.noteNotApplied': ["Há um rascunho guardado que não foi aplicado: veja na Seleção.", "A kept draft was not applied: see the Selection."],
   'draft.notePageOnly': ['Rascunho só nesta página.', 'Draft only in this page.'],
   'path.point': ['Ponto: {name}', 'Point: {name}'],
-  'path.runChanged': ['A run mudou: as perguntas criadas na run {run} ficaram preparadas e não foram enviadas daqui.', 'The run changed: the questions created in run {run} stay prepared and were not sent from here.'],
   // Selection and inspection (spec 2.2, T1 to T3).
   'sel.aria': ['Seleção', 'Selection'],
   'sel.selected': ['Selecionado: {name}', 'Selected: {name}'],
@@ -1736,8 +1702,8 @@ const STRINGS = {
   'insp.pointNamed': ['Inspeção: {name}', 'Inspection: {name}'],
   'project.empty': ['Sem projeto: escolha a pasta de um projeto e clique em Abrir.', 'No project: choose a project folder and click Open.'],
   'tools.needsProject': ['Abra um projeto em Projeto para ver as configurações dele.', 'Open a project in Project to see its settings.'],
-  'tools.modelfiles.info': ['Os Modelfiles definem o SYSTEM e os parâmetros de cada envio. Gravar um Modelfile não toca o perfil do projeto.', 'Modelfiles set the SYSTEM and the parameters of each send. Saving a Modelfile does not touch the project profile.'],
-  'tools.modelfiles.open': ['Abrir os Modelfiles', 'Open the Modelfiles'],
+  'tools.modelfiles.info': ["A biblioteca de modelos: dois perfis (local: Qwen3-Coder; remoto: Claude), as tarefas (responder em claims, propor mudança, propor léxico) e o padrão de cada ação, num único catálogo (modelfiles/catalog.json). Cada Modelfile é montado dele no envio, e a cópia usada fica gravada com o hash. Só leitura aqui.", "The model library: two profiles (local: Qwen3-Coder; remote: Claude), the tasks (answer in claims, propose a change, propose a lexicon) and the default of each action, in one catalog (modelfiles/catalog.json). Each Modelfile is rendered from it when sending, and the copy used is recorded with its hash. Read only here."],
+  'tools.modelfiles.open': ["Ver a biblioteca", "See the library"],
   'settings.byMode': ['Hipótese e mudança proposta são a política do modo (Localizar ou Melhorar): mudam só pelo seletor do modo, no compositor, nunca por Salvar.', 'Hypothesis and proposed change are the mode policy (Locate or Improve): they change only through the mode selector, in the composer, never through Save.'],
   'lexicon.save': ['Salvar léxico', 'Save lexicon'],
   'lexicon.suggestTitle': ['Sugerir com um LLM', 'Suggest with an LLM'],
@@ -1763,8 +1729,6 @@ const STRINGS = {
   'how.noHunk': ['Esta função já tinha contador no projeto: nada foi inserido nela.', 'This function already had a counter in the project: nothing was inserted in it.'],
   'how.allDiff': ['Tudo o que foi inserido', 'Everything inserted'],
   'how.allOut': ['Tudo o que o programa imprimiu', 'Everything the program printed'],
-  'skills.label': ['Skills:', 'Skills:'],
-  'help.skills': ['Uma skill é um texto de instruções sobre como trabalhar (a pasta skills/ ao lado de modelfiles/). A marcada entra no SYSTEM de tudo o que a página envia: perguntas, escada, fichas do Onde pesa e perguntas do caminho, no Ollama e no Claude. O formato de resposta que o Librarian pede continua valendo. Cada resposta mostra as skills que foram junto.', 'A skill is a text of instructions on how to work (the skills/ folder next to modelfiles/). The checked one joins the SYSTEM of everything the page sends: questions, ladder, Where it weighs facts and path questions, on Ollama and on Claude. The answer format the Librarian asks for still holds. Each answer shows the skills that went with it.'],
   'legend.district': ['Bairro: um arquivo', 'District: a file'],
   'legend.building': ['Prédio: uma função', 'Building: a function'],
   'legend.height': ['Altura: a contagem observada (sem medição, o tamanho da função)', 'Height: the observed count (without a measure, the size of the function)'],
@@ -1857,27 +1821,24 @@ const STRINGS = {
   'criteria.undo': ['Desfazer a edição', 'Undo the edit'],
   'criteria.defaultChanged': ['O padrão do projeto mudou desde este rascunho. Padrão quando o rascunho foi escrito: “{then}”. Padrão atual: “{now}”.',
     'The project default changed since this draft. Default when the draft was written: “{then}”. Current default: “{now}”.'],
-  'route.noTarget': ['Escolha um alvo no Builder', 'Choose a target in the Builder'],
-  'route.ladder': ['Escada: {model}; portão: {gate}.', 'Ladder: {model}; gate: {gate}.'],
-  'route.noReview': ['Esta rota envia sem revisão (depende do C1)', 'This route sends without review (depends on C1)'],
-  'route.noGate': ['Sem comando aprovado no portão (→ Régua)', 'No approved command in the gate (→ Ruler)'],
+  'route.noTarget': ["Escolha um alvo na Seleção", "Choose a target in the Selection"],
   'route.finding': ['Achado do inventário: {n} item(ns) marcado(s), sem registro de seleção', 'Inventory finding: {n} item(s) ticked, no selection record'],
-  'route.builder': ['Builder: {n} fonte(s)', 'Builder: {n} source(s)'],
-  'route.free': ['Primeiro as regras de desempenho. Se não reconhecerem, pergunta livre com busca', 'First the performance rules. If they do not recognize it, a free question with search'],
+  'route.builder': ["Seleção: {n} fonte(s)", "Selection: {n} source(s)"],
+  'route.free': ["Primeiro as regras de desempenho. Se não reconhecerem, pergunta livre com busca: o pacote abre na vista Pacote, sem envio", "First the performance rules. If they do not recognize it, a free question with search: the package opens in the Package view, unsent"],
   'route.modeDiffers': ['Esta pergunta usa o modo {x}; a política do projeto está em {y}', 'This question uses the {x} mode; the project policy is {y}'],
   'route.criteria': ['Os critérios editados ainda não podem valer só para esta pergunta (depende do D10)', 'Edited criteria cannot yet apply to this question only (depends on D10)'],
   // F10 (4.1 to 4.5, 7.3): the review, the batch and "Aprovar todos".
-  'route.review': ['Preparar abre a Revisão (parcial); o envio é um passo à parte, na Revisão', 'Prepare opens the Review (partial); sending is a step of its own, in the Review'],
+  'route.review': ["Preparar monta o pacote (Evidence Builder) e abre a vista Pacote; o envio é um passo à parte, no Pacote", "Preparing builds the package (Evidence Builder) and opens the Package view; sending is a step of its own, in the Package"],
   'composer.prepareBuilder': ['Preparar ({n} fonte(s))', 'Prepare ({n} source(s))'],
   'composer.prepareFinding': ['Preparar o achado ({n})', 'Prepare the finding ({n})'],
-  'review.close': ['Fechar a Revisão (a pergunta continua como está)', 'Close the Review (the question stays as it is)'],
-  'review.tabTurn': ['Revisão #{id}', 'Review #{id}'],
-  'review.tabLot': ['Revisão do lote ({n})', 'Batch review ({n})'],
+  'review.close': ["Fechar o Pacote (a pergunta continua como está)", "Close the Package (the question stays as it is)"],
+  'review.tabTurn': ["Pacote #{id}", "Package #{id}"],
+  'review.tabLot': ["Pacotes do lote ({n})", "Batch packages ({n})"],
   'review.tabSending': ['enviando {k} de {n}', 'sending {k} of {n}'],
   'col.review': ['Centro: {what}', 'Center: {what}'],
-  'help.review': ['A Revisão mostra, antes do envio, o que a pergunta preparada vai entregar e o que o servidor confere agora. É parcial: o que ela não confere está escrito no fim. Enviar é uma ação à parte. Depois do envio, os itens da resposta se decidem na pergunta, na conversa.', 'The Review shows, before the send, what the prepared question will deliver and what the server checks now. It is partial: what it does not check is written at the end. Sending is an action of its own. After the send, the items of the answer are decided on the question, in the conversation.'],
-  'review.titleTurn': ['Revisão da pergunta #{id}', 'Review of question #{id}'],
-  'review.titleLot': ['Revisão do lote: {n} pergunta(s) independente(s)', 'Batch review: {n} independent question(s)'],
+  'help.review': ["O Pacote mostra, antes do envio, a pergunta, a seleção, as evidências e o pacote que o Evidence Builder montou, a proveniência e as conferências H1 a H4 feitas agora. Todo envio sai daqui: nada vai a um modelo sem passar por esta vista. É parcial: o que ela não confere está escrito no fim. Depois do envio, os itens da resposta se decidem na pergunta, na conversa.", "The Package shows, before the send, the question, the selection, the evidence and the package the Evidence Builder made, its provenance and the H1 to H4 checks made now. Every send leaves from here: nothing reaches a model without this view. It is partial: what it does not check is written at the end. After the send, the items of the answer are decided on the question, in the conversation."],
+  'review.titleTurn': ["Pacote da pergunta #{id}", "Package of question #{id}"],
+  'review.titleLot': ["Pacotes do lote: {n} pergunta(s) independente(s)", "Batch packages: {n} independent question(s)"],
   'review.block.question': ['A pergunta preparada', 'The prepared question'],
   'review.block.package': ['Pacote gravado', 'Recorded package'],
   'review.block.used': ['Política e critérios usados', 'Policy and criteria used'],
@@ -1888,19 +1849,16 @@ const STRINGS = {
   'review.label.question': ['O texto completo da query que o envio entrega (turn.query)', 'The full text of the query the send delivers (turn.query)'],
   'review.label.package': ['Pacote como foi gravado ao preparar', 'Package as recorded when preparing'],
   'review.label.checks': ['Conferido nesta consulta; o envio confere de novo. Conferido não quer dizer aprovado', 'Checked in this reading; the send checks again. Checked does not mean approved'],
-  'review.label.chosen': ['Escolhido para o envio. A identidade do SYSTEM e das skills não é garantida por esta revisão (D4)', 'Chosen for the send. The identity of the SYSTEM and the skills is not guaranteed by this review (D4)'],
+  'review.label.chosen': ["Escolhido para o envio: o perfil e o modelo, no compositor. A tarefa vem da pergunta e o idioma, do projeto; o Modelfile usado vai gravado no envio, com o hash.", "Chosen for the send: the profile and the model, in the composer. The task comes from the question and the language from the project; the Modelfile used is recorded with the send, with its hash."],
   'review.label.only': ['Não vai ao modelo', 'Does not go to the model'],
   'review.personText': ['Pergunta escrita: {text}', 'Question written: {text}'],
   'review.loading': ['Carregando {what}…', 'Loading {what}…'],
   'review.what.package': ['o pacote', 'the package'],
   'review.what.checks': ['as conferências', 'the checks'],
   'review.evidenceUnread': ['Não foi possível ler o pacote e as conferências: {error}', 'Could not read the package and the checks: {error}'],
-  'review.chosen': ['Provedor: {provider} · modelo: {model} · Modelfile: {modelfile} · skills: {skills} (o que o compositor tem agora)', 'Provider: {provider} · model: {model} · Modelfile: {modelfile} · skills: {skills} (what the composer has now)'],
+  'review.chosen': ["Perfil: {profile} · modelo: {model} · tarefa: {task} · idioma: {language}", "Profile: {profile} · model: {model} · task: {task} · language: {language}"],
   'review.chosenManual': ['Nenhum: a pergunta não vai a um modelo; copie a query e cole a resposta na pergunta, na conversa.', 'None: the question goes to no model; copy the query and paste the answer into the question, in the conversation.'],
-  'review.noSkills': ['nenhuma', 'none'],
-  'review.system': ['Texto do SYSTEM do Modelfile {name}', 'SYSTEM text of the Modelfile {name}'],
-  'review.noSystem': ['O Modelfile {name} não tem SYSTEM legível aqui.', 'The Modelfile {name} has no SYSTEM readable here.'],
-  'review.defaultSystem': ['Sem Modelfile: o SYSTEM é o padrão do provedor.', 'No Modelfile: the SYSTEM is the provider\'s default.'],
+  'review.system': ["Texto da tarefa ({name})", "Task text ({name})"],
   'review.onlyFinding': ['Achado do inventário: sem registro de seleção no servidor.', 'Inventory finding: no selection record on the server.'],
   'review.onlyNone': ['Sem registro de seleção nesta pergunta.', 'No selection record in this question.'],
   'review.only.gaps': ['Lacunas e candidatos ({n})', 'Gaps and candidates ({n})'],
@@ -1909,7 +1867,7 @@ const STRINGS = {
   'review.only.removed': ['Removidas por você ({n})', 'Removed by you ({n})'],
   'review.only.reasons': ['Incluídas: papel, categoria e justificativas ({n})', 'Included: role, category and reasons ({n})'],
   'review.gap': ['{code}: {text} em {where} · {n} candidato(s) · para {target}', '{code}: {text} at {where} · {n} candidate(s) · for {target}'],
-  'review.unchecked': ['Não conferido nesta revisão: identidade com o envio (D3), SYSTEM e skills (D4), recusa por fato revogado (D7)', 'Not checked in this review: identity with the send (D3), SYSTEM and skills (D4), refusal for a revoked fact (D7)'],
+  'review.unchecked': ["Não conferido neste pacote: identidade com o envio (D3), SYSTEM (D4), recusa por fato revogado (D7)", "Not checked in this package: identity with the send (D3), SYSTEM (D4), refusal for a revoked fact (D7)"],
   'review.revoked': ['O fato {id} foi revogado depois da preparação. Recomendado: preparar de novo.', 'Fact {id} was revoked after preparation. Recommended: prepare again.'],
   'review.revokedUnread': ['Não foi possível conferir revogações antes do envio: {error}', 'Could not check revocations before the send: {error}'],
   'review.whySending': ['Enviando…', 'Sending…'],
@@ -1930,9 +1888,8 @@ const STRINGS = {
   'review.decideThere': ['A resposta e as decisões sobre os itens ficam na pergunta, na conversa (3. O que você decide).', 'The answer and the decisions on its items are on the question, in the conversation (3. What you decide).'],
   'review.sendFailed': ['O envio falhou: {error}. A pergunta continua preparada.', 'The send failed: {error}. The question stays prepared.'],
   'review.manualThere': ['A query está na pergunta, na conversa, para copiar; cole a resposta lá.', 'The query is on the question, in the conversation, to copy; paste the answer there.'],
-  'review.open': ['Ver revisão', 'See review'],
-  'review.noRoute': ['Sem revisão nesta rota', 'No review on this route'],
-  'lot.intro': ['Perguntas independentes: cada uma tem pacote, conferência, envio, resultado e falha próprios, e nenhuma fonte de uma entra no pacote de outra. A revisão só as agrupa na tela.', 'Independent questions: each has its own package, checks, send, result and failure, and no source of one enters the package of another. The review only groups them on screen.'],
+  'review.open': ["Ver pacote", "See package"],
+  'lot.intro': ["Perguntas independentes: cada uma tem pacote, conferência, envio, resultado e falha próprios, e nenhuma fonte de uma entra no pacote de outra. Esta vista só as agrupa na tela.", "Independent questions: each has its own package, checks, send, result and failure, and no source of one enters the package of another. This view only groups them on screen."],
   'lot.model': ['Modelo fixo do lote: {model}.', 'The batch\'s fixed model: {model}.'],
   'lot.notApprove': ['Enviar as marcadas inicia um envio por pergunta; não aprova nada. Os fatos das respostas se aprovam depois, na conversa ou com "Aprovar todos…".', 'Send the ticked starts one send per question; it approves nothing. The facts of the answers are approved later, in the conversation or with "Approve all…".'],
   'lot.item': ['#{id} · {label}', '#{id} · {label}'],
@@ -1940,7 +1897,7 @@ const STRINGS = {
   'lot.source': ['Fonte: {source}', 'Source: {source}'],
   'lot.query': ['A query desta pergunta ({bytes} bytes)', 'This question\'s query ({bytes} bytes)'],
   'lot.creating': ['Preparando {k} de {n}: {name}…', 'Preparing {k} of {n}: {name}…'],
-  'lot.prepared': ['{n} pergunta(s) preparada(s) para {model}, nenhuma enviada ({failed} falha(s) na criação). Confira a Revisão do lote e envie as marcadas.', '{n} question(s) prepared for {model}, none sent ({failed} failure(s) creating). Check the batch review and send the ticked ones.'],
+  'lot.prepared': ["{n} pergunta(s) preparada(s) para {model}, nenhuma enviada ({failed} falha(s) na criação). Confira os pacotes do lote e envie os marcados.", "{n} question(s) prepared for {model}, none sent ({failed} failure(s) creating). Check the batch packages and send the ticked ones."],
   'lot.createFailed': ['A criação desta pergunta falhou: {error}. As outras continuaram.', 'Creating this question failed: {error}. The others went on.'],
   'lot.notCreatedMoved': ['Não criada: a run mudou antes ({where}).', 'Not created: the run changed before ({where}).'],
   'lot.autoPrepare': ['Desmarcada: preparação recusada ({error}).', 'Unticked: preparation refused ({error}).'],
@@ -1984,17 +1941,11 @@ const STRINGS = {
   'help.mode': ['Localizar pede só fatos: onde o código faz algo, com a linha e o trecho copiado. Melhorar também aceita uma hipótese com uma mudança proposta, conferida linha a linha, e grava antes da resposta os critérios prévios que vão julgá-la. O modo é a política gravada no perfil do projeto e vale para as próximas perguntas dele, inclusive as da cadeia; trocar aqui altera essa política (só hipótese e patch), depois de confirmar. As perguntas já feitas guardam a política da época.',
     'Locate asks only for facts: where the code does something, with the line and the copied excerpt. Improve also accepts a hypothesis with a proposed change, checked line by line, and records before the answer the prior criteria that will judge it. The mode is the policy saved in the project profile and applies to its next questions, chain steps included; switching here changes that policy (only hypothesis and patch), after you confirm. The questions already asked keep the policy of their time.'],
   'picker.label': ['Quem responde', 'Who answers'],
-  'resend.title': ['Enviar a pergunta', 'Send the question'],
-  'resend.message': ['A mesma pergunta, com a mesma evidência, para quem você escolher:\n{question}', 'The same question, with the same evidence, to whoever you choose:\n{question}'],
-  'resend.ok': ['Enviar', 'Send'],
   'gather.hint': ['A próxima pergunta da Conversa vai só com estas declarações, nesta ordem.', 'The next question in the Conversation goes with these declarations only, in this order.'],
   'turn.answers': ['{n} respostas', '{n} answers'],
   'turn.facts': ['fato {list}', 'fact {list}'],
   'turn.olderAnswer': ['Resposta anterior · {who} · {verdict}', 'Earlier answer · {who} · {verdict}'],
-  'turn.resend': ['Enviar de novo…', 'Send again…'],
-  'turn.sendFirst': ['Enviar…', 'Send…'],
   'turn.evidence': ['Evidência: {n} declarações', 'Evidence: {n} declarations'],
-  'evidence.title': ['Pacote de evidências e conferências', 'Evidence package and checks'],
   'evidence.loading': ['Lendo o pacote…', 'Reading the package…'],
   'evidence.checks': ['Conferências de agora', 'Checks made now'],
   'evidence.checksNote': ['H1 a H3 são conferidos antes de cada envio, e um envio só sai com os três. H4 só informa.', 'H1 to H3 are checked before every send, and a send goes only with all three. H4 only tells.'],
@@ -2214,6 +2165,22 @@ const STRINGS = {
   'facts.originShown': ['Origem do fato {id}: pergunta #{turn}, envio {send}, item {claim}.', 'Origin of fact {id}: question #{turn}, send {send}, item {claim}.'],
   'facts.originSendGone': ['Origem do fato {id}: pergunta #{turn}; o envio {send} não está mais nela.', 'Origin of fact {id}: question #{turn}; send {send} is no longer in it.'],
   'builder.via.facts': ['Acervo', 'Collection'],
+  'settings.language': ["Idioma das perguntas aos modelos", "Language of the questions to models"],
+  'help.language': ["Um só lugar decide o idioma: o contrato de claims, o texto de cada tarefa e o pedido do léxico seguem esta escolha. Fixado em cada pergunta quando ela é preparada.", "One place decides the language: the claims contract, each task's text and the lexicon request follow this choice. Fixed in each question when it is prepared."],
+  'language.pt': ["Português", "Portuguese"],
+  'language.en': ["Inglês", "English"],
+  'field.language': ["Idioma", "Language"],
+  'review.ladder': ["Enviar pela escada · {model}", "Send through the ladder · {model}"],
+  'review.ladderNoGate': ["Escada: nenhum comando aprovado no portão (→ Régua)", "Ladder: no approved command in the gate (→ Ruler)"],
+  'review.ladderHelp': ["A escada sobe sobre este mesmo pacote: o primeiro envio é ele, ao modelo da escada definido na biblioteca. O portão roda os comandos aprovados com cada mudança proposta; das que passam, fica a de maior ganho.", "The ladder climbs on this same package: its first send is this package, to the ladder model the library sets. The gate runs the approved commands with each proposed change; of those that pass, the largest gain stays."],
+  'path.joined': ["{n} ponto(s) juntado(s) à Seleção; prepare lá.", "{n} point(s) joined to the Selection; prepare there."],
+  'review.task.verificavel': ["responder em claims", "answer in claims"],
+  'review.task.performance': ["propor mudança", "propose a change"],
+  'review.task.analista': ["explicar em prosa (legado)", "explain in prose (legacy)"],
+  'review.taskPending': ["decidida pela pergunta", "decided by the question"],
+  'mf.profiles': ["Perfis: {list}", "Profiles: {list}"],
+  'mf.actions': ["Padrão de cada ação: {list}", "Default of each action: {list}"],
+  'mf.skills': ["Skills oferecidas por tarefa: {list}", "Skills offered per task: {list}"],
 };
 
 // Fixed texts the server writes in Portuguese (constants and a few formats), shown in English
@@ -2984,12 +2951,19 @@ async function busy(buttons, note, action) {
 }
 const say = (note, text) => { note.className = 'muted'; note.textContent = text; };
 
+/// The composer's "who answers": Nenhum and each profile of the model library, the local one first.
 function fillProviders() {
-  const llm = studio.status.llm, current = $('#provider').value;
-  // Providers without sending yet stay off the list: they only confused the choice.
-  $('#provider').replaceChildren(...llm.providers.filter(p => p.implemented)
-    .map(p => el('option', { value: p.id, textContent: providerLabel(p.id), title: STRINGS[`provider.${p.id}`] ? t(`provider.${p.id}`) : p.label })));
-  if (current) $('#provider').value = current;
+  const current = $('#provider').value;
+  $('#provider').replaceChildren(...profileIds().map(id => el('option', { value: id, textContent: providerLabel(id) })));
+  if (current && profileOf(current)) $('#provider').value = current;
+  fillClaudeModels();
+}
+/// The Claude models of the profile chosen in the composer, from the library.
+function fillClaudeModels(chosen = $('#claudeModel').value) {
+  const p = profileOf($('#provider').value);
+  const models = p?.models ?? [];
+  $('#claudeModel').replaceChildren(...models.map(m => el('option', { value: m, textContent: m })));
+  if (models.includes(chosen)) $('#claudeModel').value = chosen; else if (p?.default_model) $('#claudeModel').value = p.default_model;
 }
 
 async function initStudio() {
@@ -2999,11 +2973,8 @@ async function initStudio() {
   document.title = 'Librarian Studio';
   $('h1').textContent = 'Librarian Studio';
   $('#projectCard').hidden = false;
-  const llm = studio.status.llm;
   fillProviders();
-  renderSkills();
-  $('#claudeModel').replaceChildren(...llm.claude_cli.models.map(m => el('option', { value: m, textContent: m })));
-  setModelfiles(studio.status.modelfiles);
+  setModelfiles(studio.status.models);
   // The mode is the policy saved in the project (3.13): with no project open there is none. The old
   // global preference `librarian.mode` no longer decides it (3.13.4); it is neither read nor erased.
   syncMode();
@@ -3088,7 +3059,7 @@ async function openRun(previous, previousRun) {
     const left = leaveDraft();
     Object.assign(studio, { run: null, graphState: null, graphError: null, turns: [], activeTurn: null, turnsState: null, turnsError: null, facts: null, factsError: null, executions: null, executionsError: null });
     // The composer's text and ladder are the draft's (5.4): they stay with the run left.
-    draftRunChanged(); draftLeft = left; $('#question').value = ''; $('#ladderOn').checked = false; clearDraftCriteria(); renderGathered();
+    draftRunChanged(); draftLeft = left; $('#question').value = ''; clearDraftCriteria(); renderGathered();
     say($('#chatNote'), '');
     clearGraph();
     status(t('project.noRunsYet'));
@@ -3201,6 +3172,8 @@ const SETTINGS_FIELDS = (() => {
     numbered_lines: check('#numbered', 'numbered_lines'), accept_diagnostics: check('#acceptDiag', 'accept_diagnostics'),
     exclude_tests: check('#excludeTests', 'exclude_tests'),
     answer_format: text('#answerFormat', 'settings', s => s.answer_format ?? 'prose', v => v),
+    // One place decides the language (D12): '' (Portuguese, as projects saved before it) or 'en'.
+    language: text('#language', 'settings', s => (s.language === 'en' ? 'en' : 'pt'), v => (v === 'en' ? 'en' : '')),
     allow_inference: check('#allowInference', 'allow_inference'),
   };
 })();
@@ -3495,61 +3468,56 @@ function lightActive() {
 }
 
 // ---- questions
-// Buttons name the provider short; the list keeps the longer explanation.
-const providerLabel = id => (id === 'manual' ? t('provider.short.manual') : { ollama: 'Ollama', 'claude-cli': 'Claude CLI' }[id])
-  ?? studio.status?.llm.providers.find(p => p.id === id)?.label ?? id;
-
-// ---- LLM choice next to each action. Each kind of action remembers its own LLM and Modelfile:
-// the lexicon suggestion, locating, improving, chaining and sending a question again.
-const DEFAULT_MODELFILES = {
-  lexicon: ['lexico-qwen3coder'], locate: ['verificavel-qwen3coder'], improve: ['performance-qwen3coder'],
-  chain: ['performance-qwen3coder'], resend: ['verificavel-qwen3coder'],
-};
-const implementedProviders = () => studio.status.llm.providers.filter(p => p.implemented).map(p => p.id);
-function defaultProvider() {
-  const llm = studio.status.llm, ids = implementedProviders();
-  if (llm.ollama.running && ids.includes('ollama')) return 'ollama';
-  if (llm.claude_cli.executable && ids.includes('claude-cli')) return 'claude-cli';
-  return ids[0] ?? 'manual';
+// ---- Who answers: Nenhum (copy the query) or a profile of the model library (local: Qwen3-Coder; remote: Claude),
+// with the Claude model. Which task a send asks for comes from what is sent, and the language from the project:
+// none of it is chosen here. The default of each action is the library's (models.actions); each kind of action
+// (lexicon, locate, improve, chain, facts, ladder) remembers the person's own choice in this browser.
+const profiles = () => studio.status?.llm.providers ?? [];
+const profileIds = () => profiles().map(p => p.id);
+const profileOf = id => profiles().find(p => p.id === id);
+const providerLabel = id => (id === 'manual' ? t('provider.short.manual') : profileOf(id)?.label?.[LANG] ?? id);
+/// Whether a profile's provider is there now: Ollama running, the Claude CLI found.
+const profileReady = id => { const p = profileOf(id); if (!p) return false; if (!p.provider) return true;
+  return p.provider === 'ollama' ? Boolean(studio.status.llm.ollama.running) : Boolean(studio.status.llm.claude_cli.executable); };
+/// The library's default for an action: its profile when that provider is there, else another that is, else Nenhum.
+function libraryChoice(kind) {
+  const a = studio.status?.models?.actions?.[kind];
+  const wanted = a && profileOf(a.profile) ? a.profile : null;
+  const profile = wanted && profileReady(wanted) ? wanted : profileIds().find(id => id !== 'manual' && profileReady(id)) ?? wanted ?? 'manual';
+  return { profile, claude_model: profile === a?.profile ? (a.claude_model ?? null) : null };
 }
 function choiceFor(kind) {
   let c = null;
   try { c = JSON.parse(saved.get(`llm.${kind}`) ?? 'null'); } catch { /* a broken entry falls back to the default */ }
-  const names = studio.modelfiles.map(m => m.name);
-  if (!c || !implementedProviders().includes(c.provider)) {
-    c = { provider: defaultProvider(), modelfile: (DEFAULT_MODELFILES[kind] ?? []).find(n => names.includes(n)) ?? names[0] ?? null };
-  }
-  if (c.modelfile && !names.includes(c.modelfile)) c.modelfile = null;
-  if (c.provider === 'ollama' && !c.modelfile) c.modelfile = names[0] ?? null;
-  if (c.provider === 'manual') c.modelfile = null;
-  c.claude_model = c.provider === 'claude-cli' ? (c.claude_model ?? studio.status.llm.claude_cli.models[0] ?? null) : null;
-  return c;
+  // A choice kept before the model library (provider and Modelfile) names no profile: the library's default replaces it.
+  if (!c || !profileOf(c.profile)) c = libraryChoice(kind);
+  const p = profileOf(c.profile);
+  const claude = p?.models?.length ? (p.models.includes(c.claude_model) ? c.claude_model : p.default_model ?? p.models[0]) : null;
+  return { profile: c.profile, claude_model: claude };
 }
 const keepChoice = (kind, c) => saved.set(`llm.${kind}`, JSON.stringify(c));
-const choiceLabel = c => [providerLabel(c.provider), c.modelfile].filter(Boolean).join(' · ');
+const choiceLabel = c => [providerLabel(c.profile), c.claude_model].filter(Boolean).join(' · ');
+/// Who answered a send, as its record says: the profile, or, for a send from before the library, its provider and Modelfile.
+const sendLabel = s => (s.state === 'pasted' ? providerLabel('manual') : s.profile ? choiceLabel({ profile: s.profile, claude_model: s.claude_model ?? (s.provider === 'claude-cli' ? s.model : null) })
+  : [s.provider === 'ollama' ? 'Ollama' : s.provider === 'claude-cli' ? 'Claude CLI' : s.provider, s.modelfile].filter(Boolean).join(' · '));
 
-/// Provider, Modelfile and Claude model for one kind of action, saved as it changes.
+/// Profile and Claude model for one kind of action, saved as it changes.
 function llmPicker(kind) {
   const c = choiceFor(kind);
-  const provider = el('select', { title: t('composer.llm') }, ...implementedProviders().map(id =>
-    el('option', { value: id, textContent: providerLabel(id), title: STRINGS[`provider.${id}`] ? t(`provider.${id}`) : id })));
-  provider.value = c.provider;
-  const modelfile = el('select', { title: 'Modelfile' }, el('option', { value: '', textContent: t('mf.none') }),
-    ...studio.modelfiles.map(m => el('option', { value: m.name, textContent: m.name })));
-  modelfile.value = c.modelfile ?? '';
-  const claude = el('select', { title: t('composer.claudeModel') }, ...studio.status.llm.claude_cli.models.map(m => el('option', { value: m, textContent: m })));
-  if (c.claude_model) claude.value = c.claude_model;
-  const read = () => ({ provider: provider.value, modelfile: provider.value === 'manual' ? null : (modelfile.value || null),
-    claude_model: provider.value === 'claude-cli' ? claude.value : null });
+  const profile = el('select', { title: t('composer.llm') }, ...profileIds().map(id => el('option', { value: id, textContent: providerLabel(id) })));
+  profile.value = c.profile;
+  const claude = el('select', { title: t('composer.claudeModel') });
+  const read = () => ({ profile: profile.value, claude_model: claude.hidden ? null : claude.value });
   const sync = () => {
-    modelfile.hidden = provider.value === 'manual';
-    claude.hidden = provider.value !== 'claude-cli';
-    modelfile.querySelector('option[value=""]').disabled = provider.value === 'ollama';
-    if (provider.value === 'ollama' && !modelfile.value) modelfile.value = studio.modelfiles[0]?.name ?? '';
+    const models = profileOf(profile.value)?.models ?? [];
+    const keep = claude.value || c.claude_model;
+    claude.replaceChildren(...models.map(m => el('option', { value: m, textContent: m })));
+    claude.hidden = !models.length;
+    if (models.includes(keep)) claude.value = keep;
   };
-  for (const s of [provider, modelfile, claude]) s.onchange = () => { sync(); keepChoice(kind, read()); };
+  for (const x of [profile, claude]) x.onchange = () => { sync(); keepChoice(kind, read()); };
   sync();
-  return { node: el('div', { className: 'picker' }, el('span', { className: 'label', textContent: t('picker.label') }), provider, modelfile, claude), read };
+  return { node: el('div', { className: 'picker' }, el('span', { className: 'label', textContent: t('picker.label') }), profile, claude), read };
 }
 
 // ---- question mode: Locate asks for facts; Improve also accepts a hypothesis with a proposed
@@ -3580,9 +3548,8 @@ function applyMode() {
   renderCriteria();
 }
 function setComposerChoice(c) {
-  $('#provider').value = c.provider;
-  $('#modelfile').value = c.modelfile ?? '';
-  if (c.claude_model) $('#claudeModel').value = c.claude_model;
+  $('#provider').value = c.profile;
+  fillClaudeModels(c.claude_model ?? undefined);
 }
 /// Syncs the selector with the policy of the profile on screen (opening a project, reading it again). Writes
 /// nothing; another project's mode never applies, and neither does `librarian.mode` (3.13.3, 3.13.4).
@@ -4147,48 +4114,24 @@ function renderHead() {
   renderSummary();
 }
 
-// Skills chosen next to the LLM: their text joins the SYSTEM of every send the page makes
-// (composer, ladder, "Onde pesa" facts, path questions). Remembered in this browser.
-function selectedSkills() {
-  try { return JSON.parse(saved.get('skills') ?? '[]').filter(n => studio.status?.skills?.some(s => s.name === n)); } catch { return []; }
-}
-function renderSkills() {
-  const skills = studio.status?.skills ?? [], chosen = new Set(selectedSkills());
-  $('#skillsRow').hidden = !skills.length;
-  $('#skillsRow').replaceChildren(el('span', { className: 'label', textContent: t('skills.label') }),
-    ...skills.map(s => el('label', { className: 'check', style: 'margin: 0', title: s.description ?? '' },
-      el('input', { type: 'checkbox', checked: chosen.has(s.name), onchange: ev => {
-        ev.target.checked ? chosen.add(s.name) : chosen.delete(s.name);
-        saved.set('skills', JSON.stringify([...chosen]));
-      } }), s.name)),
-    helpButton(t('help.skills')));
-}
-
-const composerChoice = () => {
-  const provider = $('#provider').value;
-  return { provider, modelfile: $('#modelfileRow').hidden ? null : ($('#modelfile').value || null),
-    claude_model: provider === 'claude-cli' ? $('#claudeModel').value : null };
-};
+// Skills: the library says which a task takes (models.tasks[task].skills); none is offered by default, and a send
+// never carries one its task does not take. The Ponytail stays in skills/, for a future performance specialization.
+const composerChoice = () => ({ profile: $('#provider').value, claude_model: $('#claudeModelRow').hidden ? null : ($('#claudeModel').value || null) });
 
 // The mode the question in the composer uses: the one its draft requires (5.4), or the project's policy.
 const effectiveMode = () => ((gathered.length || investigation) && draft.required_mode) || mode;
 const approvedGate = () => (studio.commands ?? []).filter(c => c.approved).map(c => c.name);
 /// The expected path of the action button (3.11), in the same order of decision as ask().
 function composerRoute() {
-  const ladder = effectiveMode() === 'improve' && $('#ladderOn').checked && gathered.length > 0 && !investigation;
-  const gate = approvedGate();
   if (gathered.length && !investigation && !seeds.length) return { id: 'noTarget', blocked: true, text: t('route.noTarget') };
-  if (ladder) return gate.length ? { id: 'ladder', text: `${t('route.ladder', { model: ladderLabel(), gate: gate.join(', ') })} ${t('route.noReview')}` }
-    : { id: 'ladder', blocked: true, text: t('route.noGate') };
-  // 3.11, column "Revisão na v1": routes 3 and 4 pass through the partial review (4.1).
+  // D3: every route prepares a package and opens the Package view; nothing is sent from the composer.
   if (investigation) return { id: 'finding', text: `${t('route.finding', { n: investigation.ticked.size })}\n${t('route.review')}` };
   if (gathered.length) return { id: 'builder', text: `${t('route.builder', { n: gathered.length })}\n${t('route.review')}` };
-  return { id: 'free', text: t('route.free') };
+  return { id: 'free', text: `${t('route.free')}\n${t('route.review')}` };
 }
 function refreshComposer() {
   if (!studio.status) return;
-  const ladder = effectiveMode() === 'improve' && $('#ladderOn')?.checked && gathered.length && !investigation;
-  const provider = ladder ? LADDER_MODELS[0].provider : $('#provider').value;
+  const profile = $('#provider').value, provider = profileOf(profile)?.provider ?? null;
   const ready = Boolean(studio.run);
   const route = composerRoute();
   $('#question').disabled = !ready;
@@ -4201,42 +4144,20 @@ function refreshComposer() {
     draftCriteria != null ? t('route.criteria') : ''].filter(Boolean).join('\n');
   $('#route').hidden = !ready;
   renderCriteria();
-  // The ladder is offered only where it would answer, with what is configured for it.
-  $('#ladderRow').hidden = effectiveMode() !== 'improve' || !gathered.length || Boolean(investigation);
-  $('#ladderText').textContent = t('ladder.on', { model: ladderLabel() });
-  // With the ladder, its own models answer: a selector here would be ignored.
-  $('#provider').hidden = ladder;
-  $('#llmHelp').hidden = ladder;
-  $('#claudeModelRow').hidden = ladder || provider !== 'claude-cli';
-  $('#modelfileRow').hidden = ladder || !['ollama', 'claude-cli'].includes(provider);
-  const noneOption = $('#modelfile').querySelector('option[value=""]');
-  if (noneOption) noneOption.disabled = provider === 'ollama';
-  if (provider === 'ollama' && !$('#modelfile').value && studio.modelfiles.length) $('#modelfile').value = studio.modelfiles[0].name;
-  const mf = studio.modelfiles.find(m => m.name === (ladder ? LADDER_MODELS[0].modelfile : $('#modelfile').value));
-  const target = choiceLabel(composerChoice());
-  $('#ask').textContent = ladder ? t('composer.askLadder', { n: gathered.length, model: ladderLabel() })
-    // 3.11 routes 3 and 4: "Preparar"; the send is chosen in the review.
-    : investigation ? t('composer.prepareFinding', { n: investigation.ticked.size })
-    : gathered.length ? t('composer.prepareBuilder', { n: gathered.length })
-    : provider === 'manual' ? t('composer.askManual') : t('composer.askSend', { target });
-  $('#modelfileSummary').textContent = mf ? modelfileSummary(mf.content, provider) : (provider === 'claude-cli' ? t('composer.defaultSystem') : '');
+  // Who answers is read by the Package view when it sends; the composer only prepares.
+  $('#claudeModelRow').hidden = !(profileOf(profile)?.models ?? []).length;
+  $('#ask').textContent = investigation ? t('composer.prepareFinding', { n: investigation.ticked.size })
+    : gathered.length ? t('composer.prepareBuilder', { n: gathered.length }) : t('composer.askSend');
+  $('#modelfileSummary').textContent = '';
   const llm = studio.status.llm;
   // A failure stays on screen until the next action: redrawing the composer must not erase it.
   if (!$('#llmNote').classList.contains('error')) $('#llmNote').textContent = {
     manual: t('llm.manual'),
-    ollama: llm.ollama.running ? t('llm.ollama', { endpoint: llm.ollama.endpoint, model: mf ? 'librarian-' + mf.name : '…' })
+    ollama: llm.ollama.running ? t('llm.ollama', { endpoint: llm.ollama.endpoint, model: `librarian-<${t('review.taskPending')}>-${profile}` })
       : t('llm.ollamaDown', { endpoint: llm.ollama.endpoint, missing: llm.ollama.executable ? '' : t('llm.ollamaMissing') }),
     'claude-cli': llm.claude_cli.executable ? t('llm.claude', { path: llm.claude_cli.executable }) : t('llm.claudeMissing'),
-  }[provider] ?? '';
+  }[provider ?? 'manual'] ?? '';
   if (!$('#chatNote').classList.contains('error')) $('#chatNote').textContent = ready ? t('chat.ready', { run: studio.run }) : t('chat.empty');
-}
-
-function modelfileSummary(content, provider) {
-  const from = content.match(/^\s*FROM\s+(\S+)/im)?.[1] ?? t('mf.noFrom');
-  const params = [...content.matchAll(/^\s*PARAMETER\s+(\S+)\s+(.+)$/gim)].map(m => `${m[1]} ${m[2].trim()}`);
-  const system = content.match(/^\s*SYSTEM\s+"""([\s\S]*?)"""/im)?.[1] ?? content.match(/^\s*SYSTEM\s+(.+)$/im)?.[1];
-  const systemText = system ? t('mf.system', { n: system.trim().split('\n').length }) : t('mf.noSystem');
-  return provider === 'claude-cli' ? t('mf.claudeOnly', { system: systemText }) : [from, ...params, systemText].join(' · ');
 }
 
 // The composer asks a free question, or, with an envelope, a question over the gathered declarations.
@@ -4253,22 +4174,12 @@ async function ask() {
     $('#llmNote').textContent = t('gather.noTarget');
     return;
   }
-  // 3.11 route 2. The ladder uses Improve: with another policy, T26 asks to change it first. It never
-  // saves the profile (3.13.2): the server reads the policy and the criteria saved there.
-  if (composerRoute().id === 'ladder') {
-    if (criteriaStop()) return;
-    if (!(await ensureMode('improve'))) return;
-    return busy([$('#ask')], $('#llmNote'), () => askLadder(question));
-  }
   if (!gathered.length && !investigation && await busy([$('#ask')], $('#llmNote'), () => askPerf(question)) !== false) return;
   return askModel(question);
 }
 /// Prepares a question (Builder, finding, or free) and, with an LLM chosen, sends it. Never saves the
 /// profile (3.12, 3.13): the server copies the saved default criteria and policy into the question.
 async function askModel(question) {
-  // Who answers is what the composer showed when the person clicked: changing the policy below (T26) also
-  // brings the LLM remembered for the new mode to the composer, and must not change this send.
-  const choice = composerChoice();
   // The run the person asked in (4.7): the question is created there and shown only while it is open.
   const home = homeNow(), seq = ++askSeq;
   if (criteriaStop()) return;
@@ -4311,15 +4222,9 @@ async function askModel(question) {
     addTurn(turn, home, seq);
     // 3.10: the composer's text stays in the draft after preparing.
     persistDraft();
-    // F10 (T10, 4.1): from the Builder or a finding, preparing does not send. The review opens (when this is still
-    // the latest question asked), and "Enviar" there is the send, a step of its own.
-    if (fromBuilder) {
-      if (reviewable(turn) && seq === askSeq) openReview(turn);
-      return;
-    }
-    // A free question (route 5, /api/ask) has no review (4.4): the composer's LLM decides. Nenhum only shows the
-    // query; any LLM also sends it.
-    if (turn.query && !turn.prepare_error) await sendTurn(turn, choice);
+    // D3: every route only prepares. The Package view opens (when this is still the latest question asked), and
+    // "Enviar" there is the send, a step of its own.
+    if (reviewable(turn) && seq === askSeq) openReview(turn);
   });
 }
 /// A question just created by the person, into its place in the timeline. It becomes the active one
@@ -4335,15 +4240,14 @@ function addTurn(turn, home, seq) {
 }
 
 // Chain step: a new question over the declarations the checked answers located, with the
-// reviewed facts about them. The dialog carries the mode and the LLM of this step.
+// reviewed facts about them. The dialog carries the mode of this step; the package opens in the Package view (D3).
 async function continueTurn(from, button) {
   // The chain continues the question it starts from, in that question's run (4.7, 8.4 item 8).
   const home = homeOf(from);
   const chooser = modeChooser('improve');
-  const picker = llmPicker('chain');
   const question = await modal({ title: t('chain.title'), message: t('chain.message', { id: from.id }), input: true,
     placeholder: t('chain.placeholder'), ok: t('chain.ok'), required: t('chain.required'),
-    extra: el('div', {}, chooser.node, picker.node) });
+    extra: el('div', {}, chooser.node) });
   if (!question) return;
   if (!isHome(home)) return lateNotice('chain.movedBefore', from.id, home);
   // T26: the mode chosen in the dialog, when the policy is another, is changed only after confirming; the
@@ -4356,17 +4260,10 @@ async function continueTurn(from, button) {
     // Created after the run changed: it stays prepared in its run, and is neither shown nor sent here.
     if (!isHome(home)) return lateNotice('turn.lateCreated', turn.id, home);
     addTurn(turn, home, seq);
-    if (turn.query) await sendTurn(turn, picker.read());
+    if (reviewable(turn) && seq === askSeq) openReview(turn);
   });
 }
 
-// Sends the same question (same evidence) to an LLM chosen now.
-async function resendTurn(turn, button) {
-  const picker = llmPicker('resend');
-  const ok = await modal({ title: t('resend.title'), message: t('resend.message', { question: turn.question }), ok: t('resend.ok'), extra: picker.node });
-  if (!ok) return;
-  await busy([button], $('#llmNote'), () => sendTurn(turn, picker.read()));
-}
 
 // P4: the envelope, declarations gathered one by one for a single question; reset with the run.
 // It lives over the composer: with an envelope, the composer asks over exactly these declarations.
@@ -4556,7 +4453,8 @@ function draftBody() {
     finding: investigation && { ...investigation, ticked: [...investigation.ticked] },
     // F7 (5.4): the draft's criteria only while they differ from the default, with the default they were
     // written against (5.5 step 7). Never the policy.
-    composer: { text: $('#question').value, ladder: $('#ladderOn').checked, required_mode: draft.required_mode,
+    // `ladder` stays in the kept shape (librarian.draft.v1), always false: the ladder is chosen in the Package view now.
+    composer: { text: $('#question').value, ladder: false, required_mode: draft.required_mode,
       criteria: draftCriteria == null ? null : { text: draftCriteria, base: draftCriteriaBase } },
     prepared_as: draft.prepared_as,
   };
@@ -4615,7 +4513,6 @@ function applyDraftBody(p) {
   p.arrived.forEach((via, id) => draft.arrived.set(id, via));
   p.coverage.forEach((e, id) => draft.coverage.set(id, e));
   $('#question').value = p.text;
-  $('#ladderOn').checked = p.ladder;
   // 5.5 step 7: the draft's criteria come back as the draft's, never into the profile. When the default
   // changed since they were written, both are said; equal to the default now, they simply follow it.
   draftCriteria = p.criteria?.text ?? null; draftCriteriaBase = p.criteria?.base ?? null; criteriaChanged = null; criteriaBlocked = false;
@@ -4642,7 +4539,6 @@ function takeKept(memory = null) {
   draftMissing = []; draftAck = false; draftRestoredAt = null;
   resetDraftSources();
   $('#question').value = '';
-  $('#ladderOn').checked = false;
   clearDraftCriteria();
   let applied = null;
   const mine = memory && memory.catalog === slot.catalog ? readDraftBody(memory.body) : null;
@@ -4713,7 +4609,6 @@ function renderDraftState() {
   if (!studio.status) return;
   const st = draftSlot?.status(), locked = st?.state === 'conflict';
   $('#question').readOnly = locked;
-  $('#ladderOn').disabled = locked;
   if (locked !== draftWasLocked) { draftWasLocked = locked; builderNotice = locked ? builderNotice : ''; renderGathered(); inspect(); renderPathPoint(); return; }
   const box = $('#builderDraft'), actions = [];
   const act = (label, run, primary = false) => actions.push(el('button', { type: 'button', className: primary ? 'primary' : '', textContent: label, onclick: run }));
@@ -5161,7 +5056,7 @@ function ownerView(o) {
 
 /// Sends one prepared question with the LLM chosen at the action that asked for it.
 async function sendTurn(turn, choice = composerChoice()) {
-  const { provider, modelfile, claude_model } = choice;
+  const { profile, claude_model } = choice;
   // The send goes to the question's own run (4.7), never to the run open when it is clicked or answered.
   const home = homeOf(turn), id = homeId(home, turn.id);
   if (!turn.query) {
@@ -5169,24 +5064,23 @@ async function sendTurn(turn, choice = composerChoice()) {
     renderTurns();
     return;
   }
-  if (provider === 'manual') {
+  if (profile === 'manual') {
     turn.showQuery = true;
     turn.manual = true;
     renderTurns();
     return;
   }
   // Ollama cuts prompts longer than num_ctx without failing; warn before that happens.
-  if (provider === 'ollama' && !(await confirmContext(turn.query, modelfile))) return;
+  if (profileOf(profile)?.provider === 'ollama' && !(await confirmContext(turn.query, profile))) return;
   // The run changed before the send: nothing is sent from here (as askPath, F4); the question stays prepared.
   if (!isHome(home)) return lateNotice('turn.notSentMoved', turn.id, home);
-  const skills = choice.skills ?? selectedSkills();
-  sendsInFlight.set(id, [choiceLabel(choice), ...skills].join(' + '));
+  sendsInFlight.set(id, choiceLabel(choice));
   turn.sendError = null;
   renderTurns();
   let result = null;
   try {
     result = await api('POST', '/api/send', {
-      key: home.key, run: home.run, turn: turn.id, provider, modelfile, claude_model, skills,
+      key: home.key, run: home.run, turn: turn.id, profile, claude_model,
     });
     (turn.sends ??= []).push(result);
     await refreshSends(turn, home);
@@ -5256,14 +5150,14 @@ function pasteView(turn) {
 
 // Same conservative estimate as the server (3.5 bytes per token for JSON with code).
 const estimateTokens = text => Math.round(new Blob([text]).size / 3.5);
-const numCtx = content => Number(content?.match(/^\s*PARAMETER\s+num_ctx\s+(\d+)/im)?.[1] ?? 0) || null;
+/// The context of a local profile, from the library (its num_ctx parameter).
+const numCtx = profile => Number((studio.status?.models?.profiles?.[profile]?.parameters ?? []).find(([k]) => k === 'num_ctx')?.[1] ?? 0) || null;
 
-async function confirmContext(text, modelfileName) {
-  const mf = studio.modelfiles.find(m => m.name === modelfileName);
-  const ctx = numCtx(mf?.content);
+async function confirmContext(text, profile) {
+  const ctx = numCtx(profile);
   const tokens = estimateTokens(text);
   if (ctx && tokens <= ctx * 0.75) return true;
-  const limit = ctx ? t('context.limit', { name: modelfileName, ctx }) : t('context.noLimit', { name: modelfileName ?? '' });
+  const limit = ctx ? t('context.limit', { name: providerLabel(profile), ctx }) : t('context.noLimit', { name: providerLabel(profile) });
   return modal({ title: t('context.title'), message: t('context.message', { tokens, limit }), ok: t('context.ok') });
 }
 
@@ -5440,7 +5334,7 @@ function renderTurn(turn) {
   // Older answers fold under their header; the latest stays open.
   const replies = sends.map((s, k) => k < sends.length - 1
     ? el('details', { className: 'older' }, el('summary', { textContent: t('turn.olderAnswer', {
-      who: choiceLabel({ provider: s.state === 'pasted' ? 'manual' : s.provider, modelfile: s.modelfile }),
+      who: sendLabel(s),
       verdict: s.check ? (s.check.report.mechanical_status === 'passed' ? t('check.passed') : t('check.failed')) : s.state }) }), reply(s, turn))
     : reply(s, turn));
   const more = el('span', { hidden: true },
@@ -5450,12 +5344,9 @@ function renderTurn(turn) {
     b.onclick = () => continueTurn(turn, b);
     return b;
   })() : null;
-  const send = el('button', { textContent: sends.length ? t('turn.resend') : t('turn.sendFirst'), disabled: !turn.query || Boolean(sending) });
-  send.onclick = () => resendTurn(turn, send);
-  // 4.1, 4.7 item 1: "Ver revisão" on a question of a route that has one (4.4); the others say they have none.
-  const seeReview = reviewable(turn) ? withData(el('button', { className: 'review-open', textContent: t('review.open') }), { action: 'review' })
-    : turn.query && !turn.prepare_error ? el('span', { className: 'muted review-none', style: 'font-size: 11px', textContent: t('review.noRoute') }) : null;
-  if (seeReview?.tagName === 'BUTTON') seeReview.onclick = () => openReview(turn);
+  // D2, D3: the package, its checks and every send of a question are in its Package view.
+  const seeReview = reviewable(turn) ? withData(el('button', { className: 'review-open', textContent: t('review.open') }), { action: 'review' }) : null;
+  if (seeReview) seeReview.onclick = () => openReview(turn);
   // Answered and validated (a fact approved from it): folded to its question and summary,
   // unless it is the active one or you opened it.
   const validated = sends.some(s => Object.values(s.reviews ?? {}).some(r => r.decision === 'approved'));
@@ -5493,7 +5384,6 @@ function renderTurn(turn) {
       el('p', { className: 'muted', textContent: t('turn.sentHow') }),
       turn.answer_format === 'claims' ? el('p', { className: 'muted', textContent: t('turn.claimsHow') }) : null,
       el('pre', { textContent: turn.query })) : null,
-    evidenceView(turn),
     // 4.7 item 2: each send in three layers.
     ...replies,
     turn.comparison ? compareView(turn.comparison) : null,
@@ -5503,32 +5393,11 @@ function renderTurn(turn) {
     // 4.7 item 4: executions and facts of this question.
     recordsView(turn),
     el('div', { className: 'row', style: 'margin-top: 8px' },
-      chain, seeReview, send, copyButton,
+      chain, seeReview, copyButton,
       el('span', { className: 'row', style: 'margin-left: auto; gap: 6px' }, more,
         el('button', { textContent: '⋯', title: t('turn.more'), onclick: () => { more.hidden = !more.hidden; } })))), { turn: turn.id });
 }
 
-// The question's evidence package as recorded, and what the server checks of it now (GET /api/evidence).
-// Read when opened, and only read. H1 to H3 are what a send checks; H4 only tells.
-function evidenceView(turn) {
-  const box = el('div', { className: 'evidence-body' });
-  const details = el('details', { className: 'evidence', open: Boolean(turn.evidenceOpen) }, el('summary', { textContent: t('evidence.title') }), box);
-  details.dataset.turn = turn.id;
-  const show = data => box.replaceChildren(...evidenceParts(data));
-  const load = async () => {
-    const home = homeOf(turn);
-    box.replaceChildren(el('p', { className: 'muted', textContent: t('evidence.loading') }));
-    try {
-      const data = await api('GET', `/api/evidence?${query({ key: home.key, run: home.run, turn: turn.id })}`);
-      turn.evidence = data;
-      // Read for this question's run: shown only while that run is the one open.
-      if (isHome(home)) show(data);
-    } catch (e) { if (isHome(home)) box.replaceChildren(el('p', { className: 'error', textContent: e.message })); }
-  };
-  details.addEventListener('toggle', () => { turn.evidenceOpen = details.open; if (details.open) load(); });
-  if (turn.evidenceOpen && turn.evidence) show(turn.evidence);
-  return details;
-}
 const shortSha = sha => sha ? String(sha).slice(0, 12) : '—';
 const measureReading = m => !m ? '—' : m.read_status === 'ok' ? `ok ${m.execution} ${shortSha(m.execution_sha256)}` : m.suggestion ? `${m.read_status} (${shortSha(m.suggestion)})` : m.read_status;
 function evidenceParts(data) {
@@ -6214,9 +6083,10 @@ function measuredOrigins(executions) {
 // hotBatch: the batch made last (4.5), its run and its questions, for "Aprovar todos".
 let hot = null, hotBatch = null, hotPicked = null;
 // qwen is out of the changes for now: 0 of 8 answers passed, nearly all refused by their form (see the plan).
-const LADDER_MODELS = [{ provider: 'claude-cli', modelfile: 'performance-claude', claude_model: 'haiku' }];
-const ladderLabel = () => LADDER_MODELS.map(m => [providerLabel(m.provider), m.claude_model ?? m.modelfile].filter(Boolean).join(' · ')).join(', ');
-const FACT_MODEL = { provider: 'ollama', modelfile: 'verificavel-qwen3coder' };
+// The ladder's model and the batch's are the library's defaults (models.actions.ladder, .facts): one place for both.
+const ladderChoice = () => libraryChoice('ladder');
+const ladderLabel = () => choiceLabel(ladderChoice());
+const factChoice = () => libraryChoice('facts');
 const intPt = v => Number(v).toLocaleString(LANG === 'pt' ? 'pt-BR' : 'en-US');
 // A count as the page says it, by what the server says its line can be (`count_kind`): only the
 // statement put at a function's entry reads as its calls.
@@ -6326,10 +6196,10 @@ function renderHot() {
     sep ? el('div', { className: 'muted', style: 'font-size: 12px' }, t('hot.callers'), ' ',
       ...sep.callers.flatMap((c, k) => [k ? ', ' : '', goTo(c.symbol, c.name), ` (${intPt(c.calls)})`])) : null,
     el('div', { className: 'row', style: 'gap: 6px; margin-top: 6px' },
-      el('button', { className: 'primary', textContent: sep ? t('hot.askFacts', { n: sep.lines.length, model: choiceLabel(FACT_MODEL) }) : t('hot.askFactsNone', { model: choiceLabel(FACT_MODEL) }), disabled: !sep?.lines.length,
+      el('button', { className: 'primary', textContent: sep ? t('hot.askFacts', { n: sep.lines.length, model: choiceLabel(factChoice()) }) : t('hot.askFactsNone', { model: choiceLabel(factChoice()) }), disabled: !sep?.lines.length,
         onclick: ev => busy([ev.target], $('#hotNote'), () => askHotFacts(sep)) }),
       el('button', { id: 'hotApprove', textContent: t('hot.approveAll'), hidden: !approvable(), onclick: ev => approveHotFacts(ev.target) }),
-      helpButton(t('help.hotSeparate', { model: choiceLabel(FACT_MODEL) })))) : el('p', { className: 'muted', textContent: t('hot.noneRan') });
+      helpButton(t('help.hotSeparate', { model: choiceLabel(factChoice()) })))) : el('p', { className: 'muted', textContent: t('hot.noneRan') });
   const row = r => el('li', {}, el('details', { className: 'finding' },
     el('summary', {}, el('button', { className: 'primary investigate', textContent: t('hot.optimize'), title: t('help.hotOptimize'),
       onclick: ev => { ev.preventDefault(); busy([ev.target], $('#hotNote'), () => optimize(r)); } }),
@@ -6440,7 +6310,7 @@ function perfCard(perf) {
     el('div', { className: 'muted', style: 'font-size: 12px', textContent: t('perf.route', { intent, words: r.matched.join(', ') }) }),
     // Where the answer came from: `execution` comes when a measure was read. A question with no
     // intent gets it too, but no card: the page sends it to the model.
-    perf.execution ? el('div', { className: 'muted', style: 'font-size: 12px' }, t('perf.noModel'), helpButton(t('help.perf', { facts: choiceLabel(FACT_MODEL), ladder: ladderLabel() })))
+    perf.execution ? el('div', { className: 'muted', style: 'font-size: 12px' }, t('perf.noModel'), helpButton(t('help.perf', { facts: choiceLabel(factChoice()), ladder: ladderLabel() })))
       : r.target?.status === 'ambiguous' ? el('div', { className: 'muted', style: 'font-size: 12px', textContent: t('perf.ambiguous') })
       : r.target?.status === 'not_found' ? el('div', { className: 'muted', style: 'font-size: 12px', textContent: t('perf.notFound') }) : null,
     ...perf.answer.map(a => el('div', { style: 'font-size: 13px; margin-top: 4px', textContent: a })),
@@ -6470,9 +6340,8 @@ function perfCard(perf) {
 //   of what goes and what does not, and each result. It is not part of the batch's review.
 // The decisions on the items of an answer stay in the conversation (layer 3, F8): the review never decides.
 
-/// The routes that pass through the review in v1 (4.4): the Builder, the inventory finding and the batches, all
-/// prepared by /api/gathered-question. The ladder, the chain, the path questions and /api/ask have none.
-const reviewable = turn => Boolean(turn?.gathered) && turn.gathered.origin?.kind !== 'ladder' && Boolean(turn.query) && !turn.prepare_error;
+/// D3: every prepared question is seen in its Package view before any send, whatever route made it.
+const reviewable = turn => Boolean(turn?.query) && !turn.prepare_error;
 const H_CHECKS = ['h1', 'h2', 'h3'];
 /// H1 to H3 as the server checked them in this reading: the first refusal, or null. "Not applicable" (a
 /// question older than marks) is no refusal: the send decides then, as it always did.
@@ -6535,17 +6404,21 @@ async function readRevoked(r) {
 const revokedOf = r => { const ids = packageFacts(reviewTurn(r), r.evidence); return (r.facts ?? []).filter(f => f.status === 'revoked' && ids.includes(String(f.id))); };
 
 /// The choice that will send (3.10): the composer's, read now; the review shows it and follows its changes.
-function choiceView(choice) {
-  const mf = choice.modelfile ? studio.modelfiles.find(m => m.name === choice.modelfile) : null;
-  const system = mf?.content ? (mf.content.match(/^\s*SYSTEM\s+"""([\s\S]*?)"""/im)?.[1] ?? mf.content.match(/^\s*SYSTEM\s+(.+)$/im)?.[1] ?? null) : null;
-  const skills = selectedSkills();
+/// The task a question asks for, as the server decides it: proposing a change when its claims policy allows edits or
+/// a patch, answering otherwise; a prose question explains (legacy). The language is the project's.
+function turnTask(turn) {
+  if (turn.answer_format !== 'claims') return 'analista';
+  return usedPolicy(turn).patch ? 'performance' : 'verificavel';
+}
+function choiceView(choice, turn) {
+  if (choice.profile === 'manual') return [el('div', { className: 'rv-chosen', textContent: t('review.chosenManual') })];
+  const task = turnTask(turn), language = studio.project?.settings?.language === 'en' ? 'en' : 'pt';
+  const rendered = (studio.status?.models?.modelfiles ?? []).find(m => m.task === task && m.profile === choice.profile && m.language === language);
+  const system = rendered?.content.match(/^\s*SYSTEM\s+"""([\s\S]*?)"""/im)?.[1] ?? null;
   return [
-    el('div', { className: 'rv-chosen', textContent: choice.provider === 'manual' ? t('review.chosenManual')
-      : t('review.chosen', { provider: providerLabel(choice.provider), model: choice.claude_model ?? '—', modelfile: choice.modelfile ?? t('mf.none'),
-        skills: skills.length ? skills.join(', ') : t('review.noSkills') }) }),
-    choice.provider === 'manual' ? null : system != null
-      ? el('details', { className: 'rv-system' }, el('summary', { textContent: t('review.system', { name: choice.modelfile }) }), el('pre', { textContent: system.trim() }))
-      : el('div', { className: 'muted', textContent: choice.modelfile ? t('review.noSystem', { name: choice.modelfile }) : t('review.defaultSystem') }),
+    el('div', { className: 'rv-chosen', textContent: t('review.chosen', { profile: providerLabel(choice.profile), model: choice.claude_model ?? '—',
+      task: t(`review.task.${task}`), language: t(`language.${language}`) }) }),
+    system != null ? el('details', { className: 'rv-system' }, el('summary', { textContent: t('review.system', { name: rendered.name }) }), el('pre', { textContent: system.trim() })) : null,
   ];
 }
 /// "Só você vê" (3.3, 4.1): what the selection record and the package say that does not go to the model.
@@ -6593,8 +6466,13 @@ function renderReview() {
   const why = sending ? t('review.whySending') : r.evidenceError ? t('review.whyUnread') : !data ? t('review.whyLoading')
     : refused ? t('review.whyRefused', { h: t('evidence.' + refused.h), why: refused.why }) : '';
   const send = withData(el('button', { id: 'reviewSend', className: 'primary', disabled: Boolean(why),
-    textContent: choice.provider === 'manual' ? t('review.sendManual') : t((turn.sends ?? []).length ? 'review.sendAgain' : 'review.send', { who: choiceLabel(choice) }) }), { action: 'send' });
+    textContent: choice.profile === 'manual' ? t('review.sendManual') : t((turn.sends ?? []).length ? 'review.sendAgain' : 'review.send', { who: choiceLabel(choice) }) }), { action: 'send' });
   send.onclick = () => reviewSend(r);
+  // The ladder climbs on this same package (a question that proposes a change, over gathered declarations).
+  const gate = approvedGate(), climbs = turnTask(turn) === 'performance' && Boolean(turn.gathered);
+  const ladder = climbs ? withData(el('button', { id: 'reviewLadder', disabled: Boolean(why) || !gate.length,
+    title: gate.length ? t('review.ladderHelp') : t('review.ladderNoGate'), textContent: t('review.ladder', { model: ladderLabel() }) }), { action: 'ladder' }) : null;
+  if (ladder) ladder.onclick = () => reviewLadder(r);
   const fromDraft = !turn.gathered?.origin || turn.gathered.origin.kind === 'selection' || Boolean(turn.gathered.origin.inventory);
   const sent = r.sent;
   $('#reviewBody').replaceChildren(
@@ -6605,14 +6483,15 @@ function renderReview() {
     block('package', t('review.label.package'), ...(data ? evidencePackage(data).slice(1) : [pending(t('review.what.package'))])),
     block('used', '', usedView(turn)),
     block('checks', t('review.label.checks'), ...(data ? evidenceChecks(data).slice(1) : [pending(t('review.what.checks'))])),
-    block('chosen', t('review.label.chosen'), ...choiceView(choice)),
+    block('chosen', t('review.label.chosen'), ...choiceView(choice, turn)),
     block('only', t('review.label.only'), ...onlyYouView(turn, data)),
     block('unchecked', '', el('p', { className: 'rv-unchecked', textContent: t('review.unchecked') })),
     // 4.3: a fact of the package revoked after preparing: a warning and a recommendation, never a block.
     r.factsError ? el('p', { id: 'reviewRevoked', className: 'error', tabIndex: -1, textContent: t('review.revokedUnread', { error: r.factsError }) })
       : revoked.length ? el('div', { id: 'reviewRevoked', className: 'error', tabIndex: -1, role: 'alert' },
         ...revoked.map(f => el('p', { textContent: t('review.revoked', { id: f.id }) }))) : null,
-    el('div', { className: 'row rv-actions' }, send,
+    el('div', { className: 'row rv-actions' }, send, ladder,
+      climbs && !gate.length ? el('span', { className: 'muted', textContent: t('review.ladderNoGate') }) : null,
       fromDraft ? withData(el('button', { textContent: t('review.backToDraft'), onclick: () => openBuilder() }), { action: 'draft' }) : null,
       withData(el('button', { textContent: t('review.toConversation'), onclick: () => { activate(turn.id, false); showColumn('question'); } }), { action: 'conversation' }),
       r.evidenceError ? withData(el('button', { textContent: t('review.readAgain'), onclick: () => loadReviewTurn(r) }), { action: 'again' }) : null),
@@ -6645,11 +6524,22 @@ async function reviewSend(r) {
   renderReview();
   let last = null;
   try { last = await sendTurn(turn, choice); } finally { r.sending = false; }
-  r.sent = last ? { send: last } : turn.sendError ? { error: turn.sendError } : choice.provider === 'manual' ? { manual: true } : null;
+  r.sent = last ? { send: last } : turn.sendError ? { error: turn.sendError } : choice.profile === 'manual' ? { manual: true } : null;
   if (review === r) { renderReview(); $('#reviewSend')?.focus(); }
 }
-// The review follows the composer's choice (provider, Modelfile, Claude model, skills) while it is open.
-for (const id of ['#provider', '#modelfile', '#claudeModel', '#skillsRow']) $(id).addEventListener('change', () => { if (review?.kind === 'turn') renderReview(); });
+/// "Enviar pela escada": the ladder over this package, already seen here (D3, D5). Improve is the policy it needs
+/// (T26 asks first); its model is the library's.
+async function reviewLadder(r) {
+  const turn = reviewTurn(r);
+  if (review !== r || !isHome(r.home) || r.sending) return;
+  if (!(await ensureMode('improve'))) return;
+  r.sending = true;
+  renderReview();
+  try { await busy([], $('#reviewNote'), () => askLadder(turn)); } finally { r.sending = false; }
+  if (review === r) renderReview();
+}
+// The Package view follows the composer's choice (profile, Claude model) while it is open.
+for (const id of ['#provider', '#claudeModel']) $(id).addEventListener('change', () => { if (review?.kind === 'turn') renderReview(); });
 
 // ---- The batch (4.5, T7). Each question has its own package, checks, send, result and failure; nothing of one
 // enters another. The review only groups them on screen.
@@ -6693,7 +6583,7 @@ async function prepareLot(items, note) {
   // H1 to H3 of each question, read now; one refused (or unreadable) is unticked, with the reason (4.5).
   await Promise.all(lot.items.filter(i => i.turn && !i.auto).map(i => lotChecks(lot, i)));
   const made = lot.items.filter(i => i.turn).length;
-  say(note, t('lot.prepared', { n: made, failed: items.length - made, model: choiceLabel(FACT_MODEL) }));
+  say(note, t('lot.prepared', { n: made, failed: items.length - made, model: choiceLabel(factChoice()) }));
   if (review === lot) renderReview();
   if (isHome(home)) renderHot();
 }
@@ -6727,7 +6617,7 @@ async function sendLot(lot) {
     const turn = item.turn;
     turn.sendError = null;
     let last = null;
-    try { last = await sendTurn(turn, FACT_MODEL); } catch (error) { turn.sendError = error.message; }
+    try { last = await sendTurn(turn, factChoice()); } catch (error) { turn.sendError = error.message; }
     item.result = last ? { kind: 'sent', send: last } : turn.sendError ? { kind: 'failed', why: turn.sendError }
       : { kind: 'notSent', why: isHome(lot.home) ? t('lot.notSentCancelled') : t('lot.skippedMoved', { where: whereText(lot.home) }) };
   }
@@ -6778,7 +6668,7 @@ function renderLot(lot) {
   send.onclick = () => sendLot(lot);
   $('#reviewBody').replaceChildren(
     el('p', { className: 'rv-label', textContent: t('lot.intro') }),
-    el('p', { className: 'muted', textContent: t('lot.model', { model: choiceLabel(FACT_MODEL) }) }),
+    el('p', { className: 'muted', textContent: t('lot.model', { model: choiceLabel(factChoice()) }) }),
     el('p', { className: 'muted', textContent: t('lot.notApprove') }),
     ...lot.items.map(row),
     el('div', { className: 'row rv-actions' }, send),
@@ -6898,7 +6788,6 @@ async function optimize(r) {
       // Improve is what this question needs (5.4): a requirement recorded in the draft, never the policy.
       // The ladder shows for it; running it with another policy asks first (T26).
       draft.required_mode = 'improve';
-      $('#ladderOn').checked = true;
       $('#question').value = t('hot.optimizeQuestion', { name: r.name, runs: runsText(r),
         called: called.length ? t('hot.optimizeCalled', { list: called.map(c => `${c.name} (${intPt(c.calls)})`).join(', ') }) : '' });
     });
@@ -6907,8 +6796,8 @@ async function optimize(r) {
   inspect();
   openBuilder();
 }
-// 2.4.1: "Pedir esta mudança" makes a new draft as Otimizar does (it no longer sends at once). With no
-// edit by the person, "Rodar a escada" in the composer sends the same body as before (9.5).
+// 2.4.1: "Pedir esta mudança" makes a new draft as Otimizar does (it no longer sends at once); the ladder is chosen
+// in the Package view of the question prepared from it.
 async function requestChange(c) {
   const done = await restartDraft({ kind: 'change', summary: c.text },
     () => api('POST', '/api/envelope/suggest', { key: studio.project.key, run: studio.run, nodes: c.nodes }),
@@ -6924,7 +6813,6 @@ async function requestChange(c) {
       gatheredFolded = false;
       // As Otimizar: Improve is recorded as required (5.4); the policy changes only by T26, when it runs.
       draft.required_mode = 'improve';
-      $('#ladderOn').checked = true;
       $('#question').value = c.text;
     });
   if (!done) return;
@@ -6932,10 +6820,10 @@ async function requestChange(c) {
   inspect();
   openBuilder();
 }
-// The ladder from the composer, once: nothing changes the package after it is asked. A refusal or
-// a LACUNA stays in the record for the person to decide. Each send shows in the conversation as it
-// is recorded.
-async function askLadder(question) {
+// The ladder over a question already prepared and seen in its Package view (D3): its first send is that package,
+// to the library's ladder model. A refusal or a LACUNA stays in the record for the person to decide. Each send shows
+// in the conversation as it is recorded.
+async function askLadder(prepared) {
   const gate = approvedGate();
   if (!gate.length) throw new Error(t('ladder.noGate'));
   // The server reads the policy from the saved profile: Improve (hypotheses and changes allowed) is made
@@ -6949,11 +6837,8 @@ async function askLadder(question) {
   const poll = setInterval(async () => { await readTurns(); if (same()) renderTurns(); }, 4000);
   try {
     say($('#llmNote'), t('ladder.running', { gate: gate.join(', ') }));
-    const result = await api('POST', '/api/ladder', { key: studio.project.key, run: studio.run, question, nodes: gathered, with_facts: gatherFacts,
-      gate, models: LADDER_MODELS.map(m => ({ ...m, skills: selectedSkills() })), retries: 0, lacuna_rounds: 0, origin: { kind: 'ladder', summary: question.slice(0, 80), ...(selectionOnRecord() ? { selection: selectionOnRecord() } : {}) } });
+    const result = await api('POST', '/api/ladder', { key: home.key, run: home.run, turn: prepared.id, gate, retries: 0, lacuna_rounds: 0 });
     ladderLog.unshift(result);
-    // 3.10: the composer's text stays in the draft (the draft of this run: another run's is not touched).
-    if (same()) persistDraft();
     return result;
   } finally {
     clearInterval(poll);
@@ -6972,7 +6857,7 @@ function renderLadder() {
   const box = $('#ladderLog');
   box.hidden = !ladderLog.length;
   const costOf = s => s.detail?.cost_usd != null ? ` · US$ ${Number(s.detail.cost_usd).toFixed(3)}` : '';
-  const who = s => s.claude_model ? `Claude ${s.claude_model}` : (s.modelfile ?? s.name ?? '');
+  const who = s => s.claude_model ? `Claude ${s.claude_model}` : s.profile ? providerLabel(s.profile) : (s.modelfile ?? s.name ?? '');
   const line = s => el('div', { style: 'font-size: 12px' },
     el('span', { className: s.outcome === 'passed' || s.outcome === 'passed_smaller' ? 'verdict passed' : s.outcome === 'baseline' ? 'muted' : 'verdict failed', textContent: t(`ladder.${s.outcome}`) }),
     ` ${who(s)}${s.turn ? ` · ${t('ladder.turn', { turn: s.turn })}` : ''}${costOf(s)}`,
@@ -7209,7 +7094,6 @@ function fitCity() {
   flyTo(sphere.center, Math.max(160, sphere.radius / Math.sin(narrow)), userMoved ? null : new THREE.Vector3(.35, 1, .9));
 }
 
-$('#ladderOn').addEventListener('change', () => { refreshComposer(); persistDraft(); });
 $('#inventoryFilter').addEventListener('change', () => renderInventory());
 $('#inventorySearch').addEventListener('input', () => renderInventory());
 
@@ -7491,7 +7375,7 @@ const helpButton = text => {
 // L2b: the answers of one question side by side, by content (kind, function, lines), not wording.
 function compareView(c) {
   const label = s => s.provider === 'claude-cli' ? t('compare.claude', { model: s.model ?? '' })
-    : s.provider === 'ollama' ? t('compare.ollama', { modelfile: s.modelfile ?? '' }) : s.provider === 'manual' ? t('compare.pasted') : providerLabel(s.provider);
+    : s.provider === 'ollama' ? t('compare.ollama', { modelfile: s.modelfile ?? '' }) : s.provider === 'manual' ? t('compare.pasted') : sendLabel(s);
   const where = ([evidence, start, end]) => `${evidence} ${start === end ? t('compare.line', { n: start }) : t('compare.lines', { start, end })}`;
   const describe = content => [content.kind, content.symbol ? content.symbol[1] : null, content.lines.map(where).join(', ')]
     .filter(Boolean).join(' · ');
@@ -7835,49 +7719,15 @@ function closePathView({ keep = false } = {}) {
 }
 $('#pathResetChoices').onclick = () => { pathChosen = {}; drawPath(); };
 
-// P1b: one question per point of the path, each with that point alone as evidence; with an LLM
-// chosen, they are sent one after the other.
-async function askPath(button) {
-  const label = id => state.nodes[state.index.get(id)]?.label ?? id;
-  const targets = [...pathTargets];
-  // Questions about the points of a path locate: they are asked in the Locate mode.
-  const picker = llmPicker('locate');
-  const question = await modal({ title: t('path.askTitle'), input: true, value: t('path.askDefault'), required: t('chain.required'),
-    message: t('path.askMessage', { n: targets.length, list: targets.map(label).join('\n') }), ok: t('path.askOk', { n: targets.length }),
-    extra: picker.node });
-  if (!question) return;
-  const choice = picker.read();
-  // 2.3, T26: questions per point use Locate; with another policy, it is changed only after confirming.
-  // Cancel, or a failure, and nothing is created. Nothing here saves the profile (3.13.2).
-  if (!(await ensureMode('locate'))) return;
-  // 2.3: an answer that arrives after a change of run is not put in the other run's conversation,
-  // and nothing more is sent from here (the questions stay prepared in their run, 5.9).
-  const same = sameRun(), run = studio.run;
-  let moved = false;
-  const left = () => { moved = true; };
-  await busy([button], $('#llmNote'), async () => {
-    const turns = await api('POST', '/api/path-questions', { key: studio.project.key, run: studio.run, question, nodes: targets,
-      seed: pathSeed, chosen: pathChosen });
-    if (!same()) return left();
-    // Questions of this run (4.7), in the order of their numbers.
-    adoptTurns(turns);
-    studio.turns.push(...turns);
-    orderTurns(studio.turns);
-    renderTurns();
-    $('#turns').scrollTop = $('#turns').scrollHeight;
-    if (choice.provider === 'manual') return;
-    for (const [i, turn] of turns.entries()) {
-      if (!same()) return left();
-      say($('#llmNote'), t('path.sending', { index: i + 1, total: turns.length, name: label(turn.path.node) }));
-      await sendTurn(turn, choice);
-    }
-    say($('#llmNote'), t('path.sent', { total: turns.length }));
-  });
-  // In the conversation's note, as an interrupted action (refreshComposer rewrites the other notes;
-  // this one stays until the person edits the question, as other errors there do).
-  if (moved) Object.assign($('#chatNote'), { className: 'error', textContent: t('path.runChanged', { run }) });
+// D3: the points followed on a path join the Selection (as sources of one draft); the question is prepared there and
+// seen in the Package view before any send. Nothing is asked or sent from the flowchart.
+function joinPathPoints() {
+  const marked = pathTargets.filter(id => !gathered.includes(id));
+  for (const id of marked) toggleGathered(id, 'path');
+  say($('#pathNote'), t('path.joined', { n: marked.length }));
+  if (marked.length) openBuilder();
 }
-$('#pathAsk').onclick = () => askPath($('#pathAsk'));
+$('#pathAsk').onclick = () => joinPathPoints();
 for (const id of ['#pathDepth', '#pathNoTests', '#pathSolid', '#pathRan']) $(id).onchange = () => { if (pathSeed) drawPath(); };
 
 // ---- help: each "?" explains a part of the page in plain words, on hover or click.
@@ -7925,19 +7775,18 @@ async function suggestLexicon() {
     // 2.10: the suggestion never saves; it uses the lexicon saved in the profile, and says so when the
     // text on screen has unsaved edits.
     const stale = unsavedFields().includes('lexicon') ? ` ${t('lexicon.usesSaved')}` : '';
+    // The proposed words are in the project's language (Configurações), the one setting every flow reads.
     const choice = lexiconPicker.read();
-    // The proposed words follow the Modelfile's language: a name ending in -en asks for English.
-    choice.language = /-en$/.test(choice.modelfile ?? '') ? 'en' : 'pt';
-    say($('#suggestNote'), (choice.provider === 'manual' ? t('lexicon.building')
-      : t('lexicon.asking', { provider: providerLabel(choice.provider), modelfile: choice.modelfile ? t('lexicon.modelfile', { name: choice.modelfile }) : '' })) + stale);
+    say($('#suggestNote'), (choice.profile === 'manual' ? t('lexicon.building')
+      : t('lexicon.asking', { provider: choiceLabel(choice), modelfile: '' })) + stale);
     $('#lexiconProposal').hidden = true;
     const result = await api('POST', '/api/lexicon/suggest', { key: studio.project.key, run: studio.run, ...choice });
     studio.lexiconRequest = result.id;
-    $('#manualLexicon').hidden = choice.provider !== 'manual';
+    $('#manualLexicon').hidden = choice.profile !== 'manual';
     $('#lexiconQuery').textContent = result.query;
     const send = result.send;
-    say($('#suggestNote'), choice.provider === 'manual' ? t('lexicon.ready', { id: result.id })
-      : t('lexicon.answered', { provider: providerLabel(choice.provider), modelfile: send?.modelfile ? t('lexicon.modelfile', { name: send.modelfile }) : '',
+    say($('#suggestNote'), choice.profile === 'manual' ? t('lexicon.ready', { id: result.id })
+      : t('lexicon.answered', { provider: choiceLabel(choice), modelfile: send?.modelfile ? t('lexicon.modelfile', { name: send.modelfile }) : '',
         state: send?.state ?? '?', cost: send?.cost_usd != null ? ` · US$ ${Number(send.cost_usd).toFixed(4)}` : '',
         cut: send?.state === 'incomplete_response' ? t('lexicon.cut') : '' }) + stale);
     if (result.proposal) showProposal(result.proposal);
@@ -8010,29 +7859,32 @@ $('#copyLexiconQuery').addEventListener('click', async () => {
 });
 $('#exportProfile').addEventListener('click', exportProfile);
 
-// ---- Modelfiles
-function setModelfiles(list, selected) {
-  studio.modelfiles = list;
-  const current = selected ?? $('#modelfile').value;
-  $('#modelfile').replaceChildren(el('option', { value: '', textContent: t('mf.none') }),
-    ...list.map(m => el('option', { value: m.name, textContent: m.name })));
-  $('#modelfile').value = list.some(m => m.name === current) ? current : (list[0]?.name ?? '');
+// ---- The model library (GET /api/status → models): read only. Its catalog is the one source of the profiles, the
+// tasks, the defaults of each action and the skills a task takes; each Modelfile is rendered from it.
+function setModelfiles(library) {
+  studio.models = library;
+  studio.modelfiles = library?.modelfiles ?? [];
   renderLexiconPicker();
   refreshComposer();
 }
 
 function openModelfiles(name) {
+  const lib = studio.models ?? {};
+  const actions = Object.entries(lib.actions ?? {}).map(([a, c]) => `${a}: ${choiceLabel({ profile: c.profile, claude_model: c.claude_model })}`).join(' · ');
+  const skills = Object.entries(lib.tasks ?? {}).map(([task, d]) => `${task}: ${(d.skills ?? []).join(', ') || '—'}`).join(' · ');
+  $('#mfLibrary').replaceChildren(
+    el('div', { textContent: t('mf.profiles', { list: profileIds().filter(id => id !== 'manual').map(providerLabel).join(' · ') }) }),
+    el('div', { textContent: t('mf.actions', { list: actions }) }),
+    el('div', { textContent: t('mf.skills', { list: skills }) }));
   $('#mfSelect').replaceChildren(...studio.modelfiles.map(m => el('option', { value: m.name, textContent: m.name })));
   showModelfile(name || studio.modelfiles[0]?.name);
-  say($('#mfNote'), '');
   $('#modelfileDialog').showModal();
 }
 function showModelfile(name) {
   const mf = studio.modelfiles.find(m => m.name === name);
   $('#mfSelect').value = mf?.name ?? '';
-  $('#mfName').value = mf?.name ?? '';
   $('#mfContent').value = mf?.content ?? '';
-  $('#mfModel').textContent = mf ? mf.model : t('mf.placeholderModel');
+  $('#mfModel').textContent = mf ? `librarian-${mf.name}` : '';
 }
 
 // ---- folder picker
@@ -8106,7 +7958,8 @@ $('#ask').addEventListener('click', ask);
 $('#question').addEventListener('input', () => persistDraft());
 $('#question').addEventListener('keydown', ev => { if (ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey)) ask(); });
 // The composer's choice belongs to the current mode.
-for (const id of ['#provider', '#claudeModel', '#modelfile']) $(id).addEventListener('change', () => { refreshComposer(); keepChoice(choiceKind(), composerChoice()); renderTurns(); });
+$('#provider').addEventListener('change', () => fillClaudeModels());
+for (const id of ['#provider', '#claudeModel']) $(id).addEventListener('change', () => { refreshComposer(); keepChoice(choiceKind(), composerChoice()); renderTurns(); });
 // The selector is the explicit operation "Alterar a política do modo" (3.13.2, T20).
 for (const b of document.querySelectorAll('#modeSeg [data-mode]')) b.addEventListener('click', () => changePolicy(b.dataset.mode));
 // The composer's criteria are the draft's (3.12): editing them never touches the profile.
@@ -8118,25 +7971,8 @@ $('#criteriaCancel').addEventListener('click', () => { criteriaBlocked = false; 
 $('#saveLexicon').addEventListener('click', () => busy([$('#saveLexicon')], $('#lexiconNote'), async () => {
   saidSaved($('#lexiconNote'), await saveProfile());
 }));
-$('#editModelfile').addEventListener('click', () => openModelfiles($('#modelfile').value));
-$('#toolModelfiles').addEventListener('click', () => openModelfiles($('#modelfile').value));
+$('#toolModelfiles').addEventListener('click', () => openModelfiles());
 $('#mfSelect').addEventListener('change', ev => showModelfile(ev.target.value));
-$('#mfNew').addEventListener('click', () => {
-  $('#mfSelect').value = '';
-  $('#mfName').value = '';
-  $('#mfContent').value = 'FROM qwen2.5-coder:14b\nPARAMETER temperature 0\nPARAMETER seed 42\nPARAMETER num_ctx 4096\n\nSYSTEM """\n\n"""\n';
-  $('#mfModel').textContent = t('mf.placeholderModel');
-  $('#mfName').focus();
-});
-$('#mfSave').addEventListener('click', () => busy([$('#mfSave')], $('#mfNote'), async () => {
-  const name = $('#mfName').value.trim();
-  const list = await api('PUT', '/api/modelfiles', { name, content: $('#mfContent').value });
-  setModelfiles(list, name);
-  saved.set('modelfile', name);
-  $('#mfSelect').replaceChildren(...list.map(m => el('option', { value: m.name, textContent: m.name })));
-  showModelfile(name);
-  say($('#mfNote'), t('mf.saved', { name }));
-}));
 document.querySelectorAll('dialog [data-close]').forEach(b => b.addEventListener('click', () => b.closest('dialog').close()));
 
 // ---- language: relabels the static page and redraws everything built from data. Notes left
@@ -8148,7 +7984,7 @@ function setLang(lang) {
   applyI18n();
   hideHelp();
   applyMode();
-  if (studio.status) { fillProviders(); setModelfiles(studio.modelfiles); renderSkills(); }
+  if (studio.status) { fillProviders(); setModelfiles(studio.models); }
   if (studio.project) { renderProjectInfo(); renderRuns(); showRunNote(); renderUnsaved(); loadFacts().catch(console.error); }
   if (studio.status) { renderHead(); renderNav(); }
   renderGathered();
@@ -8163,8 +7999,10 @@ function setLang(lang) {
     : studio.run && studio.graphState === 'loading' ? t('status.loading') : t('status.openAny'));
   inspect();
   if (studio.browsing && $('#browseDialog').open) renderBrowse();
-  if ($('#modelfileDialog').open && !$('#mfName').value) $('#mfModel').textContent = t('mf.placeholderModel');
+  if ($('#modelfileDialog').open) showModelfile($('#mfSelect').value);
   renderCenter();
+  // The Package view is built from data too: it follows the language.
+  renderReview();
   if (pathSeed) drawPath();
 }
 document.querySelectorAll('[data-lang]').forEach(b => b.addEventListener('click', () => setLang(b.dataset.lang)));

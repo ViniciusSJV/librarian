@@ -1,7 +1,7 @@
 //! Librarian Studio: local server for the page in web/index.html. Select a project, generate its
 //! verified graph, ask questions that light the graph, and send prepared queries to an LLM.
 //! Listens on 127.0.0.1 only; requests from other origins are refused.
-mod builder;
+
 mod claims;
 mod execution;
 mod facts;
@@ -12,13 +12,12 @@ mod lexicon;
 mod llm;
 mod questions;
 mod store;
-mod values;
 
 use http::{Request, Response};
-use librarian_ingest::{
-    evidence::{AdditionReason, AdditionRule, RetryRule, ServerAddition, ServerLacunaDeclared},
-    graph::v2,
-};
+#[cfg(test)]
+use librarian_ingest::evidence::RetryRule;
+use librarian_ingest::graph::v2;
+use librarian_llm_engine::models;
 use serde_json::{json, Value};
 use std::{
     net::TcpListener,
@@ -111,8 +110,8 @@ fn route(app: &App, req: &Request) -> Result<Response> {
         ("GET", "/api/status") => ok(json!({
             "studio": true,
             "data": store::display(&store.dir),
-            "llm": llm::status(),
-            "modelfiles": store.modelfiles()?,
+            "llm": llm::status(&store.library()?),
+            "models": store.library()?.summary()?,
             "skills": store.skills()?,
         })),
         ("GET", "/api/browse") => ok(store::browse(req.param("path"))?),
@@ -231,7 +230,6 @@ fn route(app: &App, req: &Request) -> Result<Response> {
             let body = req.json()?;
             ok(store.execute_instrumented(&field(&body, "key")?, &field(&body, "run")?)?)
         }
-        ("GET", "/api/value-sources") => ok(store.value_sources(param("key")?, param("run")?, param("symbol")?, param("text")?)?),
         ("GET", "/api/hotspots") => {
             // No measure yet is an answer, not a failure: the page tells the two apart.
             if store.latest_measure(param("key")?, param("run")?)?.is_none() {
@@ -250,14 +248,12 @@ fn route(app: &App, req: &Request) -> Result<Response> {
         }
         ("POST", "/api/lexicon/suggest") => {
             let body = req.json()?;
-            let provider = field(&body, "provider")?;
-            if provider != "manual" && !implemented(&provider) {
-                return Ok(Response::error(501, format!("Provedor sem envio implementado: {provider}")));
-            }
+            // The words are proposed in the project's language; the profile answers, or "manual" only writes the request.
             let choice = choice(store, &body)?;
-            // The language of the proposed words; the page takes it from the Modelfile name (-en).
-            let language = body["language"].as_str().unwrap_or("pt");
-            ok(store.suggest_lexicon(&field(&body, "key")?, &field(&body, "run")?, &provider, language, choice)?)
+            if choice.profile != "manual" {
+                llm::provider_of(&store.library()?, &choice.profile)?;
+            }
+            ok(store.suggest_lexicon(&field(&body, "key")?, &field(&body, "run")?, choice)?)
         }
         ("POST", "/api/lexicon/check") => {
             let body = req.json()?;
@@ -268,11 +264,8 @@ fn route(app: &App, req: &Request) -> Result<Response> {
             let body = req.json()?;
             ok(store.export_profile(&field(&body, "key")?, body["dry_run"] != false)?)
         }
-        ("GET", "/api/modelfiles") => ok(store.modelfiles()?),
-        ("PUT", "/api/modelfiles") => {
-            let body = req.json()?;
-            ok(store.save_modelfile(&field(&body, "name")?, &field(&body, "content")?)?)
-        }
+        // The library, read only: each task × profile × language as the send renders it.
+        ("GET", "/api/modelfiles") => ok(store.library()?.summary()?),
         _ => Ok(Response::error(404, format!("Rota desconhecida: {} {}", req.method, req.path))),
     }
 }
@@ -296,36 +289,37 @@ fn graph(app: &App, key: &str, run: &str) -> Result<Arc<v2::Graph>> {
 
 /// Re-verifies the question immediately before every send; the send records the link (L3).
 fn send(store: &Store, body: &Value) -> Result<Response> {
-    let provider = body["provider"].as_str().unwrap_or("");
-    // Tests reach the route with the provider that pastes an answer (see `send_value`).
-    if !provider.is_empty() && !implemented(provider) && !(cfg!(test) && provider == "test") {
-        return Ok(Response::error(501, format!("Provedor sem envio implementado: {provider}")));
+    let profile = body["profile"].as_str().unwrap_or("");
+    // Tests reach the route with the profile that pastes an answer (see `send_value`).
+    if !profile.is_empty() && llm::provider_of(&store.library()?, profile).is_err() {
+        return Ok(Response::error(501, format!("Perfil sem envio: {profile}")));
     }
     Ok(Response::json(200, &send_value(store, body)?))
 }
 
 fn send_value(store: &Store, body: &Value) -> Result<Value> {
     let get = |name: &str| body[name].as_str();
-    let (Some(key), Some(run), Some(turn), Some(provider)) =
-        (get("key"), get("run"), get("turn"), get("provider"))
+    let (Some(key), Some(run), Some(turn), Some(profile)) =
+        (get("key"), get("run"), get("turn"), get("profile"))
     else {
-        return Err("Informe key, run, turn e provider".into());
+        return Err("Informe key, run, turn e profile".into());
     };
-    let testing = cfg!(test) && provider == "test";
-    if !implemented(provider) && !testing {
-        return Err(format!("Provedor sem envio implementado: {provider}").into());
-    }
+    let library = store.library()?;
+    let provider = llm::provider_of(&library, profile).map_err(|_| format!("Perfil sem envio: {profile}"))?;
     let verified = store.verify_for_send(key, run, turn)?;
     // Tests with `answers` stand an answer pasted as a person would for a provider's, by the question
     // it answers, after the check every send has: the same files after it. Without them, the send
     // goes on to `llm`'s test provider. No model is called either way.
     #[cfg(test)]
-    if testing && body.get("answers").is_some() {
+    if profile == "test" && body.get("answers").is_some() {
         return store.paste_answer(key, run, turn, body["answers"][turn].as_str().unwrap_or_default());
     }
     let choice = choice(store, body)?;
-    let destination = store::next_send(&store.turn_dir(key, run, turn)?, provider)?;
-    let mut summary = llm::send_question(provider, &choice, &verified, &destination)?;
+    // The task follows what the question asks (its claims policy); the language, the project.
+    let task = models::task_for_question(verified.context().map(|c| (c.allow_patch, c.allow_edits)));
+    let language = store::language_of(&store.settings(key)?)?;
+    let destination = store::next_send(&store.turn_dir(key, run, turn)?, &provider)?;
+    let mut summary = llm::send_question(&library, &choice, task, language, &verified, &destination)?;
     if let (Some(context), Some(text)) = (verified.context(), summary["text"].as_str()) {
         summary["check"] = claims::check(context, &destination, text)?;
         std::fs::write(destination.join("send.json"), serde_json::to_vec_pretty(&summary)?)?;
@@ -333,27 +327,62 @@ fn send_value(store: &Store, body: &Value) -> Result<Value> {
     Ok(summary)
 }
 
-/// The ladder (see ladder.rs): `models` in order, the gate's commands, and how many times a
-/// LACUNA may gather what it asks for. Baselines missing for a gate command are run first.
+/// What every refusal of the ladder ends with: it is checked before anything runs, is created or is sent.
+const LADDER_NOTHING: &str = "nada foi criado, executado nem enviado";
+
+/// The ladder (see ladder.rs) over one question already prepared and reviewed in the Pacote view
+/// (`turn`): that package goes once to one model, and the gate's commands judge the changes it
+/// proposes. Baselines missing for a gate command are run first. Nothing more is asked: a refusal or
+/// a LACUNA stays in the record, and a new question is a new package the person reviews (18/11,
+/// option A). The request is refused, before anything runs, when it asks for anything else.
 fn ladder(store: &Store, body: &Value) -> Result<Value> {
     // Before anything runs or is created: no `notes`, anywhere in what the client sent.
     store::refuse_notes(body)?;
     let field = |name: &str| -> Result<String> { body[name].as_str().map(str::to_owned).ok_or_else(|| format!("Informe {name}").into()) };
-    let (key, run, question) = (field("key")?, field("run")?, field("question")?);
-    let mut nodes: Vec<String> = serde_json::from_value(body["nodes"].clone())?;
-    let models: Vec<Value> = serde_json::from_value(body["models"].clone())?;
-    let gate: Vec<String> = serde_json::from_value(body["gate"].clone())?;
-    let rounds = body["lacuna_rounds"].as_u64().unwrap_or(1);
-    // A refused answer gets this many new tries from the same model, with why it was refused.
-    let retries = body["retries"].as_u64().unwrap_or(1);
-    let with_facts = body["with_facts"].as_bool().unwrap_or(false);
-    let origin = body.get("origin").filter(|o| !o.is_null()).cloned();
-    if models.is_empty() || gate.is_empty() {
-        return Err("A escada precisa de ao menos um modelo e um comando no portão".into());
+    let (key, run) = (field("key")?, field("run")?);
+    // No question is made here: without the reviewed one, there is nothing to send.
+    let Some(turn) = body["turn"].as_str().map(str::to_owned) else {
+        return Err(format!("A escada só envia uma pergunta já preparada e revisada na vista Pacote: informe turn; {LADDER_NOTHING}").into());
+    };
+    for name in ["question", "nodes", "with_facts", "origin"] {
+        if body.get(name).is_some() {
+            return Err(format!("A escada não recebe {name}: a pergunta, as declarações e a origem são as da pergunta revisada (turn); {LADDER_NOTHING}").into());
+        }
     }
-    // The client's selection is checked once, over the nodes it sent, before any baseline runs or
-    // any round starts. The rounds go with this record; the nodes a LACUNA adds are the server's.
-    let selection = store.accept_selection(&key, &run, &nodes, origin.as_ref())?;
+    // No automatic rounds: absent or 0, nothing else (no default that climbs on its own).
+    for name in ["retries", "lacuna_rounds"] {
+        if body.get(name).is_some_and(|v| v.as_u64() != Some(0)) {
+            return Err(format!("A escada não faz rodadas automáticas ({name} deve ser 0 ou ausente): cada nova pergunta passa pela vista Pacote; {LADDER_NOTHING}").into());
+        }
+    }
+    // One model: the one the request names, or the ladder's default in the library. A second one would
+    // be another call made after an answer, without the person asking for it.
+    let models: Vec<Value> = match body.get("models").filter(|m| !m.is_null()) {
+        Some(models) => serde_json::from_value(models.clone())?,
+        None => {
+            let library = store.library()?;
+            let default = library.action("ladder").ok_or("A biblioteca não define a escada")?;
+            vec![json!({ "profile": default.profile, "claude_model": default.claude_model })]
+        }
+    };
+    let [model] = models.as_slice() else {
+        return Err(format!("A escada envia a um único modelo por pedido (models com {} itens); {LADDER_NOTHING}", models.len()).into());
+    };
+    let gate: Vec<String> = serde_json::from_value(body["gate"].clone())?;
+    if gate.is_empty() {
+        return Err(format!("A escada precisa de ao menos um comando no portão; {LADDER_NOTHING}").into());
+    }
+    // The reviewed package: it exists, it is a gathered question, and it passes the check every send
+    // has (H1 to H3), before any baseline runs. The send checks it again right before it goes.
+    let recorded: Value = match std::fs::read(store.turn_dir(&key, &run, &turn)?.join("question.json")) {
+        Ok(bytes) => serde_json::from_slice(&bytes)?,
+        Err(_) => return Err(format!("Pergunta {turn} sem pacote preparado; {LADDER_NOTHING}").into()),
+    };
+    if recorded.get("gathered").is_none() {
+        return Err(format!("A escada só sobe sobre uma pergunta reunida (com declarações juntadas); {LADDER_NOTHING}").into());
+    }
+    store.verify_for_send(&key, &run, &turn)?;
+    let nodes: Vec<String> = serde_json::from_value(recorded["gathered"]["nodes"].clone())?;
     let mut steps = vec![];
     let executions = store.executions(&key, &run)?;
     for name in &gate {
@@ -364,137 +393,85 @@ fn ladder(store: &Store, body: &Value) -> Result<Value> {
             steps.push(json!({ "outcome": "baseline", "execution": x["id"], "name": name }));
         }
     }
-    let catalog = librarian_ingest::Catalog::load(&store.edition(&key, &run)?)?;
-    // Every question of the ladder goes with the record accepted at its entry, the rounds too, and
-    // with what the server added so far, in the order added.
-    let ask = |suffix: &[store::Suffix], nodes: &[String], additions: &[ServerAddition]| -> Result<String> {
-        Ok(store.ask_gathered_parts(&key, &run, &question, suffix, nodes, with_facts, origin.clone(), selection.as_ref(), additions)?["id"].as_str().ok_or("pergunta sem id")?.to_owned())
-    };
-    let mut additions: Vec<ServerAddition> = vec![];
-    let mut turn = ask(&[], &nodes, &additions)?;
-    for model in &models {
-        let (mut asked, mut tried) = (0, 0);
-        // What a retry added to the client's question, kept apart from it.
-        let mut suffix: Option<store::Suffix> = None;
-        loop {
-            let mut request = model.clone();
-            for (k, v) in [("key", &key), ("run", &run), ("turn", &turn)] {
-                request[k] = json!(v);
-            }
-            let summary = match send_value(store, &request) {
-                Ok(s) => s,
-                Err(e) => {
-                    steps.push(ladder::step(model, &turn, "", "provider_failed", json!(e.to_string())));
-                    break;
-                }
-            };
-            let send = summary["directory"].as_str().and_then(|d| std::path::Path::new(d).file_name()).map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
-            let (usable, lacunas, codes) = ladder::outcome(&summary);
-            if !usable.is_empty() {
-                // Each proposed change through the gate, in the answer's order; of those that pass,
-                // the one that gains the most is the answer's: the first to pass is often a small
-                // one, and a larger one after it would never be seen. The cost of the send is
-                // counted once, on its first change.
-                let mut refused = vec![];
-                let mut best: Option<(usize, String, f64)> = None;
-                for (k, claim) in usable.iter().enumerate() {
-                    let change = execution::ChangeRef { turn: turn.clone(), send: send.clone(), claim: claim.clone() };
-                    let runs: Vec<Value> = gate.iter().map(|name| store.execute(&key, &run, name, Some(&change))
-                        .unwrap_or_else(|e| json!({ "name": name, "refused": e.to_string() }))).collect();
-                    let (passed, why) = ladder::verdict(&runs);
-                    let cost = if k == 0 { summary["cost_usd"].clone() } else { Value::Null };
-                    let gain = ladder::gain(&runs);
-                    steps.push(ladder::step(model, &turn, &send, if passed { "passed" } else { "refused_by_gate" },
-                        json!({ "claim": claim, "cost_usd": cost, "executions": runs.iter().map(|x| &x["id"]).collect::<Vec<_>>(), "why": why, "worse": ladder::worse(&runs), "gain_pct": gain })));
-                    if passed {
-                        if best.as_ref().is_none_or(|(_, _, g)| gain > *g) {
-                            best = Some((steps.len() - 1, claim.clone(), gain));
-                        }
-                        continue;
-                    }
-                    let proposed = summary["check"]["claims"].as_array().into_iter().flatten().find(|c| c["id"] == claim.as_str())
-                        .and_then(|c| c["text"].as_str()).unwrap_or("").trim_end_matches('.').to_owned();
-                    refused.push(format!("{proposed}: {}", why.join("; ")));
-                }
-                if let Some((chosen, claim, _)) = best {
-                    for (i, step) in steps.iter_mut().enumerate() {
-                        if i != chosen && step["outcome"] == "passed" && step["send"] == send.as_str() {
-                            step["outcome"] = json!("passed_smaller");
-                        }
-                    }
-                    return Ok(json!({ "passed": true, "turn": turn, "send": send, "claim": claim, "nodes": nodes, "steps": steps }));
-                }
-                if tried < retries {
-                    tried += 1;
-                    // What was proposed, so the next try does not repeat it.
-                    suffix = Some(gate_suffix(&refused, tried as usize));
-                    turn = ask(suffix.as_slice(), &nodes, &additions)?;
-                    continue;
-                }
-                break;
-            }
-            if !lacunas.is_empty() && asked < rounds {
-                let names: Vec<String> = lacunas.iter().flat_map(|t| ladder::lacuna_names(t)).collect();
-                let ran: Vec<String> = store.hotspots(&key, &run).ok().map(|h| h["rows"].as_array().into_iter().flatten()
-                    .filter(|r| r["calls"].as_f64().unwrap_or(0.) > 0.).filter_map(|r| r["name"].as_str().map(String::from)).collect()).unwrap_or_default();
-                let room = ladder::lacuna_room(nodes.len());
-                let added = ladder::resolve(&catalog, &names, &nodes, &ran, room);
-                // Nothing leaves a full question to make room: the record only says so.
-                steps.push(ladder::step(model, &turn, &send, "lacuna", json!({ "cost_usd": summary["cost_usd"], "text": lacunas, "names": names, "no_room": room == 0,
-                    "gathered": added.iter().map(|(id, n)| json!({ "symbol": id, "name": catalog.symbols().get(id).map(|s| &s.qualified_name), "for": n })).collect::<Vec<_>>() })));
-                if added.is_empty() {
-                    break;
-                }
-                // Each one the server's, with the round, the send whose LACUNA asked for it and the
-                // name that found it: the questions from now on carry them apart from the client's.
-                asked += 1;
-                additions.extend(added.iter().map(|(id, name)| ServerAddition {
-                    declared_by: ServerLacunaDeclared::ServerLacuna, round: asked as usize, from_turn: turn.clone(), from_send: send.clone(),
-                    symbol_id: id.clone(), for_name: name.clone(), reason: AdditionReason::LacunaName, decided_by_rule: AdditionRule::LadderResolve,
-                }));
-                nodes.extend(added.into_iter().map(|(id, _)| id));
-                turn = ask(suffix.as_slice(), &nodes, &additions)?;
-                continue;
-            }
-            steps.push(ladder::step(model, &turn, &send, if lacunas.is_empty() { "refused" } else { "lacuna" },
-                json!({ "cost_usd": summary["cost_usd"], "issues": codes, "text": lacunas })));
-            // A cloud model whose answer the check refused tries again, told which rules failed;
-            // the local one is not retried (it is the free first step, not the one that must pass).
-            if lacunas.is_empty() && tried < retries && model["provider"] != "ollama" {
-                tried += 1;
-                suffix = Some(mechanical_suffix(&codes, tried as usize));
-                turn = ask(suffix.as_slice(), &nodes, &additions)?;
-                continue;
-            }
-            break;
+    // The one send: the reviewed package, to the one model. What comes back is judged and recorded;
+    // no other call follows it.
+    let mut request = model.clone();
+    for (k, v) in [("key", &key), ("run", &run), ("turn", &turn)] {
+        request[k] = json!(v);
+    }
+    let summary = match send_value(store, &request) {
+        Ok(s) => s,
+        Err(e) => {
+            steps.push(ladder::step(model, &turn, "", "provider_failed", json!(e.to_string())));
+            return Ok(json!({ "passed": false, "turn": turn, "nodes": nodes, "steps": steps }));
         }
+    };
+    let send = summary["directory"].as_str().and_then(|d| std::path::Path::new(d).file_name()).map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
+    let (usable, lacunas, codes) = ladder::outcome(&summary);
+    if !usable.is_empty() {
+        // Each proposed change through the gate, in the answer's order; of those that pass, the one
+        // that gains the most is the answer's: the first to pass is often a small one, and a larger
+        // one after it would never be seen. The cost of the send is counted once, on its first change.
+        let mut best: Option<(usize, String, f64)> = None;
+        for (k, claim) in usable.iter().enumerate() {
+            let change = execution::ChangeRef { turn: turn.clone(), send: send.clone(), claim: claim.clone() };
+            let runs: Vec<Value> = gate.iter().map(|name| store.execute(&key, &run, name, Some(&change))
+                .unwrap_or_else(|e| json!({ "name": name, "refused": e.to_string() }))).collect();
+            let (passed, why) = ladder::verdict(&runs);
+            let cost = if k == 0 { summary["cost_usd"].clone() } else { Value::Null };
+            let gain = ladder::gain(&runs);
+            steps.push(ladder::step(model, &turn, &send, if passed { "passed" } else { "refused_by_gate" },
+                json!({ "claim": claim, "cost_usd": cost, "executions": runs.iter().map(|x| &x["id"]).collect::<Vec<_>>(), "why": why, "worse": ladder::worse(&runs), "gain_pct": gain })));
+            if passed && best.as_ref().is_none_or(|(_, _, g)| gain > *g) {
+                best = Some((steps.len() - 1, claim.clone(), gain));
+            }
+        }
+        if let Some((chosen, claim, _)) = best {
+            for (i, step) in steps.iter_mut().enumerate() {
+                if i != chosen && step["outcome"] == "passed" && step["send"] == send.as_str() {
+                    step["outcome"] = json!("passed_smaller");
+                }
+            }
+            return Ok(json!({ "passed": true, "turn": turn, "send": send, "claim": claim, "nodes": nodes, "steps": steps }));
+        }
+    } else if !lacunas.is_empty() {
+        // A LACUNA is recorded with what it names and what the catalog would find for it (`suggested`),
+        // for the person to gather in a new package; nothing is added and nothing is asked.
+        let catalog = librarian_ingest::Catalog::load(&store.edition(&key, &run)?)?;
+        let names: Vec<String> = lacunas.iter().flat_map(|t| ladder::lacuna_names(t)).collect();
+        let ran: Vec<String> = store.hotspots(&key, &run).ok().map(|h| h["rows"].as_array().into_iter().flatten()
+            .filter(|r| r["calls"].as_f64().unwrap_or(0.) > 0.).filter_map(|r| r["name"].as_str().map(String::from)).collect()).unwrap_or_default();
+        let room = ladder::lacuna_room(nodes.len());
+        let found = ladder::resolve(&catalog, &names, &nodes, &ran, room);
+        steps.push(ladder::step(model, &turn, &send, "lacuna", json!({ "cost_usd": summary["cost_usd"], "issues": codes, "text": lacunas, "names": names, "no_room": room == 0,
+            "suggested": found.iter().map(|(id, n)| json!({ "symbol": id, "name": catalog.symbols().get(id).map(|s| &s.qualified_name), "for": n })).collect::<Vec<_>>() })));
+    } else {
+        steps.push(ladder::step(model, &turn, &send, "refused", json!({ "cost_usd": summary["cost_usd"], "issues": codes, "text": lacunas })));
     }
     Ok(json!({ "passed": false, "turn": turn, "nodes": nodes, "steps": steps }))
 }
 
-/// What a gate refusal adds to the client's question: what was proposed, so the next try does not
-/// repeat it. Its text is the one the question always got.
+/// What a gate refusal added to the client's question in a ladder retry. No route retries since 18/11;
+/// the text stays for the tests of the questions recorded with it, whose packages are still read.
+#[cfg(test)]
 pub(crate) fn gate_suffix(refused: &[String], attempt: usize) -> store::Suffix {
     store::Suffix { text: format!(" Propostas anteriores recusadas pelo portão: {}. Proponha outras mudanças.", refused.join(" | ")), rule: RetryRule::GateRefused, attempt }
 }
 
-/// What a refusal of the mechanical check adds to the client's question: which rules failed.
+/// What a refusal of the mechanical check added to the client's question in a ladder retry (see `gate_suffix`).
+#[cfg(test)]
 pub(crate) fn mechanical_suffix(codes: &[String], attempt: usize) -> store::Suffix {
     store::Suffix { text: format!(" Uma resposta anterior foi recusada na conferência mecânica: {}.", codes.join(", ")), rule: RetryRule::MechanicalRefused, attempt }
 }
 
-/// Providers that actually send; "manual" and the listed-but-pending ones do not.
-fn implemented(provider: &str) -> bool {
-    let providers = llm::providers();
-    let found = providers.as_array().unwrap().iter().any(|p| p["id"] == provider && p["implemented"] == true);
-    found && provider != "manual"
-}
-
+/// Who answers, as the page or the ladder chose it: a profile of the library (or "manual"), the
+/// Claude model and the skills. A request that still names a Modelfile is from before the library.
 fn choice(store: &Store, body: &Value) -> Result<llm::Choice> {
-    let name = body["modelfile"].as_str().filter(|n| !n.is_empty());
+    if body.get("modelfile").is_some_and(|m| !m.is_null()) {
+        return Err("O Modelfile não é mais escolhido: escolha um perfil (profile); a tarefa vem da pergunta".into());
+    }
     Ok(llm::Choice {
-        modelfile: name.map(|n| store.modelfile_path(n)).transpose()?,
-        modelfile_name: name.map(str::to_owned),
+        profile: body["profile"].as_str().unwrap_or("manual").to_owned(),
         claude_model: body["claude_model"].as_str().map(str::to_owned),
         skills: body["skills"].as_array().into_iter().flatten().filter_map(Value::as_str).map(|n| store.skill(n)).collect::<Result<_>>()?,
     })

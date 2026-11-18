@@ -2053,3 +2053,103 @@ Fatos por fonte. Propostas lado a lado, com medidas e pioras de `execution.json`
 2. **Legenda com origens diferentes.** A regra da altura está acima. Falta definir como a legenda mostra, na mesma cidade, prédios com `count_kind` diferentes.
 3. **Sem medição.** Hoje, sem medição, a altura vem do tamanho da função, numa cor só. É preciso definir como isso convive com "altura é execução".
 4. **Funções sem passagens e sem cobertura.** Hoje, com medição, a cidade mostra só as funções com contagem acima de zero. As duas ausências precisam aparecer, e diferentes entre si.
+
+## Evidence Builder independente e simplificação (17/11/2026)
+
+**Publicado em 18/11/2026, junto com o fechamento abaixo.**
+
+**E1 a E5: o Evidence Builder fora do Studio.** O crate `librarian-evidence` monta, confere (H1 a H4) e
+refaz os pacotes a partir dos dados que recebe, sem ler arquivos nem conhecer o Studio. O Studio lê e
+entrega os dados, e é o `Keeper` das conferências. Contratos e lacunas de identidade estão no
+[README do crate](crates/librarian-evidence/README.md).
+
+**Equivalência com o código anterior.** O corpus foi gerado pelos testes do código anterior: 235
+perguntas e 68 sugestões. Sobre ele, `GET /api/evidence` e a sugestão de envelope deram respostas
+idênticas no código anterior e no novo. A bateria de independência roda sem o Studio compilado.
+
+**Simplificação, fases A a D** (a auditoria e as decisões D1 a D16 estão no relatório da sessão):
+
+- **Modelos.** Uma biblioteca só, `modelfiles/catalog.json` com `system/`, lida pelo
+  `librarian-llm-engine` (`models`, `transport`):
+  - **Tarefas:** três ativas (`verificavel`, `performance`, `lexico`) e o legado `analista`, só para a prosa.
+  - **Perfis:** dois, `qwen3coder` (local, o preferido) e `claude`.
+  - **Idioma:** um, o do projeto.
+  - **Padrões:** o de cada ação no catálogo, no lugar de `DEFAULT_MODELFILES`, `FACT_MODEL` e `LADDER_MODELS`.
+  - **Bytes:** os 14 Modelfiles que existiam são montados de novo byte a byte, com os hashes
+    fixados no teste. Isso vale para os três validados.
+  - **Removidos:** gemma4, gpt-oss e a diretiva `structured-output off`. A Ponytail continua em
+    `skills/`, mas nenhuma tarefa a aceita.
+- **Studio.**
+  - A vista "Evidence Builder" virou **Seleção**, e a "Revisão" virou **Pacote**, que absorveu a
+    seção de pacote da conversa.
+  - Todo envio sai do Pacote.
+  - A escada sobe sobre o pacote revisado (`/api/ladder` com `turn`).
+  - No fluxograma, **Juntar os pontos marcados** põe os pontos na Seleção.
+  - A ferramenta Modelos é só leitura, e o Idioma ficou nas Configurações.
+  - `/api/value-sources` saiu.
+- **Pendentes em 17/11:** decididas em 18/11 (abaixo).
+
+### Fechamento da consolidação (18/11/2026)
+
+**Publicado em 18/11/2026, num commit sobre `27f7bdd`.** Nenhuma funcionalidade nova; só o
+fechamento do que estava aberto.
+
+**Princípio:** nenhuma pergunta chega ao modelo sem passar por um pacote de evidências revisado
+pelo usuário na vista Pacote.
+
+**Arquitetura atual.**
+
+| Parte | Onde | Faz | Não faz |
+| --- | --- | --- | --- |
+| Evidence Builder | `crates/librarian-evidence` (tipos do pacote em `librarian-ingest/src/evidence.rs`) | Monta, confere (H1 a H4) e refaz o pacote a partir dos dados recebidos | Ler arquivos, Git em execução, comandos, modelos; conhecer o Studio |
+| LLM Engine | `crates/librarian-llm-engine` (`models.rs`, `transport.rs`, contrato de claims) | Monta o Modelfile de tarefa × perfil × idioma a partir de `modelfiles/catalog.json`; envia por Ollama ou Claude CLI | Escolher o que vai ao modelo; aprovar sentido |
+| Studio | `crates/librarian-studio` (servidor e `web/index.html`) | Lê e grava os dados do projeto, entrega ao Builder, guarda as conferências (`Keeper`), a escada, o portão e a tela | Montar o pacote por conta própria |
+
+Dependências: `librarian-core ← librarian-graph-engine ← librarian-ingest ← librarian-evidence ←
+librarian-studio`, e `librarian-llm-engine ← librarian-studio`. O Builder não depende do Studio nem
+do LLM Engine (`tests/independence.rs`).
+
+**Proteção da escada (opção A).** Até 17/11, a página mandava `retries: 0` e `lacuna_rounds: 0`, mas
+a API tinha 1 e 1 como padrão: cada nova tentativa e cada rodada de LACUNA criava uma pergunta que
+ninguém via e a enviava. Agora `fn ladder` (`crates/librarian-studio/src/main.rs`) só aceita um
+`turn` já preparado, com declarações juntadas e aprovado em H1 a H3, faz um único envio a um único
+modelo e recusa, antes de qualquer execução, pergunta ou envio, a falta de `turn`, `question`,
+`nodes`, `with_facts` e `origin` no corpo, `retries` ou `lacuna_rounds` diferentes de 0 e `models`
+com outro número de itens que não 1. Uma LACUNA é registrada com o que o catálogo acharia
+(`suggested`), sem acrescentar nem perguntar. Uma recusa só é registrada. As funções de sufixo de
+nova tentativa (`gate_suffix`, `mechanical_suffix`) ficaram só nos testes, porque as perguntas
+gravadas antes com elas ainda são lidas. A ligação do léxico (`/api/lexicon/suggest`) continua
+mandando ao modelo, por um clique, nomes do catálogo, fora de um pacote: mantida como operação explícita e separada da investigação de código (decisão de 18/11): grava `query.json`, o envio com perfil, tarefa e idioma e a proposta conferida (`proposal.json`); só muda o léxico das configurações quando a pessoa aplica, e nunca vira fato no acervo.
+Detalhes: [STUDIO.md, Proteção da escada](STUDIO.md#proteção-da-escada-18112026).
+
+**Decisões.**
+
+- **Modelos e Modelfiles.** Uma biblioteca (`catalog.json` e `system/`); os 14 Modelfiles antigos
+  são montados byte a byte, com os hashes fixados no teste. Gemma4 e gpt-oss saíram. O `verificavel`
+  em inglês fica com as duas traduções, uma por perfil, como **exceção temporária**, sem reescrever
+  textos nem mudar hashes ([modelfiles/README.md](modelfiles/README.md)).
+- **Ponytail.** Fica em `skills/ponytail/`; nenhuma tarefa a aceita, e um envio que a peça é recusado.
+- **`/api/path-questions`.** Mantida: prepara perguntas sem enviar e tem testes próprios.
+- **Abrir arquivos.** Mantido: o visualizador abre e explora um grafo sem servidor.
+- **Baterias de tela antigas.** Nenhuma apagada. A classificação de cada uma (substituída, a
+  recriar, sem mudança) está no [README das baterias](crates/librarian-studio/tests/tela/README.md).
+  Dependem das raízes de 04/11, que não existem mais, e elas não foram inventadas.
+- **Identidade do Builder.** Hoje é `unknown`, como o contrato manda: `build.rs` exige que o Git
+  rastreie `crates/librarian-evidence/Cargo.toml`, e o crate ainda não está no índice. Validado
+  com uma cópia do índice (`GIT_INDEX_FILE`) com o crate adicionado: `recorded`, commit `27f7bdd…`,
+  `git_dirty: true`. Depois do commit, o mesmo teste deve dar o commit novo, com `git_dirty: false`
+  se nada sob `crates`, `Cargo.toml` e `Cargo.lock` estiver alterado:
+  `cargo test -p librarian-evidence this_binary_has -- --nocapture` (linha `BUILDER|`).
+
+**Validação (18/11).** Windows: 446 aprovados, 0 falhas, 2 ignorados (443 antes, mais 3 testes da
+escada). Ubuntu 24.04 (Docker, Rust 1.100.0): 446, 0 e 2. Clippy: nenhum aviso novo; o erro antigo de
+`send_ollama.rs:384` continua. Bateria `tela-simplificacao.js` no Edge: 47 de 47 (40 de antes e 7
+do clique na escada). `tela-estado.js`, parte A: 46 de 46.
+
+**Adiado conscientemente.**
+
+- **Opção B da escada:** cada rodada termina num pacote novo, preparado e não enviado, que abre no
+  Pacote.
+- **Unificar as traduções do `verificavel` em inglês.**
+- **Recriar as baterias antigas**, com uma raiz nova gravada e descrita.
+- O projeto piloto Python não foi iniciado.

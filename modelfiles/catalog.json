@@ -1,0 +1,126 @@
+{
+  "format": 1,
+  "header": "# Biblioteca de Modelfiles do Librarian, fora dos crates: modelo, parâmetros e SYSTEM são escolha de quem pergunta.",
+  "profiles": {
+    "qwen3coder": {
+      "label": {
+        "pt": "Local: Qwen3-Coder",
+        "en": "Local: Qwen3-Coder"
+      },
+      "provider": "ollama",
+      "from": "qwen3-coder:30b",
+      "parameters": [
+        [
+          "temperature",
+          "0"
+        ],
+        [
+          "seed",
+          "42"
+        ],
+        [
+          "num_ctx",
+          "32768"
+        ]
+      ],
+      "task_parameters": [
+        "num_predict"
+      ]
+    },
+    "claude": {
+      "label": {
+        "pt": "Remoto: Claude",
+        "en": "Remote: Claude"
+      },
+      "provider": "claude-cli",
+      "from": "claude",
+      "comment": "FROM claude existe só porque o studio exige uma linha FROM: com o Ollama, este Modelfile falha no ollama create.",
+      "models": [
+        "sonnet",
+        "opus",
+        "haiku"
+      ],
+      "default_model": "sonnet"
+    }
+  },
+  "tasks": {
+    "analista": {
+      "num_predict": 4096,
+      "system": {
+        "pt": "system/analista.pt.txt",
+        "en": "system/analista.en.txt"
+      },
+      "notes": {
+        "claude.en": "analista para o Claude, SYSTEM em inglês: explica só as evidências selecionadas. No Claude só o SYSTEM vale; FROM e PARAMETER não se aplicam.",
+        "claude.pt": "analista para o Claude, SYSTEM em português (o padrão; a versão em inglês é analista-claude-en): explica só as evidências selecionadas. No Claude só o SYSTEM vale; FROM e PARAMETER não se aplicam.",
+        "qwen3coder.pt": "analista: explica somente as evidências selecionadas (FACT, LACUNA; inferência e hipótese só quando pedidas). Modelo: qwen3-coder:30b."
+      },
+      "skills": []
+    },
+    "lexico": {
+      "num_predict": 12288,
+      "system": {
+        "pt": "system/lexico.pt.txt",
+        "en": "system/lexico.en.txt"
+      },
+      "notes": {
+        "claude.en": "lexico para o Claude, SYSTEM em inglês: propõe grupos de sinônimos para o léxico, com palavras em inglês. No Claude só o SYSTEM vale; FROM e PARAMETER não se aplicam.",
+        "claude.pt": "lexico para o Claude, SYSTEM em português (o padrão; a versão em inglês é lexico-claude-en): propõe grupos de sinônimos para o léxico, com palavras em português. No Claude só o SYSTEM vale; FROM e PARAMETER não se aplicam.",
+        "qwen3coder.pt": "Propõe grupos de sinônimos para o léxico de busca; a proposta é conferida pelo Librarian e aprovada pelo usuário. Modelo: qwen3-coder:30b."
+      },
+      "skills": []
+    },
+    "performance": {
+      "num_predict": 16384,
+      "system": {
+        "pt": "system/performance.pt.txt",
+        "en": "system/performance.en.txt"
+      },
+      "notes": {
+        "claude.en": "performance para o Claude, SYSTEM em inglês: etapa de performance em claims: HYPOTHESIS com edições e plano de medição. No Claude só o SYSTEM vale; FROM e PARAMETER não se aplicam.",
+        "claude.pt": "performance para o Claude, SYSTEM em português (o padrão; a versão em inglês é performance-claude-en): etapa de performance em claims: HYPOTHESIS com edições e plano de medição. No Claude só o SYSTEM vale; FROM e PARAMETER não se aplicam.",
+        "qwen3coder.en": "Etapa de performance no formato claims, SYSTEM em inglês (a versão em português é performance-qwen3coder): cada mudança é uma HYPOTHESIS com edições e plano de medição. Modelo: qwen3-coder:30b.",
+        "qwen3coder.pt": "Etapa de performance no formato claims: cada mudança é uma HYPOTHESIS com edições e plano de medição. Modelo: qwen3-coder:30b."
+      },
+      "skills": []
+    },
+    "verificavel": {
+      "num_predict": 8192,
+      "system": {
+        "pt": "system/verificavel.pt.txt",
+        "en": "system/verificavel.en.txt"
+      },
+      "system_by_profile": {
+        "qwen3coder.en": "system/verificavel.en.qwen3coder.txt"
+      },
+      "notes": {
+        "claude.en": "verificavel para o Claude, SYSTEM em inglês: responde no formato claims, cada item com a própria prova. No Claude só o SYSTEM vale; FROM e PARAMETER não se aplicam.",
+        "claude.pt": "verificavel para o Claude, SYSTEM em português (o padrão; a versão em inglês é verificavel-claude-en): responde no formato claims, cada item com a própria prova. No Claude só o SYSTEM vale; FROM e PARAMETER não se aplicam.",
+        "qwen3coder.en": "Responde no formato claims do studio, SYSTEM em inglês (a versão em português é verificavel-qwen3coder): só o JSON pedido, com cada item carregando a própria prova. Modelo: qwen3-coder:30b.",
+        "qwen3coder.pt": "Responde no formato claims do studio: só o JSON pedido, com cada item carregando a própria prova. Modelo: qwen3-coder:30b."
+      },
+      "skills": []
+    }
+  },
+  "actions": {
+    "locate": {
+      "profile": "qwen3coder"
+    },
+    "improve": {
+      "profile": "qwen3coder"
+    },
+    "chain": {
+      "profile": "qwen3coder"
+    },
+    "lexicon": {
+      "profile": "qwen3coder"
+    },
+    "facts": {
+      "profile": "qwen3coder"
+    },
+    "ladder": {
+      "profile": "claude",
+      "claude_model": "haiku"
+    }
+  }
+}

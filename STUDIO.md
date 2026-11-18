@@ -70,10 +70,10 @@ prévios ficam no campo de pergunta, no modo **Melhorar**.
 **Sugerir léxico com o LLM** (na aba **Léxico**, depois de gerar o grafo):
 
 1. O Librarian tira da edition, sem LLM, os 80 termos mais frequentes nos nomes do código.
-2. O LLM escolhido ao lado do botão (de início, Ollama com o Modelfile `lexico-qwen3coder`) propõe até
-   40 grupos de palavras em português. Se o nome
-   do Modelfile termina em `-en` (por exemplo `lexico-claude-en`), o pedido vai em inglês e pede
-   palavras em inglês. Com **Nenhum**, o pedido aparece para copiar, e a resposta de
+2. O perfil escolhido ao lado do botão (de início, o local, Qwen3-Coder, com a tarefa `lexico` da
+   [biblioteca de modelos](modelfiles/README.md)) propõe até 40 grupos de palavras no **idioma do
+   projeto** (Configurações): o mesmo idioma vale para o contrato de claims e para o texto de cada
+   tarefa, e é decidido só ali. Com **Nenhum**, o pedido aparece para copiar, e a resposta de
    qualquer LLM pode ser colada em **Conferir resposta**.
 3. O pedido leva também as palavras das perguntas do projeto que não tocaram nenhum resultado
    (`missed_terms`, com quantas perguntas as usaram), e o LLM pode devolver `stop_words`: as
@@ -132,11 +132,12 @@ Ctrl+Enter):
   HYPOTHESIS** e **patch**) e mostra os **critérios prévios**, gravados com a pergunta antes
   da resposta.
 
-Cada modo lembra quem responde (LLM e Modelfile), escolhido logo abaixo da pergunta. O
-botão diz o que vai acontecer: com **Nenhum**, **Perguntar (sem enviar)** só mostra a
-query; com Ollama ou Claude, **Perguntar · Ollama · verificavel-qwen3coder**, por exemplo, já envia.
-Com declarações no envelope (veja Pergunta com declarações juntadas), o botão vira
-**Perguntar com o envelope (N)**.
+O botão só **prepara**: nenhuma pergunta vai a um modelo a partir do compositor. Sem nada
+juntado, **Preparar o pacote (busca)** monta o pacote pela busca; com declarações na **Seleção**
+(veja Pergunta com declarações juntadas), **Preparar (N fonte(s))**; com um achado do inventário,
+**Preparar o achado (N)**. Em todos os casos o pacote abre na vista **Pacote**, e o envio é feito lá
+(veja Enviar ao LLM). Cada modo lembra quem responde: um **perfil** da biblioteca de modelos
+(local: Qwen3-Coder; remoto: Claude, com o modelo) ou **Nenhum**, escolhido logo abaixo da pergunta.
 
 1. Os **critérios prévios** do projeto são gravados com a pergunta, antes de existir query
    ou resposta, e o hash deles fica no registro.
@@ -160,12 +161,16 @@ lado da pergunta abre e recolhe, e a pergunta ativa fica sempre aberta. **Apagar
 bloco, remove a pergunta, a query e as respostas, inclusive os arquivos em `.studio`,
 depois de confirmar.
 
-### 4. Enviar ao LLM, ou só ver
+### 4. Enviar ao LLM, ou só ver (vista Pacote)
 
-Cada pergunta tem o botão **Enviar…** (ou **Enviar de novo…**, depois da primeira
-resposta), que abre um diálogo para escolher quem responde. Serve para reenviar a mesma
-query a outro LLM ou com outro Modelfile. A query é conferida de novo
-contra a edition imediatamente antes de cada envio.
+Todo envio sai da vista **Pacote**, que abre ao preparar e, depois, por **Ver pacote** em cada
+pergunta da conversa. Ela mostra a pergunta preparada, o pacote gravado e a proveniência, a política
+e os critérios usados, as conferências H1 a H4 feitas agora, o que foi escolhido para o envio (perfil,
+modelo, a **tarefa**, que vem da pergunta, e o **idioma**, que vem do projeto, com o texto da tarefa),
+o que só você vê e o que esta vista não confere. **Enviar** envia com o perfil escolhido no compositor;
+enviar de novo, a outro perfil, é o mesmo botão. A query é conferida de novo contra a edition
+imediatamente antes de cada envio. Não há outro caminho: a busca livre, a cadeia, os pontos do
+fluxograma e a escada passam pela vista Pacote.
 
 Cada envio grava o **vínculo** com o que foi conferido (`link` no `send.json`): o hash da
 query enviada, a origem (`edition:<hash>`), as fichas selecionadas, os hashes do
@@ -183,11 +188,16 @@ mensagem diz o nível. O `link` grava então o `evidence_sha256` do pacote confe
 | Opção | O que faz |
 | --- | --- |
 | Nenhum (só preparar para copiar) | Não envia. Abre a `query.json` exata; **Copiar query** leva para a área de transferência. Em claims, a caixa **Resposta colada** recebe a resposta trazida de fora: a pergunta é reconferida, a resposta é ligada à query pelo hash e passa pela mesma conferência mecânica. Aparece como "Resposta colada", porque o studio não sabe quem a escreveu. |
-| Ollama (Modelfile) | Copia o Modelfile para a pasta do envio, roda `ollama create librarian-<nome>` e envia ao Ollama em `127.0.0.1:11434`. |
-| Claude (Claude Code CLI) | `claude -p` com a sua sessão do Claude Code, sem ferramentas, sem MCP e sem sessão salva. Modelo `sonnet`, `opus` ou `haiku`. O `SYSTEM` do Modelfile escolhido vira o system prompt. Cobra pela sua conta, e o custo aparece na resposta. |
-| Claude (API), DeepSeek | Listados como "em breve"; ainda não enviam. |
+| Local: Qwen3-Coder (Ollama) | Monta da biblioteca o Modelfile da tarefa (por exemplo `verificavel-qwen3coder`), grava a cópia na pasta do envio (`Modelfile.requested`, com o hash), roda `ollama create librarian-<nome>` e envia ao Ollama em `127.0.0.1:11434`. |
+| Remoto: Claude (Claude Code CLI) | `claude -p` com a sua sessão do Claude Code, sem ferramentas, sem MCP e sem sessão salva. Modelo `sonnet`, `opus` ou `haiku` (a lista e o padrão são da biblioteca). O `SYSTEM` da tarefa vira o system prompt. Cobra pela sua conta, e o custo aparece na resposta. |
 
-A resposta aparece na conversa com provedor, Modelfile, modelo, estado, custo e tempo.
+A **tarefa** não é escolhida: uma pergunta em claims cuja política permite mudança (`allow_edits` ou
+`allow_patch`) pede **propor mudança** (`performance`); as outras, **responder em claims**
+(`verificavel`); uma pergunta em prosa (legado) pede **explicar** (`analista`). O envio grava o perfil,
+a tarefa e o idioma no `send.json`. Uma skill só vai com uma tarefa que a aceite, pela biblioteca;
+hoje nenhuma aceita.
+
+A resposta aparece na conversa com o perfil, o Modelfile montado, o modelo, o estado, o custo e o tempo.
 `completed` descreve o transporte. O Librarian não avalia o sentido, e a tela diz **Sentido não
 avaliado**: essa avaliação é feita por você, com os critérios gravados antes.
 
@@ -507,7 +517,7 @@ encaixar.
 
 Na inspeção (aba **Mapa**), **Juntar à pergunta** põe a declaração selecionada no
 **envelope**, que aparece acima do campo de pergunta, com um × em cada declaração. Com o
-envelope cheio, o botão vira **Perguntar com o envelope (N)** e cria uma pergunta só, com
+envelope cheio (a vista **Seleção**), o botão vira **Preparar (N fonte(s))** e cria uma pergunta só, com
 todas como evidência, na ordem em que foram juntadas: nada é buscado e nada é acrescentado (nem
 o contexto do dono). A pergunta mostra a faixa **juntadas (N)**, e o `search.json` diz
 "Gathered step". Até 16 declarações.
@@ -738,12 +748,12 @@ Sem Medir tudo e com [contagens manuais](#medição-capacidade-não-é-cobertura
   nome não foi encontrado: basta perguntar de novo sem essa expressão.
 
   Sem medição, o cartão oferece o
-  **Medir tudo** ou diz por que não dá para medir. **Perguntar ao modelo mesmo assim** manda a mesma pergunta a quem está escolhido
-  na conversa, para quando as regras reconheceram uma pergunta que não era sobre isso. Uma
-  pergunta com envelope ou que as regras não reconhecem vai direto ao modelo. O cartão é
-  calculado da medição gravada e não fica salvo: some ao recarregar a página.
-- **Otimizar** recomeça o envelope do zero e monta o sugerido da função (com os fatos aprovados),
-  uma pergunta só com o que foi contado, sem a solução, e marca a escada. Fecha uma investigação
+  **Medir tudo** ou diz por que não dá para medir. **Perguntar ao modelo mesmo assim** prepara a
+  mesma pergunta, que abre na vista Pacote, para quando as regras reconheceram uma pergunta que não
+  era sobre isso. Uma pergunta com envelope ou que as regras não reconhecem também só é preparada e
+  abre no Pacote. O cartão é calculado da medição gravada e não fica salvo: some ao recarregar a página.
+- **Otimizar** recomeça o envelope do zero e monta na Seleção o sugerido da função (com os fatos
+  aprovados) e uma pergunta só com o que foi contado, sem a solução; a escada é escolhida no Pacote. Fecha uma investigação
   aberta, e o registro conta as fontes como inclusão em bloco.
 
 O envelope de um método padrão de trait também traz o `impl Trait for T` do tipo que a cadeia
@@ -752,10 +762,12 @@ do inventário percorre até ele (`child.intersect` com `child` em `Vec<Object>`
 
 ### Escada (Claude Haiku)
 
-No modo **Melhorar**, com um envelope juntado, a opção **Escada** manda a pergunta ao Claude Haiku.
-Com ela ligada, o seletor de modelo some, porque ela não o usa.
-O qwen saiu das mudanças por enquanto, porque nenhuma resposta dele passou, e continua nos fatos. O
-servidor aceita mais de um modelo em ordem: o próximo só responde se nada passar. Cada mudança proposta passa pelo
+Numa pergunta preparada no modo **Melhorar**, com declarações juntadas, a vista **Pacote** oferece
+**Enviar pela escada**: a escada sobe sobre **esse mesmo pacote** (`POST /api/ladder` com `turn`), já
+visto ali, e o primeiro envio é ele. O modelo é o padrão da biblioteca para a escada (hoje Claude
+Haiku, em `modelfiles/catalog.json`, `actions.ladder`); sem comando aprovado no portão, o botão
+fica desligado e diz por quê. Cada clique é **um único envio**: o pacote revisado, a um único
+modelo; nada mais é perguntado depois da resposta (ver "Proteção da escada", abaixo). Cada mudança proposta passa pelo
 **portão**: os comandos aprovados rodam com ela, e ela passa quando todos têm sucesso, toda
 saída é igual à da linha de base, alguma contagem cai 5% ou mais (ou um número medido pelo
 projeto melhora 10% com as faixas separadas; o `wall_ms` da Régua não conta) e nenhuma contagem
@@ -799,30 +811,51 @@ medidas, mesmo onde o **Medir tudo** não sabe colocar os contadores:
   queda grande de memória vence uma queda menor de tempo, mesmo numa pergunta sobre tempo. As outras aparecem no registro como "ganho menor". Uma mudança
   vale por si: os próprios edits geraram o diff, nenhum problema a cita e nenhum problema é da
   resposta inteira.
-- **A tela envia `retries: 0` e `lacuna_rounds: 0`:** cada pergunta é uma rodada só, sem mudar o que
-  foi enviado. O servidor continua aceitando valores maiores, e são eles que ligam a nova tentativa
-  e a rodada de lacuna dos dois itens abaixo. A escada real com esses valores zerados ainda não foi
-  executada pela tela.
-- Uma **LACUNA** precisa dizer entre crases o que falta. Com `lacuna_rounds` maior que 0, o Librarian procura esses nomes no
-  catálogo (tipos primeiro, só os que rodaram na medida; um enum traz os tipos das variantes
-  que rodaram), junta ao envelope (até 16 declarações) e pergunta de novo ao mesmo modelo. Um
-  método que dois traits declaram não é adivinhado: só vem escrito com o trait. Com as 16
-  declarações já ocupadas, nada sai para dar lugar: o registro diz que não houve espaço, e a
-  rodada termina ali.
-- Com `retries` maior que 0, uma recusa ganha uma nova tentativa, com as propostas recusadas e o porquê na pergunta.
-- O registro da escada fica abaixo do compositor: cada passo, quem respondeu, o custo e o
+- Uma **LACUNA** precisa dizer entre crases o que falta. A escada registra esses nomes e o que o
+  catálogo acharia para eles (`suggested`: tipos primeiro, só os que rodaram na medida; um enum traz
+  os tipos das variantes que rodaram; um método que dois traits declaram só vem escrito com o
+  trait; com as 16 declarações já ocupadas, o registro diz que não há espaço). **Nada é acrescentado
+  e nada é perguntado:** para seguir, a pessoa junta o que quiser na Seleção e revisa um pacote novo.
+- Uma recusa (do portão ou da conferência mecânica) também só é registrada: não há nova tentativa.
+- O registro da escada fica abaixo do compositor: cada passo, o perfil que respondeu, o custo e o
   motivo de cada recusa. Cada envio fica na conversa como qualquer outro.
+
+#### Proteção da escada (18/11/2026)
+
+**Nenhuma pergunta chega ao modelo sem passar por um pacote de evidências revisado na vista Pacote.**
+Até 17/11, a página já mandava `retries: 0` e `lacuna_rounds: 0`, mas a API tinha 1 e 1 como padrão e
+aceitava mais: cada nova tentativa e cada rodada de LACUNA criava uma pergunta que ninguém tinha visto
+e a enviava em seguida. Desde 18/11 (opção A), a proteção está no servidor (`fn ladder`, em
+`crates/librarian-studio/src/main.rs`), e um pedido é **recusado antes de qualquer execução, pergunta
+ou envio** (a mensagem termina com "nada foi criado, executado nem enviado") quando:
+
+- falta `turn`: a escada não cria pergunta; sobe só sobre uma já preparada;
+- traz `question`, `nodes`, `with_facts` ou `origin`: tudo isso vem da pergunta revisada;
+- traz `retries` ou `lacuna_rounds` diferente de 0 (um número maior, um texto, negativo, fracionário
+  ou `null`); ausente vale 0;
+- traz `models` com mais ou menos de um modelo: um segundo modelo seria outra chamada feita depois
+  de uma resposta;
+- o `gate` está vazio;
+- a pergunta não existe, não tem declarações juntadas ou não passa em H1 a H3 agora (a mesma
+  conferência do envio, feita antes de qualquer linha de base rodar; o envio confere de novo).
+
+Um pedido aceito faz um único envio daquele pacote, ao modelo pedido ou ao padrão da biblioteca, e
+termina. As perguntas de rodada gravadas antes de 18/11 (com `server_additions` e sufixos de nova
+tentativa) continuam legíveis e conferidas (H1 a H4), e os testes as recriam pela store para isso.
+**Adiado conscientemente:** a opção B (cada rodada termina num pacote novo, preparado e não enviado,
+que abre no Pacote) fica para outra iniciativa.
 
 A escada é o que a pessoa faria à mão; ela não julga sentido. O que passou continua uma
 HYPOTHESIS até alguém aprovar a mudança como fato.
 
-### 5. Modelfiles
+### 5. Modelos
 
-O seletor **Modelfile** mostra o resumo do escolhido (FROM, PARAMETER, SYSTEM).
-**Editar** abre o conteúdo para alterar e salvar; **Novo…** cria outro (por exemplo,
-`performance-gemma4` ou `cenas`). Eles ficam na biblioteca [`modelfiles/`](modelfiles/README.md),
-com nomes `<tarefa>-<modelo>` (SYSTEM em português) e `<tarefa>-<modelo>-en` (em inglês),
-e dá para usar um diferente em cada pergunta.
+A ferramenta **Modelos** mostra, só para leitura, a [biblioteca de modelos](modelfiles/README.md): os
+dois perfis (local: Qwen3-Coder; remoto: Claude), o padrão de cada ação (localizar, melhorar, cadeia,
+léxico, lote de fatos e escada), as skills que cada tarefa aceita e cada Modelfile como um envio o
+monta (`<tarefa>-<perfil>` e `<tarefa>-<perfil>-en`). Para mudar um modelo, um parâmetro ou um padrão,
+edite `modelfiles/catalog.json`; o texto de cada tarefa fica em `modelfiles/system/`. Os Modelfiles
+não são mais escolhidos nem editados na página.
 
 ## Perfil do projeto (`librarian.json`)
 
@@ -1209,9 +1242,9 @@ Antes de enviar, colar uma resposta, continuar em cadeia ou aprovar um item de u
 | `latest_measure` | A medição mais recente da edition, lida agora e não gravada: `ok`, `none` ou `unreadable` |
 | `warnings` | `["measure_diverges_not_computed"]` num pacote de formato 1; vazio nos demais |
 
-### Na conversa
+### Na vista Pacote
 
-Cada pergunta tem a seção recolhida **Pacote de evidências e conferências**, que busca `/api/evidence` quando é aberta. Ela mostra H1 a H3 conferidos agora e H4 à parte, com a nota de que H4 só informa; os avisos; as fichas com `declared_by` sempre visível; as classes dos campos da query; o texto da pessoa e os acréscimos do servidor; as complementações; a seleção e as declarações do cliente; a medição gravada (no formato 1, o valor e o aviso; no formato 2, o estado e os motivos); a medição mais recente, à parte; e os limites. Em português e inglês, no tema escuro e em tela estreita. A tela diz "conferido", nunca "aprovado".
+A vista **Pacote** (antes, a "Revisão" e a seção "Pacote de evidências e conferências" de cada pergunta da conversa) busca `/api/evidence` quando é aberta. Ela mostra H1 a H3 conferidos agora e H4 à parte, com a nota de que H4 só informa; os avisos; as fichas com `declared_by` sempre visível; as classes dos campos da query; o texto da pessoa e os acréscimos do servidor; as complementações; a seleção e as declarações do cliente; a medição gravada (no formato 1, o valor e o aviso; no formato 2, o estado e os motivos); a medição mais recente, à parte; e os limites. Em português e inglês, no tema escuro e em tela estreita. A tela diz "conferido", nunca "aprovado".
 
 ### Limites do pacote
 
@@ -1234,7 +1267,7 @@ Cada pergunta tem a seção recolhida **Pacote de evidências e conferências**,
   nós e 75 mil arestas, `graph-v2.json` de 107 MB) gera em cerca de 13 s e carrega em
   cerca de 1,5 s. O layout leva cerca de 1 min até estabilizar, mas a página responde
   durante esse tempo.
-- **Contexto do Ollama:** o Ollama corta, sem erro, a entrada que passa do `num_ctx` do Modelfile, e o envio ainda termina como `completed`. O studio estima o tamanho da query em tokens (bytes ÷ 3,5, mostrado em "O que é enviado ao LLM") e pede confirmação antes de enviar uma query maior que 3/4 do `num_ctx`. Depois do envio, compara o que o Ollama processou (`prompt_eval_count`) com o tamanho da query e marca a resposta em vermelho como "Entrada possivelmente truncada". Um prefixo em cache também reduz a contagem, por isso é uma suspeita, não uma prova. O `analista` usa `num_ctx` 16384; com `hits` maior, reduza `hits` ou aumente o contexto.
+- **Contexto do Ollama:** o Ollama corta, sem erro, a entrada que passa do `num_ctx` do Modelfile, e o envio ainda termina como `completed`. O studio estima o tamanho da query em tokens (bytes ÷ 3,5, mostrado em "O que é enviado ao LLM") e pede confirmação antes de enviar uma query maior que 3/4 do `num_ctx` do perfil local. Depois do envio, compara o que o Ollama processou (`prompt_eval_count`) com o tamanho da query e marca a resposta em vermelho como "Entrada possivelmente truncada". Um prefixo em cache também reduz a contagem, por isso é uma suspeita, não uma prova. O perfil local usa `num_ctx` 32768 (`modelfiles/catalog.json`); com `hits` maior, reduza `hits` ou aumente o contexto lá.
 - Um envio dura até 300 s e bloqueia só a própria requisição.
 - O status do Ollama é lido quando a página abre; recarregue a página depois de iniciá-lo.
 - A conferência do formato claims é só mecânica. A avaliação semântica continua manual:
@@ -1246,11 +1279,13 @@ Cada pergunta tem a seção recolhida **Pacote de evidências e conferências**,
 - A linha da declaração de um símbolo ainda é achada no texto, não pelo parser. Linhas
   de atributo, comentário e decorator são puladas; um nome repetido numa linha de código
   antes da declaração (raro) ainda seria tomado por ela.
-- Para o formato claims, use um `verificavel-<modelo>`; o `analista-<modelo>` foi escrito para
-  prosa. Com o qwen2.5-coder 14B (removido em 31/10/2026), nenhum dos dois fez o modelo citar a declaração em cada item.
+- A prosa é legado: não tem conferência mecânica e só existe para projetos que já a usavam; a
+  tarefa `analista` só é usada por uma pergunta em prosa. Com o qwen2.5-coder 14B (removido em
+  31/10/2026), nem o `verificavel` nem o `analista` fizeram o modelo citar a declaração em cada item.
 - Aberta com duplo clique (`file://`), a página só visualiza um `graph-v2.json` escolhido
   em **Abrir arquivos**, sem projeto nem conversa. Para inspeção automatizada, `#debug`
-  expõe `window.viewerDebug`.
+  expõe `window.viewerDebug`. **Mantido por decisão de 18/11/2026:** abrir e explorar um grafo não
+  depende do servidor.
 
 Detalhes técnicos do servidor: [crates/librarian-studio](crates/librarian-studio/README.md).
 
@@ -1413,4 +1448,4 @@ Aceitos na Etapa 2, e nenhum foi agravado por ela. Ficam para a [Etapa 5](PLANO-
 - **Sem proteção de grafo (`sameRun`), risco não reproduzido:** `askFacts`, `askHotFacts`, `continueTurn`, `askPath`, `drawPath` e outros caminhos sem a guarda.
 - **Sem histórico de decisões:** só a última ação fica registrada (veja [Registro da seleção](#registro-da-seleção-originselection-formato-2)).
 
-O cartão de desempenho e **Separar** ainda enviam sem revisão do pacote (também [Etapa 5](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#etapa-5-pacote-e-revisão)).
+Desde a simplificação de 17/11/2026, nenhuma pergunta é enviada sem passar pela vista **Pacote**: o cartão de desempenho prepara, e **Separar** abre os pacotes do lote, que você envia marcados.

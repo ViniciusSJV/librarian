@@ -3,8 +3,7 @@
 //! what it was built from. `Unknown` says the build could not tell, and promises nothing more.
 use librarian_ingest::evidence::BuilderIdentity;
 
-/// The identity compiled into this binary.
-#[cfg_attr(not(test), allow(dead_code))] // Read by the evidence package, which a later step builds.
+/// The identity compiled into this crate, which is the code that builds the package.
 pub fn identity() -> BuilderIdentity {
     parse(env!("LIBRARIAN_BUILDER"))
 }

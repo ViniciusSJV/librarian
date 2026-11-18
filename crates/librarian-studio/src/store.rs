@@ -4,14 +4,20 @@
 //! runs/<run>/suggestions/<sha256>.json; each new question that reached the preparation also has
 //! turns/<NN>/evidence.json, named by its hash in question.json, and one asked with a selection has
 //! turns/<NN>/selection.json, named by its hash in the package.
+use librarian_evidence::{
+    check::{self, QuestionRecord, Remake, SelectionFile, TurnFiles},
+    keeper::Keeper,
+    lacuna,
+    package::{self, BuildInput, ClaimsFiles, Criteria, MeasureRead, Origin as PackageOrigin, Prepared},
+    selection, suggestion,
+};
 use librarian_llm_engine::claims::{self, compare::compare, Claim, Policy};
 use librarian_ingest::{
     envelope,
     evidence::{
-        self, BoundArtifacts, ClaimsEvidence, CompositionInput, EditionIdentity, EvidencePackage, FactRecord, Form, InventoryRuleEntry, InventoryRuleOrigin,
-        MeasureAtQuestion, MeasureReferences, MeasureSelectionBasis, Normalization, OriginKind, PackageFormat, PackageKind, ProvenanceInput, QuestionInput,
-        Representation, RetryRule, Route, RulesVersion, SelectionEdition, SelectionInput, SelectionRecord, SelectionRecordFormat, SelectionReference,
-        ServerAddition, ServerDeclared, Sha256Hex, SnapshotInput, SuffixInput, SuggestionInput, SuggestionInventoryRules, SuggestionMeasure, SuggestionRecord, Versions,
+        self, EvidencePackage, MeasureAtQuestion, OriginKind, PackageFormat, Route,
+        SelectionInput, SelectionRecord, ServerAddition, Sha256Hex, SuffixInput, SuggestionInput,
+        SuggestionMeasure, SuggestionRecord,
     },
     inventory,
     graph::v2,
@@ -38,20 +44,112 @@ const EVIDENCE: &str = "evidence.json";
 /// The record of the selection a new question was asked with, beside its package.
 const SELECTION: &str = "selection.json";
 
-/// A selection the server checked at the entry of a question, before anything was created: its
-/// record and the bytes it is kept in. Only `Store::accept_selection` makes one.
-pub struct AcceptedSelection {
-    record: SelectionRecord,
-    bytes: Vec<u8>,
-    sha256: Sha256Hex,
+/// A selection the Evidence Builder checked at the entry of a question, before anything was created.
+pub use librarian_evidence::selection::AcceptedSelection;
+/// What a server retry added to a client's question, with the rule that added it.
+pub use librarian_evidence::package::Suffix;
+
+/// What the Evidence Builder asks of a run's records while it checks: the Studio reads them where it
+/// keeps them, under `.studio/`, and hands them over as they are.
+struct RunKeeper<'s> {
+    store: &'s Store,
+    key: &'s str,
+    run: &'s str,
 }
 
-/// What a server retry added to a client's question, with the rule that added it.
-#[derive(Debug, Clone)]
-pub struct Suffix {
-    pub text: String,
-    pub rule: RetryRule,
-    pub attempt: usize,
+impl Keeper for RunKeeper<'_> {
+    fn suggestion(&self, sha256: &str) -> std::result::Result<Vec<u8>, String> {
+        let file = self.store.run_dir(self.key, self.run).map_err(|e| e.to_string())?.join(SUGGESTIONS).join(format!("{sha256}.json"));
+        fs::read(file).map_err(|e| e.to_string())
+    }
+    fn execution(&self, id: &str) -> std::result::Result<Vec<u8>, String> {
+        let file = self.store.run_dir(self.key, self.run).map_err(|e| e.to_string())?.join("executions").join(safe_id(id).map_err(|e| e.to_string())?).join("execution.json");
+        fs::read(file).map_err(|e| e.to_string())
+    }
+    fn hot(&self, execution: &Value) -> Option<Value> {
+        self.store.hotspots_of(self.key, self.run, execution).ok()
+    }
+    fn graph(&self) -> std::result::Result<Vec<u8>, String> {
+        self.store.graph(self.key, self.run).map_err(|e| e.to_string())
+    }
+    fn lacunas(&self, turn: &str, send: &str) -> std::result::Result<Vec<String>, String> {
+        let sent = self.store.turn_dir(self.key, self.run, turn).map_err(|e| e.to_string())?.join("sends").join(safe_id(send).map_err(|e| e.to_string())?).join("send.json");
+        let summary: Value = serde_json::from_slice(&fs::read(&sent).map_err(|_| format!("envio {turn}/{send} indisponível"))?).map_err(|e| e.to_string())?;
+        let (_, lacunas, _) = crate::ladder::outcome(&summary);
+        Ok(lacunas)
+    }
+}
+
+/// The artifacts of one question, read from its folder for the Evidence Builder's checks.
+struct ReadTurn {
+    package: Option<Vec<u8>>,
+    request: Option<Vec<u8>>,
+    search: Option<Vec<u8>>,
+    dossier: Option<Vec<u8>>,
+    bundle_query: Option<Vec<u8>>,
+    bundle_origin: std::result::Result<Vec<u8>, String>,
+    claims_context: Option<Vec<u8>>,
+    claims_query: Option<Vec<u8>>,
+    /// None when there are no criteria; Some(None) when they are there and cannot be read.
+    criteria: Option<Option<Vec<u8>>>,
+    /// Whether the selection's record is there, and its bytes when they can be read.
+    selection: (bool, Option<Vec<u8>>),
+}
+
+impl ReadTurn {
+    fn read(dir: &Path) -> Self {
+        let read = |path: PathBuf| fs::read(path).ok();
+        let prepared = dir.join("prepared");
+        let claims = dir.join(crate::claims::DIR);
+        Self {
+            package: read(dir.join(EVIDENCE)),
+            request: read(prepared.join("request.json")),
+            search: read(prepared.join("search.json")),
+            dossier: read(prepared.join("bundle/dossier.json")),
+            bundle_query: read(prepared.join("bundle/query.json")),
+            bundle_origin: fs::read(prepared.join("bundle/origin.json")).map_err(|e| e.to_string()),
+            claims_context: read(claims.join("context.json")),
+            claims_query: read(claims.join("query.json")),
+            criteria: dir.join(CRITERIA).is_file().then(|| read(dir.join(CRITERIA))),
+            selection: (dir.join(SELECTION).exists(), read(dir.join(SELECTION))),
+        }
+    }
+
+    fn files(&self) -> TurnFiles<'_> {
+        TurnFiles {
+            package: self.package.as_deref(),
+            prepared: Prepared { request: self.request.as_deref(), search: self.search.as_deref(), dossier: self.dossier.as_deref(), bundle_query: self.bundle_query.as_deref() },
+            bundle_origin: self.bundle_origin.as_deref().map_err(String::as_str),
+            claims: ClaimsFiles { context: self.claims_context.as_deref(), query: self.claims_query.as_deref() },
+            criteria: match &self.criteria {
+                None => Criteria::Absent,
+                Some(Some(bytes)) => Criteria::Present(bytes),
+                Some(None) => Criteria::Unreadable,
+            },
+            selection: match &self.selection {
+                (_, Some(bytes)) => SelectionFile::Bytes(bytes),
+                (true, None) => SelectionFile::Unreadable,
+                (false, None) => SelectionFile::Absent,
+            },
+        }
+    }
+}
+
+/// What question.json records of a question, in the Evidence Builder's terms.
+fn question_record<'a>(question: &'a Value, mark: &'a Value) -> QuestionRecord<'a> {
+    QuestionRecord {
+        mark,
+        prepared: question["question"].as_str().unwrap_or_default(),
+        asked: asked_of(question).map_err(|e| e.to_string()),
+        criteria_sha256: question["criteria_sha256"].as_str(),
+        claims: question["answer_format"] == "claims",
+        sent_selection: SelectionInput::from_value(&question["gathered"]["origin"]["selection"]).ok(),
+        additions: match question["gathered"].get("server_additions") {
+            Some(value) => serde_json::from_value(value.clone()).map_err(|_| ()),
+            None => Ok(vec![]),
+        },
+        nodes: serde_json::from_value(question["gathered"]["nodes"].clone()).unwrap_or_default(),
+    }
 }
 
 /// A question as asked: the client's text and what the server added to it, in order.
@@ -431,7 +529,7 @@ impl Store {
         }
         let settings = self.settings(key)?;
         let catalog = Catalog::load(&self.edition(key, run)?)?;
-        let included: Option<Vec<String>> = selection.map(|s| s.record.received.included.iter().map(|e| e.id.clone()).collect());
+        let included: Option<Vec<String>> = selection.map(|s| s.record().received.included.iter().map(|e| e.id.clone()).collect());
         self.check_additions(key, run, &catalog, nodes, included.as_deref(), additions)
             .map_err(|e| format!("Complementação recusada ({e}); nenhuma pergunta foi criada"))?;
         let headers: Vec<String> = nodes.iter().filter_map(|id| id.strip_prefix(envelope::HEADER_PREFIX).map(str::to_owned)).collect();
@@ -459,50 +557,10 @@ impl Store {
         self.new_turn_with(key, run, &settings, &catalog, asked, None, request, Some(("gathered", gathered)), selection)
     }
 
-    /// The declarations a ladder's LACUNA rounds added, as the question says: each the server's,
-    /// once, after the client's (the selection's included sources, when there is one), in the order
-    /// added; each asked for by a LACUNA of the send it names, and found for it in this edition by
-    /// `ladder::resolve`. The rule is read with nothing excluded by the measure, which only ever
-    /// leaves out: a declaration it gave then is one it gives now.
+    /// The declarations a ladder's LACUNA rounds added, as the question says, checked by the Evidence
+    /// Builder against the LACUNA of each send they name.
     fn check_additions(&self, key: &str, run: &str, catalog: &Catalog, nodes: &[String], included: Option<&[String]>, additions: &[ServerAddition]) -> Result<()> {
-        let ids: Vec<&String> = additions.iter().map(|a| &a.symbol_id).collect();
-        let Some(split) = nodes.len().checked_sub(ids.len()) else { return Err("mais complementações do que declarações".into()) };
-        let (client, added) = nodes.split_at(split);
-        // With a selection, what is not the server's is exactly what the client sent: nothing more.
-        if included.is_some_and(|included| included != client) {
-            return Err("as declarações da cliente não são as da seleção".into());
-        }
-        if additions.is_empty() {
-            return Ok(());
-        }
-        if added.iter().ne(ids.iter().copied()) {
-            return Err("as declarações acrescentadas não são as últimas da pergunta, na ordem".into());
-        }
-        for (n, id) in ids.iter().enumerate() {
-            if ids[..n].contains(id) || client.contains(id) {
-                return Err(format!("{id} já estava na pergunta").into());
-            }
-        }
-        // Round by round: what one send's LACUNA asked for, over what was gathered before it.
-        let mut start = 0;
-        while start < additions.len() {
-            let first = &additions[start];
-            let end = start + additions[start..].iter().take_while(|a| (a.round, &a.from_turn, &a.from_send) == (first.round, &first.from_turn, &first.from_send)).count();
-            let sent = self.turn_dir(key, run, &first.from_turn)?.join("sends").join(safe_id(&first.from_send)?).join("send.json");
-            let summary: Value = serde_json::from_slice(&fs::read(&sent).map_err(|_| format!("envio {}/{} indisponível", first.from_turn, first.from_send))?)?;
-            let (_, lacunas, _) = crate::ladder::outcome(&summary);
-            let names: Vec<String> = lacunas.iter().flat_map(|t| crate::ladder::lacuna_names(t)).collect();
-            let before: Vec<String> = client.iter().chain(&added[..start]).cloned().collect();
-            let found = crate::ladder::resolve(catalog, &names, &before, &[], usize::MAX);
-            for addition in &additions[start..end] {
-                let named = names.contains(&addition.for_name) || addition.for_name.split_once("::").is_some_and(|(t, _)| names.iter().any(|n| n == t));
-                if addition.round == 0 || !named || !found.iter().any(|(id, _)| *id == addition.symbol_id) {
-                    return Err(format!("{} não é o que a LACUNA de {}/{} pediu", addition.symbol_id, first.from_turn, first.from_send).into());
-                }
-            }
-            start = end;
-        }
-        Ok(())
+        lacuna::check_additions(&self.keeper(key, run), catalog, nodes, included, additions)
     }
 
     /// A selection sent with a question, checked against the suggestion records of this run and its
@@ -526,69 +584,11 @@ impl Store {
         self.accept_input(key, run, nodes, input).map(Some).map_err(|e| refuse(e.to_string()))
     }
 
-    /// The record of a selection: its suggestions read back and checked, then the selection checked
-    /// against them and the edition. The same input gives the same bytes.
+    /// The record of a selection, by the Evidence Builder: its suggestions read back and checked,
+    /// then the selection checked against them and the edition. The same input gives the same bytes.
     fn accept_input(&self, key: &str, run: &str, nodes: &[String], input: SelectionInput) -> Result<AcceptedSelection> {
-        let mut records = vec![];
-        for sha256 in &input.suggestions {
-            let suggestion = |why: String| evidence::SelectionRefusal::Suggestion { sha256: sha256.as_str().to_owned(), why };
-            let record = self.verify_suggestion(key, run, sha256.as_str()).map_err(|e| suggestion(e.to_string()))?;
-            if record.rules_version.0 != envelope::RULES_VERSION {
-                return Err(suggestion(format!("regras {} não são as desta versão", record.rules_version.0)).into());
-            }
-            records.push(record);
-        }
         let catalog = Catalog::load(&self.edition(key, run)?)?;
-        let edition = self.selection_edition(key, run, &catalog, &input)?;
-        let cited: Vec<&SuggestionRecord> = records.iter().collect();
-        evidence::check_selection(&input, nodes, &cited, &edition)?;
-        let record = SelectionRecord::new(edition_origin(&catalog)?, envelope::RULES_VERSION, input, &cited);
-        let bytes = record.to_bytes()?;
-        let sha256 = Sha256Hex::try_from(hash(&bytes))?;
-        Ok(AcceptedSelection { record, bytes, sha256 })
-    }
-
-    /// What the edition says of the sources a selection names: the catalog's data, as a suggestion
-    /// gives them (a file head by the envelope's rule), and the graph's label, as the page shows it.
-    fn selection_edition(&self, key: &str, run: &str, catalog: &Catalog, input: &SelectionInput) -> Result<SelectionEdition> {
-        let graph: v2::Graph = serde_json::from_slice(&self.graph(key, run)?)?;
-        let mut edition = SelectionEdition::default();
-        let ids = [&input.included, &input.removed, &input.left_out, &input.not_joined].into_iter().flatten().map(|e| e.id.as_str());
-        for id in ids {
-            let source = match id.strip_prefix(envelope::HEADER_PREFIX) {
-                Some(path) => envelope::header(catalog, path).and_then(|(start, end)| {
-                    let source = catalog.source_by_path(path)?;
-                    let bytes = String::from_utf8_lossy(catalog.source_bytes(&source.path)?).lines().take(end).map(|l| l.len() + 1).sum();
-                    Some(evidence::EditionSource { name: path.to_owned(), path: path.to_owned(), kind: "header".into(), start_line: start, end_line: end, bytes })
-                }),
-                None => catalog.symbols().get(id).map(|symbol| {
-                    let chunk = &catalog.chunks()[&symbol.chunk_id];
-                    evidence::EditionSource { name: symbol.qualified_name.clone(), path: catalog.sources()[&symbol.source_id].path.clone(), kind: symbol.kind.clone(),
-                        start_line: chunk.start_line, end_line: chunk.end_line, bytes: chunk.end_byte - chunk.start_byte }
-                }),
-            };
-            if let Some(source) = source {
-                edition.sources.insert(id.to_owned(), source);
-            }
-            if let Some(node) = graph.nodes.get(id) {
-                edition.labels.insert(id.to_owned(), (node.label.clone(), node.kind.clone()));
-            }
-        }
-        Ok(edition)
-    }
-
-    /// What a "Medir tudo" says about each function.
-    fn measure_of(hot: &Value) -> Option<envelope::Measure> {
-        let rows = hot["rows"].as_array()?;
-        let mut measure = envelope::Measure::default();
-        measure.counted.extend(hot["counted"].as_array().into_iter().flatten().filter_map(|s| s.as_str().map(String::from)));
-        for row in rows {
-            let (Some(symbol), Some(calls)) = (row["symbol"].as_str(), row["calls"].as_f64()) else { continue };
-            measure.counted.insert(symbol.to_owned());
-            let most = measure.calls.entry(symbol.to_owned()).or_insert(0.);
-            *most = most.max(calls);
-        }
-        Some(measure)
+        selection::accept(&self.keeper(key, run), &catalog, nodes, input)
     }
 
     /// P5: the envelope suggested for the chosen declarations: what was selected, each with its
@@ -599,8 +599,10 @@ impl Store {
         self.suggest_with(key, run, nodes, self.latest_measure_read(key, run))
     }
 
-    /// A suggestion over a measure already read. A file changed after that read is not what the
-    /// record names; the check before answering finds it, and nothing is answered.
+    /// A suggestion over a measure already read, made by the Evidence Builder: the Studio reads the
+    /// measure, the project's inventory rules and the acervo, and keeps the record. A file changed
+    /// after that read is not what the record names; the check before answering finds it, and
+    /// nothing is answered.
     fn suggest_with(&self, key: &str, run: &str, nodes: &[String], reading: Result<Option<crate::execution::ReadExecution>>) -> Result<Value> {
         let catalog = Catalog::load(&self.edition(key, run)?)?;
         let hot = match &reading {
@@ -608,7 +610,8 @@ impl Store {
             _ => None,
         };
         let (found, _, _, rules) = self.inventory_with_rules(key, run)?;
-        let (mut out, measured) = Self::suggestion_answer(&catalog, &found, nodes, hot.as_ref(), envelope::BUDGET_BYTES, MAX_GATHERED)?;
+        let (mut out, measured) = suggestion::answer(&catalog, &found, nodes, hot.as_ref(), envelope::BUDGET_BYTES, MAX_GATHERED)?;
+        // The facts of the acervo about each item: the Studio's, recorded as given.
         let facts = self.facts(key, run)?;
         let current: Vec<&Value> = facts["facts"].as_array().into_iter().flatten().filter(|f| f["status"] == "current").collect();
         for list in ["items", "left_out"] {
@@ -624,18 +627,8 @@ impl Store {
             }
         }
         let read = measure_read(&reading, measured)?;
-        let builtin = inventory::builtin();
-        let entries = |origin, set: &inventory::RuleSet| set.rules.iter().map(|rule| Ok(InventoryRuleEntry { origin, rule: serde_json::to_value(rule)? })).collect::<Result<Vec<_>>>();
-        let mut applied = entries(InventoryRuleOrigin::Builtin, &builtin)?;
-        applied.extend(entries(InventoryRuleOrigin::Project, &rules)?);
-        let record = SuggestionRecord::new(
-            edition_origin(&catalog)?,
-            envelope::RULES_VERSION,
-            SuggestionInput { nodes: nodes.to_vec(), budget_bytes: envelope::BUDGET_BYTES, max_items: MAX_GATHERED },
-            SuggestionInventoryRules::new(inventory::VERSION, applied)?,
-            read,
-            &out,
-        )?;
+        let input = SuggestionInput { nodes: nodes.to_vec(), budget_bytes: envelope::BUDGET_BYTES, max_items: MAX_GATHERED };
+        let record = suggestion::record(&catalog, input, &rules, read, &out)?;
         let bytes = record.to_bytes()?;
         let sha256 = hash(&bytes);
         publish_immutable(&self.run_dir(key, run)?.join(SUGGESTIONS), &format!("{sha256}.json"), &bytes)?;
@@ -645,39 +638,13 @@ impl Store {
         Ok(out)
     }
 
-    /// What a suggestion answers, but for the facts of each item: the selection over the edition, with
-    /// the inventory found and the measure read (`hot`), its coverage told. It reads no acervo and
-    /// writes nothing. True when the measure was used.
-    fn suggestion_answer(catalog: &Catalog, found: &inventory::Inventory, nodes: &[String], hot: Option<&Value>, budget: usize, max_items: usize) -> Result<(Value, bool)> {
-        let measure = hot.and_then(Self::measure_of);
-        let mut candidates = envelope::candidates(catalog, nodes, measure.as_ref())?;
-        envelope::trait_impls(catalog, found, nodes, measure.as_ref(), &mut candidates);
-        let mut selection = envelope::select(catalog, &candidates, measure.as_ref(), budget, max_items);
-        selection.behavior = envelope::behavior(catalog, found, &selection);
-        selection.notes = envelope::notes(&selection);
-        let mut out = serde_json::to_value(&selection)?;
-        crate::instrument::annotate_suggestion(&mut out, hot.map(|h| &h["coverage"]));
-        Ok((out, measure.is_some()))
-    }
-
-    /// H4 of a question: each suggestion its selection cites, made again by this code from what its
-    /// record names, and compared with the record but for the facts. Told, never enforced, and it
-    /// writes nothing: no suggestion, no question, no record, nothing in the acervo.
+    /// H4 of a question, by the Evidence Builder: each suggestion its selection cites, made again
+    /// from what its record names. Told, never enforced, and it writes nothing.
     pub fn reproduce(&self, key: &str, run: &str, turn: &str) -> Result<evidence::Reproduction> {
         let dir = self.turn_dir(key, run, turn)?;
-        // An older question has no package, and a package with no selection no suggestion behind it.
-        let Ok(bytes) = fs::read(dir.join(EVIDENCE)) else { return Ok(evidence::Reproduction::NotApplicable {}) };
-        let package: EvidencePackage = serde_json::from_slice(&bytes)?;
-        let Some(selection) = &package.selection else { return Ok(evidence::Reproduction::NotApplicable {}) };
-        let catalog = Catalog::load(&self.edition(key, run)?)?;
-        let mut replays = vec![];
-        for sha256 in &selection.suggestions {
-            replays.push(match self.replay_suggestion(key, run, &catalog, sha256)? {
-                None => evidence::SuggestionReplay::Reproduced { suggestion: sha256.clone() },
-                Some(reason) => evidence::SuggestionReplay::NotReplayable { suggestion: sha256.clone(), reason },
-            });
-        }
-        Ok(evidence::Reproduction::of(replays, &package.versions.builder))
+        let package = fs::read(dir.join(EVIDENCE)).ok();
+        let catalog = self.edition(key, run).and_then(|edition| Catalog::load(&edition)).map_err(|e| e.to_string());
+        suggestion::reproduce(&self.keeper(key, run), catalog.as_ref().map_err(String::clone), package.as_deref())
     }
 
     /// What `GET /api/evidence` answers for one question of one run: what was recorded with it, as
@@ -723,76 +690,11 @@ impl Store {
             "selection": recorded(SELECTION), "checks": checks, "h4": h4, "latest_measure": latest, "warnings": warnings }))
     }
 
-    /// One suggestion made again, or why not: its record, then the rules it names, then the
-    /// execution it read, then the suggestion itself.
-    fn replay_suggestion(&self, key: &str, run: &str, catalog: &Catalog, sha256: &Sha256Hex) -> Result<Option<evidence::NotReplayable>> {
-        use evidence::NotReplayable as Not;
-        let run_dir = self.run_dir(key, run)?;
-        let read = fs::read(run_dir.join(SUGGESTIONS).join(format!("{}.json", sha256.as_str())));
-        let Some(record) = read.ok().and_then(|bytes| SuggestionRecord::from_bytes(&bytes, sha256.as_str()).ok()) else { return Ok(Some(Not::SuggestionMissing)) };
-        // The rules: of the selection, and of the inventory, the built-in ones as this code has them.
-        let builtin = inventory::builtin();
-        let entries = |origin, set: &inventory::RuleSet| set.rules.iter().map(|rule| Ok(InventoryRuleEntry { origin, rule: serde_json::to_value(rule)? })).collect::<Result<Vec<_>>>();
-        let builtin_entries = entries(InventoryRuleOrigin::Builtin, &builtin)?;
-        let recorded_builtin: Vec<&InventoryRuleEntry> = record.inventory_rules.rules.iter().filter(|r| r.origin == InventoryRuleOrigin::Builtin).collect();
-        if record.rules_version.0 != envelope::RULES_VERSION || record.inventory_rules.version != inventory::VERSION || recorded_builtin.into_iter().ne(builtin_entries.iter()) {
-            return Ok(Some(Not::RulesVersionDiffers));
-        }
-        // The execution read then, with the bytes it had then.
-        let hot = match &record.measure {
-            SuggestionMeasure::Ok { execution, execution_sha256 } => {
-                let Ok(bytes) = fs::read(run_dir.join("executions").join(safe_id(execution)?).join("execution.json")) else { return Ok(Some(Not::ExecutionMissing)) };
-                if hash(&bytes) != execution_sha256.as_str() {
-                    return Ok(Some(Not::ExecutionDiffers));
-                }
-                self.hotspots_of(key, run, &serde_json::from_slice(&bytes)?).ok()
-            }
-            SuggestionMeasure::NoMeasure {} | SuggestionMeasure::Unreadable {} => None,
-        };
-        // The project's rules as the record copied them, not as the profile has them now.
-        let project: Vec<&InventoryRuleEntry> = record.inventory_rules.rules.iter().filter(|r| r.origin == InventoryRuleOrigin::Project).collect();
-        let project_rules: inventory::RuleSet = serde_json::from_value(json!({ "rules": project.iter().map(|r| &r.rule).collect::<Vec<_>>() }))?;
-        let found = inventory::inventory(catalog, &project_rules)?;
-        let (mut out, measured) = Self::suggestion_answer(catalog, &found, &record.input.nodes, hot.as_ref(), record.input.budget_bytes, record.input.max_items)?;
-        // The facts of each item are the record's, as given: not made again.
-        let recorded_facts = |id: &Value| record.output.items.iter().chain(&record.output.left_out).find(|i| i["id"] == *id).map_or(json!([]), |i| i["facts"].clone());
-        for list in ["items", "left_out"] {
-            for value in out[list].as_array_mut().into_iter().flatten() {
-                value["facts"] = recorded_facts(&value["id"]);
-            }
-        }
-        let measure = match (&record.measure, measured) {
-            (SuggestionMeasure::Ok { .. }, true) => record.measure.clone(),
-            (SuggestionMeasure::Ok { .. }, false) | (SuggestionMeasure::Unreadable {}, _) => SuggestionMeasure::Unreadable {},
-            (SuggestionMeasure::NoMeasure {}, _) => SuggestionMeasure::NoMeasure {},
-        };
-        let mut applied = builtin_entries;
-        applied.extend(project.into_iter().cloned());
-        let again = SuggestionRecord::new(edition_origin(catalog)?, envelope::RULES_VERSION, record.input.clone(), SuggestionInventoryRules::new(inventory::VERSION, applied)?, measure, &out)?;
-        Ok((!evidence::same_but_facts(&record, &again)).then_some(Not::OutputDiffers))
-    }
-
-    fn execution_sha256(&self, key: &str, run: &str, execution: &str) -> Result<Sha256Hex> {
-        let file = self.run_dir(key, run)?.join("executions").join(safe_id(execution)?).join("execution.json");
-        Ok(Sha256Hex::try_from(hash(&fs::read(file)?))?)
-    }
-
-    /// A suggestion's record, if it is what its name says and still fits this run: the bytes are the
-    /// ones the hash names, the edition is the run's, and the execution it used has the same bytes.
+    /// A suggestion's record, if it is what its name says and still fits this run, by the Evidence
+    /// Builder's rule.
     pub(crate) fn verify_suggestion(&self, key: &str, run: &str, sha256: &str) -> Result<SuggestionRecord> {
-        let sha256 = Sha256Hex::try_from(sha256.to_owned())?;
-        let file = self.run_dir(key, run)?.join(SUGGESTIONS).join(format!("{}.json", sha256.as_str()));
-        let record = SuggestionRecord::from_bytes(&fs::read(file)?, sha256.as_str())?;
         let catalog = Catalog::load(&self.edition(key, run)?)?;
-        if record.edition_origin != edition_origin(&catalog)? {
-            return Err(format!("Sugestão {} é de outra edition", sha256.as_str()).into());
-        }
-        if let SuggestionMeasure::Ok { execution, execution_sha256 } = &record.measure {
-            if self.execution_sha256(key, run, execution)? != *execution_sha256 {
-                return Err(format!("Sugestão {}: a execução {execution} mudou", sha256.as_str()).into());
-            }
-        }
-        Ok(record)
+        suggestion::verify(&self.keeper(key, run), &catalog, sha256)
     }
 
     /// Steps 2 and 3: the operation inventory of a run's edition, with the built-in rules and
@@ -1035,14 +937,14 @@ impl Store {
         // existed left nothing behind.
         let kept = match selection {
             Some(_) if failing_at("selection") => Err("selection_persistence_failed"),
-            Some(s) => publish_immutable(&dir, SELECTION, &s.bytes).map_err(|_| "selection_persistence_failed"),
+            Some(s) => publish_immutable(&dir, SELECTION, s.bytes()).map_err(|_| "selection_persistence_failed"),
             None => Ok(()),
         };
         // The package describes what was prepared and written, so it comes after all of it.
         let package = match (&composition, &claims_error, kept) {
             (_, _, Err(code)) => Some(Err(code)),
             (Some(composition), None, Ok(())) => Some(self.evidence_package(key, run, catalog, &dir, composition, &asked, origin.as_ref(),
-                settings.answer_format == AnswerFormat::Claims, settings.instructions.as_deref(), None, selection.map(|s| (&s.sha256, &s.record)), PackageFormat::WRITTEN)
+                settings.answer_format == AnswerFormat::Claims, settings.instructions.as_deref(), None, selection.map(|s| (s.sha256(), s.record())), PackageFormat::WRITTEN)
                 .and_then(|bytes| publish_package(&dir, &bytes))),
             _ => None,
         };
@@ -1076,156 +978,46 @@ impl Store {
     fn evidence_package(&self, key: &str, run: &str, catalog: &Catalog, dir: &Path, composition: &evidence::Composition, asked: &Asked,
         origin: Option<&(&str, Value)>, claims: bool, project_instructions: Option<&[String]>, at_question: Option<MeasureAtQuestion>,
         selection: Option<(&Sha256Hex, &SelectionRecord)>, format: PackageFormat) -> std::result::Result<Vec<u8>, &'static str> {
-        // What a lacuna round added, as the question records it: those fichas are the server's.
-        let additions: Vec<ServerAddition> = match origin.filter(|(field, _)| *field == "gathered").and_then(|(_, value)| value.get("server_additions")) {
-            Some(recorded) => serde_json::from_value(recorded.clone()).map_err(|_| "server_additions_unreadable")?,
-            None => vec![],
-        };
-        let mut composition = composition.clone();
-        for seed in &mut composition.fichas {
-            if seed.symbol_id.as_ref().is_some_and(|id| additions.iter().any(|a| a.symbol_id == *id)) {
-                seed.declared_by = evidence::DeclaredBy::ServerLacuna;
-            }
-        }
-        let composition = &composition;
-        let read = |path: PathBuf| fs::read(path).map_err(|_| "artifact_unreadable");
+        // The Studio reads what the package is made from; the Evidence Builder makes it.
+        let origin = package_origin(origin);
+        let read = |path: PathBuf| fs::read(path).ok();
         let prepared = dir.join("prepared");
-        let request_bytes = read(prepared.join("request.json"))?;
-        let search = read(prepared.join("search.json"))?;
-        let dossier = read(prepared.join("bundle/dossier.json"))?;
-        let bundle_query = String::from_utf8(read(prepared.join("bundle/query.json"))?).map_err(|_| "artifact_unreadable")?;
-        let (context_bytes, claims_query) = if claims {
-            (Some(read(dir.join(crate::claims::DIR).join("context.json"))?), Some(String::from_utf8(read(dir.join(crate::claims::DIR).join("query.json"))?).map_err(|_| "artifact_unreadable")?))
-        } else {
-            (None, None)
+        let (request, search, dossier, bundle_query) =
+            (read(prepared.join("request.json")), read(prepared.join("search.json")), read(prepared.join("bundle/dossier.json")), read(prepared.join("bundle/query.json")));
+        let claims_files = claims.then(|| (read(dir.join(crate::claims::DIR).join("context.json")), read(dir.join(crate::claims::DIR).join("query.json"))));
+        let criteria = dir.join(CRITERIA).is_file().then(|| read(dir.join(CRITERIA)));
+        let lines = self.promotion_lines(key);
+        let at_question = match at_question {
+            Some(recorded) => Ok(recorded),
+            None => package::measure_at_question(match self.latest_measure_read(key, run) {
+                Ok(Some(read)) => MeasureRead::Read { execution: read.record["id"].as_str().map(str::to_owned), sha256: read.sha256 },
+                Ok(None) => MeasureRead::None,
+                Err(_) => MeasureRead::Unreadable,
+            }),
         };
-        let criteria = match dir.join(CRITERIA).is_file() {
-            true => Some(read(dir.join(CRITERIA))?),
-            false => None,
-        };
-        // The sources the fichas and the quotes are in, as the edition has them.
-        let mut paths: Vec<&str> = composition.fichas.iter().map(|f| f.path.as_str()).collect();
-        paths.extend(composition.reviewed.iter().flat_map(|f| f.citations.iter().map(|c| c.path.as_str())));
-        let mut snapshots: Vec<SnapshotInput> = vec![];
-        for path in paths {
-            if snapshots.iter().any(|s| s.path == path) {
-                continue;
-            }
-            let source = catalog.source_by_path(path).ok_or("snapshot_unavailable")?;
-            let bytes = catalog.source_bytes(path).ok_or("snapshot_unavailable")?;
-            snapshots.push(SnapshotInput { source_id: &source.id, path: &source.path, sha256: &source.sha256, bytes });
-        }
-        // Claims: the context's evidence is what the form is checked against.
-        let context: Option<Value> = context_bytes.as_deref().map(serde_json::from_slice).transpose().map_err(|_| "claims_context_unreadable")?;
-        let items: Vec<ClaimsEvidence> = match &context {
-            Some(context) => context["evidence"].as_array().ok_or("claims_context_unreadable")?.iter().map(|e| Some(ClaimsEvidence {
-                id: e["id"].as_str()?, path: e["path"].as_str()?, start_line: e["start_line"].as_u64()? as usize, end_line: e["end_line"].as_u64()? as usize, excerpt: e["excerpt"].as_str()?,
-            })).collect::<Option<Vec<_>>>().ok_or("claims_context_unreadable")?,
-            None => vec![],
-        };
-        let form = if claims { Form::Claims(&items) } else { Form::Prose };
-        let input = CompositionInput { query_json: &bundle_query, seeds: &composition.fichas, radius: composition.radius, form, snapshots: &snapshots };
+        // Tests stand this in for a composition that is hard to make fail.
         if failing_at("composition") {
             return Err("composition_failed");
         }
-        let composed = evidence::compose(&input).map_err(|_| "composition_failed")?;
-        // Each reviewed fact's line in the acervo, in its exact bytes, when it is there.
-        let lines = self.promotion_lines(key).map_err(|_| "acervo_unreadable")?;
-        let records: Vec<FactRecord> = composition.reviewed.iter()
-            .filter_map(|fact| lines.iter().find(|(id, _)| *id == fact.id).map(|(_, line)| FactRecord { fact_id: &fact.id, bytes: line }))
-            .collect();
         let suffixes: Vec<SuffixInput> = asked.suffixes.iter().map(|s| SuffixInput { text: &s.text, rule: s.rule, attempt: s.attempt }).collect();
-        let query_json = claims_query.as_deref().unwrap_or(&bundle_query);
-        let query = evidence::build_provenance(&ProvenanceInput {
-            query_json,
-            question: QuestionInput { original: asked.original, suffixes: &suffixes },
-            search: &search,
+        package::build(&BuildInput {
+            catalog,
             composition,
-            composed: &composed,
-            snapshots: &snapshots,
-            fact_records: &records,
+            asked: package::Asked { original: asked.original, suffixes: &suffixes },
+            origin: &origin,
+            prepared: Prepared { request: request.as_deref(), search: search.as_deref(), dossier: dossier.as_deref(), bundle_query: bundle_query.as_deref() },
+            claims: claims_files.as_ref().map(|(context, query)| ClaimsFiles { context: context.as_deref(), query: query.as_deref() }),
+            criteria: match &criteria {
+                None => Criteria::Absent,
+                Some(Some(bytes)) => Criteria::Present(bytes),
+                Some(None) => Criteria::Unreadable,
+            },
             project_instructions,
-        }).map_err(|_| "provenance_failed")?;
-        // The measure there was when the question was made, read once: what is named is what was read.
-        // A package made again keeps the one it was made with.
-        let at_question = match at_question {
-            Some(recorded) => recorded,
-            None => match self.latest_measure_read(key, run) {
-                Ok(Some(read)) => MeasureAtQuestion::Ok {
-                    execution: read.record["id"].as_str().ok_or("measure_unidentified")?.to_owned(),
-                    execution_sha256: Sha256Hex::try_from(read.sha256).map_err(|_| "measure_unidentified")?,
-                },
-                Ok(None) => MeasureAtQuestion::NoMeasure {},
-                Err(_) => MeasureAtQuestion::Unreadable {},
-            },
-        };
-        // A selection checked at the entry is named by its record, and rests on its last suggestion's
-        // measure. A package made before selections were checked said only that none was tied to it.
-        let gathered_origin = origin.filter(|(field, _)| *field == "gathered").map(|(_, value)| &value["origin"]);
-        let (selection, selection_basis) = match selection {
-            Some((sha256, record)) => (Some(SelectionReference { record_format: SelectionRecordFormat, record_sha256: sha256.clone(),
-                suggestions: record.suggestions(), declared_by: ServerDeclared::Server }), record.selection_basis()),
-            None => (None, match gathered_origin.is_some_and(|o| o.get("selection").is_some_and(|s| !s.is_null())) {
-                true => MeasureSelectionBasis::NotRecorded {},
-                false => MeasureSelectionBasis::NotApplicable {},
-            }),
-        };
-        let origin_kind = gathered_origin.and_then(|o| o["kind"].as_str()).and_then(|kind| match kind {
-            "selection" => Some(OriginKind::Selection),
-            "ladder" => Some(OriginKind::Ladder),
-            "hot" => Some(OriginKind::Hot),
-            "loop" => Some(OriginKind::Loop),
-            "operation" => Some(OriginKind::Operation),
-            _ => None,
-        });
-        let route = match origin.map(|(field, _)| *field) {
-            Some("gathered") => Route::Gathered,
-            Some("chain") => Route::Chain,
-            Some("path") => Route::Path,
-            _ => Route::Search,
-        };
-        let manifest = catalog.manifest();
-        let report: Value = serde_json::from_slice(&search).map_err(|_| "artifact_unreadable")?;
-        let sha = |bytes: &[u8]| Sha256Hex::try_from(hash(bytes)).map_err(|_| "artifact_unreadable");
-        let package = EvidencePackage {
-            kind: PackageKind::EvidencePackage,
-            format_version: format,
-            versions: Versions { normalization: Normalization::LinesV1, rules: RulesVersion(envelope::RULES_VERSION.to_owned()), builder: crate::builder::identity() },
-            edition: EditionIdentity {
-                origin: edition_origin(catalog).map_err(|_| "edition_unreadable")?,
-                catalog_sha256: Sha256Hex::try_from(report["catalog_sha256"].as_str().unwrap_or_default().to_owned()).map_err(|_| "edition_unreadable")?,
-                extractor: manifest.extractor.clone(),
-                git_head: manifest.git.head.clone(),
-                git_dirty: manifest.git.dirty,
-            },
-            route,
-            origin_kind,
-            representation: if claims { Representation::Claims } else { Representation::Prose },
-            fichas: composed.fichas,
-            units: composed.units,
-            query,
-            // Format 1 wrote false and compared nothing; it is made again as it was. Format 2 compares.
-            measure: match format {
-                PackageFormat::V1 => MeasureReferences { at_question, selection_basis, measure_diverges: Some(false), measure_divergence: None },
-                PackageFormat::V2 => {
-                    let divergence = evidence::measure_divergence(&at_question, &selection_basis);
-                    MeasureReferences { at_question, selection_basis, measure_diverges: None, measure_divergence: Some(divergence) }
-                }
-            },
+            fact_lines: lines.as_deref().map_err(|_| ()),
+            at_question,
             selection,
-            server_additions: additions,
-            bound: BoundArtifacts {
-                request_sha256: sha(&request_bytes)?,
-                search_sha256: sha(&search)?,
-                dossier_sha256: sha(&dossier)?,
-                bundle_query_sha256: sha(bundle_query.as_bytes())?,
-                claims_context_sha256: context_bytes.as_deref().map(sha).transpose()?,
-                criteria_sha256: criteria.as_deref().map(sha).transpose()?,
-            },
-        };
-        let mut bytes = serde_json::to_vec_pretty(&package).map_err(|_| "serialization_failed")?;
-        bytes.push(b'\n');
-        Ok(bytes)
+            format,
+        })
     }
 
     /// An answer pasted by the person (provider `manual`), for a claims question: verified and
@@ -1342,201 +1134,60 @@ impl Store {
         Ok(Verified { query, context, criteria_sha256, link })
     }
 
-    /// H1 and H2 of a new question's package: the mark, the bytes, the package with itself and with
-    /// the files of its turn (H1), then its units again from the edition's snapshots (H2). Nothing
-    /// is rewritten; what does not agree is refused as it is.
+    /// H1 and H2 of a new question's package, by the Evidence Builder: the Studio reads the files of
+    /// the turn and the record of the question, and hands them over.
     fn check_package(&self, key: &str, run: &str, dir: &Path, question: &Value, mark: &Value) -> Result<(String, EvidencePackage, Vec<u8>)> {
-        let refuse = |level: &str, why: String| -> Box<dyn std::error::Error> { format!("{level}: {why}; nada foi enviado").into() };
-        if let Some(code) = mark.get("error") {
-            return Err(format!("Esta pergunta não tem pacote de evidências ({}); nada foi enviado", code.as_str().unwrap_or("?")).into());
-        }
-        let fields = mark.as_object().ok_or_else(|| refuse("H1", "marca do pacote ilegível".into()))?;
-        // Format 1 or 2: the mark names the format, and the package has to be in that same format.
-        let format = mark["format_version"].as_u64().and_then(|v| u32::try_from(v).ok()).and_then(|v| PackageFormat::try_from(v).ok());
-        let Some(format) = format.filter(|_| fields.len() == 2) else {
-            return Err(refuse("H1", "marca do pacote em formato desconhecido".into()));
-        };
-        let sha256 = Sha256Hex::try_from(mark["sha256"].as_str().unwrap_or_default().to_owned()).map_err(|_| refuse("H1", "hash da marca inválido".into()))?;
-        let bytes = fs::read(dir.join(EVIDENCE)).map_err(|_| refuse("H1", "pacote ausente".into()))?;
-        if hash(&bytes) != sha256.as_str() {
-            return Err(refuse("H1", "o pacote não é o que a marca nomeia".into()));
-        }
-        let package: EvidencePackage = serde_json::from_slice(&bytes).map_err(|e| refuse("H1", format!("pacote ilegível ({e})")))?;
-        let mut again = serde_json::to_vec_pretty(&package)?;
-        again.push(b'\n');
-        if again != bytes {
-            return Err(refuse("H1", "pacote fora da forma em que é gravado".into()));
-        }
-        if package.format_version != format {
-            return Err(refuse("H1", "o formato da marca não é o do pacote".into()));
-        }
-        evidence::check_structure(&package).map_err(|e| refuse("H1", e.to_string()))?;
-        // The versions it names are ones this code knows; the builder is the one recorded, whatever it is.
-        if package.versions.rules.0 != envelope::RULES_VERSION {
-            return Err(refuse("H1", format!("regras {} desconhecidas", package.versions.rules.0)));
-        }
-        // The files of this turn are the ones bound, and only those.
-        let of = |path: PathBuf| fs::read(path).map(|b| hash(&b)).ok();
-        let claims = package.representation == Representation::Claims;
-        let prepared = dir.join("prepared");
-        let bound = &package.bound;
-        let claims_context = of(dir.join(crate::claims::DIR).join("context.json"));
-        let criteria = of(dir.join(CRITERIA));
-        let checks = [
-            ("request", Some(bound.request_sha256.as_str().to_owned()) == of(prepared.join("request.json"))),
-            ("search", Some(bound.search_sha256.as_str().to_owned()) == of(prepared.join("search.json"))),
-            ("dossier", Some(bound.dossier_sha256.as_str().to_owned()) == of(prepared.join("bundle/dossier.json"))),
-            ("bundle_query", Some(bound.bundle_query_sha256.as_str().to_owned()) == of(prepared.join("bundle/query.json"))),
-            // A claims question has its context, a prose one has none: a null is no stand-in for it.
-            ("claims_context", claims == bound.claims_context_sha256.is_some()
-                && bound.claims_context_sha256.as_ref().map(|h| h.as_str().to_owned()) == if claims { claims_context } else { None }),
-            ("criteria", bound.criteria_sha256.as_ref().map(|h| h.as_str().to_owned()) == criteria && question["criteria_sha256"].as_str().map(str::to_owned) == criteria),
-            ("query", Some(package.query.sha256.as_str().to_owned()) == of(if claims { dir.join(crate::claims::DIR).join("query.json") } else { prepared.join("bundle/query.json") })),
-            ("representation", claims == (question["answer_format"] == "claims")),
-        ];
-        if let Some((name, _)) = checks.iter().find(|(_, same)| !same) {
-            return Err(refuse("H1", format!("{name} difere do vinculado no pacote")));
-        }
-        // The question as asked, and the edition the package names.
-        let asked = asked_of(question)?;
-        let prepared_text = question["question"].as_str().unwrap_or_default();
-        let suffixes: Vec<(String, RetryRule, usize)> = package.query.server_suffixes.iter().map(|s| (s.sha256.as_str().to_owned(), s.rule, s.attempt)).collect();
-        let asked_suffixes: Vec<(String, RetryRule, usize)> = asked.1.iter().map(|s| (hash(s.text.as_bytes()), s.rule, s.attempt)).collect();
-        let joined: String = std::iter::once(asked.0.as_str()).chain(asked.1.iter().map(|s| s.text.as_str())).collect();
-        if package.query.prepared_question_sha256.as_str() != hash(prepared_text.as_bytes()) || joined != prepared_text
-            || package.query.person_text.sha256.as_str() != hash(asked.0.as_bytes()) || suffixes != asked_suffixes {
-            return Err(refuse("H1", "a pergunta registrada não é a do pacote".into()));
-        }
-        let origin: Value = serde_json::from_slice(&fs::read(prepared.join("bundle/origin.json"))?)?;
-        let search: Value = serde_json::from_slice(&fs::read(prepared.join("search.json"))?)?;
-        if origin["dossier"]["source_path"] != package.edition.origin.as_str() || search["catalog_sha256"] != package.edition.catalog_sha256.as_str() {
-            return Err(refuse("H1", "a edition do pacote não é a do bundle".into()));
-        }
-        // The selection's record is the one the package names, and says what the question says it sent.
-        let selection_file = dir.join(SELECTION);
-        let included: Option<Vec<String>> = match &package.selection {
-            Some(reference) => {
-                let bytes = fs::read(&selection_file).map_err(|_| refuse("H1", "registro de seleção ausente".into()))?;
-                let record = SelectionRecord::from_bytes(&bytes, reference.record_sha256.as_str()).map_err(|e| refuse("H1", format!("registro de seleção: {e}")))?;
-                if record.suggestions() != reference.suggestions || record.selection_basis() != package.measure.selection_basis {
-                    return Err(refuse("H1", "o registro de seleção não é o que o pacote diz".into()));
-                }
-                let sent = SelectionInput::from_value(&question["gathered"]["origin"]["selection"]).ok();
-                if sent.as_ref() != Some(&record.received) || record.edition_origin != package.edition.origin {
-                    return Err(refuse("H1", "a seleção da pergunta não é a do registro".into()));
-                }
-                Some(record.received.included.iter().map(|e| e.id.clone()).collect())
-            }
-            None if selection_file.exists() => return Err(refuse("H1", "registro de seleção que o pacote não nomeia".into())),
-            None => None,
-        };
-        // What the server added is what the question records, in its order.
-        let recorded: Vec<ServerAddition> = match question["gathered"].get("server_additions") {
-            Some(value) => serde_json::from_value(value.clone()).map_err(|_| refuse("H1", "complementações ilegíveis".into()))?,
-            None => vec![],
-        };
-        if recorded != package.server_additions {
-            return Err(refuse("H1", "as complementações não são as da pergunta".into()));
-        }
-        // H2: from the edition kept with the run, never from the analyzed project.
-        let catalog = self.edition(key, run).and_then(|edition| Catalog::load(&edition)).map_err(|e| refuse("H2", format!("edition indisponível ({e})")))?;
-        // Each one asked for by its LACUNA and found for it in the edition, after the client's.
-        let nodes: Vec<String> = serde_json::from_value(question["gathered"]["nodes"].clone()).unwrap_or_default();
-        self.check_additions(key, run, &catalog, &nodes, included.as_deref(), &package.server_additions).map_err(|e| refuse("H1", format!("complementação: {e}")))?;
-        let mut snapshots: Vec<SnapshotInput> = vec![];
-        for unit in &package.units {
-            if snapshots.iter().any(|s| s.path == unit.path) {
-                continue;
-            }
-            let (Some(source), Some(bytes)) = (catalog.source_by_path(&unit.path), catalog.source_bytes(&unit.path)) else {
-                return Err(refuse("H2", format!("snapshot de {} indisponível", unit.path)));
-            };
-            snapshots.push(SnapshotInput { source_id: &source.id, path: &source.path, sha256: &source.sha256, bytes });
-        }
-        evidence::check_sources(&package, &snapshots).map_err(|e| refuse("H2", e.to_string()))?;
-        Ok((sha256.as_str().to_owned(), package, bytes))
+        let turn = ReadTurn::read(dir);
+        let catalog = self.edition(key, run).and_then(|edition| Catalog::load(&edition)).map_err(|e| e.to_string());
+        check::check_package(&self.keeper(key, run), catalog.as_ref().map_err(String::clone), &turn.files(), &question_record(question, mark))
     }
 
-    /// H3: the package this code makes from what was prepared and recorded is the stored one, except
-    /// for the code that built it and the measure read when the question was made.
+    /// H3, by the Evidence Builder: the package made again from what was prepared and recorded.
     #[allow(clippy::too_many_arguments)]
     fn rederive_package(&self, key: &str, run: &str, catalog: &Catalog, dir: &Path, question: &Value, stored: &EvidencePackage,
         stored_bytes: &[u8], context: Option<&librarian_llm_engine::claims::Context>) -> Result<()> {
-        let refuse = |why: String| -> Box<dyn std::error::Error> { format!("H3: {why}; nada foi enviado").into() };
-        let request: Request = serde_json::from_slice(&fs::read(dir.join("prepared/request.json"))?)?;
-        let composition = prepare::prepare(catalog, &request).map_err(|e| refuse(format!("preparação não refeita ({e})")))?.composition;
-        let (original, suffixes) = asked_of(question)?;
-        let asked = Asked { original: &original, suffixes: &suffixes };
+        let turn = ReadTurn::read(dir);
+        let files = turn.files();
         let origin = ["gathered", "chain", "path"].into_iter().find(|f| question.get(*f).is_some()).map(|f| (f, question[f].clone()));
-        // The instructions the query was written with: the claims context records them.
-        let recorded: Option<Vec<String>> = context.map(|c| c.project_instructions.clone());
-        let claims = stored.representation == Representation::Claims;
-        // The selection's record made again by this code, from what the client sent, the suggestion
-        // records of the run and the edition: checked as at the entry, against the client's nodes.
-        let selection = match &stored.selection {
-            Some(reference) => {
-                let bytes = fs::read(dir.join(SELECTION))?;
-                let record = SelectionRecord::from_bytes(&bytes, reference.record_sha256.as_str())?;
-                let nodes: Vec<String> = record.received.included.iter().map(|e| e.id.clone()).collect();
-                let again = self.accept_input(key, run, &nodes, record.received.clone()).map_err(|e| refuse(format!("registro de seleção não refeito ({e})")))?;
-                if again.bytes != bytes {
-                    return Err(refuse("o código atual não refaz o registro de seleção".into()));
-                }
-                Some(again)
-            }
-            None => None,
-        };
-        let bytes = self.evidence_package(key, run, catalog, dir, &composition, &asked, origin.as_ref(), claims, recorded.as_deref(), Some(stored.measure.at_question.clone()),
-            selection.as_ref().map(|s| (&s.sha256, &s.record)), stored.format_version)
-            .map_err(|code| refuse(format!("pacote não refeito ({code})")))?;
-        // The builder is the one field allowed to differ: what it built is compared byte for byte.
-        let mut again: EvidencePackage = serde_json::from_slice(&bytes)?;
-        again.versions.builder = stored.versions.builder.clone();
-        let mut again_bytes = serde_json::to_vec_pretty(&again)?;
-        again_bytes.push(b'\n');
-        if again_bytes == stored_bytes {
-            return Ok(());
-        }
-        // Different bytes: the first part that differs names the refusal.
-        let parts: [(&str, bool); 10] = [
-            ("versions", again.versions == stored.versions),
-            ("edition", again.edition == stored.edition),
-            ("route", (again.route, again.origin_kind, again.representation) == (stored.route, stored.origin_kind, stored.representation)),
-            ("fichas", again.fichas == stored.fichas),
-            ("units", again.units == stored.units),
-            ("query", again.query == stored.query),
-            ("measure", again.measure == stored.measure),
-            ("selection", again.selection == stored.selection),
-            ("server_additions", again.server_additions == stored.server_additions),
-            ("bound", again.bound == stored.bound),
-        ];
-        let part = parts.iter().find(|(_, same)| !same).map_or("a forma", |(part, _)| part);
-        Err(refuse(format!("o código atual não refaz {part} do pacote")))
+        let lines = self.promotion_lines(key);
+        let record = question_record(question, &Value::Null);
+        check::rederive(&self.keeper(key, run), &Remake {
+            catalog,
+            files: &files,
+            question: &record,
+            origin: &package_origin(origin.as_ref()),
+            // The instructions the query was written with: the claims context records them.
+            recorded_instructions: context.map(|c| c.project_instructions.as_slice()),
+            fact_lines: lines.as_deref().map_err(|_| ()),
+        }, stored, stored_bytes)
+    }
+
+    fn keeper<'s>(&'s self, key: &'s str, run: &'s str) -> RunKeeper<'s> {
+        RunKeeper { store: self, key, run }
     }
 
     pub(crate) fn settings(&self, key: &str) -> Result<Settings> {
         Ok(serde_json::from_slice(&fs::read(self.project_dir(key)?.join("project.json"))?)?)
     }
 
-    /// Asks an LLM for lexicon groups over the edition's code vocabulary and checks them.
-    /// `provider: manual` only writes and returns the request, for a pasted answer later.
-    pub fn suggest_lexicon(&self, key: &str, run: &str, provider: &str, language: &str, send: crate::llm::Choice) -> Result<Value> {
-        if !crate::lexicon::LANGUAGES.contains(&language) {
-            return Err(format!("Idioma do léxico desconhecido: {language}").into());
-        }
+    /// Asks an LLM for lexicon groups over the edition's code vocabulary and checks them, in the
+    /// project's language. The profile `manual` only writes and returns the request, for a pasted
+    /// answer later.
+    pub fn suggest_lexicon(&self, key: &str, run: &str, send: crate::llm::Choice) -> Result<Value> {
         let settings = self.settings(key)?;
+        let language = language_of(&settings)?;
         let catalog = Catalog::load(&self.edition(key, run)?)?;
         let missed = self.missed_terms(key, &settings.lexicon)?;
         let (id, dir) = reserve(&self.project_dir(key)?.join("lexicon"), &stamp())?;
-        let request = crate::lexicon::request(&catalog, &settings.lexicon, language, &missed);
+        let request = crate::lexicon::request(&catalog, &settings.lexicon, language.code(), &missed);
         let mut bytes = serde_json::to_vec_pretty(&request)?;
         bytes.push(b'\n');
         fs::write(dir.join("query.json"), &bytes)?;
         let query = String::from_utf8(bytes)?;
-        if provider == "manual" {
+        if send.profile == "manual" {
             return Ok(json!({ "id": id, "query": query, "directory": display(&dir) }));
         }
-        let summary = crate::llm::send_lexicon(provider, &send, &dir.join("query.json"), &dir.join("send"))?;
+        let summary = crate::llm::send_lexicon(&self.library()?, &send, language, &dir.join("query.json"), &dir.join("send"))?;
         let checked = match summary["text"].as_str() {
             Some(text) => self.check_text(&catalog, &settings, &dir, text),
             None => json!({ "error": summary["diagnostic"].as_str().unwrap_or("O LLM não devolveu texto") }),
@@ -1644,20 +1295,10 @@ impl Store {
         self.turns(key, run)
     }
 
-    pub fn modelfiles(&self) -> Result<Value> {
-        let mut list = vec![];
-        if self.modelfiles.is_dir() {
-            for entry in fs::read_dir(&self.modelfiles)? {
-                let path = entry?.path();
-                let name = path.file_name().unwrap().to_string_lossy().into_owned();
-                if let Some(stem) = name.strip_suffix(".Modelfile") {
-                    let content = fs::read_to_string(&path)?;
-                    list.push(json!({ "name": stem, "content": content, "model": model_name(stem) }));
-                }
-            }
-        }
-        list.sort_by(|a, b| a["name"].as_str().cmp(&b["name"].as_str()));
-        Ok(json!(list))
+    /// The model library (tasks, profiles, languages and the defaults of each action), read from its
+    /// folder each time, like the profile's commands: an edit applies to the next send.
+    pub fn library(&self) -> Result<librarian_llm_engine::models::Library> {
+        librarian_llm_engine::models::Library::load(&self.modelfiles)
     }
 
     /// Skills live next to the Modelfiles: skills/<name>/SKILL.md, with a front matter.
@@ -1689,25 +1330,6 @@ impl Store {
         let name = safe_id(name)?;
         let content = fs::read_to_string(self.skills_dir().join(name).join("SKILL.md")).map_err(|_| format!("Skill desconhecida: {name}"))?;
         Ok(crate::llm::Skill { name: name.to_owned(), text: split_front_matter(&content).1.trim().to_owned() })
-    }
-
-    pub fn modelfile_path(&self, name: &str) -> Result<PathBuf> {
-        let name = safe_id(name)?;
-        let path = self.modelfiles.join(format!("{name}.Modelfile"));
-        if !path.is_file() {
-            return Err(format!("Modelfile desconhecido: {name}").into());
-        }
-        Ok(path)
-    }
-
-    pub fn save_modelfile(&self, name: &str, content: &str) -> Result<Value> {
-        let name = safe_id(name)?;
-        if !content.lines().any(|l| l.trim_start().to_ascii_uppercase().starts_with("FROM ")) {
-            return Err("O Modelfile precisa de uma linha FROM".into());
-        }
-        fs::create_dir_all(&self.modelfiles)?;
-        fs::write(self.modelfiles.join(format!("{name}.Modelfile")), content)?;
-        self.modelfiles()
     }
 }
 
@@ -1782,10 +1404,6 @@ pub fn next_send(turn: &Path, provider: &str) -> Result<PathBuf> {
     fs::create_dir_all(&sends)?;
     let next = fs::read_dir(&sends)?.count() + 1;
     Ok(sends.join(format!("{next:02}-{provider}")))
-}
-
-pub fn model_name(modelfile: &str) -> String {
-    format!("librarian-{modelfile}")
 }
 
 /// Folder picker data; browsers do not expose absolute paths, so the server lists them.
@@ -2055,9 +1673,46 @@ fn publish_package(dir: &Path, bytes: &[u8]) -> std::result::Result<String, &'st
     Ok(hash(bytes))
 }
 
-/// An edition's identity, as a prepared bundle's `origin.json` names it.
+/// The project's language, the one place it is decided: the claims contract, the task texts and the
+/// lexicon request all follow it. Empty is Portuguese, as projects saved before the setting are.
+pub fn language_of(settings: &Settings) -> Result<librarian_llm_engine::models::Language> {
+    match settings.language.as_str() {
+        "" | "pt" => Ok(librarian_llm_engine::models::Language::Pt),
+        "en" => Ok(librarian_llm_engine::models::Language::En),
+        other => Err(format!("Idioma do projeto desconhecido: {other}").into()),
+    }
+}
+
+/// An edition's identity, as a prepared bundle's `origin.json` names it: the Evidence Builder's rule.
+#[cfg(test)]
 fn edition_origin(catalog: &Catalog) -> Result<String> {
-    Ok(format!("edition:{}", hash(&serde_json::to_vec(catalog.manifest())?)))
+    package::edition_origin(catalog)
+}
+
+/// Where a question's evidence came from, from the field of question.json that records it (`gathered`,
+/// `chain` or `path`; none for a search), in the Evidence Builder's terms.
+fn package_origin(origin: Option<&(&str, Value)>) -> PackageOrigin {
+    let gathered = origin.filter(|(field, _)| *field == "gathered").map(|(_, value)| value);
+    let additions = match gathered.and_then(|value| value.get("server_additions")) {
+        Some(recorded) => serde_json::from_value(recorded.clone()).map_err(|_| ()),
+        None => Ok(vec![]),
+    };
+    let gathered_origin = gathered.map(|value| &value["origin"]);
+    let kind = gathered_origin.and_then(|o| o["kind"].as_str()).and_then(|kind| match kind {
+        "selection" => Some(OriginKind::Selection),
+        "ladder" => Some(OriginKind::Ladder),
+        "hot" => Some(OriginKind::Hot),
+        "loop" => Some(OriginKind::Loop),
+        "operation" => Some(OriginKind::Operation),
+        _ => None,
+    });
+    let route = match origin.map(|(field, _)| *field) {
+        Some("gathered") => Route::Gathered,
+        Some("chain") => Route::Chain,
+        Some("path") => Route::Path,
+        _ => Route::Search,
+    };
+    PackageOrigin { route, kind, selection_sent: gathered_origin.is_some_and(|o| o.get("selection").is_some_and(|s| !s.is_null())), additions }
 }
 
 /// Publishes `bytes` under `name`, once and for good. A hard link is how: it fails when the name
@@ -2103,7 +1758,10 @@ fn publish_with(dir: &Path, name: &str, bytes: &[u8], write: impl FnOnce(&mut fs
 #[cfg(test)]
 mod tests {
     use super::*;
-    use librarian_ingest::evidence::{Incomparable, MeasureDivergence, MeasureSide, NotComparable};
+    use librarian_ingest::evidence::{
+        Incomparable, InventoryRuleOrigin, MeasureDivergence, MeasureSelectionBasis, MeasureSide, NotComparable, Representation, RetryRule,
+        RulesVersion, ServerDeclared, SnapshotInput, SuggestionInventoryRules,
+    };
 
     struct Scratch(PathBuf);
     impl Drop for Scratch {
@@ -2117,6 +1775,11 @@ mod tests {
     }
 
     static NEXT: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+
+    /// The model library of the repository: the tests read it and never write to it.
+    fn library_dir() -> PathBuf {
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../modelfiles")
+    }
 
     fn project() -> Scratch {
         let n = NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
@@ -2135,7 +1798,7 @@ mod tests {
     fn measure_all_is_available_only_with_instrument_and_a_source_it_can_be_placed_in() {
         let scratch = project();
         let root = scratch.0.join("project");
-        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: library_dir() };
         let key = store.open(&display(&root)).unwrap()["key"].as_str().unwrap().to_owned();
         let git = |args: &[&str]| {
             let out = std::process::Command::new("git").arg("-C").arg(&root).args(["-c", "user.name=t", "-c", "user.email=t@t"]).args(args).output().unwrap();
@@ -2188,7 +1851,7 @@ mod tests {
         git(&["init", "-q"]);
         git(&["add", "-A"]);
         git(&["commit", "-q", "-m", "x"]);
-        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: library_dir() };
         let key = store.open(&display(&root)).unwrap()["key"].as_str().unwrap().to_owned();
         (scratch, store, key, root)
     }
@@ -2373,7 +2036,7 @@ mod tests {
     #[test]
     fn open_generate_and_ask_light_the_graph_and_prepare_a_numbered_query() {
         let scratch = project();
-        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: library_dir() };
         let opened = store.open(&display(&scratch.0.join("project"))).unwrap();
         let key = opened["key"].as_str().unwrap().to_owned();
         assert!(key.starts_with("project-"));
@@ -2448,7 +2111,7 @@ mod tests {
     #[test]
     fn claims_questions_derive_a_checked_context_and_pasted_answers_are_checked() {
         let scratch = project();
-        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: library_dir() };
         let opened = store.open(&display(&scratch.0.join("project"))).unwrap();
         let key = opened["key"].as_str().unwrap().to_owned();
         let mut settings: Settings = serde_json::from_value(opened["settings"].clone()).unwrap();
@@ -2552,7 +2215,7 @@ mod tests {
     #[test]
     fn approved_facts_pass_every_gate_and_are_rechecked_against_later_editions() {
         let scratch = project();
-        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: library_dir() };
         let opened = store.open(&display(&scratch.0.join("project"))).unwrap();
         let key = opened["key"].as_str().unwrap().to_owned();
         let mut settings: Settings = serde_json::from_value(opened["settings"].clone()).unwrap();
@@ -2649,7 +2312,7 @@ mod tests {
     #[test]
     fn chain_steps_carry_checked_locations_and_current_reviewed_facts_never_the_text() {
         let scratch = project();
-        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: library_dir() };
         let opened = store.open(&display(&scratch.0.join("project"))).unwrap();
         let key = opened["key"].as_str().unwrap().to_owned();
         let mut settings: Settings = serde_json::from_value(opened["settings"].clone()).unwrap();
@@ -2714,7 +2377,7 @@ mod tests {
         let scratch = project();
         // Two `trace`: only the qualified name settles which one.
         fs::write(scratch.0.join("project/src/lib.rs"), "pub struct Camera;\n\nimpl Camera {\n    pub fn ray_from_pixel(&self, x: f64) -> f64 {\n        let direction = x * 2.0;\n        direction\n    }\n\n    pub fn trace(&self) -> f64 {\n        1.0\n    }\n}\n\npub struct World;\n\nimpl World {\n    pub fn trace(&self) -> f64 {\n        0.0\n    }\n}\n").unwrap();
-        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: library_dir() };
         let opened = store.open(&display(&scratch.0.join("project"))).unwrap();
         let key = opened["key"].as_str().unwrap().to_owned();
         let mut settings: Settings = serde_json::from_value(opened["settings"].clone()).unwrap();
@@ -2750,7 +2413,7 @@ mod tests {
     #[test]
     fn allow_patch_is_fixed_with_the_question_and_checks_proposed_edits() {
         let scratch = project();
-        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: library_dir() };
         let opened = store.open(&display(&scratch.0.join("project"))).unwrap();
         let key = opened["key"].as_str().unwrap().to_owned();
         let mut settings: Settings = serde_json::from_value(opened["settings"].clone()).unwrap();
@@ -2802,7 +2465,7 @@ mod tests {
                 "answer": {"format": "prose", "allow_hypothesis": true}}"#,
         )
         .unwrap();
-        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: library_dir() };
         let opened = store.open(&display(&root)).unwrap();
         let settings: Settings = serde_json::from_value(opened["settings"].clone()).unwrap();
         assert_eq!(settings.inputs, ["src"]);
@@ -2834,7 +2497,7 @@ mod tests {
     #[test]
     fn path_questions_ask_one_picked_declaration_at_a_time() {
         let scratch = project();
-        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: library_dir() };
         let key = store.open(&display(&scratch.0.join("project"))).unwrap()["key"].as_str().unwrap().to_owned();
         let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
         let catalog = Catalog::load(&store.edition(&key, &run).unwrap()).unwrap();
@@ -2887,26 +2550,30 @@ mod tests {
     fn lexicon_proposals_are_checked_and_profiles_exported_on_request() {
         let scratch = project();
         let root = scratch.0.join("project");
-        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: library_dir() };
         let key = store.open(&display(&root)).unwrap()["key"].as_str().unwrap().to_owned();
         let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
         // A question whose words "fica" and "hoje" touch no result: candidates for stop words.
         store.ask(&key, &run, "Onde fica o ray_from_pixel da Camera hoje?").unwrap();
 
         // Manual: the request is written and returned; nothing is sent.
-        let manual = store.suggest_lexicon(&key, &run, "manual", "pt", crate::llm::Choice {
-            modelfile: None, modelfile_name: None, claude_model: None, skills: vec![] }).unwrap();
+        let none = || crate::llm::Choice { profile: "manual".into(), claude_model: None, skills: vec![] };
+        let manual = store.suggest_lexicon(&key, &run, none()).unwrap();
         let query: Value = serde_json::from_str(manual["query"].as_str().unwrap()).unwrap();
         let terms: Vec<_> = query["evidence"]["code_terms"].as_array().unwrap().iter().map(|t| t["term"].clone()).collect();
         assert!(terms.contains(&json!("camera")) && terms.contains(&json!("pixel")));
         assert_eq!(query["evidence"]["missed_terms"], json!([{ "term": "fica", "questions": 1 }, { "term": "hoje", "questions": 1 }]));
-        // In English the same code terms go with a request for English words; others are refused.
-        let none = || crate::llm::Choice { modelfile: None, modelfile_name: None, claude_model: None, skills: vec![] };
-        let english = store.suggest_lexicon(&key, &run, "manual", "en", none()).unwrap();
+        // A project in English: the same code terms go with a request for English words. The language
+        // is the project's, the one setting every flow reads; an unknown one is refused.
+        let language = |code: &str| { let mut s = store.settings(&key).unwrap(); s.language = code.into(); store.save_settings(&key, &s).unwrap(); };
+        language("en");
+        let english = store.suggest_lexicon(&key, &run, none()).unwrap();
         let english: Value = serde_json::from_str(english["query"].as_str().unwrap()).unwrap();
         assert!(english["question"].as_str().unwrap().contains("English words"));
         assert_eq!(english["evidence"]["code_terms"], query["evidence"]["code_terms"]);
-        assert!(store.suggest_lexicon(&key, &run, "manual", "fr", none()).is_err());
+        language("fr");
+        assert!(store.suggest_lexicon(&key, &run, none()).unwrap_err().to_string().contains("Idioma do projeto desconhecido: fr"));
+        language("");
 
         let answer = "Aqui está:\n```json\n{\"groups\": [[\"raio\", \"raios\", \"ray\"], [\"banco\", \"dados\"], \
             [\"duas palavras\", \"câmera\", \"camera\"], [\"ray\", \"feixe\"]]}\n```";
@@ -2966,16 +2633,39 @@ mod tests {
         assert!(store.export_profile(&key, true).is_err());
     }
 
+    /// The library is read, never written by the page: the Modelfiles are rendered from it, the two
+    /// profiles are what a send can name, and a request that names a Modelfile or a profile the
+    /// library does not have sends nothing. A skill goes only with a task that takes it.
     #[test]
-    fn modelfiles_require_from_and_safe_names() {
-        let scratch = project();
-        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
-        assert!(store.save_modelfile("cenas", "PARAMETER seed 1\n").is_err());
-        assert!(store.save_modelfile("../fora", "FROM qwen\n").is_err());
-        let list = store.save_modelfile("cenas", "FROM qwen\nSYSTEM Crie cenas.\n").unwrap();
-        assert_eq!(list[0]["name"], "cenas");
-        assert_eq!(list[0]["model"], "librarian-cenas");
-        assert!(store.modelfile_path("cenas").is_ok());
+    fn sends_name_a_profile_of_the_library_and_the_task_comes_from_the_question() {
+        let (_scratch, store, key, run) = opened_run();
+        let (status, models) = api_with(&store, "GET", "/api/modelfiles", &Value::Null);
+        assert_eq!(status, 200);
+        let names: Vec<&str> = models["modelfiles"].as_array().unwrap().iter().map(|m| m["name"].as_str().unwrap()).collect();
+        for name in ["verificavel-qwen3coder", "performance-claude", "lexico-qwen3coder", "verificavel-claude-en"] {
+            assert!(names.contains(&name), "{name} em {names:?}");
+        }
+        assert!(names.iter().all(|n| !n.contains("gemma") && !n.contains("gptoss")), "{names:?}");
+        assert_eq!(api_with(&store, "PUT", "/api/modelfiles", &json!({ "name": "cenas", "content": "FROM qwen\n" })).0, 404);
+        let (_, status) = api_with(&store, "GET", "/api/status", &Value::Null);
+        let offered: Vec<&str> = status["llm"]["providers"].as_array().unwrap().iter().map(|p| p["id"].as_str().unwrap()).collect();
+        assert_eq!(offered, ["manual", "qwen3coder", "claude"]);
+        let turn = fresh(&store, &key, &run, AnswerFormat::Claims);
+        let before = store.turns(&key, &run).unwrap();
+        let (code, _) = api(&store, "/api/send", &json!({ "key": key, "run": run, "turn": turn, "profile": "gemma4" }));
+        assert_eq!(code, 501);
+        let (code, refused) = api(&store, "/api/send", &json!({ "key": key, "run": run, "turn": turn, "profile": "test", "modelfile": "verificavel-qwen3coder" }));
+        assert_ne!(code, 200);
+        assert!(refused.to_string().contains("O Modelfile não é mais escolhido"), "{refused}");
+        // The Ponytail is kept in skills/, and no task takes it: it is refused before anything is sent.
+        let (code, refused) = api(&store, "/api/send", &json!({ "key": key, "run": run, "turn": turn, "profile": "test", "skills": ["ponytail"] }));
+        assert_ne!(code, 200);
+        assert!(refused.to_string().contains("A skill ponytail não se aplica à tarefa verificavel"), "{refused}");
+        assert_eq!(store.turns(&key, &run).unwrap(), before, "nothing was sent");
+        // A send records the profile, the task the question asks for and the project's language.
+        let (code, sent) = api(&store, "/api/send", &json!({ "key": key, "run": run, "turn": turn, "profile": "test" }));
+        assert_eq!(code, 200, "{sent}");
+        assert_eq!((&sent["profile"], &sent["task"], &sent["language"]), (&json!("test"), &json!("verificavel"), &json!("pt")));
     }
 
     #[test]
@@ -2997,7 +2687,7 @@ mod tests {
         git(&["config", "core.autocrlf", "false"]);
         git(&["add", "."]);
         git(&["commit", "-q", "-m", "x"]);
-        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: library_dir() };
         let key = store.open(&display(&root)).unwrap()["key"].as_str().unwrap().to_owned();
         let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
         let refusal = |r: Result<Value>| r.err().unwrap().to_string();
@@ -3084,7 +2774,7 @@ mod tests {
     fn the_inventory_reads_the_profile_rules_at_each_use() {
         let scratch = project();
         let root = scratch.0.join("project");
-        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: library_dir() };
         let key = store.open(&display(&root)).unwrap()["key"].as_str().unwrap().to_owned();
         let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
         let sources = |v: &Value| -> Vec<String> { v["inventory"]["rules"].as_array().unwrap().iter().map(|r| r["source"].as_str().unwrap().to_owned()).collect() };
@@ -3107,7 +2797,7 @@ mod tests {
         let scratch = project();
         let root = scratch.0.join("project");
         fs::write(root.join("src/scan.rs"), "fn norm(v: f64) -> f64 {\n    v.sqrt()\n}\n\npub fn scan(xs: &[f64]) -> f64 {\n    let mut t = 0.0;\n    for x in xs {\n        t += norm(*x);\n    }\n    t\n}\n").unwrap();
-        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: library_dir() };
         let key = store.open(&display(&root)).unwrap()["key"].as_str().unwrap().to_owned();
         let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
         let found = store.inventory(&key, &run).unwrap();
@@ -3151,7 +2841,7 @@ mod tests {
         git(&["config", "core.autocrlf", "false"]);
         git(&["add", "project"]);
         git(&["commit", "-q", "-m", "x"]);
-        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: library_dir() };
         let key = store.open(&display(&root)).unwrap()["key"].as_str().unwrap().to_owned();
         let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
         let sha = store.commands(&key).unwrap()["commands"][0]["sha256"].as_str().unwrap().to_owned();
@@ -3213,7 +2903,7 @@ librarian-measure calls=5 at=src/lib.rs:7
         git(&["config", "core.autocrlf", "false"]);
         git(&["add", "."]);
         git(&["commit", "-q", "-m", "x"]);
-        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: library_dir() };
         let key = store.open(&display(&root)).unwrap()["key"].as_str().unwrap().to_owned();
         let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
         let sha = store.commands(&key).unwrap()["commands"][0]["sha256"].as_str().unwrap().to_owned();
@@ -3273,7 +2963,7 @@ librarian-measure memory_mb=100
         git(&["config", "core.autocrlf", "false"]);
         git(&["add", "."]);
         git(&["commit", "-q", "-m", "x"]);
-        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: library_dir() };
         let key = store.open(&display(&root)).unwrap()["key"].as_str().unwrap().to_owned();
         let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
         let sha = store.commands(&key).unwrap()["commands"][0]["sha256"].as_str().unwrap().to_owned();
@@ -3323,7 +3013,7 @@ librarian-measure memory_mb=100
         git(&["config", "core.autocrlf", "false"]);
         git(&["add", "."]);
         git(&["commit", "-q", "-m", "x"]);
-        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: library_dir() };
         let key = store.open(&display(&root)).unwrap()["key"].as_str().unwrap().to_owned();
         let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
         // Before any measure: a question the rules know asks for it, any other is for the model.
@@ -3402,7 +3092,7 @@ librarian-measure memory_mb=100
         git(&["config", "core.autocrlf", "false"]);
         git(&["add", "."]);
         git(&["commit", "-q", "-m", "x"]);
-        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: library_dir() };
         let key = store.open(&display(&root)).unwrap()["key"].as_str().unwrap().to_owned();
         let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
         let sha = store.commands(&key).unwrap()["commands"][0]["sha256"].as_str().unwrap().to_owned();
@@ -3619,7 +3309,7 @@ librarian-measure memory_mb=100
         let root = scratch.0.join("project");
         fs::remove_file(root.join("src/lib.rs")).unwrap();
         fs::write(root.join("src/app.py"), "def demo():\n    return {\"a\": 1}\n").unwrap();
-        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: library_dir() };
         let key = store.open(&display(&root)).unwrap()["key"].as_str().unwrap().to_owned();
         let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
         // Still the same "no measure" answer, the one the route turns into a 404.
@@ -3764,7 +3454,7 @@ librarian-measure memory_mb=100
         git(&["init", "-q"]);
         git(&["add", "."]);
         git(&["commit", "-q", "-m", "x"]);
-        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: library_dir() };
         let key = store.open(&display(&root)).unwrap()["key"].as_str().unwrap().to_owned();
         let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
         let sha = store.commands(&key).unwrap()["commands"][0]["sha256"].as_str().unwrap().to_owned();
@@ -3990,7 +3680,7 @@ librarian-measure memory_mb=100
         git(&["config", "core.autocrlf", "false"]);
         git(&["add", "."]);
         git(&["commit", "-q", "-m", "x"]);
-        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: library_dir() };
         let key = store.open(&display(&root)).unwrap()["key"].as_str().unwrap().to_owned();
         let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
         let sha = store.commands(&key).unwrap()["commands"][0]["sha256"].as_str().unwrap().to_owned();
@@ -4066,7 +3756,7 @@ librarian-measure memory_mb=100
         git(&["config", "core.autocrlf", "false"]);
         git(&["add", "."]);
         git(&["commit", "-q", "-m", "x"]);
-        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: library_dir() };
         let key = store.open(&display(&root)).unwrap()["key"].as_str().unwrap().to_owned();
         let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
         (scratch, store, key, run)
@@ -4353,7 +4043,7 @@ librarian-measure memory_mb=100
         git(&["config", "core.autocrlf", "false"]);
         git(&["add", "."]);
         git(&["commit", "-q", "-m", "x"]);
-        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: library_dir() };
         let key = store.open(&display(&root)).unwrap()["key"].as_str().unwrap().to_owned();
         let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
         let sha = store.commands(&key).unwrap()["commands"][0]["sha256"].as_str().unwrap().to_owned();
@@ -4520,7 +4210,7 @@ librarian-measure memory_mb=100
     fn catalog_of(source: &str) -> (Scratch, Catalog) {
         let scratch = project();
         fs::write(scratch.0.join("project/src/lib.rs"), source).unwrap();
-        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: library_dir() };
         let key = store.open(&display(&scratch.0.join("project"))).unwrap()["key"].as_str().unwrap().to_owned();
         let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
         let catalog = Catalog::load(&store.edition(&key, &run).unwrap()).unwrap();
@@ -4574,7 +4264,7 @@ librarian-measure memory_mb=100
     fn no_measure() -> (Scratch, Store, String, String, String) {
         let scratch = project();
         let root = scratch.0.join("project");
-        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: library_dir() };
         let key = store.open(&display(&root)).unwrap()["key"].as_str().unwrap().to_owned();
         let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
         let node = symbol_id(&store, &key, &run, "ray_from_pixel");
@@ -5173,7 +4863,7 @@ librarian-measure memory_mb=100
         git(&["config", "core.autocrlf", "false"]);
         git(&["add", "."]);
         git(&["commit", "-q", "-m", "x"]);
-        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: library_dir() };
         let key = store.open(&display(&root)).unwrap()["key"].as_str().unwrap().to_owned();
         let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
         let sha = store.commands(&key).unwrap()["commands"][0]["sha256"].as_str().unwrap().to_owned();
@@ -5276,7 +4966,7 @@ librarian-measure memory_mb=100
 
     fn opened() -> (Scratch, Store, String, Settings) {
         let scratch = project();
-        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: library_dir() };
         let opened = store.open(&display(&scratch.0.join("project"))).unwrap();
         let key = opened["key"].as_str().unwrap().to_owned();
         let mut settings: Settings = serde_json::from_value(opened["settings"].clone()).unwrap();
@@ -5292,7 +4982,7 @@ librarian-measure memory_mb=100
         let asked = store.ask(&key, &run, "Onde a câmera calcula a direção dos raios?").unwrap();
         let (_, _, claims) = package_of(&store, &key, &run, asked["id"].as_str().unwrap());
         assert_eq!((claims.route, claims.representation, claims.origin_kind), (Route::Search, Representation::Claims, None));
-        assert_eq!(claims.versions.builder, crate::builder::identity());
+        assert_eq!(claims.versions.builder, librarian_evidence::identity::identity());
         assert_eq!(claims.versions.rules.0, envelope::RULES_VERSION);
         assert!(claims.units.iter().all(|u| u.excerpt_sha256.is_some()), "claims units carry their excerpt");
         bound_to_its_turn(&store, &key, &run, asked["id"].as_str().unwrap(), &claims);
@@ -6156,11 +5846,13 @@ librarian-measure memory_mb=100
         let (_scratch, store, key, run) = opened_run();
         let turn = fresh(&store, &key, &run, AnswerFormat::Claims);
         let (_, bytes, _) = package_of(&store, &key, &run, &turn);
-        let choice = || crate::llm::Choice { modelfile: None, modelfile_name: None, claude_model: None, skills: vec![] };
+        let choice = || crate::llm::Choice { profile: "test".into(), claude_model: None, skills: vec![] };
+        let library = store.library().unwrap();
+        let (task, language) = (librarian_llm_engine::models::ANSWER, librarian_llm_engine::models::Language::Pt);
         // 39: by a provider and by paste, the link has the hash of the package checked.
         let verified = store.verify_for_send(&key, &run, &turn).unwrap();
         let dir = next_send(&store.turn_dir(&key, &run, &turn).unwrap(), "test").unwrap();
-        let sent = crate::llm::send_question("test", &choice(), &verified, &dir).unwrap();
+        let sent = crate::llm::send_question(&library, &choice(), task, language, &verified, &dir).unwrap();
         let recorded: Value = serde_json::from_slice(&fs::read(dir.join("send.json")).unwrap()).unwrap();
         assert_eq!((&recorded["link"]["evidence_sha256"], &recorded["purpose"]), (&json!(hash(&bytes)), &json!("question")));
         assert_eq!(recorded["link"], verified.link);
@@ -6168,7 +5860,7 @@ librarian-measure memory_mb=100
         let pasted = store.paste_answer(&key, &run, &turn, &ray_fact()).unwrap();
         assert_eq!((&pasted["link"]["evidence_sha256"], &pasted["purpose"]), (&json!(hash(&bytes)), &json!("question")));
         // 45: the lexicon sends with no package and says so.
-        let lexicon = store.suggest_lexicon(&key, &run, "test", crate::lexicon::LANGUAGES[0], choice()).unwrap();
+        let lexicon = store.suggest_lexicon(&key, &run, choice()).unwrap();
         assert_eq!(lexicon["send"]["purpose"], "lexicon");
         assert!(lexicon["send"]["link"].is_null());
         assert!(!Path::new(lexicon["directory"].as_str().unwrap()).join(EVIDENCE).exists());
@@ -6179,7 +5871,7 @@ librarian-measure memory_mb=100
         FAIL_EVIDENCE_AT.with(|f| f.set(Some("send_record")));
         let pasted = store.paste_answer(&key, &run, &turn, &ray_fact());
         let dir = next_send(&store.turn_dir(&key, &run, &turn).unwrap(), "test").unwrap();
-        let provider = crate::llm::send_question("test", &choice(), &store.verify_for_send(&key, &run, &turn).unwrap(), &dir);
+        let provider = crate::llm::send_question(&library, &choice(), task, language, &store.verify_for_send(&key, &run, &turn).unwrap(), &dir);
         FAIL_EVIDENCE_AT.with(|f| f.set(None));
         assert!(pasted.unwrap_err().to_string().contains("não está vinculada"));
         assert!(provider.is_err());
@@ -6192,9 +5884,9 @@ librarian-measure memory_mb=100
     fn a_question_reaches_a_model_only_through_its_check() {
         // 46: one way to send a question, taking what only the check makes; the free send is private.
         let llm = include_str!("llm.rs");
-        assert!(llm.contains("pub fn send_question(provider: &str, choice: &Choice, verified: &crate::store::Verified, dir: &Path)"));
-        assert!(llm.contains("\nfn send(provider: &str, request: Send, purpose: &str)") && !llm.contains("pub fn send("));
-        assert!(llm.contains("\n    fn request<'a>"), "a request is made only here");
+        assert!(llm.contains("pub fn send_question(library: &Library, choice: &Choice, task: &str, language: Language, verified: &crate::store::Verified, dir: &Path)"));
+        assert!(llm.contains("\nfn send(library: &Library, choice: &Choice, task: &str") && !llm.contains("pub fn send("));
+        assert_eq!(llm.matches(concat!("Request", " {")).count(), 1, "a request is made only here");
         let store = include_str!("store.rs");
         let verified = &store[store.find("pub struct Verified {").unwrap() + "pub struct Verified {".len()..];
         let verified = &verified[..verified.find("\n}").unwrap()];
@@ -6217,8 +5909,8 @@ librarian-measure memory_mb=100
         let review = store.review(&key, &run, &turn, "01-manual", "C1", true, "A linha 5 calcula direction.");
         assert!(review.unwrap_err().to_string().starts_with("Portão 2: a pergunta não confere mais: H2:"));
         assert!(store.facts(&key, &run).unwrap()["facts"].as_array().unwrap().is_empty());
-        // 40: /api/send stops before any provider runs.
-        let body = json!({ "key": key, "run": run, "turn": turn, "provider": "ollama" });
+        // 40: /api/send stops before any provider runs (the local profile would run Ollama).
+        let body = json!({ "key": key, "run": run, "turn": turn, "profile": "qwen3coder" });
         assert!(crate::send_value(&store, &body).unwrap_err().to_string().starts_with("H2:"));
         assert_eq!(sends(&turn), 1);
         // 41: /api/paste.
@@ -6761,7 +6453,7 @@ librarian-measure memory_mb=100
         let (_scratch, store, key, run, page) = gathered_page();
         let gathered = |origin: Value| json!({ "key": key, "run": run, "question": "O que muda?", "nodes": page.gathered, "with_facts": false, "origin": origin });
         let ladder = |origin: Value| json!({ "key": key, "run": run, "question": "O que muda?", "nodes": page.gathered, "with_facts": false, "origin": origin,
-            "gate": ["probe"], "models": [{ "provider": "test" }], "retries": 0, "lacuna_rounds": 0 });
+            "gate": ["probe"], "models": [{ "profile": "test" }], "retries": 0, "lacuna_rounds": 0 });
         let with = |place: &str, value: Value| {
             let mut origin = page.origin();
             match place {
@@ -6822,6 +6514,8 @@ librarian-measure memory_mb=100
         (scratch, store, key, run)
     }
 
+    /// The client's selection is checked once, when the package is prepared, before anything runs; the
+    /// ladder takes no selection of its own (18/11): it climbs on the package prepared with it.
     #[test]
     fn the_ladder_checks_the_clients_selection_once_before_anything_runs() {
         let (_scratch, store, key, run) = with_a_gate();
@@ -6830,25 +6524,33 @@ librarian-measure memory_mb=100
         page.toggle(&ray);
         let answer = page.suggest(&store, &key, &run, std::slice::from_ref(&ray));
         page.join(&answer);
-        let body = |selection: Value, nodes: &[String]| json!({ "key": key, "run": run, "question": "Como acelerar?", "nodes": nodes, "with_facts": false,
-            "gate": ["probe"], "models": [{ "provider": "test" }], "retries": 0, "lacuna_rounds": 0, "origin": { "kind": "ladder", "summary": "x", "selection": selection } });
+        let origin = |selection: Value| json!({ "kind": "ladder", "summary": "x", "selection": selection });
+        let prepare = |selection: Value| api(&store, "/api/gathered-question", &json!({ "key": key, "run": run, "question": "Como acelerar?", "nodes": page.gathered, "with_facts": false, "origin": origin(selection) }));
         // Refused: no baseline ran, no question was made.
         let mut wrong = page.record();
         wrong["included_bytes"] = json!(wrong["included_bytes"].as_u64().unwrap() + 1);
         let before = files_of(&store, &key, &run);
-        let (status, refused) = api(&store, "/api/ladder", &body(wrong, &page.gathered));
+        let (status, refused) = prepare(wrong.clone());
         assert_eq!(status, 400, "{refused}");
         assert!(refused["error"].as_str().unwrap().contains("included_bytes não é a soma"), "{refused}");
+        // The ladder given the selection itself, as before 18/11, is refused before it is even read.
+        let (status, refused) = api(&store, "/api/ladder", &json!({ "key": key, "run": run, "question": "Como acelerar?", "nodes": page.gathered, "with_facts": false,
+            "gate": ["probe"], "models": [{ "profile": "test" }], "origin": origin(page.record()) }));
+        assert_eq!(status, 400, "{refused}");
+        assert!(refused["error"].as_str().unwrap().contains("informe turn"), "{refused}");
         assert_eq!(files_of(&store, &key, &run), before);
         assert!(store.executions(&key, &run).unwrap().is_empty(), "no baseline ran");
-        // Taken: the baseline, then the question with the client's record.
-        let (status, done) = api(&store, "/api/ladder", &body(page.record(), &page.gathered));
+        // Taken: the question with the client's record, then the ladder on it: the baseline, then its send.
+        let (status, prepared) = prepare(page.record());
+        assert_eq!(status, 200, "{prepared}");
+        let (status, done) = api(&store, "/api/ladder", &json!({ "key": key, "run": run, "turn": prepared["id"], "gate": ["probe"], "models": [{ "profile": "test" }] }));
         assert_eq!(status, 200, "{done}");
         assert_eq!(done["steps"][0]["outcome"], "baseline");
+        assert_eq!(done["turn"], prepared["id"]);
         let (_, _, package) = package_of(&store, &key, &run, done["turn"].as_str().unwrap());
         assert_eq!(package.origin_kind, Some(OriginKind::Ladder));
         assert!(package.selection.is_some());
-        assert!(package.server_additions.is_empty(), "the rounds' additions are the next step's");
+        assert!(package.server_additions.is_empty(), "nothing is added by the server");
     }
 
     #[test]
@@ -6882,7 +6584,7 @@ librarian-measure memory_mb=100
         assert_eq!(question["gathered"]["nodes"], json!(nodes));
         let record = SelectionRecord::from_bytes(&fs::read(store.turn_dir(&key, &run, turn).unwrap().join(SELECTION)).unwrap(), package.selection.as_ref().unwrap().record_sha256.as_str()).unwrap();
         // `Camera` is one the client took out: the record says that still, and nothing more.
-        assert_eq!(fs::read(store.turn_dir(&key, &run, turn).unwrap().join(SELECTION)).unwrap(), accepted.bytes, "the record kept is the one accepted at the entry");
+        assert_eq!(fs::read(store.turn_dir(&key, &run, turn).unwrap().join(SELECTION)).unwrap(), accepted.bytes(), "the record kept is the one accepted at the entry");
         for addition in &additions {
             assert!(record.received.included.iter().all(|e| e.id != addition.symbol_id));
             assert!(record.declared_by_client.decisions.iter().all(|d| d.id != addition.symbol_id || d.decision == evidence::Decision::Removed));
@@ -6932,24 +6634,50 @@ librarian-measure memory_mb=100
         (scratch, store, key, run, page)
     }
 
+    /// Questions as the ladder's LACUNA rounds recorded them before 18/11 (no route makes them since; their
+    /// records are still read and checked): the first over the client's selection, each answered with a
+    /// LACUNA as a person pastes one, and each next one with what `ladder::resolve` finds for it, the
+    /// server's, until a LACUNA finds nothing new. Returns the questions made.
+    fn recorded_rounds(store: &Store, key: &str, run: &str, page: &Page, lacunas: &[&str]) -> Vec<String> {
+        let mut origin = page.origin();
+        origin["kind"] = json!("ladder");
+        let accepted = store.accept_selection(key, run, &page.gathered, Some(&origin)).unwrap();
+        let catalog = Catalog::load(&store.edition(key, run).unwrap()).unwrap();
+        let (mut nodes, mut additions, mut made): (Vec<String>, Vec<ServerAddition>, Vec<String>) = (page.gathered.clone(), vec![], vec![]);
+        for (i, text) in lacunas.iter().enumerate() {
+            let turn = store.ask_gathered_parts(key, run, "Como acelerar?", &[], &nodes, false, Some(origin.clone()), accepted.as_ref(), &additions).unwrap()["id"].as_str().unwrap().to_owned();
+            let sent = record_answer(store, key, run, &turn, "manual", &lacuna_answer(text)).unwrap();
+            let send = Path::new(sent["directory"].as_str().unwrap()).file_name().unwrap().to_string_lossy().into_owned();
+            made.push(turn.clone());
+            let names = crate::ladder::lacuna_names(text);
+            let added = crate::ladder::resolve(&catalog, &names, &nodes, &[], crate::ladder::lacuna_room(nodes.len()));
+            if added.is_empty() {
+                break;
+            }
+            additions.extend(added.iter().map(|(id, name)| ServerAddition {
+                declared_by: evidence::ServerLacunaDeclared::ServerLacuna, round: i + 1, from_turn: turn.clone(), from_send: send.clone(), symbol_id: id.clone(), for_name: name.clone(),
+                reason: evidence::AdditionReason::LacunaName, decided_by_rule: evidence::AdditionRule::LadderResolve,
+            }));
+            nodes.extend(added.into_iter().map(|(id, _)| id));
+        }
+        made
+    }
+
+    /// The rounds recorded before 18/11 keep what the server added, and only that. The route that made
+    /// them refuses them now, before anything is created, run or sent.
     #[test]
-    fn the_ladder_records_what_its_lacuna_rounds_add_and_only_that() {
+    fn recorded_lacuna_rounds_keep_what_the_server_added_and_only_that() {
         let (_scratch, store, key, run, page) = ladder_project();
         let id = |name: &str| symbol_id(&store, &key, &run, name);
-        // Each question answered with a LACUNA, as a person pastes one: no model is called.
-        let answers = json!({
-            "01": lacuna_answer("Faltam `helper` e `scale` para responder."),
-            "02": lacuna_answer("Falta `Camera`, e ainda `helper`."),
-            "03": lacuna_answer("Falta `helper`."),
-        });
-        let body = json!({ "key": key, "run": run, "question": "Como acelerar?", "nodes": page.gathered, "with_facts": false, "gate": ["probe"],
-            "models": [{ "provider": "test", "answers": answers }], "retries": 0, "lacuna_rounds": 3,
-            "origin": { "kind": "ladder", "summary": "x", "selection": page.record() } });
-        let (status, done) = api(&store, "/api/ladder", &body);
-        assert_eq!(status, 200, "{done}");
-        let outcomes: Vec<&str> = done["steps"].as_array().unwrap().iter().map(|s| s["outcome"].as_str().unwrap()).collect();
-        assert_eq!(outcomes, ["baseline", "lacuna", "lacuna", "lacuna"], "{done:#}");
-        assert_eq!(done["turn"], "03");
+        let before = files_of(&store, &key, &run);
+        let (status, refused) = api(&store, "/api/ladder", &json!({ "key": key, "run": run, "question": "Como acelerar?", "nodes": page.gathered, "with_facts": false, "gate": ["probe"],
+            "models": [{ "profile": "test", "answers": { "01": lacuna_answer("Falta `helper`.") } }], "retries": 0, "lacuna_rounds": 3,
+            "origin": { "kind": "ladder", "summary": "x", "selection": page.record() } }));
+        assert_eq!(status, 400, "{refused}");
+        assert_eq!(files_of(&store, &key, &run), before);
+        assert!(store.executions(&key, &run).unwrap().is_empty());
+        let made = recorded_rounds(&store, &key, &run, &page, &["Faltam `helper` e `scale` para responder.", "Falta `Camera`, e ainda `helper`.", "Falta `helper`."]);
+        assert_eq!(made, ["01", "02", "03"]);
         let addition = |round: usize, turn: &str, symbol: String, name: &str| ServerAddition {
             declared_by: evidence::ServerLacunaDeclared::ServerLacuna, round, from_turn: turn.into(), from_send: "01-manual".into(), symbol_id: symbol, for_name: name.into(),
             reason: evidence::AdditionReason::LacunaName, decided_by_rule: evidence::AdditionRule::LadderResolve,
@@ -6981,6 +6709,173 @@ librarian-measure memory_mb=100
             assert_eq!(refusal_of(&store, &key, &run, turn), "", "{turn}");
         }
         assert!(store.turn_dir(&key, &run, "04").is_err(), "a name already there is not added again");
+    }
+
+    /// D3: the ladder climbs on a question already prepared and seen in its Package view. Its first send is that
+    /// package, as it was seen, and no other question is made for it; a question with nothing gathered is refused.
+    #[test]
+    fn the_ladder_climbs_on_the_reviewed_package_without_making_another() {
+        let (_scratch, store, key, run, page) = ladder_project();
+        let origin = json!({ "kind": "ladder", "summary": "x", "selection": page.record() });
+        let prepared = store.ask_gathered(&key, &run, "Como acelerar?", &page.gathered, false, Some(origin)).unwrap()["id"].as_str().unwrap().to_owned();
+        let (_, seen, _) = package_of(&store, &key, &run, &prepared);
+        let mut answers = json!({});
+        answers[&prepared] = json!(lacuna_answer("Falta `helper`."));
+        // Neither retries nor lacuna_rounds: absent, nothing climbs on its own (before 18/11, absent meant 1 and 1).
+        let body = json!({ "key": key, "run": run, "turn": prepared, "gate": ["probe"], "models": [{ "profile": "test", "answers": answers }] });
+        let (status, done) = api(&store, "/api/ladder", &body);
+        assert_eq!(status, 200, "{done}");
+        let steps = done["steps"].as_array().unwrap();
+        assert_eq!(steps.iter().map(|s| s["outcome"].as_str().unwrap()).collect::<Vec<_>>(), ["baseline", "lacuna"], "{done:#}");
+        assert!(steps.iter().filter(|s| s["outcome"] != "baseline").all(|s| s["turn"] == json!(prepared) && s["profile"] == "test"), "{done:#}");
+        assert_eq!(done["turn"], json!(prepared));
+        assert_eq!(package_of(&store, &key, &run, &prepared).1, seen, "the package sent is the one seen");
+        let next = format!("{:02}", prepared.parse::<usize>().unwrap() + 1);
+        assert!(store.turn_dir(&key, &run, &next).is_err(), "no other question was made");
+        assert_eq!(sends_of(&store, &key, &run, &prepared), ["01-manual"], "one send, the one asked for");
+        // The LACUNA is recorded with what the catalog would find for it, for a new package: not added, not asked.
+        let lacuna = &steps[1]["detail"];
+        assert!(lacuna["names"].as_array().unwrap().contains(&json!("helper")), "{lacuna}");
+        assert_eq!(lacuna["suggested"].as_array().unwrap().iter().map(|s| s["symbol"].clone()).collect::<Vec<_>>(), [json!(symbol_id(&store, &key, &run, "helper"))]);
+        assert!(package_of(&store, &key, &run, &prepared).2.server_additions.is_empty());
+        let free = store.ask(&key, &run, "Onde a câmera calcula a direção dos raios?").unwrap()["id"].as_str().unwrap().to_owned();
+        let (status, refused) = api(&store, "/api/ladder", &json!({ "key": key, "run": run, "turn": free, "gate": ["probe"],
+            "models": [{ "profile": "test" }], "retries": 0, "lacuna_rounds": 0 }));
+        assert_ne!(status, 200);
+        assert!(refused.to_string().contains("só sobe sobre uma pergunta reunida"), "{refused}");
+    }
+
+    /// The sends recorded for a question, in order.
+    fn sends_of(store: &Store, key: &str, run: &str, turn: &str) -> Vec<String> {
+        let mut sends: Vec<String> = fs::read_dir(store.turn_dir(key, run, turn).unwrap().join("sends")).map(|d| d.map(|e| e.unwrap().file_name().to_string_lossy().into_owned()).collect()).unwrap_or_default();
+        sends.sort();
+        sends
+    }
+
+    /// 18/11 (option A): every request that would make the ladder ask on its own, or send without the reviewed
+    /// package, is refused before anything is created, run or sent, whatever the page would have sent.
+    #[test]
+    fn the_ladder_refuses_what_would_ask_on_its_own_before_anything_runs() {
+        let (_scratch, store, key, run, page) = ladder_project();
+        let origin = json!({ "kind": "ladder", "summary": "x", "selection": page.record() });
+        let prepared = store.ask_gathered(&key, &run, "Como acelerar?", &page.gathered, false, Some(origin.clone())).unwrap()["id"].as_str().unwrap().to_owned();
+        let free = store.ask(&key, &run, "Onde a câmera calcula a direção dos raios?").unwrap()["id"].as_str().unwrap().to_owned();
+        let answers = json!({ "01": lacuna_answer("Falta `helper`."), "02": lacuna_answer("Falta `helper`.") });
+        let base = json!({ "key": key, "run": run, "turn": prepared, "gate": ["probe"], "models": [{ "profile": "test", "answers": answers }] });
+        let with = |changes: Value| {
+            let mut body = base.clone();
+            for (k, v) in changes.as_object().unwrap() {
+                if v.is_null() && k == "turn" { body.as_object_mut().unwrap().remove(k); } else { body[k] = v.clone(); }
+            }
+            body
+        };
+        let cases: Vec<(Value, &str)> = vec![
+            // Rounds and retries the server would make by itself, in any shape a client may send them.
+            (with(json!({ "retries": 1 })), "rodadas automáticas (retries"),
+            (with(json!({ "lacuna_rounds": 1 })), "rodadas automáticas (lacuna_rounds"),
+            (with(json!({ "lacuna_rounds": 3, "retries": 0 })), "rodadas automáticas (lacuna_rounds"),
+            (with(json!({ "retries": "1" })), "rodadas automáticas (retries"),
+            (with(json!({ "retries": -1 })), "rodadas automáticas (retries"),
+            (with(json!({ "lacuna_rounds": 0.5 })), "rodadas automáticas (lacuna_rounds"),
+            (with(json!({ "lacuna_rounds": null })), "rodadas automáticas (lacuna_rounds"),
+            // A second model is a second call after an answer; none is no send at all.
+            (with(json!({ "models": [{ "profile": "test" }, { "profile": "test" }] })), "único modelo por pedido (models com 2"),
+            (with(json!({ "models": [] })), "único modelo por pedido (models com 0"),
+            // No reviewed package: no turn, or a question given in its place.
+            (with(json!({ "turn": null, "question": "Como acelerar?", "nodes": page.gathered, "origin": origin })), "informe turn"),
+            (with(json!({ "turn": null, "retries": 0, "lacuna_rounds": 0 })), "informe turn"),
+            (with(json!({ "question": "Outra pergunta" })), "não recebe question"),
+            (with(json!({ "nodes": page.gathered })), "não recebe nodes"),
+            (with(json!({ "origin": origin })), "não recebe origin"),
+            (with(json!({ "with_facts": true })), "não recebe with_facts"),
+            (with(json!({ "turn": free })), "só sobe sobre uma pergunta reunida"),
+            (with(json!({ "gate": [] })), "comando no portão"),
+        ];
+        let before = files_of(&store, &key, &run);
+        for (body, why) in &cases {
+            let (status, refused) = api(&store, "/api/ladder", body);
+            assert_eq!(status, 400, "{body} {refused}");
+            let error = refused["error"].as_str().unwrap();
+            assert!(error.contains(why) && error.ends_with("nada foi criado, executado nem enviado"), "{body}: {error}");
+        }
+        // A question that does not exist: refused by the store, nothing either.
+        assert_eq!(api(&store, "/api/ladder", &with(json!({ "turn": "99" }))).0, 400);
+        // No question, no package, no send, no baseline.
+        assert_eq!(files_of(&store, &key, &run), before);
+        assert!(store.executions(&key, &run).unwrap().is_empty(), "no baseline ran");
+        assert!(sends_of(&store, &key, &run, &prepared).is_empty() && sends_of(&store, &key, &run, &free).is_empty());
+        assert_eq!(turn_ids(&store, &key, &run), [prepared.clone(), free]);
+        // 0 and 0, as the page sends them, are the same as absent: the one send.
+        let (status, done) = api(&store, "/api/ladder", &with(json!({ "retries": 0, "lacuna_rounds": 0 })));
+        assert_eq!(status, 200, "{done}");
+        assert_eq!(sends_of(&store, &key, &run, &prepared), ["01-manual"]);
+    }
+
+    /// The reviewed package is checked (H1 to H3) before the ladder runs anything: one that changed since is
+    /// refused with the check's reason, with no baseline and no send.
+    #[test]
+    fn the_ladder_refuses_a_package_that_no_longer_checks_before_anything_runs() {
+        let (_scratch, store, key, run, page) = ladder_project();
+        let origin = json!({ "kind": "ladder", "summary": "x", "selection": page.record() });
+        let prepared = store.ask_gathered(&key, &run, "Como acelerar?", &page.gathered, false, Some(origin)).unwrap()["id"].as_str().unwrap().to_owned();
+        forge(&store, &key, &run, &prepared, |p| p.units[0].text_sha256 = Sha256Hex::try_from("0".repeat(64)).unwrap());
+        let (status, refused) = api(&store, "/api/ladder", &json!({ "key": key, "run": run, "turn": prepared, "gate": ["probe"], "models": [{ "profile": "test" }] }));
+        assert_eq!(status, 400, "{refused}");
+        assert!(refused["error"].as_str().unwrap().starts_with("H2: TextDiffers"), "{refused}");
+        assert!(store.executions(&key, &run).unwrap().is_empty(), "no baseline ran");
+        assert!(sends_of(&store, &key, &run, &prepared).is_empty());
+    }
+
+    /// An answer the ladder judges never makes it call a model again: refused by the mechanical check (once
+    /// retried for a cloud model) or by the gate (once retried with what was refused), it is recorded and the
+    /// ladder ends; the only send is the one asked for, and no question is made.
+    #[test]
+    fn an_answer_of_the_ladder_starts_no_other_call() {
+        let lib = "pub struct Camera;\n\nimpl Camera {\n    pub fn ray_from_pixel(&self, x: f64) -> f64 {\n        let direction = x * 2.0;\n        direction\n    }\n}\n";
+        // `unchanged` passes on the project as it is and fails on any change: the gate refuses every proposal.
+        let profile = json!({ "project_root": ".", "commands": { "unchanged": { "argv": ["git", "diff", "--exit-code"], "repeat": 1 } } });
+        let (_scratch, store, key, _root) = project_with(&[("src/lib.rs", lib)], profile);
+        approve(&store, &key, "unchanged");
+        let mut settings = store.settings(&key).unwrap();
+        settings.lexicon.groups = vec![vec!["raios".into(), "ray".into()], vec!["direcao".into(), "direction".into()]];
+        (settings.allow_hypothesis, settings.allow_patch) = (true, true);
+        store.save_settings(&key, &settings).unwrap();
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        let ray = symbol_id(&store, &key, &run, "ray_from_pixel");
+        let mut page = Page::new(&store, &key, &run);
+        page.toggle(&ray);
+        page.suggest(&store, &key, &run, std::slice::from_ref(&ray));
+        let origin = json!({ "kind": "ladder", "summary": "x", "selection": page.record() });
+        let ask = || store.ask_gathered(&key, &run, "Como acelerar?", &page.gathered, false, Some(origin.clone())).unwrap()["id"].as_str().unwrap().to_owned();
+        let climb = |turn: &str, answer: String| {
+            let mut answers = json!({});
+            answers[turn] = json!(answer);
+            // A cloud profile, the one a refused answer was retried for before 18/11.
+            api(&store, "/api/ladder", &json!({ "key": key, "run": run, "turn": turn, "gate": ["unchanged"], "models": [{ "profile": "test", "provider": "claude", "answers": answers }] }))
+        };
+        // Refused by the mechanical check: an answer that is not the claims format.
+        let first = ask();
+        let (status, done) = climb(&first, "não sei".into());
+        assert_eq!(status, 200, "{done}");
+        assert_eq!(done["steps"].as_array().unwrap().iter().map(|s| s["outcome"].as_str().unwrap()).collect::<Vec<_>>(), ["baseline", "refused"], "{done:#}");
+        assert_eq!(sends_of(&store, &key, &run, &first), ["01-manual"]);
+        // Refused by the gate: a change the gate refuses.
+        let second = ask();
+        let evidence = package_of(&store, &key, &run, &second).0;
+        let quote = "        let direction = x * 2.0;";
+        let cited = evidence["evidence"].as_array().into_iter().flatten().find(|e| e["path"] == "src/lib.rs").map(|e| e["id"].clone()).unwrap_or(json!("E1"));
+        let change = json!({"schema_version": 1, "claims": [{
+            "id": "H1", "kind": "HYPOTHESIS", "text": "Triplicar no lugar de dobrar.",
+            "citations": [{"evidence_id": cited, "path": "src/lib.rs", "start_line": 5, "end_line": 5, "quote": quote}],
+            "premises": [], "verification_plan": "Medir antes e depois.", "location": null,
+            "edits": [{"path": "src/lib.rs", "op": "replace", "start_line": 5, "end_line": 5, "new_lines": ["        let direction = x * 3.0;"]}]}]});
+        let (status, done) = climb(&second, change.to_string());
+        assert_eq!(status, 200, "{done}");
+        let outcomes: Vec<&str> = done["steps"].as_array().unwrap().iter().map(|s| s["outcome"].as_str().unwrap()).collect();
+        assert_eq!(outcomes, ["refused_by_gate"], "{done:#}");
+        assert_eq!(done["passed"], false);
+        assert_eq!(sends_of(&store, &key, &run, &second), ["01-manual"]);
+        assert_eq!(turn_ids(&store, &key, &run), [first, second], "no question was made");
     }
 
     #[test]
@@ -7155,12 +7050,9 @@ librarian-measure memory_mb=100
         // One package per question: the two points of the path have two.
         assert_ne!(package_of(&store, &key, &run, &made[3]).1, package_of(&store, &key, &run, &made[4]).1);
         assert_eq!(turn_ids(&store, &key, &run), made);
-        // The ladder: every question it makes, the rounds too.
+        // The ladder's rounds recorded before 18/11 (no route makes them since): each its own package.
         let (_scratch2, store, key, run, page) = ladder_project();
-        let answers = json!({ "01": lacuna_answer("Falta `helper`."), "02": lacuna_answer("Falta `helper`.") });
-        let (status, done) = api(&store, "/api/ladder", &json!({ "key": key, "run": run, "question": "Como acelerar?", "nodes": page.gathered, "gate": ["probe"],
-            "models": [{ "provider": "test", "answers": answers }], "retries": 0, "lacuna_rounds": 1, "origin": { "kind": "ladder", "summary": "x", "selection": page.record() } }));
-        assert_eq!(status, 200, "{done}");
+        assert_eq!(recorded_rounds(&store, &key, &run, &page, &["Falta `helper`.", "Falta `helper`."]), ["01", "02"]);
         assert_eq!(turn_ids(&store, &key, &run), ["01", "02"]);
         for turn in ["01", "02"] {
             a_valid_package(&store, &key, &run, turn);
@@ -7176,14 +7068,14 @@ librarian-measure memory_mb=100
         let evidence = hash(&fs::read(store.turn_dir(&key, &run, &turn).unwrap().join(EVIDENCE)).unwrap());
         // /api/send: the question checked, then sent (to the test provider, which answers nothing)
         // and linked to the package checked.
-        let send = json!({ "key": key, "run": run, "turn": turn, "provider": "test" });
+        let send = json!({ "key": key, "run": run, "turn": turn, "profile": "test" });
         let (status, sent) = api(&store, "/api/send", &send);
         assert_eq!(status, 200, "{sent}");
         assert!(sent["directory"].as_str().unwrap().ends_with("01-test"), "{sent}");
         assert_eq!((&sent["link"]["evidence_sha256"], &sent["purpose"]), (&json!(evidence), &json!("question")));
         assert_eq!(sent["link"]["checks"], json!(["prepare::verify", "claims::verify", "evidence_h1", "evidence_h2", "evidence_h3"]));
-        // A provider that does not send is refused before anything, the question untouched.
-        let (status, refused) = api(&store, "/api/send", &json!({ "key": key, "run": run, "turn": turn, "provider": "claude-api" }));
+        // A profile the library does not have sends nothing, refused before anything, the question untouched.
+        let (status, refused) = api(&store, "/api/send", &json!({ "key": key, "run": run, "turn": turn, "profile": "claude-api" }));
         assert_eq!(status, 501, "{refused}");
         // /api/paste: the same check and link.
         let (status, pasted) = api(&store, "/api/paste", &json!({ "key": key, "run": run, "turn": turn, "text": fact_answer("C1") }));
@@ -7213,10 +7105,7 @@ librarian-measure memory_mb=100
     #[test]
     fn listing_and_deleting_questions_keep_each_package_with_its_question() {
         let (_scratch, store, key, run, page) = ladder_project();
-        let answers = json!({ "01": lacuna_answer("Falta `helper`."), "02": lacuna_answer("Falta `helper`.") });
-        let (status, _) = api(&store, "/api/ladder", &json!({ "key": key, "run": run, "question": "Como acelerar?", "nodes": page.gathered, "gate": ["probe"],
-            "models": [{ "provider": "test", "answers": answers }], "retries": 0, "lacuna_rounds": 1, "origin": { "kind": "ladder", "summary": "x", "selection": page.record() } }));
-        assert_eq!(status, 200);
+        assert_eq!(recorded_rounds(&store, &key, &run, &page, &["Falta `helper`.", "Falta `helper`."]), ["01", "02"]);
         // Listed as the page reads them; the package is not part of the listing.
         let (_, listed) = api_with(&store, "GET", &format!("/api/turns?key={key}&run={run}"), &Value::Null);
         assert_eq!(listed.as_array().unwrap().len(), 2);
@@ -7233,9 +7122,7 @@ librarian-measure memory_mb=100
         assert_eq!(next["id"], "03");
         // The question a lacuna round came from, deleted: what it added can no longer be shown (Passo 11).
         let (_scratch2, store, key, run, page) = ladder_project();
-        let (status, _) = api(&store, "/api/ladder", &json!({ "key": key, "run": run, "question": "Como acelerar?", "nodes": page.gathered, "gate": ["probe"],
-            "models": [{ "provider": "test", "answers": answers }], "retries": 0, "lacuna_rounds": 1, "origin": { "kind": "ladder", "summary": "x", "selection": page.record() } }));
-        assert_eq!(status, 200);
+        assert_eq!(recorded_rounds(&store, &key, &run, &page, &["Falta `helper`.", "Falta `helper`."]), ["01", "02"]);
         assert_eq!(refusal_of(&store, &key, &run, "02"), "");
         assert_eq!(api_with(&store, "DELETE", "/api/turn", &json!({ "key": key, "run": run, "turn": "01" })).0, 200);
         assert!(refusal_of(&store, &key, &run, "02").starts_with("H1: complementação: Pergunta desconhecida: 01"), "{}", refusal_of(&store, &key, &run, "02"));
@@ -7254,7 +7141,7 @@ librarian-measure memory_mb=100
         let (status, _) = api(&store, "/api/performance-question", &json!({ "key": key, "run": run, "question": "Quais funções pesam?" }));
         assert_eq!(status, 200);
         // The lexicon is not a question: its request is written apart, with no package (excluded by the plan).
-        let (status, lexicon) = api(&store, "/api/lexicon/suggest", &json!({ "key": key, "run": run, "provider": "manual", "language": crate::lexicon::LANGUAGES[0] }));
+        let (status, lexicon) = api(&store, "/api/lexicon/suggest", &json!({ "key": key, "run": run, "profile": "manual" }));
         assert_eq!(status, 200, "{lexicon}");
         assert_eq!(turns(&store, &key, &run), before);
         let lexicon_dir = store.project_dir(&key).unwrap().join("lexicon");
@@ -7264,7 +7151,7 @@ librarian-measure memory_mb=100
         let scratch = project();
         let root = scratch.0.join("project");
         fs::write(root.join("src/scan.rs"), "fn norm(v: f64) -> f64 {\n    v.sqrt()\n}\n\npub fn scan(xs: &[f64]) -> f64 {\n    let mut t = 0.0;\n    for x in xs {\n        t += norm(*x);\n    }\n    t\n}\n").unwrap();
-        let store = Store { dir: scratch.0.join("studio"), modelfiles: scratch.0.join("modelfiles") };
+        let store = Store { dir: scratch.0.join("studio"), modelfiles: library_dir() };
         let key = store.open(&display(&root)).unwrap()["key"].as_str().unwrap().to_owned();
         let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
         let found = store.inventory(&key, &run).unwrap();
@@ -7667,12 +7554,9 @@ librarian-measure memory_mb=100
         let (_, answer) = evidence_of(&store, &key, &run, &turn);
         assert_eq!(answer["h4"]["suggestions"], json!(page.suggestions.iter().map(|s| json!({ "status": "reproduced", "suggestion": s })).collect::<Vec<_>>()));
         assert_eq!(statuses(&answer), ["passed", "passed", "passed"]);
-        // A ladder round: the client's selection, the server's additions, each where it belongs.
+        // A ladder round recorded before 18/11: the client's selection, the server's additions, each where it belongs.
         let (_scratch2, store, key, run, page) = ladder_project();
-        let answers = json!({ "01": lacuna_answer("Falta `helper`."), "02": lacuna_answer("Falta `helper`.") });
-        let (status, _) = api(&store, "/api/ladder", &json!({ "key": key, "run": run, "question": "Como acelerar?", "nodes": page.gathered, "gate": ["probe"],
-            "models": [{ "provider": "test", "answers": answers }], "retries": 0, "lacuna_rounds": 1, "origin": { "kind": "ladder", "summary": "x", "selection": page.record() } }));
-        assert_eq!(status, 200);
+        assert_eq!(recorded_rounds(&store, &key, &run, &page, &["Falta `helper`.", "Falta `helper`."]), ["01", "02"]);
         let (_, round) = evidence_of(&store, &key, &run, "02");
         let helper = symbol_id(&store, &key, &run, "helper");
         assert_eq!(round["package"]["server_additions"].as_array().unwrap().iter().map(|a| a["symbol_id"].clone()).collect::<Vec<_>>(), [json!(helper)]);
@@ -7762,7 +7646,7 @@ librarian-measure memory_mb=100
         assert_eq!((&now["h4"]["status"], &now["warnings"]), (&json!("reproduced"), &json!([])));
         assert_eq!(now["package"]["measure"]["measure_divergence"], json!({ "status": "diverges" }));
         // The divergence blocks nothing: the question is sent, linked to this package.
-        let (status, sent) = api(&store, "/api/send", &json!({ "key": key, "run": run, "turn": turn, "provider": "test" }));
+        let (status, sent) = api(&store, "/api/send", &json!({ "key": key, "run": run, "turn": turn, "profile": "test" }));
         assert_eq!(status, 200, "{sent}");
         assert_eq!(sent["link"]["evidence_sha256"], json!(hash(&bytes)));
         assert_eq!(sent["link"]["checks"], json!(["prepare::verify", "claims::verify", "evidence_h1", "evidence_h2", "evidence_h3"]));
@@ -7862,7 +7746,7 @@ librarian-measure memory_mb=100
         let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/evidence-v1");
         copy(&fixture, &scratch.0.join("v1"));
         let manifest: Value = serde_json::from_slice(&fs::read(scratch.0.join("v1/manifest.json")).unwrap()).unwrap();
-        let store = Store { dir: scratch.0.join("v1/studio"), modelfiles: scratch.0.join("modelfiles") };
+        let store = Store { dir: scratch.0.join("v1/studio"), modelfiles: library_dir() };
         (scratch, store, manifest)
     }
 
@@ -7892,7 +7776,7 @@ librarian-measure memory_mb=100
         // The divergent one: its two measures differ, yet format 1 wrote false, and is checked as format 1.
         let (_, _, package) = package_of(&store, key, run, "01");
         assert_eq!(evidence::measure_divergence(&package.measure.at_question, &package.measure.selection_basis), MeasureDivergence::Diverges {});
-        let (status, sent) = api(&store, "/api/send", &json!({ "key": key, "run": run, "turn": "01", "provider": "test" }));
+        let (status, sent) = api(&store, "/api/send", &json!({ "key": key, "run": run, "turn": "01", "profile": "test" }));
         assert_eq!((status, &sent["link"]["evidence_sha256"]), (200, &json!(pinned[0].1)), "{sent}");
     }
 

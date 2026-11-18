@@ -1,5 +1,7 @@
 # Contexto de continuidade do Librarian
 
+**Atualização de 18/11/2026: a consolidação (E1 a E5, simplificação do Studio e proteção da escada) foi publicada sobre `27f7bdd` ([seção 18](#18-consolidação-evidence-builder-independente-simplificação-e-proteção-da-escada-17112026-e-18112026): comece por ela).** As seções 1 a 17 descrevem estados anteriores; onde divergem, vale a 18. Em especial, o Evidence Builder agora é um crate (`librarian-evidence`), e a tabela da seção 2 está desatualizada nesse ponto.
+
 **Atualização de 11/11/2026: a Etapa 4 (Evidence Builder) está em andamento e não está encerrada, com todo o trabalho sem commit sobre `60d4d50` ([seção 17](#17-etapa-4-evidence-builder-07112026-a-11112026): comece por ela).** O texto abaixo, até a seção 16, descreve o estado de 06/11/2026.
 
 Conferido no repositório em 06/11/2026, com os Passos 1 e 2 da Etapa 3 da frente do Studio concluídos, o Passo 3 encerrado no backend ([seção 12](#12-passo-3-encerrado-e-sequência-da-etapa-3-06112026)), o Passo 4 concluído, nas entregas 4A e 4B ([seção 14](#14-4b-concluída-e-encerrada-06112026)), e os Passos 6 e 7 feitos, em `94089d3` (**[seção 16](#16-passos-6-e-7-feitos-06112026): comece por ela**). Documento de transferência entre sessões. Não substitui o plano: as tabelas completas estão em [PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md), da linha 1116 em diante, e o andamento desta frente em [Evidence Builder no Studio](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evidence-builder-no-studio-etapas-0-a-7-05112026).
@@ -827,3 +829,67 @@ As limitações aceitas estão no [resultado](PLANO-MULTILINGUAGEM-E-VISUALIZADO
 - **Mutações:** só contam as detectadas por asserção, numa cópia descartável, cada uma com o seu próprio `CARGO_TARGET_DIR`.
 - **Baterias de tela:** gravam perguntas nas raízes; rode em cópias, nunca nas raízes que o H3 histórico e o manifesto leem.
 - **Validação em paralelo:** nunca rode duas cadeias de validação ao mesmo tempo sobre as mesmas pastas. Em 11/11/2026 isso invalidou uma rodada inteira, que foi descartada e refeita.
+
+## 18. Consolidação: Evidence Builder independente, simplificação e proteção da escada (17/11/2026 e 18/11/2026)
+
+**Estado [confirmado em 18/11]:** branch `main`. A consolidação (E1 a E5, simplificação e proteção da escada) foi revista e publicada em 18/11, num commit sobre `27f7bdd` (o hash está no `git log`; a identidade do Builder conferida depois do commit está abaixo). O piloto Python começa depois da publicação, fora deste repositório.
+
+### Arquitetura atual [confirmado]
+
+| Parte | Onde | Responsabilidade |
+|---|---|---|
+| Acervo, edition, grafo `v2`, tipos do pacote | `crates/librarian-ingest` (`src/evidence.rs` tem os tipos e as conferências puras) | O que o projeto é, byte a byte |
+| **Evidence Builder** | `crates/librarian-evidence` (`package`, `check`, `selection`, `suggestion`, `lacuna`, `keeper`, `identity`) | Monta, confere (H1 a H4) e refaz o pacote a partir dos dados que recebe. Não lê arquivos, não roda comandos, não chama modelos, não conhece o Studio (`tests/independence.rs`) |
+| **LLM Engine** | `crates/librarian-llm-engine` (`models.rs`, `transport.rs`, `CLAIMS.md`) | Monta o Modelfile de tarefa × perfil × idioma a partir de `modelfiles/catalog.json` e `system/`; envia por Ollama ou Claude CLI; contrato e conferência mecânica de claims |
+| **Studio** | `crates/librarian-studio` | Lê e grava `.studio`, entrega os dados ao Builder e guarda as conferências; escada e portão (`ladder.rs`, `main.rs`, `execution.rs`); a página (`web/index.html`) |
+
+Dependências: `librarian-core ← librarian-graph-engine ← librarian-ingest ← librarian-evidence ← librarian-studio`; `librarian-llm-engine ← librarian-studio`.
+
+Na tela: **Seleção** (antes "Evidence Builder") monta a lista; **Pacote** (antes "Revisão") mostra o pacote, H1 a H4, a tarefa e o idioma, e é **o único lugar de onde sai um envio**, inclusive "Enviar pela escada".
+
+### Princípio e proteção da escada [confirmado]
+
+**Nenhuma pergunta chega ao modelo sem passar por um pacote de evidências revisado pelo usuário.**
+
+- **Falha encontrada na auditoria de 17/11:** a página mandava `retries: 0` e `lacuna_rounds: 0`, mas a API tinha 1 e 1 como padrão e aceitava mais; cada nova tentativa e cada rodada de LACUNA criava uma pergunta e a enviava sem revisão. Também aceitava a escada sem `turn` (criava a pergunta e enviava) e com vários modelos (o seguinte respondia depois de uma resposta).
+- **Opção A, aplicada em 18/11 (`fn ladder`):** um pedido precisa de `turn` de uma pergunta reunida que passe em H1 a H3; faz um envio, a um modelo, e termina. É recusado antes de qualquer execução, pergunta ou envio, com mensagem terminada em "nada foi criado, executado nem enviado", quando traz `question`, `nodes`, `with_facts` ou `origin`, `retries` ou `lacuna_rounds` diferentes de 0 (inclusive texto, negativo, fracionário e `null`), `models` com outro número de itens que não 1 ou portão vazio. A LACUNA fica registrada com `suggested` (o que o catálogo acharia), sem acrescentar nada.
+- **Testes:** em `store.rs`, `the_ladder_refuses_what_would_ask_on_its_own_before_anything_runs`, `the_ladder_refuses_a_package_that_no_longer_checks_before_anything_runs`, `an_answer_of_the_ladder_starts_no_other_call` (recusa mecânica e pelo portão sem nova chamada) e `the_ladder_climbs_on_the_reviewed_package_without_making_another` (um envio só, sem os dois campos). Os testes que usavam rodadas pela API (`recorded_lacuna_rounds_keep_what_the_server_added_and_only_that` e outros três) agora recriam as perguntas de rodada pela store (`recorded_rounds`), com as mesmas asserções de formato, H1 a H4 e exclusão, porque perguntas gravadas assim antes de 18/11 continuam sendo lidas. Na página, `tela-simplificacao.js` confere o corpo do clique.
+- **Fora da escada:** `/api/lexicon/suggest` com um perfil manda ao modelo nomes do catálogo, por um clique, sem pacote. Não é uma pergunta sobre o código nem é feito automaticamente. Está mantida como operação explícita e separada da investigação de código (decisão de 18/11): grava `query.json`, o envio com perfil, tarefa e idioma e a proposta conferida (`proposal.json`); só muda o léxico das configurações quando a pessoa aplica, e nunca vira fato no acervo.
+
+### Decisões de 18/11 [confirmado]
+
+- `verificavel` em inglês: as duas traduções ficam, uma por perfil, como exceção temporária, sem mudar textos nem hashes.
+- `/api/path-questions`: mantida (prepara, não envia; testes próprios).
+- "Abrir arquivos": mantido (visualizador sem servidor).
+- Ponytail: em `skills/`, sem tarefa que a aceite.
+- Baterias de tela antigas: nenhuma apagada; a classificação está em `crates/librarian-studio/tests/tela/README.md`.
+
+### Identidade do Builder [confirmado]
+
+`build.rs` grava `unknown` enquanto o Git não rastrear `crates/librarian-evidence/Cargo.toml` (`git ls-files --error-unmatch` falha), como o contrato manda. Com uma cópia do índice com o crate adicionado (`GIT_INDEX_FILE`, sem tocar no índice real, cujo hash foi conferido antes e depois), o mesmo teste deu `recorded`, `27f7bdd63cdf2b9b6406c833b74f2c4554961209`, `git_dirty: true`. **Para validar depois do `git add` e do commit:** `cargo test -p librarian-evidence this_binary_has -- --nocapture` e conferir a linha `BUILDER|`: o commit novo, e `git_dirty: false` se nada sob `crates`, `Cargo.toml` e `Cargo.lock` estiver alterado. Um build que já rodou com o crate fora do índice volta a rodar o `build.rs` quando o índice muda (ele observa `.git/index`).
+
+### Validação de 18/11 [confirmado]
+
+| Verificação | Resultado | Referência de 17/11 |
+|---|---|---|
+| `cargo test --workspace --locked`, Windows | 446 aprovados, 0 falhas, 2 ignorados | 443, 0, 2 (os 3 a mais são os testes novos da escada) |
+| `cargo test -p librarian-studio` | 177 aprovados | 174 |
+| Ubuntu 24.04 (Docker, `ubuntu:24.04` `fe815609`, Rust 1.100.0, cópia do repositório) | 446 aprovados, 0 falhas, 2 ignorados | 443, 0, 2 |
+| Clippy (`--workspace --all-targets`) | Nenhum aviso novo; o binário do Studio caiu de 3 para 2 avisos; o erro antigo de `send_ollama.rs:384` continua | O mesmo erro |
+| `tela-simplificacao.js`, Edge | 47 de 47 | 40 de 40 |
+| `tela-estado.js`, parte A, Chrome | 46 de 46; parte B pulada (sem a raiz de 04/11) | — |
+
+Nenhuma bateria foi dada como aprovada por remoção: os testes de rodada não foram apagados, e as dez baterias antigas não foram executadas nem contadas.
+
+### Pendências que dependem do usuário
+
+1. ~~Revisão final~~: feita em 18/11, antes da publicação.
+2. ~~Commit e push~~: feitos em 18/11, com os arquivos novos adicionados um a um ao índice; identidade do Builder conferida depois do commit. Falta conferir o CI.
+3. ~~O léxico fora do pacote~~: decidido em 18/11 (mantido, acima).
+4. Adiados conscientemente: opção B da escada, unificação do `verificavel` em inglês, recriação das baterias antigas com uma raiz nova.
+5. Limpeza opcional: `%TEMP%\lw` (cerca de 3 GB) e os scratchpads. O Docker Desktop foi aberto para o teste no Ubuntu.
+
+### Onde estão os dados
+
+- `.studio/` deste repositório só tem `projects/renderer-9b78f3a9` com a run `20261118-020654`. As raízes de 04/11 e `.studio/arquivo-copias` citadas nas seções anteriores **não estão mais nesta máquina**.
+- Cópias de segurança feitas antes de cada mudança: `scratchpad\backup-e1e5` (sessão `a7716d82`, 17/11) e `scratchpad\backup-inicio-18-11` (sessão `02fdc43f`, 18/11: patch da árvore, patch do índice, os não rastreados e as fontes do Studio).

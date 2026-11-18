@@ -396,14 +396,6 @@ impl Store {
         Ok(hot)
     }
 
-    /// Where a hot line's value comes from (values.rs), over the latest "Medir tudo" of `run`.
-    pub fn value_sources(&self, key: &str, run: &str, symbol: &str, text: &str) -> Result<Value> {
-        let hot = self.hotspots(key, run)?;
-        let catalog = Catalog::load(&self.edition(key, run)?)?;
-        let rows: Vec<Value> = hot["rows"].as_array().cloned().unwrap_or_default();
-        crate::values::sources(&catalog, &rows, symbol, text)
-    }
-
     /// Executions recorded for `run`, oldest first; each carries its folder name as `id`.
     pub fn executions(&self, key: &str, run: &str) -> Result<Vec<Value>> {
         Ok(self.executions_read(key, run)?.into_iter().map(|read| read.record).collect())

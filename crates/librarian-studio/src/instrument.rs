@@ -44,14 +44,13 @@ pub struct Plan {
     pub excluded: Vec<Value>,
 }
 
-pub(crate) const KINDS: [&str; 3] = ["function", "method", "trait_method"];
+/// The declarations a measure covers, and the reasons of a function with none (`not_recorded`: a
+/// measure from before they were kept; `not_classified`: one that could not be classified, which a
+/// loaded edition never gives), are the Evidence Builder's: a suggestion is annotated by the same
+/// words the coverage is written in.
+pub(crate) use librarian_evidence::suggestion::{missing_reason, MEASURED_KINDS as KINDS, NOT_CLASSIFIED, NOT_RECORDED};
 /// The one language whose function bodies this module knows how to open.
 const LANGUAGE: &str = "rust";
-/// A function with no reason in the record: a measure from before they were kept.
-const NOT_RECORDED: &str = "not_recorded";
-/// A function with no reason in a record that keeps them: it could not be classified. A loaded
-/// edition always gives a function its source and its chunk, so this is not expected to appear.
-const NOT_CLASSIFIED: &str = "not_classified";
 /// A function that got the statement on a source line another one also got it, with passes counted
 /// on that line: they may be either's.
 const SHARED_LINE: &str = "shared_line";
@@ -59,10 +58,6 @@ const SHARED_LINE: &str = "shared_line";
 const NO_COVERAGE_LIMIT: &str = "Sem cobertura quer dizer que esta medição não observou a função; não quer dizer que ela não rodou.";
 const NO_PASSES_LIMIT: &str = "Contada e sem passagens quer dizer que esta medição não observou passagens positivas, não que ela não rodou: o programa pode zerar as contagens durante a execução, ou não imprimir uma linha.";
 
-/// The reason of a function with none, by whether its record keeps reasons at all.
-fn missing_reason(recorded: bool) -> &'static str {
-    if recorded { NOT_CLASSIFIED } else { NOT_RECORDED }
-}
 
 /// Whether the edition has a source the statement can be placed in.
 pub fn can_place(catalog: &Catalog) -> bool {
@@ -451,34 +446,9 @@ fn coverage(catalog: &Catalog, execution: &Value, rows: &[Value]) -> Value {
     out
 }
 
-/// A suggested envelope with what `coverage` says, on each function it mentions and in a summary.
-/// With no measure (`None`) a function has no coverage and nothing was left out of anything; what
-/// is not a function has no such state.
-pub fn annotate_suggestion(suggestion: &mut Value, coverage: Option<&Value>) {
-    let functions: BTreeMap<&str, &Value> = coverage.and_then(|c| c["functions"].as_array()).into_iter().flatten()
-        .filter_map(|f| Some((f["symbol"].as_str()?, f))).collect();
-    for list in ["items", "left_out"] {
-        for entry in suggestion[list].as_array_mut().into_iter().flatten() {
-            let (state, reason, zero) = match functions.get(entry["id"].as_str().unwrap_or_default()) {
-                Some(f) => (f["coverage_state"].clone(), f["exclusion_reason"].clone(), f["zero_evidence"].clone()),
-                None if KINDS.contains(&entry["kind"].as_str().unwrap_or_default()) => (json!("no_coverage"), coverage.map_or(Value::Null, |c| json!(missing_reason(c["reasons_recorded"] == true))), Value::Null),
-                None => (Value::Null, Value::Null, Value::Null),
-            };
-            entry["coverage_state"] = state;
-            entry["exclusion_reason"] = reason;
-            entry["zero_evidence"] = zero;
-        }
-    }
-    let mut summary = coverage.cloned().unwrap_or(Value::Null);
-    if let Some(fields) = summary.as_object_mut() {
-        fields.remove("functions");
-    }
-    suggestion["coverage"] = summary;
-}
-
 #[cfg(test)]
 mod tests {
-    use super::{annotate_suggestion, body_brace, by_calls, calls_by_symbol, count_kind, planned_lines};
+    use super::{body_brace, by_calls, calls_by_symbol, count_kind, planned_lines};
     use serde_json::json;
 
     /// The calls decide, whatever the time says; a tie falls the same way from any starting order.
@@ -553,23 +523,6 @@ mod tests {
         assert_eq!(calls_by_symbol(&rows(7., 2.))["f"], 7.);
         assert_eq!(calls_by_symbol(&rows(2., 7.))["f"], 7.);
         assert_eq!(calls_by_symbol(&rows(7., 2.)).len(), 1);
-    }
-
-    /// A function the measure's list does not have: the reason depends on the kind of record,
-    /// as it does in `coverage`, and with no measure there is none.
-    #[test]
-    fn a_function_missing_from_the_coverage_follows_the_kind_of_record() {
-        let annotated = |coverage: Option<serde_json::Value>| {
-            let mut suggestion = json!({ "items": [{ "id": "x", "kind": "function" }, { "id": "y", "kind": "struct" }], "left_out": [] });
-            annotate_suggestion(&mut suggestion, coverage.as_ref());
-            assert_eq!(suggestion["items"][0]["coverage_state"], "no_coverage");
-            assert_eq!(suggestion["items"][1]["coverage_state"], serde_json::Value::Null);
-            assert_eq!(suggestion["items"][1]["exclusion_reason"], serde_json::Value::Null);
-            suggestion["items"][0]["exclusion_reason"].clone()
-        };
-        assert_eq!(annotated(Some(json!({ "functions": [], "reasons_recorded": false }))), "not_recorded");
-        assert_eq!(annotated(Some(json!({ "functions": [], "reasons_recorded": true }))), "not_classified");
-        assert_eq!(annotated(None), serde_json::Value::Null);
     }
 
     #[test]

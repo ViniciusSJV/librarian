@@ -10,9 +10,9 @@
    - E1 = `impl Camera::ray_from_pixel`, aceso no grafo;
    - critérios prévios gravados com hash;
    - query com `{"number": 86, "text": "        let direction = (pixel - origin).normalize();"}`.
-5. Com **Nenhum**, veja e copie a query. Com **Ollama** e o Modelfile `analista-qwen3coder`, ou com o
-   **Claude Code CLI**, envie e leia a resposta. Avalie contra os critérios; `completed`
-   não é aprovação.
+5. A pergunta abre na vista **Pacote**. Com **Nenhum**, veja e copie a query. Com o perfil
+   **Local: Qwen3-Coder** ou **Remoto: Claude**, clique em **Enviar** e leia a resposta. Avalie contra
+   os critérios; `completed` não é aprovação.
 
 Os testes automáticos: `cargo test --workspace --locked`. A trilha pela CLI está no
 [WORKFLOW](WORKFLOW.md). Para API e uso independente, consulte

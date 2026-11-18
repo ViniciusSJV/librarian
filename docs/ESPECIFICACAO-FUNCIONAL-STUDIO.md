@@ -4,6 +4,15 @@
 
 **Base:** `main` no commit `9bc92b00cfc05f5cf46b491a0e1ee110e43d378a`. Esta especificação consolida a jornada do usuário (Etapa 1), a organização das áreas (Etapa 2) e a especificação funcional (Etapa 3) da fase de reformulação do frontend, com as decisões aprovadas sobre as questões I-1 a I-8 e Q1 a Q12 e a correção da regra de Salvar e Trocar modo (seção 3.13).
 
+**Superada em parte pela simplificação de 17/11/2026** (ver o [README do Studio](../crates/librarian-studio/README.md#simplificação-de-17112026) e o [STUDIO.md](../STUDIO.md)):
+
+- **Nomes.** A vista "Evidence Builder" da tela agora se chama **Seleção**, e a "Revisão" agora se chama **Pacote**. A vista Pacote absorveu a seção de pacote da conversa.
+- **Envio.** Toda pergunta passa pelo Pacote antes de qualquer envio. As rotas "sem revisão" desta especificação (pergunta livre, cadeia, perguntas do caminho e escada) não existem mais na página.
+- **Escolha do modelo.** Quem responde é um perfil da biblioteca de modelos, não um Modelfile, e o idioma é uma configuração do projeto.
+- **Rotas.** `/api/value-sources` saiu.
+
+Onde esta especificação diverge desses pontos, vale a simplificação.
+
 **Documentos relacionados:** o funcionamento atual está no [STUDIO.md](../STUDIO.md); os detalhes técnicos do servidor, no [README do Studio](../crates/librarian-studio/README.md); as etapas do Evidence Builder (incluindo as Etapas 5, 6 e 7 citadas aqui), no [plano](../PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evidence-builder-no-studio-etapas-0-a-7-05112026).
 
 ## Marcas

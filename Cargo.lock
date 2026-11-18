@@ -461,6 +461,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "librarian-evidence"
+version = "0.1.0"
+dependencies = [
+ "librarian-ingest",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "librarian-graph-engine"
 version = "0.1.0"
 dependencies = [
@@ -499,6 +508,7 @@ dependencies = [
 name = "librarian-studio"
 version = "0.1.0"
 dependencies = [
+ "librarian-evidence",
  "librarian-ingest",
  "librarian-llm-engine",
  "reqwest",

@@ -124,12 +124,10 @@ cargo run --release --locked -p librarian-studio
 
 Open <http://127.0.0.1:8765/>. For another port, append `-- --port 9000`. On Windows, double-clicking `STUDIO.cmd` builds, starts the server and opens the browser.
 
-Local models used by the bundled [Modelfiles](modelfiles/README.md):
+The local model of the [model library](modelfiles/README.md) (the remote one is the Claude Code CLI):
 
 ```sh
 ollama pull qwen3-coder:30b
-ollama pull gemma4:12b
-ollama pull gpt-oss:20b
 ```
 
 **Configuration:** a project opens with no configuration. To declare commands, a lexicon, inventory rules or **Measure everything**, add a [`librarian.json`](STUDIO.md#perfil-do-projeto-librarianjson) to the root of the analyzed project.

@@ -13,9 +13,6 @@ use std::collections::BTreeSet;
 /// How many of the most frequent code terms go into the request.
 pub const TERMS: usize = 80;
 
-/// Languages a lexicon request can ask the question words in.
-pub const LANGUAGES: [&str; 2] = ["pt", "en"];
-
 /// The query sent to the LLM, in the shape the transports accept (question, evidence, instructions).
 /// `language` is the language of the proposed question words, and of the query itself.
 /// `missed` are the question terms that touched no result, with how many questions used them.

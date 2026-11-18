@@ -17,17 +17,18 @@ Variáveis: `LIBRARIAN_ROOT` (raiz do Librarian; padrão, a do workspace) e
 | --- | --- |
 | `src/main.rs` | Escuta em `127.0.0.1`, recusa `Host` e `Origin` de fora, roteia e envia com o vínculo da conferência |
 | `src/http.rs` | HTTP/1.1 mínimo sobre `std`: uma requisição por conexão, corpo por `Content-Length` (até 16 MiB) |
-| `src/store.rs` | Projetos, execuções e perguntas em `.studio/`; importa `librarian.json`; grava critérios antes da query; confere a seleção e grava o pacote de evidências de cada pergunta nova; reconfere bundle, claims, critérios e o pacote (H1 a H3) antes de cada envio e monta o vínculo; refaz a sugestão (H4); Modelfiles; navegação de pastas |
-| `build.rs`, `src/builder.rs` | Grava na compilação o commit e o `git_dirty` do Librarian (ou `unknown`), que o pacote registra como `builder` |
+| `src/store.rs` | Projetos, execuções e perguntas em `.studio/`; importa `librarian.json`; grava critérios antes da query; lê o que o pacote de evidências precisa e o grava; lê os artefatos da pergunta antes de cada envio, na ordem das conferências, e monta o vínculo; é o `Keeper` do Evidence Builder (sugestões, execuções, grafo, LACUNA dos envios); Modelfiles; navegação de pastas. Montar, conferir (H1 a H4), aceitar a seleção e sugerir o envelope são do [`librarian-evidence`](../librarian-evidence/README.md) |
 | `web/index.html` | A página: o mapa como cidade (Three.js 0.180.0 fixado no jsDelivr), o fluxograma, projeto e conversa |
 | `src/lexicon.rs` | Pedido de léxico, leitura da resposta e conferência mecânica de cada grupo |
 | `src/facts.rs` | L4: portões, revisão por item (`reviews.jsonl`), acervo de fatos (`facts.jsonl`) e reconferência por texto contra uma edition |
-| `src/llm.rs` | Provedores: Ollama (`ollama create` + `attempt_linked` do LLM Engine, com o vínculo), Claude Code CLI (mesma conferência do hash da query) e os ainda não implementados |
+| `src/llm.rs` | Os envios do Studio: a tarefa vem do que é enviado (a política de claims da pergunta, ou o léxico), o perfil é a escolha da pessoa e o idioma é o do projeto; o Modelfile, o transporte (Ollama e Claude Code CLI) e a biblioteca de modelos são do `librarian-llm-engine`. Grava o `send.json` com o vínculo, o perfil, a tarefa e o idioma |
 
-O studio usa os crates do workspace (`librarian-ingest`, `librarian-llm-engine`) e não
+O studio usa os crates do workspace (`librarian-ingest`, `librarian-evidence`, `librarian-llm-engine`) e não
 adiciona dependências: o `reqwest` é o mesmo do LLM Engine. O contrato do pacote de
 evidências (tipos, `lines-v1`, conferências puras) fica em `librarian-ingest`, em
-`src/evidence.rs`, sem nenhuma regra de linguagem.
+`src/evidence.rs`, sem nenhuma regra de linguagem. Quem monta e confere o pacote é o
+[`librarian-evidence`](../librarian-evidence/README.md), que não conhece o Studio: o Studio lê os
+arquivos e entrega os dados. A identidade do builder (`build.rs`) foi junto com ele.
 
 ## Evidências
 
@@ -52,6 +53,26 @@ partir das medições e do grafo, e a pessoa junta, tira ou aceita. Desde a Etap
   é verdadeira, que as evidências bastam ou que uma pessoa agiu.
 
 Detalhes no [STUDIO.md](../../STUDIO.md#pacote-de-evidências-etapa-4).
+
+## Simplificação de 17/11/2026
+
+O fluxo principal ficou **Projeto → Investigar → Seleção → Pacote → Consumir**:
+
+- **Seleção.** A vista que se chamava "Evidence Builder" na tela. O nome Evidence Builder fica
+  para o crate que monta e confere o pacote.
+- **Pacote.** A antiga "Revisão", que absorveu a seção de pacote que cada pergunta tinha na
+  conversa: pergunta, seleção, pacote e proveniência, H1 a H4, tarefa, idioma, o que só você vê.
+- **Envio.** Todo envio sai da vista Pacote. O compositor só prepara. A busca livre, a cadeia e o
+  cartão de desempenho preparam e abrem o Pacote. No fluxograma, **Juntar os pontos marcados** põe
+  os pontos na Seleção. A escada é **Enviar pela escada**, no Pacote, sobre o mesmo pacote.
+- **Quem responde.** É um perfil da biblioteca de modelos (local: Qwen3-Coder; remoto: Claude). Não
+  há mais Modelfile, escada nem skills no compositor, e os padrões de cada ação vêm da biblioteca.
+- **Configurações.** Ganharam o **Idioma** do projeto, o único lugar que decide o idioma. A prosa
+  ficou como legado.
+- **Modelos.** A ferramenta, que antes era Modelfiles, mostra a biblioteca só para leitura.
+
+A especificação funcional e o estado da implementação abaixo descrevem as etapas F0 a F10, de antes
+dessa simplificação. Onde divergem, vale o `STUDIO.md`.
 
 ## Especificação funcional do frontend
 
@@ -105,7 +126,7 @@ A tabela lista as rotas principais; a lista completa está em `src/main.rs`.
 | Rota | Função |
 | --- | --- |
 | `GET /` | `web/index.html`, lido do disco a cada requisição (editar a página não exige recompilar) |
-| `GET /api/status` | Ollama (executável, se responde, modelos), Claude CLI, provedores e Modelfiles |
+| `GET /api/status` | Ollama (executável, se responde, modelos), Claude CLI, os perfis oferecidos (`llm.providers`), a biblioteca de modelos (`models`) e as skills |
 | `GET /api/browse?path=` | Subpastas (marca as que têm `Cargo.toml`); sem `path`, unidades e pasta do usuário |
 | `POST /api/project {root}` | Abre ou cria o projeto da pasta |
 | `GET /api/project?key=` · `PUT /api/project {key, settings}` | Lê ou salva as configurações (a pasta não muda) |
@@ -115,16 +136,17 @@ A tabela lista as rotas principais; a lista completa está em `src/main.rs`.
 | `POST /api/envelope/suggest {key, run, nodes}` | Sugestão do envelope, gravada em `suggestions/<sha256>.json`; a resposta traz o hash |
 | `POST /api/gathered-question {key, run, question, nodes, with_facts?, origin?}` | Pergunta com as fontes juntadas; recusa `notes` em qualquer parte do corpo e confere a seleção (formato 2) antes de criar |
 | `GET /api/evidence?key=&run=&turn=` | Pacote e registro da seleção como gravados, H1 a H3 conferidos agora, H4 refeito agora; só leitura |
-| `POST /api/send {key, run, turn, provider, modelfile?, claude_model?}` | `verify-prepared`, H1 a H3 do pacote e envio; `501` para provedores não implementados |
+| `POST /api/send {key, run, turn, profile, claude_model?, skills?}` | `verify-prepared`, H1 a H3 do pacote e envio pelo perfil, com a tarefa da pergunta e o idioma do projeto; `501` para um perfil que a biblioteca não tem; um pedido que ainda nomeia um `modelfile`, ou uma skill que a tarefa não aceita, é recusado antes de enviar |
 | `POST /api/paste {key, run, turn, text}` | Resposta trazida de fora, com a mesma conferência do envio |
-| `POST /api/ladder` | Escada: recusa `notes` em qualquer parte do corpo, confere a seleção na entrada, pergunta, envia e registra o que as rodadas de lacuna acrescentaram |
+| `POST /api/ladder {key, run, turn, gate, models?, retries?: 0, lacuna_rounds?: 0}` | Escada sobre uma pergunta já preparada e revisada no Pacote: um único envio desse pacote a um único modelo (sem `models`, o padrão da biblioteca), e o portão com os comandos aprovados. Antes de qualquer execução ou envio, recusa `notes` em qualquer parte do corpo, a falta de `turn`, `question`/`nodes`/`with_facts`/`origin`, `retries` ou `lacuna_rounds` diferentes de 0, `models` com outro número de itens que não 1, portão vazio e pacote que não passa em H1 a H3. Uma LACUNA ou uma recusa só é registrada; nada é perguntado de novo (18/11) |
 | `POST /api/continue {key, run, turn, question}` | Cadeia: nova pergunta com as declarações das respostas que passam de novo na mecânica e os fatos vigentes sobre elas |
 | `POST /api/review {key, run, turn, send, claim, decision, note}` | Aprova (`approved`, com nota, passando pelos portões) ou recusa (`rejected`, revoga a promoção anterior) um item |
 | `GET /api/facts?key=&run=` | Acervo de fatos reconferido contra a edition da execução (vigente, desatualizado, revogado) |
 | `DELETE /api/turn {key, run, turn}` | Apaga a pergunta e tudo o que foi enviado para ela |
-| `POST /api/lexicon/suggest {key, run, provider, modelfile?, claude_model?}` | Vocabulário da edition, pedido ao LLM (ou só o pedido, em `manual`) e conferência dos grupos |
+| `POST /api/lexicon/suggest {key, run, profile, claude_model?}` | Vocabulário da edition, pedido no idioma do projeto ao perfil (ou só o pedido, em `manual`) e conferência dos grupos |
 | `POST /api/lexicon/check {key, run, id, text}` | Confere uma resposta colada para um pedido anterior |
 | `POST /api/project/export {key, dry_run}` | Lista (`dry_run` true, padrão) ou grava `librarian.json` e os arquivos dele no projeto |
-| `GET /api/modelfiles` · `PUT /api/modelfiles {name, content}` | Lista ou salva `modelfiles/<nome>.Modelfile` (exige `FROM`) |
+| `GET /api/modelfiles` | A biblioteca de modelos, só leitura: perfis, tarefas e skills, padrão de cada ação e cada Modelfile montado (tarefa × perfil × idioma). Não há mais gravação de Modelfile |
+| `POST /api/path-questions` | Uma pergunta por ponto de um caminho, só preparada. A página não a usa mais (os pontos vão à Seleção); nada é enviado. **Mantida por decisão de 18/11/2026:** é uma capacidade de preparar perguntas, com testes próprios do pacote da rota `path` |
 
 Erros voltam como `{"error": "..."}` com status 400, 403, 404 ou 501.

@@ -4,9 +4,21 @@ O [contrato experimental de afirmações](CLAIMS.md) acrescenta preparação de 
 e verificação mecânica de categorias/citações, sem alterar o transporte legado
 ou aprovar semanticamente as respostas. Use `claims prepare` e `claims check`.
 
-Preparação e transporte Ollama do Librarian. Este crate não depende do renderer, do Graph Engine ou de um modelo específico.
-O adaptador implementado é Ollama HTTP `/api/generate`, não uma API universal de
-provedores. Modelo e endpoint são argumentos; Qwen/DeepSeek não são embutidos.
+Tudo o que o Librarian faz com um modelo. Este crate não depende do renderer, do Graph Engine ou de um modelo específico.
+
+- **`models`:** a biblioteca de modelos, uma fonte só para as tarefas (`verificavel`, `performance`,
+  `lexico` e o legado `analista`), os perfis (local `qwen3coder`, remoto `claude`), os idiomas, o
+  padrão de cada ação e as skills que cada tarefa aceita. Lê o [`catalog.json`](../../modelfiles/catalog.json)
+  e monta o Modelfile de cada tarefa × perfil × idioma. Os que existiam como arquivo saem byte a byte
+  (o teste fixa os hashes). `task_for_question` diz a tarefa de uma pergunta pela política de claims dela.
+- **`transport`:** roda uma query preparada num provedor. No Ollama, faz `ollama create` do Modelfile
+  montado (a cópia vai gravada com o hash) e chama `/api/generate` pelo `ollama::client`. No Claude Code
+  CLI, sem ferramentas, sem MCP e sem sessão, usa o `SYSTEM` como system prompt. Em ambos, a query
+  precisa ainda bater com o hash do vínculo conferido; se não bater, nada é enviado.
+- **`claims`:** o contrato de afirmações e a conferência mecânica de cada resposta.
+
+O adaptador HTTP é o Ollama `/api/generate`, não uma API universal de provedores. Quem escolhe a
+tarefa, o perfil e o idioma é o consumidor (o Studio): este crate não decide nada disso por conta própria.
 
 ## Usar no Librarian
 
