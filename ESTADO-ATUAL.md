@@ -7,7 +7,7 @@
 - **Fase 1 — Piloto 1b: concluída em 18/11/2026.** Relatório final: [docs/reports/piloto-1b/00-resumo.md](docs/reports/piloto-1b/00-resumo.md).
 - **Próximo passo: 2.0**, tornar a amostra da Parte C e os scripts da auditoria (Parte E) executáveis a partir do repositório, sem caminhos do scratchpad. É o portão da Fase 2. Cada passo depende de autorização.
 - **Feito no 1b:** P1 (`987d7a8`), G3 (`aae51d7`), Partes A–E do diagnóstico, a Q6 (run `20261118-205150`, avaliada em 18/11), a consolidação documental (`a8e4074`) e o relatório final. Relatórios em [docs/reports/piloto-1b/](docs/reports/piloto-1b/) (`0c4bcab`).
-- **Git:** `main`. Commits sem push sobre `origin/main`: `0398829`, `987d7a8`, `aae51d7`, `0c4bcab`, `a8e4074`, `4fdb509` (passo 1.3).
+- **Git:** `main`, sincronizada: os commits do 1b foram enviados em 18/11, e `origin/main` está em `955537e`.
 - **Suíte:** `cargo test --workspace --locked`: 456 aprovados, 0 falhas, 2 ignorados (18/11, com P1 e G3).
 - **Roadmap:** [PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#roadmap). Nenhum agente nem orquestrador existe.
 
@@ -48,7 +48,7 @@ Cite sempre com o prefixo. As tabelas de abreviações e de prefixos estão em [
 ## Pendências abertas por fase
 
 **Fase 1** (concluída)
-- Push dos commits do 1b, quando o usuário pedir; depois, conferir o CI deles e o do commit de 18/11 (CTX:883).
+- Push feito em 18/11 e CI verde em `955537e`, inclusive no `d949f91`, o que fecha a pendência do CTX:883.
 
 **Fase 2**
 - 2.0 é o portão: a amostra da Parte C e os scripts da Parte E ainda usam caminhos do scratchpad ([dados/amostra/](docs/reports/piloto-1b/dados/amostra/), [dados/acervo/](docs/reports/piloto-1b/dados/acervo/)).
