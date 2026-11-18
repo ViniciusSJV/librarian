@@ -114,16 +114,37 @@ fn symbols(catalog: &Catalog, path: &str, start: usize, lines: &[String]) -> Vec
         if chunk.start_line < start || chunk.end_line > end {
             continue;
         }
-        let declaration = (chunk.start_line..=chunk.end_line)
-            .filter(|n| !annotation(&lines[n - start]))
-            .find_map(|n| Some((n, identifier_column(&lines[n - start], &symbol.name)?)));
-        let Some((line, column)) = declaration else { continue };
+        let Some((line, column)) = declaration_in(&symbol.name, chunk.start_line, chunk.end_line, lines, start) else { continue };
         if !found.iter().any(|s| s.name == symbol.name && s.declaration_line == line) {
             found.push(Symbol { name: symbol.name.clone(), declaration_line: line, name_column: column, end_line: chunk.end_line });
         }
     }
     found.sort_by(|a, b| (a.declaration_line, &a.name).cmp(&(b.declaration_line, &b.name)));
     found
+}
+
+/// The declaration line and name column of `symbol` in its edition, by the same rule the envelope
+/// uses to give `declaration_line` (`declaration_in`), read from the edition's snapshot. None when
+/// no code line of its chunk names it.
+pub fn declaration_of(catalog: &Catalog, symbol: &librarian_ingest::Symbol) -> Option<(usize, usize)> {
+    let path = &catalog.sources().get(&symbol.source_id)?.path;
+    let chunk = catalog.chunk(&symbol.chunk_id)?;
+    let text = String::from_utf8_lossy(catalog.source_bytes(path)?);
+    let lines: Vec<&str> = text.lines().collect();
+    if chunk.start_line == 0 || chunk.end_line > lines.len() {
+        return None;
+    }
+    declaration_in(&symbol.name, chunk.start_line, chunk.end_line, &lines, 1)
+}
+
+/// The one rule for a declaration line: the first line of `start..=end` that is not an annotation
+/// and names `name` as a whole identifier, with its column. `lines[0]` is line `first`, and the
+/// range must be inside them. Multi-line annotations are not followed: a continuation line that
+/// names the symbol is taken as its declaration.
+fn declaration_in<S: AsRef<str>>(name: &str, start: usize, end: usize, lines: &[S], first: usize) -> Option<(usize, usize)> {
+    (start..=end)
+        .filter(|n| !annotation(lines[n - first].as_ref()))
+        .find_map(|n| Some((n, identifier_column(lines[n - first].as_ref(), name)?)))
 }
 
 /// Lines that annotate a declaration instead of declaring: `#[attr]`, `///` and other comments,

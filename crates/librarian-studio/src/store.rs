@@ -1356,13 +1356,17 @@ fn compare_sends(sends: &[Value]) -> Value {
     json!({ "sends": columns, "rows": compare(&answers) })
 }
 
-/// The target a graph node names: its file, name and the first line of its excerpt.
+/// The target a graph node names: its file, name and declaration line, by the rule the envelope
+/// gives `declaration_line` with (`claims::declaration_of`), so a fact is found by the line it keeps.
+/// An excerpt starts at its decorators, attributes or doc comments; when no line of it names the
+/// symbol, the first line of the excerpt, as before.
 fn target_of(catalog: &Catalog, symbols: &std::collections::BTreeMap<String, librarian_ingest::Symbol>, id: &str) -> Result<Target> {
     let symbol = symbols.get(id).ok_or_else(|| format!("Ponto desconhecido: {id}"))?;
+    let chunk = catalog.chunks().get(&symbol.chunk_id).ok_or("Ponto sem trecho")?;
     Ok(Target {
         path: catalog.sources()[&symbol.source_id].path.clone(),
         symbol_name: symbol.name.clone(),
-        declaration_line: catalog.chunks().get(&symbol.chunk_id).ok_or("Ponto sem trecho")?.start_line,
+        declaration_line: crate::claims::declaration_of(catalog, symbol).map_or(chunk.start_line, |(line, _)| line),
     })
 }
 
@@ -7806,5 +7810,130 @@ librarian-measure memory_mb=100
         let (_scratch, store, _) = format_1_store();
         forge(&store, key, run, "01", |p| p.units[0].text_sha256 = Sha256Hex::try_from("0".repeat(64)).unwrap());
         assert!(refusal_of(&store, key, run, "01").starts_with("H2: TextDiffers"));
+    }
+
+    // P1 (Piloto 1b): facts about a declaration whose excerpt starts at an annotation line
+    // (Python decorator, Rust attribute or doc comment). The fact keeps the line the envelope
+    // gives as `declaration_line` (the `def`/`fn` line); recovering it must use that same line.
+
+    /// What a declaration's fact looks like when it comes back: a project with `file` at `path`,
+    /// one gathered question about `name`, a checked answer locating the operation at `op` after
+    /// the declaration at `declaration`, promoted as F1. Then the same declaration is gathered again
+    /// with its facts, and its envelope is suggested.
+    struct Recovered {
+        fact_declaration_line: Value,
+        target_line: usize,
+        chunk_start_line: usize,
+        with_facts: Value,
+        suggested: Value,
+    }
+
+    fn recovered(path: &str, file: &str, name: &str, declaration: usize, op: usize) -> Recovered {
+        let (_scratch, store, key, _root) = project_with(&[(path, file)], json!({ "project_root": "." }));
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        let id = symbol_id(&store, &key, &run, name);
+        let catalog = Catalog::load(&store.edition(&key, &run).unwrap()).unwrap();
+        let chunk_start_line = catalog.chunks()[&catalog.symbols()[&id].chunk_id].start_line;
+        let first = store.ask_gathered(&key, &run, "O que esta função calcula?", std::slice::from_ref(&id), false, None).unwrap();
+        assert_eq!(first["prepare_error"], Value::Null, "{}", first["prepare_error"]);
+        let lines: Vec<&str> = file.lines().collect();
+        let quote = lines[declaration - 1..op].join("\n");
+        let answer = json!({"schema_version": 1, "claims": [{
+            "id": "C1", "kind": "FACT", "text": format!("`{name}` calcula um valor na linha {op}."),
+            "citations": [{"evidence_id": "E1", "path": path, "start_line": declaration, "end_line": op, "quote": quote}],
+            "premises": [], "verification_plan": null,
+            "location": {"evidence_id": "E1", "path": path, "symbol_name": name,
+                "declaration_line": declaration, "operation_start_line": op, "operation_end_line": op}}]});
+        let sent = record_answer(&store, &key, &run, "01", "manual", &answer.to_string()).unwrap();
+        let check: Value = serde_json::from_slice(&fs::read(Path::new(sent["directory"].as_str().unwrap()).join("check.json")).unwrap()).unwrap();
+        assert_eq!(check["report"]["mechanical_status"], "passed", "{check}");
+        assert_eq!(store.review(&key, &run, "01", "01-manual", "C1", true, "A linha calcula o valor.").unwrap()["fact_id"], "F1");
+        let fact_declaration_line = store.facts(&key, &run).unwrap()["facts"][0]["declaration_line"].clone();
+        let target_line = target_of(&catalog, catalog.symbols(), &id).unwrap().declaration_line;
+        let again = store.ask_gathered(&key, &run, "E o que mais?", std::slice::from_ref(&id), true, None).unwrap();
+        assert_eq!(again["prepare_error"], Value::Null, "{}", again["prepare_error"]);
+        let suggested = store.suggest_envelope(&key, &run, std::slice::from_ref(&id)).unwrap();
+        let suggested = suggested["items"].as_array().unwrap().iter().find(|i| i["id"] == json!(id)).unwrap()["facts"].clone();
+        Recovered { fact_declaration_line, target_line, chunk_start_line, with_facts: again["gathered"]["reviewed_facts"].clone(), suggested }
+    }
+
+    fn assert_recovered(case: &str, r: &Recovered, declaration: usize) {
+        let mut wrong = vec![];
+        if r.fact_declaration_line != json!(declaration) {
+            wrong.push(format!("fact declaration_line {} (expected {declaration})", r.fact_declaration_line));
+        }
+        if r.target_line != declaration {
+            wrong.push(format!("target_of {} (excerpt starts at {})", r.target_line, r.chunk_start_line));
+        }
+        if r.with_facts != json!(["F1"]) {
+            wrong.push(format!("with_facts {}", r.with_facts));
+        }
+        if r.suggested != json!(["F1"]) {
+            wrong.push(format!("envelope suggestion facts {}", r.suggested));
+        }
+        assert!(wrong.is_empty(), "{case}, declaration at {declaration}: {}", wrong.join("; "));
+    }
+
+    const PY_DECORATED: &str = "def trace(f):\n    return f\n\n\n@trace\n@trace\ndef handler(x):\n    y = x * 2\n    return y\n";
+
+    #[test]
+    fn p1_a_fact_about_a_decorated_python_function_comes_back() {
+        let r = recovered("src/app.py", PY_DECORATED, "handler", 7, 8);
+        assert_eq!(r.chunk_start_line, 5, "the excerpt starts at the first decorator");
+        assert_recovered("python @decorator", &r, 7);
+    }
+
+    #[test]
+    fn p1_a_fact_about_a_rust_function_with_an_attribute_comes_back() {
+        let file = "pub struct Camera;\n\nimpl Camera {\n    #[inline]\n    pub fn ray_from_pixel(&self, x: f64) -> f64 {\n        let direction = x * 2.0;\n        direction\n    }\n}\n";
+        let r = recovered("src/lib.rs", file, "ray_from_pixel", 5, 6);
+        assert_recovered("rust #[inline]", &r, 5);
+    }
+
+    #[test]
+    fn p1_a_fact_about_a_rust_function_with_a_doc_comment_comes_back() {
+        let file = "pub struct Camera;\n\nimpl Camera {\n    /// The ray through a pixel.\n    pub fn ray_from_pixel(&self, x: f64) -> f64 {\n        let direction = x * 2.0;\n        direction\n    }\n}\n";
+        let r = recovered("src/lib.rs", file, "ray_from_pixel", 5, 6);
+        assert_recovered("rust ///", &r, 5);
+    }
+
+    /// Control: with nothing above the declaration, the excerpt starts at it and the fact comes back
+    /// today; the fix must keep it so.
+    #[test]
+    fn p1_a_fact_about_an_unannotated_declaration_comes_back_in_both_languages() {
+        let python = recovered("src/app.py", "def handler(x):\n    y = x * 2\n    return y\n", "handler", 1, 2);
+        assert_eq!(python.chunk_start_line, 1);
+        assert_recovered("python plain", &python, 1);
+        let rust = recovered("src/lib.rs", "pub struct Camera;\n\nimpl Camera {\n    pub fn ray_from_pixel(&self, x: f64) -> f64 {\n        let direction = x * 2.0;\n        direction\n    }\n}\n",
+            "ray_from_pixel", 4, 5);
+        assert_eq!(rust.chunk_start_line, 4);
+        assert_recovered("rust plain", &rust, 4);
+    }
+
+    /// A question recorded before the fix named a decorated declaration by the first line of its
+    /// excerpt (the decorator). It still resolves, checks and verifies as it was written.
+    #[test]
+    fn p1_a_question_recorded_with_the_excerpt_line_still_checks() {
+        let (_scratch, store, key, _root) = project_with(&[("src/app.py", PY_DECORATED)], json!({ "project_root": "." }));
+        let run = store.generate(&key).unwrap()["id"].as_str().unwrap().to_owned();
+        let id = symbol_id(&store, &key, &run, "handler");
+        let settings = store.settings(&key).unwrap();
+        let catalog = Catalog::load(&store.edition(&key, &run).unwrap()).unwrap();
+        let older_target = Target { path: "src/app.py".into(), symbol_name: "handler".into(), declaration_line: 5 };
+        let mut older = request(&settings, "O que esta função calcula?", Some(vec![older_target]), vec![], false);
+        older.gathered = true;
+        let gathered = json!({ "nodes": [id], "with_facts": false, "reviewed_facts": [] });
+        let turn = store.new_turn(&key, &run, &settings, &catalog, Asked::client("O que esta função calcula?"), None, older, Some(("gathered", gathered))).unwrap();
+        assert_eq!(turn["prepare_error"], Value::Null, "{}", turn["prepare_error"]);
+        let id = turn["id"].as_str().unwrap().to_owned();
+        let before = files_of(&store, &key, &run);
+        assert!(store.verify_for_send(&key, &run, &id).is_ok());
+        // A new question about the same declaration rewrites nothing of the older one.
+        store.ask_gathered(&key, &run, "E agora?", &[symbol_id(&store, &key, &run, "handler")], true, None).unwrap();
+        let after: std::collections::BTreeMap<PathBuf, Vec<u8>> = files_of(&store, &key, &run).into_iter().collect();
+        for (path, bytes) in &before {
+            assert_eq!(after.get(path), Some(bytes), "{} mudou", path.display());
+        }
+        assert!(store.verify_for_send(&key, &run, &id).is_ok());
     }
 }
