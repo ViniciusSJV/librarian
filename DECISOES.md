@@ -2,7 +2,7 @@
 
 Registro das decisões já tomadas. Cada linha cita o texto como está escrito e onde ele está. A origem é a tabela D3 do [inventário do Piloto 1b](docs/reports/piloto-1b/03-inventario-e-auditoria.md#d3-decisões-já-tomadas), com as referências atualizadas para o estado de 18/11/2026, mais a decisão A do G3 e as decisões da consolidação documental.
 
-**Como citar:** pelo id (`DEC-11`), com a referência ao lado quando ajudar (ex.: "decisão Homônimos, PLANO-H:1555"). As abreviações dos arquivos estão no [ESTADO-ATUAL.md](ESTADO-ATUAL.md#convenção-de-ids). `PLANO-H` é o plano até 18/11, em [docs/historico/PLANO-ate-18-11.md](docs/historico/PLANO-ate-18-11.md), com as mesmas linhas do plano em `aae51d7`.
+**Como citar:** pelo id (`DEC-11`), com a referência ao lado quando ajudar (ex.: "decisão Homônimos, PLANO-H:1555"). As abreviações dos arquivos e os prefixos estão em [docs/IDS.md](docs/IDS.md). `PLANO-H` é o plano até 18/11, em [docs/historico/PLANO-ate-18-11.md](docs/historico/PLANO-ate-18-11.md), com as mesmas linhas do plano em `aae51d7`.
 
 **Estado:** "vigente" quando nada a reabriu. Uma decisão reaberta continua aqui, com o passo que a reabre.
 

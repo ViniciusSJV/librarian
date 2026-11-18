@@ -1,6 +1,6 @@
 # Piloto 1b — Relatório final
 
-> Passo 1.3 do roadmap, 18/11/2026. Resume os relatórios [01](01-g3.md), [02](02-fechamento-g3-e-diagnostico.md), [03](03-inventario-e-auditoria.md) e [04](04-q6.md); os detalhes e os números de cada parte estão neles. Ids com prefixo, como no [ESTADO-ATUAL.md](../../../ESTADO-ATUAL.md#convenção-de-ids).
+> Passo 1.3 do roadmap, 18/11/2026. Resume os relatórios [01](01-g3.md), [02](02-fechamento-g3-e-diagnostico.md), [03](03-inventario-e-auditoria.md) e [04](04-q6.md); os detalhes e os números de cada parte estão neles. Ids com prefixo, como em [docs/IDS.md](../../IDS.md).
 
 ## Objetivo
 
@@ -24,7 +24,7 @@ Corrigir as limitações comprovadas do [Piloto 1](../PILOTO-1-HEALTHCHECKS.md) 
 - **Suíte:** 456 aprovados, 0 falhas, 2 ignorados (antes da correção do G3: 452 aprovados e 4 falhas, as dos testes novos). Os 5 testes do G3 passam (antes, 1 de 5); os 5 do P1, também.
 - **Parte B:** Python não liga variável a tipo em nenhum nível com homônimo. Rust grava `receiver_type`, mas só o inventário o usa; "o que chama?" não.
 - **Parte C:** no Healthchecks, 4 dos 8 links únicos da amostra estão errados, e 197 dos 442 links únicos de método vão para função solta. No ray tracer, nenhum erro (2 corretos, 2 ambíguos, 6 sem candidato).
-- **Parte E:** dos 26 fatos, 15 não dependem do grafo, 6 dependem de link correto, 2 de link ambíguo (F6, F7) e 3 de link errado (F1, F14, F17). Os 26 estão corretos como afirmação sobre o código.
+- **Parte E:** dos 26 fatos, 15 não dependem do grafo, 6 dependem de link correto, 2 de link ambíguo (F6, F7) e 3 de link errado (F1, F14, F17). Pela leitura do agente, sem revisão humana, os 26 estão corretos como afirmação sobre o código.
 - **Q6** (avaliada pelo usuário em 18/11):
   - Entrega: sim. 13 fatos chegaram ao modelo, com +3,9% de tokens (11.667 → 12.119) e +3,4% de pacote (46.220 → 47.777 B).
   - Reutilização: não. F20, F22 e F26 foram entregues e repetidos; só a repetição do F6 sumiu.
