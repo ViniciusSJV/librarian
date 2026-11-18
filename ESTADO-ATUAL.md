@@ -4,10 +4,10 @@
 
 ## Onde estamos
 
-- **Fase 1 — Piloto 1b**, passo **1.2 (consolidação documental)**, em validação pelo usuário.
-- **Próximo passo: 1.3**, relatório final do 1b. Depois, a Fase 2, começando pelo passo 2.0. Cada passo depende de autorização.
-- **Feito no 1b:** P1 (`987d7a8`), G3 (`aae51d7`), Partes A–E do diagnóstico e a Q6 (run `20261118-205150`, avaliada em 18/11). Relatórios em [docs/reports/piloto-1b/](docs/reports/piloto-1b/).
-- **Git:** `main`. Três commits sem push sobre `origin/main` (`0398829`, `987d7a8`, `aae51d7`), mais os desta consolidação quando forem aprovados.
+- **Fase 1 — Piloto 1b: concluída em 18/11/2026.** Relatório final: [docs/reports/piloto-1b/00-resumo.md](docs/reports/piloto-1b/00-resumo.md).
+- **Próximo passo: 2.0**, tornar a amostra da Parte C e os scripts da auditoria (Parte E) executáveis a partir do repositório, sem caminhos do scratchpad. É o portão da Fase 2. Cada passo depende de autorização.
+- **Feito no 1b:** P1 (`987d7a8`), G3 (`aae51d7`), Partes A–E do diagnóstico, a Q6 (run `20261118-205150`, avaliada em 18/11), a consolidação documental (`a8e4074`) e o relatório final. Relatórios em [docs/reports/piloto-1b/](docs/reports/piloto-1b/) (`0c4bcab`).
+- **Git:** `main`. Commits sem push sobre `origin/main`: `0398829`, `987d7a8`, `aae51d7`, `0c4bcab`, `a8e4074`, mais o do passo 1.3 quando for aprovado.
 - **Suíte:** `cargo test --workspace --locked`: 456 aprovados, 0 falhas, 2 ignorados (18/11, com P1 e G3).
 - **Roadmap:** [PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#roadmap). Nenhum agente nem orquestrador existe.
 
@@ -47,7 +47,7 @@ Muitos ids se repetem com sentidos diferentes nos documentos antigos. Daqui em d
 | PLANO-H | [docs/historico/PLANO-ate-18-11.md](docs/historico/PLANO-ate-18-11.md), mesmas linhas do plano em `aae51d7` |
 | CTX | [CONTEXTO-CONTINUIDADE.md](CONTEXTO-CONTINUIDADE.md), diário datado |
 | PIL | [docs/reports/PILOTO-1-HEALTHCHECKS.md](docs/reports/PILOTO-1-HEALTHCHECKS.md) |
-| 1B-01 a 1B-04 | os relatórios em [docs/reports/piloto-1b/](docs/reports/piloto-1b/) |
+| 1B-00 a 1B-04 | os relatórios em [docs/reports/piloto-1b/](docs/reports/piloto-1b/) |
 | ARQ, ESP, EST | [arquitetura](docs/ARQUITETURA-EVIDENCIAS-MULTIAGENTE.md), [especificação](docs/ESPECIFICACAO-FUNCIONAL-STUDIO.md) e [estado](docs/ESTADO-IMPLEMENTACAO-STUDIO.md) do frontend |
 
 | Prefixo | Família | Onde nasceu | Não confundir com |
@@ -81,10 +81,8 @@ Muitos ids se repetem com sentidos diferentes nos documentos antigos. Daqui em d
 
 ## Pendências abertas por fase
 
-**Fase 1**
-- 1.2: validação desta consolidação e os dois commits.
-- 1.3: relatório final do 1b.
-- Conferir o CI do commit de 18/11 (CTX:883) e, depois do push, o dos commits do 1b.
+**Fase 1** (concluída)
+- Push dos commits do 1b, quando o usuário pedir; depois, conferir o CI deles e o do commit de 18/11 (CTX:883).
 
 **Fase 2**
 - 2.0 é o portão: a amostra da Parte C e os scripts da Parte E ainda usam caminhos do scratchpad ([dados/amostra/](docs/reports/piloto-1b/dados/amostra/), [dados/acervo/](docs/reports/piloto-1b/dados/acervo/)).
@@ -108,6 +106,6 @@ Muitos ids se repetem com sentidos diferentes nos documentos antigos. Daqui em d
 ## Links
 
 - [PLANO](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md): roadmap · [DECISOES](DECISOES.md) · [CTX](CONTEXTO-CONTINUIDADE.md): diário, última seção 21 · [Histórico](docs/historico/README.md)
-- Piloto 1: [PIL](docs/reports/PILOTO-1-HEALTHCHECKS.md) · Piloto 1b: [01 G3](docs/reports/piloto-1b/01-g3.md), [02 Partes A–C](docs/reports/piloto-1b/02-fechamento-g3-e-diagnostico.md), [03 inventário e Parte E](docs/reports/piloto-1b/03-inventario-e-auditoria.md), [04 Q6](docs/reports/piloto-1b/04-q6.md)
+- Piloto 1: [PIL](docs/reports/PILOTO-1-HEALTHCHECKS.md) · Piloto 1b: [00 resumo](docs/reports/piloto-1b/00-resumo.md), [01 G3](docs/reports/piloto-1b/01-g3.md), [02 Partes A–C](docs/reports/piloto-1b/02-fechamento-g3-e-diagnostico.md), [03 inventário e Parte E](docs/reports/piloto-1b/03-inventario-e-auditoria.md), [04 Q6](docs/reports/piloto-1b/04-q6.md)
 - Direção: [ARQ](docs/ARQUITETURA-EVIDENCIAS-MULTIAGENTE.md) · Frontend: [ESP](docs/ESPECIFICACAO-FUNCIONAL-STUDIO.md), [EST](docs/ESTADO-IMPLEMENTACAO-STUDIO.md) · Manual: [STUDIO.md](STUDIO.md)
 - Componentes: [Ingest](crates/librarian-ingest/README.md) · [Evidence Builder](crates/librarian-evidence/README.md) · [LLM Engine](crates/librarian-llm-engine/CLAIMS.md) · [Graph Engine](crates/librarian-graph-engine/WORKFLOW-V0.1.md)
