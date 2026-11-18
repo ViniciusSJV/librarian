@@ -1276,6 +1276,8 @@ A vista **Pacote** (antes, a "Revisão" e a seção "Pacote de evidências e con
   foi outro modelo. O `strict_text` não vê uma
   paráfrase sem número de linha nem crase, e não confere se há uma só afirmação por
   claim.
+- **Fatos de funções Python decoradas não são recuperados** (P1 do [Piloto Python 1](docs/reports/PILOTO-1-HEALTHCHECKS.md)). A pergunta com fatos, o passo de cadeia e a sugestão de envelope procuram o fato pelo início do trecho, que inclui os decoradores. O fato guarda a linha do `def`. A correção é a Fase 1 do plano.
+- Em `/api/calls`, uma chamada com mais homônimos que o teto do grafo some da resposta sem aviso (G3 do piloto). Ausência ali não prova ausência de relação.
 - A linha da declaração de um símbolo ainda é achada no texto, não pelo parser. Linhas
   de atributo, comentário e decorator são puladas; um nome repetido numa linha de código
   antes da declaração (raro) ainda seria tomado por ela.

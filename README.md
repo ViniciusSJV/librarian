@@ -168,6 +168,8 @@ Librarian did not always win. On 2026-11-01, before the current selection rules,
 
 Role-based selection also [did not get more changes approved](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evidence-builder--escolher-as-fontes-pelo-que-explicam-04112026) than the hand-picked envelope, in any case. What it brought was automatic selection, a smaller query and a record of what was left out. These are few projects, and the same envelope has varied between 4/6 and 8/8 approvals: read these numbers as observations, not guarantees.
 
+In Python, [Pilot 1 (Healthchecks)](docs/reports/PILOTO-1-HEALTHCHECKS.md) ingested 657 files with no diagnostics and rebuilt four workflows of a Django application with local Qwen3-Coder. Of the 65 items the model proposed, 26 became facts after semantic review by the agent that ran the pilot. That review was not a human approval. The pilot also found real limitations in relations and reuse, recorded in the report.
+
 ## Known limitations
 
 - **Passing the check does not mean correct.** The check says the answer points to real lines in the requested format. A paraphrase with no line number or quoted excerpt gets past it, and meaning stays with the person.
@@ -193,9 +195,13 @@ A Rust workspace with no database. Extraction uses `syn` (Rust) and `rustpython-
 | [`crates/librarian-graph-engine`](crates/librarian-graph-engine/WORKFLOW-V0.1.md), `crates/librarian-core` | Dossiers, checks and the prepared query, used by `prepare`, and their contracts |
 | [`modelfiles`](modelfiles/README.md) | `<task>-<model>` Modelfiles, editable in the Studio |
 
+## Direction
+
+Librarian is evolving into an **evidence infrastructure** for many consumers: agents, orchestrators and applications in any language. It receives requests, builds and checks traceable packages, and keeps facts and their origins. **It does not choose agents, orchestrate them, plan the consumer's investigation, or turn hypotheses into facts.** The Studio stays as the consumer that shows workflows. The direction and phases are in [Architecture for many consumers](docs/ARQUITETURA-EVIDENCIAS-MULTIAGENTE.md) (Portuguese); none of it is implemented yet.
+
 ## Documentation
 
-The project's internal documentation is in Portuguese: [Studio](STUDIO.md) · [Workflow](WORKFLOW.md) · [Testing](TESTME.md) · [Plan and measurements](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md) · [History](HISTORICO.md)
+The project's internal documentation is in Portuguese: [Studio](STUDIO.md) · [Workflow](WORKFLOW.md) · [Testing](TESTME.md) · [Plan and measurements](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md) · [Python pilot 1](docs/reports/PILOTO-1-HEALTHCHECKS.md) · [Architecture for many consumers](docs/ARQUITETURA-EVIDENCIAS-MULTIAGENTE.md) · [History](HISTORICO.md)
 
 ## License
 

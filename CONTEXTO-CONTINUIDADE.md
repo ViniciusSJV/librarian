@@ -1,5 +1,7 @@
 # Contexto de continuidade do Librarian
 
+**Atualização de 18/11/2026, depois da publicação de `d949f91`: o Piloto Python 1 (Healthchecks) foi executado sem mudar código, e a direção para uma infraestrutura de evidências com vários consumidores foi registrada ([seção 19](#19-piloto-python-1-e-direção-multiagente-18112026): comece por ela).** A próxima prioridade é o Piloto 1b, ainda não iniciado.
+
 **Atualização de 18/11/2026: a consolidação (E1 a E5, simplificação do Studio e proteção da escada) foi publicada sobre `27f7bdd` ([seção 18](#18-consolidação-evidence-builder-independente-simplificação-e-proteção-da-escada-17112026-e-18112026): comece por ela).** As seções 1 a 17 descrevem estados anteriores; onde divergem, vale a 18. Em especial, o Evidence Builder agora é um crate (`librarian-evidence`), e a tabela da seção 2 está desatualizada nesse ponto.
 
 **Atualização de 11/11/2026: a Etapa 4 (Evidence Builder) está em andamento e não está encerrada, com todo o trabalho sem commit sobre `60d4d50` ([seção 17](#17-etapa-4-evidence-builder-07112026-a-11112026): comece por ela).** O texto abaixo, até a seção 16, descreve o estado de 06/11/2026.
@@ -893,3 +895,39 @@ Nenhuma bateria foi dada como aprovada por remoção: os testes de rodada não f
 
 - `.studio/` deste repositório só tem `projects/renderer-9b78f3a9` com a run `20261118-020654`. As raízes de 04/11 e `.studio/arquivo-copias` citadas nas seções anteriores **não estão mais nesta máquina**.
 - Cópias de segurança feitas antes de cada mudança: `scratchpad\backup-e1e5` (sessão `a7716d82`, 17/11) e `scratchpad\backup-inicio-18-11` (sessão `02fdc43f`, 18/11: patch da árvore, patch do índice, os não rastreados e as fontes do Studio).
+
+## 19. Piloto Python 1 e direção multiagente (18/11/2026)
+
+**Estado [confirmado em 18/11]:** o piloto rodou sobre `d949f91`, e o código dos crates não mudou. O resultado e a direção foram registrados só em documentos.
+
+### Onde ler
+
+- **Resultado completo do piloto:** [docs/reports/PILOTO-1-HEALTHCHECKS.md](docs/reports/PILOTO-1-HEALTHCHECKS.md). Traz os números, os quatro workflows com a evidência de cada elo, as 14 perguntas, o acervo, a reutilização e as limitações G1 a G8, P1 a P4 e as do Ingest, da verificação e do LLM.
+- **Direção arquitetural:** [docs/ARQUITETURA-EVIDENCIAS-MULTIAGENTE.md](docs/ARQUITETURA-EVIDENCIAS-MULTIAGENTE.md). Traz os papéis, os pacotes pela necessidade do consumidor, o ciclo de complementação, o contrato público, os orquestradores externos, os extratores, o papel do Studio, a rastreabilidade e os 14 princípios.
+- **Roadmap das fases 1 a 8 e Piloto 1b com critérios de aceite:** [plano, última seção](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#piloto-python-1-e-direção-multiagente-18112026).
+
+### O essencial [confirmado]
+
+- **Healthchecks** em `6c05a7adf266efb70f9517727bef9ea8b2bbf52f`, clone em `Projetos/pilotos/healthchecks`, sem alterações. No `.studio` local, projeto `healthchecks-25597e41`, run `20261118-061046`, turns 01 a 14 e acervo F1 a F26. Esses dados não estão no Git.
+- **Números:**
+  - ingestão: 657 arquivos, 4.718 símbolos, 61.506 nós, 116.928 arestas, nenhum diagnóstico;
+  - envios: 14 perguntas e 16 envios ao Qwen3-Coder local (2 falharam pela queda do `llama-server`);
+  - contexto: cerca de 318 KB e 83 mil tokens de prompt;
+  - itens: 65 candidatos, 44 aprovados mecanicamente, 26 promovidos e 18 rejeitados;
+  - reutilização: 8 de 12 fatos recuperados;
+  - conferências: H1 a H3 em todos os pacotes, H4 não exercitado.
+- **Os 26 fatos foram revisados pelo agente, não aprovados pelo usuário.** O contrato grava "revisão humana"; cada nota declara isso.
+- **P1, bug reproduzido:** `target_of` (`store.rs`) usa `chunk.start_line`, que em Python inclui os decoradores. Por isso fatos de funções decoradas não voltam nem com `with_facts` nem na sugestão de envelope.
+- **G3:** `/api/calls` omite sem avisar as chamadas acima do teto de homônimos.
+- **Ligação pelo banco:** `Check.ping` → `Flip(processed=None)` → `process_one_flip` não é uma chamada. Foi reconstruída lendo o código.
+
+### Como retomar
+
+1. **Fase 1, Piloto 1b**, só com autorização:
+   - corrigir P1, com teste de regressão Python e verificação separada do Rust;
+   - mostrar as omissões de G3;
+   - gerar uma nova edition e repetir Q6;
+   - comparar o resultado.
+2. **G1 fica para a Fase 2**, depois de medir o impacto no corpus Rust.
+3. **A autoria dos fatos e a promoção por item são da Fase 3.** Não mudar o formato dos fatos sem especificação.
+4. **Não adicionar framework de agentes aos crates centrais.** Não implementar a interface pública nem o extrator Java antes das fases deles.

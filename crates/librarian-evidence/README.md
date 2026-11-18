@@ -122,6 +122,12 @@ cinco lacunas, todas registradas aqui e não resolvidas nesta extração:
 
 Os formatos 1 e 2 continuam sendo lidos e refeitos como foram gravados.
 
+A lacuna 3 ("o pacote não sabe quem pediu") é o ponto de partida do contrato de pedido de
+evidências (Evidence Request, Fase 4) e da separação entre autoria, revisão e aprovação dos fatos
+(Fase 3). As duas fases estão no [plano](../../PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#piloto-python-1-e-direção-multiagente-18112026)
+e na [arquitetura para vários consumidores](../../docs/ARQUITETURA-EVIDENCIAS-MULTIAGENTE.md).
+Nada disso está implementado.
+
 ## O que fica com quem consome (no Studio, hoje)
 
 - **Ler e gravar arquivos:** `.studio/`, gravação imutável, `question.json`, `evidence.json`,

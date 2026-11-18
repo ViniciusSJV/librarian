@@ -4,6 +4,8 @@ Data: 27/09/2026.
 
 **Status: ETAPA 1 concluída. Plano validado pelo usuário em 19/10/2026; somente a ETAPA 2 (2A regressão v1 e 2B abstração do extractor Rust) está autorizada. As etapas seguintes dependem de nova validação.**
 
+**Atualização de 18/11/2026:** o Piloto Python 1 (Healthchecks) foi executado, e a direção para uma infraestrutura de evidências com vários consumidores foi registrada. A próxima prioridade é o **Piloto 1b**, e o roadmap das fases 1 a 8 está na última seção: [Piloto Python 1 e direção multiagente](#piloto-python-1-e-direção-multiagente-18112026).
+
 Este documento preserva a análise da arquitetura atual e o plano incremental para extração multilinguagem e evolução do Graph Visualizer. O código existente é a referência do diagnóstico; as propostas abaixo ainda não representam capacidades implementadas.
 
 ## Princípios preservados
@@ -2152,4 +2154,149 @@ do clique na escada). `tela-estado.js`, parte A: 46 de 46.
   Pacote.
 - **Unificar as traduções do `verificavel` em inglês.**
 - **Recriar as baterias antigas**, com uma raiz nova gravada e descrita.
-- O projeto piloto Python não foi iniciado.
+- O projeto piloto Python não foi iniciado nesse fechamento. Foi executado em seguida, em 18/11 (seção abaixo).
+
+## Piloto Python 1 e direção multiagente (18/11/2026)
+
+**Situação:** documental. O piloto rodou sobre `d949f91` sem mudar código. Esta seção registra o resultado, a direção e a sequência de fases. **Nenhuma fase abaixo está iniciada; cada uma depende de autorização.**
+
+### Resultado do piloto
+
+Relatório completo: [docs/reports/PILOTO-1-HEALTHCHECKS.md](docs/reports/PILOTO-1-HEALTHCHECKS.md).
+
+**Condições:**
+
+- Healthchecks fixado em `6c05a7adf266efb70f9517727bef9ea8b2bbf52f` e Librarian em `d949f91`. Nenhum dos dois foi alterado.
+- Só os mecanismos existentes do Studio, sem implementação específica para o projeto.
+- Só o Qwen3-Coder local.
+- Testes do Healthchecks lidos, não executados.
+
+**Números:**
+
+- **Ingestão:** 657 arquivos Python, 4.718 símbolos, 61.506 nós, 116.928 arestas e nenhum diagnóstico.
+- **Envios:** 14 perguntas e 16 envios. Dois envios falharam pela queda do `llama-server` ao recarregar o modelo.
+- **Contexto:** cerca de 318 KB de queries e 83 mil tokens de prompt.
+- **Conferências:** H1 a H3 em todos os pacotes; o H4 não foi exercitado.
+- **Itens:** 65 candidatos, 44 com citações aprovadas mecanicamente, 26 fatos promovidos e 18 rejeitados na revisão semântica.
+- **Reutilização:** 8 de 12 fatos aplicáveis recuperados.
+
+**Os 26 fatos foram revisados pelo agente que conduziu o piloto, não aprovados pelo usuário**, embora o contrato grave "revisão humana" (ver Fase 3).
+
+Foram reconstruídos quatro workflows: cadastro de Check, recebimento de Ping, detecção de atraso pelo `sendalerts` e processamento de Flip com notificação. Os quatro foram até a fronteira das classes de transporte, que não foi aprofundada. A ligação `Check.ping` → `Flip(processed=None)` → `process_one_flip` é **mediada pelo banco**. Ela foi reconstruída lendo o código: o grafo não a declara, e nenhum teste de ponta a ponta a confirma.
+
+**Limitações, por componente** (detalhe e exemplos no relatório):
+
+- **Graph Engine:**
+  - G1, resolução falsa (`unique` por nome);
+  - G2, ORM e framework;
+  - G3, omissões silenciosas em `/api/calls`;
+  - G4, referências em rotas;
+  - G5, funções passadas como valor;
+  - G6, despacho dinâmico;
+  - G7, homônimo que inclui o próprio chamador;
+  - G8, testes HTTP sem ligação com as views.
+- **Ingest:** imports não são relações; dependências externas não são inventariadas; `is_test` não marca classes; templates e estáticos ficaram fora do fluxo testado.
+- **Evidências e fatos:**
+  - P1, recuperação de fatos em funções decoradas (bug reproduzido);
+  - P2, a sugestão de envelope herda G1;
+  - P3, custo fixo de cerca de 10 KB por pacote;
+  - P4, a instrução ao modelo diz "aprovados por uma pessoa".
+- **Verificação e LLM:**
+  - nenhuma lacuna real declarada, e uma LACUNA falsa;
+  - perguntas estreitas funcionam melhor;
+  - o portão vale para a resposta inteira;
+  - conferir citações não garante o sentido;
+  - a confirmação por teste só fica na nota.
+
+O resultado do Qwen não mostra que o modelo conduz sozinho uma investigação. A revisão semântica continua necessária.
+
+### Direção: infraestrutura de evidências para vários consumidores
+
+Documento: [docs/ARQUITETURA-EVIDENCIAS-MULTIAGENTE.md](docs/ARQUITETURA-EVIDENCIAS-MULTIAGENTE.md). Ele cobre:
+
+- a separação de papéis: orchestrator externo, agentes, Librarian, ferramentas, validador independente e humano;
+- pacotes pela necessidade declarada do consumidor;
+- o ciclo de complementação;
+- o contrato público HTTP/JSON independente de linguagem;
+- orquestradores externos, sem framework de agentes nos crates centrais;
+- a representação intermediária comum dos extratores;
+- o papel do Studio;
+- a rastreabilidade da investigação com vários agentes;
+- os 14 princípios permanentes.
+
+Síntese: **o Librarian não é um agente nem um orquestrador; é uma infraestrutura independente que permite a qualquer agente ou aplicação solicitar, receber e reutilizar evidências rastreáveis.**
+
+### Roadmap
+
+| Fase | Conteúdo | Situação |
+|---|---|---|
+| **1. Piloto Python 1b** | Corrigir P1; mostrar as omissões de G3; repetir Q6; medir | **Próxima prioridade**; não iniciada |
+| **2. Precisão das relações** | Estudar e corrigir G1 (método × função livre); medir o impacto em Python e Rust; melhorar relações indiretas e funções passadas como valor (G5); não priorizar suporte específico a framework sem necessidade demonstrada | Depois da 1 |
+| **3. Contrato de fatos e proveniência** | Separar autoria, revisão e aprovação; distinguir conferência mecânica, revisão por agente e aprovação humana; avaliar promoção por item; registrar de forma estruturada a confirmação por teste; projetar a compatibilidade (formato 3) | Precisa de especificação |
+| **4. Evidence Request** | Contrato genérico de pedido de evidências: objetivo, escopo e requisitos declarados pelo consumidor; justificativas de seleção; lacunas e evidências indisponíveis; complementação progressiva; Evidence Builder independente | — |
+| **5. Generalização dos extratores** | Representação intermediária comum; validar Python e Rust; documentar o que é específico de cada linguagem; preparar a arquitetura para Java | — |
+| **6. Interface pública** | Contratos HTTP/JSON versionados; consumo por linguagens diferentes; adaptadores externos; nenhum framework de agentes imposto | — |
+| **7. Primeiro fluxo multiagente** | Um investigador, um proponente, um validador independente, um orquestrador externo; evidências pedidas conforme a necessidade; decisão humana | — |
+| **8. Especialização e escala** | Agentes de DDD, performance, segurança e qualidade; extrator Java; mais projetos e consumidores | — |
+
+### Fase 1: Piloto 1b
+
+**Objetivo:** corrigir limitações comprovadas, sem funcionalidade nova e sem mudar a arquitetura além do necessário.
+
+**P1. Recuperar fatos de funções decoradas.**
+
+- Investigar `target_of` (`crates/librarian-studio/src/store.rs`) e usar a linha real de declaração do símbolo, não o início do trecho que inclui os decoradores.
+- Criar um teste de regressão para uma função Python decorada.
+- Verificar separadamente se atributos Rust (`#[...]`) têm o mesmo problema, sem supor que o comportamento é igual.
+
+Aceite:
+
+- fatos de funções Python decoradas são recuperados;
+- a sugestão de envelope encontra esses fatos;
+- o comportamento atual para Rust continua o mesmo.
+
+**G3. Mostrar as omissões de chamadas.**
+
+- `/api/calls` passa a informar as ocorrências ambíguas que deixou de fora. O grafo já guarda `ambiguous_candidates`.
+- Elas aparecem como lacunas ou como resultados não resolvidos, e nenhum candidato é escolhido arbitrariamente. O objetivo é que um agente não leia ausência de resultado como ausência de relação.
+
+Aceite:
+
+- chamadas acima do teto de homônimos não somem sem aviso;
+- o consumidor consegue ver o motivo de não haver resolução;
+- os testes existentes continuam válidos.
+
+**Repetir Q6.** Depois das correções:
+
+- gerar uma nova edition e repetir a pergunta de reutilização, comparando com o resultado de 18/11;
+- verificar se F2, F4, F5 e F6 voltam e se o F6 deixa de ser repetido quando já está no pacote;
+- medir o tamanho do pacote e os tokens, e registrar falhas novas.
+
+Um teste unitário que passa não basta para dar a correção por suficiente.
+
+**G1 fica para a Fase 2.** Antes de mudar a regra de resolução:
+
+- avaliar o impacto no ray tracer em Rust;
+- criar casos de regressão em Python e em Rust;
+- distinguir chamadas de método de chamadas a funções livres;
+- manter as ambiguidades quando não houver resolução segura.
+
+Uma correção que melhora o Python e piora o Rust sem aviso não é aceitável.
+
+### Autoria e proveniência (para a Fase 3)
+
+A evolução precisa separar:
+
+- o agente que identificou o candidato;
+- o agente que elaborou a afirmação;
+- o agente ou processo da revisão semântica;
+- a verificação mecânica;
+- a confirmação por teste;
+- a pessoa que aprovou, quando houver;
+- quem revogou.
+
+**Revisão por agente não é aprovação humana.** Os fatos do piloto precisam ser descritos pelo que de fato aconteceu: as notas deles já dizem quem revisou.
+
+Fica registrada a decisão futura sobre **promoção por item**: um item correto não deve ser perdido só porque outro item da mesma resposta foi reprovado, desde que passe pelos próprios critérios.
+
+O formato atual dos fatos **não muda nesta iniciativa**. O formato 3 precisa de especificação, compatibilidade e testes.

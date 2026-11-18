@@ -168,6 +168,8 @@ O Librarian não ganhou sempre. Em 01/11/2026, antes das regras de seleção atu
 
 A seleção por papéis também [não aprovou mais mudanças](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#evidence-builder--escolher-as-fontes-pelo-que-explicam-04112026) que o envelope escolhido à mão, em nenhum caso. O que ela trouxe foi a seleção automática, uma query menor e o registro do que ficou de fora. São poucos projetos, e o mesmo envelope já variou entre 4/6 e 8/8 aprovações: leia esses números como observações, não como garantia.
 
+Em Python, o [Piloto 1 (Healthchecks)](docs/reports/PILOTO-1-HEALTHCHECKS.md) ingeriu 657 arquivos sem diagnóstico e reconstruiu quatro workflows de uma aplicação Django com o Qwen3-Coder local. Dos 65 itens que o modelo propôs, 26 viraram fatos depois da revisão semântica do agente que conduziu o piloto. Essa revisão não foi uma aprovação humana. O piloto também encontrou limitações reais de relação e de reutilização, registradas no relatório.
+
 ## Limitações conhecidas
 
 - **Aprovada na mecânica não quer dizer correta.** A conferência diz que a resposta aponta para linhas reais no formato pedido. Uma paráfrase sem número de linha nem trecho citado não é vista por ela, e o sentido fica com a pessoa.
@@ -193,9 +195,13 @@ Workspace em Rust, sem banco de dados. Extração com `syn` (Rust) e `rustpython
 | [`crates/librarian-graph-engine`](crates/librarian-graph-engine/WORKFLOW-V0.1.md), `crates/librarian-core` | Dossiês, conferência e query preparada, usados pelo `prepare`, e seus contratos |
 | [`modelfiles`](modelfiles/README.md) | Modelfiles `<tarefa>-<modelo>`, editáveis no Studio |
 
+## Direção
+
+O Librarian evolui para uma **infraestrutura de evidências** usada por vários consumidores: agentes, orquestradores e aplicações em qualquer linguagem. Ele recebe pedidos, monta e confere pacotes rastreáveis e preserva fatos e suas origens. **Não escolhe agentes, não orquestra, não planeja a investigação do consumidor e não transforma hipóteses em fatos.** O Studio continua como o consumidor que mostra os workflows. A direção e as fases estão em [Arquitetura para vários consumidores](docs/ARQUITETURA-EVIDENCIAS-MULTIAGENTE.md); nada disso está implementado ainda.
+
 ## Documentação
 
-[Studio](STUDIO.md) · [Workflow](WORKFLOW.md) · [Como testar](TESTME.md) · [Plano e medições](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md) · [Histórico](HISTORICO.md)
+[Studio](STUDIO.md) · [Workflow](WORKFLOW.md) · [Como testar](TESTME.md) · [Plano e medições](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md) · [Piloto Python 1](docs/reports/PILOTO-1-HEALTHCHECKS.md) · [Arquitetura para vários consumidores](docs/ARQUITETURA-EVIDENCIAS-MULTIAGENTE.md) · [Histórico](HISTORICO.md)
 
 ## Licença
 
