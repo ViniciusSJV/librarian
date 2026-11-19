@@ -1,0 +1,1361 @@
+{
+ "projeto": "healthchecks-25597e41",
+ "fonte": "Projetos/pilotos/healthchecks @ 6c05a7a",
+ "selecao": "tools/precisao/amostra.js sobre a linha de base de 18/11/2026 (binário de aae51d7)",
+ "chamadas": [
+  {
+   "id": "HC-01",
+   "parte_c": true,
+   "estrato": "no_candidate_in_project",
+   "ocorrencia": "hc/front/views.py@20773-20793",
+   "local": "hc/front/views.py:623",
+   "texto": "cron_form.is_valid()",
+   "dono": "update_timeout",
+   "linha_de_base": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": []
+   },
+   "verdade": {
+    "externo": "Django: Form.is_valid"
+   },
+   "certeza": "alta",
+   "justificativa": "cron_form = forms.CronForm(request.POST) (views.py:622); CronForm herda de forms.Form e não define is_valid.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-02",
+   "parte_c": true,
+   "estrato": "unique->outro",
+   "ocorrencia": "hc/api/management/commands/sendreports.py@1848-1881",
+   "local": "hc/api/management/commands/sendreports.py:57",
+   "texto": "profile.choose_next_report_date()",
+   "dono": "Command.handle_one_report",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Profile.choose_next_report_date (hc/accounts/models.py:365)"
+    ]
+   },
+   "verdade": {
+    "alvo": "Profile.choose_next_report_date (hc/accounts/models.py:365)"
+   },
+   "certeza": "alta",
+   "justificativa": "profile vem de Profile.objects e choose_next_report_date é método de Profile.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-03",
+   "parte_c": true,
+   "estrato": "unique->function",
+   "ocorrencia": "hc/api/views.py@19885-19950",
+   "local": "hc/api/views.py:579",
+   "texto": "check.save(update_fields=(\"status\", \"last_start\", \"alert_after\"))",
+   "dono": "pause",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "save (hc/integrations/github/views.py:92)"
+    ]
+   },
+   "verdade": {
+    "externo": "Django: Model.save"
+   },
+   "certeza": "alta",
+   "justificativa": "check (Check) é instância de um model do Django e nenhum model do projeto sobrescreve save; o único save do projeto é a view do GitHub.",
+   "verdade_validada_por": "usuário (revisada, 18/11)"
+  },
+  {
+   "id": "HC-04",
+   "parte_c": true,
+   "estrato": "no_candidate_in_project",
+   "ocorrencia": "hc/accounts/views.py@27849-27927",
+   "local": "hc/accounts/views.py:779",
+   "texto": "totp.provisioning_uri(name=request.user.email, issuer_name=settings.SITE_NAME)",
+   "dono": "add_totp",
+   "linha_de_base": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": []
+   },
+   "verdade": {
+    "externo": "pyotp: TOTP.provisioning_uri"
+   },
+   "certeza": "alta",
+   "justificativa": "totp é um pyotp.TOTP criado na própria view.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-05",
+   "parte_c": true,
+   "estrato": "no_candidate_in_project",
+   "ocorrencia": "hc/integrations/slack/views.py@3320-3453",
+   "local": "hc/integrations/slack/views.py:107",
+   "texto": "messages.warning(",
+   "dono": "add_complete",
+   "linha_de_base": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": []
+   },
+   "verdade": {
+    "externo": "Django: django.contrib.messages.warning"
+   },
+   "certeza": "alta",
+   "justificativa": "messages é o módulo django.contrib.messages; warning é função dele.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-06",
+   "parte_c": true,
+   "estrato": "no_candidate_in_project",
+   "ocorrencia": "hc/integrations/pd/views.py@1571-1586",
+   "local": "hc/integrations/pd/views.py:46",
+   "texto": "form.is_valid()",
+   "dono": "add",
+   "linha_de_base": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": []
+   },
+   "verdade": {
+    "externo": "Django: Form.is_valid"
+   },
+   "certeza": "alta",
+   "justificativa": "form = forms.AddPdForm(request.POST) (pd/views.py:45); o form não define is_valid.",
+   "verdade_validada_por": "usuário (revisada, 18/11)"
+  },
+  {
+   "id": "HC-07",
+   "parte_c": true,
+   "estrato": "no_candidate_in_project",
+   "ocorrencia": "hc/api/management/commands/sendalerts.py@3406-3435",
+   "local": "hc/api/management/commands/sendalerts.py:102",
+   "texto": "self.seats.acquire(timeout=1)",
+   "dono": "Command.process_one_flip",
+   "linha_de_base": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": []
+   },
+   "verdade": {
+    "externo": "stdlib: threading.BoundedSemaphore.acquire"
+   },
+   "certeza": "alta",
+   "justificativa": "self.seats = BoundedSemaphore(10) (sendalerts.py:64).",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-08",
+   "parte_c": true,
+   "estrato": "no_candidate_in_project",
+   "ocorrencia": "hc/api/migrations/0048_auto_20190102_0737.py@285-315",
+   "local": "hc/api/migrations/0048_auto_20190102_0737.py:12",
+   "texto": "apps.get_model(\"api\", \"Check\")",
+   "dono": "remove_anon_checks",
+   "linha_de_base": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": []
+   },
+   "verdade": {
+    "externo": "Django: Apps.get_model"
+   },
+   "certeza": "alta",
+   "justificativa": "apps é o StateApps que o Django passa à migração.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-09",
+   "parte_c": true,
+   "estrato": "no_candidate_in_project",
+   "ocorrencia": "hc/accounts/migrations/0036_fill_profile_reports.py@330-397",
+   "local": "hc/accounts/migrations/0036_fill_profile_reports.py:13",
+   "texto": "Profile.objects.filter(reports_allowed=False).update(reports=\"off\")",
+   "dono": "fill_reports_field",
+   "linha_de_base": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": []
+   },
+   "verdade": {
+    "externo": "Django: QuerySet.update"
+   },
+   "certeza": "alta",
+   "justificativa": "Profile vem de apps.get_model; filter().update() é ORM do Django.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-10",
+   "parte_c": true,
+   "estrato": "unique->function",
+   "ocorrencia": "hc/integrations/signal/transport.py@3198-3227",
+   "local": "hc/integrations/signal/transport.py:101",
+   "texto": "logger.error(msg_with_extras)",
+   "dono": "Signal.send",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "error (hc/api/decorators.py:21)"
+    ]
+   },
+   "verdade": {
+    "externo": "stdlib: logging.Logger.error"
+   },
+   "certeza": "alta",
+   "justificativa": "logger = logging.getLogger(...); o error de decorators.py:21 é uma função que monta resposta HTTP.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-11",
+   "parte_c": true,
+   "estrato": "no_candidate_in_project",
+   "ocorrencia": "hc/api/models.py@56799-56839",
+   "local": "hc/api/models.py:1541",
+   "texto": "hashlib.sha1(salted_encoded).hexdigest()",
+   "dono": "TokenBucket.authorize_ntfy",
+   "linha_de_base": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": []
+   },
+   "verdade": {
+    "externo": "stdlib: hashlib (hash.hexdigest)"
+   },
+   "certeza": "alta",
+   "justificativa": "hashlib.sha1(...).hexdigest() é da biblioteca padrão.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-12",
+   "parte_c": true,
+   "estrato": "no_candidate_in_project",
+   "ocorrencia": "hc/accounts/migrations/0020_auto_20190112_1950.py@266-303",
+   "local": "hc/accounts/migrations/0020_auto_20190112_1950.py:12",
+   "texto": "apps.get_model(\"accounts\", \"Project\")",
+   "dono": "set_badge_key",
+   "linha_de_base": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": []
+   },
+   "verdade": {
+    "externo": "Django: Apps.get_model"
+   },
+   "certeza": "alta",
+   "justificativa": "apps é o registro de apps da migração.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-13",
+   "parte_c": true,
+   "estrato": "no_candidate_in_project",
+   "ocorrencia": "hc/accounts/management/commands/sendinactivitynotices.py@739-795",
+   "local": "hc/accounts/management/commands/sendinactivitynotices.py:24",
+   "texto": "q.filter(recent_signup | recent_login | recent_activity)",
+   "dono": "has_projects_with_active_members",
+   "linha_de_base": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": []
+   },
+   "verdade": {
+    "externo": "Django: QuerySet.filter"
+   },
+   "certeza": "alta",
+   "justificativa": "q é um QuerySet de Profile; o projeto não declara filter.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-14",
+   "parte_c": true,
+   "estrato": "unique->function",
+   "ocorrencia": "hc/api/migrations/0067_last_error_values.py@630-639",
+   "local": "hc/api/migrations/0067_last_error_values.py:23",
+   "texto": "ch.save()",
+   "dono": "fill_last_errors",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "save (hc/integrations/github/views.py:92)"
+    ]
+   },
+   "verdade": {
+    "externo": "Django: Model.save"
+   },
+   "certeza": "alta",
+   "justificativa": "ch (Channel histórico da migração) é instância de um model do Django e nenhum model do projeto sobrescreve save; o único save do projeto é a view do GitHub.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-15",
+   "parte_c": true,
+   "estrato": "unique->outro",
+   "ocorrencia": "hc/integrations/slack/transport.py@2031-2050",
+   "local": "hc/integrations/slack/transport.py:52",
+   "texto": "check.cloaked_url()",
+   "dono": "Slackalike.payload",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Check.cloaked_url (hc/api/models.py:275)"
+    ]
+   },
+   "verdade": {
+    "alvo": "Check.cloaked_url (hc/api/models.py:275)"
+   },
+   "certeza": "alta",
+   "justificativa": "check = flip.owner, um Check; cloaked_url é método de Check.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-16",
+   "parte_c": true,
+   "estrato": "no_candidate_in_project",
+   "ocorrencia": "hc/accounts/migrations/0018_auto_20190112_1426.py@874-895",
+   "local": "hc/accounts/migrations/0018_auto_20190112_1426.py:28",
+   "texto": "Profile.objects.all()",
+   "dono": "create_projects",
+   "linha_de_base": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": []
+   },
+   "verdade": {
+    "externo": "Django: Manager.all"
+   },
+   "certeza": "alta",
+   "justificativa": "Profile vem de apps.get_model na migração.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-17",
+   "parte_c": true,
+   "estrato": "unique->outro",
+   "ocorrencia": "hc/integrations/email/transport.py@3171-3223",
+   "local": "hc/integrations/email/transport.py:84",
+   "texto": "Profile.objects.for_user(self.channel.project.owner)",
+   "dono": "Email.notify",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "ProfileManager.for_user (hc/accounts/models.py:62)"
+    ]
+   },
+   "verdade": {
+    "alvo": "ProfileManager.for_user (hc/accounts/models.py:62)"
+   },
+   "certeza": "alta",
+   "justificativa": "Profile.objects = ProfileManager() (models.py:115).",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-18",
+   "parte_c": true,
+   "estrato": "unique->function",
+   "ocorrencia": "hc/integrations/webhook/transport.py@2037-2081",
+   "local": "hc/integrations/webhook/transport.py:59",
+   "texto": "result.replace(\"\\r\", \" \").replace(\"\\n\", \" \")",
+   "dono": "Webhook.prepare",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "replace (hc/lib/string.py:10)"
+    ]
+   },
+   "verdade": {
+    "externo": "stdlib: str.replace"
+   },
+   "certeza": "alta",
+   "justificativa": "result é str (decode na linha 57); o replace de lib/string.py é uma função de template.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-19",
+   "parte_c": true,
+   "estrato": "no_candidate_in_project",
+   "ocorrencia": "hc/front/templatetags/asciitable.py@2731-2776",
+   "local": "hc/front/templatetags/asciitable.py:90",
+   "texto": "register.simple_block_tag(takes_context=True)",
+   "dono": "row",
+   "linha_de_base": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": []
+   },
+   "verdade": {
+    "externo": "Django: template.Library.simple_block_tag"
+   },
+   "certeza": "baixa",
+   "justificativa": "register = template.Library(); o alvo é Library.simple_block_tag, externo.",
+   "verdade_validada_por": "usuário (revisada, 18/11)",
+   "observacao": "A chamada do decorador roda na carga do módulo, não quando row roda; atribuí-la a row é a mesma questão de dono do Repo() preso ao campo (N4). Fica para o passo 2.3."
+  },
+  {
+   "id": "HC-20",
+   "parte_c": true,
+   "estrato": "unique->outro",
+   "ocorrencia": "hc/integrations/po/transport.py@2063-2103",
+   "local": "hc/integrations/po/transport.py:62",
+   "texto": "TokenBucket.authorize_pushover(user_key)",
+   "dono": "Pushover.notify",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "TokenBucket.authorize_pushover (hc/api/models.py:1530)"
+    ]
+   },
+   "verdade": {
+    "alvo": "TokenBucket.authorize_pushover (hc/api/models.py:1530)"
+   },
+   "certeza": "alta",
+   "justificativa": "Chamada pela classe importada na linha 60; método estático de TokenBucket.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-21",
+   "parte_c": false,
+   "estrato": "no_candidate_in_project",
+   "ocorrencia": "hc/front/templatetags/hc_extras.py@7958-7971",
+   "local": "hc/front/templatetags/hc_extras.py:321",
+   "texto": "q.urlencode()",
+   "dono": "sort_url",
+   "linha_de_base": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": []
+   },
+   "verdade": {
+    "externo": "Django: QueryDict.urlencode"
+   },
+   "certeza": "alta",
+   "justificativa": "q = request.GET.copy(), um QueryDict.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-22",
+   "parte_c": false,
+   "estrato": "no_candidate_in_project",
+   "ocorrencia": "hc/accounts/admin.py@4639-4691",
+   "local": "hc/accounts/admin.py:167",
+   "texto": "qs.annotate(plan=F(\"user__subscription__plan_name\"))",
+   "dono": "ProfileAdmin.get_queryset",
+   "linha_de_base": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": []
+   },
+   "verdade": {
+    "externo": "Django: QuerySet.annotate"
+   },
+   "certeza": "alta",
+   "justificativa": "qs é o QuerySet do admin.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-23",
+   "parte_c": false,
+   "estrato": "unique->outro",
+   "ocorrencia": "hc/api/decorators.py@1807-1876",
+   "local": "hc/api/decorators.py:59",
+   "texto": "Project.objects.for_api_key(api_key, accept_rw=True, accept_ro=False)",
+   "dono": "authorize.wrapper",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "ProjectManager.for_api_key (hc/accounts/models.py:404)"
+    ]
+   },
+   "verdade": {
+    "alvo": "ProjectManager.for_api_key (hc/accounts/models.py:404)"
+   },
+   "certeza": "alta",
+   "justificativa": "Project.objects = ProjectManager() (models.py:459).",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-24",
+   "parte_c": false,
+   "estrato": "unique->outro",
+   "ocorrencia": "hc/accounts/forms.py@2815-2851",
+   "local": "hc/accounts/forms.py:79",
+   "texto": "TokenBucket.authorize_login_email(v)",
+   "dono": "EmailLoginForm.clean_identity",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "TokenBucket.authorize_login_email (hc/api/models.py:1481)"
+    ]
+   },
+   "verdade": {
+    "alvo": "TokenBucket.authorize_login_email (hc/api/models.py:1481)"
+   },
+   "certeza": "alta",
+   "justificativa": "Chamada pela classe TokenBucket; método estático.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-25",
+   "parte_c": false,
+   "estrato": "unique->outro",
+   "ocorrencia": "hc/integrations/sms/transport.py@2169-2194",
+   "local": "hc/integrations/sms/transport.py:65",
+   "texto": "notification.status_url()",
+   "dono": "Sms.notify",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Notification.status_url (hc/api/models.py:1352)"
+    ]
+   },
+   "verdade": {
+    "alvo": "Notification.status_url (hc/api/models.py:1352)"
+   },
+   "certeza": "alta",
+   "justificativa": "notification: Notification na assinatura de Sms.notify.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-26",
+   "parte_c": false,
+   "estrato": "unique->outro",
+   "ocorrencia": "hc/integrations/pagertree/transport.py@1094-1116",
+   "local": "hc/integrations/pagertree/transport.py:29",
+   "texto": "flip.owner.tags_list()",
+   "dono": "PagerTree.notify",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Check.tags_list (hc/api/models.py:413)"
+    ]
+   },
+   "verdade": {
+    "alvo": "Check.tags_list (hc/api/models.py:413)"
+   },
+   "certeza": "alta",
+   "justificativa": "Flip.owner = ForeignKey(Check) (models.py:1362); tags_list é método de Check.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-27",
+   "parte_c": false,
+   "estrato": "unique->outro",
+   "ocorrencia": "hc/lib/curl.py@6664-6695",
+   "local": "hc/lib/curl.py:203",
+   "texto": "c.getinfo(pycurl.RESPONSE_CODE)",
+   "dono": "request",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "FakeCurl.getinfo (hc/lib/tests/test_curl.py:39)"
+    ]
+   },
+   "verdade": {
+    "externo": "pycurl: Curl.getinfo"
+   },
+   "certeza": "baixa",
+   "justificativa": "c = pycurl.Curl() (curl.py:138). O link vai para FakeCurl.getinfo, dublê que só os testes injetam por @patch. Dublê de teste não conta como alvo de código de produção (DEC-33): a chamada fica errada.",
+   "verdade_validada_por": "usuário (revisada, 18/11)"
+  },
+  {
+   "id": "HC-28",
+   "parte_c": false,
+   "estrato": "unique->outro",
+   "ocorrencia": "hc/integrations/github/views.py@4276-4293",
+   "local": "hc/integrations/github/views.py:124",
+   "texto": "form.get_labels()",
+   "dono": "save",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "AddGitHubForm.get_labels (hc/integrations/github/forms.py:10)"
+    ]
+   },
+   "verdade": {
+    "alvo": "AddGitHubForm.get_labels (hc/integrations/github/forms.py:10)"
+   },
+   "certeza": "alta",
+   "justificativa": "form = forms.AddGitHubForm(request.POST) na mesma view.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-29",
+   "parte_c": false,
+   "estrato": "unique->function",
+   "ocorrencia": "hc/integrations/signal/views.py@1105-1119",
+   "local": "hc/integrations/signal/views.py:30",
+   "texto": "channel.save()",
+   "dono": "signal_form",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "save (hc/integrations/github/views.py:92)"
+    ]
+   },
+   "verdade": {
+    "externo": "Django: Model.save"
+   },
+   "certeza": "alta",
+   "justificativa": "channel (Channel) é instância de um model do Django e nenhum model do projeto sobrescreve save; o único save do projeto é a view do GitHub.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-30",
+   "parte_c": false,
+   "estrato": "unique->function",
+   "ocorrencia": "hc/integrations/matrix/views.py@1172-1186",
+   "local": "hc/integrations/matrix/views.py:33",
+   "texto": "channel.save()",
+   "dono": "add",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "save (hc/integrations/github/views.py:92)"
+    ]
+   },
+   "verdade": {
+    "externo": "Django: Model.save"
+   },
+   "certeza": "alta",
+   "justificativa": "channel (Channel) é instância de um model do Django e nenhum model do projeto sobrescreve save; o único save do projeto é a view do GitHub.",
+   "verdade_validada_por": "usuário (revisada, 18/11)"
+  },
+  {
+   "id": "HC-31",
+   "parte_c": false,
+   "estrato": "unique->function",
+   "ocorrencia": "hc/integrations/spike/views.py@861-875",
+   "local": "hc/integrations/spike/views.py:26",
+   "texto": "channel.save()",
+   "dono": "add_spike",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "save (hc/integrations/github/views.py:92)"
+    ]
+   },
+   "verdade": {
+    "externo": "Django: Model.save"
+   },
+   "certeza": "alta",
+   "justificativa": "channel (Channel) é instância de um model do Django e nenhum model do projeto sobrescreve save; o único save do projeto é a view do GitHub.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-32",
+   "parte_c": false,
+   "estrato": "unique->function",
+   "ocorrencia": "hc/api/transports.py@1470-1505",
+   "local": "hc/api/transports.py:49",
+   "texto": "body_bytes.decode(errors=\"replace\")",
+   "dono": "get_ping_body",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "decode (hc/front/templatetags/hc_extras.py:330)"
+    ]
+   },
+   "verdade": {
+    "externo": "stdlib: bytes.decode"
+   },
+   "certeza": "alta",
+   "justificativa": "get_ping_body_bytes retorna bytes | None; o decode de hc_extras é um filtro de template.",
+   "verdade_validada_por": "usuário (revisada, 18/11)"
+  },
+  {
+   "id": "HC-33",
+   "parte_c": false,
+   "estrato": "unique->function",
+   "ocorrencia": "hc/integrations/msteamsw/transport.py@568-593",
+   "local": "hc/integrations/msteamsw/transport.py:16",
+   "texto": "s.replace(\"*\", \"\\u034f*\")",
+   "dono": "MsTeamsWorkflow.fix_asterisks",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "replace (hc/lib/string.py:10)"
+    ]
+   },
+   "verdade": {
+    "externo": "stdlib: str.replace"
+   },
+   "certeza": "alta",
+   "justificativa": "s: str na assinatura de fix_asterisks.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-34",
+   "parte_c": false,
+   "estrato": "unique->function",
+   "ocorrencia": "hc/api/migrations/0117_fill_badge_key.py@384-419",
+   "local": "hc/api/migrations/0117_fill_badge_key.py:14",
+   "texto": "c.save(update_fields=[\"badge_key\"])",
+   "dono": "fill_badge_key",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "save (hc/integrations/github/views.py:92)"
+    ]
+   },
+   "verdade": {
+    "externo": "Django: Model.save"
+   },
+   "certeza": "alta",
+   "justificativa": "c (Check histórico da migração) é instância de um model do Django e nenhum model do projeto sobrescreve save; o único save do projeto é a view do GitHub.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-35",
+   "parte_c": false,
+   "estrato": "unique->function",
+   "ocorrencia": "hc/lib/string.py@1287-1322",
+   "local": "hc/lib/string.py:43",
+   "texto": "part.replace(placeholder, value, 1)",
+   "dono": "replace",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "replace (hc/lib/string.py:10)"
+    ]
+   },
+   "verdade": {
+    "externo": "stdlib: str.replace"
+   },
+   "certeza": "alta",
+   "justificativa": "part é str; o link aponta para a própria função replace que contém a chamada.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-36",
+   "parte_c": false,
+   "estrato": "unique->function",
+   "ocorrencia": "hc/integrations/mattermost/views.py@1033-1047",
+   "local": "hc/integrations/mattermost/views.py:31",
+   "texto": "channel.save()",
+   "dono": "add",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "save (hc/integrations/github/views.py:92)"
+    ]
+   },
+   "verdade": {
+    "externo": "Django: Model.save"
+   },
+   "certeza": "alta",
+   "justificativa": "channel (Channel) é instância de um model do Django e nenhum model do projeto sobrescreve save; o único save do projeto é a view do GitHub.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-37",
+   "parte_c": false,
+   "estrato": "homonym",
+   "ocorrencia": "hc/front/management/commands/pygmentize.py@1010-1074",
+   "local": "hc/front/management/commands/pygmentize.py:33",
+   "texto": "self.stdout.write(\"This command requires the Pygments package.\")",
+   "dono": "Command.handle",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "LogSink.write (hc/api/management/commands/smtpd.py:29)",
+     "NullSink.write (hc/api/tests/test_smtpd.py:43)"
+    ]
+   },
+   "verdade": {
+    "externo": "Django: OutputWrapper.write"
+   },
+   "certeza": "alta",
+   "justificativa": "self.stdout de um BaseCommand é OutputWrapper; LogSink e NullSink são outras classes.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-38",
+   "parte_c": false,
+   "estrato": "homonym",
+   "ocorrencia": "hc/api/management/commands/smtpd.py@4815-4861",
+   "local": "hc/api/management/commands/smtpd.py:144",
+   "texto": "self.stdout.write(f\"smtpd was sent {desc}!\\n\")",
+   "dono": "Command.handle.on_signal",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "LogSink.write (hc/api/management/commands/smtpd.py:29)",
+     "NullSink.write (hc/api/tests/test_smtpd.py:43)"
+    ]
+   },
+   "verdade": {
+    "externo": "Django: OutputWrapper.write"
+   },
+   "certeza": "alta",
+   "justificativa": "self é o Command (closure dentro de handle); stdout é OutputWrapper.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-39",
+   "parte_c": false,
+   "estrato": "homonym",
+   "ocorrencia": "hc/integrations/matrix/client.py@1074-1114",
+   "local": "hc/integrations/matrix/client.py:33",
+   "texto": "curl.post(url, headers=headers, json={})",
+   "dono": "join",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 6,
+    "alvos": [
+     "HttpTransport.post (hc/api/transports.py:199)",
+     "post (hc/lib/curl.py:224)",
+     "CreateCheckTestCase.post (hc/api/tests/test_create_check.py:15)",
+     "AuthTestCase.post (hc/api/tests/test_auth.py:12)",
+     "BounceTestCase.post (hc/api/tests/test_bounces.py:32)",
+     "UpdateCheckTestCase.post (hc/api/tests/test_update_check.py:20)"
+    ]
+   },
+   "verdade": {
+    "alvo": "post (hc/lib/curl.py:224)"
+   },
+   "certeza": "alta",
+   "justificativa": "from hc.lib import curl (matrix/client.py:8): curl.post é a função do módulo.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-40",
+   "parte_c": false,
+   "estrato": "homonym",
+   "ocorrencia": "hc/integrations/prometheus/views.py@1306-1346",
+   "local": "hc/integrations/prometheus/views.py:41",
+   "texto": "request.headers.get(\"Authorization\", \"\")",
+   "dono": "metrics",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 8,
+    "alvos": [
+     "get (hc/lib/curl.py:210)",
+     "ListChannelsTestCase.get (hc/api/tests/test_list_channels.py:18)",
+     "GetBadgesTestCase.get (hc/api/tests/test_get_badges.py:23)",
+     "ListChecksTestCase.get (hc/api/tests/test_list_checks.py:39)",
+     "AuthTestCase.get (hc/api/tests/test_auth.py:9)",
+     "GetCheckTestCase.get (hc/api/tests/test_get_check.py:37)",
+     "GetFlipsTestCase.get (hc/api/tests/test_get_flips.py:32)",
+     "GetPingsTestCase.get (hc/api/tests/test_get_pings.py:38)"
+    ]
+   },
+   "verdade": {
+    "externo": "Django: HttpHeaders.get"
+   },
+   "certeza": "alta",
+   "justificativa": "request.headers é HttpHeaders (mapeamento do Django).",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-41",
+   "parte_c": false,
+   "estrato": "homonym",
+   "ocorrencia": "hc/api/management/commands/smtpd.py@2162-2190",
+   "local": "hc/api/management/commands/smtpd.py:70",
+   "texto": "Check.objects.get(code=code)",
+   "dono": "_process_message",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 8,
+    "alvos": [
+     "get (hc/lib/curl.py:210)",
+     "ListChannelsTestCase.get (hc/api/tests/test_list_channels.py:18)",
+     "GetBadgesTestCase.get (hc/api/tests/test_get_badges.py:23)",
+     "ListChecksTestCase.get (hc/api/tests/test_list_checks.py:39)",
+     "AuthTestCase.get (hc/api/tests/test_auth.py:9)",
+     "GetCheckTestCase.get (hc/api/tests/test_get_check.py:37)",
+     "GetFlipsTestCase.get (hc/api/tests/test_get_flips.py:32)",
+     "GetPingsTestCase.get (hc/api/tests/test_get_pings.py:38)"
+    ]
+   },
+   "verdade": {
+    "externo": "Django: QuerySet.get"
+   },
+   "certeza": "alta",
+   "justificativa": "Check.objects é o Manager padrão do Django; o projeto não define get nele.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-42",
+   "parte_c": false,
+   "estrato": "homonym",
+   "ocorrencia": "hc/integrations/github/client.py@1624-1654",
+   "local": "hc/integrations/github/client.py:57",
+   "texto": "curl.get(url, headers=headers)",
+   "dono": "get_installation_ids",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 8,
+    "alvos": [
+     "get (hc/lib/curl.py:210)",
+     "ListChannelsTestCase.get (hc/api/tests/test_list_channels.py:18)",
+     "GetBadgesTestCase.get (hc/api/tests/test_get_badges.py:23)",
+     "ListChecksTestCase.get (hc/api/tests/test_list_checks.py:39)",
+     "AuthTestCase.get (hc/api/tests/test_auth.py:9)",
+     "GetCheckTestCase.get (hc/api/tests/test_get_check.py:37)",
+     "GetFlipsTestCase.get (hc/api/tests/test_get_flips.py:32)",
+     "GetPingsTestCase.get (hc/api/tests/test_get_pings.py:38)"
+    ]
+   },
+   "verdade": {
+    "alvo": "get (hc/lib/curl.py:210)"
+   },
+   "certeza": "alta",
+   "justificativa": "from hc.lib import curl (github/client.py:8): curl.get é a função do módulo.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-43",
+   "parte_c": false,
+   "estrato": "homonym",
+   "ocorrencia": "hc/front/management/commands/populate_searchdb.py@389-437",
+   "local": "hc/front/management/commands/populate_searchdb.py:17",
+   "texto": "sqlite3.connect(settings.BASE_DIR / \"search.db\")",
+   "dono": "Command.handle",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "MockSocket.connect (hc/integrations/signal/tests/test_signal_captcha.py:24)",
+     "MockSocket.connect (hc/integrations/signal/tests/test_notify.py:36)"
+    ]
+   },
+   "verdade": {
+    "externo": "stdlib: sqlite3.connect"
+   },
+   "certeza": "alta",
+   "justificativa": "sqlite3 é o módulo da biblioteca padrão; MockSocket.connect é de teste.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-44",
+   "parte_c": false,
+   "estrato": "homonym",
+   "ocorrencia": "hc/integrations/email/forms.py@388-417",
+   "local": "hc/integrations/email/forms.py:17",
+   "texto": "self.cleaned_data.get(\"down\")",
+   "dono": "EmailForm.clean",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 8,
+    "alvos": [
+     "get (hc/lib/curl.py:210)",
+     "ListChannelsTestCase.get (hc/api/tests/test_list_channels.py:18)",
+     "GetBadgesTestCase.get (hc/api/tests/test_get_badges.py:23)",
+     "ListChecksTestCase.get (hc/api/tests/test_list_checks.py:39)",
+     "AuthTestCase.get (hc/api/tests/test_auth.py:9)",
+     "GetCheckTestCase.get (hc/api/tests/test_get_check.py:37)",
+     "GetFlipsTestCase.get (hc/api/tests/test_get_flips.py:32)",
+     "GetPingsTestCase.get (hc/api/tests/test_get_pings.py:38)"
+    ]
+   },
+   "verdade": {
+    "externo": "stdlib: dict.get"
+   },
+   "certeza": "alta",
+   "justificativa": "self.cleaned_data é o dict do Form do Django.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-45",
+   "parte_c": false,
+   "estrato": "homonym",
+   "ocorrencia": "hc/integrations/email/forms.py@432-459",
+   "local": "hc/integrations/email/forms.py:18",
+   "texto": "self.cleaned_data.get(\"up\")",
+   "dono": "EmailForm.clean",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 8,
+    "alvos": [
+     "get (hc/lib/curl.py:210)",
+     "ListChannelsTestCase.get (hc/api/tests/test_list_channels.py:18)",
+     "GetBadgesTestCase.get (hc/api/tests/test_get_badges.py:23)",
+     "ListChecksTestCase.get (hc/api/tests/test_list_checks.py:39)",
+     "AuthTestCase.get (hc/api/tests/test_auth.py:9)",
+     "GetCheckTestCase.get (hc/api/tests/test_get_check.py:37)",
+     "GetFlipsTestCase.get (hc/api/tests/test_get_flips.py:32)",
+     "GetPingsTestCase.get (hc/api/tests/test_get_pings.py:38)"
+    ]
+   },
+   "verdade": {
+    "externo": "stdlib: dict.get"
+   },
+   "certeza": "alta",
+   "justificativa": "self.cleaned_data é o dict do Form do Django.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-46",
+   "parte_c": false,
+   "estrato": "homonym",
+   "ocorrencia": "hc/api/migrations/0044_auto_20181120_2004.py@492-512",
+   "local": "hc/api/migrations/0044_auto_20181120_2004.py:17",
+   "texto": "doc.get(\"label\", \"\")",
+   "dono": "combine_channel_names",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 8,
+    "alvos": [
+     "get (hc/lib/curl.py:210)",
+     "ListChannelsTestCase.get (hc/api/tests/test_list_channels.py:18)",
+     "GetBadgesTestCase.get (hc/api/tests/test_get_badges.py:23)",
+     "ListChecksTestCase.get (hc/api/tests/test_list_checks.py:39)",
+     "AuthTestCase.get (hc/api/tests/test_auth.py:9)",
+     "GetCheckTestCase.get (hc/api/tests/test_get_check.py:37)",
+     "GetFlipsTestCase.get (hc/api/tests/test_get_flips.py:32)",
+     "GetPingsTestCase.get (hc/api/tests/test_get_pings.py:38)"
+    ]
+   },
+   "verdade": {
+    "externo": "stdlib: dict.get"
+   },
+   "certeza": "alta",
+   "justificativa": "doc = json.loads(...) de um valor que começa com \"{\": dict.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-47",
+   "parte_c": false,
+   "estrato": "homonym",
+   "ocorrencia": "hc/integrations/trello/views.py@2297-2326",
+   "local": "hc/integrations/trello/views.py:80",
+   "texto": "request.POST.get(\"token\", \"\")",
+   "dono": "trello_settings",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 8,
+    "alvos": [
+     "get (hc/lib/curl.py:210)",
+     "ListChannelsTestCase.get (hc/api/tests/test_list_channels.py:18)",
+     "GetBadgesTestCase.get (hc/api/tests/test_get_badges.py:23)",
+     "ListChecksTestCase.get (hc/api/tests/test_list_checks.py:39)",
+     "AuthTestCase.get (hc/api/tests/test_auth.py:9)",
+     "GetCheckTestCase.get (hc/api/tests/test_get_check.py:37)",
+     "GetFlipsTestCase.get (hc/api/tests/test_get_flips.py:32)",
+     "GetPingsTestCase.get (hc/api/tests/test_get_pings.py:38)"
+    ]
+   },
+   "verdade": {
+    "externo": "Django: QueryDict.get"
+   },
+   "certeza": "alta",
+   "justificativa": "request.POST é QueryDict.",
+   "verdade_validada_por": "usuário (revisada, 18/11)"
+  },
+  {
+   "id": "HC-48",
+   "parte_c": false,
+   "estrato": "homonym",
+   "ocorrencia": "hc/integrations/trello/views.py@2644-2665",
+   "local": "hc/integrations/trello/views.py:93",
+   "texto": "curl.get(url, params)",
+   "dono": "trello_settings",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 8,
+    "alvos": [
+     "get (hc/lib/curl.py:210)",
+     "ListChannelsTestCase.get (hc/api/tests/test_list_channels.py:18)",
+     "GetBadgesTestCase.get (hc/api/tests/test_get_badges.py:23)",
+     "ListChecksTestCase.get (hc/api/tests/test_list_checks.py:39)",
+     "AuthTestCase.get (hc/api/tests/test_auth.py:9)",
+     "GetCheckTestCase.get (hc/api/tests/test_get_check.py:37)",
+     "GetFlipsTestCase.get (hc/api/tests/test_get_flips.py:32)",
+     "GetPingsTestCase.get (hc/api/tests/test_get_pings.py:38)"
+    ]
+   },
+   "verdade": {
+    "alvo": "get (hc/lib/curl.py:210)"
+   },
+   "certeza": "alta",
+   "justificativa": "from hc.lib import curl (trello/views.py:19): curl.get é a função do módulo.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-49",
+   "parte_c": false,
+   "estrato": "homonym",
+   "ocorrencia": "hc/accounts/models.py@6561-6589",
+   "local": "hc/accounts/models.py:173",
+   "texto": "emails.login(new_email, ctx)",
+   "dono": "Profile.send_change_email_link",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 3,
+    "alvos": [
+     "login (hc/lib/emails.py:88)",
+     "login (hc/accounts/views.py:161)",
+     "ProfileAdmin.login (hc/accounts/admin.py:210)"
+    ]
+   },
+   "verdade": {
+    "alvo": "login (hc/lib/emails.py:88)"
+   },
+   "certeza": "alta",
+   "justificativa": "from hc.lib import emails (accounts/models.py:24): emails.login é a função do módulo.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-50",
+   "parte_c": false,
+   "estrato": "homonym",
+   "ocorrencia": "hc/integrations/discord/views.py@1979-2003",
+   "local": "hc/integrations/discord/views.py:59",
+   "texto": "request.GET.get(\"state\")",
+   "dono": "add_complete",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 8,
+    "alvos": [
+     "get (hc/lib/curl.py:210)",
+     "ListChannelsTestCase.get (hc/api/tests/test_list_channels.py:18)",
+     "GetBadgesTestCase.get (hc/api/tests/test_get_badges.py:23)",
+     "ListChecksTestCase.get (hc/api/tests/test_list_checks.py:39)",
+     "AuthTestCase.get (hc/api/tests/test_auth.py:9)",
+     "GetCheckTestCase.get (hc/api/tests/test_get_check.py:37)",
+     "GetFlipsTestCase.get (hc/api/tests/test_get_flips.py:32)",
+     "GetPingsTestCase.get (hc/api/tests/test_get_pings.py:38)"
+    ]
+   },
+   "verdade": {
+    "externo": "Django: QueryDict.get"
+   },
+   "certeza": "alta",
+   "justificativa": "request.GET é QueryDict.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-51",
+   "parte_c": false,
+   "estrato": "above_candidate_limit",
+   "ocorrencia": "hc/integrations/rocketchat/transport.py@1319-1375",
+   "local": "hc/integrations/rocketchat/transport.py:37",
+   "texto": "fields.add(\"Tags\", \" \".join(f\"`{tag}`\" for tag in tags))",
+   "dono": "RocketChat.payload",
+   "linha_de_base": {
+    "resolution": "above_candidate_limit",
+    "candidates": 29,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "SlackFields.add (hc/integrations/slack/transport.py:21)"
+   },
+   "certeza": "alta",
+   "justificativa": "fields = SlackFields() (rocketchat/transport.py:22).",
+   "verdade_validada_por": "usuário (revisada, 18/11)"
+  },
+  {
+   "id": "HC-52",
+   "parte_c": false,
+   "estrato": "above_candidate_limit",
+   "ocorrencia": "hc/integrations/googlechat/transport.py@1457-1511",
+   "local": "hc/integrations/googlechat/transport.py:44",
+   "texto": "fields.add(\"Last Ping\", ping.formatted_kind_created())",
+   "dono": "GoogleChat.notify",
+   "linha_de_base": {
+    "resolution": "above_candidate_limit",
+    "candidates": 29,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "GoogleChatFields.add (hc/integrations/googlechat/transport.py:14)"
+   },
+   "certeza": "alta",
+   "justificativa": "fields = GoogleChatFields() (googlechat/transport.py:23).",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-53",
+   "parte_c": false,
+   "estrato": "above_candidate_limit",
+   "ocorrencia": "hc/integrations/googlechat/transport.py@1262-1300",
+   "local": "hc/integrations/googlechat/transport.py:39",
+   "texto": "fields.add(\"Schedule\", check.schedule)",
+   "dono": "GoogleChat.notify",
+   "linha_de_base": {
+    "resolution": "above_candidate_limit",
+    "candidates": 29,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "GoogleChatFields.add (hc/integrations/googlechat/transport.py:14)"
+   },
+   "certeza": "alta",
+   "justificativa": "fields = GoogleChatFields() (googlechat/transport.py:23).",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-54",
+   "parte_c": false,
+   "estrato": "above_candidate_limit",
+   "ocorrencia": "hc/integrations/webhook/views.py@816-832",
+   "local": "hc/integrations/webhook/views.py:24",
+   "texto": "form.get_value()",
+   "dono": "webhook_form",
+   "linha_de_base": {
+    "resolution": "above_candidate_limit",
+    "candidates": 9,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "WebhookForm.get_value (hc/integrations/webhook/forms.py:79)"
+   },
+   "certeza": "alta",
+   "justificativa": "form = forms.WebhookForm(request.POST) (webhook/views.py:21).",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-55",
+   "parte_c": false,
+   "estrato": "above_candidate_limit",
+   "ocorrencia": "hc/integrations/googlechat/transport.py@1057-1092",
+   "local": "hc/integrations/googlechat/transport.py:33",
+   "texto": "fields.add(\"Tags\", \", \".join(tags))",
+   "dono": "GoogleChat.notify",
+   "linha_de_base": {
+    "resolution": "above_candidate_limit",
+    "candidates": 29,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "GoogleChatFields.add (hc/integrations/googlechat/transport.py:14)"
+   },
+   "certeza": "alta",
+   "justificativa": "fields = GoogleChatFields() (googlechat/transport.py:23).",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-56",
+   "parte_c": false,
+   "estrato": "above_candidate_limit",
+   "ocorrencia": "hc/integrations/rocketchat/transport.py@1223-1264",
+   "local": "hc/integrations/rocketchat/transport.py:34",
+   "texto": "fields.add(\"Project\", check.project.name)",
+   "dono": "RocketChat.payload",
+   "linha_de_base": {
+    "resolution": "above_candidate_limit",
+    "candidates": 29,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "SlackFields.add (hc/integrations/slack/transport.py:21)"
+   },
+   "certeza": "alta",
+   "justificativa": "fields = SlackFields() (rocketchat/transport.py:22).",
+   "verdade_validada_por": "usuário (revisada, 18/11)"
+  },
+  {
+   "id": "HC-57",
+   "parte_c": false,
+   "estrato": "receiver",
+   "ocorrencia": "hc/front/templatetags/linemode.py@433-462",
+   "local": "hc/front/templatetags/linemode.py:16",
+   "texto": "self.nodelist.render(context)",
+   "dono": "LineModeNode.render",
+   "linha_de_base": {
+    "resolution": "receiver",
+    "candidates": 3,
+    "alvos": [
+     "LineModeNode.render (hc/front/templatetags/linemode.py:14)"
+    ]
+   },
+   "verdade": {
+    "externo": "Django: NodeList.render"
+   },
+   "certeza": "alta",
+   "justificativa": "self.nodelist: NodeList (linemode.py:11). O link vai para o próprio LineModeNode.render, que contém a chamada.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-58",
+   "parte_c": false,
+   "estrato": "receiver",
+   "ocorrencia": "hc/accounts/models.py@18219-18260",
+   "local": "hc/accounts/models.py:472",
+   "texto": "self.owner_profile.num_checks_available()",
+   "dono": "Project.num_checks_available",
+   "linha_de_base": {
+    "resolution": "receiver",
+    "candidates": 2,
+    "alvos": [
+     "Project.num_checks_available (hc/accounts/models.py:471)"
+    ]
+   },
+   "verdade": {
+    "alvo": "Profile.num_checks_available (hc/accounts/models.py:350)"
+   },
+   "certeza": "alta",
+   "justificativa": "owner_profile é @property que retorna Profile (models.py:467). O link vai para o próprio Project.num_checks_available.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-59",
+   "parte_c": false,
+   "estrato": "receiver",
+   "ocorrencia": "hc/accounts/models.py@24063-24105",
+   "local": "hc/accounts/models.py:626",
+   "texto": "self.user.profile.can_accept(self.project)",
+   "dono": "Member.can_accept",
+   "linha_de_base": {
+    "resolution": "receiver",
+    "candidates": 2,
+    "alvos": [
+     "Member.can_accept (hc/accounts/models.py:625)"
+    ]
+   },
+   "verdade": {
+    "alvo": "Profile.can_accept (hc/accounts/models.py:353)"
+   },
+   "certeza": "alta",
+   "justificativa": "user.profile é a relação reversa de Profile.user = OneToOneField(User) (models.py:84). O link vai para o próprio Member.can_accept.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-60",
+   "parte_c": false,
+   "estrato": "receiver",
+   "ocorrencia": "hc/front/templatetags/asciitable.py@1618-1647",
+   "local": "hc/front/templatetags/asciitable.py:49",
+   "texto": "self.nodelist.render(context)",
+   "dono": "TableNode.render",
+   "linha_de_base": {
+    "resolution": "receiver",
+    "candidates": 3,
+    "alvos": [
+     "TableNode.render (hc/front/templatetags/asciitable.py:47)"
+    ]
+   },
+   "verdade": {
+    "externo": "Django: NodeList.render"
+   },
+   "certeza": "alta",
+   "justificativa": "self.nodelist é NodeList. O link vai para o próprio TableNode.render.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  }
+ ]
+}

@@ -1,0 +1,687 @@
+{
+ "projeto": "renderer-9b78f3a9",
+ "fonte": "Projetos/renderer @ e38254b",
+ "selecao": "tools/precisao/amostra.js sobre a linha de base de 18/11/2026 (binário de aae51d7)",
+ "chamadas": [
+  {
+   "id": "RT-01",
+   "parte_c": true,
+   "estrato": "unique->outro",
+   "ocorrencia": "src/triangle.rs@2011-2039",
+   "local": "src/triangle.rs:63",
+   "texto": "self.e2.dot(origin_cross_e1)",
+   "dono": "impl Intersectable for Triangle::local_intersect",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "impl Tuple::dot (src/tuple.rs:127)"
+    ]
+   },
+   "verdade": {
+    "alvo": "impl Tuple::dot (src/tuple.rs:127)"
+   },
+   "certeza": "alta",
+   "justificativa": "Triangle.e2 é Tuple.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "RT-02",
+   "parte_c": true,
+   "estrato": "homonym",
+   "ocorrencia": "src/patterns.rs@9352-9376",
+   "local": "src/patterns.rs:338",
+   "texto": "checkers.color_at(point)",
+   "dono": "impl Incuse for Patterns::color_at",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 7,
+    "alvos": [
+     "impl Incuse for Stripe::color_at (src/patterns.rs:175)",
+     "impl Incuse for LinearGradient::color_at (src/patterns.rs:202)",
+     "impl Incuse for Ring::color_at (src/patterns.rs:229)",
+     "impl Incuse for Checkers::color_at (src/patterns.rs:255)",
+     "impl Incuse for Patterns::color_at (src/patterns.rs:333)",
+     "Incuse::color_at (src/patterns.rs:19)",
+     "impl World::color_at (src/world.rs:109)"
+    ]
+   },
+   "verdade": {
+    "alvo": "impl Incuse for Checkers::color_at (src/patterns.rs:255)"
+   },
+   "certeza": "alta",
+   "justificativa": "Patterns::Checkers(ref checkers) guarda um Checkers.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "RT-03",
+   "parte_c": true,
+   "estrato": "no_candidate_in_project",
+   "ocorrencia": "src/tuple.rs@2600-2614",
+   "local": "src/tuple.rs:120",
+   "texto": "self.z.powi(2)",
+   "dono": "impl Tuple::length",
+   "linha_de_base": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": []
+   },
+   "verdade": {
+    "externo": "std: f64::powi"
+   },
+   "certeza": "alta",
+   "justificativa": "Tuple.z é f64.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "RT-04",
+   "parte_c": true,
+   "estrato": "no_candidate_in_project",
+   "ocorrencia": "src/obj.rs@5691-5986",
+   "local": "src/obj.rs:141",
+   "texto": "objects.sort_by(|left, right| {",
+   "dono": "build_bvh",
+   "linha_de_base": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": []
+   },
+   "verdade": {
+    "externo": "std: slice::sort_by"
+   },
+   "certeza": "alta",
+   "justificativa": "objects é Vec<Object>; sort_by é do slice.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "RT-05",
+   "parte_c": true,
+   "estrato": "unique->outro",
+   "ocorrencia": "src/ray.rs@275-296",
+   "local": "src/ray.rs:12",
+   "texto": "direction.is_vector()",
+   "dono": "impl Ray::new",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "impl Tuple::is_vector (src/tuple.rs:25)"
+    ]
+   },
+   "verdade": {
+    "alvo": "impl Tuple::is_vector (src/tuple.rs:25)"
+   },
+   "certeza": "alta",
+   "justificativa": "direction: Tuple na assinatura de Ray::new.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "RT-06",
+   "parte_c": true,
+   "estrato": "no_candidate_in_project",
+   "ocorrencia": "src/camera.rs@4262-4309",
+   "local": "src/camera.rs:130",
+   "texto": "ordered.get(median_index).copied().unwrap_or(0)",
+   "dono": "impl Camera::benchmark_render",
+   "linha_de_base": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": []
+   },
+   "verdade": {
+    "externo": "std: slice::get"
+   },
+   "certeza": "alta",
+   "justificativa": "ordered é Vec<u128> (clone de timings).",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "RT-07",
+   "parte_c": true,
+   "estrato": "no_candidate_in_project",
+   "ocorrencia": "src/bounds.rs@833-860",
+   "local": "src/bounds.rs:28",
+   "texto": "self.maximum.y.max(point.y)",
+   "dono": "impl Bounds::add_point",
+   "linha_de_base": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": []
+   },
+   "verdade": {
+    "externo": "std: f64::max"
+   },
+   "certeza": "alta",
+   "justificativa": "Bounds.maximum.y é f64.",
+   "verdade_validada_por": "usuário (revisada, 18/11)"
+  },
+  {
+   "id": "RT-08",
+   "parte_c": true,
+   "estrato": "no_candidate_in_project",
+   "ocorrencia": "src/count.rs@2324-2331",
+   "local": "src/count.rs:63",
+   "texto": "d.get()",
+   "dono": "impl Drop for Guard::drop",
+   "linha_de_base": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": []
+   },
+   "verdade": {
+    "externo": "std: Cell::get"
+   },
+   "certeza": "alta",
+   "justificativa": "d é &Cell<u32> (LocalKey<Cell<u32>>::with, count.rs:43).",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "RT-09",
+   "parte_c": true,
+   "estrato": "no_candidate_in_project",
+   "ocorrencia": "src/bin/librarian_measure_mesh.rs@2883-2915",
+   "local": "src/bin/librarian_measure_mesh.rs:75",
+   "texto": "world.groups.push(mirror_teapot)",
+   "dono": "main",
+   "linha_de_base": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": []
+   },
+   "verdade": {
+    "externo": "std: Vec::push"
+   },
+   "certeza": "alta",
+   "justificativa": "World.groups é Vec.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "RT-10",
+   "parte_c": true,
+   "estrato": "homonym",
+   "ocorrencia": "src/cone.rs@1152-1182",
+   "local": "src/cone.rs:34",
+   "texto": "ray.direction.y.equivalent(0.)",
+   "dono": "impl Cone::intersect_caps",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 8,
+    "alvos": [
+     "impl Equivalence<Color> for Color::equivalent (src/color.rs:34)",
+     "impl Equivalence<Matrix<2>> for Matrix<2>::equivalent (src/matrix.rs:210)",
+     "impl Equivalence<Matrix<3>> for Matrix<3>::equivalent (src/matrix.rs:220)",
+     "impl Equivalence<Matrix<4>> for Matrix<4>::equivalent (src/matrix.rs:236)",
+     "impl Equivalence<f64> for f64::equivalent (src/equivalent.rs:12)",
+     "Equivalence::equivalent (src/equivalent.rs:4)",
+     "impl Equivalence<Tuple> for Tuple::equivalent (src/tuple.rs:42)",
+     "impl Equivalence<Camera> for Camera::equivalent (src/camera.rs:211)"
+    ]
+   },
+   "verdade": {
+    "alvo": "impl Equivalence<f64> for f64::equivalent (src/equivalent.rs:12)"
+   },
+   "certeza": "alta",
+   "justificativa": "ray.direction.y é f64.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "RT-11",
+   "parte_c": false,
+   "estrato": "no_candidate_in_project",
+   "ocorrencia": "src/bin/cena_video.rs@1828-1839",
+   "local": "src/bin/cena_video.rs:50",
+   "texto": "args.get(2)",
+   "dono": "main",
+   "linha_de_base": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": []
+   },
+   "verdade": {
+    "externo": "std: slice::get"
+   },
+   "certeza": "alta",
+   "justificativa": "args: Vec<String>.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "RT-12",
+   "parte_c": false,
+   "estrato": "unique->outro",
+   "ocorrencia": "src/groups.rs@2385-2409",
+   "local": "src/groups.rs:88",
+   "texto": "self.transform.inverse()",
+   "dono": "impl Groups::intersect",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "impl Matrix<4>::inverse (src/matrix.rs:193)"
+    ]
+   },
+   "verdade": {
+    "alvo": "impl Matrix<4>::inverse (src/matrix.rs:193)"
+   },
+   "certeza": "alta",
+   "justificativa": "Groups.transform: Matrix<4> (groups.rs:14).",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "RT-13",
+   "parte_c": false,
+   "estrato": "unique->outro",
+   "ocorrencia": "src/object.rs@5613-5642",
+   "local": "src/object.rs:161",
+   "texto": "bounds.add_point(triangle.p1)",
+   "dono": "impl Intersectable for Object::bounds",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "impl Bounds::add_point (src/bounds.rs:23)"
+    ]
+   },
+   "verdade": {
+    "alvo": "impl Bounds::add_point (src/bounds.rs:23)"
+   },
+   "certeza": "alta",
+   "justificativa": "bounds = Bounds::empty().",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "RT-14",
+   "parte_c": false,
+   "estrato": "unique->outro",
+   "ocorrencia": "src/groups.rs@2203-2248",
+   "local": "src/groups.rs:83",
+   "texto": "self.local_bounds.transformed(self.transform)",
+   "dono": "impl Groups::bounds",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "impl Bounds::transformed (src/bounds.rs:47)"
+    ]
+   },
+   "verdade": {
+    "alvo": "impl Bounds::transformed (src/bounds.rs:47)"
+   },
+   "certeza": "alta",
+   "justificativa": "Groups.local_bounds: Bounds (groups.rs:15).",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "RT-15",
+   "parte_c": false,
+   "estrato": "unique->function",
+   "ocorrencia": "src/obj.rs@588-601",
+   "local": "src/obj.rs:17",
+   "texto": "model.lines()",
+   "dono": "parse_obj",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "lines (src/count.rs:81)"
+    ]
+   },
+   "verdade": {
+    "externo": "std: str::lines"
+   },
+   "certeza": "alta",
+   "justificativa": "model: &str (obj.rs:13); o lines de count.rs é função livre, que x.f() em Rust nunca chama.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "RT-16",
+   "parte_c": false,
+   "estrato": "unique->function",
+   "ocorrencia": "src/obj.rs@2546-2559",
+   "local": "src/obj.rs:60",
+   "texto": "model.lines()",
+   "dono": "parse_obj_smooth",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "lines (src/count.rs:81)"
+    ]
+   },
+   "verdade": {
+    "externo": "std: str::lines"
+   },
+   "certeza": "alta",
+   "justificativa": "model: &str (obj.rs:55).",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "RT-17",
+   "parte_c": false,
+   "estrato": "homonym",
+   "ocorrencia": "src/world.rs@2337-2360",
+   "local": "src/world.rs:66",
+   "texto": "comps.object.material()",
+   "dono": "impl World::reflected_color",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 8,
+    "alvos": [
+     "impl Intersectable for Sphere::material (src/sphere.rs:56)",
+     "impl Intersectable for Cylinder::material (src/cylinder.rs:113)",
+     "impl Intersectable for Plane::material (src/plane.rs:42)",
+     "impl Intersectable for Triangle::material (src/triangle.rs:84)",
+     "impl Intersectable for Object::material (src/object.rs:113)",
+     "Intersectable::material (src/object.rs:17)",
+     "impl Intersectable for Cone::material (src/cone.rs:122)",
+     "impl Intersectable for Cube::material (src/cube.rs:85)"
+    ]
+   },
+   "verdade": {
+    "alvo": "impl Intersectable for Object::material (src/object.rs:113)"
+   },
+   "certeza": "alta",
+   "justificativa": "Computations.object: Object (intersection.rs:9).",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "RT-18",
+   "parte_c": false,
+   "estrato": "homonym",
+   "ocorrencia": "src/world.rs@2607-2630",
+   "local": "src/world.rs:71",
+   "texto": "comps.object.material()",
+   "dono": "impl World::reflected_color",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 8,
+    "alvos": [
+     "impl Intersectable for Sphere::material (src/sphere.rs:56)",
+     "impl Intersectable for Cylinder::material (src/cylinder.rs:113)",
+     "impl Intersectable for Plane::material (src/plane.rs:42)",
+     "impl Intersectable for Triangle::material (src/triangle.rs:84)",
+     "impl Intersectable for Object::material (src/object.rs:113)",
+     "Intersectable::material (src/object.rs:17)",
+     "impl Intersectable for Cone::material (src/cone.rs:122)",
+     "impl Intersectable for Cube::material (src/cube.rs:85)"
+    ]
+   },
+   "verdade": {
+    "alvo": "impl Intersectable for Object::material (src/object.rs:113)"
+   },
+   "certeza": "alta",
+   "justificativa": "Computations.object: Object.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "RT-19",
+   "parte_c": false,
+   "estrato": "homonym",
+   "ocorrencia": "src/cylinder.rs@1868-1884",
+   "local": "src/cylinder.rs:59",
+   "texto": "a.equivalent(0.)",
+   "dono": "impl Intersectable for Cylinder::local_intersect",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 8,
+    "alvos": [
+     "impl Equivalence<Color> for Color::equivalent (src/color.rs:34)",
+     "impl Equivalence<Matrix<2>> for Matrix<2>::equivalent (src/matrix.rs:210)",
+     "impl Equivalence<Matrix<3>> for Matrix<3>::equivalent (src/matrix.rs:220)",
+     "impl Equivalence<Matrix<4>> for Matrix<4>::equivalent (src/matrix.rs:236)",
+     "impl Equivalence<f64> for f64::equivalent (src/equivalent.rs:12)",
+     "Equivalence::equivalent (src/equivalent.rs:4)",
+     "impl Equivalence<Tuple> for Tuple::equivalent (src/tuple.rs:42)",
+     "impl Equivalence<Camera> for Camera::equivalent (src/camera.rs:211)"
+    ]
+   },
+   "verdade": {
+    "alvo": "impl Equivalence<f64> for f64::equivalent (src/equivalent.rs:12)"
+   },
+   "certeza": "alta",
+   "justificativa": "a é f64 (soma de powi).",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "RT-20",
+   "parte_c": false,
+   "estrato": "homonym",
+   "ocorrencia": "src/world.rs@3360-3383",
+   "local": "src/world.rs:89",
+   "texto": "comps.object.material()",
+   "dono": "impl World::refracted_color",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 8,
+    "alvos": [
+     "impl Intersectable for Sphere::material (src/sphere.rs:56)",
+     "impl Intersectable for Cylinder::material (src/cylinder.rs:113)",
+     "impl Intersectable for Plane::material (src/plane.rs:42)",
+     "impl Intersectable for Triangle::material (src/triangle.rs:84)",
+     "impl Intersectable for Object::material (src/object.rs:113)",
+     "Intersectable::material (src/object.rs:17)",
+     "impl Intersectable for Cone::material (src/cone.rs:122)",
+     "impl Intersectable for Cube::material (src/cube.rs:85)"
+    ]
+   },
+   "verdade": {
+    "alvo": "impl Intersectable for Object::material (src/object.rs:113)"
+   },
+   "certeza": "alta",
+   "justificativa": "Computations.object: Object.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "RT-21",
+   "parte_c": false,
+   "estrato": "homonym",
+   "ocorrencia": "src/world.rs@4096-4104",
+   "local": "src/world.rs:112",
+   "texto": "xs.hit()",
+   "dono": "impl World::color_at",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "impl Intersections::hit (src/intersection.rs:119)",
+     "impl Site::hit (src/count.rs:31)"
+    ]
+   },
+   "verdade": {
+    "alvo": "impl Intersections::hit (src/intersection.rs:119)"
+   },
+   "certeza": "alta",
+   "justificativa": "xs = self.intersect_world(ray), que retorna Intersections.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "RT-22",
+   "parte_c": false,
+   "estrato": "above_candidate_limit",
+   "ocorrencia": "src/bin/librarian_measure.rs@1333-1430",
+   "local": "src/bin/librarian_measure.rs:36",
+   "texto": "wall.set_transform(Matrix::translation(Tuple::vector(0., 0., 10.)) * Matrix::rotation_x(PI / 2.))",
+   "dono": "main",
+   "linha_de_base": {
+    "resolution": "above_candidate_limit",
+    "candidates": 9,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "impl Intersectable for Plane::set_transform (src/plane.rs:54)"
+   },
+   "certeza": "alta",
+   "justificativa": "wall = Plane::default().",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "RT-23",
+   "parte_c": false,
+   "estrato": "above_candidate_limit",
+   "ocorrencia": "src/camera.rs@5135-5219",
+   "local": "src/camera.rs:155",
+   "texto": "sphere_2.set_transform(crate::matrix::Matrix::scaling(Tuple::vector(0.5, 0.5, 0.5)))",
+   "dono": "render_benchmark",
+   "linha_de_base": {
+    "resolution": "above_candidate_limit",
+    "candidates": 9,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "impl Intersectable for Sphere::set_transform (src/sphere.rs:68)"
+   },
+   "certeza": "alta",
+   "justificativa": "sphere_2 = Sphere::default().",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "RT-24",
+   "parte_c": false,
+   "estrato": "above_candidate_limit",
+   "ocorrencia": "src/world.rs@1163-1189",
+   "local": "src/world.rs:37",
+   "texto": "ray.set_transform(inverse)",
+   "dono": "impl World::intersect_world",
+   "linha_de_base": {
+    "resolution": "above_candidate_limit",
+    "candidates": 9,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "impl Ray::set_transform (src/ray.rs:22)"
+   },
+   "certeza": "alta",
+   "justificativa": "ray: Ray na assinatura de intersect_world.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "RT-25",
+   "parte_c": false,
+   "estrato": "above_candidate_limit",
+   "ocorrencia": "src/groups.rs@1701-1756",
+   "local": "src/groups.rs:68",
+   "texto": "child.set_transform(self.transform * child.transform())",
+   "dono": "impl Groups::into_objects",
+   "linha_de_base": {
+    "resolution": "above_candidate_limit",
+    "candidates": 9,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "impl Intersectable for Object::set_transform (src/object.rs:146)"
+   },
+   "certeza": "alta",
+   "justificativa": "child vem de self.children: Vec<Object> (groups.rs:12).",
+   "verdade_validada_por": "usuário (revisada, 18/11)"
+  },
+  {
+   "id": "RT-26",
+   "parte_c": false,
+   "estrato": "receiver",
+   "ocorrencia": "src/color.rs@867-901",
+   "local": "src/color.rs:36",
+   "texto": "self.green.equivalent(other.green)",
+   "dono": "impl Equivalence<Color> for Color::equivalent",
+   "linha_de_base": {
+    "resolution": "receiver",
+    "candidates": 8,
+    "alvos": [
+     "impl Equivalence<Color> for Color::equivalent (src/color.rs:34)"
+    ]
+   },
+   "verdade": {
+    "alvo": "impl Equivalence<f64> for f64::equivalent (src/equivalent.rs:12)"
+   },
+   "certeza": "alta",
+   "justificativa": "Color.green é f64. O link vai para o próprio Color::equivalent.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "RT-27",
+   "parte_c": false,
+   "estrato": "receiver",
+   "ocorrencia": "src/scene.rs@3881-3903",
+   "local": "src/scene.rs:128",
+   "texto": "self.camera.validate()",
+   "dono": "impl SceneSpec::validate",
+   "linha_de_base": {
+    "resolution": "receiver",
+    "candidates": 5,
+    "alvos": [
+     "impl SceneSpec::validate (src/scene.rs:127)"
+    ]
+   },
+   "verdade": {
+    "alvo": "impl CameraSpec::validate (src/scene.rs:12)"
+   },
+   "certeza": "alta",
+   "justificativa": "SceneSpec.camera: CameraSpec (scene.rs:79). O link vai para o próprio SceneSpec::validate.",
+   "verdade_validada_por": "usuário (revisada, 18/11)"
+  },
+  {
+   "id": "RT-28",
+   "parte_c": false,
+   "estrato": "receiver",
+   "ocorrencia": "src/intersection.rs@3858-3879",
+   "local": "src/intersection.rs:134",
+   "texto": "self.data.into_iter()",
+   "dono": "impl IntoIterator for Intersections::into_iter",
+   "linha_de_base": {
+    "resolution": "receiver",
+    "candidates": 2,
+    "alvos": [
+     "impl IntoIterator for Intersections::into_iter (src/intersection.rs:133)"
+    ]
+   },
+   "verdade": {
+    "externo": "std: Vec::into_iter"
+   },
+   "certeza": "alta",
+   "justificativa": "Intersections.data é Vec<Intersection>. O link vai para o próprio into_iter.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "RT-29",
+   "parte_c": false,
+   "estrato": "receiver",
+   "ocorrencia": "src/color.rs@820-850",
+   "local": "src/color.rs:35",
+   "texto": "self.red.equivalent(other.red)",
+   "dono": "impl Equivalence<Color> for Color::equivalent",
+   "linha_de_base": {
+    "resolution": "receiver",
+    "candidates": 8,
+    "alvos": [
+     "impl Equivalence<Color> for Color::equivalent (src/color.rs:34)"
+    ]
+   },
+   "verdade": {
+    "alvo": "impl Equivalence<f64> for f64::equivalent (src/equivalent.rs:12)"
+   },
+   "certeza": "alta",
+   "justificativa": "Color.red é f64. O link vai para o próprio Color::equivalent.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "RT-30",
+   "parte_c": false,
+   "estrato": "receiver",
+   "ocorrencia": "src/scene.rs@1514-1538",
+   "local": "src/scene.rs:53",
+   "texto": "self.material.validate()",
+   "dono": "impl ObjectSpec::validate",
+   "linha_de_base": {
+    "resolution": "receiver",
+    "candidates": 5,
+    "alvos": [
+     "impl ObjectSpec::validate (src/scene.rs:49)"
+    ]
+   },
+   "verdade": {
+    "alvo": "impl MaterialSpec::validate (src/scene.rs:66)"
+   },
+   "certeza": "alta",
+   "justificativa": "ObjectSpec.material: MaterialSpec (scene.rs:45). O link vai para o próprio ObjectSpec::validate.",
+   "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  }
+ ]
+}
