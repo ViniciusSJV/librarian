@@ -5,11 +5,11 @@
 ## Onde estamos
 
 - **Fase 1 — Piloto 1b: concluída em 18/11/2026.** Relatório final: [docs/reports/piloto-1b/00-resumo.md](docs/reports/piloto-1b/00-resumo.md).
-- **Fase 2 — Precisão das relações: em andamento.** O passo 2.0 (portão) está em `2b05b8c`. O **passo 2.1** (regra única de resolução, `receiver` corrigido, resolução `type`) está commitado desde 19/11/2026 (`c316bf7` portão, `3b4e1c6` resolver e testes, `6525fb4` documentação), sem push. A amostra RT-31 a RT-55 foi validada pelo usuário em 19/11, e a linha de base foi trocada. Detalhe no CTX, seção 23.
+- **Fase 2 — Precisão das relações: em andamento.** O passo 2.0 (portão) está em `2b05b8c`. O **passo 2.1** (regra única de resolução, `receiver` corrigido, resolução `type`) está commitado desde 19/11/2026 (`c316bf7` portão, `3b4e1c6` resolver e testes, `6525fb4` documentação, `cb8e5ef` DEC-37, `078fd0e` linha de base), com push feito em 19/11/2026. A amostra RT-31 a RT-55 foi validada pelo usuário em 19/11, e a linha de base foi trocada. Detalhe no CTX, seção 23.
 - **Próximo passo: 2.2**, chamada de método que não casa com função solta. Cada passo depende de autorização.
 - **Portão de cada passo da Fase 2:** `node tools/precisao/portao.js --studio .studio --base tools/precisao/linha-de-base.json` (cerca de 4 minutos). Reprova se `link_falso` subir ou as corretas caírem, em Python ou em Rust, se uma edition antiga mudar ou se o `.studio` original mudar. Exceção só com justificativa caso a caso e aprovação do usuário (DEC-34).
 - **Feito no 1b:** P1 (`987d7a8`), G3 (`aae51d7`), Partes A–E do diagnóstico, a Q6 (run `20261118-205150`, avaliada em 18/11), a consolidação documental (`a8e4074`) e o relatório final. Relatórios em [docs/reports/piloto-1b/](docs/reports/piloto-1b/) (`0c4bcab`).
-- **Git:** `main`; a referência é `origin/main` (ver `git log`). Último marco: passo 2.1 (`c316bf7`, `3b4e1c6`, `6525fb4`), sem push; antes, o passo 2.0 (`2b05b8c`, `aee6915`).
+- **Git:** `main`; a referência é `origin/main` (ver `git log`). Último marco: passo 2.1 (`c316bf7` a `078fd0e`), com push em 19/11/2026; antes, o passo 2.0 (`2b05b8c`, `aee6915`).
 - **Suíte:** `cargo test --workspace --locked`: 468 aprovados, 0 falhas, 2 ignorados (19/11, no commit `3b4e1c6`).
 - **Roadmap:** [PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#roadmap). Nenhum agente nem orquestrador existe.
 
@@ -63,7 +63,6 @@ Cite sempre com o prefixo. As tabelas de abreviações e de prefixos estão em [
   - a validação dos 60 links `type`/`trait_default` da população, em [docs/reports/fase-2/2.1-links-type.md](docs/reports/fase-2/2.1-links-type.md);
   - o novo status da DEC-11, proposto (a DEC-37 foi aprovada em 19/11);
   - as respostas da Parada 3, em [docs/reports/fase-2/2.1-parada-3.md](docs/reports/fase-2/2.1-parada-3.md), com a verificação de tela (DEC-30: 51 de 51);
-  - o push dos commits do 2.1.
 - **Para o 2.2:** um `self.m()` acima do teto de homônimos sai com `basis` `type`, e não `receiver`, porque o `receiver` só decide entre arestas candidatas (RT-55, `object.rs:173`). O alvo está certo; o rótulo, não.
 - **Para o 2.3:** o extrator do Rust toma `T` como o tipo de `let x = T::f(..)` sem ler o retorno de `f` (32 dos 38 links `type` por variável acima do teto; certos aqui, porque as cinco funções retornam `Self`), e o grafo não guarda qual regra deu o tipo do receptor.
 - **Para o 2.3:** a chamada de um decorador roda na carga do módulo, mas é atribuída à função decorada (HC-19). É a mesma questão de dono do `Repo()` preso ao campo.
