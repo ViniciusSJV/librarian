@@ -84,14 +84,25 @@ Etapa 6 vai para as trilhas paralelas, DEC-31)
   reutilizou e produz só o novo.
 - Lacunas conhecidas fazem parte do contrato (ex.: elo pelo banco).
 - PIL-P3: custo fixo por pacote.
+- Formato de workflow no acervo: um workflow como sequência de etapas,
+  cada uma apoiada em fatos aprovados e com as lacunas declaradas. É o
+  que o agente de workflows produz e o agente de documentação consome
+  (DEC-36).
 
-### Fases 5–6 — Extratores (IR comum, preparação Java) e HTTP/JSON público
+### Fase 6 — HTTP/JSON público
 
 ### Fase 7 — Primeiros agentes
 Agente de workflows e agente de documentação (fluxogramas para
 humanos). A validação final é humana.
 
-### Fase 8 — Especialização e escala (DDD, performance, segurança, Java)
+### Fase 5 — Extratores: representação intermediária comum
+Executada depois da Fase 7, mantendo o nome (DEC-35): os primeiros
+agentes trabalham em Python e Rust, que já existem.
+
+### Fase 8 — Especialização e escala (DDD, performance, segurança)
+
+### Extrator Java
+Último item do roadmap, depois da Fase 8 (DEC-35).
 
 ### Trilhas paralelas
 Congeladas até o fim da Fase 2B: F11–F13, Etapa 5 do Studio, GE-G7

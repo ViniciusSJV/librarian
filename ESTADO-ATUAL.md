@@ -9,7 +9,7 @@
 - **Próximo passo: 2.1**, uma regra única de resolução para "o que chama?" e para o inventário, com a resolução `type` e a correção da regra `receiver`. Cada passo depende de autorização.
 - **Portão de cada passo da Fase 2:** `node tools/precisao/portao.js --studio .studio --base tools/precisao/linha-de-base.json` (cerca de 4 minutos). Reprova se `link_falso` subir ou as corretas caírem, em Python ou em Rust, se uma edition antiga mudar ou se o `.studio` original mudar. Exceção só com justificativa caso a caso e aprovação do usuário (DEC-34).
 - **Feito no 1b:** P1 (`987d7a8`), G3 (`aae51d7`), Partes A–E do diagnóstico, a Q6 (run `20261118-205150`, avaliada em 18/11), a consolidação documental (`a8e4074`) e o relatório final. Relatórios em [docs/reports/piloto-1b/](docs/reports/piloto-1b/) (`0c4bcab`).
-- **Git:** `main`, sincronizada: os commits do 1b foram enviados em 18/11, e `origin/main` está em `955537e`.
+- **Git:** `main`; a referência é `origin/main` (ver `git log`). Último marco: passo 2.0 (`2b05b8c`, `aee6915`).
 - **Suíte:** `cargo test --workspace --locked`: 456 aprovados, 0 falhas, 2 ignorados (18/11, com P1 e G3).
 - **Roadmap:** [PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#roadmap). Nenhum agente nem orquestrador existe.
 
