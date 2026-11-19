@@ -1,6 +1,6 @@
-//! P1b: "what does it call?" Forward from a symbol through written calls. A call is followed
-//! only when its name points to one declaration (unique, the receiver's own call within the
-//! same container, or a candidate the person chose); homonyms are reported, never followed.
+//! P1b: "what does it call?" Forward from a symbol through written calls, by the rule of resolve.rs. A call is followed
+//! only when the rule settles it on one declaration (unique, self.m() within the
+//! same container, the receiver's written type, or a candidate the person chose); homonyms are reported, never followed.
 use librarian_ingest::{generate, graph::v2, Catalog, Config};
 use std::{
     collections::BTreeMap,
@@ -115,33 +115,34 @@ fn calls_are_followed_only_where_the_written_name_points_to_one_declaration() {
     let syntax = catalog.call_syntax();
     let render = symbol(&graph, "render");
 
-    // world.color_at matches World::color_at and Stripe::color_at: both reported, neither followed.
+    // world.color_at matches World::color_at and Stripe::color_at; `world: &World` settles it by
+    // type. From there self.hit is the receiver's own call: of its two homonyms, only World::hit
+    // shares the caller's impl. self.shade and lighting are unique.
     let calls = graph.calls_from(&render, 3, 50, &syntax, &BTreeMap::new()).unwrap();
-    let mut first: Vec<_> = calls.links.iter().map(|l| (label(&graph, &l.to), l.resolution.as_str(), l.candidates)).collect();
-    first.sort();
-    assert_eq!(first, [("impl Stripe::color_at".to_owned(), "homonym", 2), ("impl World::color_at".to_owned(), "homonym", 2)]);
-    assert_eq!(calls.nodes.len(), 3);
-
-    // The person chooses World::color_at; from there self.hit is the receiver's own call: of its
-    // two homonyms, only World::hit shares the caller's impl. self.shade and lighting are unique.
-    let occurrence = calls.links[0].occurrence.clone();
-    let chosen = BTreeMap::from([(occurrence, symbol(&graph, "impl World::color_at"))]);
-    let calls = graph.calls_from(&render, 3, 50, &syntax, &chosen).unwrap();
-    let path: Vec<_> = calls.links.iter().map(|l| (label(&graph, &l.from), label(&graph, &l.to), l.resolution.as_str())).collect();
-    let step = |a: &str, b: &str, r: &'static str| (a.to_owned(), b.to_owned(), r);
+    let path: Vec<_> = calls.links.iter().map(|l| (label(&graph, &l.from), label(&graph, &l.to), l.resolution.as_str(), l.basis.as_str())).collect();
+    let step = |a: &str, b: &str, r: &'static str, basis: &'static str| (a.to_owned(), b.to_owned(), r, basis);
     assert_eq!(path, [
-        step("render", "impl World::color_at", "chosen"),
-        step("impl World::color_at", "impl World::hit", "receiver"),
-        step("impl World::color_at", "impl World::shade", "unique"),
-        step("impl World::shade", "lighting", "unique"),
+        step("render", "impl World::color_at", "type", "type"),
+        step("impl World::color_at", "impl World::hit", "receiver", "graph_edge"),
+        step("impl World::color_at", "impl World::shade", "unique", "graph_edge"),
+        step("impl World::shade", "lighting", "unique", "graph_edge"),
     ]);
+    assert_eq!(calls.links[0].candidates, 2);
     let layers: Vec<_> = calls.nodes.iter().map(|n| (n.label.clone(), n.layer)).collect();
     assert_eq!(layers.last().unwrap(), &("lighting".to_owned(), 3));
-    // Every link is a candidate edge of the graph, with its own evidence.
+    // Every link here is a candidate edge of the graph, with its own evidence.
     for link in &calls.links {
-        let edge = graph.edges.iter().find(|e| e.id == link.candidate_edge).unwrap();
+        let edge = graph.edges.iter().find(|e| link.candidate_edge.as_deref() == Some(e.id.as_str())).unwrap();
         assert_eq!((edge.kind.as_str(), &edge.from, &edge.to), ("name_candidate", &link.occurrence, &link.to));
     }
+
+    // The person's choice comes before the type: Stripe::color_at, which calls nothing.
+    let occurrence = calls.links[0].occurrence.clone();
+    let chosen = BTreeMap::from([(occurrence, symbol(&graph, "impl Stripe::color_at"))]);
+    let picked = graph.calls_from(&render, 3, 50, &syntax, &chosen).unwrap();
+    let path: Vec<_> = picked.links.iter().map(|l| (label(&graph, &l.to), l.resolution.as_str())).collect();
+    assert_eq!(path, [("impl Stripe::color_at".to_owned(), "chosen")]);
+    let chosen = BTreeMap::new();
     // A depth limit stops the walk; the node cap truncates.
     assert_eq!(graph.calls_from(&render, 1, 50, &syntax, &chosen).unwrap().links.len(), 1);
     let capped = graph.calls_from(&render, 3, 2, &syntax, &chosen).unwrap();

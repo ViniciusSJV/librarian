@@ -7,6 +7,7 @@
 //! `select` then decides what goes: each candidate gets a role by fixed rules over the graph and
 //! the measure, the roles fill a budget in bytes, and what stays out says why. The person keeps
 //! or drops each item before asking.
+use crate::resolve::SETTLED;
 use crate::{graph::v2, graph::Evidence, inventory::Inventory, owner, Catalog, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
@@ -216,9 +217,9 @@ pub fn candidates(catalog: &Catalog, chosen: &[String], measure: Option<&Measure
     let syntax = catalog.call_syntax();
     for id in chosen {
         let target = qualified(id);
-        // What it calls, when the written name points to one declaration.
+        // What it calls, when the rule of "what does it call?" settles it on one declaration.
         let calls = graph.calls_from(id, 1, 64, &syntax, &BTreeMap::new())?;
-        for link in calls.links.iter().filter(|l| &l.from == id && matches!(l.resolution.as_str(), "unique" | "receiver")) {
+        for link in calls.links.iter().filter(|l| &l.from == id && SETTLED.contains(&l.resolution.as_str())) {
             let reason = Reason { code: "called".into(), for_target: target.clone(), fields: vec![], lines: vec![link.evidence.start_line] };
             push(catalog, &mut suggestion, &link.to, reason);
             // A change that keeps what the call returns needs the type it returns.

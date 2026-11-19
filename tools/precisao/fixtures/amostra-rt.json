@@ -1,7 +1,7 @@
 {
  "projeto": "renderer-9b78f3a9",
  "fonte": "Projetos/renderer @ e38254b",
- "selecao": "tools/precisao/amostra.js sobre a linha de base de 18/11/2026 (binário de aae51d7)",
+ "selecao": "tools/precisao/amostra.js sobre a linha de base de 18/11/2026 (binário de aae51d7); RT-31 a RT-50: estratos do passo 2.1 (type, type_caminho, type_fora, trait_default), sorteados pela ordem do sha256 do id da ocorrência, arquivos distintos primeiro; RT-51 a RT-55: chamadas por variável acima do teto, escolhidas à mão na Parada 3 do passo 2.1, uma por origem do tipo (item de coleção, parâmetro anotado, parâmetro no corpo de trait, construtor por caminho completo, self acima do teto)",
  "chamadas": [
   {
    "id": "RT-01",
@@ -682,6 +682,506 @@
    "certeza": "alta",
    "justificativa": "ObjectSpec.material: MaterialSpec (scene.rs:45). O link vai para o próprio ObjectSpec::validate.",
    "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "RT-31",
+   "parte_c": false,
+   "estrato": "type",
+   "ocorrencia": "src/bin/cena_video.rs@4034-4062",
+   "local": "src/bin/cena_video.rs:96",
+   "texto": "floor.set_material(checkers)",
+   "dono": "main",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 8,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "impl Intersectable for Plane::set_material (src/plane.rs:50)"
+   },
+   "certeza": "alta",
+   "justificativa": "floor = Plane::default() (cena_video.rs:95); Plane não define set_material fora do impl Intersectable.",
+   "verdade_validada_por": "proposta pelo agente (passo 2.1, 19/11); aguarda validação do usuário"
+  },
+  {
+   "id": "RT-32",
+   "parte_c": false,
+   "estrato": "type",
+   "ocorrencia": "src/bin/librarian_measure_mesh.rs@2622-2649",
+   "local": "src/bin/librarian_measure_mesh.rs:70",
+   "texto": "wall.set_material(checkers)",
+   "dono": "main",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 8,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "impl Intersectable for Plane::set_material (src/plane.rs:50)"
+   },
+   "certeza": "alta",
+   "justificativa": "wall = Plane::default() (librarian_measure_mesh.rs:68).",
+   "verdade_validada_por": "proposta pelo agente (passo 2.1, 19/11); aguarda validação do usuário"
+  },
+  {
+   "id": "RT-33",
+   "parte_c": false,
+   "estrato": "type",
+   "ocorrencia": "src/patterns.rs@8202-8243",
+   "local": "src/patterns.rs:318",
+   "texto": "checkers.set_pattern_transform(transform)",
+   "dono": "impl Incuse for Patterns::set_pattern_transform",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 7,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "impl Incuse for Checkers::set_pattern_transform (src/patterns.rs:251)"
+   },
+   "certeza": "alta",
+   "justificativa": "Padrão Patterns::Checkers(ref mut checkers): checkers é Checkers.",
+   "verdade_validada_por": "proposta pelo agente (passo 2.1, 19/11); aguarda validação do usuário"
+  },
+  {
+   "id": "RT-34",
+   "parte_c": false,
+   "estrato": "type",
+   "ocorrencia": "src/count.rs@1894-1904",
+   "local": "src/count.rs:49",
+   "texto": "site.hit()",
+   "dono": "impl Guard::enter",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "impl Site::hit (src/count.rs:31)"
+   },
+   "certeza": "alta",
+   "justificativa": "site: &'static Site no parâmetro de Guard::enter (count.rs:48).",
+   "verdade_validada_por": "proposta pelo agente (passo 2.1, 19/11); aguarda validação do usuário"
+  },
+  {
+   "id": "RT-35",
+   "parte_c": false,
+   "estrato": "type",
+   "ocorrencia": "src/groups.rs@2759-2788",
+   "local": "src/groups.rs:98",
+   "texto": "subgroup.intersect(local_ray)",
+   "dono": "impl Groups::intersect",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "impl Groups::intersect (src/groups.rs:86)"
+   },
+   "certeza": "alta",
+   "justificativa": "subgroup vem de self.subgroups: Vec<Groups> (groups.rs:13).",
+   "verdade_validada_por": "proposta pelo agente (passo 2.1, 19/11); aguarda validação do usuário"
+  },
+  {
+   "id": "RT-36",
+   "parte_c": false,
+   "estrato": "type_caminho",
+   "ocorrencia": "src/intersection.rs@13368-13376",
+   "local": "src/intersection.rs:373",
+   "texto": "Ray::new",
+   "dono": "tests_intersection::the_schlick_approximation_with_small_angle_and_n2_larger_n1",
+   "linha_de_base": {
+    "resolution": "above_candidate_limit",
+    "candidates": 22,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "impl Ray::new (src/ray.rs:11)"
+   },
+   "certeza": "alta",
+   "justificativa": "Chamada por caminho Ray::new; impl Ray::new é o único new de Ray.",
+   "verdade_validada_por": "proposta pelo agente (passo 2.1, 19/11); aguarda validação do usuário"
+  },
+  {
+   "id": "RT-37",
+   "parte_c": false,
+   "estrato": "type_caminho",
+   "ocorrencia": "src/world.rs@11708-11716",
+   "local": "src/world.rs:344",
+   "texto": "Ray::new",
+   "dono": "tests_world::the_reflected_color_for_a_nonreflective_material",
+   "linha_de_base": {
+    "resolution": "above_candidate_limit",
+    "candidates": 22,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "impl Ray::new (src/ray.rs:11)"
+   },
+   "certeza": "alta",
+   "justificativa": "Chamada por caminho Ray::new.",
+   "verdade_validada_por": "proposta pelo agente (passo 2.1, 19/11); aguarda validação do usuário"
+  },
+  {
+   "id": "RT-38",
+   "parte_c": false,
+   "estrato": "type_caminho",
+   "ocorrencia": "src/matrix.rs@15212-15224",
+   "local": "src/matrix.rs:497",
+   "texto": "Matrix::from",
+   "dono": "tests_matrix::submatrix_of_mat4_is_a_mat3",
+   "linha_de_base": {
+    "resolution": "above_candidate_limit",
+    "candidates": 14,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "impl From<[[f64; D]; D]> for Matrix<D>::from (src/matrix.rs:12)"
+   },
+   "certeza": "alta",
+   "justificativa": "Matrix::from([[..]]) com let mat4: Matrix<4>: o From<[[f64; D]; D]> for Matrix<D>.",
+   "verdade_validada_por": "proposta pelo agente (passo 2.1, 19/11); aguarda validação do usuário"
+  },
+  {
+   "id": "RT-39",
+   "parte_c": false,
+   "estrato": "type_caminho",
+   "ocorrencia": "src/tuple.rs@6261-6271",
+   "local": "src/tuple.rs:251",
+   "texto": "Tuple::new",
+   "dono": "tests_tuple::mul_tuple_by_fraction",
+   "linha_de_base": {
+    "resolution": "above_candidate_limit",
+    "candidates": 22,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "impl Tuple::new (src/tuple.rs:13)"
+   },
+   "certeza": "alta",
+   "justificativa": "Chamada por caminho Tuple::new.",
+   "verdade_validada_por": "proposta pelo agente (passo 2.1, 19/11); aguarda validação do usuário"
+  },
+  {
+   "id": "RT-40",
+   "parte_c": false,
+   "estrato": "type_caminho",
+   "ocorrencia": "src/triangle.rs@5153-5166",
+   "local": "src/triangle.rs:164",
+   "texto": "Triangle::new",
+   "dono": "tests_triangle::a_ray_misses_the_p1_and_p3_edge",
+   "linha_de_base": {
+    "resolution": "above_candidate_limit",
+    "candidates": 22,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "impl Triangle::new (src/triangle.rs:24)"
+   },
+   "certeza": "alta",
+   "justificativa": "Chamada por caminho Triangle::new.",
+   "verdade_validada_por": "proposta pelo agente (passo 2.1, 19/11); aguarda validação do usuário"
+  },
+  {
+   "id": "RT-41",
+   "parte_c": false,
+   "estrato": "type_caminho",
+   "ocorrencia": "src/camera.rs@6571-6601",
+   "local": "src/camera.rs:186",
+   "texto": "crate::sphere::Sphere::default",
+   "dono": "external_benchmark_scene",
+   "linha_de_base": {
+    "resolution": "above_candidate_limit",
+    "candidates": 12,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "impl Default for Sphere::default (src/sphere.rs:26)"
+   },
+   "certeza": "alta",
+   "justificativa": "crate::sphere::Sphere::default: o impl Default for Sphere (sphere.rs:26).",
+   "verdade_validada_por": "proposta pelo agente (passo 2.1, 19/11); aguarda validação do usuário"
+  },
+  {
+   "id": "RT-42",
+   "parte_c": false,
+   "estrato": "type_fora",
+   "ocorrencia": "src/world.rs@18174-18186",
+   "local": "src/world.rs:503",
+   "texto": "b.material()",
+   "dono": "tests_world::the_refracted_color_with_a_refracted_ray",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 8,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "impl Intersectable for Object::material (src/object.rs:113)"
+   },
+   "certeza": "alta",
+   "justificativa": "let mut b: Object (world.rs:502); Object implementa Intersectable::material.",
+   "verdade_validada_por": "proposta pelo agente (passo 2.1, 19/11); aguarda validação do usuário"
+  },
+  {
+   "id": "RT-43",
+   "parte_c": false,
+   "estrato": "type_fora",
+   "ocorrencia": "src/intersection.rs@9485-9544",
+   "local": "src/intersection.rs:281",
+   "texto": "a.set_transform(Matrix::scaling(Tuple::vector(2., 2., 2.)))",
+   "dono": "tests_intersection::finding_n1_and_n2_at_various_intersections",
+   "linha_de_base": {
+    "resolution": "above_candidate_limit",
+    "candidates": 9,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "impl Intersectable for Sphere::set_transform (src/sphere.rs:68)"
+   },
+   "certeza": "alta",
+   "justificativa": "a = Sphere::grass(1.), que retorna Self (sphere.rs:18).",
+   "verdade_validada_por": "proposta pelo agente (passo 2.1, 19/11); aguarda validação do usuário"
+  },
+  {
+   "id": "RT-44",
+   "parte_c": false,
+   "estrato": "type_fora",
+   "ocorrencia": "src/patterns.rs@13373-13414",
+   "local": "src/patterns.rs:444",
+   "texto": "pattern.color_at(Tuple::point(0.,0., 0.))",
+   "dono": "tests_patterns::a_gradient_linearly_interpolates_between_colors",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 7,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "impl Incuse for Patterns::color_at (src/patterns.rs:333)"
+   },
+   "certeza": "alta",
+   "justificativa": "pattern = Patterns::from(LinearGradient::new(..)), From<..> for Patterns retorna Self.",
+   "verdade_validada_por": "proposta pelo agente (passo 2.1, 19/11); aguarda validação do usuário"
+  },
+  {
+   "id": "RT-45",
+   "parte_c": false,
+   "estrato": "type_fora",
+   "ocorrencia": "src/transformations.rs@1530-1557",
+   "local": "src/transformations.rs:51",
+   "texto": "from.view_transform(to, up)",
+   "dono": "tests_transformations::the_view_transformation_matrix_looking_in_positive_z_direction",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "impl Transform for Tuple::view_transform (src/transformations.rs:9)"
+   },
+   "certeza": "alta",
+   "justificativa": "from = Tuple::point(..): Tuple; impl Transform for Tuple.",
+   "verdade_validada_por": "proposta pelo agente (passo 2.1, 19/11); aguarda validação do usuário"
+  },
+  {
+   "id": "RT-46",
+   "parte_c": false,
+   "estrato": "trait_default",
+   "ocorrencia": "src/cylinder.rs@5437-5456",
+   "local": "src/cylinder.rs:171",
+   "texto": "cyl.intersect(ray2)",
+   "dono": "tests_cylinder::a_ray_strikes_a_cylinder",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "Intersectable::intersect (src/object.rs:29)"
+   },
+   "certeza": "alta",
+   "justificativa": "cyl = Cylinder::default(); Cylinder não sobrescreve intersect: vale o padrão de Intersectable (object.rs:29).",
+   "verdade_validada_por": "proposta pelo agente (passo 2.1, 19/11); aguarda validação do usuário"
+  },
+  {
+   "id": "RT-47",
+   "parte_c": false,
+   "estrato": "trait_default",
+   "ocorrencia": "src/cube.rs@4094-4117",
+   "local": "src/cube.rs:123",
+   "texto": "c.intersect(ray_inside)",
+   "dono": "tests_cube::a_ray_intersects_a_cube",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "Intersectable::intersect (src/object.rs:29)"
+   },
+   "certeza": "alta",
+   "justificativa": "c = Cube::default(); Cube não sobrescreve intersect.",
+   "verdade_validada_por": "proposta pelo agente (passo 2.1, 19/11); aguarda validação do usuário"
+  },
+  {
+   "id": "RT-48",
+   "parte_c": false,
+   "estrato": "trait_default",
+   "ocorrencia": "src/sphere.rs@3874-3895",
+   "local": "src/sphere.rs:133",
+   "texto": "sphere.intersect(ray)",
+   "dono": "tests_sphere::a_ray_originates_inside_a_sphere",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "Intersectable::intersect (src/object.rs:29)"
+   },
+   "certeza": "alta",
+   "justificativa": "sphere = Sphere::new(..); Sphere não sobrescreve intersect.",
+   "verdade_validada_por": "proposta pelo agente (passo 2.1, 19/11); aguarda validação do usuário"
+  },
+  {
+   "id": "RT-49",
+   "parte_c": false,
+   "estrato": "trait_default",
+   "ocorrencia": "src/patterns.rs@8821-8866",
+   "local": "src/patterns.rs:328",
+   "texto": "checkers.color_at_object(object, world_point)",
+   "dono": "impl Incuse for Patterns::color_at_object",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "Incuse::color_at_object (src/patterns.rs:13)"
+   },
+   "certeza": "alta",
+   "justificativa": "Padrão Patterns::Checkers(ref checkers); Checkers não define color_at_object: vale o padrão de Incuse (patterns.rs:13).",
+   "verdade_validada_por": "proposta pelo agente (passo 2.1, 19/11); aguarda validação do usuário"
+  },
+  {
+   "id": "RT-50",
+   "parte_c": false,
+   "estrato": "trait_default",
+   "ocorrencia": "src/groups.rs@2642-2668",
+   "local": "src/groups.rs:95",
+   "texto": "child.intersect(local_ray)",
+   "dono": "impl Groups::intersect",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "Intersectable::intersect (src/object.rs:29)"
+   },
+   "certeza": "alta",
+   "justificativa": "child vem de self.children: Vec<Object> (groups.rs:12); Object não sobrescreve intersect.",
+   "verdade_validada_por": "proposta pelo agente (passo 2.1, 19/11); aguarda validação do usuário"
+  },
+  {
+   "id": "RT-51",
+   "parte_c": false,
+   "estrato": "type_variavel",
+   "ocorrencia": "src/world.rs@1072-1090",
+   "local": "src/world.rs:35",
+   "texto": "object.transform()",
+   "dono": "impl World::intersect_world",
+   "linha_de_base": {
+    "resolution": "above_candidate_limit",
+    "candidates": 15,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "impl Intersectable for Object::transform (src/object.rs:124)"
+   },
+   "certeza": "alta",
+   "justificativa": "Origem: item de coleção. object vem de for (i, object) in self.objects.iter().enumerate() (world.rs:31), com objects: Vec<Object> (world.rs:12). Object não tem transform inerente; o do impl Intersectable for Object é o único.",
+   "verdade_validada_por": "proposta pelo agente (passo 2.1, Parada 3, 19/11); aguarda validação do usuário"
+  },
+  {
+   "id": "RT-52",
+   "parte_c": false,
+   "estrato": "type_variavel",
+   "ocorrencia": "src/world.rs@1163-1189",
+   "local": "src/world.rs:37",
+   "texto": "ray.set_transform(inverse)",
+   "dono": "impl World::intersect_world",
+   "linha_de_base": {
+    "resolution": "above_candidate_limit",
+    "candidates": 9,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "impl Ray::set_transform (src/ray.rs:22)"
+   },
+   "certeza": "alta",
+   "justificativa": "Origem: parâmetro anotado. intersect_world(&self, ray: Ray) (world.rs:28); set_transform inerente de Ray.",
+   "verdade_validada_por": "proposta pelo agente (passo 2.1, Parada 3, 19/11); aguarda validação do usuário"
+  },
+  {
+   "id": "RT-53",
+   "parte_c": false,
+   "estrato": "type_variavel",
+   "ocorrencia": "src/patterns.rs@457-475",
+   "local": "src/patterns.rs:14",
+   "texto": "object.transform()",
+   "dono": "Incuse::color_at_object",
+   "linha_de_base": {
+    "resolution": "above_candidate_limit",
+    "candidates": 15,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "impl Intersectable for Object::transform (src/object.rs:124)"
+   },
+   "certeza": "alta",
+   "justificativa": "Origem: parâmetro anotado, dentro do corpo padrão de um trait. color_at_object(&self, object: Object, ..) (patterns.rs:13).",
+   "verdade_validada_por": "proposta pelo agente (passo 2.1, Parada 3, 19/11); aguarda validação do usuário"
+  },
+  {
+   "id": "RT-54",
+   "parte_c": false,
+   "estrato": "type_variavel",
+   "ocorrencia": "src/camera.rs@5772-5858",
+   "local": "src/camera.rs:169",
+   "texto": "floor.set_transform(crate::matrix::Matrix::translation(Tuple::vector(0.0, -1.0, 0.0)))",
+   "dono": "external_benchmark_scene",
+   "linha_de_base": {
+    "resolution": "above_candidate_limit",
+    "candidates": 9,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "impl Intersectable for Plane::set_transform (src/plane.rs:54)"
+   },
+   "certeza": "alta",
+   "justificativa": "Origem: construtor por caminho completo. let mut floor = crate::plane::Plane::default() (camera.rs:168); Default for Plane retorna Plane (plane.rs:20).",
+   "verdade_validada_por": "proposta pelo agente (passo 2.1, Parada 3, 19/11); aguarda validação do usuário"
+  },
+  {
+   "id": "RT-55",
+   "parte_c": false,
+   "estrato": "type_variavel",
+   "ocorrencia": "src/object.rs@6215-6231",
+   "local": "src/object.rs:173",
+   "texto": "self.transform()",
+   "dono": "impl Intersectable for Object::bounds",
+   "linha_de_base": {
+    "resolution": "above_candidate_limit",
+    "candidates": 15,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "impl Intersectable for Object::transform (src/object.rs:124)"
+   },
+   "certeza": "alta",
+   "justificativa": "Origem: self no impl. self.m() acima do teto não tem aresta candidata, então o receiver não se aplica e o tipo do impl (Object) resolve. bounds e transform estão no mesmo impl Intersectable for Object.",
+   "verdade_validada_por": "proposta pelo agente (passo 2.1, Parada 3, 19/11); aguarda validação do usuário"
   }
  ]
 }

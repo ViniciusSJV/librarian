@@ -4,6 +4,8 @@
 //! the loops they sit in, directly or through a chain of calls. Nothing here says an operation
 //! is slow or a cause: being inside a loop is structure; how often and how long needs a
 //! measurement.
+use crate::resolve::{matching_open, trailing_ident, Resolution, Resolver};
+pub use crate::resolve::call_parts;
 use crate::{
     graph::{v2, Evidence},
     hash, Catalog, Result,
@@ -315,82 +317,6 @@ impl<'g> Index<'g> {
     }
 }
 
-/// A written path's last segment without generic arguments or references: `ops::Mul` ->
-/// `Mul`, `Matrix<4>` -> `Matrix`, `&'a Sphere` -> `Sphere`.
-fn last_segment(text: &str) -> String {
-    let text = text.split('<').next().unwrap_or_default();
-    let last = text.rsplit("::").next().unwrap_or_default();
-    last.rsplit(|c: char| c.is_whitespace() || c == '&').next().unwrap_or_default().to_owned()
-}
-
-/// The type and the trait of a Rust impl's name: `impl Intersectable for Sphere` ->
-/// (`Sphere`, `Intersectable`), `impl Matrix<4>` -> (`Matrix`, none).
-fn impl_parts(label: &str) -> (Option<String>, Option<String>) {
-    let Some(rest) = label.strip_prefix("impl ") else { return (None, None) };
-    match rest.split_once(" for ") {
-        Some((tr, ty)) => (Some(last_segment(ty)), Some(last_segment(tr))),
-        None => (Some(last_segment(rest)), None),
-    }
-}
-
-/// The written name of a call and the name written just before it, from the call's text:
-/// `self.session.exec(s)` -> (`session`, `exec`), `File::open` -> (`File`, `open`),
-/// `open` -> (``, `open`). None when the text ends in no name.
-pub fn call_parts(text: &str) -> Option<(String, String)> {
-    let mut head = text.trim_end();
-    // A method call's text has its arguments: drop the last balanced parentheses.
-    if head.ends_with(')') {
-        head = &head[..matching_open(head, '(', ')')?];
-    }
-    // Turbofish: `collect::<Vec<_>>`.
-    if head.ends_with('>') {
-        head = head[..matching_open(head, '<', '>')?].trim_end_matches("::");
-    }
-    let name = trailing_ident(head)?;
-    let before = head[..head.len() - name.len()].trim_end();
-    // A receiver that is itself a call's result or an index (`a.b(x).c()`) has no written
-    // name: "()", never the "" of a call with no receiver.
-    let receiver = match before.strip_suffix('.').or_else(|| before.strip_suffix("::")) {
-        Some(rest) => trailing_ident(rest.trim_end()).unwrap_or("()"),
-        None => "",
-    };
-    Some((receiver.to_owned(), name.to_owned()))
-}
-
-/// Bytes of a method call's receiver, from the call's text: `self.transform.inverse()` -> the
-/// length of `self.transform`. None without a receiver.
-fn receiver_len(text: &str) -> Option<usize> {
-    let mut head = text.trim_end();
-    if head.ends_with(')') {
-        head = &head[..matching_open(head, '(', ')')?];
-    }
-    if head.ends_with('>') {
-        head = head[..matching_open(head, '<', '>')?].trim_end_matches("::");
-    }
-    let name = trailing_ident(head)?;
-    let receiver = head[..head.len() - name.len()].trim_end().strip_suffix('.')?.trim_end();
-    (!receiver.is_empty()).then_some(receiver.len())
-}
-
-fn matching_open(text: &str, open: char, close: char) -> Option<usize> {
-    let mut depth = 0usize;
-    for (i, c) in text.char_indices().rev() {
-        if c == close {
-            depth += 1;
-        } else if c == open {
-            depth = depth.checked_sub(1)?;
-            if depth == 0 {
-                return Some(i);
-            }
-        }
-    }
-    None
-}
-
-fn trailing_ident(text: &str) -> Option<&str> {
-    let start = text.char_indices().rev().take_while(|(_, c)| c.is_alphanumeric() || *c == '_').last().map(|(i, _)| i)?;
-    Some(&text[start..])
-}
 
 /// A step for the terminal: `name (path:line)`, and how it was followed when not by a unique
 /// name (`[tipo]`, `[padrão do trait]`, `[uma das implementações]`).
@@ -574,106 +500,17 @@ pub fn inventory(catalog: &Catalog, project: &RuleSet) -> Result<Inventory> {
     }
     operations.sort_by(|a, b| (&a.path, a.evidence.start_byte, &a.rule).cmp(&(&b.path, b.evidence.start_byte, &b.rule)));
 
-    // Calls followed without homonyms, the rule of "what does it call?"; then, with several,
-    // by the receiver's written type, or to every implementation of one trait's method.
-    let container = |id: &str| index.parent.get(id).copied();
-    // The type and the trait an impl or trait names, by their last segments.
-    let owner_of = |method: &str| -> Option<(Option<String>, Option<String>)> {
-        let owner = container(method)?;
-        match index.kind(owner) {
-            "impl" => Some(impl_parts(index.label(owner))),
-            "trait" => Some((None, Some(last_segment(index.label(owner))))),
-            _ => None,
-        }
-    };
-    let mut methods_by_name: BTreeMap<&str, Vec<&str>> = BTreeMap::new();
-    for (id, node) in &graph.nodes {
-        if node.category == "symbol" && matches!(node.kind.as_str(), "method" | "trait_method") {
-            methods_by_name.entry(node.label.rsplit("::").next().unwrap_or_default()).or_default().push(id);
-        }
-    }
-    // Several receivers can start where a call starts (`self` and `self.transform` in
-    // `self.transform.inverse()`, `x` in `x.f().g()`): the call's receiver is the one that
-    // ends where the call's written receiver ends.
-    let mut receiver_types: BTreeMap<(&str, usize), Vec<(usize, &str)>> = BTreeMap::new();
-    for edges in index.observed.values() {
-        for e in edges.iter().filter(|e| index.kind(&e.to) == "receiver_type") {
-            receiver_types.entry((e.evidence.path.as_str(), e.evidence.start_byte)).or_default().push((e.evidence.end_byte, &e.to));
-        }
-    }
-    let call_evidence: BTreeMap<&str, &Evidence> = index.observed.values().flatten().map(|e| (e.to.as_str(), &e.evidence)).collect();
-    // The written type of the receiver: `T::f` and `Self::f` by their path, `x.f()` by the
-    // receiver_type the extractor recorded where the call starts.
-    let receiver_type = |symbol: &str, occurrence: &str| -> Vec<String> {
-        let text = index.label(occurrence);
-        if index.kind(occurrence) == "call_observed" {
-            let Some((receiver, _)) = call_parts(text) else { return vec![] };
-            if receiver == "Self" {
-                return container(symbol).filter(|c| index.kind(c) == "impl").and_then(|c| impl_parts(index.label(c)).0).into_iter().collect();
-            }
-            return if receiver.starts_with(|c: char| c.is_uppercase()) { vec![receiver] } else { vec![] };
-        }
-        let Some(evidence) = call_evidence.get(occurrence) else { return vec![] };
-        let Some(end) = receiver_len(text).map(|n| evidence.start_byte + n) else { return vec![] };
-        let Some(written) = receiver_types
-            .get(&(evidence.path.as_str(), evidence.start_byte))
-            .and_then(|found| found.iter().find(|(e, _)| *e == end).map(|(_, id)| *id))
-        else {
-            return vec![];
-        };
-        let mut names: Vec<String> = index.candidates.get(written).into_iter().flatten().map(|t| last_segment(index.label(t))).collect();
-        names.sort();
-        names.dedup();
-        names
-    };
+    // Calls followed by the one rule of "what does it call?" (graph::resolve): without
+    // homonyms, by the receiver's own call, by its written type, or to every implementation of
+    // one trait's method. Every target is followed, one or several.
+    let resolver = Resolver::new(&graph, &syntax);
+    let receiver_type = |symbol: &str, occurrence: &str| -> Vec<String> { resolver.receiver_types(symbol, occurrence) };
     let follow = |symbol: &str, occurrence: &str| -> std::result::Result<Vec<(String, &'static str)>, usize> {
-        let edges = index.candidates.get(occurrence).cloned().unwrap_or_default();
-        if edges.len() == 1 {
-            return Ok(vec![(edges[0].to_owned(), "unique")]);
+        match resolver.resolve(symbol, occurrence, None) {
+            Resolution::Linked(how, targets) => Ok(targets.into_iter().map(|t| (t.to_owned(), how.as_str())).collect()),
+            Resolution::Homonym(candidates) => Err(candidates.len()),
+            Resolution::AboveLimit(_) | Resolution::NoCandidate => Err(0),
         }
-        let receiver = syntax.languages.get(&graph.nodes[symbol].language).and_then(|(_, r)| *r);
-        let own = receiver.is_some_and(|r| index.label(occurrence).starts_with(&format!("{r}.")));
-        let same: Vec<&&str> = edges.iter().filter(|e| container(e) == container(symbol)).collect();
-        if own && same.len() == 1 && index.kind(same[0]) != "trait_method" {
-            return Ok(vec![(same[0].to_string(), "receiver")]);
-        }
-        let name = call_parts(index.label(occurrence)).map(|(_, n)| n).unwrap_or_default();
-        let methods = methods_by_name.get(name.as_str()).cloned().unwrap_or_default();
-        let types = receiver_type(symbol, occurrence);
-        if !types.is_empty() {
-            // The type's own method; else the default of a trait the type implements.
-            let own: Vec<(String, &'static str)> = methods
-                .iter()
-                .filter(|m| owner_of(m).is_some_and(|(t, _)| t.is_some_and(|t| types.contains(&t))))
-                .map(|m| (m.to_string(), "type"))
-                .collect();
-            if !own.is_empty() {
-                return Ok(own);
-            }
-            let traits: BTreeSet<String> = graph
-                .nodes
-                .values()
-                .filter(|n| n.category == "symbol" && n.kind == "impl")
-                .filter_map(|n| match impl_parts(&n.label) {
-                    (Some(t), Some(tr)) if types.contains(&t) => Some(tr),
-                    _ => None,
-                })
-                .collect();
-            let defaults: Vec<(String, &'static str)> = methods
-                .iter()
-                .filter(|m| index.kind(m) == "trait_method" && owner_of(m).is_some_and(|(_, tr)| tr.is_some_and(|tr| traits.contains(&tr))))
-                .map(|m| (m.to_string(), "trait_default"))
-                .collect();
-            if !defaults.is_empty() {
-                return Ok(defaults);
-            }
-        }
-        // Every candidate belongs to the same trait: its implementations, all of them.
-        let traits: BTreeSet<Option<String>> = edges.iter().map(|e| owner_of(e).and_then(|(_, tr)| tr)).collect();
-        if edges.len() > 1 && traits.len() == 1 && traits.iter().all(Option::is_some) {
-            return Ok(edges.iter().map(|e| (e.to_string(), "trait")).collect());
-        }
-        Err(edges.len())
     };
     let calls_of = |symbol: &str| -> Vec<&v2::Edge> {
         let language = &graph.nodes[symbol].language;

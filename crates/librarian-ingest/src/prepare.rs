@@ -495,6 +495,14 @@ fn owner_statement(added: &Added) -> String {
             "Chamada por `{}` pelo próprio receptor ({lines}): é a declaração de mesmo nome no mesmo bloco.",
             added.for_target
         ),
+        ("called", "type") => format!(
+            "Chamada por `{}` ({lines}): é o método com esse nome do tipo escrito do receptor.",
+            added.for_target
+        ),
+        ("called", "trait_default") => format!(
+            "Chamada por `{}` ({lines}): o tipo escrito do receptor não define esse método; é o padrão do trait que ele implementa.",
+            added.for_target
+        ),
         ("called", _) => format!(
             "Chamada por `{}` ({lines}): é a única declaração com esse nome na edition.",
             added.for_target

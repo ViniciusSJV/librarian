@@ -7,6 +7,7 @@ mod extractors;
 pub mod graph;
 pub mod owner;
 pub mod prepare;
+pub mod resolve;
 pub mod search;
 
 use extractors::Registry;

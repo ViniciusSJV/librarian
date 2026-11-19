@@ -3,6 +3,7 @@
 //! names, in the forms the edition profile's adapter declares (`OwnerSyntax`): the container
 //! that is or names the owner, `<receiver>.<field>` in the method, `<receiver>.<field> = ...` in
 //! another method of the same owner, and literals of the owner type. Nothing is resolved by type.
+use crate::resolve::SETTLED;
 use crate::{
     extractors::OwnerSyntax,
     graph::{Evidence, Graph},
@@ -380,8 +381,10 @@ fn names(literal: &str, name: &str) -> bool {
 
 /// P4: the declarations a target calls, added to a chain step so that a change to the target is
 /// written with what they do in view. Only calls the "what does it call?" traversal follows
-/// without a person's choice: the one declaration of that name (`unique`), or the one in the
-/// target's own container reached through its receiver (`receiver`). Homonyms are not added.
+/// without a person's choice and with one target (`resolve::SETTLED`): the one declaration
+/// of that name (`unique`), the one in the target's own container reached by `self.m()`
+/// (`receiver`), a method of the receiver's written type (`type`) or the trait default that type
+/// gets (`trait_default`). Homonyms are not added.
 /// At most `room` declarations; the rest is reported as truncated.
 pub fn called(catalog: &Catalog, targets: &[String], already: &[String], room: usize) -> Result<(Vec<Added>, bool)> {
     let graph = crate::graph::v2::Graph::build(catalog);
@@ -390,7 +393,7 @@ pub fn called(catalog: &Catalog, targets: &[String], already: &[String], room: u
     for target in targets {
         let calls = graph.calls_from(target, 1, 64, &syntax, &BTreeMap::new())?;
         let qualified = catalog.symbols.get(target).map_or_else(|| target.clone(), |s| s.qualified_name.clone());
-        for link in calls.links.iter().filter(|l| &l.from == target && matches!(l.resolution.as_str(), "unique" | "receiver")) {
+        for link in calls.links.iter().filter(|l| &l.from == target && SETTLED.contains(&l.resolution.as_str())) {
             if already.contains(&link.to) {
                 continue;
             }

@@ -1,5 +1,6 @@
 //! Neutral graph contract: a projection of the verified graph, never a source of new relations.
 //! Every v2 edge corresponds to exactly one edge of the graph built from the same catalog.
+use crate::resolve::{Resolution, Resolver};
 use super::Evidence;
 use crate::{hash, Catalog, Result};
 use serde::{Deserialize, Serialize};
@@ -260,10 +261,12 @@ pub struct CallSyntax {
     pub languages: BTreeMap<String, (Vec<&'static str>, Option<&'static str>)>,
 }
 
-/// P1b: what a symbol calls, forward, in layers. A call is followed only when its written name
-/// points to one declaration: it matches only one (`unique`), it is the receiver's own call and
-/// only one homonym shares the caller's container (`receiver`), or the person chose one
-/// (`chosen`). Otherwise every candidate is reported (`homonym`) and none is followed.
+/// P1b: what a symbol calls, forward, in layers, by the one rule of `resolve.rs`. A call is
+/// followed only when the rule settles it on one declaration: the person chose it (`chosen`), the
+/// written name matches only it (`unique`), it is `self.m()` and the only homonym in the
+/// caller's container (`receiver`), it is a method of the receiver's written type (`type`) or
+/// the trait default that type gets (`trait_default`). Several targets (`trait`, a type that
+/// names several impls) are reported as today: every candidate as `homonym`, none followed.
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 pub struct Calls {
     pub seed: String,
@@ -318,9 +321,15 @@ pub struct CallLink {
     pub text: String,
     /// How many declarations the written name matched.
     pub candidates: usize,
-    /// unique, receiver, chosen or homonym; homonym links are reported, never followed.
+    /// unique, receiver, type, trait_default, chosen or homonym; homonym links are reported,
+    /// never followed.
     pub resolution: String,
-    pub candidate_edge: String,
+    /// The name_candidate edge to `to`. Null only for a `type` or `trait_default` link of a call
+    /// above the candidate limit: the graph kept only the count of its candidates.
+    pub candidate_edge: Option<String>,
+    /// Where the resolution comes from: `graph_edge` (the candidate edges alone: unique,
+    /// receiver, chosen, homonym) or `type` (the receiver's written type, a layer over the graph).
+    pub basis: String,
     pub evidence: Evidence,
 }
 
@@ -331,13 +340,12 @@ impl Graph {
         if self.nodes.get(seed).is_none_or(|n| n.category != "symbol") || !(1..=6).contains(&depth) || !(1..=300).contains(&max_nodes) {
             return Err("The seed must be a symbol; depth 1..6, nodes 1..300".into());
         }
-        let mut candidates_from: BTreeMap<&str, Vec<&Edge>> = BTreeMap::new();
+        let resolver = Resolver::new(self, syntax);
         let mut observed: BTreeMap<&str, Vec<&Edge>> = BTreeMap::new();
         let mut parent: BTreeMap<&str, &str> = BTreeMap::new();
         let mut declared: BTreeMap<&str, &Evidence> = BTreeMap::new();
         for e in &self.edges {
             match e.kind.as_str() {
-                "name_candidate" => candidates_from.entry(&e.from).or_default().push(e),
                 "observes" => observed.entry(&e.from).or_default().push(e),
                 "contains" => {
                     parent.insert(&e.to, &e.from);
@@ -373,16 +381,24 @@ impl Graph {
         for layer in 1..=depth {
             let mut next = vec![];
             for caller in &frontier {
-                let Some((kinds, receiver)) = syntax.languages.get(&self.nodes[caller].language) else { continue };
+                let Some((kinds, _)) = syntax.languages.get(&self.nodes[caller].language) else { continue };
                 for observation in observed.get(caller.as_str()).into_iter().flatten() {
                     let occurrence = &observation.to.as_str();
                     let written = &self.nodes[*occurrence];
                     if !kinds.contains(&written.kind.as_str()) {
                         continue;
                     }
-                    let edges = candidates_from.get(occurrence).cloned().unwrap_or_default();
-                    // No candidate edge: what the graph recorded says why, and nothing is chosen.
-                    if edges.is_empty() {
+                    let edges = resolver.candidates(occurrence);
+                    let resolved = resolver.resolve(caller, occurrence, chosen.get(*occurrence).map(String::as_str));
+                    // One target settled by the rule; or every candidate edge, as homonyms.
+                    let (reported, resolution, basis): (Vec<(&str, Option<&Edge>)>, &str, &str) = match resolved {
+                        Resolution::Linked(how, targets) if targets.len() == 1 => {
+                            (vec![(targets[0], edges.iter().copied().find(|e| e.to == targets[0]))], how.as_str(), how.basis())
+                        }
+                        _ => (edges.iter().map(|e| (e.to.as_str(), Some(*e))).collect(), "homonym", "graph_edge"),
+                    };
+                    // No candidate edge and nothing settled: what the graph recorded says why.
+                    if reported.is_empty() {
                         let (reason, candidates) = match written.ambiguous_candidates {
                             Some(count) => ("above_candidate_limit", count),
                             None => ("no_candidate_in_project", 0),
@@ -401,17 +417,11 @@ impl Graph {
                         });
                         continue;
                     }
-                    let own = receiver.is_some_and(|r| written.label.starts_with(&format!("{r}.")));
-                    let same: Vec<&Edge> = edges.iter().copied().filter(|e| container(&e.to) == container(caller)).collect();
-                    let pick = chosen.get(*occurrence).and_then(|c| edges.iter().find(|e| &e.to == c));
-                    let (reported, resolution): (Vec<&Edge>, &str) = match (pick, edges.len(), own && same.len() == 1) {
-                        (Some(e), _, _) => (vec![*e], "chosen"),
-                        (None, 1, _) => (edges.clone(), "unique"),
-                        (None, _, true) => (same, "receiver"),
-                        _ => (edges.clone(), "homonym"),
-                    };
-                    for edge in reported {
-                        if !layer_of.contains_key(&edge.to) {
+                    // Above the limit, a type link counts the declarations the graph recorded.
+                    let count = if edges.is_empty() { written.ambiguous_candidates.unwrap_or(0) } else { edges.len() };
+                    for (to, edge) in reported {
+                        let evidence = edge.map_or(&observation.evidence, |e| &e.evidence);
+                        if !layer_of.contains_key(to) {
                             if nodes.len() >= max_nodes {
                                 truncated = true;
                                 // The link exists; only its presentation is left out.
@@ -421,30 +431,31 @@ impl Graph {
                                     occurrence_kind: written.kind.clone(),
                                     text: written.label.clone(),
                                     reason: "node_limit".into(),
-                                    candidates: edges.len(),
+                                    candidates: count,
                                     resolution: Some(resolution.into()),
-                                    to: Some(edge.to.clone()),
-                                    candidate_edge: Some(edge.id.clone()),
-                                    evidence: edge.evidence.clone(),
+                                    to: Some(to.to_owned()),
+                                    candidate_edge: edge.map(|e| e.id.clone()),
+                                    evidence: evidence.clone(),
                                 });
                                 continue;
                             }
-                            layer_of.insert(edge.to.clone(), layer);
-                            nodes.push(node(&edge.to, layer));
+                            layer_of.insert(to.to_owned(), layer);
+                            nodes.push(node(to, layer));
                         }
-                        if resolution != "homonym" && followed.insert(edge.to.clone()) {
-                            next.push(edge.to.clone());
+                        if resolution != "homonym" && followed.insert(to.to_owned()) {
+                            next.push(to.to_owned());
                         }
                         links.push(CallLink {
                             from: caller.clone(),
-                            to: edge.to.clone(),
+                            to: to.to_owned(),
                             occurrence: (*occurrence).to_owned(),
                             occurrence_kind: written.kind.clone(),
                             text: written.label.clone(),
-                            candidates: edges.len(),
+                            candidates: count,
                             resolution: resolution.into(),
-                            candidate_edge: edge.id.clone(),
-                            evidence: edge.evidence.clone(),
+                            candidate_edge: edge.map(|e| e.id.clone()),
+                            basis: basis.into(),
+                            evidence: evidence.clone(),
                         });
                     }
                 }

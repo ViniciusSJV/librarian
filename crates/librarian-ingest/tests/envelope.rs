@@ -337,10 +337,11 @@ pub struct Scene { pub disk: Disk, pub total: f64 }
 impl Scene {
     pub fn sum(&mut self, n: usize) -> f64 {
         for _ in 0..n {
-            self.total = self.total + self.disk.area_of();
+            self.total = self.total + self.shape().area_of();
         }
         self.total
     }
+    pub fn shape(&self) -> &Disk { &self.disk }
 }
 pub fn reset(c: Scene2) {
     c.total = 0.0;
@@ -393,6 +394,21 @@ fn a_call_with_homonyms_is_a_gap_until_the_measure_settles_it() {
     let settled = envelope::candidates(&catalog, &chosen, Some(&uncounted)).unwrap();
     assert!(!gaps(&settled, "homonym_call").iter().any(|g| g.text.contains("area_of")), "{:#?}", settled.gaps);
     assert!(selected(&envelope::select(&catalog, &settled, Some(&uncounted), envelope::BUDGET_BYTES, 16)).contains(&("impl Disk::area_of", "cost")));
+}
+
+/// Step 2.1: a call whose receiver has a written type (`self.disk: Disk`) is settled by type: the
+/// declaration comes in as called, and there is no homonym gap for it.
+#[test]
+fn a_call_settled_by_the_receivers_type_is_called_not_a_gap() {
+    let project = Project::new();
+    fs::write(project.0.join("src/scene.rs"), SCENE.replace("self.shape().area_of()", "self.disk.area_of()")).unwrap();
+    let catalog = project.edition();
+    let chosen = [id(&catalog, "impl Scene::sum")];
+    let open = envelope::candidates(&catalog, &chosen, None).unwrap();
+    assert!(!gaps(&open, "homonym_call").iter().any(|g| g.text.contains("area_of")), "{:#?}", open.gaps);
+    let disk = open.items.iter().find(|i| i.name.ends_with("area_of")).unwrap_or_else(|| panic!("{:#?}", open.items));
+    assert_eq!(disk.id, id(&catalog, "impl Disk::area_of"));
+    assert!(disk.reasons.iter().any(|r| r.code == "called"), "{:#?}", disk.reasons);
 }
 
 #[test]
