@@ -407,7 +407,7 @@ fn a_type_link_is_followed_and_a_homonym_is_not() {
 #[test]
 fn the_owner_context_takes_settled_links_only() {
     let s = setup();
-    assert_eq!(SETTLED, ["unique", "receiver", "type", "trait_default"]);
+    assert_eq!(SETTLED, ["unique", "import", "receiver", "type", "trait_default"]);
     let added = |label: &str| {
         let (added, _) = owner::called(&s.catalog, &[symbol(&s.graph, label)], &[], 10).unwrap();
         let mut out: Vec<(String, String)> = added.iter().map(|a| (s.graph.nodes[&a.symbol_id].label.clone(), a.resolution.clone())).collect();

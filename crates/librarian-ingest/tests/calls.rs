@@ -154,7 +154,7 @@ fn calls_are_followed_only_where_the_written_name_points_to_one_declaration() {
     let found: Vec<_> = python.links.iter().map(|l| (label(&graph, &l.to), l.resolution.as_str(), l.candidates)).collect();
     assert_eq!(found, [("World.hit".to_owned(), "receiver", 2)]);
     // Without a receiver in the syntax (profiles before owner syntax), the call stays a homonym.
-    let bare = v2::CallSyntax { languages: syntax.languages.iter().map(|(l, (k, _))| (l.clone(), (k.clone(), None))).collect() };
+    let bare = v2::CallSyntax { languages: syntax.languages.iter().map(|(l, (k, _))| (l.clone(), (k.clone(), None))).collect(), facts: None };
     let homonyms = graph.calls_from(&symbol(&graph, "World.color_at"), 1, 50, &bare, &BTreeMap::new()).unwrap();
     assert!(homonyms.links.iter().all(|l| l.resolution == "homonym") && homonyms.links.len() == 2);
 }

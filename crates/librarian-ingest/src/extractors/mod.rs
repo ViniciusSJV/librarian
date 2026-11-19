@@ -45,6 +45,13 @@ pub(crate) trait Extractor: Sync {
     fn call_kinds(&self) -> &'static [&'static str] {
         &[]
     }
+    /// What the rule of "what does it call?" reads from a file besides the graph (step 2.2): the
+    /// names each scope binds to imports or locally, and the written type of method receivers.
+    /// Read from the preserved bytes when the rule needs it; nothing is recorded. Empty when the
+    /// bytes do not parse.
+    fn call_facts(&self, _bytes: &[u8]) -> crate::resolve::CallFacts {
+        Default::default()
+    }
     /// Occurrence kinds recorded only when their written name matches a declaration (v5): a
     /// plain name is far more often a local than a use, and nothing is kept for those.
     fn matched_only(&self) -> &'static [&'static str] {

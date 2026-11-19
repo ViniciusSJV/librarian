@@ -256,14 +256,19 @@ impl Graph {
 
 /// What "what does it call?" needs from the edition profile, by language: the occurrence kinds
 /// that are calls and the receiver of a method's own calls (`<receiver>.f()`), when recorded.
+/// `facts` reads what the rule needs from one file's preserved bytes (step 2.2); without it, the
+/// rule uses the graph alone.
 #[derive(Debug, Clone, Default)]
 pub struct CallSyntax {
     pub languages: BTreeMap<String, (Vec<&'static str>, Option<&'static str>)>,
+    pub facts: Option<crate::resolve::FileFacts>,
 }
 
 /// P1b: what a symbol calls, forward, in layers, by the one rule of `resolve.rs`. A call is
 /// followed only when the rule settles it on one declaration: the person chose it (`chosen`), the
-/// written name matches only it (`unique`), it is `self.m()` and the only homonym in the
+/// written name matches only it among the candidates the call's form reaches (`unique`), the
+/// receiver is a module of the project and it is that module's only one (`import`), it is
+/// `self.m()` and the only homonym in the
 /// caller's container (`receiver`), it is a method of the receiver's written type (`type`) or
 /// the trait default that type gets (`trait_default`). Several targets (`trait`, a type that
 /// names several impls) are reported as today: every candidate as `homonym`, none followed.
@@ -388,13 +393,16 @@ impl Graph {
                     if !kinds.contains(&written.kind.as_str()) {
                         continue;
                     }
-                    let edges = resolver.candidates(occurrence);
+                    // The candidates the call's form reaches (step 2.2).
+                    let edges = resolver.admitted(caller, occurrence);
                     let resolved = resolver.resolve(caller, occurrence, chosen.get(*occurrence).map(String::as_str));
                     // One target settled by the rule; or every candidate edge, as homonyms.
                     let (reported, resolution, basis): (Vec<(&str, Option<&Edge>)>, &str, &str) = match resolved {
                         Resolution::Linked(how, targets) if targets.len() == 1 => {
                             (vec![(targets[0], edges.iter().copied().find(|e| e.to == targets[0]))], how.as_str(), how.basis())
                         }
+                        // Ruled out by the receiver's written type (step 2.2): no link.
+                        Resolution::NoCandidate => (vec![], "homonym", "graph_edge"),
                         _ => (edges.iter().map(|e| (e.to.as_str(), Some(*e))).collect(), "homonym", "graph_edge"),
                     };
                     // No candidate edge and nothing settled: what the graph recorded says why.

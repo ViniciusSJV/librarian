@@ -1,6 +1,7 @@
 //! Python adapter (rustpython-parser). Only syntactic declarations and occurrences.
 //! No import resolution, dynamic dispatch, decorator evaluation or runtime behavior.
 use super::{Extraction, Extractor, Occurrence, OwnerSyntax};
+use crate::resolve::{CallFacts, Import, NameScope};
 use crate::{hash, Chunk, Diagnostic, Source, Symbol};
 use rustpython_ast::{self as ast, text_size::TextRange, Ranged, Visitor};
 use rustpython_parser::Parse;
@@ -114,6 +115,249 @@ impl Extractor for Python {
             &["name_reference", "name_write"]
         } else {
             &[]
+        }
+    }
+
+    /// Step 2.2: the file's name scopes, with what each binds to an import and otherwise.
+    fn call_facts(&self, bytes: &[u8]) -> CallFacts {
+        let Ok(text) = std::str::from_utf8(bytes) else { return CallFacts::default() };
+        let Ok((suite, offset)) = parse(text) else { return CallFacts::default() };
+        let mut scopes = Scopes { offset, open: vec![0], scopes: vec![NameScope { start: 0, end: usize::MAX, ..Default::default() }], globals: vec![Default::default()] };
+        for stmt in suite {
+            scopes.visit_stmt(stmt);
+        }
+        scopes.leave();
+        CallFacts { scopes: scopes.scopes, ..Default::default() }
+    }
+}
+
+/// Step 2.2: the name scopes of a file (module, class, function, lambda, comprehension), for the
+/// rule of "what does it call?": the names each binds to an import, and the names it binds
+/// otherwise (parameters, assignment, `for`, `with`, `except` and comprehension targets, nested
+/// definitions). Decorators, defaults and bases belong to the enclosing scope.
+struct Scopes {
+    offset: usize,
+    open: Vec<usize>,
+    scopes: Vec<NameScope>,
+    /// Names each open scope declares `global` or `nonlocal`: not its own.
+    globals: Vec<std::collections::BTreeSet<String>>,
+}
+
+impl Scopes {
+    fn enter(&mut self, range: TextRange, class: bool) {
+        let (start, end) = (usize::from(range.start()) + self.offset, usize::from(range.end()) + self.offset);
+        self.scopes.push(NameScope { start, end, class, ..Default::default() });
+        self.open.push(self.scopes.len() - 1);
+        self.globals.push(Default::default());
+    }
+
+    fn leave(&mut self) {
+        let (Some(i), Some(globals)) = (self.open.pop(), self.globals.pop()) else { return };
+        self.scopes[i].locals.retain(|n| !globals.contains(n));
+    }
+
+    fn top(&mut self) -> &mut NameScope {
+        let i = self.open.last().copied().unwrap_or(0);
+        &mut self.scopes[i]
+    }
+
+    fn local(&mut self, name: &str) {
+        self.top().locals.insert(name.to_owned());
+    }
+
+    fn parameters(&mut self, arguments: &ast::Arguments) {
+        let params = arguments.posonlyargs.iter().chain(&arguments.args).chain(&arguments.kwonlyargs).map(|a| &a.def);
+        for arg in params.chain(arguments.vararg.as_deref()).chain(arguments.kwarg.as_deref()) {
+            self.local(&arg.arg);
+        }
+    }
+
+    fn defaults(&mut self, arguments: &ast::Arguments) {
+        let all = arguments.posonlyargs.iter().chain(&arguments.args).chain(&arguments.kwonlyargs);
+        for default in all.filter_map(|a| a.default.clone()) {
+            self.visit_expr(*default);
+        }
+    }
+
+    /// A function: its name in the enclosing scope, then its own scope.
+    fn function(&mut self, name: &str, range: TextRange, arguments: ast::Arguments, body: Vec<ast::Stmt>, decorators: Vec<ast::Expr>) {
+        self.local(name);
+        for decorator in decorators {
+            self.visit_expr(decorator);
+        }
+        self.defaults(&arguments);
+        self.enter(range, false);
+        self.parameters(&arguments);
+        for stmt in body {
+            self.visit_stmt(stmt);
+        }
+        self.leave();
+    }
+
+    /// A comprehension is a scope of its own: its targets do not leak.
+    fn comprehension(&mut self, range: TextRange, generators: Vec<ast::Comprehension>, elements: Vec<ast::Expr>) {
+        self.enter(range, false);
+        for generator in generators {
+            self.visit_comprehension(generator);
+        }
+        for element in elements {
+            self.visit_expr(element);
+        }
+        self.leave();
+    }
+}
+
+impl Visitor for Scopes {
+    fn visit_stmt_function_def(&mut self, node: ast::StmtFunctionDef) {
+        self.function(&node.name, node.range, *node.args, node.body, node.decorator_list);
+    }
+
+    fn visit_stmt_async_function_def(&mut self, node: ast::StmtAsyncFunctionDef) {
+        self.function(&node.name, node.range, *node.args, node.body, node.decorator_list);
+    }
+
+    fn visit_stmt_class_def(&mut self, node: ast::StmtClassDef) {
+        self.local(&node.name);
+        for expr in node.decorator_list.into_iter().chain(node.bases) {
+            self.visit_expr(expr);
+        }
+        for keyword in node.keywords {
+            self.visit_keyword(keyword);
+        }
+        self.enter(node.range, true);
+        for stmt in node.body {
+            self.visit_stmt(stmt);
+        }
+        self.leave();
+    }
+
+    fn visit_expr_lambda(&mut self, node: ast::ExprLambda) {
+        self.defaults(&node.args);
+        self.enter(node.range, false);
+        self.parameters(&node.args);
+        self.visit_expr(*node.body);
+        self.leave();
+    }
+
+    fn visit_expr_list_comp(&mut self, node: ast::ExprListComp) {
+        self.comprehension(node.range, node.generators, vec![*node.elt]);
+    }
+
+    fn visit_expr_set_comp(&mut self, node: ast::ExprSetComp) {
+        self.comprehension(node.range, node.generators, vec![*node.elt]);
+    }
+
+    fn visit_expr_generator_exp(&mut self, node: ast::ExprGeneratorExp) {
+        self.comprehension(node.range, node.generators, vec![*node.elt]);
+    }
+
+    fn visit_expr_dict_comp(&mut self, node: ast::ExprDictComp) {
+        self.comprehension(node.range, node.generators, vec![*node.key, *node.value]);
+    }
+
+    fn visit_comprehension(&mut self, node: ast::Comprehension) {
+        self.visit_expr(node.target);
+        self.visit_expr(node.iter);
+        for condition in node.ifs {
+            self.visit_expr(condition);
+        }
+    }
+
+    fn visit_expr_name(&mut self, node: ast::ExprName) {
+        if !matches!(node.ctx, ast::ExprContext::Load) {
+            self.local(&node.id);
+        }
+    }
+
+    fn visit_stmt_import(&mut self, node: ast::StmtImport) {
+        for alias in node.names {
+            let name = alias.name.to_string();
+            match alias.asname {
+                Some(bound) => {
+                    self.top().imports.insert(bound.to_string(), Import::Module(name));
+                }
+                None => {
+                    // `import a.b` binds `a`; `a.b` written whole is the module `a.b`.
+                    let head = name.split('.').next().unwrap_or_default().to_owned();
+                    self.top().imports.insert(head.clone(), Import::Module(head));
+                    if name.contains('.') {
+                        self.top().imports.insert(name.clone(), Import::Module(name));
+                    }
+                }
+            }
+        }
+    }
+
+    fn visit_stmt_import_from(&mut self, node: ast::StmtImportFrom) {
+        let dots = ".".repeat(node.level.map_or(0, |l| l.to_usize()));
+        let package = format!("{dots}{}", node.module.as_ref().map_or("", |m| m.as_str()));
+        for alias in node.names {
+            if alias.name.as_str() == "*" {
+                continue;
+            }
+            let bound = alias.asname.as_ref().unwrap_or(&alias.name).to_string();
+            self.top().imports.insert(bound, Import::From(package.clone(), alias.name.to_string()));
+        }
+    }
+
+    fn visit_excepthandler_except_handler(&mut self, node: ast::ExceptHandlerExceptHandler) {
+        if let Some(name) = &node.name {
+            self.local(name);
+        }
+        self.generic_visit_excepthandler_except_handler(node);
+    }
+
+    // The generic visitor stops at these: `with ... as`, `match`/`case` and keyword arguments.
+    fn visit_withitem(&mut self, node: ast::WithItem) {
+        self.visit_expr(node.context_expr);
+        if let Some(target) = node.optional_vars {
+            self.visit_expr(*target);
+        }
+    }
+
+    fn visit_match_case(&mut self, node: ast::MatchCase) {
+        self.visit_pattern(node.pattern);
+        if let Some(guard) = node.guard {
+            self.visit_expr(*guard);
+        }
+        for stmt in node.body {
+            self.visit_stmt(stmt);
+        }
+    }
+
+    fn visit_pattern_match_as(&mut self, node: ast::PatternMatchAs) {
+        if let Some(name) = &node.name {
+            self.local(name);
+        }
+        self.generic_visit_pattern_match_as(node);
+    }
+
+    fn visit_pattern_match_star(&mut self, node: ast::PatternMatchStar) {
+        if let Some(name) = &node.name {
+            self.local(name);
+        }
+    }
+
+    fn visit_pattern_match_mapping(&mut self, node: ast::PatternMatchMapping) {
+        if let Some(rest) = &node.rest {
+            self.local(rest);
+        }
+        self.generic_visit_pattern_match_mapping(node);
+    }
+
+    fn visit_keyword(&mut self, node: ast::Keyword) {
+        self.visit_expr(node.value);
+    }
+
+    fn visit_stmt_global(&mut self, node: ast::StmtGlobal) {
+        if let Some(globals) = self.globals.last_mut() {
+            globals.extend(node.names.iter().map(|n| n.to_string()));
+        }
+    }
+
+    fn visit_stmt_nonlocal(&mut self, node: ast::StmtNonlocal) {
+        if let Some(globals) = self.globals.last_mut() {
+            globals.extend(node.names.iter().map(|n| n.to_string()));
         }
     }
 }

@@ -156,7 +156,8 @@ pub struct Catalog {
     symbols: BTreeMap<String, Symbol>,
     names: BTreeMap<String, Vec<String>>,
     chunks: BTreeMap<String, Chunk>,
-    snapshots: BTreeMap<String, Vec<u8>>,
+    /// Shared with the file facts that "what does it call?" reads (step 2.2).
+    snapshots: std::sync::Arc<BTreeMap<String, Vec<u8>>>,
     diagnostics: Vec<Diagnostic>,
 }
 
@@ -517,7 +518,7 @@ impl Catalog {
             symbols: symbol_map,
             names,
             chunks: chunk_map,
-            snapshots,
+            snapshots: std::sync::Arc::new(snapshots),
             diagnostics,
         })
     }
@@ -539,6 +540,18 @@ impl Catalog {
             let receiver = self.registry.owner_syntax(&source.language).map(|o| o.receiver);
             syntax.languages.insert(source.language.clone(), (extractor.call_kinds().to_vec(), receiver));
         }
+        // Step 2.2: a file's imports, local bindings and receivers' written types, read from its
+        // preserved bytes by its language's extractor when the rule needs them.
+        let files: BTreeMap<String, (String, &'static dyn extractors::Extractor)> = self
+            .sources
+            .values()
+            .filter_map(|s| Some((s.path.clone(), (s.id.clone(), self.registry.extractor(&s.language)?))))
+            .collect();
+        let snapshots = self.snapshots.clone();
+        syntax.facts = Some(resolve::FileFacts(std::sync::Arc::new(move |path: &str| {
+            let (id, extractor) = files.get(path)?;
+            Some(extractor.call_facts(snapshots.get(id)?))
+        })));
         syntax
     }
     pub fn sources(&self) -> &BTreeMap<String, Source> {

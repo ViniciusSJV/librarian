@@ -1196,7 +1196,7 @@ const STRINGS = {
   'path.unresolved.title.no_candidate_in_project': ['Sem candidato no projeto ({n})', 'No candidate in the project ({n})'],
   'path.unresolved.title.node_limit': ['Omitidas pelo limite de pontos ({n})', 'Left out by the point limit ({n})'],
   'path.unresolved.why.above_candidate_limit': ['Ambiguidade: o nome combina com mais declarações do que o grafo liga, e ele guarda só a quantidade. Nenhuma foi escolhida.', 'Ambiguity: the name matches more declarations than the graph links, and it keeps only how many. None was chosen.'],
-  'path.unresolved.why.no_candidate_in_project': ['Nenhuma declaração do projeto corresponde a esta chamada (pelo nome escrito, quando há um). Isso não diz que a chamada é externa nem que ela não acontece.', 'No declaration of the project matches this call (by its written name, when there is one). This does not say the call is external, nor that it does not happen.'],
+  'path.unresolved.why.no_candidate_in_project': ['Nenhuma declaração do projeto que a forma da chamada alcança corresponde a ela (pelo nome escrito, quando há um). Uma chamada x.m() não alcança função solta, nem nada de um import de fora do projeto; uma chamada sem receptor não alcança método; o tipo escrito do receptor pode excluir o único candidato. Isso não diz que a chamada é externa nem que ela não acontece.', 'No declaration of the project that the call\'s form reaches matches this call (by its written name, when there is one). A call x.m() does not reach a free function, nor anything of an import from outside the project; a call without a receiver does not reach a method; the receiver\'s written type may rule out the one candidate. This does not say the call is external, nor that it does not happen.'],
   'path.unresolved.why.node_limit': ['Limite de apresentação, não ambiguidade: o grafo liga estas chamadas, mas o desenho atingiu o teto de {max} pontos. Reduza a profundidade para vê-las.', 'Presentation limit, not ambiguity: the graph links these calls, but the drawing reached the cap of {max} points. Reduce the depth to see them.'],
   'path.unresolved.candidates': ['{n} candidatos', '{n} candidates'],
   'path.unresolved.target': ['seria {label}', 'would be {label}'],
@@ -1205,7 +1205,8 @@ const STRINGS = {
   'path.callsAmbiguous': [' {n} chamada(s) tracejada(s): o nome combina com homônimos e o caminho para ali até você escolher.', ' {n} dashed call(s): the name matches homonyms and the path stops there until you choose.'],
   'path.chosenCount': [' {n} escolha(s) sua(s).', ' {n} choice(s) of yours.'],
   'path.callsClick': [' Clique numa linha tracejada para escolher o candidato.', ' Click a dashed line to choose the candidate.'],
-  'path.resolution.unique': ['seguida: o nome só combina com esta declaração', 'followed: the name matches only this declaration'],
+  'path.resolution.unique': ['seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta', 'followed: among the declarations the call\'s form reaches, the name matches only this one'],
+  'path.resolution.import': ['seguida: o receptor é um módulo do projeto (import), e só esta função dele tem o nome', 'followed: the receiver is a module of the project (import), and only this function of it has the name'],
   'path.resolution.receiver': ['seguida: chamada do próprio receptor (self.m()), e só este homônimo está na mesma classe ou impl', 'followed: the receiver\'s own call (self.m()), and only this homonym is in the same class or impl'],
   'path.resolution.type': ['seguida: método do tipo escrito do receptor', 'followed: a method of the receiver\'s written type'],
   'path.resolution.trait_default': ['seguida: o tipo escrito do receptor não define o método; vale o padrão do trait que ele implementa', 'followed: the receiver\'s written type does not define the method; the default of a trait it implements applies'],
@@ -1215,7 +1216,8 @@ const STRINGS = {
   'help.pathRan': ['Usa o último Medir tudo. Esconde as funções que foram contadas e não tiveram passagens observadas, o que não prova que não rodaram. Quando um nome combina com vários homônimos e só um deles teve contagem, segue por ele, como se você o tivesse escolhido. As caixas mostram a contagem observada de cada função e o tempo instrumentado, com a cor de azul (pouco) a vermelho (muito).', 'Uses the latest Measure everything. Hides the functions that were counted and had no passes observed, which does not prove they did not run. When a name matches several homonyms and only one of them had a count, follows it, as if you had chosen it. The boxes show the observed count and instrumented time of each function, colored from blue (little) to red (a lot).'],
   'path.notRan': ['sem contagem', 'no count'],
   'path.measuredCount': [' {n} homônimo(s) resolvido(s) pela medição.', ' {n} homonym(s) resolved by the measure.'],
-  'path.resolution.homonym': ['não seguida: o nome combina com {n} declarações; esta é uma delas', 'not followed: the name matches {n} declarations; this is one of them'],
+  'path.resolution.homonym': ['não seguida: o nome combina com {n} declarações que a forma da chamada alcança; esta é uma delas', 'not followed: the name matches {n} declarations the call\'s form reaches; this is one of them'],
+  'path.resolution.homonymOne': ['não seguida: das declarações que a forma da chamada alcança, só esta tem o nome; as outras de mesmo nome foram excluídas pela forma, e nada confirma que a chamada chega aqui', 'not followed: of the declarations the call\'s form reaches, only this one has the name; the others of the same name were ruled out by the form, and nothing confirms the call reaches here'],
   'path.choose': ['Seguir por este', 'Follow this one'],
   'path.unchoose': ['Desfazer escolha', 'Undo choice'],
   'path.resetChoices': ['Limpar escolhas', 'Clear choices'],
@@ -1507,6 +1509,8 @@ const STRINGS = {
   'inventory.step.type.help': ['Seguida pelo tipo escrito do receptor (parâmetro anotado, self no impl, campo, padrão do enum).', 'Followed by the receiver\'s written type (annotated parameter, self in the impl, field, enum pattern).'],
   'inventory.step.trait_default': ['padrão do trait', 'trait default'],
   'inventory.step.trait_default.help': ['O tipo escrito não tem o método; segue o método padrão de um trait que o tipo implementa.', 'The written type lacks the method; follows the default of a trait the type implements.'],
+  'inventory.step.import': ['pelo import', 'by import'],
+  'inventory.step.import.help': ['Seguida pelo import do arquivo: o receptor é um módulo do projeto, e só esta função dele tem o nome.', 'Followed by the file\'s import: the receiver is a module of the project, and only this function of it has the name.'],
   'inventory.step.trait': ['uma das implementações', 'one of the implementations'],
   'inventory.step.trait.help': ['Candidata: o tipo do receptor não está escrito e todos os homônimos implementam o mesmo trait; cada implementação é seguida.', 'Candidate: the receiver\'s type is not written and every homonym implements the same trait; each implementation is followed.'],
   'inventory.boundList': ['lista atribuída na linha {lines}', 'list assigned on line {lines}'],
@@ -7176,7 +7180,7 @@ function renderInventory() {
     ...measuredTags(o));
   // A step and, when it was not followed by a unique name, how it was followed.
   const stepParts = (s, k) => [k ? ' → ' : '', goTo(s.to, s.to_name), ...declarationTags(s.to),
-    ['type', 'trait_default', 'trait'].includes(s.resolution)
+    ['type', 'trait_default', 'trait', 'import'].includes(s.resolution)
       ? el('span', { className: 'muted', style: 'font-size: 11px', title: t(`inventory.step.${s.resolution}.help`), textContent: ` (${t(`inventory.step.${s.resolution}`)})` }) : null,
     where(s.path, s.line)];
   // The operations a chain reaches in one declaration are one line, as in the terminal.
@@ -7748,7 +7752,7 @@ function showUse(info, nodes) {
     else delete pathChosen[l.occurrence];
     drawPath();
   };
-  const resolution = l => el('div', { className: 'muted' }, t(`path.resolution.${l.resolution}`, { n: l.candidates }),
+  const resolution = l => el('div', { className: 'muted' }, t(l.resolution === 'homonym' && l.candidates === 1 ? 'path.resolution.homonymOne' : `path.resolution.${l.resolution}`, { n: l.candidates }),
     l.resolution === 'homonym' ? el('button', { textContent: t('path.choose'), style: 'margin-left: 8px', onclick: decide(l, true) }) : null,
     l.resolution === 'chosen' ? el('button', { textContent: t('path.unchoose'), style: 'margin-left: 8px', onclick: decide(l, false) }) : null);
   box.replaceChildren(

@@ -91,9 +91,39 @@ impl Extractor for Rust {
             shapes,
             impl_name: None,
             types: vec![],
+            refs: vec![],
+            written: None,
         };
         observer.visit_file(&tree);
         observer.found
+    }
+
+    /// Step 2.2: each method call receiver's written type, and whether it is a reference.
+    fn call_facts(&self, bytes: &[u8]) -> crate::resolve::CallFacts {
+        let Ok(text) = std::str::from_utf8(bytes) else { return Default::default() };
+        let Ok((tree, offset)) = parse(text) else { return Default::default() };
+        let mut shapes = Shapes::default();
+        if self.v6 {
+            shapes.visit_file(&tree);
+        }
+        let mut observer = Occurrences {
+            g6: self.g6,
+            g6d: self.g6d,
+            v5: self.v5,
+            v6: self.v6,
+            v7: self.v7,
+            offset,
+            found: vec![],
+            impl_type: None,
+            locals: vec![],
+            shapes,
+            impl_name: None,
+            types: vec![],
+            refs: vec![],
+            written: Some(BTreeMap::new()),
+        };
+        observer.visit_file(&tree);
+        crate::resolve::CallFacts { receiver_types: observer.written.unwrap_or_default(), ..Default::default() }
     }
 
     fn candidate_kinds(&self) -> &'static [&'static str] {
@@ -295,6 +325,11 @@ struct Occurrences {
     /// v6: names with a written type in each enclosing function. A later binding of the same
     /// name replaces the earlier one; blocks are not scopes.
     types: Vec<BTreeMap<String, String>>,
+    /// Step 2.2: names whose written type is a reference, in each enclosing function.
+    refs: Vec<std::collections::BTreeSet<String>>,
+    /// Step 2.2: when Some, each receiver_type's span, type and whether it is a reference, for
+    /// the rule's file facts; the occurrences themselves do not change.
+    written: Option<BTreeMap<(usize, usize), (String, bool)>>,
 }
 
 use std::collections::BTreeMap;
@@ -309,6 +344,9 @@ struct Shapes {
     variants: BTreeMap<(String, String), String>,
     /// v7: free function -> the type its signature returns.
     returns: BTreeMap<String, String>,
+    /// Step 2.2: (struct, field) and free functions whose written type is a reference.
+    ref_fields: std::collections::BTreeSet<(String, String)>,
+    ref_returns: std::collections::BTreeSet<String>,
 }
 
 impl<'ast> Visit<'ast> for Shapes {
@@ -317,6 +355,9 @@ impl<'ast> Visit<'ast> for Shapes {
         for field in &value.fields {
             if let Some(ident) = &field.ident {
                 fields.insert(ident.to_string(), (type_name(&field.ty), element_name(&field.ty)));
+                if is_reference(&field.ty) {
+                    self.ref_fields.insert((value.ident.to_string(), ident.to_string()));
+                }
             }
         }
     }
@@ -324,6 +365,9 @@ impl<'ast> Visit<'ast> for Shapes {
         if let syn::ReturnType::Type(_, ty) = &value.sig.output {
             if let Some(name) = type_name(ty) {
                 self.returns.insert(value.sig.ident.to_string(), name);
+            }
+            if is_reference(ty) {
+                self.ref_returns.insert(value.sig.ident.to_string());
             }
         }
         visit::visit_item_fn(self, value);
@@ -336,6 +380,16 @@ impl<'ast> Visit<'ast> for Shapes {
                 }
             }
         }
+    }
+}
+
+/// Step 2.2: whether a written type is a reference (`&T`, `&mut T`), parentheses dropped.
+fn is_reference(ty: &syn::Type) -> bool {
+    match ty {
+        syn::Type::Reference(_) => true,
+        syn::Type::Paren(p) => is_reference(&p.elem),
+        syn::Type::Group(g) => is_reference(&g.elem),
+        _ => false,
     }
 }
 
@@ -435,6 +489,7 @@ impl Occurrences {
     fn base_type(&mut self, base: &syn::Expr) {
         if self.v7 {
             if let Some(ty) = self.type_of(base) {
+                self.note(base, base.span(), &ty);
                 self.push("receiver_type", base.span(), Some(ty));
             }
         }
@@ -472,18 +527,24 @@ impl Occurrences {
         self.locals.push(bindings.0);
         if self.v6 {
             let mut types = BTreeMap::new();
+            let mut refs = std::collections::BTreeSet::new();
             for input in &sig.inputs {
                 if let syn::FnArg::Typed(typed) = input {
                     if let (syn::Pat::Ident(ident), Some(ty)) = (typed.pat.as_ref(), self.written(&typed.ty)) {
                         types.insert(ident.ident.to_string(), ty);
+                        if is_reference(&typed.ty) {
+                            refs.insert(ident.ident.to_string());
+                        }
                     }
                 }
             }
             self.types.push(types);
+            self.refs.push(refs);
         }
         visit(self);
         if self.v6 {
             self.types.pop();
+            self.refs.pop();
         }
         self.locals.pop();
     }
@@ -493,9 +554,46 @@ impl Occurrences {
         type_name(ty).and_then(|t| if t == "Self" { self.impl_name.clone() } else { Some(t) })
     }
 
-    fn bind(&mut self, name: String, ty: String) {
+    fn bind(&mut self, name: String, ty: String, by_reference: bool) {
+        if let Some(refs) = self.refs.last_mut() {
+            if by_reference {
+                refs.insert(name.clone());
+            } else {
+                refs.remove(&name);
+            }
+        }
         if let Some(types) = self.types.last_mut() {
             types.insert(name, ty);
+        }
+    }
+
+    /// Step 2.2: records a receiver's written type for the rule's file facts.
+    fn note(&mut self, expr: &syn::Expr, span: Span, ty: &str) {
+        let by_reference = self.by_reference(expr);
+        let range = span.byte_range();
+        if let Some(written) = self.written.as_mut() {
+            written.insert((range.start + self.offset, range.end + self.offset), (ty.to_owned(), by_reference));
+        }
+    }
+
+    /// Step 2.2: whether an expression's written type, as `type_of` reads it, is a reference.
+    fn by_reference(&self, expr: &syn::Expr) -> bool {
+        match expr {
+            syn::Expr::Paren(p) => self.by_reference(&p.expr),
+            syn::Expr::Reference(_) => true,
+            syn::Expr::Path(p) if p.path.is_ident("self") => false,
+            syn::Expr::Path(p) => p.path.get_ident().is_some_and(|i| self.refs.last().is_some_and(|r| r.contains(&i.to_string()))),
+            syn::Expr::Field(field) => match (field.base.as_ref(), &field.member, self.impl_name.as_ref()) {
+                (syn::Expr::Path(base), syn::Member::Named(ident), Some(owner)) if base.path.is_ident("self") => {
+                    self.shapes.ref_fields.contains(&(owner.clone(), ident.to_string()))
+                }
+                _ => false,
+            },
+            syn::Expr::Call(call) => match call.func.as_ref() {
+                syn::Expr::Path(p) if self.v7 && p.path.segments.len() == 1 => self.shapes.ref_returns.contains(&p.path.segments[0].ident.to_string()),
+                _ => false,
+            },
+            _ => false,
         }
     }
 
@@ -684,7 +782,7 @@ impl<'ast> Visit<'ast> for Occurrences {
                 let owner = owner.ident.to_string();
                 let owner = if owner == "Self" { self.impl_name.clone() } else { Some(owner) };
                 if let Some(ty) = owner.and_then(|o| self.shapes.variants.get(&(o, variant.ident.to_string())).cloned()) {
-                    self.bind(ident.ident.to_string(), ty);
+                    self.bind(ident.ident.to_string(), ty, false);
                 }
             }
         }
@@ -707,7 +805,7 @@ impl<'ast> Visit<'ast> for Occurrences {
                     _ => None,
                 };
                 if let Some(name) = name {
-                    self.bind(name.to_string(), ty);
+                    self.bind(name.to_string(), ty, false);
                 }
             }
         }
@@ -753,6 +851,7 @@ impl<'ast> Visit<'ast> for Occurrences {
         if self.v6 {
             // The receiver's type only when it is written (see type_of); never inferred.
             if let Some(ty) = self.type_of(&value.receiver) {
+                self.note(&value.receiver, value.receiver.span(), &ty);
                 self.push("receiver_type", value.receiver.span(), Some(ty));
             }
             // A closure run once per element: a loop from the method's name to the closure's
@@ -785,12 +884,12 @@ impl<'ast> Visit<'ast> for Occurrences {
         visit::visit_local(self, value);
         // v6: after the value, so `let x = x.f()` reads the earlier `x`.
         if self.v6 {
-            let (pat, written) = match &value.pat {
-                syn::Pat::Type(typed) => (typed.pat.as_ref(), self.written(&typed.ty)),
-                pat => (pat, value.init.as_ref().and_then(|i| self.type_of(&i.expr))),
+            let (pat, written, by_reference) = match &value.pat {
+                syn::Pat::Type(typed) => (typed.pat.as_ref(), self.written(&typed.ty), is_reference(&typed.ty)),
+                pat => (pat, value.init.as_ref().and_then(|i| self.type_of(&i.expr)), value.init.as_ref().is_some_and(|i| self.by_reference(&i.expr))),
             };
             if let (syn::Pat::Ident(ident), Some(ty)) = (pat, written) {
-                self.bind(ident.ident.to_string(), ty);
+                self.bind(ident.ident.to_string(), ty, by_reference);
             }
         }
     }
