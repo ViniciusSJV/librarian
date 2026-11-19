@@ -26,7 +26,8 @@ Muitos ids se repetem com sentidos diferentes nos documentos antigos. Daqui em d
 | `PIL-G1`–`PIL-G8` | Limitações do grafo no Piloto 1 | PIL:265–272 | `GE-G1`–`GE-G7` |
 | `PIL-P1`–`PIL-P4` | Limitações de evidências e fatos no Piloto 1 | PIL:283–288 | `E4-P1`–`E4-P4` |
 | `PIL-Q1`–`PIL-Q6` | Perguntas do Piloto 1 (turns 01–14); `PIL-Q6/C3` é a claim C3 de uma resposta | PIL:171–186 | `ESP-Q1`–`ESP-Q12` |
-| `HC-F1`–`HC-F26` | Fatos do acervo do Healthchecks (citados também só como F1–F26) | PIL:213–246 | `ESP-F0`–`ESP-F13` |
+| `HC-F1`–`HC-F26` | Fatos do acervo do Healthchecks (citados também só como F1–F26) | PIL:213–246 | `ESP-F0`–`ESP-F13`, `HC-1`–`HC-60` |
+| `HC-1`–`HC-60`, `RT-1`–`RT-55` | Chamadas da amostra do portão da Fase 2: Healthchecks e ray tracer. RT-31–RT-55 vêm do passo 2.1, com a verdade proposta pelo agente | [tools/precisao/fixtures/](../tools/precisao/fixtures/) (`amostra-hc.json`, `amostra-rt.json`) | `HC-F*` (fatos, não chamadas) |
 | `1B-A`–`1B-E` | Partes do diagnóstico do Piloto 1b | 1B-02, 1B-03 | — |
 | `INV-D1`–`INV-D6` | Seções do inventário dos MDs | 1B-03 | demais D |
 | `N0`–`N8` | Níveis de tipos (Python e Rust) | 1B-02, Parte B | — |

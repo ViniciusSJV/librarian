@@ -1,0 +1,18 @@
+{
+ "src/scene.rs:128": {
+  "seed": "src:60e84ff1e59fc5d81afd0bdb05ef7c9ffa04c643044ee348d41eadab8a29bf58:a21eef89a69386277a04f3520635ada6498225e952194860a5d770c667ae89b1:method:3833:4350",
+  "text": "self.camera.validate()"
+ },
+ "src/bin/librarian_measure.rs:36": {
+  "seed": "src:9a3b2800680c174ce93bb60ce4f9843a903fec494fe81167d0f5d1ea9bbbd8f0:85564805231a009ae326e1f2f80b00f6a35fd2b7b304f83f4918d0bd0959a16b:function:791:3107",
+  "text": "wall.set_transform(Matrix::translation(Tuple::vector(0., 0., 10.)) * Matrix::rotation_x(PI / 2.))"
+ },
+ "src/groups.rs:95": {
+  "seed": "src:e19e0152f89ef0654c5abfa7328e078a9f53938ac9487fcefc42168d566a99b8:4470bc6efffd40757149d799134c5bfc3569b6eb3ab875ed2d87325f7f617230:method:2263:2851",
+  "text": "child.intersect(local_ray)"
+ },
+ "hc/accounts/management/commands/senddeletionscheduled.py:93": {
+  "seed": "src:decf2e0f7b20f32893d74618fe75738263998c3b6d22dcbeccf01d36b9d7dffb:107ebf3f12f2668a1bd3ad3a067da19de426a26c394bc6b1ec71dfdf40688706:method:2619:3713",
+  "text": "self.pause()"
+ }
+}

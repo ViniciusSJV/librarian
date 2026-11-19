@@ -1,0 +1,137 @@
+PASSA  PT self.camera.validate(): /api/calls dá type → /CameraSpec::validate/  -> {"resolution":"type","to":"952194860a5d770c667ae89b1:method:289:665","basis":"type","candidate_edge":"edge:176b21f348a3eed468d888268e324fb565cdc808db1136c61adb3d9a0c7a96b5","candidates":5}
+PASSA  PT self.camera.validate(): basis type, candidate_edge presente  -> type edge:176b21f348a3eed468d888268e324fb565cdc808db1136c61adb3d9a0c7a96b5
+PASSA  PT self.camera.validate(): o detalhe da linha diz o texto da resolução  -> seguida: método do tipo escrito do receptor || impl SceneSpec::validate → impl CameraSpec::validate
+Fechar
+chama: self.camera.validate()
+src/scene.rs:128
+seguida: método do tipo escrito do receptor
+PASSA  PT self.camera.validate(): nenhuma chave crua nem código sem texto  -> impl SceneSpec::validate → impl CameraSpec::validate
+Fechar
+chama: self.camera.validate()
+src/scene.rs:128
+seguida: método do tipo escrito do receptor
+      [pt-type.png] impl SceneSpec::validate → impl CameraSpec::validate ⏎ Fechar ⏎ chama: self.camera.validate() ⏎ src/scene.rs:128 ⏎ seguida: método do tipo escrito do receptor
+PASSA  PT wall.set_transform (acima do teto): /api/calls dá type → /Plane::set_transform/  -> {"resolution":"type","to":"7a18bd4d2f3cc5816ad1683:method:1440:1534","basis":"type","candidate_edge":null,"candidates":9}
+PASSA  PT wall.set_transform (acima do teto): basis type, candidate_edge null  -> type null
+PASSA  PT wall.set_transform (acima do teto): o detalhe da linha diz o texto da resolução  -> seguida: método do tipo escrito do receptor || main → impl Intersectable for Plane::set_transform
+Fechar
+chama: wall.set_transform(Matrix::translation(Tuple::vector(0., 0., 10.)) * Matrix::rotation_x(PI / 2.))
+src/bin/librarian_measure.rs:36
+seguida: método do tipo escrito do receptor
+PASSA  PT wall.set_transform (acima do teto): nenhuma chave crua nem código sem texto  -> main → impl Intersectable for Plane::set_transform
+Fechar
+chama: wall.set_transform(Matrix::translation(Tuple::vector(0., 0., 10.)) * Matrix::rotation_x(PI / 2.))
+src/bin/librarian_measure.rs:36
+seguida: método do tipo escrito do receptor
+      [pt-type-sem-aresta.png] main → impl Intersectable for Plane::set_transform ⏎ Fechar ⏎ chama: wall.set_transform(Matrix::translation(Tuple::vector(0., 0., 10.)) * Matrix::rotation_x(PI / 2.)) ⏎ src/bin/librarian_measure.rs:36 ⏎ seguida: método do tipo escrito do receptor
+PASSA  PT child.intersect(local_ray): /api/calls dá trait_default → /Intersectable::intersect/  -> {"resolution":"trait_default","to":"342dfd3a3c453bd165:trait_method:877:1089","basis":"type","candidate_edge":"edge:04568275c677888cfcf4b015362f5aaeae37da79881d5419f06b187499a85b0a","candidates":2}
+PASSA  PT child.intersect(local_ray): basis type, candidate_edge presente  -> type edge:04568275c677888cfcf4b015362f5aaeae37da79881d5419f06b187499a85b0a
+PASSA  PT child.intersect(local_ray): o detalhe da linha diz o texto da resolução  -> seguida: o tipo escrito do receptor não define o método; vale o padrão do trait que ele implementa || impl Groups::intersect → Intersectable::intersect
+Fechar
+chama: child.intersect(local_ray)
+src/groups.rs:95
+seguida: o tipo escrito do receptor não define o método; vale o padrão do trait que ele implementa
+PASSA  PT child.intersect(local_ray): nenhuma chave crua nem código sem texto  -> impl Groups::intersect → Intersectable::intersect
+Fechar
+chama: child.intersect(local_ray)
+src/groups.rs:95
+seguida: o tipo escrito do receptor não define o método; vale o padrão do trait que ele implementa
+      [pt-trait_default.png] impl Groups::intersect → Intersectable::intersect ⏎ Fechar ⏎ chama: child.intersect(local_ray) ⏎ src/groups.rs:95 ⏎ seguida: o tipo escrito do receptor não define o método; vale o padrão do trait que ele implementa
+PASSA  PT self.pause() (Healthchecks): /api/calls dá receiver → /^Command\.pause$/  -> {"resolution":"receiver","to":"c394bc6b1ec71dfdf40688706:method:547:594","basis":"graph_edge","candidate_edge":"edge:081ce3c6f3c6e9fa57a086f91190c040a8e1c6cef5661b07c33bdcff4b0f8390","candidates":6}
+PASSA  PT self.pause() (Healthchecks): basis graph_edge, candidate_edge presente  -> graph_edge edge:081ce3c6f3c6e9fa57a086f91190c040a8e1c6cef5661b07c33bdcff4b0f8390
+PASSA  PT self.pause() (Healthchecks): o detalhe da linha diz o texto da resolução  -> seguida: chamada do próprio receptor (self.m()), e só este homônimo está na mesma classe ou impl || Command.handle → Command.pause
+Fechar
+chama: self.pause()
+hc/accounts/management/commands/senddeletionscheduled.py:93
+seguida: chamada do próprio receptor (self.m()), e só este homônimo está na mesma classe ou impl
+PASSA  PT self.pause() (Healthchecks): nenhuma chave crua nem código sem texto  -> Command.handle → Command.pause
+Fechar
+chama: self.pause()
+hc/accounts/management/commands/senddeletionscheduled.py:93
+seguida: chamada do próprio receptor (self.m()), e só este homônimo está na mesma classe ou impl
+PASSA  PT self.pause() (Healthchecks): o alvo está no mesmo arquivo da chamada (a própria classe Command)  -> src:decf2e0f7b20f32893d74618fe75738263998c3b6d22dcbeccf01d36b9d7dffb:107ebf3f12f2668a1bd3ad3a067da19de426a26c394bc6b1ec71dfdf40688706:method:547:594
+      [pt-receiver.png] Command.handle → Command.pause ⏎ Fechar ⏎ chama: self.pause() ⏎ hc/accounts/management/commands/senddeletionscheduled.py:93 ⏎ seguida: chamada do próprio receptor (self.m()), e só este homônimo está na mesma classe ou impl
+PASSA  PT: textos novos em português
+PASSA  PT: nenhum erro de página
+PASSA  PT: nada além de abrir o projeto (POST /api/project = store.open) e /api/calls
+PASSA  EN self.camera.validate(): /api/calls dá type → /CameraSpec::validate/  -> {"resolution":"type","to":"952194860a5d770c667ae89b1:method:289:665","basis":"type","candidate_edge":"edge:176b21f348a3eed468d888268e324fb565cdc808db1136c61adb3d9a0c7a96b5","candidates":5}
+PASSA  EN self.camera.validate(): basis type, candidate_edge presente  -> type edge:176b21f348a3eed468d888268e324fb565cdc808db1136c61adb3d9a0c7a96b5
+PASSA  EN self.camera.validate(): o detalhe da linha diz o texto da resolução  -> followed: a method of the receiver's written type || impl SceneSpec::validate → impl CameraSpec::validate
+Close
+calls: self.camera.validate()
+src/scene.rs:128
+followed: a method of the receiver's written type
+PASSA  EN self.camera.validate(): nenhuma chave crua nem código sem texto  -> impl SceneSpec::validate → impl CameraSpec::validate
+Close
+calls: self.camera.validate()
+src/scene.rs:128
+followed: a method of the receiver's written type
+      [en-type.png] impl SceneSpec::validate → impl CameraSpec::validate ⏎ Close ⏎ calls: self.camera.validate() ⏎ src/scene.rs:128 ⏎ followed: a method of the receiver's written type
+PASSA  EN wall.set_transform (acima do teto): /api/calls dá type → /Plane::set_transform/  -> {"resolution":"type","to":"7a18bd4d2f3cc5816ad1683:method:1440:1534","basis":"type","candidate_edge":null,"candidates":9}
+PASSA  EN wall.set_transform (acima do teto): basis type, candidate_edge null  -> type null
+PASSA  EN wall.set_transform (acima do teto): o detalhe da linha diz o texto da resolução  -> followed: a method of the receiver's written type || main → impl Intersectable for Plane::set_transform
+Close
+calls: wall.set_transform(Matrix::translation(Tuple::vector(0., 0., 10.)) * Matrix::rotation_x(PI / 2.))
+src/bin/librarian_measure.rs:36
+followed: a method of the receiver's written type
+PASSA  EN wall.set_transform (acima do teto): nenhuma chave crua nem código sem texto  -> main → impl Intersectable for Plane::set_transform
+Close
+calls: wall.set_transform(Matrix::translation(Tuple::vector(0., 0., 10.)) * Matrix::rotation_x(PI / 2.))
+src/bin/librarian_measure.rs:36
+followed: a method of the receiver's written type
+      [en-type-sem-aresta.png] main → impl Intersectable for Plane::set_transform ⏎ Close ⏎ calls: wall.set_transform(Matrix::translation(Tuple::vector(0., 0., 10.)) * Matrix::rotation_x(PI / 2.)) ⏎ src/bin/librarian_measure.rs:36 ⏎ followed: a method of the receiver's written type
+PASSA  EN child.intersect(local_ray): /api/calls dá trait_default → /Intersectable::intersect/  -> {"resolution":"trait_default","to":"342dfd3a3c453bd165:trait_method:877:1089","basis":"type","candidate_edge":"edge:04568275c677888cfcf4b015362f5aaeae37da79881d5419f06b187499a85b0a","candidates":2}
+PASSA  EN child.intersect(local_ray): basis type, candidate_edge presente  -> type edge:04568275c677888cfcf4b015362f5aaeae37da79881d5419f06b187499a85b0a
+PASSA  EN child.intersect(local_ray): o detalhe da linha diz o texto da resolução  -> followed: the receiver's written type does not define the method; the default of a trait it implements applies || impl Groups::intersect → Intersectable::intersect
+Close
+calls: child.intersect(local_ray)
+src/groups.rs:95
+followed: the receiver's written type does not define the method; the default of a trait it implements applies
+PASSA  EN child.intersect(local_ray): nenhuma chave crua nem código sem texto  -> impl Groups::intersect → Intersectable::intersect
+Close
+calls: child.intersect(local_ray)
+src/groups.rs:95
+followed: the receiver's written type does not define the method; the default of a trait it implements applies
+      [en-trait_default.png] impl Groups::intersect → Intersectable::intersect ⏎ Close ⏎ calls: child.intersect(local_ray) ⏎ src/groups.rs:95 ⏎ followed: the receiver's written type does not define the method; the default of a trait it implements applies
+PASSA  EN self.pause() (Healthchecks): /api/calls dá receiver → /^Command\.pause$/  -> {"resolution":"receiver","to":"c394bc6b1ec71dfdf40688706:method:547:594","basis":"graph_edge","candidate_edge":"edge:081ce3c6f3c6e9fa57a086f91190c040a8e1c6cef5661b07c33bdcff4b0f8390","candidates":6}
+PASSA  EN self.pause() (Healthchecks): basis graph_edge, candidate_edge presente  -> graph_edge edge:081ce3c6f3c6e9fa57a086f91190c040a8e1c6cef5661b07c33bdcff4b0f8390
+PASSA  EN self.pause() (Healthchecks): o detalhe da linha diz o texto da resolução  -> followed: the receiver's own call (self.m()), and only this homonym is in the same class or impl || Command.handle → Command.pause
+Close
+calls: self.pause()
+hc/accounts/management/commands/senddeletionscheduled.py:93
+followed: the receiver's own call (self.m()), and only this homonym is in the same class or impl
+PASSA  EN self.pause() (Healthchecks): nenhuma chave crua nem código sem texto  -> Command.handle → Command.pause
+Close
+calls: self.pause()
+hc/accounts/management/commands/senddeletionscheduled.py:93
+followed: the receiver's own call (self.m()), and only this homonym is in the same class or impl
+PASSA  EN self.pause() (Healthchecks): o alvo está no mesmo arquivo da chamada (a própria classe Command)  -> src:decf2e0f7b20f32893d74618fe75738263998c3b6d22dcbeccf01d36b9d7dffb:107ebf3f12f2668a1bd3ad3a067da19de426a26c394bc6b1ec71dfdf40688706:method:547:594
+      [en-receiver.png] Command.handle → Command.pause ⏎ Close ⏎ calls: self.pause() ⏎ hc/accounts/management/commands/senddeletionscheduled.py:93 ⏎ followed: the receiver's own call (self.m()), and only this homonym is in the same class or impl
+PASSA  EN: textos novos em inglês
+PASSA  EN: receiver cita self.m()
+PASSA  EN: nenhum erro de página
+PASSA  EN: nada além de abrir o projeto (POST /api/project = store.open) e /api/calls
+PASSA  tema escuro: o detalhe aparece com o texto de type  -> impl SceneSpec::validate → impl CameraSpec::validate
+Fechar
+chama: self.camera.validate()
+src/scene.rs:128
+seguida: método do tipo escrito do receptor
+PASSA  tema escuro: tema aplicado (dark), texto rgb(143, 142, 134) sobre rgb(35, 35, 33)  -> {"color":"rgb(143, 142, 134)","bg":"rgb(35, 35, 33)","theme":"dark","overflow":false,"detailRight":1006,"width":1440}
+PASSA  tema escuro: nenhum erro de página
+PASSA  tema claro: o detalhe aparece com o texto de type  -> impl SceneSpec::validate → impl CameraSpec::validate
+Fechar
+chama: self.camera.validate()
+src/scene.rs:128
+seguida: método do tipo escrito do receptor
+PASSA  tema claro: tema aplicado (light), texto rgb(122, 121, 116) sobre rgb(255, 255, 255)  -> {"color":"rgb(122, 121, 116)","bg":"rgb(255, 255, 255)","theme":"light","overflow":false,"detailRight":1006,"width":1440}
+PASSA  tema claro: nenhum erro de página
+PASSA  tela estreita (390 px): o detalhe aparece com o texto de type  -> impl SceneSpec::validate → impl CameraSpec::validate
+Fechar
+chama: self.camera.validate()
+src/scene.rs:128
+seguida: método do tipo escrito do receptor
+PASSA  tela estreita (390 px): sem rolagem horizontal da página  -> {"color":"rgb(122, 121, 116)","bg":"rgb(255, 255, 255)","theme":"(sistema)","overflow":false,"detailRight":376,"width":390}
+PASSA  tela estreita (390 px): nenhum erro de página
+PASSA  .studio original igual antes e depois
+
+51 passam, 0 falham. Capturas em C:\Users\beatl\AppData\Local\Temp\claude\09139e964f85837f\254a423a-0573-4bac-9106-c1b8ad1f2ac5\scratchpad\p3\tela

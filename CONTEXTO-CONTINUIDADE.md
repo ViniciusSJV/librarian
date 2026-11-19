@@ -1018,3 +1018,33 @@ Escrever o teste de regressão do P1 **antes** da correção: uma função Pytho
   - Rust: 5 corretas, 7 `link_falso`, 0 `candidatos_falsos`, 11 ambíguas e 7 sem candidato.
 - **Achado:** a regra `receiver` erra nas 17 chamadas da população em que aparece. Ela toma `self.x.m()` por `self.m()`, e o inventário usa a mesma regra. Fica para o passo 2.1.
 - **Decisões:** DEC-33 (dublê de teste não é alvo). "Errada" foi dividida em `link_falso`, que reprova se subir, e `candidatos_falsos`, que é só registrado. A questão do dono no HC-19 (decorador) foi para o passo 2.3.
+
+## 23. Passo 2.1: regra única de resolução (19/11/2026)
+
+**Estado nesta data.** O estado vigente fica no [ESTADO-ATUAL.md](ESTADO-ATUAL.md). O contrato de "o que chama?" está no [SEARCH.md](crates/librarian-ingest/SEARCH.md#o-que-chama-calls_from-post-apicalls).
+
+- **Regra única:** `crates/librarian-ingest/src/resolve.rs`. É usada por `calls_from` (`/api/calls`) e pelo inventário. O envelope e o contexto do dono aceitam o que ela decide com um alvo só (`SETTLED`: unique, receiver, type, trait_default).
+  - Precedência: chosen > unique > receiver > type > trait_default > trait > homonym. `unique` e `receiver` vêm antes de `type` para não mudar rótulos corretos; o tipo derrubar um `unique` errado é o 2.2.
+  - Mudança em relação ao desenho da Parada 1: o arquivo ficou na raiz do crate, e não em `graph/`, porque conhece `impl`, `trait` e `Self`, e o teste `agnostic.rs` exige que o grafo não nomeie linguagens.
+- **receiver:** só `self.m()` (o receptor da linguagem e nada mais antes do nome). Um método de trait não é alvo do receiver, como o inventário já fazia.
+  - Achado: o `calls_from` antigo comparava o bloco pelo nome, e o inventário pelo id. Com a regra única, 5 `self.pause()` do Healthchecks (várias classes `Command`) passaram de homônimo para `receiver`, corretamente. Nenhum `receiver` antigo apontava para outro bloco.
+- **type e trait_default:** camada sobre o grafo, sem aresta nova. Um link acima do teto não tem aresta candidata: `candidate_edge: null`. Todo link ganhou `basis` (`graph_edge` ou `type`). Vários alvos (`trait`, ou um tipo genérico com vários impls) aparecem como `homonym` em `/api/calls`; o inventário segue todos.
+- **Portão** (aprovado, igual à previsão da Parada 1, número por número):
+  - Python: `link_falso` 17 → 13, `candidatos_falsos` 10 → 12 e ambíguas 10 → 12; as corretas ficam em 9.
+  - Rust: corretas 5 → 11, `link_falso` 7 → 2, `candidatos_falsos` 0 → 1 e ambíguas 11 → 9.
+  - População: `receiver` 17 → 0. No Rust, `type` 53, `trait_default` 7, `homonym` 71 → 35 e acima do teto 14 → 3.
+  - Níveis: N1, N2, N3b, N4 e N5 do Rust estão no alvo. Python e fatos F1–F26 sem mudança.
+- **Amostra ampliada:** RT-31 a RT-50, nos estratos `type`, `type_caminho` (acima do teto), `type_fora` e `trait_default`. A verdade foi proposta pelo agente e aguarda o usuário (DEC-22): 20 de 20 corretas. O portão passou a achar chamadas fora da população e compara só as entradas que a linha de base tem.
+- **/api/calls, antigo × novo, todo símbolo dos dois runs:**
+  - Healthchecks: 4403 de 4651 consultas não envolvem `receiver` nem `type`, e todas ficaram iguais nos campos antigos.
+  - Ray tracer: o mesmo vale para 479 de 729 consultas.
+  - Os 17845 links que já existiam ficaram iguais (16519 + 1326); só ganharam `basis`.
+  - As mudanças são as previstas: 513 acima do teto → `type`, 98 homonym → `type`, 40 homonym → `trait_default`, 48 + 30 `receiver` desfeitos, e os 5 `self.pause()`.
+- **Validação:** `cargo test --workspace --locked` com 468 aprovados, 0 falhas e 2 ignorados. G3 e P1 passam. As perguntas 01–14 do Healthchecks passam em H1–H3.
+- **Parada 3 (19/11), depois da avaliação do usuário:** relatório em [docs/reports/fase-2/2.1-parada-3.md](docs/reports/fase-2/2.1-parada-3.md).
+  - Portão: a regra antiga com o binário novo e a regra nova com o binário antigo dão o mesmo veredito sobre as 30 + 60 chamadas originais. Registro proposto: DEC-37.
+  - Amostra: RT-51 a RT-55 (chamadas por variável acima do teto, uma por origem do tipo), 5 de 5 corretas. Linha de base proposta em `tools/precisao/linha-de-base-proposta.json` (Rust 55: 36 corretas, 2 `link_falso`).
+  - Os 513 acima do teto que viraram `type`: 475 por caminho e 38 por variável. Destas, 32 vêm de `let x = T::f(..)`, que o extrator lê como `T` sem olhar o retorno (heurística, para o 2.3).
+  - `trait_default`: os 12 casos conferidos com arquivo e linha. O ray tracer não tem `dyn`.
+  - Verificação de tela (DEC-30): 51 de 51.
+  - O status da DEC-11 foi corrigido: o 2.1 reabre a decisão e resolve pelo tipo, mas os homônimos continuam.

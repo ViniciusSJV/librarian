@@ -129,6 +129,60 @@ símbolo que a escreveu; repete por camadas até `depth` (1–6), com teto de n�
 `candidates`, o número de declarações que aquele nome combina (acima de 1, é um entre
 homônimos). Não resolve nada: é o mapa dos candidatos pelo nome.
 
+### O que chama (`calls_from`, `POST /api/calls`)
+
+`v2::Graph::calls_from(seed, depth, max_nodes, syntax, chosen)` segue para a frente as
+chamadas escritas, por camadas, com os mesmos limites de `used_by`. A regra que decide cada
+chamada é uma só, em `src/resolve.rs` (passo 2.1). O inventário também a usa, e o envelope e
+o contexto do dono aceitam o que ela decide com um alvo só (`resolve::SETTLED`). Ela é uma
+camada sobre o grafo: lê nós e arestas e não cria aresta. As arestas continuam candidatos
+por nome, nunca resolução de compilador.
+
+Precedência: `chosen` > `unique` > `receiver` > `type` > `trait_default` > `trait` > `homonym`.
+
+| `resolution` | Quando | `basis` |
+|---|---|---|
+| `chosen` | A pessoa escolheu este entre os candidatos | `graph_edge` |
+| `unique` | O nome escrito só combina com esta declaração | `graph_edge` |
+| `receiver` | A chamada é `self.m()` (o receptor da linguagem e nada mais antes do nome) e só este homônimo está no bloco de quem chama. `self.x.m()` nunca é `receiver` | `graph_edge` |
+| `type` | Método do tipo escrito do receptor: `receiver_type` do extrator ou caminho `T::f`. Hoje só o Rust registra | `type` |
+| `trait_default` | O tipo escrito não define o método; é o padrão de um trait que ele implementa | `type` |
+| `homonym` | Nada decide; cada candidato aparece, e nenhum é seguido | `graph_edge` |
+
+`basis: "type"` quer dizer que o tipo foi lido do que está escrito, pelas regras sintáticas
+do extrator, e não inferido como um compilador faria. As regras e os limites estão no
+`receiver_type` de `src/extractors/mod.rs`:
+- parâmetro ou `let` anotado;
+- `self` no impl;
+- `T::f(..)` e `T { .. }`;
+- campo;
+- item de uma coleção declarada como campo, inclusive em `for (i, x) in
+  self.v.iter().enumerate()`;
+- padrão de variante.
+
+Os nomes `Vec`, `iter` e `enumerate` são lidos sem resolver os caminhos. Uma nova
+declaração do mesmo nome vale para a função inteira, porque blocos não são escopos. O grafo
+não guarda qual regra deu o tipo.
+
+`receiver` só decide entre arestas candidatas. Um `self.m()` acima do teto não tem aresta,
+e por isso cai em `type`, pelo tipo do impl.
+
+Um resultado com vários alvos (`trait`, em que todos os candidatos são de um trait, ou um
+tipo que nomeia vários impls, como `Matrix<3>` e `Matrix<4>`, porque os genéricos não são
+comparados) aparece como `homonym` sobre as arestas candidatas, sem ser seguido. O
+inventário segue todos eles.
+
+Cada link traz `from`, `to`, `occurrence`, `occurrence_kind`, `text`, `candidates`,
+`resolution`, `candidate_edge`, `basis` e `evidence`.
+- `candidate_edge` é o ID da aresta `name_candidate`. É `null` só num link `type` ou
+  `trait_default` de uma chamada acima do teto de homônimos, para a qual o grafo guardou
+  só a contagem.
+- `candidates`, nesse caso, é a contagem registrada (`ambiguous_candidates`).
+- Os links que já existiam antes do 2.1 têm os mesmos campos e valores, mais `basis`.
+
+`unresolved` lista o que não virou link: `above_candidate_limit` e
+`no_candidate_in_project`, sem tipo que decida, e `node_limit`.
+
 Não registrados no v3, e portanto ausentes de `used_by`: corpos de macro, literais de
 struct e padrões em Rust; constantes, `static` e variantes de enum como alvo; argumentos
 nomeados e `getattr` em Python; nomes acima do teto de homônimos. Ausência não prova

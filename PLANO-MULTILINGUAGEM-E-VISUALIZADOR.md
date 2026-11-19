@@ -43,9 +43,12 @@ corretas, lacunas explícitas e fatos aguardando aprovação humana.
   a chamada ao próprio método que a contém. Erra nas 17 chamadas da
   população (4 no Healthchecks, 13 no ray tracer), e o inventário usa a
   mesma regra antes da regra por tipo (`inventory.rs:635-639`).
+  Implementado em 19/11 (CTX seção 23); aguarda commit.
 - 2.2 Chamada de método não casa com função solta (Rust direto; Python
   com tabela mínima de imports para modulo.f()). Meta: os 197 links;
-  F6, F7, F14 e F17.
+  F6, F7, F14 e F17. Quando o tipo do receptor é conhecido e não tem o
+  método, o tipo derruba um unique (ex.: RT-15/16, `model.lines()` com
+  `model: &str`); no 2.1, unique vem antes de type.
 - 2.3 Tipos em Python: N2 → N1 (com relação "instancia", separada de
   "chama") → N4 (corrige Repo() preso ao campo) → N3 entre arquivos
   (também Rust). Na mesma questão de dono: a chamada de um decorador
