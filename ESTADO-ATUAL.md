@@ -5,7 +5,9 @@
 ## Onde estamos
 
 - **Fase 1 — Piloto 1b: concluída em 18/11/2026.** Relatório final: [docs/reports/piloto-1b/00-resumo.md](docs/reports/piloto-1b/00-resumo.md).
-- **Próximo passo: 2.0**, tornar a amostra da Parte C e os scripts da auditoria (Parte E) executáveis a partir do repositório, sem caminhos do scratchpad. É o portão da Fase 2. Cada passo depende de autorização.
+- **Fase 2 — Precisão das relações: em andamento.** O passo 2.0 (portão) foi entregue em 18/11/2026 e aguarda commit: [tools/precisao/](tools/precisao/README.md). A linha de base, a amostra e a regra estão aprovadas.
+- **Próximo passo: 2.1**, uma regra única de resolução para "o que chama?" e para o inventário, com a resolução `type` e a correção da regra `receiver`. Cada passo depende de autorização.
+- **Portão de cada passo da Fase 2:** `node tools/precisao/portao.js --studio .studio --base tools/precisao/linha-de-base.json` (cerca de 4 minutos). Reprova se `link_falso` subir ou as corretas caírem, em Python ou em Rust, se uma edition antiga mudar ou se o `.studio` original mudar. Exceção só com justificativa caso a caso e aprovação do usuário (DEC-34).
 - **Feito no 1b:** P1 (`987d7a8`), G3 (`aae51d7`), Partes A–E do diagnóstico, a Q6 (run `20261118-205150`, avaliada em 18/11), a consolidação documental (`a8e4074`) e o relatório final. Relatórios em [docs/reports/piloto-1b/](docs/reports/piloto-1b/) (`0c4bcab`).
 - **Git:** `main`, sincronizada: os commits do 1b foram enviados em 18/11, e `origin/main` está em `955537e`.
 - **Suíte:** `cargo test --workspace --locked`: 456 aprovados, 0 falhas, 2 ignorados (18/11, com P1 e G3).
@@ -51,8 +53,14 @@ Cite sempre com o prefixo. As tabelas de abreviações e de prefixos estão em [
 - Push feito em 18/11 e CI verde em `955537e`, inclusive no `d949f91`, o que fecha a pendência do CTX:883.
 
 **Fase 2**
-- 2.0 é o portão: a amostra da Parte C e os scripts da Parte E ainda usam caminhos do scratchpad ([dados/amostra/](docs/reports/piloto-1b/dados/amostra/), [dados/acervo/](docs/reports/piloto-1b/dados/acervo/)).
-- Achados sem correção: a ordem de `unresolved` não segue arquivo/linha/coluna; o corte do `node_limit` segue a ordem dos ids das arestas; `self.repo = Repo()` deixa `Repo()` preso ao campo; "o que chama?" não usa `receiver_type`; 197 dos 442 links únicos de método vão para função solta.
+- **Linha de base do portão (binário de `aae51d7`, amostra validada):**
+  - Python, 60 chamadas: 9 corretas, 17 `link_falso`, 10 `candidatos_falsos`, 10 ambíguas e 14 sem candidato.
+  - Rust, 30 chamadas: 5 corretas, 7 `link_falso`, 0 `candidatos_falsos`, 11 ambíguas e 7 sem candidato.
+  - Fatos: 15 não dependem, 6 corretos, 2 suspeitos e 3 errados.
+  - Detalhe em [tools/precisao/linha-de-base.json](tools/precisao/linha-de-base.json).
+- **Para o 2.1:** a regra `receiver` toma `self.x.m()` por `self.m()` e liga a chamada ao próprio método. Erra nas 17 chamadas da população (4 no Healthchecks, 13 no ray tracer), e o inventário usa a mesma regra antes da regra por tipo (`inventory.rs:635-639`).
+- **Para o 2.3:** a chamada de um decorador roda na carga do módulo, mas é atribuída à função decorada (HC-19). É a mesma questão de dono do `Repo()` preso ao campo.
+- Achados sem correção: a ordem de `unresolved` não segue arquivo/linha/coluna; o corte do `node_limit` segue a ordem dos ids das arestas; `self.repo = Repo()` deixa `Repo()` preso ao campo; "o que chama?" não usa `receiver_type`; 197 dos 442 links únicos de método vão para função solta (meta do 2.2).
 - `R30-7` (tipo do receptor): feito só no Rust e só no inventário.
 - Links errados ou ambíguos nos fatos: `HC-F1`, `HC-F14`, `HC-F17` (errado), `HC-F6`, `HC-F7` (ambíguo). Pela leitura do agente, sem revisão humana, os fatos estão corretos sobre o código; o risco é seguir o grafo a partir deles.
 
@@ -71,7 +79,7 @@ Cite sempre com o prefixo. As tabelas de abreviações e de prefixos estão em [
 
 ## Links
 
-- [PLANO](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md): roadmap · [DECISOES](DECISOES.md) · [CTX](CONTEXTO-CONTINUIDADE.md): diário, última seção 21 · [Histórico](docs/historico/README.md)
+- [PLANO](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md): roadmap · [DECISOES](DECISOES.md) · [CTX](CONTEXTO-CONTINUIDADE.md): diário, última seção 22 · [Histórico](docs/historico/README.md)
 - Piloto 1: [PIL](docs/reports/PILOTO-1-HEALTHCHECKS.md) · Piloto 1b: [00 resumo](docs/reports/piloto-1b/00-resumo.md), [01 G3](docs/reports/piloto-1b/01-g3.md), [02 Partes A–C](docs/reports/piloto-1b/02-fechamento-g3-e-diagnostico.md), [03 inventário e Parte E](docs/reports/piloto-1b/03-inventario-e-auditoria.md), [04 Q6](docs/reports/piloto-1b/04-q6.md)
 - Direção: [ARQ](docs/ARQUITETURA-EVIDENCIAS-MULTIAGENTE.md) · Frontend: [ESP](docs/ESPECIFICACAO-FUNCIONAL-STUDIO.md), [EST](docs/ESTADO-IMPLEMENTACAO-STUDIO.md) · Manual: [STUDIO.md](STUDIO.md)
 - Componentes: [Ingest](crates/librarian-ingest/README.md) · [Evidence Builder](crates/librarian-evidence/README.md) · [LLM Engine](crates/librarian-llm-engine/CLAIMS.md) · [Graph Engine](crates/librarian-graph-engine/WORKFLOW-V0.1.md)

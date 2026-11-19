@@ -35,22 +35,28 @@ corretas, lacunas explícitas e fatos aguardando aprovação humana.
 ### Fase 2 — Precisão das relações (PIL-G1, PIL-G5, PIL-G7, item 7 de 30/10)
 - 2.0 Tornar a amostra da Parte C e os scripts da auditoria (Parte E)
   executáveis a partir do repositório, sem caminhos do scratchpad.
-  Eles são o portão da Fase 2.
+  Eles são o portão da Fase 2: `tools/precisao/` (README lá).
 - 2.1 Regra única de resolução para "o que chama?" e inventário;
   resolução própria `type`, separada de `unique`. Reabre a decisão
   "Homônimos: investigação suspensa" (DEC-11, PLANO-H:1555).
+  Inclui a regra `receiver`: ela toma `self.x.m()` por `self.m()` e liga
+  a chamada ao próprio método que a contém. Erra nas 17 chamadas da
+  população (4 no Healthchecks, 13 no ray tracer), e o inventário usa a
+  mesma regra antes da regra por tipo (`inventory.rs:635-639`).
 - 2.2 Chamada de método não casa com função solta (Rust direto; Python
   com tabela mínima de imports para modulo.f()). Meta: os 197 links;
   F6, F7, F14 e F17.
 - 2.3 Tipos em Python: N2 → N1 (com relação "instancia", separada de
   "chama") → N4 (corrige Repo() preso ao campo) → N3 entre arquivos
-  (também Rust).
+  (também Rust). Na mesma questão de dono: a chamada de um decorador
+  roda na carga do módulo, não na função decorada (HC-19 da amostra).
 - 2.4 Herança (N5) e alias local (N8).
 - 2.5 PIL-G5/N7: relação "passa referência", nunca "chama".
 - 2.6 Genéricos (N6), por último (ch.notify: 33 → 1).
-- Portão de cada passo: amostra da Parte C ampliada (~60 Python, ~30
-  Rust, verdade definida pelo usuário); Rust sem piora (DEC-25,
-  PLANO-H:2284); editions antigas iguais; auditoria da Parte E refeita.
+- Portão de cada passo: `node tools/precisao/portao.js --studio .studio
+  --base tools/precisao/linha-de-base.json`. Reprova se `link_falso`
+  subir ou as corretas caírem (Python ou Rust; DEC-25, PLANO-H:2284),
+  se uma edition antiga mudar ou se o `.studio` original mudar.
 
 ### Fase 2B — Relações de workflow
 - Pontos de entrada: rotas (PIL-G4), management commands, jobs.

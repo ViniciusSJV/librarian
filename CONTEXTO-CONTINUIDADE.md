@@ -1006,3 +1006,15 @@ Escrever o teste de regressão do P1 **antes** da correção: uma função Pytho
 - **Parte D (inventário dos MDs) e Parte E (acervo × grafo):** 3 fatos afirmam chamadas que o grafo liga errado (F1, F14, F17) e 2 que ele liga de forma ambígua (F6, F7). `ping_by_slug → ping` é homônimo de 2, não [grafo]. Relatório: [03-inventario-e-auditoria.md](docs/reports/piloto-1b/03-inventario-e-auditoria.md).
 - **Q6 (run `20261118-205150`), avaliada pelo usuário em 18/11:** entrega sim (13 fatos, +3,9% de tokens); reutilização não (F20, F22 e F26 entregues e repetidos; só a repetição do F6 sumiu); resposta reprovada na C3 (`location_operation_includes_declaration`); C2 semanticamente incorreta com citação válida; nenhuma LACUNA sobre o elo pelo banco. Relatório: [04-q6.md](docs/reports/piloto-1b/04-q6.md).
 - **Depois:** consolidação documental (passo 1.2): [ESTADO-ATUAL.md](ESTADO-ATUAL.md), [DECISOES.md](DECISOES.md), plano reduzido ao roadmap e [docs/historico/](docs/historico/).
+
+## 22. Passo 2.0: portão de precisão da Fase 2 (18/11/2026)
+
+**Estado nesta data.** O estado vigente fica no [ESTADO-ATUAL.md](ESTADO-ATUAL.md); como rodar, em [tools/precisao/README.md](tools/precisao/README.md).
+
+- **Ferramenta:** `tools/precisao/`, em Node, sobre o binário real. O comando copia o `.studio` para uma pasta temporária, gera um run novo com o binário em teste e mede nesse run. Também roda `verify-graph` nos runs antigos e confere o hash do `.studio` original. Os scripts de `docs/reports/piloto-1b/dados/` ficaram como evidência.
+- **Linha de base (binário de `aae51d7`):** reproduz a Parte C (20 Python: 4/4/0/12; 10 Rust: 2/0/2/6), a população (1956 e 515) e os 197 links de método → função solta. Reproduz também a Parte E (15 não dependem, 6 corretos, 2 suspeitos, 3 errados). O run gerado de novo dá o mesmo grafo, byte a byte.
+- **Amostra ampliada:** 60 Python e 30 Rust, estratificadas por `resolution`. A verdade foi validada pelo usuário: 12 revisadas e 78 aceitas por amostragem.
+  - Python: 9 corretas, 17 `link_falso`, 10 `candidatos_falsos`, 10 ambíguas e 14 sem candidato.
+  - Rust: 5 corretas, 7 `link_falso`, 0 `candidatos_falsos`, 11 ambíguas e 7 sem candidato.
+- **Achado:** a regra `receiver` erra nas 17 chamadas da população em que aparece. Ela toma `self.x.m()` por `self.m()`, e o inventário usa a mesma regra. Fica para o passo 2.1.
+- **Decisões:** DEC-33 (dublê de teste não é alvo). "Errada" foi dividida em `link_falso`, que reprova se subir, e `candidatos_falsos`, que é só registrado. A questão do dono no HC-19 (decorador) foi para o passo 2.3.
