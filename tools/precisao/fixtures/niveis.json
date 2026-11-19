@@ -4,7 +4,7 @@
  "casos": [
   { "id": "N0-py-livre", "projeto": "py", "dono": "n0", "linha": 6, "texto": "livre",
     "atual": { "resolution": "homonym", "candidates": 2, "alvos": ["livre (pkg/models.py:63)", "livre (pkg/outro.py:1)"] },
-    "alvo": { "alvo": "livre (pkg/models.py:63)", "resolution": "import", "passo": "2.2", "por_que": "from pkg.models import livre" } },
+    "alvo": { "alvo": "livre (pkg/models.py:63)", "resolution": "import", "passo": "a definir", "por_que": "from pkg.models import livre; chamada simples, fora do escopo do 2.2 (receptor)" } },
   { "id": "N0-py-unica", "projeto": "py", "dono": "n0", "linha": 7, "texto": "unica",
     "atual": { "resolution": "unique", "candidates": 1, "alvos": ["unica (pkg/models.py:67)"] },
     "alvo": { "alvo": "unica (pkg/models.py:67)", "resolution": "unique", "passo": "já correto" } },
@@ -44,7 +44,7 @@
 
   { "id": "N0-rs-livre", "projeto": "rs", "dono": "n0", "linha": 5, "texto": "livre",
     "atual": { "resolution": "homonym", "candidates": 2, "alvos": ["livre (src/models.rs:78)", "livre (src/outro.rs:1)"] },
-    "alvo": { "alvo": "livre (src/models.rs:78)", "resolution": "import", "passo": "2.2", "por_que": "use crate::models::{livre, ...}" } },
+    "alvo": { "alvo": "livre (src/models.rs:78)", "resolution": "import", "passo": "a definir", "por_que": "use crate::models::{livre, ...}; chamada simples, fora do escopo do 2.2 (receptor)" } },
   { "id": "N0-rs-unica", "projeto": "rs", "dono": "n0", "linha": 5, "texto": "unica",
     "atual": { "resolution": "unique", "candidates": 1, "alvos": ["unica (src/models.rs:82)"] },
     "alvo": { "alvo": "unica (src/models.rs:82)", "resolution": "unique", "passo": "já correto" } },

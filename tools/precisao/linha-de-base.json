@@ -1,43 +1,44 @@
 {
  "projetos": {
   "hc": {
-   "run_novo": "20261119-044753",
+   "run_novo": "20261119-084124",
    "grafo_novo_igual_ao_de_referencia": true,
    "populacao": {
     "total": 1956,
     "por_resolution": {
-     "no_candidate_in_project": 1186,
-     "unique": 442,
+     "no_candidate_in_project": 1391,
+     "unique": 249,
      "above_candidate_limit": 78,
-     "homonym": 250
+     "homonym": 224,
+     "import": 14
     },
     "por_estrato": {
-     "no_candidate_in_project": 1186,
-     "unique->outro": 245,
+     "no_candidate_in_project": 1391,
+     "unique->outro": 233,
      "above_candidate_limit": 78,
-     "homonym": 250,
-     "unique->function": 197
+     "homonym": 224,
+     "import": 14,
+     "unique->function": 16
     },
-    "metodo_para_funcao": 197
+    "metodo_para_funcao": 30
    },
    "amostra_contagem": {
-    "sem_candidato": 14,
-    "correta": 9,
-    "link_falso": 13,
+    "sem_candidato": 33,
+    "correta": 21,
+    "link_falso": 1,
     "candidatos_falsos": 12,
-    "ambigua": 12
+    "ambigua": 8
    },
    "parte_c_contagem": {
-    "sem_candidato": 12,
-    "correta": 4,
-    "link_falso": 4
+    "sem_candidato": 16,
+    "correta": 4
    },
    "estimativa_populacao": {
-    "correta": 221,
-    "link_falso": 222,
-    "candidatos_falsos": 179,
-    "ambigua": 149,
-    "sem_candidato": 1186
+    "correta": 274,
+    "link_falso": 23,
+    "candidatos_falsos": 144,
+    "ambigua": 78,
+    "sem_candidato": 1423
    },
    "amostra": [
     {
@@ -60,8 +61,8 @@
      "id": "HC-03",
      "estrato": "unique->function",
      "parte_c": true,
-     "categoria": "link_falso",
-     "resposta": "unique (1) → save (hc/integrations/github/views.py:92)",
+     "categoria": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (revisada, 18/11)"
     },
     {
@@ -116,8 +117,8 @@
      "id": "HC-10",
      "estrato": "unique->function",
      "parte_c": true,
-     "categoria": "link_falso",
-     "resposta": "unique (1) → error (hc/api/decorators.py:21)",
+     "categoria": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
     {
@@ -148,8 +149,8 @@
      "id": "HC-14",
      "estrato": "unique->function",
      "parte_c": true,
-     "categoria": "link_falso",
-     "resposta": "unique (1) → save (hc/integrations/github/views.py:92)",
+     "categoria": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
     {
@@ -180,8 +181,8 @@
      "id": "HC-18",
      "estrato": "unique->function",
      "parte_c": true,
-     "categoria": "link_falso",
-     "resposta": "unique (1) → replace (hc/lib/string.py:10)",
+     "categoria": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
     {
@@ -268,64 +269,64 @@
      "id": "HC-29",
      "estrato": "unique->function",
      "parte_c": false,
-     "categoria": "link_falso",
-     "resposta": "unique (1) → save (hc/integrations/github/views.py:92)",
+     "categoria": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
     {
      "id": "HC-30",
      "estrato": "unique->function",
      "parte_c": false,
-     "categoria": "link_falso",
-     "resposta": "unique (1) → save (hc/integrations/github/views.py:92)",
+     "categoria": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (revisada, 18/11)"
     },
     {
      "id": "HC-31",
      "estrato": "unique->function",
      "parte_c": false,
-     "categoria": "link_falso",
-     "resposta": "unique (1) → save (hc/integrations/github/views.py:92)",
+     "categoria": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
     {
      "id": "HC-32",
      "estrato": "unique->function",
      "parte_c": false,
-     "categoria": "link_falso",
-     "resposta": "unique (1) → decode (hc/front/templatetags/hc_extras.py:330)",
+     "categoria": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (revisada, 18/11)"
     },
     {
      "id": "HC-33",
      "estrato": "unique->function",
      "parte_c": false,
-     "categoria": "link_falso",
-     "resposta": "unique (1) → replace (hc/lib/string.py:10)",
+     "categoria": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
     {
      "id": "HC-34",
      "estrato": "unique->function",
      "parte_c": false,
-     "categoria": "link_falso",
-     "resposta": "unique (1) → save (hc/integrations/github/views.py:92)",
+     "categoria": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
     {
      "id": "HC-35",
      "estrato": "unique->function",
      "parte_c": false,
-     "categoria": "link_falso",
-     "resposta": "unique (1) → replace (hc/lib/string.py:10)",
+     "categoria": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
     {
      "id": "HC-36",
      "estrato": "unique->function",
      "parte_c": false,
-     "categoria": "link_falso",
-     "resposta": "unique (1) → save (hc/integrations/github/views.py:92)",
+     "categoria": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
     {
@@ -348,8 +349,8 @@
      "id": "HC-39",
      "estrato": "homonym",
      "parte_c": false,
-     "categoria": "ambigua",
-     "resposta": "homonym (6)",
+     "categoria": "correta",
+     "resposta": "import (1) → post (hc/lib/curl.py:224)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
     {
@@ -357,7 +358,7 @@
      "estrato": "homonym",
      "parte_c": false,
      "categoria": "candidatos_falsos",
-     "resposta": "homonym (8)",
+     "resposta": "homonym (7)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
     {
@@ -365,23 +366,23 @@
      "estrato": "homonym",
      "parte_c": false,
      "categoria": "candidatos_falsos",
-     "resposta": "homonym (8)",
+     "resposta": "homonym (7)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
     {
      "id": "HC-42",
      "estrato": "homonym",
      "parte_c": false,
-     "categoria": "ambigua",
-     "resposta": "homonym (8)",
+     "categoria": "correta",
+     "resposta": "import (1) → get (hc/lib/curl.py:210)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
     {
      "id": "HC-43",
      "estrato": "homonym",
      "parte_c": false,
-     "categoria": "candidatos_falsos",
-     "resposta": "homonym (2)",
+     "categoria": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
     {
@@ -389,7 +390,7 @@
      "estrato": "homonym",
      "parte_c": false,
      "categoria": "candidatos_falsos",
-     "resposta": "homonym (8)",
+     "resposta": "homonym (7)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
     {
@@ -397,7 +398,7 @@
      "estrato": "homonym",
      "parte_c": false,
      "categoria": "candidatos_falsos",
-     "resposta": "homonym (8)",
+     "resposta": "homonym (7)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
     {
@@ -405,7 +406,7 @@
      "estrato": "homonym",
      "parte_c": false,
      "categoria": "candidatos_falsos",
-     "resposta": "homonym (8)",
+     "resposta": "homonym (7)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
     {
@@ -413,23 +414,23 @@
      "estrato": "homonym",
      "parte_c": false,
      "categoria": "candidatos_falsos",
-     "resposta": "homonym (8)",
+     "resposta": "homonym (7)",
      "validada": "usuário (revisada, 18/11)"
     },
     {
      "id": "HC-48",
      "estrato": "homonym",
      "parte_c": false,
-     "categoria": "ambigua",
-     "resposta": "homonym (8)",
+     "categoria": "correta",
+     "resposta": "import (1) → get (hc/lib/curl.py:210)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
     {
      "id": "HC-49",
      "estrato": "homonym",
      "parte_c": false,
-     "categoria": "ambigua",
-     "resposta": "homonym (3)",
+     "categoria": "correta",
+     "resposta": "import (1) → login (hc/lib/emails.py:88)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
     {
@@ -437,7 +438,7 @@
      "estrato": "homonym",
      "parte_c": false,
      "categoria": "candidatos_falsos",
-     "resposta": "homonym (8)",
+     "resposta": "homonym (7)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
     {
@@ -519,38 +520,156 @@
      "categoria": "candidatos_falsos",
      "resposta": "homonym (3)",
      "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-61",
+     "estrato": "metodo_funcao",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "HC-62",
+     "estrato": "metodo_funcao",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "HC-63",
+     "estrato": "metodo_funcao",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "HC-64",
+     "estrato": "metodo_funcao",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "HC-65",
+     "estrato": "metodo_funcao",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "HC-66",
+     "estrato": "metodo_funcao",
+     "parte_c": false,
+     "categoria": "candidatos_falsos",
+     "resposta": "homonym (1)",
+     "validada": "usuário (revisada, conferida no editor, 19/11)"
+    },
+    {
+     "id": "HC-67",
+     "estrato": "modulo_f",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "unique (1) → report (hc/lib/emails.py:112)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "HC-68",
+     "estrato": "modulo_f",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "unique (1) → join (hc/integrations/matrix/client.py:26)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "HC-69",
+     "estrato": "modulo_f",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "import (1) → request (hc/lib/curl.py:55)",
+     "validada": "usuário (revisada, conferida no editor, 19/11)"
+    },
+    {
+     "id": "HC-70",
+     "estrato": "modulo_f",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "import (1) → transfer_request (hc/lib/emails.py:92)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "HC-71",
+     "estrato": "modulo_f",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "import (1) → get (hc/lib/curl.py:210)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "HC-72",
+     "estrato": "espelho",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "unique (1) → send (hc/lib/emails.py:71)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "HC-73",
+     "estrato": "espelho",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "HC-74",
+     "estrato": "espelho",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "unique (1) → request (hc/lib/curl.py:55)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "HC-75",
+     "estrato": "espelho",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "unique (1) → send (hc/lib/emails.py:71)",
+     "validada": "usuário (revisada, 19/11)"
     }
    ]
   },
   "rt": {
-   "run_novo": "20261119-045018",
+   "run_novo": "20261119-084400",
    "grafo_novo_igual_ao_de_referencia": true,
    "populacao": {
     "total": 515,
     "por_resolution": {
-     "no_candidate_in_project": 313,
+     "no_candidate_in_project": 323,
      "type": 53,
      "trait_default": 7,
-     "unique": 104,
+     "unique": 94,
      "homonym": 35,
      "above_candidate_limit": 3
     },
     "por_estrato": {
-     "no_candidate_in_project": 313,
+     "no_candidate_in_project": 323,
      "type": 53,
      "trait_default": 7,
-     "unique->outro": 102,
+     "unique->outro": 94,
      "homonym": 35,
-     "unique->function": 2,
      "above_candidate_limit": 3
     },
-    "metodo_para_funcao": 2
+    "metodo_para_funcao": 0
    },
    "amostra_contagem": {
     "correta": 36,
-    "sem_candidato": 7,
-    "ambigua": 9,
-    "link_falso": 2,
+    "sem_candidato": 15,
+    "ambigua": 10,
     "candidatos_falsos": 1
    },
    "parte_c_contagem": {
@@ -559,11 +678,11 @@
     "ambigua": 1
    },
    "estimativa_populacao": {
-    "correta": 169,
-    "link_falso": 2,
+    "correta": 161,
+    "link_falso": 0,
     "candidatos_falsos": 0,
     "ambigua": 31,
-    "sem_candidato": 313
+    "sem_candidato": 323
    },
    "amostra": [
     {
@@ -682,16 +801,16 @@
      "id": "RT-15",
      "estrato": "unique->function",
      "parte_c": false,
-     "categoria": "link_falso",
-     "resposta": "unique (1) → lines (src/count.rs:81)",
+     "categoria": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
     {
      "id": "RT-16",
      "estrato": "unique->function",
      "parte_c": false,
-     "categoria": "link_falso",
-     "resposta": "unique (1) → lines (src/count.rs:81)",
+     "categoria": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
     {
@@ -1003,8 +1122,64 @@
      "estrato": "type_variavel",
      "parte_c": false,
      "categoria": "correta",
-     "resposta": "type (15) → impl Intersectable for Object::transform (src/object.rs:124)",
+     "resposta": "receiver (15) → impl Intersectable for Object::transform (src/object.rs:124)",
      "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-56",
+     "estrato": "tipo_derruba",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-57",
+     "estrato": "tipo_derruba",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-58",
+     "estrato": "tipo_derruba",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-59",
+     "estrato": "tipo_derruba",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-60",
+     "estrato": "tipo_derruba",
+     "parte_c": false,
+     "categoria": "ambigua",
+     "resposta": "homonym (8)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-61",
+     "estrato": "espelho",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-62",
+     "estrato": "espelho",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (revisada, conferida no editor, 19/11)"
     }
    ]
   }
@@ -1034,7 +1209,7 @@
      "linha": 277,
      "texto": "Check.objects.get(",
      "classificacao": "errado",
-     "resposta": "homonym (8)"
+     "resposta": "homonym (7)"
     }
    ]
   },
@@ -1086,19 +1261,19 @@
      "linha": 255,
      "texto": "check.ping(",
      "classificacao": "suspeito",
-     "resposta": "homonym (2)"
+     "resposta": "homonym (1)"
     }
    ]
   },
   {
    "id": "F7",
-   "classificacao": "suspeito",
+   "classificacao": "correto",
    "chamadas": [
     {
      "linha": 300,
      "texto": "ping",
-     "classificacao": "suspeito",
-     "resposta": "homonym (2)"
+     "classificacao": "correto",
+     "resposta": "unique (1)"
     }
    ]
   },
@@ -1168,19 +1343,19 @@
   },
   {
    "id": "F14",
-   "classificacao": "errado",
+   "classificacao": "nao_depende",
    "chamadas": [
     {
      "linha": 418,
      "texto": "check.save(",
-     "classificacao": "errado",
-     "resposta": "unique (1)"
+     "classificacao": "nao_depende",
+     "resposta": "no_candidate_in_project (0)"
     },
     {
      "linha": 422,
      "texto": "check.save(",
-     "classificacao": "errado",
-     "resposta": "unique (1)"
+     "classificacao": "nao_depende",
+     "resposta": "no_candidate_in_project (0)"
     }
    ]
   },
@@ -1222,7 +1397,7 @@
   },
   {
    "id": "F17",
-   "classificacao": "errado",
+   "classificacao": "correto",
    "chamadas": [
     {
      "linha": 170,
@@ -1233,8 +1408,8 @@
     {
      "linha": 175,
      "texto": "flip.save(",
-     "classificacao": "errado",
-     "resposta": "unique (1)"
+     "classificacao": "nao_depende",
+     "resposta": "no_candidate_in_project (0)"
     }
    ]
   },
@@ -1368,8 +1543,8 @@
    "alvo": {
     "alvo": "livre (pkg/models.py:63)",
     "resolution": "import",
-    "passo": "2.2",
-    "por_que": "from pkg.models import livre"
+    "passo": "a definir",
+    "por_que": "from pkg.models import livre; chamada simples, fora do escopo do 2.2 (receptor)"
    },
    "estado": "igual ao atual"
   },
@@ -1607,13 +1782,12 @@
    },
    "agora": {
     "resolution": "homonym",
-    "candidates": 5,
+    "candidates": 4,
     "alvos": [
      "Canal.notify (pkg/models.py:40)",
      "Email.notify (pkg/models.py:45)",
      "Fila.notify (pkg/models.py:55)",
-     "Sms.notify (pkg/models.py:50)",
-     "notify (pkg/casos.py:42)"
+     "Sms.notify (pkg/models.py:50)"
     ]
    },
    "alvo": {
@@ -1622,7 +1796,7 @@
     "passo": "2.6",
     "por_que": "canais: list[Canal]"
    },
-   "estado": "igual ao atual"
+   "estado": "mudou"
   },
   {
    "id": "N7-py",
@@ -1715,8 +1889,8 @@
    "alvo": {
     "alvo": "livre (src/models.rs:78)",
     "resolution": "import",
-    "passo": "2.2",
-    "por_que": "use crate::models::{livre, ...}"
+    "passo": "a definir",
+    "por_que": "use crate::models::{livre, ...}; chamada simples, fora do escopo do 2.2 (receptor)"
    },
    "estado": "igual ao atual"
   },

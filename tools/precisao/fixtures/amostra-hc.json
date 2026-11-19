@@ -1,7 +1,7 @@
 {
  "projeto": "healthchecks-25597e41",
  "fonte": "Projetos/pilotos/healthchecks @ 6c05a7a",
- "selecao": "tools/precisao/amostra.js sobre a linha de base de 18/11/2026 (binário de aae51d7)",
+ "selecao": "tools/precisao/amostra.js sobre a linha de base de 18/11/2026 (binário de aae51d7); HC-61 a HC-75: estratos do passo 2.2 (metodo_funcao, modulo_f, espelho), escolhidos à mão na Parada 1 do 2.2, equilibrando código de teste e de produção",
  "chamadas": [
   {
    "id": "HC-01",
@@ -1356,6 +1356,354 @@
    "certeza": "alta",
    "justificativa": "self.nodelist é NodeList. O link vai para o próprio TableNode.render.",
    "verdade_validada_por": "usuário (aceita por amostragem, 18/11)"
+  },
+  {
+   "id": "HC-61",
+   "parte_c": false,
+   "estrato": "metodo_funcao",
+   "ocorrencia": "hc/lib/signing.py@1125-1136",
+   "local": "hc/lib/signing.py:27",
+   "texto": "time.time()",
+   "dono": "ShortHexTimestampSigner.sign",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "ChannelsAdmin.time (hc/api/admin.py:224)"
+    ]
+   },
+   "verdade": {
+    "externo": "stdlib: time.time"
+   },
+   "certeza": "alta",
+   "justificativa": "import time (signing.py:3): o receptor é o módulo time da biblioteca padrão. O link atual vai para o método ChannelsAdmin.time (hc/api/admin.py:224).",
+   "verdade_validada_por": "usuário (revisada, 19/11)"
+  },
+  {
+   "id": "HC-62",
+   "parte_c": false,
+   "estrato": "metodo_funcao",
+   "ocorrencia": "hc/api/management/commands/sendalerts.py@1953-1968",
+   "local": "hc/api/management/commands/sendalerts.py:55",
+   "texto": "\"\\n\".join(logs)",
+   "dono": "notify",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "join (hc/integrations/matrix/client.py:26)"
+    ]
+   },
+   "verdade": {
+    "externo": "builtin: str.join"
+   },
+   "certeza": "alta",
+   "justificativa": "O receptor é o literal \"\\n\" (str). O link atual vai para a função livre join de hc/integrations/matrix/client.py.",
+   "verdade_validada_por": "usuário (revisada, 19/11)"
+  },
+  {
+   "id": "HC-63",
+   "parte_c": false,
+   "estrato": "metodo_funcao",
+   "ocorrencia": "hc/lib/curl.py@953-974",
+   "local": "hc/lib/curl.py:38",
+   "texto": "self.content.decode()",
+   "dono": "Response.json",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "decode (hc/front/templatetags/hc_extras.py:330)"
+    ]
+   },
+   "verdade": {
+    "externo": "builtin: bytes.decode"
+   },
+   "certeza": "alta",
+   "justificativa": "self.content é bytes (Response.__init__, content: bytes, curl.py:33-35). O link atual vai para a função livre decode de hc_extras.py.",
+   "verdade_validada_por": "usuário (revisada, 19/11)"
+  },
+  {
+   "id": "HC-64",
+   "parte_c": false,
+   "estrato": "metodo_funcao",
+   "ocorrencia": "hc/api/tests/test_check_model.py@10805-10816",
+   "local": "hc/api/tests/test_check_model.py:282",
+   "texto": "flip.save()",
+   "dono": "CheckModelTestCase.test_downtimes_handles_flip_two_months_ago",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "save (hc/integrations/github/views.py:92)"
+    ]
+   },
+   "verdade": {
+    "externo": "Django: Model.save"
+   },
+   "certeza": "alta",
+   "justificativa": "flip = Flip(owner=check) (test_check_model.py:278); Flip é um model do Django e não sobrescreve save. Código de teste.",
+   "verdade_validada_por": "usuário (revisada, 19/11)"
+  },
+  {
+   "id": "HC-65",
+   "parte_c": false,
+   "estrato": "metodo_funcao",
+   "ocorrencia": "hc/api/tests/test_tokenbucket.py@1791-1801",
+   "local": "hc/api/tests/test_tokenbucket.py:55",
+   "texto": "obj.save()",
+   "dono": "TokenBucketTestCase.test_s3_get_object_healthy_works",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "save (hc/integrations/github/views.py:92)"
+    ]
+   },
+   "verdade": {
+    "externo": "Django: Model.save"
+   },
+   "certeza": "alta",
+   "justificativa": "obj = TokenBucket(...) (test_tokenbucket.py:52); TokenBucket é um model do Django e não sobrescreve save. Código de teste.",
+   "verdade_validada_por": "usuário (revisada, 19/11)"
+  },
+  {
+   "id": "HC-66",
+   "parte_c": false,
+   "estrato": "metodo_funcao",
+   "ocorrencia": "hc/integrations/rocketchat/tests/test_add.py@1290-1356",
+   "local": "hc/integrations/rocketchat/tests/test_add.py:38",
+   "texto": "self.client.login(username=\"bob@example.org\", password=\"password\")",
+   "dono": "AddRocketChatTestCase.test_it_requires_rw_access",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 3,
+    "alvos": [
+     "ProfileAdmin.login (hc/accounts/admin.py:210)",
+     "login (hc/accounts/views.py:161)",
+     "login (hc/lib/emails.py:88)"
+    ]
+   },
+   "verdade": {
+    "externo": "Django: django.test.Client.login"
+   },
+   "certeza": "alta",
+   "justificativa": "self.client é o cliente de teste do Django (BaseTestCase herda de TestCase). Os 3 candidatos atuais (ProfileAdmin.login e as funções login de accounts/views.py e lib/emails.py) estão errados. Código de teste.",
+   "verdade_validada_por": "usuário (revisada, conferida no editor, 19/11)"
+  },
+  {
+   "id": "HC-67",
+   "parte_c": false,
+   "estrato": "modulo_f",
+   "ocorrencia": "hc/accounts/models.py@11408-11452",
+   "local": "hc/accounts/models.py:285",
+   "texto": "emails.report(self.user.email, ctx, headers)",
+   "dono": "Profile.send_report",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "report (hc/lib/emails.py:112)"
+    ]
+   },
+   "verdade": {
+    "alvo": "report (hc/lib/emails.py:112)"
+   },
+   "certeza": "alta",
+   "justificativa": "from hc.lib import emails (accounts/models.py:24): emails.report é a função do módulo.",
+   "verdade_validada_por": "usuário (revisada, 19/11)"
+  },
+  {
+   "id": "HC-68",
+   "parte_c": false,
+   "estrato": "modulo_f",
+   "ocorrencia": "hc/integrations/matrix/forms.py@439-453",
+   "local": "hc/integrations/matrix/forms.py:18",
+   "texto": "client.join(v)",
+   "dono": "AddMatrixForm.clean_alias",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "join (hc/integrations/matrix/client.py:26)"
+    ]
+   },
+   "verdade": {
+    "alvo": "join (hc/integrations/matrix/client.py:26)"
+   },
+   "certeza": "alta",
+   "justificativa": "from hc.integrations.matrix import client (matrix/forms.py:5): client.join é a função do módulo.",
+   "verdade_validada_por": "usuário (revisada, 19/11)"
+  },
+  {
+   "id": "HC-69",
+   "parte_c": false,
+   "estrato": "modulo_f",
+   "ocorrencia": "hc/api/transports.py@4690-4944",
+   "local": "hc/api/transports.py:151",
+   "texto": "curl.request(",
+   "dono": "HttpTransport._request",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "HttpTransport.request (hc/api/transports.py:166)",
+     "request (hc/lib/curl.py:55)"
+    ]
+   },
+   "verdade": {
+    "alvo": "request (hc/lib/curl.py:55)"
+   },
+   "certeza": "alta",
+   "justificativa": "from hc.lib import curl (transports.py:10): curl.request é a função do módulo, não o método HttpTransport.request.",
+   "verdade_validada_por": "usuário (revisada, conferida no editor, 19/11)"
+  },
+  {
+   "id": "HC-70",
+   "parte_c": false,
+   "estrato": "modulo_f",
+   "ocorrencia": "hc/accounts/models.py@7089-7134",
+   "local": "hc/accounts/models.py:189",
+   "texto": "emails.transfer_request(self.user.email, ctx)",
+   "dono": "Profile.send_transfer_request",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Project.transfer_request (hc/accounts/models.py:525)",
+     "transfer_request (hc/lib/emails.py:92)"
+    ]
+   },
+   "verdade": {
+    "alvo": "transfer_request (hc/lib/emails.py:92)"
+   },
+   "certeza": "alta",
+   "justificativa": "from hc.lib import emails (accounts/models.py:24): emails.transfer_request é a função do módulo, não o método Project.transfer_request.",
+   "verdade_validada_por": "usuário (revisada, 19/11)"
+  },
+  {
+   "id": "HC-71",
+   "parte_c": false,
+   "estrato": "modulo_f",
+   "ocorrencia": "hc/integrations/github/client.py@3166-3196",
+   "local": "hc/integrations/github/client.py:100",
+   "texto": "curl.get(url, headers=headers)",
+   "dono": "get_repos",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 8,
+    "alvos": [
+     "AuthTestCase.get (hc/api/tests/test_auth.py:9)",
+     "GetBadgesTestCase.get (hc/api/tests/test_get_badges.py:23)",
+     "GetCheckTestCase.get (hc/api/tests/test_get_check.py:37)",
+     "GetFlipsTestCase.get (hc/api/tests/test_get_flips.py:32)",
+     "GetPingsTestCase.get (hc/api/tests/test_get_pings.py:38)",
+     "ListChannelsTestCase.get (hc/api/tests/test_list_channels.py:18)",
+     "ListChecksTestCase.get (hc/api/tests/test_list_checks.py:39)",
+     "get (hc/lib/curl.py:210)"
+    ]
+   },
+   "verdade": {
+    "alvo": "get (hc/lib/curl.py:210)"
+   },
+   "certeza": "alta",
+   "justificativa": "from hc.lib import curl (github/client.py:8): curl.get é a função do módulo.",
+   "verdade_validada_por": "usuário (revisada, 19/11)"
+  },
+  {
+   "id": "HC-72",
+   "parte_c": false,
+   "estrato": "espelho",
+   "ocorrencia": "hc/lib/emails.py@2957-2961",
+   "local": "hc/lib/emails.py:89",
+   "texto": "send",
+   "dono": "login",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 3,
+    "alvos": [
+     "Signal.send (hc/integrations/signal/transport.py:60)",
+     "Telegram.send (hc/integrations/telegram/transport.py:55)",
+     "send (hc/lib/emails.py:71)"
+    ]
+   },
+   "verdade": {
+    "alvo": "send (hc/lib/emails.py:71)"
+   },
+   "certeza": "alta",
+   "justificativa": "Chamada simples send(...) em emails.login (emails.py:88-89): a função send do próprio módulo, não os métodos Signal.send e Telegram.send.",
+   "verdade_validada_por": "usuário (revisada, 19/11)"
+  },
+  {
+   "id": "HC-73",
+   "parte_c": false,
+   "estrato": "espelho",
+   "ocorrencia": "hc/integrations/webhook/views.py@1568-1574",
+   "local": "hc/integrations/webhook/views.py:50",
+   "texto": "render",
+   "dono": "webhook_form",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 3,
+    "alvos": [
+     "LineModeNode.render (hc/front/templatetags/linemode.py:14)",
+     "Table.render (hc/front/templatetags/asciitable.py:22)",
+     "TableNode.render (hc/front/templatetags/asciitable.py:47)"
+    ]
+   },
+   "verdade": {
+    "externo": "Django: django.shortcuts.render"
+   },
+   "certeza": "alta",
+   "justificativa": "from django.shortcuts import redirect, render (webhook/views.py:8). Os candidatos atuais são três métodos render (linemode.py, asciitable.py), que uma chamada simples não alcança.",
+   "verdade_validada_por": "usuário (revisada, 19/11)"
+  },
+  {
+   "id": "HC-74",
+   "parte_c": false,
+   "estrato": "espelho",
+   "ocorrencia": "hc/lib/tests/test_curl.py@1657-1664",
+   "local": "hc/lib/tests/test_curl.py:50",
+   "texto": "request",
+   "dono": "CurlTestCase.test_get_works",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "HttpTransport.request (hc/api/transports.py:166)",
+     "request (hc/lib/curl.py:55)"
+    ]
+   },
+   "verdade": {
+    "alvo": "request (hc/lib/curl.py:55)"
+   },
+   "certeza": "alta",
+   "justificativa": "from hc.lib.curl import CurlError, request (test_curl.py:10). Código de teste.",
+   "verdade_validada_por": "usuário (revisada, 19/11)"
+  },
+  {
+   "id": "HC-75",
+   "parte_c": false,
+   "estrato": "espelho",
+   "ocorrencia": "hc/lib/tests/test_emails.py@1410-1414",
+   "local": "hc/lib/tests/test_emails.py:45",
+   "texto": "send",
+   "dono": "EmailsTestCase.test_it_requires_smtp_configuration",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 3,
+    "alvos": [
+     "Signal.send (hc/integrations/signal/transport.py:60)",
+     "Telegram.send (hc/integrations/telegram/transport.py:55)",
+     "send (hc/lib/emails.py:71)"
+    ]
+   },
+   "verdade": {
+    "alvo": "send (hc/lib/emails.py:71)"
+   },
+   "certeza": "alta",
+   "justificativa": "from hc.lib.emails import EmailThread, send (test_emails.py:9). Código de teste.",
+   "verdade_validada_por": "usuário (revisada, 19/11)"
   }
  ]
 }

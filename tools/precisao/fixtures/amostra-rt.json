@@ -1,7 +1,7 @@
 {
  "projeto": "renderer-9b78f3a9",
  "fonte": "Projetos/renderer @ e38254b",
- "selecao": "tools/precisao/amostra.js sobre a linha de base de 18/11/2026 (binário de aae51d7); RT-31 a RT-50: estratos do passo 2.1 (type, type_caminho, type_fora, trait_default), sorteados pela ordem do sha256 do id da ocorrência, arquivos distintos primeiro; RT-51 a RT-55: chamadas por variável acima do teto, escolhidas à mão na Parada 3 do passo 2.1, uma por origem do tipo (item de coleção, parâmetro anotado, parâmetro no corpo de trait, construtor por caminho completo, self acima do teto)",
+ "selecao": "tools/precisao/amostra.js sobre a linha de base de 18/11/2026 (binário de aae51d7); RT-31 a RT-50: estratos do passo 2.1 (type, type_caminho, type_fora, trait_default), sorteados pela ordem do sha256 do id da ocorrência, arquivos distintos primeiro; RT-51 a RT-55: chamadas por variável acima do teto, escolhidas à mão na Parada 3 do passo 2.1, uma por origem do tipo (item de coleção, parâmetro anotado, parâmetro no corpo de trait, construtor por caminho completo, self acima do teto); RT-56 a RT-62: estratos do passo 2.2 (tipo_derruba, com um caso de controle, e espelho), escolhidos à mão na Parada 1 do 2.2",
  "chamadas": [
   {
    "id": "RT-01",
@@ -1182,6 +1182,167 @@
    "certeza": "alta",
    "justificativa": "Origem: self no impl. self.m() acima do teto não tem aresta candidata, então o receiver não se aplica e o tipo do impl (Object) resolve. bounds e transform estão no mesmo impl Intersectable for Object.",
    "verdade_validada_por": "usuário (revisada, 19/11)"
+  },
+  {
+   "id": "RT-56",
+   "parte_c": false,
+   "estrato": "tipo_derruba",
+   "ocorrencia": "src/bin/cena_video.rs@4541-4552",
+   "local": "src/bin/cena_video.rs:107",
+   "texto": "balls.len()",
+   "dono": "main",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "impl Groups::len (src/groups.rs:60)"
+    ]
+   },
+   "verdade": {
+    "externo": "std: Vec::len"
+   },
+   "certeza": "alta",
+   "justificativa": "let mut balls: Vec<(f64, f64, f64)> (cena_video.rs:105). O link atual vai para impl Groups::len.",
+   "verdade_validada_por": "usuário (revisada, 19/11)"
+  },
+  {
+   "id": "RT-57",
+   "parte_c": false,
+   "estrato": "tipo_derruba",
+   "ocorrencia": "src/obj.rs@5280-5293",
+   "local": "src/obj.rs:124",
+   "texto": "objects.len()",
+   "dono": "build_bvh",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "impl Groups::len (src/groups.rs:60)"
+    ]
+   },
+   "verdade": {
+    "externo": "std: Vec::len"
+   },
+   "certeza": "alta",
+   "justificativa": "Parâmetro mut objects: Vec<Object> (obj.rs:123). O link atual vai para impl Groups::len.",
+   "verdade_validada_por": "usuário (revisada, 19/11)"
+  },
+  {
+   "id": "RT-58",
+   "parte_c": false,
+   "estrato": "tipo_derruba",
+   "ocorrencia": "src/groups.rs@1526-1545",
+   "local": "src/groups.rs:61",
+   "texto": "self.children.len()",
+   "dono": "impl Groups::len",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "impl Groups::len (src/groups.rs:60)"
+    ]
+   },
+   "verdade": {
+    "externo": "std: Vec::len"
+   },
+   "certeza": "alta",
+   "justificativa": "Campo children: Vec<Object> (groups.rs:12). O link atual é Groups::len chamando a si mesmo.",
+   "verdade_validada_por": "usuário (revisada, 19/11)"
+  },
+  {
+   "id": "RT-59",
+   "parte_c": false,
+   "estrato": "tipo_derruba",
+   "ocorrencia": "src/world.rs@855-874",
+   "local": "src/world.rs:30",
+   "texto": "self.inverses.len()",
+   "dono": "impl World::intersect_world",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "impl Groups::len (src/groups.rs:60)"
+    ]
+   },
+   "verdade": {
+    "externo": "std: Vec::len"
+   },
+   "certeza": "alta",
+   "justificativa": "Campo inverses: Vec<crate::matrix::Matrix<4>> (world.rs:15). O link atual vai para impl Groups::len.",
+   "verdade_validada_por": "usuário (revisada, 19/11)"
+  },
+  {
+   "id": "RT-60",
+   "parte_c": false,
+   "estrato": "tipo_derruba",
+   "ocorrencia": "src/tuple.rs@525-547",
+   "local": "src/tuple.rs:26",
+   "texto": "self.w.equivalent(0.0)",
+   "dono": "impl Tuple::is_vector",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 8,
+    "alvos": [
+     "Equivalence::equivalent (src/equivalent.rs:4)",
+     "impl Equivalence<Camera> for Camera::equivalent (src/camera.rs:211)",
+     "impl Equivalence<Color> for Color::equivalent (src/color.rs:34)",
+     "impl Equivalence<Matrix<2>> for Matrix<2>::equivalent (src/matrix.rs:210)",
+     "impl Equivalence<Matrix<3>> for Matrix<3>::equivalent (src/matrix.rs:220)",
+     "impl Equivalence<Matrix<4>> for Matrix<4>::equivalent (src/matrix.rs:236)",
+     "impl Equivalence<Tuple> for Tuple::equivalent (src/tuple.rs:42)",
+     "impl Equivalence<f64> for f64::equivalent (src/equivalent.rs:12)"
+    ]
+   },
+   "verdade": {
+    "alvo": "impl Equivalence<f64> for f64::equivalent (src/equivalent.rs:12)"
+   },
+   "certeza": "alta",
+   "justificativa": "Controle: w: f64 (tuple.rs:9), e o projeto implementa Equivalence<f64> for f64 (equivalent.rs:11). O tipo de fora do projeto não derruba: continua homonym, com o alvo entre os candidatos.",
+   "verdade_validada_por": "usuário (revisada, 19/11)"
+  },
+  {
+   "id": "RT-61",
+   "parte_c": false,
+   "estrato": "espelho",
+   "ocorrencia": "src/canvas.rs@4159-4163",
+   "local": "src/canvas.rs:118",
+   "texto": "drop",
+   "dono": "impl Canvas::to_png",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "impl Drop for Guard::drop (src/count.rs:59)"
+    ]
+   },
+   "verdade": {
+    "externo": "std: std::mem::drop"
+   },
+   "certeza": "alta",
+   "justificativa": "drop(writer) em Canvas::to_png (canvas.rs:118): a função drop do prelúdio. O link atual vai para impl Drop for Guard::drop, um método.",
+   "verdade_validada_por": "usuário (revisada, 19/11)"
+  },
+  {
+   "id": "RT-62",
+   "parte_c": false,
+   "estrato": "espelho",
+   "ocorrencia": "src/obj.rs@2758-2762",
+   "local": "src/obj.rs:64",
+   "texto": "next",
+   "dono": "parse_obj_smooth",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "impl Sorteio::next (src/bin/cena_video.rs:29)"
+    ]
+   },
+   "verdade": {
+    "externo": "closure local next (src/obj.rs:63), sem declaração no projeto"
+   },
+   "certeza": "alta",
+   "justificativa": "let mut next = || ... (obj.rs:63): next() chama a closure local. O link atual vai para impl Sorteio::next (src/bin/cena_video.rs:29).",
+   "verdade_validada_por": "usuário (revisada, conferida no editor, 19/11)"
   }
  ]
 }
