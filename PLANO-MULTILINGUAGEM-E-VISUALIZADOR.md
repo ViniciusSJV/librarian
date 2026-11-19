@@ -43,12 +43,19 @@ corretas, lacunas explícitas e fatos aguardando aprovação humana.
   a chamada ao próprio método que a contém. Erra nas 17 chamadas da
   população (4 no Healthchecks, 13 no ray tracer), e o inventário usa a
   mesma regra antes da regra por tipo (`inventory.rs:635-639`).
-  Commitado em 19/11 (`c316bf7`, `3b4e1c6`, `6525fb4`), sem push; CTX seção 23.
+  Commitado em 19/11 (`c316bf7`, `3b4e1c6`, `6525fb4`, `cb8e5ef`, `078fd0e`), com push
+  em 19/11/2026; CTX seção 23.
 - 2.2 Chamada de método não casa com função solta (Rust direto; Python
   com tabela mínima de imports para modulo.f()). Meta: os 197 links;
   F6, F7, F14 e F17. Quando o tipo do receptor é conhecido e não tem o
   método, o tipo derruba um unique (ex.: RT-15/16, `model.lines()` com
   `model: &str`); no 2.1, unique vem antes de type.
+  Feito em 19/11 (CTX seção 24, DEC-38; amostra validada): 197 → 30 links
+  (todos modulo.f() certos); HC-F7 e HC-F17 corretos, HC-F14 sem link.
+  Meta não atingida: HC-F6 (`check.ping`) fica `homonym` com um só
+  candidato, o certo, sem link. Promover um homônimo que fica com um
+  candidato criaria 711 links falsos em testes (`self.client.login`), e
+  o tipo de `check` em Python só vem no 2.3. Fica para o 2.3.
 - 2.3 Tipos em Python: N2 → N1 (com relação "instancia", separada de
   "chama") → N4 (corrige Repo() preso ao campo) → N3 entre arquivos
   (também Rust). Na mesma questão de dono: a chamada de um decorador

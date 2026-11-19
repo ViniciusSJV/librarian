@@ -58,7 +58,7 @@ Um passo da Fase 2 reprova se, em Python ou em Rust:
 
 `candidatos_falsos`, ambíguas, a população, os níveis e a auditoria dos fatos são registrados com a variação, mas não reprovam sozinhos.
 
-A regra compara só as chamadas que a linha de base também tem. Um estrato acrescentado à amostra depois aparece numa tabela à parte até entrar numa nova linha de base. Foi o caso de RT-31 a RT-55, do passo 2.1, que entraram na linha de base em 19/11/2026. Uma chamada da amostra fora da população (por caminho, como `Ray::new`, ou em testes) é procurada entre todas as chamadas do run. Com a amostra original, o veredito é o mesmo da regra anterior (DEC-37). Uma exceção só vale com justificativa caso a caso e aprovação do usuário.
+A regra compara só as chamadas que a linha de base também tem. Um estrato acrescentado à amostra depois aparece numa tabela à parte até entrar numa nova linha de base. Foi o caso de RT-31 a RT-55, do passo 2.1, que entraram na linha de base em 19/11/2026. HC-61 a HC-75 e RT-56 a RT-62, do passo 2.2, entraram na linha de base em 19/11/2026, com a verdade validada pelo usuário. Uma chamada da amostra fora da população (por caminho, como `Ray::new`, ou em testes) é procurada entre todas as chamadas do run. Com a amostra original, o veredito é o mesmo da regra anterior (DEC-37). Uma exceção só vale com justificativa caso a caso e aprovação do usuário.
 
 ## Arquivos
 
@@ -67,10 +67,10 @@ A regra compara só as chamadas que a linha de base também tem. Um estrato acre
 | `portao.js` | O comando |
 | `lib.js` | Cópia do `.studio`, Studio numa porta livre, hashes, o conjunto de chamadas e as respostas |
 | `amostra.js` | Como a amostra foi sorteada: rodado uma vez, sobre a linha de base de 18/11/2026. Não roda no portão |
-| `fixtures/amostra-hc.json`, `fixtures/amostra-rt.json` | 60 chamadas do Healthchecks e 55 do ray tracer (RT-31 a RT-55 vêm do passo 2.1), com verdade, certeza, justificativa e `verdade_validada_por` |
+| `fixtures/amostra-hc.json`, `fixtures/amostra-rt.json` | 75 chamadas do Healthchecks e 62 do ray tracer (RT-31 a RT-55 vêm do passo 2.1; HC-61 a HC-75 e RT-56 a RT-62, do passo 2.2), com verdade, certeza, justificativa e `verdade_validada_por` |
 | `fixtures/fatos.json` | As chamadas que cada fato F1–F26 afirma, com a verdade |
 | `fixtures/niveis.json` | N0–N8: resultado atual e alvo da Fase 2, com o passo |
 | `sinteticos/py`, `sinteticos/rs` | Projetos dos níveis, copiados de `docs/reports/piloto-1b/dados/tipos/` |
-| `linha-de-base.json` | Resultado com o binário de `3b4e1c6` (passo 2.1), sobre as 60 chamadas do Healthchecks e as 55 do ray tracer. Aprovada pelo usuário em 19/11/2026 |
+| `linha-de-base.json` | Resultado com o binário do passo 2.2, sobre as 75 chamadas do Healthchecks e as 62 do ray tracer, gravado com `--gravar-base`. Aprovada pelo usuário em 19/11/2026 (a anterior, do passo 2.1, sobre 60 + 55 chamadas, está no histórico do git) |
 
 A amostra é identificada pelo caminho e pelo intervalo de bytes da ocorrência (`arquivo@início-fim`), que são os mesmos em qualquer run do mesmo código-fonte. A verdade é do usuário (DEC-22). Uma verdade nova ou corrigida entra na fixture com `verdade_validada_por` indicando quem validou.

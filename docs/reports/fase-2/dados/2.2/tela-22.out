@@ -1,0 +1,154 @@
+PASSA  PT emails.login (import): /api/calls dá import (1) → /^login$/  -> {"resolution":"import","to":"login","basis":"import","candidate_edge":"edge:83161d7cbece79d34932bb2730246127b58dbfa5af5e9a4a405badce5f7bee7f","candidates":1}
+PASSA  PT emails.login (import): o alvo é a declaração de hc/lib/emails.py  -> src:b440deb0964c4fda323b02257da0434349204b6f55e39529fb014ec9275f3987:5068841002a9320ceed13d33db9ae68aa2367728d4b777fa8afa2de054b25535:function:2903:2993
+PASSA  PT emails.login (import): basis import, candidate_edge presente  -> import edge:83161d7cbece79d34932bb2730246127b58dbfa5af5e9a4a405badce5f7bee7f
+PASSA  PT emails.login (import): o detalhe da linha diz o texto da resolução  -> seguida: o receptor é um módulo do projeto (import), e só esta função dele tem o nome || Profile.send_instant_login_link → login
+Fechar
+chama: emails.login(self.user.email, ctx)
+hc/accounts/models.py:158
+seguida: o receptor é um módulo do projeto (import), e só esta função dele tem o nome
+PASSA  PT emails.login (import): nenhuma chave crua nem código sem texto  -> Profile.send_instant_login_link → login
+Fechar
+chama: emails.login(self.user.email, ctx)
+hc/accounts/models.py:158
+seguida: o receptor é um módulo do projeto (import), e só esta função dele tem o nome
+      [pt-import.png] Profile.send_instant_login_link → login ⏎ Fechar ⏎ chama: emails.login(self.user.email, ctx) ⏎ hc/accounts/models.py:158 ⏎ seguida: o receptor é um módulo do projeto (import), e só esta função dele tem o nome
+PASSA  PT ping (espelho, HC-F7): /api/calls dá unique (1) → /^ping$/  -> {"resolution":"unique","to":"ping","basis":"graph_edge","candidate_edge":"edge:9086bcf3809a59f6fb31fbc281775e9502b91d7db3d05f65931f7fa6031bc524","candidates":1}
+PASSA  PT ping (espelho, HC-F7): o alvo é a declaração de hc/api/views.py  -> src:627a48233053768114a51eadccf97aadd78ac0fc450648e2b5da871ba305777e:d0121156422dcefcd2035b4c7f2222f23eba84765c7abf28520153d051ca673d:function:6860:9238
+PASSA  PT ping (espelho, HC-F7): basis graph_edge, candidate_edge presente  -> graph_edge edge:9086bcf3809a59f6fb31fbc281775e9502b91d7db3d05f65931f7fa6031bc524
+PASSA  PT ping (espelho, HC-F7): o detalhe da linha diz o texto da resolução  -> seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta || ping_by_slug → ping
+Fechar
+chama: ping
+hc/api/views.py:300
+seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+PASSA  PT ping (espelho, HC-F7): nenhuma chave crua nem código sem texto  -> ping_by_slug → ping
+Fechar
+chama: ping
+hc/api/views.py:300
+seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+      [pt-unique.png] ping_by_slug → ping ⏎ Fechar ⏎ chama: ping ⏎ hc/api/views.py:300 ⏎ seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+PASSA  PT check.ping (homonym com 1, HC-F6): /api/calls dá homonym (1) → /^Check\.ping$/  -> {"resolution":"homonym","to":"Check.ping","basis":"graph_edge","candidate_edge":"edge:34e270b39d0ca2926003dfdde07d5db66a39db4144c0c55729f09350de2a1ce0","candidates":1}
+PASSA  PT check.ping (homonym com 1, HC-F6): basis graph_edge, candidate_edge presente  -> graph_edge edge:34e270b39d0ca2926003dfdde07d5db66a39db4144c0c55729f09350de2a1ce0
+PASSA  PT check.ping (homonym com 1, HC-F6): o detalhe da linha diz o texto da resolução  -> não seguida: das declarações que a forma da chamada alcança, só esta tem o nome; as outras de mesmo nome foram excluídas pela forma, e nada confirma que a chamada chega aqui || ping → Check.ping
+Fechar
+chama: check.ping(remote_addr, scheme, method, ua, body, action, rid, exitstatus)
+hc/api/views.py:255
+não seguida: das declarações que a forma da chamada alcança, só esta tem o nome; as outras de me
+PASSA  PT check.ping (homonym com 1, HC-F6): nenhuma chave crua nem código sem texto  -> ping → Check.ping
+Fechar
+chama: check.ping(remote_addr, scheme, method, ua, body, action, rid, exitstatus)
+hc/api/views.py:255
+não seguida: das declarações que a forma da chamada alcança, só esta tem o nome; as outras de mesmo nome foram excluídas pela forma, e nada confirma que a chamada chega aquiSeguir por este
+      [pt-homonym.png] ping → Check.ping ⏎ Fechar ⏎ chama: check.ping(remote_addr, scheme, method, ua, body, action, rid, exitstatus) ⏎ hc/api/views.py:255 ⏎ não seguida: das declarações que a forma da chamada alcança, só esta tem o nome; as outras de mesmo nome foram excluídas pela forma, e nada confirma que a chamada chega aquiSeguir por este
+PASSA  PT self.transform() acima do teto (RT-55): /api/calls dá receiver (15) → /Object::transform$/  -> {"resolution":"receiver","to":"impl Intersectable for Object::transform","basis":"graph_edge","candidate_edge":null,"candidates":15}
+PASSA  PT self.transform() acima do teto (RT-55): basis graph_edge, candidate_edge null  -> graph_edge null
+PASSA  PT self.transform() acima do teto (RT-55): o detalhe da linha diz o texto da resolução  -> seguida: chamada do próprio receptor (self.m()), e só este homônimo está na mesma classe ou impl || impl Intersectable for Object::bounds → impl Intersectable for Object::transform
+Fechar
+chama: self.transform()
+src/object.rs:173
+seguida: chamada do próprio receptor (self.m()), e só este homônimo está na mesma classe ou impl
+PASSA  PT self.transform() acima do teto (RT-55): nenhuma chave crua nem código sem texto  -> impl Intersectable for Object::bounds → impl Intersectable for Object::transform
+Fechar
+chama: self.transform()
+src/object.rs:173
+seguida: chamada do próprio receptor (self.m()), e só este homônimo está na mesma classe ou impl
+      [pt-receiver-sem-aresta.png] impl Intersectable for Object::bounds → impl Intersectable for Object::transform ⏎ Fechar ⏎ chama: self.transform() ⏎ src/object.rs:173 ⏎ seguida: chamada do próprio receptor (self.m()), e só este homônimo está na mesma classe ou impl
+PASSA  PT check.save() sem candidato (HC-F14): /api/calls dá no_candidate_in_project (0) e nenhum link  -> {"reason":"no_candidate_in_project","candidates":0}
+PASSA  PT check.save() sem candidato (HC-F14): a lista de não resolvidas mostra a chamada e o motivo novo  -> Chamadas não apresentadas: 26 (5 acima do limite de homônimos · 21 sem candidato no projeto). Não aparecer no desenho não quer dizer que a chamada não existe.
+Acima do limite de homônimos (5)
+
+Ambiguidade: o nome combina com mais declarações do que o grafo liga, e ele guarda só a quantidade. Nenhuma foi escolhida.
+
+new_channels.add(matches[0]) · _update hc/api/views.py:359 · 29 candidatos
+update_f
+PASSA  PT: textos novos em português
+PASSA  PT: nenhum erro de página
+PASSA  PT: nada além de abrir o projeto (POST /api/project = store.open) e /api/calls
+PASSA  EN emails.login (import): /api/calls dá import (1) → /^login$/  -> {"resolution":"import","to":"login","basis":"import","candidate_edge":"edge:83161d7cbece79d34932bb2730246127b58dbfa5af5e9a4a405badce5f7bee7f","candidates":1}
+PASSA  EN emails.login (import): o alvo é a declaração de hc/lib/emails.py  -> src:b440deb0964c4fda323b02257da0434349204b6f55e39529fb014ec9275f3987:5068841002a9320ceed13d33db9ae68aa2367728d4b777fa8afa2de054b25535:function:2903:2993
+PASSA  EN emails.login (import): basis import, candidate_edge presente  -> import edge:83161d7cbece79d34932bb2730246127b58dbfa5af5e9a4a405badce5f7bee7f
+PASSA  EN emails.login (import): o detalhe da linha diz o texto da resolução  -> followed: the receiver is a module of the project (import), and only this function of it has the name || Profile.send_instant_login_link → login
+Close
+calls: emails.login(self.user.email, ctx)
+hc/accounts/models.py:158
+followed: the receiver is a module of the project (import), and only this function of it has the name
+PASSA  EN emails.login (import): nenhuma chave crua nem código sem texto  -> Profile.send_instant_login_link → login
+Close
+calls: emails.login(self.user.email, ctx)
+hc/accounts/models.py:158
+followed: the receiver is a module of the project (import), and only this function of it has the name
+      [en-import.png] Profile.send_instant_login_link → login ⏎ Close ⏎ calls: emails.login(self.user.email, ctx) ⏎ hc/accounts/models.py:158 ⏎ followed: the receiver is a module of the project (import), and only this function of it has the name
+PASSA  EN ping (espelho, HC-F7): /api/calls dá unique (1) → /^ping$/  -> {"resolution":"unique","to":"ping","basis":"graph_edge","candidate_edge":"edge:9086bcf3809a59f6fb31fbc281775e9502b91d7db3d05f65931f7fa6031bc524","candidates":1}
+PASSA  EN ping (espelho, HC-F7): o alvo é a declaração de hc/api/views.py  -> src:627a48233053768114a51eadccf97aadd78ac0fc450648e2b5da871ba305777e:d0121156422dcefcd2035b4c7f2222f23eba84765c7abf28520153d051ca673d:function:6860:9238
+PASSA  EN ping (espelho, HC-F7): basis graph_edge, candidate_edge presente  -> graph_edge edge:9086bcf3809a59f6fb31fbc281775e9502b91d7db3d05f65931f7fa6031bc524
+PASSA  EN ping (espelho, HC-F7): o detalhe da linha diz o texto da resolução  -> followed: among the declarations the call's form reaches, the name matches only this one || ping_by_slug → ping
+Close
+calls: ping
+hc/api/views.py:300
+followed: among the declarations the call's form reaches, the name matches only this one
+PASSA  EN ping (espelho, HC-F7): nenhuma chave crua nem código sem texto  -> ping_by_slug → ping
+Close
+calls: ping
+hc/api/views.py:300
+followed: among the declarations the call's form reaches, the name matches only this one
+      [en-unique.png] ping_by_slug → ping ⏎ Close ⏎ calls: ping ⏎ hc/api/views.py:300 ⏎ followed: among the declarations the call's form reaches, the name matches only this one
+PASSA  EN check.ping (homonym com 1, HC-F6): /api/calls dá homonym (1) → /^Check\.ping$/  -> {"resolution":"homonym","to":"Check.ping","basis":"graph_edge","candidate_edge":"edge:34e270b39d0ca2926003dfdde07d5db66a39db4144c0c55729f09350de2a1ce0","candidates":1}
+PASSA  EN check.ping (homonym com 1, HC-F6): basis graph_edge, candidate_edge presente  -> graph_edge edge:34e270b39d0ca2926003dfdde07d5db66a39db4144c0c55729f09350de2a1ce0
+PASSA  EN check.ping (homonym com 1, HC-F6): o detalhe da linha diz o texto da resolução  -> not followed: of the declarations the call's form reaches, only this one has the name; the others of the same name were ruled out by the form, and nothing confirms the call reaches here || ping → Check.ping
+Close
+calls: check.ping(remote_addr, scheme, method, ua, body, action, rid, exitstatus)
+hc/api/views.py:255
+not followed: of the declarations the call's form reaches, only this one has the name
+PASSA  EN check.ping (homonym com 1, HC-F6): nenhuma chave crua nem código sem texto  -> ping → Check.ping
+Close
+calls: check.ping(remote_addr, scheme, method, ua, body, action, rid, exitstatus)
+hc/api/views.py:255
+not followed: of the declarations the call's form reaches, only this one has the name; the others of the same name were ruled out by the form, and nothing confirms the call reaches hereFollow this one
+      [en-homonym.png] ping → Check.ping ⏎ Close ⏎ calls: check.ping(remote_addr, scheme, method, ua, body, action, rid, exitstatus) ⏎ hc/api/views.py:255 ⏎ not followed: of the declarations the call's form reaches, only this one has the name; the others of the same name were ruled out by the form, and nothing confirms the call reaches hereFollow this one
+PASSA  EN self.transform() acima do teto (RT-55): /api/calls dá receiver (15) → /Object::transform$/  -> {"resolution":"receiver","to":"impl Intersectable for Object::transform","basis":"graph_edge","candidate_edge":null,"candidates":15}
+PASSA  EN self.transform() acima do teto (RT-55): basis graph_edge, candidate_edge null  -> graph_edge null
+PASSA  EN self.transform() acima do teto (RT-55): o detalhe da linha diz o texto da resolução  -> followed: the receiver's own call (self.m()), and only this homonym is in the same class or impl || impl Intersectable for Object::bounds → impl Intersectable for Object::transform
+Close
+calls: self.transform()
+src/object.rs:173
+followed: the receiver's own call (self.m()), and only this homonym is in the same class or impl
+PASSA  EN self.transform() acima do teto (RT-55): nenhuma chave crua nem código sem texto  -> impl Intersectable for Object::bounds → impl Intersectable for Object::transform
+Close
+calls: self.transform()
+src/object.rs:173
+followed: the receiver's own call (self.m()), and only this homonym is in the same class or impl
+      [en-receiver-sem-aresta.png] impl Intersectable for Object::bounds → impl Intersectable for Object::transform ⏎ Close ⏎ calls: self.transform() ⏎ src/object.rs:173 ⏎ followed: the receiver's own call (self.m()), and only this homonym is in the same class or impl
+PASSA  EN check.save() sem candidato (HC-F14): /api/calls dá no_candidate_in_project (0) e nenhum link  -> {"reason":"no_candidate_in_project","candidates":0}
+PASSA  EN check.save() sem candidato (HC-F14): a lista de não resolvidas mostra a chamada e o motivo novo  -> Calls not shown: 26 (5 above the homonym limit · 21 with no candidate in the project). Not being drawn does not mean the call does not exist.
+Above the homonym limit (5)
+
+Ambiguity: the name matches more declarations than the graph links, and it keeps only how many. None was chosen.
+
+new_channels.add(matches[0]) · _update hc/api/views.py:359 · 29 candidates
+update_fields.add("name") · _update hc/a
+PASSA  EN: textos novos em inglês
+PASSA  EN: nenhum erro de página
+PASSA  EN: nada além de abrir o projeto (POST /api/project = store.open) e /api/calls
+PASSA  tema escuro: o detalhe aparece com o texto de import  -> Profile.send_instant_login_link → login
+Fechar
+chama: emails.login(self.user.email, ctx)
+hc/accounts/models.py:158
+seguida: o receptor é um módulo do projeto (import), e só esta função dele tem o nome
+PASSA  tema escuro: tema aplicado (dark), texto rgb(143, 142, 134) sobre rgb(35, 35, 33)  -> {"color":"rgb(143, 142, 134)","bg":"rgb(35, 35, 33)","theme":"dark","overflow":false,"detailRight":1006,"width":1440}
+PASSA  tema escuro: nenhum erro de página
+PASSA  tema claro: o detalhe aparece com o texto de import  -> Profile.send_instant_login_link → login
+Fechar
+chama: emails.login(self.user.email, ctx)
+hc/accounts/models.py:158
+seguida: o receptor é um módulo do projeto (import), e só esta função dele tem o nome
+PASSA  tema claro: tema aplicado (light), texto rgb(122, 121, 116) sobre rgb(255, 255, 255)  -> {"color":"rgb(122, 121, 116)","bg":"rgb(255, 255, 255)","theme":"light","overflow":false,"detailRight":1006,"width":1440}
+PASSA  tema claro: nenhum erro de página
+PASSA  tela estreita (390 px): o detalhe aparece com o texto de import  -> Profile.send_instant_login_link → login
+Fechar
+chama: emails.login(self.user.email, ctx)
+hc/accounts/models.py:158
+seguida: o receptor é um módulo do projeto (import), e só esta função dele tem o nome
+PASSA  tela estreita (390 px): sem rolagem horizontal da página  -> {"color":"rgb(122, 121, 116)","bg":"rgb(255, 255, 255)","theme":"(sistema)","overflow":false,"detailRight":376,"width":390}
+PASSA  tela estreita (390 px): nenhum erro de página
+PASSA  .studio original igual antes e depois
+
+56 passam, 0 falham. Capturas em C:/Users/beatl/AppData/Local/Temp/claude/09139e964f85837f/858742ea-0d4e-46f1-b995-01a71a081430/scratchpad/tela-22

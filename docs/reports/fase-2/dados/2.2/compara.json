@@ -1,0 +1,22 @@
+{
+ "healthchecks-25597e41": {
+  "grafo_igual": true,
+  "chamadas": 16239,
+  "iguais_antes": 12833,
+  "mudaram": 3406,
+  "previsao_ok": 16239,
+  "divergencias": [],
+  "sem_previsao": 0,
+  "campos_antigos_iguais_nao_mudadas": 12670
+ },
+ "renderer-9b78f3a9": {
+  "grafo_igual": true,
+  "chamadas": 2545,
+  "iguais_antes": 2529,
+  "mudaram": 16,
+  "previsao_ok": 2545,
+  "divergencias": [],
+  "sem_previsao": 0,
+  "campos_antigos_iguais_nao_mudadas": 2529
+ }
+}

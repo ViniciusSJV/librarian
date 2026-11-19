@@ -133,21 +133,50 @@ homônimos). Não resolve nada: é o mapa dos candidatos pelo nome.
 
 `v2::Graph::calls_from(seed, depth, max_nodes, syntax, chosen)` segue para a frente as
 chamadas escritas, por camadas, com os mesmos limites de `used_by`. A regra que decide cada
-chamada é uma só, em `src/resolve.rs` (passo 2.1). O inventário também a usa, e o envelope e
+chamada é uma só, em `src/resolve.rs` (passo 2.1; forma da chamada e `import` no 2.2). O inventário também a usa, e o envelope e
 o contexto do dono aceitam o que ela decide com um alvo só (`resolve::SETTLED`). Ela é uma
 camada sobre o grafo: lê nós e arestas e não cria aresta. As arestas continuam candidatos
 por nome, nunca resolução de compilador.
 
-Precedência: `chosen` > `unique` > `receiver` > `type` > `trait_default` > `trait` > `homonym`.
+**Forma da chamada (passo 2.2).** Antes da precedência, a regra só admite os candidatos que a
+forma escrita alcança. As arestas do grafo não mudam; a regra é que deixa de considerar algumas.
+
+| Forma | Candidatos admitidos |
+|---|---|
+| `x.m()`, `self.m()` | Todos menos a função solta |
+| `x.m()` com `x` ligado a um módulo do projeto (`import m`, `import m as a`, `from p import m`, `import a.b` com receptor `a.b`). Python | Só as funções do arquivo desse módulo |
+| `x.m()` com `x` ligado a um import de fora do projeto (`import time`, `from django.contrib import auth`). Python | Nenhum |
+| `f()`, sem receptor | Todos menos os métodos. Exceção: no corpo de uma classe, ou num método dela, os métodos da própria classe continuam |
+
+- **Tabela de imports.** Vem dos escopos do arquivo (módulo, classe, função, `lambda` e comprehension).
+  - Decide o escopo mais interno que liga o primeiro nome do receptor.
+  - Nesse escopo, uma ligação local de mesmo nome (parâmetro, atribuição, alvo de `for`, `with`, `except`, comprehension ou `match`, definição aninhada) vence o import.
+  - O corpo de uma classe não é visto pelas funções dentro dela.
+- **Onde se acha o módulo.** Entre os caminhos da própria edition: `a.b` é `a/b.py` ou `a/b/__init__.py`, inclusive relativo ao arquivo (`from . import m`). Sem esses, vale o único caminho que termina assim (um pacote em `src/`).
+  - `from p import Nome`, quando `Nome` não é arquivo do projeto mas `p` é: um nome do projeto (classe ou função), e a regra comum vale.
+  - `mod.Classe.m()` também segue a regra comum.
+- **Leitura sem gravação.** Os imports, as ligações locais e o tipo escrito do receptor que não é do projeto são lidos dos snapshots da edition, pelo extrator da linguagem, no arquivo de quem chama e só quando a regra precisa (`CallSyntax::facts`, `Extractor::call_facts`). Nada disso é gravado no grafo, e o perfil não muda.
+
+Precedência, sempre sobre os admitidos: `chosen` > `unique` > `import` > `receiver` > `type` >
+`trait_default` > tipo derruba > `trait` > `homonym`.
 
 | `resolution` | Quando | `basis` |
 |---|---|---|
-| `chosen` | A pessoa escolheu este entre os candidatos | `graph_edge` |
-| `unique` | O nome escrito só combina com esta declaração | `graph_edge` |
-| `receiver` | A chamada é `self.m()` (o receptor da linguagem e nada mais antes do nome) e só este homônimo está no bloco de quem chama. `self.x.m()` nunca é `receiver` | `graph_edge` |
+| `chosen` | A pessoa escolheu este entre os candidatos admitidos | `graph_edge` |
+| `unique` | Um só admitido, e ele era o único candidato do grafo, ou a chamada não tem receptor, ou o receptor é módulo do projeto | `graph_edge` |
+| `import` | `x.m()` com `x` ligado a um módulo do projeto: havia vários candidatos, e só uma função daquele nome no arquivo do módulo. Python | `import` |
+| `receiver` | A chamada é `self.m()` (o receptor da linguagem e nada mais antes do nome) e só este homônimo está no bloco de quem chama. Acima do teto, pelas declarações desse bloco. `self.x.m()` nunca é `receiver` | `graph_edge` |
 | `type` | Método do tipo escrito do receptor: `receiver_type` do extrator ou caminho `T::f`. Hoje só o Rust registra | `type` |
 | `trait_default` | O tipo escrito não define o método; é o padrão de um trait que ele implementa | `type` |
-| `homonym` | Nada decide; cada candidato aparece, e nenhum é seguido | `graph_edge` |
+| `homonym` | Nada decide; cada admitido aparece, e nenhum é seguido. Inclui um só admitido que sobrou de vários num `x.m()` | `graph_edge` |
+
+**O tipo derruba um `unique`.** Quando o receptor tem tipo escrito e o único candidato admitido
+não serve para ele, a chamada fica sem candidato.
+- **Tipo do projeto:** derruba um método que não é desse tipo, nem de um trait que ele implementa, nem do trait que ele é.
+- **Tipo de fora do projeto** (`Vec`, `str`): derruba só um método inerente de um tipo do projeto (`impl Groups::len` para `v.len()` com `v: Vec<_>`). Não derruba quando:
+  - o receptor está escrito como referência (`&T`, `&mut T`) ou como `Box`, `Rc` ou `Arc`;
+  - o projeto implementa um trait para aquele tipo (`impl Equivalence<f64> for f64`).
+- Um `unique` que o tipo confirma mantém o rótulo.
 
 `basis: "type"` quer dizer que o tipo foi lido do que está escrito, pelas regras sintáticas
 do extrator, e não inferido como um compilador faria. As regras e os limites estão no
@@ -162,26 +191,36 @@ do extrator, e não inferido como um compilador faria. As regras e os limites es
 
 Os nomes `Vec`, `iter` e `enumerate` são lidos sem resolver os caminhos. Uma nova
 declaração do mesmo nome vale para a função inteira, porque blocos não são escopos. O grafo
-não guarda qual regra deu o tipo.
+não guarda qual regra deu o tipo, nem o nome de um tipo que não é do projeto.
 
-`receiver` só decide entre arestas candidatas. Um `self.m()` acima do teto não tem aresta,
-e por isso cai em `type`, pelo tipo do impl.
+`basis: "import"` quer dizer que o alvo veio da tabela de imports do arquivo, lida do texto
+com o parser do extrator, sem executar nada.
 
 Um resultado com vários alvos (`trait`, em que todos os candidatos são de um trait, ou um
 tipo que nomeia vários impls, como `Matrix<3>` e `Matrix<4>`, porque os genéricos não são
-comparados) aparece como `homonym` sobre as arestas candidatas, sem ser seguido. O
+comparados) aparece como `homonym` sobre os candidatos admitidos, sem ser seguido. O
 inventário segue todos eles.
 
 Cada link traz `from`, `to`, `occurrence`, `occurrence_kind`, `text`, `candidates`,
 `resolution`, `candidate_edge`, `basis` e `evidence`.
-- `candidate_edge` é o ID da aresta `name_candidate`. É `null` só num link `type` ou
-  `trait_default` de uma chamada acima do teto de homônimos, para a qual o grafo guardou
-  só a contagem.
-- `candidates`, nesse caso, é a contagem registrada (`ambiguous_candidates`).
-- Os links que já existiam antes do 2.1 têm os mesmos campos e valores, mais `basis`.
+- `candidates` conta os candidatos admitidos pela forma da chamada, não todas as declarações
+  com o nome. Desde o 2.2, num link `receiver` (`self.m()`), a função solta homônima não é
+  admitida e sai da contagem: o link e o alvo são os mesmos, mas `candidates` pode ser menor
+  que antes (163 links no Healthchecks).
+- `candidate_edge` é o ID da aresta `name_candidate`. É `null` só num link `type`,
+  `trait_default` ou `receiver` de uma chamada acima do teto de homônimos, para a qual o grafo
+  guardou só a contagem. `candidates`, nesse caso, é a contagem registrada
+  (`ambiguous_candidates`).
+- Os links que já existiam antes do 2.1 têm os mesmos campos e valores, mais `basis`, salvo o
+  `candidates` dos links `receiver` descrito acima.
 
-`unresolved` lista o que não virou link: `above_candidate_limit` e
-`no_candidate_in_project`, sem tipo que decida, e `node_limit`.
+`unresolved` lista o que não virou link:
+- `above_candidate_limit`, sem tipo que decida;
+- `no_candidate_in_project`: sem candidato no grafo, ou sem candidato admitido pela forma ou pelo tipo, com `candidates: 0`. A chamada sai sem link, nunca com um link para outro símbolo;
+- `node_limit`.
+
+Acima do teto, um receptor ligado a import de fora do projeto continua `above_candidate_limit`:
+não há aresta para tirar.
 
 Não registrados no v3, e portanto ausentes de `used_by`: corpos de macro, literais de
 struct e padrões em Rust; constantes, `static` e variantes de enum como alvo; argumentos

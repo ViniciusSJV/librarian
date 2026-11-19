@@ -1,0 +1,29 @@
+{
+ "hc/accounts/models.py:158": {
+  "seed": "src:624f5aa630a6c0e91cef15bb6244ba10478f8c5b7c5e5c2cbacbe8f279f1b4d7:7981056c85e18d72fb6c7bf514efd6e753f75c679cb230d3290dce8a462b63db:method:5568:6101",
+  "text": "emails.login(self.user.email, ctx)",
+  "owner": "Profile.send_instant_login_link",
+  "to": "src:b440deb0964c4fda323b02257da0434349204b6f55e39529fb014ec9275f3987:5068841002a9320ceed13d33db9ae68aa2367728d4b777fa8afa2de054b25535:function:2903:2993"
+ },
+ "hc/api/views.py:300": {
+  "seed": "src:627a48233053768114a51eadccf97aadd78ac0fc450648e2b5da871ba305777e:d0121156422dcefcd2035b4c7f2222f23eba84765c7abf28520153d051ca673d:function:9244:10677",
+  "text": "ping",
+  "owner": "ping_by_slug",
+  "to": "src:627a48233053768114a51eadccf97aadd78ac0fc450648e2b5da871ba305777e:d0121156422dcefcd2035b4c7f2222f23eba84765c7abf28520153d051ca673d:function:6860:9238"
+ },
+ "hc/api/views.py:255": {
+  "seed": "src:627a48233053768114a51eadccf97aadd78ac0fc450648e2b5da871ba305777e:d0121156422dcefcd2035b4c7f2222f23eba84765c7abf28520153d051ca673d:function:6860:9238",
+  "text": "check.ping(remote_addr, scheme, method, ua, body, action, rid, exitstatus)",
+  "owner": "ping"
+ },
+ "hc/api/views.py:418": {
+  "seed": "src:627a48233053768114a51eadccf97aadd78ac0fc450648e2b5da871ba305777e:d0121156422dcefcd2035b4c7f2222f23eba84765c7abf28520153d051ca673d:function:11627:15116",
+  "text": "check.save()",
+  "owner": "_update"
+ },
+ "src/object.rs:173": {
+  "seed": "src:6ec61590e2fd8e76c30e8f6fafef37660f5750b5f229775ad008e79945d71f2c:2f1101d1defc548461a1ef68118bc21a6e3a3829951839342dfd3a3c453bd165:method:5444:6251",
+  "text": "self.transform()",
+  "owner": "impl Intersectable for Object::bounds"
+ }
+}

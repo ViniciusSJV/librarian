@@ -1048,3 +1048,46 @@ Escrever o teste de regressão do P1 **antes** da correção: uma função Pytho
   - `trait_default`: os 12 casos conferidos com arquivo e linha. O ray tracer não tem `dyn`.
   - Verificação de tela (DEC-30): 51 de 51.
   - O status da DEC-11 foi corrigido: o 2.1 reabre a decisão e resolve pelo tipo, mas os homônimos continuam.
+
+## 24. Passo 2.2: forma da chamada, `import` e o tipo que derruba o `unique` (19/11/2026)
+
+**Estado nesta data.** O estado vigente fica no [ESTADO-ATUAL.md](ESTADO-ATUAL.md). O contrato está no [SEARCH.md](crates/librarian-ingest/SEARCH.md#o-que-chama-calls_from-post-apicalls). Relatórios: [Parada 1](docs/reports/fase-2/2.2-parada-1.md), [Parada 2](docs/reports/fase-2/2.2-parada-2.md), [folha de revisão](docs/reports/fase-2/2.2-revisao-amostra.md).
+
+- **Regra (em `crates/librarian-ingest/src/resolve.rs`):** a forma da chamada admite só alguns candidatos; as arestas do grafo não mudam.
+  - `x.m()` não alcança função solta.
+  - No Python, um receptor ligado a módulo do projeto alcança só as funções desse módulo (resolução nova `import`, `basis: "import"`).
+  - Um receptor ligado a import de fora do projeto não alcança nada.
+  - `f()` sem receptor não alcança método, salvo, no escopo de uma classe, um método dela.
+- **Tipo:** o tipo escrito do receptor derruba um `unique` que não serve para ele. Com tipo de fora do projeto, só cai método inerente de tipo do projeto, e não cai com referência, `Box`, `Rc`, `Arc` ou com um trait do projeto implementado para o tipo.
+- **Receptor:** um `self.m()` acima do teto sai `receiver` (RT-55).
+- **De onde vêm os dados:** a tabela de imports, as ligações locais e o tipo escrito que não é do projeto são lidos dos snapshots pelo extrator (`Extractor::call_facts`), sob demanda, no arquivo de quem chama. O grafo, os perfis e as editions não mudam.
+- **Decisões do usuário na Parada 1:**
+  - Q1, regra espelho: incluída.
+  - Q2, import de fora: incluído, e a ligação local vence o import.
+  - Q3, homônimo que fica com um só candidato: continua `homonym`. O HC-F6 fica para o 2.3.
+  - Q4, tipo de fora: incluído, de forma conservadora.
+  - Q5, N0-livre: passo "a definir".
+  - Q6, `modulo.f()` que já era `unique`: continua `unique`.
+  - Registro: DEC-38.
+- **Contagens pedidas (Healthchecks):**
+  - Q1 (a), chamadas simples no escopo de uma classe que alcançam método dela: 0 de 2900.
+  - Q1 (b), funções aninhadas: 17, chamadas 21 vezes, todas `function`.
+  - Q2, sombreamento: 0 de 2244 receptores ligados a import.
+  - O `logistica-api` não está no disco (`Projetos\logistica-api` não existe), e a contagem dele ficou pendente.
+- **Portão** (aprovado, igual à previsão da Parada 1, número por número):
+  - Python: corretas 9 → 13, `link_falso` 13 → 1, `candidatos_falsos` 12 → 11, ambíguas 12 → 8 e sem candidato 14 → 27.
+  - Rust: `link_falso` 2 → 0 e sem candidato 7 → 9; as corretas ficam em 36.
+  - População: método → função solta 197 → 30 (todos `modulo.f()` certos) no Python e 2 → 0 no Rust; `import` 14.
+  - Fatos: 15/6/2/3 → 16/8/1/1 (HC-F7 e HC-F17 corretos, HC-F14 não depende; HC-F6 suspeito e HC-F1 errado).
+- **Simulador × binário:** chamada por chamada, 0 divergências nas 16239 chamadas do Healthchecks e nas 2545 do ray tracer.
+  - Uma rodada intermediária achou 11 links falsos do binário (`TimestampSigner().sign`, o primeiro nome do receptor tomado com os parênteses), corrigidos com teste antes da medição final.
+- **/api/calls, antes × depois:**
+  - Mudam 3406 chamadas no Healthchecks e 16 no ray tracer, todas previstas.
+  - Das que não mudam, 12670 e 2529 ficam iguais em todos os campos.
+  - 163 links `receiver` do Healthchecks só têm `candidates` menor, porque a função solta saiu da contagem.
+  - O grafo do run novo é igual ao antigo, byte a byte.
+- **Validação:**
+  - `cargo test --workspace --locked`: 481 aprovados, 0 falhas e 2 ignorados (13 testes novos em `tests/resolve_forma.rs`).
+  - Perguntas 01–14: H1–H3 aprovados.
+  - DEC-30: 56 de 56.
+- **Amostra:** estratos novos HC-61 a HC-75 e RT-56 a RT-62. A verdade, proposta pelo agente, foi validada pelo usuário em 19/11/2026 (HC-66, HC-69 e RT-62 conferidos no editor). A linha de base proposta passou a ser `tools/precisao/linha-de-base.json`: Python (75) 21/1/12/8/33 e Rust (62) 36/0/1/10/15.
