@@ -101,6 +101,18 @@ async function project(api, root, lang, key, run) {
   }
   const byKey = new Map(P.map(p => [p.key, p]));
   const fx = readJson(path.join(FIX, `amostra-${lang}.json`));
+  // Entries outside the population (calls by path, strata added in 2.1): found among every call of
+  // the run, and asked for with their owners.
+  const outside = fx.chamadas.filter(c => !byKey.has(c.ocorrencia)).map(c => c.ocorrencia);
+  if (outside.length) {
+    const extra = new Map();
+    for (const e of G.g.edges) {
+      if (e.kind !== 'observes' || !outside.includes(L.occKey(e.evidence)) || !/call_observed$/.test(G.g.nodes[e.to].kind)) continue;
+      byKey.set(L.occKey(e.evidence), { occ: G.g.nodes[e.to], owner: G.g.nodes[e.from] });
+      (extra.get(e.from) ?? extra.set(e.from, []).get(e.from)).push(e.to);
+    }
+    for (const [id, a] of await L.answers(api, key, run, G, extra)) A.set(id, a);
+  }
   const sample = fx.chamadas.map(c => {
     const p = byKey.get(c.ocorrencia), a = p && A.get(p.occ.id);
     if (!a) return { id: c.id, estrato: c.estrato, categoria: 'ocorrência não encontrada', resposta: null };
@@ -156,11 +168,18 @@ function estimate(sample, pop) {
   return Object.fromEntries(Object.entries(est).map(([k, v]) => [k, Math.round(v)]));
 }
 
+/** The sample's counts over the entries the baseline also has: a stratum added later is not
+ *  compared with a baseline that did not measure it. */
+function comparable(now, base, lang) {
+  const ids = new Set(base.projetos[lang].amostra.map(s => s.id));
+  return count(now.projetos[lang].amostra.filter(s => ids.has(s.id)), 'categoria');
+}
+
 function gate(now, base) {
   const fail = [];
   for (const lang of Object.keys(LANGS)) {
     if (!now.projetos?.[lang] || !base.projetos?.[lang]) continue;
-    const a = now.projetos[lang].amostra_contagem, b = base.projetos[lang].amostra_contagem;
+    const a = comparable(now, base, lang), b = base.projetos[lang].amostra_contagem;
     if ((a.link_falso ?? 0) > (b.link_falso ?? 0)) fail.push(`${LANGS[lang]}: link_falso subiu de ${b.link_falso ?? 0} para ${a.link_falso}`);
     if ((a.correta ?? 0) < (b.correta ?? 0)) fail.push(`${LANGS[lang]}: corretas caíram de ${b.correta ?? 0} para ${a.correta ?? 0}`);
     if (a['ocorrência não encontrada']) fail.push(`${LANGS[lang]}: ${a['ocorrência não encontrada']} chamada(s) da amostra não encontrada(s) no run novo`);
@@ -176,9 +195,22 @@ function report(r, base, fail) {
   L1.push(`# Portão de precisão da Fase 2`, '', `Binário: ${r.binario}. Gerado em ${r.quando}.`, '');
   if (r.projetos) {
     L1.push('## Amostra (contagens reais)', '', '| | Corretas | link_falso | candidatos_falsos | Ambíguas | Sem candidato | Não encontradas |', '|---|---|---|---|---|---|---|');
+    const added = {};
     for (const [lang, p] of Object.entries(r.projetos)) {
-      const c = p.amostra_contagem, b = base?.projetos?.[lang]?.amostra_contagem;
-      L1.push(`| ${LANGS[lang]} (${p.amostra.length}) | ${c.correta ?? 0}${delta(c.correta ?? 0, b && (b.correta ?? 0))} | ${c.link_falso ?? 0}${delta(c.link_falso ?? 0, b && (b.link_falso ?? 0))} | ${c.candidatos_falsos ?? 0}${delta(c.candidatos_falsos ?? 0, b && (b.candidatos_falsos ?? 0))} | ${c.ambigua ?? 0}${delta(c.ambigua ?? 0, b && (b.ambigua ?? 0))} | ${c.sem_candidato ?? 0}${delta(c.sem_candidato ?? 0, b && (b.sem_candidato ?? 0))} | ${c['ocorrência não encontrada'] ?? 0} |`);
+      const b = base?.projetos?.[lang]?.amostra_contagem, n = base?.projetos?.[lang] ? base.projetos[lang].amostra.length : p.amostra.length;
+      const c = base?.projetos?.[lang] ? comparable(r, base, lang) : p.amostra_contagem;
+      if (n < p.amostra.length) added[lang] = p;
+      L1.push(`| ${LANGS[lang]} (${n}) | ${c.correta ?? 0}${delta(c.correta ?? 0, b && (b.correta ?? 0))} | ${c.link_falso ?? 0}${delta(c.link_falso ?? 0, b && (b.link_falso ?? 0))} | ${c.candidatos_falsos ?? 0}${delta(c.candidatos_falsos ?? 0, b && (b.candidatos_falsos ?? 0))} | ${c.ambigua ?? 0}${delta(c.ambigua ?? 0, b && (b.ambigua ?? 0))} | ${c.sem_candidato ?? 0}${delta(c.sem_candidato ?? 0, b && (b.sem_candidato ?? 0))} | ${c['ocorrência não encontrada'] ?? 0} |`);
+    }
+    if (Object.keys(added).length) {
+      L1.push('', 'A tabela acima compara só as chamadas que a linha de base tem. A amostra inteira, com os estratos novos:', '', '| | Corretas | link_falso | candidatos_falsos | Ambíguas | Sem candidato | Não encontradas |', '|---|---|---|---|---|---|---|');
+      for (const [lang, p] of Object.entries(added)) { const c = p.amostra_contagem; L1.push(`| ${LANGS[lang]} (${p.amostra.length}) | ${c.correta ?? 0} | ${c.link_falso ?? 0} | ${c.candidatos_falsos ?? 0} | ${c.ambigua ?? 0} | ${c.sem_candidato ?? 0} | ${c['ocorrência não encontrada'] ?? 0} |`); }
+      for (const [lang, p] of Object.entries(added)) {
+        const ids = new Set(base.projetos[lang].amostra.map(s => s.id));
+        const byStratum = {};
+        for (const s of p.amostra.filter(s => !ids.has(s.id))) (byStratum[s.estrato] ??= []).push(s.categoria);
+        for (const [st, cats] of Object.entries(byStratum)) L1.push(`- ${LANGS[lang]}, estrato novo ${st} (${cats.length}): ${Object.entries(count(cats.map(c => ({ c })), 'c')).map(([k, v]) => `${k} ${v}`).join(', ')}`);
+      }
     }
     L1.push('', 'Parte C (as 30 originais, dentro da amostra):', '');
     for (const [lang, p] of Object.entries(r.projetos)) L1.push(`- ${LANGS[lang]}: ${Object.entries(p.parte_c_contagem).map(([k, v]) => `${k} ${v}`).join(', ')}`);

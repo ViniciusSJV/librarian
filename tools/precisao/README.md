@@ -56,7 +56,9 @@ Um passo da Fase 2 reprova se, em Python ou em Rust:
 - uma edition antiga falhar no `verify-graph` ou mudar;
 - o `.studio` original mudar.
 
-`candidatos_falsos`, ambíguas, a população, os níveis e a auditoria dos fatos são registrados com a variação, mas não reprovam sozinhos. Uma exceção só vale com justificativa caso a caso e aprovação do usuário.
+`candidatos_falsos`, ambíguas, a população, os níveis e a auditoria dos fatos são registrados com a variação, mas não reprovam sozinhos.
+
+A regra compara só as chamadas que a linha de base também tem. Um estrato acrescentado à amostra depois aparece numa tabela à parte até entrar numa nova linha de base. Uma chamada da amostra fora da população (por caminho, como `Ray::new`, ou em testes) é procurada entre todas as chamadas do run. Com a amostra original, o veredito é o mesmo da regra anterior (DEC-37, proposta). Uma exceção só vale com justificativa caso a caso e aprovação do usuário.
 
 ## Arquivos
 
