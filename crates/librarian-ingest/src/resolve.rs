@@ -198,7 +198,9 @@ impl<'g> Resolver<'g> {
                 continue;
             }
             if matches!(node.kind.as_str(), "method" | "trait_method") {
-                r.methods_by_name.entry(node.label.rsplit("::").next().unwrap_or_default()).or_default().push(id);
+                // The written name is the label's last segment: after `::` (`impl S::go`) or `.`
+                // (`S.go`); neither separator is part of a name (step 2.3a-0; until then, `::` only).
+                r.methods_by_name.entry(node.label.rsplit([':', '.']).next().unwrap_or_default()).or_default().push(id);
             }
             if node.kind == "impl" {
                 if let (Some(ty), Some(tr)) = impl_parts(&node.label) {

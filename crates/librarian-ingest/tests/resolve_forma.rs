@@ -3,7 +3,8 @@
 //! receiver reaches that module's functions (`import`); a receiver bound to an import from outside
 //! the project reaches nothing; a local binding wins over an import; a plain call never reaches a
 //! method (save a function of the class, in its body); the receiver's written type rules a unique
-//! candidate out, with its exceptions; `self.m()` above the limit is `receiver`.
+//! candidate out, with its exceptions; `self.m()` above the limit is `receiver`, in Rust and (step
+//! 2.3a-0) in Python.
 use librarian_ingest::{
     generate,
     graph::v2,
@@ -234,6 +235,16 @@ fn muitos() -> String {
         .collect()
 }
 
+/// Step 2.3a-0: the same nine classes in Python, with `go` and `chama` (above the limit of 8).
+/// `S4.aninhada` calls `self.go()` from a nested function, whose container is not the class.
+fn muitos_py() -> String {
+    let mut out: String = (1..=9)
+        .map(|i| format!("class S{i}:\n    def go(self):\n        return {i}\n\n    def chama(self):\n        return self.go()\n\n\n"))
+        .collect();
+    out.push_str("class S10:\n    def go(self):\n        return 10\n\n    def aninhada(self):\n        def dentro():\n            return self.go()\n\n        return dentro()\n");
+    out
+}
+
 struct Project(PathBuf);
 
 impl Project {
@@ -251,6 +262,7 @@ impl Project {
         fs::write(dir.join("pkg/views.py"), VIEWS).unwrap();
         fs::write(dir.join("pkg/admin.py"), ADMIN).unwrap();
         fs::write(dir.join("pkg/casos.py"), CASOS).unwrap();
+        fs::write(dir.join("pkg/muitos.py"), muitos_py()).unwrap();
         Self(dir)
     }
 }
@@ -441,6 +453,16 @@ fn self_dot_m_above_the_limit_is_receiver() {
     let s = setup();
     // RT-55: nine `go`, no candidate edge; the caller's impl has one.
     assert_eq!(resolved(&s, "impl S4::chama", "self.go()"), r("receiver", &["impl S4::go"], 0));
+}
+
+#[test]
+fn self_dot_m_above_the_limit_is_receiver_in_python() {
+    let s = setup();
+    // Step 2.3a-0: ten `go` in Python, no candidate edge; the caller's class has one. Until then
+    // the methods were indexed by the label's last `::` segment, the whole `S4.go` in Python.
+    assert_eq!(resolved(&s, "S4.chama", "self.go()"), r("receiver", &["S4.go"], 0));
+    // A nested function's container is the method, not the class: still above the limit.
+    assert_eq!(resolved(&s, "S10.aninhada.dentro", "self.go()"), r("above_candidate_limit 10", &[], 0));
 }
 
 #[test]
