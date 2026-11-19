@@ -7,11 +7,12 @@
 - **Fase 1 — Piloto 1b: concluída em 18/11/2026.** Relatório final: [docs/reports/piloto-1b/00-resumo.md](docs/reports/piloto-1b/00-resumo.md).
 - **Fase 2 — Precisão das relações: em andamento.** O passo 2.0 (portão) está em `2b05b8c`. O **passo 2.1** (regra única de resolução, `receiver` corrigido, resolução `type`) está commitado desde 19/11/2026 (`c316bf7` portão, `3b4e1c6` resolver e testes, `6525fb4` documentação, `cb8e5ef` DEC-37, `078fd0e` linha de base), com push feito em 19/11/2026. A amostra RT-31 a RT-55 foi validada pelo usuário em 19/11, e a linha de base foi trocada. Detalhe no CTX, seção 23.
 - **Passo 2.2** (forma da chamada, `import`, o tipo que derruba o `unique`; DEC-38): commitado em 19/11/2026 (`a34059c` código, testes e interface; `950c4f4` documentação; depois, linha de base, fixtures e folha). A amostra HC-61 a HC-75 e RT-56 a RT-62 foi validada pelo usuário em 19/11, e a linha de base foi trocada. Parada 2 em [docs/reports/fase-2/2.2-parada-2.md](docs/reports/fase-2/2.2-parada-2.md); CTX seção 24.
-- **Próximo passo: 2.3**, tipos em Python. Cada passo depende de autorização.
+- **Passo 2.3: em andamento.** Parada 1 aprovada em 19/11/2026 ([docs/reports/fase-2/2.3-parada-1.md](docs/reports/fase-2/2.3-parada-1.md)), com a divisão em 2.3a-0, 2.3a, 2.3b e 2.3c. O **2.3a-0** (a chave dos métodos pelo último trecho do rótulo, que faz o `receiver` acima do teto valer em Python) está commitado em `8c689d4`, com a documentação no commit seguinte; portão aprovado, igual à linha de base; 109 chamadas de teste passam de `above_candidate_limit` a `receiver`. CTX seção 25.
+- **Próximo passo: Parada 2 do 2.3a** (tipos do Python no arquivo, "instancia", regra gravada no `receiver_type`, `modulo.Classe(..)` e `T::V(..)`). Cada passo depende de autorização.
 - **Portão de cada passo da Fase 2:** `node tools/precisao/portao.js --studio .studio --base tools/precisao/linha-de-base.json` (cerca de 4 minutos). Reprova se `link_falso` subir ou as corretas caírem, em Python ou em Rust, se uma edition antiga mudar ou se o `.studio` original mudar. Exceção só com justificativa caso a caso e aprovação do usuário (DEC-34).
 - **Feito no 1b:** P1 (`987d7a8`), G3 (`aae51d7`), Partes A–E do diagnóstico, a Q6 (run `20261118-205150`, avaliada em 18/11), a consolidação documental (`a8e4074`) e o relatório final. Relatórios em [docs/reports/piloto-1b/](docs/reports/piloto-1b/) (`0c4bcab`).
-- **Git:** `main`; a referência é `origin/main` (ver `git log`). Último marco: passo 2.2 (`a34059c` código, `950c4f4` documentação e o commit da linha de base, em 19/11/2026); antes, o passo 2.1 (`c316bf7` a `078fd0e`) e o passo 2.0 (`2b05b8c`, `aee6915`).
-- **Suíte:** `cargo test --workspace --locked`: 481 aprovados, 0 falhas, 2 ignorados (19/11, passo 2.2).
+- **Git:** `main`; a referência é `origin/main` (ver `git log`). Último marco: passo 2.3a-0 (`8c689d4`, em 19/11/2026); antes, o passo 2.2 (`a34059c` código, `950c4f4` documentação e o commit da linha de base, em 19/11/2026); antes, o passo 2.1 (`c316bf7` a `078fd0e`) e o passo 2.0 (`2b05b8c`, `aee6915`).
+- **Suíte:** `cargo test --workspace --locked`: 482 aprovados, 0 falhas, 2 ignorados (19/11, passo 2.3a-0).
 - **Roadmap:** [PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#roadmap). Nenhum agente nem orquestrador existe.
 
 ## Para onde vamos
@@ -63,9 +64,14 @@ Cite sempre com o prefixo. As tabelas de abreviações e de prefixos estão em [
 - **Do 2.1:** a verdade de RT-31 a RT-55 foi validada pelo usuário em 19/11/2026 (folha em [docs/reports/fase-2/2.1-revisao-amostra.md](docs/reports/fase-2/2.1-revisao-amostra.md)). As respostas da Parada 3 e o status da DEC-11 foram aprovados na Parada 1 do 2.2. Os 60 links `type`/`trait_default` da população ([2.1-links-type.md](docs/reports/fase-2/2.1-links-type.md)) ficam como leitura do agente, sem validação do usuário, fora da linha de base.
 - **Do 2.2:** a verdade de HC-61 a HC-75 e RT-56 a RT-62 foi validada pelo usuário em 19/11/2026 (HC-66, HC-69 e RT-62 conferidos no editor; folha em [docs/reports/fase-2/2.2-revisao-amostra.md](docs/reports/fase-2/2.2-revisao-amostra.md)), e a DEC-38 foi aprovada. Pendente:
   - as contagens da Q1 e da Q2 no `logistica-api`. Ficam pendentes: o projeto não está disponível nesta máquina (19/11/2026: `Projetos\logistica-api` não existe, a busca em `C:\`, a única unidade, não o achou, e a única distribuição WSL é a do Docker). No Healthchecks, as duas deram 0 caso. Elas são feitas quando o projeto voltar.
-- **Para o 2.3:** o HC-F6 (`check.ping`, `hc/api/views.py:255`): depois do 2.2, fica `homonym` com um só candidato, o certo, sem link; o tipo de `check` decide.
-- **Para o 2.3:** o extrator do Rust toma `T` como o tipo de `let x = T::f(..)` sem ler o retorno de `f` (32 dos 38 links `type` por variável acima do teto; certos aqui, porque as cinco funções retornam `Self`), e o grafo não guarda qual regra deu o tipo do receptor.
-- **Para o 2.3:** a chamada de um decorador roda na carga do módulo, mas é atribuída à função decorada (HC-19). É a mesma questão de dono do `Repo()` preso ao campo.
+- **Do 2.3 (decisões da Parada 1, 19/11/2026):**
+  - DEC-39 (instanciação e tipo do receptor em Python) aprovada pelo usuário, com a exceção do `__getattr__`. O texto entra no DECISOES.md no commit do 2.3a.
+  - Q6: um tipo `Protocol` não dá link único; a verdade de `smtpd.py:122` é "ambígua", validada pelo usuário, e entra na fixture no 2.3a.
+  - Q7 e Q8 (`modulo.Classe(..)` e `T::V(..)`) entram no 2.3a, com o simulador estendido antes da implementação.
+  - Q9 (dono do decorador e do campo, opção A ou B) foi adiada para a Parada 1 do 2.3b, que responde se, com a opção B, o `used_by` e o contexto do dono continuam dizendo que a chamada do decorador pertence à função decorada.
+- **Para o 2.3a:** o HC-F6 (`check.ping`, `hc/api/views.py:255`): depois do 2.2, fica `homonym` com um só candidato, o certo, sem link; o tipo de `check` decide.
+- **Para o 2.3c:** o extrator do Rust toma `T` como o tipo de `let x = T::f(..)` sem ler o retorno de `f` (32 dos 38 links `type` por variável acima do teto; certos aqui, porque as cinco funções retornam `Self`), e o grafo não guarda qual regra deu o tipo do receptor.
+- **Para o 2.3b:** a chamada de um decorador roda na carga do módulo, mas é atribuída à função decorada (HC-19). É a mesma questão de dono do `Repo()` preso ao campo.
 - **Limites do 2.2:** um receptor ligado a import de fora do projeto, acima do teto de homônimos, continua `above_candidate_limit` (não há aresta para tirar); `Box`, `Rc`, `Arc`, referência e `Deref` não deixam o tipo de fora do projeto derrubar nada, mesmo quando derrubaria certo.
 - Achados sem correção: a ordem de `unresolved` não segue arquivo/linha/coluna; o corte do `node_limit` segue a ordem dos ids das arestas; `self.repo = Repo()` deixa `Repo()` preso ao campo; o tipo é comparado sem os genéricos (`Matrix<3>` = `Matrix<4>`), o que deixa como `homonym` em "o que chama?" o resultado com vários impls.
 - `R30-7` (tipo do receptor): feito só no Rust; desde o 2.1, também em "o que chama?". Python é o 2.3.
@@ -86,7 +92,7 @@ Cite sempre com o prefixo. As tabelas de abreviações e de prefixos estão em [
 
 ## Links
 
-- [PLANO](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md): roadmap · [DECISOES](DECISOES.md) · [CTX](CONTEXTO-CONTINUIDADE.md): diário, última seção 24 · [Histórico](docs/historico/README.md)
+- [PLANO](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md): roadmap · [DECISOES](DECISOES.md) · [CTX](CONTEXTO-CONTINUIDADE.md): diário, última seção 25 · [Histórico](docs/historico/README.md)
 - Piloto 1: [PIL](docs/reports/PILOTO-1-HEALTHCHECKS.md) · Piloto 1b: [00 resumo](docs/reports/piloto-1b/00-resumo.md), [01 G3](docs/reports/piloto-1b/01-g3.md), [02 Partes A–C](docs/reports/piloto-1b/02-fechamento-g3-e-diagnostico.md), [03 inventário e Parte E](docs/reports/piloto-1b/03-inventario-e-auditoria.md), [04 Q6](docs/reports/piloto-1b/04-q6.md)
 - Direção: [ARQ](docs/ARQUITETURA-EVIDENCIAS-MULTIAGENTE.md) · Frontend: [ESP](docs/ESPECIFICACAO-FUNCIONAL-STUDIO.md), [EST](docs/ESTADO-IMPLEMENTACAO-STUDIO.md) · Manual: [STUDIO.md](STUDIO.md)
 - Componentes: [Ingest](crates/librarian-ingest/README.md) · [Evidence Builder](crates/librarian-evidence/README.md) · [LLM Engine](crates/librarian-llm-engine/CLAIMS.md) · [Graph Engine](crates/librarian-graph-engine/WORKFLOW-V0.1.md)

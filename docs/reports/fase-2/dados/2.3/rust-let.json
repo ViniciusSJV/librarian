@@ -1,0 +1,4411 @@
+[
+ {
+  "forma": "f()",
+  "at": "src/bin/bench_render.rs:15",
+  "teste": false,
+  "call": "summary.samples.iter()",
+  "x": "summary",
+  "rhs": "render_benchmark(64, 64, 3, 5)",
+  "f": "render_benchmark",
+  "mesmo_arquivo": false,
+  "alvos": [
+   "render_benchmark (src/camera.rs) -> RenderBenchmarkSummary"
+  ],
+  "tipo_gravado": null
+ },
+ {
+  "forma": "f()",
+  "at": "src/bin/bench_render.rs:15",
+  "teste": false,
+  "call": "summary.samples.iter().enumerate()",
+  "x": "summary",
+  "rhs": "render_benchmark(64, 64, 3, 5)",
+  "f": "render_benchmark",
+  "mesmo_arquivo": false,
+  "alvos": [
+   "render_benchmark (src/camera.rs) -> RenderBenchmarkSummary"
+  ],
+  "tipo_gravado": null
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:392",
+  "teste": true,
+  "call": "sphere.set_transform(Matrix::scaling(Tuple::point(2., 2., 2.)))",
+  "x": "sphere",
+  "rhs": "Sphere::default()",
+  "T": "Sphere",
+  "f": "default",
+  "alvos": [
+   "impl Default for Sphere::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Sphere"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:396",
+  "teste": true,
+  "call": "pattern.color_at_object(Object::from(sphere), Tuple::point(1.5, 0., 0.",
+  "x": "pattern",
+  "rhs": "Patterns::from(Stripe::new(Color::white(), Color::",
+  "T": "Patterns",
+  "f": "from",
+  "alvos": [
+   "impl From<Stripe> for Patterns::from -> Self",
+   "impl From<LinearGradient> for Patterns::from -> Self",
+   "impl From<Ring> for Patterns::from -> Self",
+   "impl From<Checkers> for Patterns::from -> Self",
+   "impl From<DefaultPattern> for Patterns::from -> Self"
+  ],
+  "tipo_gravado": [
+   "Patterns"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:406",
+  "teste": true,
+  "call": "pattern.set_pattern_transform(Matrix::scaling(Tuple::point(2., 2., 2.)",
+  "x": "pattern",
+  "rhs": "Patterns::from(Stripe::new(Color::white(), Color::",
+  "T": "Patterns",
+  "f": "from",
+  "alvos": [
+   "impl From<Stripe> for Patterns::from -> Self",
+   "impl From<LinearGradient> for Patterns::from -> Self",
+   "impl From<Ring> for Patterns::from -> Self",
+   "impl From<Checkers> for Patterns::from -> Self",
+   "impl From<DefaultPattern> for Patterns::from -> Self"
+  ],
+  "tipo_gravado": [
+   "Patterns"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:408",
+  "teste": true,
+  "call": "pattern.color_at_object(Object::from(sphere), Tuple::point(1.5, 0., 0.",
+  "x": "pattern",
+  "rhs": "Patterns::from(Stripe::new(Color::white(), Color::",
+  "T": "Patterns",
+  "f": "from",
+  "alvos": [
+   "impl From<Stripe> for Patterns::from -> Self",
+   "impl From<LinearGradient> for Patterns::from -> Self",
+   "impl From<Ring> for Patterns::from -> Self",
+   "impl From<Checkers> for Patterns::from -> Self",
+   "impl From<DefaultPattern> for Patterns::from -> Self"
+  ],
+  "tipo_gravado": [
+   "Patterns"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:416",
+  "teste": true,
+  "call": "sphere.set_transform(Matrix::scaling(Tuple::point(2., 2., 2.)))",
+  "x": "sphere",
+  "rhs": "Sphere::default()",
+  "T": "Sphere",
+  "f": "default",
+  "alvos": [
+   "impl Default for Sphere::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Sphere"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:419",
+  "teste": true,
+  "call": "pattern.set_pattern_transform(Matrix::translation(Tuple::point(0.5, 0.",
+  "x": "pattern",
+  "rhs": "Patterns::from(Stripe::new(Color::white(), Color::",
+  "T": "Patterns",
+  "f": "from",
+  "alvos": [
+   "impl From<Stripe> for Patterns::from -> Self",
+   "impl From<LinearGradient> for Patterns::from -> Self",
+   "impl From<Ring> for Patterns::from -> Self",
+   "impl From<Checkers> for Patterns::from -> Self",
+   "impl From<DefaultPattern> for Patterns::from -> Self"
+  ],
+  "tipo_gravado": [
+   "Patterns"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:421",
+  "teste": true,
+  "call": "pattern.color_at_object(Object::from(sphere), Tuple::point(2.5, 0., 0.",
+  "x": "pattern",
+  "rhs": "Patterns::from(Stripe::new(Color::white(), Color::",
+  "T": "Patterns",
+  "f": "from",
+  "alvos": [
+   "impl From<Stripe> for Patterns::from -> Self",
+   "impl From<LinearGradient> for Patterns::from -> Self",
+   "impl From<Ring> for Patterns::from -> Self",
+   "impl From<Checkers> for Patterns::from -> Self",
+   "impl From<DefaultPattern> for Patterns::from -> Self"
+  ],
+  "tipo_gravado": [
+   "Patterns"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:435",
+  "teste": true,
+  "call": "p.set_pattern_transform(Matrix::translation(Tuple::point(1., 2., 3.)))",
+  "x": "p",
+  "rhs": "Stripe::default()",
+  "T": "Stripe",
+  "f": "default",
+  "alvos": [
+   "impl Default for Stripe::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Stripe"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:444",
+  "teste": true,
+  "call": "pattern.color_at(Tuple::point(0.,0., 0.))",
+  "x": "pattern",
+  "rhs": "Patterns::from(LinearGradient::new(Color::white(),",
+  "T": "Patterns",
+  "f": "from",
+  "alvos": [
+   "impl From<Stripe> for Patterns::from -> Self",
+   "impl From<LinearGradient> for Patterns::from -> Self",
+   "impl From<Ring> for Patterns::from -> Self",
+   "impl From<Checkers> for Patterns::from -> Self",
+   "impl From<DefaultPattern> for Patterns::from -> Self"
+  ],
+  "tipo_gravado": [
+   "Patterns"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:445",
+  "teste": true,
+  "call": "pattern.color_at(Tuple::point(0.25,0., 0.))",
+  "x": "pattern",
+  "rhs": "Patterns::from(LinearGradient::new(Color::white(),",
+  "T": "Patterns",
+  "f": "from",
+  "alvos": [
+   "impl From<Stripe> for Patterns::from -> Self",
+   "impl From<LinearGradient> for Patterns::from -> Self",
+   "impl From<Ring> for Patterns::from -> Self",
+   "impl From<Checkers> for Patterns::from -> Self",
+   "impl From<DefaultPattern> for Patterns::from -> Self"
+  ],
+  "tipo_gravado": [
+   "Patterns"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:446",
+  "teste": true,
+  "call": "pattern.color_at(Tuple::point(0.5,0., 0.))",
+  "x": "pattern",
+  "rhs": "Patterns::from(LinearGradient::new(Color::white(),",
+  "T": "Patterns",
+  "f": "from",
+  "alvos": [
+   "impl From<Stripe> for Patterns::from -> Self",
+   "impl From<LinearGradient> for Patterns::from -> Self",
+   "impl From<Ring> for Patterns::from -> Self",
+   "impl From<Checkers> for Patterns::from -> Self",
+   "impl From<DefaultPattern> for Patterns::from -> Self"
+  ],
+  "tipo_gravado": [
+   "Patterns"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:447",
+  "teste": true,
+  "call": "pattern.color_at(Tuple::point(0.75,0., 0.))",
+  "x": "pattern",
+  "rhs": "Patterns::from(LinearGradient::new(Color::white(),",
+  "T": "Patterns",
+  "f": "from",
+  "alvos": [
+   "impl From<Stripe> for Patterns::from -> Self",
+   "impl From<LinearGradient> for Patterns::from -> Self",
+   "impl From<Ring> for Patterns::from -> Self",
+   "impl From<Checkers> for Patterns::from -> Self",
+   "impl From<DefaultPattern> for Patterns::from -> Self"
+  ],
+  "tipo_gravado": [
+   "Patterns"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:459",
+  "teste": true,
+  "call": "pattern.color_at(Tuple::point(0.,0., 0.))",
+  "x": "pattern",
+  "rhs": "Patterns::from(Ring::new(Color::white(), Color::bl",
+  "T": "Patterns",
+  "f": "from",
+  "alvos": [
+   "impl From<Stripe> for Patterns::from -> Self",
+   "impl From<LinearGradient> for Patterns::from -> Self",
+   "impl From<Ring> for Patterns::from -> Self",
+   "impl From<Checkers> for Patterns::from -> Self",
+   "impl From<DefaultPattern> for Patterns::from -> Self"
+  ],
+  "tipo_gravado": [
+   "Patterns"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:460",
+  "teste": true,
+  "call": "pattern.color_at(Tuple::point(1.,0., 0.))",
+  "x": "pattern",
+  "rhs": "Patterns::from(Ring::new(Color::white(), Color::bl",
+  "T": "Patterns",
+  "f": "from",
+  "alvos": [
+   "impl From<Stripe> for Patterns::from -> Self",
+   "impl From<LinearGradient> for Patterns::from -> Self",
+   "impl From<Ring> for Patterns::from -> Self",
+   "impl From<Checkers> for Patterns::from -> Self",
+   "impl From<DefaultPattern> for Patterns::from -> Self"
+  ],
+  "tipo_gravado": [
+   "Patterns"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:461",
+  "teste": true,
+  "call": "pattern.color_at(Tuple::point(0.,0., 1.))",
+  "x": "pattern",
+  "rhs": "Patterns::from(Ring::new(Color::white(), Color::bl",
+  "T": "Patterns",
+  "f": "from",
+  "alvos": [
+   "impl From<Stripe> for Patterns::from -> Self",
+   "impl From<LinearGradient> for Patterns::from -> Self",
+   "impl From<Ring> for Patterns::from -> Self",
+   "impl From<Checkers> for Patterns::from -> Self",
+   "impl From<DefaultPattern> for Patterns::from -> Self"
+  ],
+  "tipo_gravado": [
+   "Patterns"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:462",
+  "teste": true,
+  "call": "pattern.color_at(Tuple::point(0.708,0., 0.708))",
+  "x": "pattern",
+  "rhs": "Patterns::from(Ring::new(Color::white(), Color::bl",
+  "T": "Patterns",
+  "f": "from",
+  "alvos": [
+   "impl From<Stripe> for Patterns::from -> Self",
+   "impl From<LinearGradient> for Patterns::from -> Self",
+   "impl From<Ring> for Patterns::from -> Self",
+   "impl From<Checkers> for Patterns::from -> Self",
+   "impl From<DefaultPattern> for Patterns::from -> Self"
+  ],
+  "tipo_gravado": [
+   "Patterns"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:474",
+  "teste": true,
+  "call": "pattern.color_at(Tuple::point(0.,0., 0.))",
+  "x": "pattern",
+  "rhs": "Patterns::from(Checkers::new(Color::white(), Color",
+  "T": "Patterns",
+  "f": "from",
+  "alvos": [
+   "impl From<Stripe> for Patterns::from -> Self",
+   "impl From<LinearGradient> for Patterns::from -> Self",
+   "impl From<Ring> for Patterns::from -> Self",
+   "impl From<Checkers> for Patterns::from -> Self",
+   "impl From<DefaultPattern> for Patterns::from -> Self"
+  ],
+  "tipo_gravado": [
+   "Patterns"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:475",
+  "teste": true,
+  "call": "pattern.color_at(Tuple::point(0.99,0., 0.))",
+  "x": "pattern",
+  "rhs": "Patterns::from(Checkers::new(Color::white(), Color",
+  "T": "Patterns",
+  "f": "from",
+  "alvos": [
+   "impl From<Stripe> for Patterns::from -> Self",
+   "impl From<LinearGradient> for Patterns::from -> Self",
+   "impl From<Ring> for Patterns::from -> Self",
+   "impl From<Checkers> for Patterns::from -> Self",
+   "impl From<DefaultPattern> for Patterns::from -> Self"
+  ],
+  "tipo_gravado": [
+   "Patterns"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:476",
+  "teste": true,
+  "call": "pattern.color_at(Tuple::point(1.01,0., 0.))",
+  "x": "pattern",
+  "rhs": "Patterns::from(Checkers::new(Color::white(), Color",
+  "T": "Patterns",
+  "f": "from",
+  "alvos": [
+   "impl From<Stripe> for Patterns::from -> Self",
+   "impl From<LinearGradient> for Patterns::from -> Self",
+   "impl From<Ring> for Patterns::from -> Self",
+   "impl From<Checkers> for Patterns::from -> Self",
+   "impl From<DefaultPattern> for Patterns::from -> Self"
+  ],
+  "tipo_gravado": [
+   "Patterns"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:487",
+  "teste": true,
+  "call": "pattern.color_at(Tuple::point(0.,0., 0.))",
+  "x": "pattern",
+  "rhs": "Patterns::from(Checkers::new(Color::white(), Color",
+  "T": "Patterns",
+  "f": "from",
+  "alvos": [
+   "impl From<Stripe> for Patterns::from -> Self",
+   "impl From<LinearGradient> for Patterns::from -> Self",
+   "impl From<Ring> for Patterns::from -> Self",
+   "impl From<Checkers> for Patterns::from -> Self",
+   "impl From<DefaultPattern> for Patterns::from -> Self"
+  ],
+  "tipo_gravado": [
+   "Patterns"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:488",
+  "teste": true,
+  "call": "pattern.color_at(Tuple::point(0.,0.99, 0.))",
+  "x": "pattern",
+  "rhs": "Patterns::from(Checkers::new(Color::white(), Color",
+  "T": "Patterns",
+  "f": "from",
+  "alvos": [
+   "impl From<Stripe> for Patterns::from -> Self",
+   "impl From<LinearGradient> for Patterns::from -> Self",
+   "impl From<Ring> for Patterns::from -> Self",
+   "impl From<Checkers> for Patterns::from -> Self",
+   "impl From<DefaultPattern> for Patterns::from -> Self"
+  ],
+  "tipo_gravado": [
+   "Patterns"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:489",
+  "teste": true,
+  "call": "pattern.color_at(Tuple::point(0.,1.01, 0.))",
+  "x": "pattern",
+  "rhs": "Patterns::from(Checkers::new(Color::white(), Color",
+  "T": "Patterns",
+  "f": "from",
+  "alvos": [
+   "impl From<Stripe> for Patterns::from -> Self",
+   "impl From<LinearGradient> for Patterns::from -> Self",
+   "impl From<Ring> for Patterns::from -> Self",
+   "impl From<Checkers> for Patterns::from -> Self",
+   "impl From<DefaultPattern> for Patterns::from -> Self"
+  ],
+  "tipo_gravado": [
+   "Patterns"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:500",
+  "teste": true,
+  "call": "pattern.color_at(Tuple::point(0.,0., 0.))",
+  "x": "pattern",
+  "rhs": "Patterns::from(Checkers::new(Color::white(), Color",
+  "T": "Patterns",
+  "f": "from",
+  "alvos": [
+   "impl From<Stripe> for Patterns::from -> Self",
+   "impl From<LinearGradient> for Patterns::from -> Self",
+   "impl From<Ring> for Patterns::from -> Self",
+   "impl From<Checkers> for Patterns::from -> Self",
+   "impl From<DefaultPattern> for Patterns::from -> Self"
+  ],
+  "tipo_gravado": [
+   "Patterns"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:501",
+  "teste": true,
+  "call": "pattern.color_at(Tuple::point(0.,0., 0.99))",
+  "x": "pattern",
+  "rhs": "Patterns::from(Checkers::new(Color::white(), Color",
+  "T": "Patterns",
+  "f": "from",
+  "alvos": [
+   "impl From<Stripe> for Patterns::from -> Self",
+   "impl From<LinearGradient> for Patterns::from -> Self",
+   "impl From<Ring> for Patterns::from -> Self",
+   "impl From<Checkers> for Patterns::from -> Self",
+   "impl From<DefaultPattern> for Patterns::from -> Self"
+  ],
+  "tipo_gravado": [
+   "Patterns"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:502",
+  "teste": true,
+  "call": "pattern.color_at(Tuple::point(0.,0., 1.01))",
+  "x": "pattern",
+  "rhs": "Patterns::from(Checkers::new(Color::white(), Color",
+  "T": "Patterns",
+  "f": "from",
+  "alvos": [
+   "impl From<Stripe> for Patterns::from -> Self",
+   "impl From<LinearGradient> for Patterns::from -> Self",
+   "impl From<Ring> for Patterns::from -> Self",
+   "impl From<Checkers> for Patterns::from -> Self",
+   "impl From<DefaultPattern> for Patterns::from -> Self"
+  ],
+  "tipo_gravado": [
+   "Patterns"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/transformations.rs:51",
+  "teste": true,
+  "call": "from.view_transform(to, up)",
+  "x": "from",
+  "rhs": "Tuple::point(0., 0., 0.)",
+  "T": "Tuple",
+  "f": "point",
+  "alvos": [
+   "impl Tuple::point -> Self"
+  ],
+  "tipo_gravado": [
+   "Tuple"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/transformations.rs:62",
+  "teste": true,
+  "call": "from.view_transform(to, up)",
+  "x": "from",
+  "rhs": "Tuple::point(0., 0., 8.)",
+  "T": "Tuple",
+  "f": "point",
+  "alvos": [
+   "impl Tuple::point -> Self"
+  ],
+  "tipo_gravado": [
+   "Tuple"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/transformations.rs:73",
+  "teste": true,
+  "call": "from.view_transform(to, up)",
+  "x": "from",
+  "rhs": "Tuple::point(1., 3., 2.)",
+  "T": "Tuple",
+  "f": "point",
+  "alvos": [
+   "impl Tuple::point -> Self"
+  ],
+  "tipo_gravado": [
+   "Tuple"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/transformations.rs:40",
+  "teste": true,
+  "call": "from.view_transform(to, up)",
+  "x": "from",
+  "rhs": "Tuple::point(0., 0., 0.)",
+  "T": "Tuple",
+  "f": "point",
+  "alvos": [
+   "impl Tuple::point -> Self"
+  ],
+  "tipo_gravado": [
+   "Tuple"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/color.rs:147",
+  "teste": true,
+  "call": "color.clamp(0.0, 1.0)",
+  "x": "color",
+  "rhs": "Color::new(2.3, -6.7, 0.8)",
+  "T": "Color",
+  "f": "new",
+  "alvos": [
+   "impl Color::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Color"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/sphere.rs:90",
+  "teste": true,
+  "call": "sphere.intersect(ray)",
+  "x": "sphere",
+  "rhs": "Sphere::new(Tuple::point(0., 0., 0.), 1.)",
+  "T": "Sphere",
+  "f": "new",
+  "alvos": [
+   "impl Sphere::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Sphere"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/sphere.rs:105",
+  "teste": true,
+  "call": "sphere.intersect(ray)",
+  "x": "sphere",
+  "rhs": "Sphere::new(Tuple::point(0., 0., 0.), 1.)",
+  "T": "Sphere",
+  "f": "new",
+  "alvos": [
+   "impl Sphere::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Sphere"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/sphere.rs:120",
+  "teste": true,
+  "call": "sphere.intersect(ray)",
+  "x": "sphere",
+  "rhs": "Sphere::new(Tuple::point(0., 0., 0.), 1.)",
+  "T": "Sphere",
+  "f": "new",
+  "alvos": [
+   "impl Sphere::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Sphere"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/sphere.rs:133",
+  "teste": true,
+  "call": "sphere.intersect(ray)",
+  "x": "sphere",
+  "rhs": "Sphere::new(Tuple::point(0., 0., 0.), 1.)",
+  "T": "Sphere",
+  "f": "new",
+  "alvos": [
+   "impl Sphere::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Sphere"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/sphere.rs:148",
+  "teste": true,
+  "call": "sphere.intersect(ray)",
+  "x": "sphere",
+  "rhs": "Sphere::new(Tuple::point(0., 0., 0.), 1.)",
+  "T": "Sphere",
+  "f": "new",
+  "alvos": [
+   "impl Sphere::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Sphere"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/sphere.rs:166",
+  "teste": true,
+  "call": "sphere.set_transform(translation)",
+  "x": "sphere",
+  "rhs": "Sphere::new(Tuple::point(0., 0., 0.), 1.)",
+  "T": "Sphere",
+  "f": "new",
+  "alvos": [
+   "impl Sphere::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Sphere"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/sphere.rs:180",
+  "teste": true,
+  "call": "sphere.set_transform(scaling)",
+  "x": "sphere",
+  "rhs": "Sphere::new(Tuple::point(0., 0., 0.), 1.)",
+  "T": "Sphere",
+  "f": "new",
+  "alvos": [
+   "impl Sphere::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Sphere"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/sphere.rs:181",
+  "teste": true,
+  "call": "sphere.intersect(ray)",
+  "x": "sphere",
+  "rhs": "Sphere::new(Tuple::point(0., 0., 0.), 1.)",
+  "T": "Sphere",
+  "f": "new",
+  "alvos": [
+   "impl Sphere::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Sphere"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/sphere.rs:197",
+  "teste": true,
+  "call": "sphere.set_transform(translation)",
+  "x": "sphere",
+  "rhs": "Sphere::new(Tuple::point(0., 0., 0.), 1.)",
+  "T": "Sphere",
+  "f": "new",
+  "alvos": [
+   "impl Sphere::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Sphere"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/sphere.rs:198",
+  "teste": true,
+  "call": "sphere.intersect(ray)",
+  "x": "sphere",
+  "rhs": "Sphere::new(Tuple::point(0., 0., 0.), 1.)",
+  "T": "Sphere",
+  "f": "new",
+  "alvos": [
+   "impl Sphere::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Sphere"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/sphere.rs:206",
+  "teste": true,
+  "call": "sphere.normal_at(Tuple::point(1., 0., 0.))",
+  "x": "sphere",
+  "rhs": "Sphere::new(Tuple::point(0., 0., 0.), 1.)",
+  "T": "Sphere",
+  "f": "new",
+  "alvos": [
+   "impl Sphere::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Sphere"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/sphere.rs:214",
+  "teste": true,
+  "call": "sphere.normal_at(Tuple::point(0., 1., 0.))",
+  "x": "sphere",
+  "rhs": "Sphere::new(Tuple::point(0., 0., 0.), 1.)",
+  "T": "Sphere",
+  "f": "new",
+  "alvos": [
+   "impl Sphere::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Sphere"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/sphere.rs:222",
+  "teste": true,
+  "call": "sphere.normal_at(Tuple::point(0., 0., 1.))",
+  "x": "sphere",
+  "rhs": "Sphere::new(Tuple::point(0., 0., 0.), 1.)",
+  "T": "Sphere",
+  "f": "new",
+  "alvos": [
+   "impl Sphere::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Sphere"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/sphere.rs:230",
+  "teste": true,
+  "call": "sphere.normal_at(Tuple::point((3. as f64).sqrt() / 3., (3. as f64).sqr",
+  "x": "sphere",
+  "rhs": "Sphere::new(Tuple::point(0., 0., 0.), 1.)",
+  "T": "Sphere",
+  "f": "new",
+  "alvos": [
+   "impl Sphere::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Sphere"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/sphere.rs:238",
+  "teste": true,
+  "call": "sphere.normal_at(Tuple::point((3. as f64).sqrt() / 3., (3. as f64).sqr",
+  "x": "sphere",
+  "rhs": "Sphere::new(Tuple::point(0., 0., 0.), 1.)",
+  "T": "Sphere",
+  "f": "new",
+  "alvos": [
+   "impl Sphere::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Sphere"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/sphere.rs:246",
+  "teste": true,
+  "call": "sphere.set_transform(Matrix::translation(Tuple::vector(0., 1., 0.)))",
+  "x": "sphere",
+  "rhs": "Sphere::new(Tuple::point(0., 0., 0.), 1.)",
+  "T": "Sphere",
+  "f": "new",
+  "alvos": [
+   "impl Sphere::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Sphere"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/sphere.rs:248",
+  "teste": true,
+  "call": "sphere.normal_at(Tuple::point(0., 1.70711, -FRAC_1_SQRT_2))",
+  "x": "sphere",
+  "rhs": "Sphere::new(Tuple::point(0., 0., 0.), 1.)",
+  "T": "Sphere",
+  "f": "new",
+  "alvos": [
+   "impl Sphere::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Sphere"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/sphere.rs:256",
+  "teste": true,
+  "call": "sphere.set_transform(\r",
+  "x": "sphere",
+  "rhs": "Sphere::new(Tuple::point(0., 0., 0.), 1.)",
+  "T": "Sphere",
+  "f": "new",
+  "alvos": [
+   "impl Sphere::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Sphere"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/sphere.rs:261",
+  "teste": true,
+  "call": "sphere.normal_at(Tuple::point(0., (2. as f64).sqrt() / 2., -(2. as f64",
+  "x": "sphere",
+  "rhs": "Sphere::new(Tuple::point(0., 0., 0.), 1.)",
+  "T": "Sphere",
+  "f": "new",
+  "alvos": [
+   "impl Sphere::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Sphere"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/cena_video.rs:96",
+  "teste": false,
+  "call": "floor.set_material(checkers)",
+  "x": "floor",
+  "rhs": "Plane::default()",
+  "T": "Plane",
+  "f": "default",
+  "alvos": [
+   "impl Default for Plane::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Plane"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/cena_video.rs:98",
+  "teste": false,
+  "call": "wall.set_transform(Matrix::translation(Tuple::vector(0., 0., 6.)) * Ma",
+  "x": "wall",
+  "rhs": "Plane::default()",
+  "T": "Plane",
+  "f": "default",
+  "alvos": [
+   "impl Default for Plane::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Plane"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/cena_video.rs:101",
+  "teste": false,
+  "call": "wall.set_material(wall_material)",
+  "x": "wall",
+  "rhs": "Plane::default()",
+  "T": "Plane",
+  "f": "default",
+  "alvos": [
+   "impl Default for Plane::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Plane"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/cena_video.rs:163",
+  "teste": false,
+  "call": "world.groups.push(glass_teapot)",
+  "x": "world",
+  "rhs": "World::new(objects, lights)",
+  "T": "World",
+  "f": "new",
+  "alvos": [
+   "impl World::new -> Self"
+  ],
+  "tipo_gravado": [
+   "World"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/cena_video.rs:164",
+  "teste": false,
+  "call": "world.groups.push(mirror_teapot)",
+  "x": "world",
+  "rhs": "World::new(objects, lights)",
+  "T": "World",
+  "f": "new",
+  "alvos": [
+   "impl World::new -> Self"
+  ],
+  "tipo_gravado": [
+   "World"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/cena_video.rs:165",
+  "teste": false,
+  "call": "world.groups.push(suzanne)",
+  "x": "world",
+  "rhs": "World::new(objects, lights)",
+  "T": "World",
+  "f": "new",
+  "alvos": [
+   "impl World::new -> Self"
+  ],
+  "tipo_gravado": [
+   "World"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/cena_video.rs:170",
+  "teste": false,
+  "call": "from.view_transform(to, up)",
+  "x": "from",
+  "rhs": "Tuple::point(0., 2.6, -7.)",
+  "T": "Tuple",
+  "f": "point",
+  "alvos": [
+   "impl Tuple::point -> Self"
+  ],
+  "tipo_gravado": [
+   "Tuple"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/cena_video.rs:173",
+  "teste": false,
+  "call": "camera.render(world)",
+  "x": "camera",
+  "rhs": "Camera::new(width, height, PI / 3.).with_transform",
+  "T": "Camera",
+  "f": "new",
+  "alvos": [
+   "impl Camera::new -> Self"
+  ],
+  "tipo_gravado": null
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/cena_video.rs:174",
+  "teste": false,
+  "call": "start.elapsed()",
+  "x": "start",
+  "rhs": "Instant::now()",
+  "T": "Instant",
+  "f": "now",
+  "alvos": [],
+  "tipo_gravado": []
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/cena_video.rs:174",
+  "teste": false,
+  "call": "start.elapsed().as_secs_f64()",
+  "x": "start",
+  "rhs": "Instant::now()",
+  "T": "Instant",
+  "f": "now",
+  "alvos": [],
+  "tipo_gravado": []
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cylinder.rs:152",
+  "teste": true,
+  "call": "cyl.intersect(*ray)",
+  "x": "cyl",
+  "rhs": "Cylinder::default()",
+  "T": "Cylinder",
+  "f": "default",
+  "alvos": [
+   "impl Default for Cylinder::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Cylinder"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cylinder.rs:170",
+  "teste": true,
+  "call": "cyl.intersect(ray1)",
+  "x": "cyl",
+  "rhs": "Cylinder::default()",
+  "T": "Cylinder",
+  "f": "default",
+  "alvos": [
+   "impl Default for Cylinder::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Cylinder"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cylinder.rs:171",
+  "teste": true,
+  "call": "cyl.intersect(ray2)",
+  "x": "cyl",
+  "rhs": "Cylinder::default()",
+  "T": "Cylinder",
+  "f": "default",
+  "alvos": [
+   "impl Default for Cylinder::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Cylinder"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cylinder.rs:172",
+  "teste": true,
+  "call": "cyl.intersect(ray3)",
+  "x": "cyl",
+  "rhs": "Cylinder::default()",
+  "T": "Cylinder",
+  "f": "default",
+  "alvos": [
+   "impl Default for Cylinder::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Cylinder"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cylinder.rs:226",
+  "teste": true,
+  "call": "cyl.intersect(ray1)",
+  "x": "cyl",
+  "rhs": "Cylinder::default()",
+  "T": "Cylinder",
+  "f": "default",
+  "alvos": [
+   "impl Default for Cylinder::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Cylinder"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cylinder.rs:227",
+  "teste": true,
+  "call": "cyl.intersect(ray2)",
+  "x": "cyl",
+  "rhs": "Cylinder::default()",
+  "T": "Cylinder",
+  "f": "default",
+  "alvos": [
+   "impl Default for Cylinder::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Cylinder"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cylinder.rs:228",
+  "teste": true,
+  "call": "cyl.intersect(ray3)",
+  "x": "cyl",
+  "rhs": "Cylinder::default()",
+  "T": "Cylinder",
+  "f": "default",
+  "alvos": [
+   "impl Default for Cylinder::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Cylinder"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cylinder.rs:229",
+  "teste": true,
+  "call": "cyl.intersect(ray4)",
+  "x": "cyl",
+  "rhs": "Cylinder::default()",
+  "T": "Cylinder",
+  "f": "default",
+  "alvos": [
+   "impl Default for Cylinder::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Cylinder"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cylinder.rs:230",
+  "teste": true,
+  "call": "cyl.intersect(ray5)",
+  "x": "cyl",
+  "rhs": "Cylinder::default()",
+  "T": "Cylinder",
+  "f": "default",
+  "alvos": [
+   "impl Default for Cylinder::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Cylinder"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cylinder.rs:231",
+  "teste": true,
+  "call": "cyl.intersect(ray6)",
+  "x": "cyl",
+  "rhs": "Cylinder::default()",
+  "T": "Cylinder",
+  "f": "default",
+  "alvos": [
+   "impl Default for Cylinder::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Cylinder"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cylinder.rs:267",
+  "teste": true,
+  "call": "cyl.intersect(*ray)",
+  "x": "cyl",
+  "rhs": "Cylinder::default()",
+  "T": "Cylinder",
+  "f": "default",
+  "alvos": [
+   "impl Default for Cylinder::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Cylinder"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/obj.rs:69",
+  "teste": false,
+  "call": "vertices.push(transform * Tuple::point(x, y, z))",
+  "x": "vertices",
+  "rhs": "Vec::new()",
+  "T": "Vec",
+  "f": "new",
+  "alvos": [],
+  "tipo_gravado": []
+ },
+ {
+  "forma": "T::f",
+  "at": "src/obj.rs:75",
+  "teste": false,
+  "call": "written.push(n.normalize())",
+  "x": "written",
+  "rhs": "Vec::new()",
+  "T": "Vec",
+  "f": "new",
+  "alvos": [],
+  "tipo_gravado": []
+ },
+ {
+  "forma": "T::f",
+  "at": "src/obj.rs:102",
+  "teste": false,
+  "call": "written.get(n)",
+  "x": "written",
+  "rhs": "Vec::new()",
+  "T": "Vec",
+  "f": "new",
+  "alvos": [],
+  "tipo_gravado": []
+ },
+ {
+  "forma": "T::f",
+  "at": "src/obj.rs:102",
+  "teste": false,
+  "call": "written.get(n).copied()",
+  "x": "written",
+  "rhs": "Vec::new()",
+  "T": "Vec",
+  "f": "new",
+  "alvos": [],
+  "tipo_gravado": []
+ },
+ {
+  "forma": "T::f",
+  "at": "src/obj.rs:107",
+  "teste": false,
+  "call": "triangle.set_material(material)",
+  "x": "triangle",
+  "rhs": "Triangle::smooth(vertices[a.0], vertices[b.0], ver",
+  "T": "Triangle",
+  "f": "smooth",
+  "alvos": [
+   "impl Triangle::smooth -> Self"
+  ],
+  "tipo_gravado": [
+   "Triangle"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/obj.rs:108",
+  "teste": false,
+  "call": "triangles.push(Object::from(triangle))",
+  "x": "triangles",
+  "rhs": "Vec::new()",
+  "T": "Vec",
+  "f": "new",
+  "alvos": [],
+  "tipo_gravado": []
+ },
+ {
+  "forma": "T::f",
+  "at": "src/obj.rs:37",
+  "teste": false,
+  "call": "triangle.set_material(material)",
+  "x": "triangle",
+  "rhs": "Triangle::new(\r\n                        vertices[i",
+  "T": "Triangle",
+  "f": "new",
+  "alvos": [
+   "impl Triangle::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Triangle"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/obj.rs:38",
+  "teste": false,
+  "call": "triangles.push(Object::from(triangle))",
+  "x": "triangles",
+  "rhs": "Vec::new()",
+  "T": "Vec",
+  "f": "new",
+  "alvos": [],
+  "tipo_gravado": []
+ },
+ {
+  "forma": "T::f",
+  "at": "src/obj.rs:24",
+  "teste": false,
+  "call": "vertices.push(Tuple::point(x, y, z))",
+  "x": "vertices",
+  "rhs": "Vec::new()",
+  "T": "Vec",
+  "f": "new",
+  "alvos": [],
+  "tipo_gravado": []
+ },
+ {
+  "forma": "T::f",
+  "at": "src/obj.rs:130",
+  "teste": false,
+  "call": "bounds.union(object.bounds())",
+  "x": "bounds",
+  "rhs": "Bounds::empty()",
+  "T": "Bounds",
+  "f": "empty",
+  "alvos": [
+   "impl Bounds::empty -> Self"
+  ],
+  "tipo_gravado": [
+   "Bounds"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/matrix.rs:523",
+  "teste": true,
+  "call": "mat3.submatrix(1, 0)",
+  "x": "mat3",
+  "rhs": "Matrix::from([\r\n            [3., 5., 0.],\r\n       ",
+  "T": "Matrix",
+  "f": "from",
+  "alvos": [
+   "impl From<[[f64; D]; D]> for Matrix<D>::from -> Self"
+  ],
+  "tipo_gravado": [
+   "Matrix"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/matrix.rs:698",
+  "teste": true,
+  "call": "mat4_transform.inverse()",
+  "x": "mat4_transform",
+  "rhs": "Matrix::translation(Tuple::vector(5., -3., 2.))",
+  "T": "Matrix",
+  "f": "translation",
+  "alvos": [
+   "impl Matrix<4>::translation -> Self"
+  ],
+  "tipo_gravado": [
+   "Matrix"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/matrix.rs:737",
+  "teste": true,
+  "call": "mat4_transform.inverse()",
+  "x": "mat4_transform",
+  "rhs": "Matrix::scaling(Tuple::vector(2., 3., 4.))",
+  "T": "Matrix",
+  "f": "scaling",
+  "alvos": [
+   "impl Matrix<4>::scaling -> Self"
+  ],
+  "tipo_gravado": [
+   "Matrix"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/matrix.rs:772",
+  "teste": true,
+  "call": "half_quarter.inverse()",
+  "x": "half_quarter",
+  "rhs": "Matrix::rotation_x(PI / 4.)",
+  "T": "Matrix",
+  "f": "rotation_x",
+  "alvos": [
+   "impl Matrix<4>::rotation_x -> Self"
+  ],
+  "tipo_gravado": [
+   "Matrix"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/plane.rs:69",
+  "teste": true,
+  "call": "plane.local_normal_at(Tuple::point(0., 0., 0.))",
+  "x": "plane",
+  "rhs": "Plane::default()",
+  "T": "Plane",
+  "f": "default",
+  "alvos": [
+   "impl Default for Plane::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Plane"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/plane.rs:70",
+  "teste": true,
+  "call": "plane.local_normal_at(Tuple::point(10., 0., -10.))",
+  "x": "plane",
+  "rhs": "Plane::default()",
+  "T": "Plane",
+  "f": "default",
+  "alvos": [
+   "impl Default for Plane::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Plane"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/plane.rs:71",
+  "teste": true,
+  "call": "plane.local_normal_at(Tuple::point(-5., 0., 150.))",
+  "x": "plane",
+  "rhs": "Plane::default()",
+  "T": "Plane",
+  "f": "default",
+  "alvos": [
+   "impl Default for Plane::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Plane"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/plane.rs:84",
+  "teste": true,
+  "call": "plane.intersect(ray)",
+  "x": "plane",
+  "rhs": "Plane::default()",
+  "T": "Plane",
+  "f": "default",
+  "alvos": [
+   "impl Default for Plane::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Plane"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/plane.rs:93",
+  "teste": true,
+  "call": "plane.intersect(ray)",
+  "x": "plane",
+  "rhs": "Plane::default()",
+  "T": "Plane",
+  "f": "default",
+  "alvos": [
+   "impl Default for Plane::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Plane"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/plane.rs:102",
+  "teste": true,
+  "call": "plane.intersect(ray)",
+  "x": "plane",
+  "rhs": "Plane::default()",
+  "T": "Plane",
+  "f": "default",
+  "alvos": [
+   "impl Default for Plane::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Plane"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/plane.rs:113",
+  "teste": true,
+  "call": "plane.intersect(ray)",
+  "x": "plane",
+  "rhs": "Plane::default()",
+  "T": "Plane",
+  "f": "default",
+  "alvos": [
+   "impl Default for Plane::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Plane"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/scene.rs:164",
+  "teste": false,
+  "call": "bad.lights.clear()",
+  "x": "bad",
+  "rhs": "SceneSpec::default_sample()",
+  "T": "SceneSpec",
+  "f": "default_sample",
+  "alvos": [
+   "impl SceneSpec::default_sample -> Self"
+  ],
+  "tipo_gravado": [
+   "SceneSpec"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/triangle.rs:134",
+  "teste": true,
+  "call": "t.normal_at(Tuple::point(0., 0.5, 0.))",
+  "x": "t",
+  "rhs": "Triangle::new(p1, p2, p3)",
+  "T": "Triangle",
+  "f": "new",
+  "alvos": [
+   "impl Triangle::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Triangle"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/triangle.rs:135",
+  "teste": true,
+  "call": "t.normal_at(Tuple::point(-0.5, 0.75, 0.))",
+  "x": "t",
+  "rhs": "Triangle::new(p1, p2, p3)",
+  "T": "Triangle",
+  "f": "new",
+  "alvos": [
+   "impl Triangle::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Triangle"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/triangle.rs:136",
+  "teste": true,
+  "call": "t.normal_at(Tuple::point(0.5, 0.25, 0.))",
+  "x": "t",
+  "rhs": "Triangle::new(p1, p2, p3)",
+  "T": "Triangle",
+  "f": "new",
+  "alvos": [
+   "impl Triangle::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Triangle"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/triangle.rs:153",
+  "teste": true,
+  "call": "t.local_intersect(ray)",
+  "x": "t",
+  "rhs": "Triangle::new(p1, p2, p3)",
+  "T": "Triangle",
+  "f": "new",
+  "alvos": [
+   "impl Triangle::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Triangle"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/triangle.rs:168",
+  "teste": true,
+  "call": "t.local_intersect(ray)",
+  "x": "t",
+  "rhs": "Triangle::new(p1, p2, p3)",
+  "T": "Triangle",
+  "f": "new",
+  "alvos": [
+   "impl Triangle::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Triangle"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/triangle.rs:183",
+  "teste": true,
+  "call": "t.local_intersect(ray)",
+  "x": "t",
+  "rhs": "Triangle::new(p1, p2, p3)",
+  "T": "Triangle",
+  "f": "new",
+  "alvos": [
+   "impl Triangle::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Triangle"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/triangle.rs:198",
+  "teste": true,
+  "call": "t.local_intersect(ray)",
+  "x": "t",
+  "rhs": "Triangle::new(p1, p2, p3)",
+  "T": "Triangle",
+  "f": "new",
+  "alvos": [
+   "impl Triangle::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Triangle"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/triangle.rs:213",
+  "teste": true,
+  "call": "t.local_intersect(ray)",
+  "x": "t",
+  "rhs": "Triangle::new(p1, p2, p3)",
+  "T": "Triangle",
+  "f": "new",
+  "alvos": [
+   "impl Triangle::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Triangle"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/object.rs:161",
+  "teste": false,
+  "call": "bounds.add_point(triangle.p1)",
+  "x": "bounds",
+  "rhs": "Bounds::empty()",
+  "T": "Bounds",
+  "f": "empty",
+  "alvos": [
+   "impl Bounds::empty -> Self"
+  ],
+  "tipo_gravado": [
+   "Bounds"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/object.rs:162",
+  "teste": false,
+  "call": "bounds.add_point(triangle.p2)",
+  "x": "bounds",
+  "rhs": "Bounds::empty()",
+  "T": "Bounds",
+  "f": "empty",
+  "alvos": [
+   "impl Bounds::empty -> Self"
+  ],
+  "tipo_gravado": [
+   "Bounds"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/object.rs:163",
+  "teste": false,
+  "call": "bounds.add_point(triangle.p3)",
+  "x": "bounds",
+  "rhs": "Bounds::empty()",
+  "T": "Bounds",
+  "f": "empty",
+  "alvos": [
+   "impl Bounds::empty -> Self"
+  ],
+  "tipo_gravado": [
+   "Bounds"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/object.rs:164",
+  "teste": false,
+  "call": "bounds.transformed(triangle.transform)",
+  "x": "bounds",
+  "rhs": "Bounds::empty()",
+  "T": "Bounds",
+  "f": "empty",
+  "alvos": [
+   "impl Bounds::empty -> Self"
+  ],
+  "tipo_gravado": [
+   "Bounds"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bounds.rs:52",
+  "teste": false,
+  "call": "result.add_point(transform * Tuple::point(x, y, z))",
+  "x": "result",
+  "rhs": "Self::empty()",
+  "T": "Self",
+  "f": "empty",
+  "alvos": [],
+  "tipo_gravado": [
+   "Bounds"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/intersection.rs:333",
+  "teste": true,
+  "call": "shape.set_transform(Matrix::translation(Tuple::vector(0., 0., 1.0)))",
+  "x": "shape",
+  "rhs": "Sphere::grass(1.)",
+  "T": "Sphere",
+  "f": "grass",
+  "alvos": [
+   "impl Sphere::grass -> Self"
+  ],
+  "tipo_gravado": [
+   "Sphere"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/intersection.rs:337",
+  "teste": true,
+  "call": "xs.data[0].prepare_computations(ray, &xs)",
+  "x": "xs",
+  "rhs": "Intersections::new(vec![intersect])",
+  "T": "Intersections",
+  "f": "new",
+  "alvos": [
+   "impl Intersections::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Intersections"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/intersection.rs:350",
+  "teste": true,
+  "call": "xs.data[1].prepare_computations(ray, &xs)",
+  "x": "xs",
+  "rhs": "Intersections::new(vec![intersect1, intersect2])",
+  "T": "Intersections",
+  "f": "new",
+  "alvos": [
+   "impl Intersections::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Intersections"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/intersection.rs:364",
+  "teste": true,
+  "call": "xs.data[1].prepare_computations(ray, &xs)",
+  "x": "xs",
+  "rhs": "Intersections::new(vec![intersect1, intersect2])",
+  "T": "Intersections",
+  "f": "new",
+  "alvos": [
+   "impl Intersections::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Intersections"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/intersection.rs:377",
+  "teste": true,
+  "call": "xs.data[0].prepare_computations(ray, &xs)",
+  "x": "xs",
+  "rhs": "Intersections::new(vec![intersect1])",
+  "T": "Intersections",
+  "f": "new",
+  "alvos": [
+   "impl Intersections::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Intersections"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/intersection.rs:169",
+  "teste": true,
+  "call": "sphere.intersect(ray)",
+  "x": "sphere",
+  "rhs": "Sphere::new(Tuple::point(0., 0., 0.), 1.)",
+  "T": "Sphere",
+  "f": "new",
+  "alvos": [
+   "impl Sphere::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Sphere"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/intersection.rs:232",
+  "teste": true,
+  "call": "intersect.prepare_computations(ray, &xs)",
+  "x": "intersect",
+  "rhs": "Intersection::new(4., s)",
+  "T": "Intersection",
+  "f": "new",
+  "alvos": [
+   "impl Intersection::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Intersection"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/intersection.rs:247",
+  "teste": true,
+  "call": "intersect.prepare_computations(ray, &xs)",
+  "x": "intersect",
+  "rhs": "Intersection::new(4., s)",
+  "T": "Intersection",
+  "f": "new",
+  "alvos": [
+   "impl Intersection::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Intersection"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/intersection.rs:261",
+  "teste": true,
+  "call": "intersection.prepare_computations(ray, &xs)",
+  "x": "intersection",
+  "rhs": "Intersection::new(5., Object::from(shape))",
+  "T": "Intersection",
+  "f": "new",
+  "alvos": [
+   "impl Intersection::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Intersection"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/intersection.rs:273",
+  "teste": true,
+  "call": "intersection.prepare_computations(ray, &xs)",
+  "x": "intersection",
+  "rhs": "Intersection::new(f64::from(2.).sqrt(), Object::fr",
+  "T": "Intersection",
+  "f": "new",
+  "alvos": [
+   "impl Intersection::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Intersection"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/intersection.rs:302",
+  "teste": true,
+  "call": "xs.data[0].prepare_computations(ray, &xs)",
+  "x": "xs",
+  "rhs": "Intersections::new(vec![intersect1, intersect2, in",
+  "T": "Intersections",
+  "f": "new",
+  "alvos": [
+   "impl Intersections::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Intersections"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/intersection.rs:303",
+  "teste": true,
+  "call": "xs.data[1].prepare_computations(ray, &xs)",
+  "x": "xs",
+  "rhs": "Intersections::new(vec![intersect1, intersect2, in",
+  "T": "Intersections",
+  "f": "new",
+  "alvos": [
+   "impl Intersections::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Intersections"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/intersection.rs:304",
+  "teste": true,
+  "call": "xs.data[2].prepare_computations(ray, &xs)",
+  "x": "xs",
+  "rhs": "Intersections::new(vec![intersect1, intersect2, in",
+  "T": "Intersections",
+  "f": "new",
+  "alvos": [
+   "impl Intersections::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Intersections"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/intersection.rs:305",
+  "teste": true,
+  "call": "xs.data[3].prepare_computations(ray, &xs)",
+  "x": "xs",
+  "rhs": "Intersections::new(vec![intersect1, intersect2, in",
+  "T": "Intersections",
+  "f": "new",
+  "alvos": [
+   "impl Intersections::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Intersections"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/intersection.rs:306",
+  "teste": true,
+  "call": "xs.data[4].prepare_computations(ray, &xs)",
+  "x": "xs",
+  "rhs": "Intersections::new(vec![intersect1, intersect2, in",
+  "T": "Intersections",
+  "f": "new",
+  "alvos": [
+   "impl Intersections::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Intersections"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/intersection.rs:307",
+  "teste": true,
+  "call": "xs.data[5].prepare_computations(ray, &xs)",
+  "x": "xs",
+  "rhs": "Intersections::new(vec![intersect1, intersect2, in",
+  "T": "Intersections",
+  "f": "new",
+  "alvos": [
+   "impl Intersections::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Intersections"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/intersection.rs:281",
+  "teste": true,
+  "call": "a.set_transform(Matrix::scaling(Tuple::vector(2., 2., 2.)))",
+  "x": "a",
+  "rhs": "Sphere::grass(1.)",
+  "T": "Sphere",
+  "f": "grass",
+  "alvos": [
+   "impl Sphere::grass -> Self"
+  ],
+  "tipo_gravado": [
+   "Sphere"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/intersection.rs:285",
+  "teste": true,
+  "call": "b.set_transform(Matrix::translation(Tuple::vector(0., 0., -0.25)))",
+  "x": "b",
+  "rhs": "Sphere::grass(1.)",
+  "T": "Sphere",
+  "f": "grass",
+  "alvos": [
+   "impl Sphere::grass -> Self"
+  ],
+  "tipo_gravado": [
+   "Sphere"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/intersection.rs:289",
+  "teste": true,
+  "call": "c.set_transform(Matrix::translation(Tuple::vector(0., 0., 0.25)))",
+  "x": "c",
+  "rhs": "Sphere::grass(1.)",
+  "T": "Sphere",
+  "f": "grass",
+  "alvos": [
+   "impl Sphere::grass -> Self"
+  ],
+  "tipo_gravado": [
+   "Sphere"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/librarian_measure.rs:33",
+  "teste": false,
+  "call": "floor.set_material(material)",
+  "x": "floor",
+  "rhs": "Plane::default()",
+  "T": "Plane",
+  "f": "default",
+  "alvos": [
+   "impl Default for Plane::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Plane"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/librarian_measure.rs:36",
+  "teste": false,
+  "call": "wall.set_transform(Matrix::translation(Tuple::vector(0., 0., 10.)) * M",
+  "x": "wall",
+  "rhs": "Plane::default()",
+  "T": "Plane",
+  "f": "default",
+  "alvos": [
+   "impl Default for Plane::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Plane"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/librarian_measure.rs:37",
+  "teste": false,
+  "call": "wall.set_material(material)",
+  "x": "wall",
+  "rhs": "Plane::default()",
+  "T": "Plane",
+  "f": "default",
+  "alvos": [
+   "impl Default for Plane::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Plane"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/librarian_measure.rs:67",
+  "teste": false,
+  "call": "from.view_transform(to, up)",
+  "x": "from",
+  "rhs": "Tuple::point(0., 1.5, -5.)",
+  "T": "Tuple",
+  "f": "point",
+  "alvos": [
+   "impl Tuple::point -> Self"
+  ],
+  "tipo_gravado": [
+   "Tuple"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/librarian_measure.rs:70",
+  "teste": false,
+  "call": "camera.render(world)",
+  "x": "camera",
+  "rhs": "Camera::new(width, height, PI / 3.).with_transform",
+  "T": "Camera",
+  "f": "new",
+  "alvos": [
+   "impl Camera::new -> Self"
+  ],
+  "tipo_gravado": null
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/librarian_measure.rs:71",
+  "teste": false,
+  "call": "start.elapsed()",
+  "x": "start",
+  "rhs": "Instant::now()",
+  "T": "Instant",
+  "f": "now",
+  "alvos": [],
+  "tipo_gravado": []
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/librarian_measure.rs:71",
+  "teste": false,
+  "call": "start.elapsed().as_secs_f64()",
+  "x": "start",
+  "rhs": "Instant::now()",
+  "T": "Instant",
+  "f": "now",
+  "alvos": [],
+  "tipo_gravado": []
+ },
+ {
+  "forma": "T::f",
+  "at": "src/ray.rs:67",
+  "teste": true,
+  "call": "ray.set_transform(translation)",
+  "x": "ray",
+  "rhs": "Ray::new(Tuple::point(1., 2., 3.), Tuple::vector(0",
+  "T": "Ray",
+  "f": "new",
+  "alvos": [
+   "impl Ray::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Ray"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/ray.rs:77",
+  "teste": true,
+  "call": "ray.set_transform(scaling)",
+  "x": "ray",
+  "rhs": "Ray::new(Tuple::point(1., 2., 3.), Tuple::vector(0",
+  "T": "Ray",
+  "f": "new",
+  "alvos": [
+   "impl Ray::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Ray"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cone.rs:160",
+  "teste": true,
+  "call": "cone.intersect(ray1)",
+  "x": "cone",
+  "rhs": "Cone::default()",
+  "T": "Cone",
+  "f": "default",
+  "alvos": [
+   "impl Default for Cone::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Cone"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cone.rs:161",
+  "teste": true,
+  "call": "cone.intersect(ray2)",
+  "x": "cone",
+  "rhs": "Cone::default()",
+  "T": "Cone",
+  "f": "default",
+  "alvos": [
+   "impl Default for Cone::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Cone"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cone.rs:162",
+  "teste": true,
+  "call": "cone.intersect(ray3)",
+  "x": "cone",
+  "rhs": "Cone::default()",
+  "T": "Cone",
+  "f": "default",
+  "alvos": [
+   "impl Default for Cone::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Cone"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cone.rs:182",
+  "teste": true,
+  "call": "cone.intersect(ray)",
+  "x": "cone",
+  "rhs": "Cone::default()",
+  "T": "Cone",
+  "f": "default",
+  "alvos": [
+   "impl Default for Cone::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Cone"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cone.rs:203",
+  "teste": true,
+  "call": "cone.intersect(ray1)",
+  "x": "cone",
+  "rhs": "Cone::default()",
+  "T": "Cone",
+  "f": "default",
+  "alvos": [
+   "impl Default for Cone::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Cone"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cone.rs:204",
+  "teste": true,
+  "call": "cone.intersect(ray2)",
+  "x": "cone",
+  "rhs": "Cone::default()",
+  "T": "Cone",
+  "f": "default",
+  "alvos": [
+   "impl Default for Cone::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Cone"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cone.rs:205",
+  "teste": true,
+  "call": "cone.intersect(ray3)",
+  "x": "cone",
+  "rhs": "Cone::default()",
+  "T": "Cone",
+  "f": "default",
+  "alvos": [
+   "impl Default for Cone::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Cone"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/tuple.rs:329",
+  "teste": true,
+  "call": "v.reflect(n)",
+  "x": "v",
+  "rhs": "Tuple::vector(1., -1., 0.)",
+  "T": "Tuple",
+  "f": "vector",
+  "alvos": [
+   "impl Tuple::vector -> Self"
+  ],
+  "tipo_gravado": [
+   "Tuple"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/tuple.rs:339",
+  "teste": true,
+  "call": "v.reflect(n)",
+  "x": "v",
+  "rhs": "Tuple::vector(0., -1., 0.)",
+  "T": "Tuple",
+  "f": "vector",
+  "alvos": [
+   "impl Tuple::vector -> Self"
+  ],
+  "tipo_gravado": [
+   "Tuple"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:148",
+  "teste": true,
+  "call": "canvas.set_pixel_color(2, 3, red)",
+  "x": "canvas",
+  "rhs": "Canvas::new(10, 20)",
+  "T": "Canvas",
+  "f": "new",
+  "alvos": [
+   "impl Canvas::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Canvas"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:158",
+  "teste": true,
+  "call": "canvas.to_ppm()",
+  "x": "canvas",
+  "rhs": "Canvas::new(5, 3)",
+  "T": "Canvas",
+  "f": "new",
+  "alvos": [
+   "impl Canvas::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Canvas"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:176",
+  "teste": true,
+  "call": "canvas.set_pixel_color(0,0, color_1)",
+  "x": "canvas",
+  "rhs": "Canvas::new(5, 3)",
+  "T": "Canvas",
+  "f": "new",
+  "alvos": [
+   "impl Canvas::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Canvas"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:177",
+  "teste": true,
+  "call": "canvas.set_pixel_color(2,1, color_2)",
+  "x": "canvas",
+  "rhs": "Canvas::new(5, 3)",
+  "T": "Canvas",
+  "f": "new",
+  "alvos": [
+   "impl Canvas::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Canvas"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:178",
+  "teste": true,
+  "call": "canvas.set_pixel_color(4,2, color_3)",
+  "x": "canvas",
+  "rhs": "Canvas::new(5, 3)",
+  "T": "Canvas",
+  "f": "new",
+  "alvos": [
+   "impl Canvas::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Canvas"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:180",
+  "teste": true,
+  "call": "canvas.to_ppm()",
+  "x": "canvas",
+  "rhs": "Canvas::new(5, 3)",
+  "T": "Canvas",
+  "f": "new",
+  "alvos": [
+   "impl Canvas::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Canvas"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:190",
+  "teste": true,
+  "call": "expected_result.extend(header)",
+  "x": "expected_result",
+  "rhs": "Vec::new()",
+  "T": "Vec",
+  "f": "new",
+  "alvos": [],
+  "tipo_gravado": []
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:191",
+  "teste": true,
+  "call": "expected_result.extend(data)",
+  "x": "expected_result",
+  "rhs": "Vec::new()",
+  "T": "Vec",
+  "f": "new",
+  "alvos": [],
+  "tipo_gravado": []
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:203",
+  "teste": true,
+  "call": "canvas.set_pixel_color(x,y, color)",
+  "x": "canvas",
+  "rhs": "Canvas::new(10, 2)",
+  "T": "Canvas",
+  "f": "new",
+  "alvos": [
+   "impl Canvas::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Canvas"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:207",
+  "teste": true,
+  "call": "canvas.to_ppm()",
+  "x": "canvas",
+  "rhs": "Canvas::new(10, 2)",
+  "T": "Canvas",
+  "f": "new",
+  "alvos": [
+   "impl Canvas::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Canvas"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:218",
+  "teste": true,
+  "call": "expected_result.extend(header)",
+  "x": "expected_result",
+  "rhs": "Vec::new()",
+  "T": "Vec",
+  "f": "new",
+  "alvos": [],
+  "tipo_gravado": []
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:219",
+  "teste": true,
+  "call": "expected_result.extend(data)",
+  "x": "expected_result",
+  "rhs": "Vec::new()",
+  "T": "Vec",
+  "f": "new",
+  "alvos": [],
+  "tipo_gravado": []
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:228",
+  "teste": true,
+  "call": "canvas.to_ppm()",
+  "x": "canvas",
+  "rhs": "Canvas::new(5, 3)",
+  "T": "Canvas",
+  "f": "new",
+  "alvos": [
+   "impl Canvas::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Canvas"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:89",
+  "teste": false,
+  "call": "ppm.extend(header)",
+  "x": "ppm",
+  "rhs": "Vec::new()",
+  "T": "Vec",
+  "f": "new",
+  "alvos": [],
+  "tipo_gravado": []
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:90",
+  "teste": false,
+  "call": "ppm.extend(pixel_data)",
+  "x": "ppm",
+  "rhs": "Vec::new()",
+  "T": "Vec",
+  "f": "new",
+  "alvos": [],
+  "tipo_gravado": []
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:114",
+  "teste": false,
+  "call": "encoder.set_color(png::ColorType::RGBA)",
+  "x": "encoder",
+  "rhs": "png::Encoder::new(&mut pixel_data, self.width as u",
+  "T": "Encoder",
+  "f": "new",
+  "alvos": [],
+  "tipo_gravado": []
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:115",
+  "teste": false,
+  "call": "encoder.set_depth(png::BitDepth::Eight)",
+  "x": "encoder",
+  "rhs": "png::Encoder::new(&mut pixel_data, self.width as u",
+  "T": "Encoder",
+  "f": "new",
+  "alvos": [],
+  "tipo_gravado": []
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:116",
+  "teste": false,
+  "call": "encoder.write_header()",
+  "x": "encoder",
+  "rhs": "png::Encoder::new(&mut pixel_data, self.width as u",
+  "T": "Encoder",
+  "f": "new",
+  "alvos": [],
+  "tipo_gravado": []
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:116",
+  "teste": false,
+  "call": "encoder.write_header().unwrap()",
+  "x": "encoder",
+  "rhs": "png::Encoder::new(&mut pixel_data, self.width as u",
+  "T": "Encoder",
+  "f": "new",
+  "alvos": [],
+  "tipo_gravado": []
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:34",
+  "teste": false,
+  "call": "header.extend(String::from(\"P3\\n\").into_bytes())",
+  "x": "header",
+  "rhs": "Vec::new()",
+  "T": "Vec",
+  "f": "new",
+  "alvos": [],
+  "tipo_gravado": []
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:35",
+  "teste": false,
+  "call": "header.extend(format!(\"{} {}\\n\", self.width, self.height).into_bytes()",
+  "x": "header",
+  "rhs": "Vec::new()",
+  "T": "Vec",
+  "f": "new",
+  "alvos": [],
+  "tipo_gravado": []
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:36",
+  "teste": false,
+  "call": "header.extend(format!(\"{}\\n\", 255).into_bytes())",
+  "x": "header",
+  "rhs": "Vec::new()",
+  "T": "Vec",
+  "f": "new",
+  "alvos": [],
+  "tipo_gravado": []
+ },
+ {
+  "forma": "f()",
+  "at": "src/count.rs:132",
+  "teste": true,
+  "call": "lines.iter()",
+  "x": "lines",
+  "rhs": "super::lines()",
+  "f": "lines",
+  "mesmo_arquivo": true,
+  "alvos": [
+   "lines (src/count.rs) -> Vec<String>"
+  ],
+  "tipo_gravado": null
+ },
+ {
+  "forma": "f()",
+  "at": "src/count.rs:132",
+  "teste": true,
+  "call": "lines.iter().find(|l| l.starts_with(\"librarian-measure cpu_ms=\") && l.",
+  "x": "lines",
+  "rhs": "super::lines()",
+  "f": "lines",
+  "mesmo_arquivo": true,
+  "alvos": [
+   "lines (src/count.rs) -> Vec<String>"
+  ],
+  "tipo_gravado": null
+ },
+ {
+  "forma": "f()",
+  "at": "src/count.rs:132",
+  "teste": true,
+  "call": "lines.iter().find(|l| l.starts_with(\"librarian-measure cpu_ms=\") && l.",
+  "x": "lines",
+  "rhs": "super::lines()",
+  "f": "lines",
+  "mesmo_arquivo": true,
+  "alvos": [
+   "lines (src/count.rs) -> Vec<String>"
+  ],
+  "tipo_gravado": null
+ },
+ {
+  "forma": "f()",
+  "at": "src/count.rs:150",
+  "teste": true,
+  "call": "lines.iter()",
+  "x": "lines",
+  "rhs": "super::lines()",
+  "f": "lines",
+  "mesmo_arquivo": true,
+  "alvos": [
+   "lines (src/count.rs) -> Vec<String>"
+  ],
+  "tipo_gravado": null
+ },
+ {
+  "forma": "f()",
+  "at": "src/count.rs:150",
+  "teste": true,
+  "call": "lines.iter().find(|l| l.starts_with(\"librarian-measure cpu_ms=\") && l.",
+  "x": "lines",
+  "rhs": "super::lines()",
+  "f": "lines",
+  "mesmo_arquivo": true,
+  "alvos": [
+   "lines (src/count.rs) -> Vec<String>"
+  ],
+  "tipo_gravado": null
+ },
+ {
+  "forma": "f()",
+  "at": "src/count.rs:150",
+  "teste": true,
+  "call": "lines.iter().find(|l| l.starts_with(\"librarian-measure cpu_ms=\") && l.",
+  "x": "lines",
+  "rhs": "super::lines()",
+  "f": "lines",
+  "mesmo_arquivo": true,
+  "alvos": [
+   "lines (src/count.rs) -> Vec<String>"
+  ],
+  "tipo_gravado": null
+ },
+ {
+  "forma": "f()",
+  "at": "src/bin/bench_external_render.rs:15",
+  "teste": false,
+  "call": "summary.samples.iter()",
+  "x": "summary",
+  "rhs": "render_external_benchmark(96, 64, 3, 5)",
+  "f": "render_external_benchmark",
+  "mesmo_arquivo": false,
+  "alvos": [
+   "render_external_benchmark (src/camera.rs) -> RenderBenchmarkSummary"
+  ],
+  "tipo_gravado": null
+ },
+ {
+  "forma": "f()",
+  "at": "src/bin/bench_external_render.rs:15",
+  "teste": false,
+  "call": "summary.samples.iter().enumerate()",
+  "x": "summary",
+  "rhs": "render_external_benchmark(96, 64, 3, 5)",
+  "f": "render_external_benchmark",
+  "mesmo_arquivo": false,
+  "alvos": [
+   "render_external_benchmark (src/camera.rs) -> RenderBenchmarkSummary"
+  ],
+  "tipo_gravado": null
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cube.rs:123",
+  "teste": true,
+  "call": "c.intersect(ray_inside)",
+  "x": "c",
+  "rhs": "Cube::default()",
+  "T": "Cube",
+  "f": "default",
+  "alvos": [
+   "impl Default for Cube::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Cube"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cube.rs:126",
+  "teste": true,
+  "call": "c.intersect(*ray)",
+  "x": "c",
+  "rhs": "Cube::default()",
+  "T": "Cube",
+  "f": "default",
+  "alvos": [
+   "impl Default for Cube::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Cube"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cube.rs:150",
+  "teste": true,
+  "call": "c.intersect(*ray)",
+  "x": "c",
+  "rhs": "Cube::default()",
+  "T": "Cube",
+  "f": "default",
+  "alvos": [
+   "impl Default for Cube::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Cube"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/materials.rs:117",
+  "teste": true,
+  "call": "material.lighting(Object::from(Sphere::default()), light, position, ey",
+  "x": "material",
+  "rhs": "Material::phong()",
+  "T": "Material",
+  "f": "phong",
+  "alvos": [
+   "impl Material::phong -> Self"
+  ],
+  "tipo_gravado": [
+   "Material"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/materials.rs:135",
+  "teste": true,
+  "call": "material.lighting(Object::from(Sphere::default()), light, position, ey",
+  "x": "material",
+  "rhs": "Material::phong()",
+  "T": "Material",
+  "f": "phong",
+  "alvos": [
+   "impl Material::phong -> Self"
+  ],
+  "tipo_gravado": [
+   "Material"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/materials.rs:153",
+  "teste": true,
+  "call": "material.lighting(Object::from(Sphere::default()), light, position, ey",
+  "x": "material",
+  "rhs": "Material::phong()",
+  "T": "Material",
+  "f": "phong",
+  "alvos": [
+   "impl Material::phong -> Self"
+  ],
+  "tipo_gravado": [
+   "Material"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/materials.rs:171",
+  "teste": true,
+  "call": "material.lighting(Object::from(Sphere::default()), light, position, ey",
+  "x": "material",
+  "rhs": "Material::phong()",
+  "T": "Material",
+  "f": "phong",
+  "alvos": [
+   "impl Material::phong -> Self"
+  ],
+  "tipo_gravado": [
+   "Material"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/materials.rs:189",
+  "teste": true,
+  "call": "material.lighting(Object::from(Sphere::default()), light, position, ey",
+  "x": "material",
+  "rhs": "Material::phong()",
+  "T": "Material",
+  "f": "phong",
+  "alvos": [
+   "impl Material::phong -> Self"
+  ],
+  "tipo_gravado": [
+   "Material"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/materials.rs:205",
+  "teste": true,
+  "call": "material.lighting(Object::from(Sphere::default()), light, position, ey",
+  "x": "material",
+  "rhs": "Material::phong()",
+  "T": "Material",
+  "f": "phong",
+  "alvos": [
+   "impl Material::phong -> Self"
+  ],
+  "tipo_gravado": [
+   "Material"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/materials.rs:223",
+  "teste": true,
+  "call": "material.lighting(Object::from(Sphere::default()), light, Tuple::point",
+  "x": "material",
+  "rhs": "Material::phong()",
+  "T": "Material",
+  "f": "phong",
+  "alvos": [
+   "impl Material::phong -> Self"
+  ],
+  "tipo_gravado": [
+   "Material"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/materials.rs:224",
+  "teste": true,
+  "call": "material.lighting(Object::from(Sphere::default()), light, Tuple::point",
+  "x": "material",
+  "rhs": "Material::phong()",
+  "T": "Material",
+  "f": "phong",
+  "alvos": [
+   "impl Material::phong -> Self"
+  ],
+  "tipo_gravado": [
+   "Material"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/librarian_measure_mesh.rs:59",
+  "teste": false,
+  "call": "start.elapsed()",
+  "x": "start",
+  "rhs": "Instant::now()",
+  "T": "Instant",
+  "f": "now",
+  "alvos": [],
+  "tipo_gravado": []
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/librarian_measure_mesh.rs:59",
+  "teste": false,
+  "call": "start.elapsed().as_secs_f64()",
+  "x": "start",
+  "rhs": "Instant::now()",
+  "T": "Instant",
+  "f": "now",
+  "alvos": [],
+  "tipo_gravado": []
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/librarian_measure_mesh.rs:66",
+  "teste": false,
+  "call": "floor.set_material(checkers)",
+  "x": "floor",
+  "rhs": "Plane::default()",
+  "T": "Plane",
+  "f": "default",
+  "alvos": [
+   "impl Default for Plane::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Plane"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/librarian_measure_mesh.rs:69",
+  "teste": false,
+  "call": "wall.set_transform(Matrix::translation(Tuple::vector(0., 0., 6.)) * Ma",
+  "x": "wall",
+  "rhs": "Plane::default()",
+  "T": "Plane",
+  "f": "default",
+  "alvos": [
+   "impl Default for Plane::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Plane"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/librarian_measure_mesh.rs:70",
+  "teste": false,
+  "call": "wall.set_material(checkers)",
+  "x": "wall",
+  "rhs": "Plane::default()",
+  "T": "Plane",
+  "f": "default",
+  "alvos": [
+   "impl Default for Plane::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Plane"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/librarian_measure_mesh.rs:74",
+  "teste": false,
+  "call": "world.groups.push(glass_teapot)",
+  "x": "world",
+  "rhs": "World::new(vec![Object::from(floor), Object::from(",
+  "T": "World",
+  "f": "new",
+  "alvos": [
+   "impl World::new -> Self"
+  ],
+  "tipo_gravado": [
+   "World"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/librarian_measure_mesh.rs:75",
+  "teste": false,
+  "call": "world.groups.push(mirror_teapot)",
+  "x": "world",
+  "rhs": "World::new(vec![Object::from(floor), Object::from(",
+  "T": "World",
+  "f": "new",
+  "alvos": [
+   "impl World::new -> Self"
+  ],
+  "tipo_gravado": [
+   "World"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/librarian_measure_mesh.rs:80",
+  "teste": false,
+  "call": "from.view_transform(to, up)",
+  "x": "from",
+  "rhs": "Tuple::point(0., 2.5, -6.)",
+  "T": "Tuple",
+  "f": "point",
+  "alvos": [
+   "impl Tuple::point -> Self"
+  ],
+  "tipo_gravado": [
+   "Tuple"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/librarian_measure_mesh.rs:84",
+  "teste": false,
+  "call": "camera.render(world)",
+  "x": "camera",
+  "rhs": "Camera::new(width, height, PI / 3.).with_transform",
+  "T": "Camera",
+  "f": "new",
+  "alvos": [
+   "impl Camera::new -> Self"
+  ],
+  "tipo_gravado": null
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/librarian_measure_mesh.rs:85",
+  "teste": false,
+  "call": "start.elapsed()",
+  "x": "start",
+  "rhs": "Instant::now()",
+  "T": "Instant",
+  "f": "now",
+  "alvos": [],
+  "tipo_gravado": []
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/librarian_measure_mesh.rs:85",
+  "teste": false,
+  "call": "start.elapsed().as_secs_f64()",
+  "x": "start",
+  "rhs": "Instant::now()",
+  "T": "Instant",
+  "f": "now",
+  "alvos": [],
+  "tipo_gravado": []
+ },
+ {
+  "forma": "T::f",
+  "at": "src/groups.rs:50",
+  "teste": false,
+  "call": "local_bounds.union(child.bounds())",
+  "x": "local_bounds",
+  "rhs": "Bounds::empty()",
+  "T": "Bounds",
+  "f": "empty",
+  "alvos": [
+   "impl Bounds::empty -> Self"
+  ],
+  "tipo_gravado": [
+   "Bounds"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/groups.rs:77",
+  "teste": false,
+  "call": "local_bounds.union(subgroup.bounds())",
+  "x": "local_bounds",
+  "rhs": "Bounds::empty()",
+  "T": "Bounds",
+  "f": "empty",
+  "alvos": [
+   "impl Bounds::empty -> Self"
+  ],
+  "tipo_gravado": [
+   "Bounds"
+  ]
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:325",
+  "teste": true,
+  "call": "world.objects.push(Object::from(s1))",
+  "x": "world",
+  "rhs": "create_default_world()",
+  "f": "create_default_world",
+  "mesmo_arquivo": true,
+  "alvos": [
+   "tests_world::create_default_world (src/world.rs) -> World",
+   "tests_camera::create_default_world (src/camera.rs) -> World"
+  ],
+  "tipo_gravado": [
+   "World"
+  ]
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:329",
+  "teste": true,
+  "call": "world.objects.push(Object::from(s2))",
+  "x": "world",
+  "rhs": "create_default_world()",
+  "f": "create_default_world",
+  "mesmo_arquivo": true,
+  "alvos": [
+   "tests_world::create_default_world (src/world.rs) -> World",
+   "tests_camera::create_default_world (src/camera.rs) -> World"
+  ],
+  "tipo_gravado": [
+   "World"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:335",
+  "teste": true,
+  "call": "intersection.prepare_computations(ray, &xs)",
+  "x": "intersection",
+  "rhs": "Intersection::new(4., Object::from(s2))",
+  "T": "Intersection",
+  "f": "new",
+  "alvos": [
+   "impl Intersection::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Intersection"
+  ]
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:336",
+  "teste": true,
+  "call": "world.shade_hit(comps, 4)",
+  "x": "world",
+  "rhs": "create_default_world()",
+  "f": "create_default_world",
+  "mesmo_arquivo": true,
+  "alvos": [
+   "tests_world::create_default_world (src/world.rs) -> World",
+   "tests_camera::create_default_world (src/camera.rs) -> World"
+  ],
+  "tipo_gravado": [
+   "World"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:352",
+  "teste": true,
+  "call": "intersection.prepare_computations(ray, &xs)",
+  "x": "intersection",
+  "rhs": "Intersection::new(1., Object::from(shape))",
+  "T": "Intersection",
+  "f": "new",
+  "alvos": [
+   "impl Intersection::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Intersection"
+  ]
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:353",
+  "teste": true,
+  "call": "world.reflected_color(comps, 4)",
+  "x": "world",
+  "rhs": "create_default_world()",
+  "f": "create_default_world",
+  "mesmo_arquivo": true,
+  "alvos": [
+   "tests_world::create_default_world (src/world.rs) -> World",
+   "tests_camera::create_default_world (src/camera.rs) -> World"
+  ],
+  "tipo_gravado": [
+   "World"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:364",
+  "teste": true,
+  "call": "plane.set_transform(Matrix::translation(Tuple::vector(0., -1., 0.)))",
+  "x": "plane",
+  "rhs": "Plane::default()",
+  "T": "Plane",
+  "f": "default",
+  "alvos": [
+   "impl Default for Plane::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Plane"
+  ]
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:365",
+  "teste": true,
+  "call": "world.objects.push(Object::from(plane))",
+  "x": "world",
+  "rhs": "create_default_world()",
+  "f": "create_default_world",
+  "mesmo_arquivo": true,
+  "alvos": [
+   "tests_world::create_default_world (src/world.rs) -> World",
+   "tests_camera::create_default_world (src/camera.rs) -> World"
+  ],
+  "tipo_gravado": [
+   "World"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:371",
+  "teste": true,
+  "call": "intersection.prepare_computations(ray, &xs)",
+  "x": "intersection",
+  "rhs": "Intersection::new(f64::from(2.).sqrt(), Object::fr",
+  "T": "Intersection",
+  "f": "new",
+  "alvos": [
+   "impl Intersection::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Intersection"
+  ]
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:372",
+  "teste": true,
+  "call": "world.reflected_color(comps, 4)",
+  "x": "world",
+  "rhs": "create_default_world()",
+  "f": "create_default_world",
+  "mesmo_arquivo": true,
+  "alvos": [
+   "tests_world::create_default_world (src/world.rs) -> World",
+   "tests_camera::create_default_world (src/camera.rs) -> World"
+  ],
+  "tipo_gravado": [
+   "World"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:383",
+  "teste": true,
+  "call": "plane.set_transform(Matrix::translation(Tuple::vector(0., -1., 0.)))",
+  "x": "plane",
+  "rhs": "Plane::default()",
+  "T": "Plane",
+  "f": "default",
+  "alvos": [
+   "impl Default for Plane::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Plane"
+  ]
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:384",
+  "teste": true,
+  "call": "world.objects.push(Object::from(plane))",
+  "x": "world",
+  "rhs": "create_default_world()",
+  "f": "create_default_world",
+  "mesmo_arquivo": true,
+  "alvos": [
+   "tests_world::create_default_world (src/world.rs) -> World",
+   "tests_camera::create_default_world (src/camera.rs) -> World"
+  ],
+  "tipo_gravado": [
+   "World"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:390",
+  "teste": true,
+  "call": "intersection.prepare_computations(ray, &xs)",
+  "x": "intersection",
+  "rhs": "Intersection::new(f64::from(2.).sqrt(), Object::fr",
+  "T": "Intersection",
+  "f": "new",
+  "alvos": [
+   "impl Intersection::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Intersection"
+  ]
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:391",
+  "teste": true,
+  "call": "world.shade_hit(comps, 4)",
+  "x": "world",
+  "rhs": "create_default_world()",
+  "f": "create_default_world",
+  "mesmo_arquivo": true,
+  "alvos": [
+   "tests_world::create_default_world (src/world.rs) -> World",
+   "tests_camera::create_default_world (src/camera.rs) -> World"
+  ],
+  "tipo_gravado": [
+   "World"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:399",
+  "teste": true,
+  "call": "world.lights.push(Light::point_light(Tuple::point(0., 0., 0.), Color::",
+  "x": "world",
+  "rhs": "World::default()",
+  "T": "World",
+  "f": "default",
+  "alvos": [
+   "impl Default for World::default -> Self"
+  ],
+  "tipo_gravado": [
+   "World"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:403",
+  "teste": true,
+  "call": "lower.set_transform(Matrix::translation(Tuple::vector(0., -1., 0.)))",
+  "x": "lower",
+  "rhs": "Plane::default()",
+  "T": "Plane",
+  "f": "default",
+  "alvos": [
+   "impl Default for Plane::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Plane"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:404",
+  "teste": true,
+  "call": "world.objects.push(Object::from(lower))",
+  "x": "world",
+  "rhs": "World::default()",
+  "T": "World",
+  "f": "default",
+  "alvos": [
+   "impl Default for World::default -> Self"
+  ],
+  "tipo_gravado": [
+   "World"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:408",
+  "teste": true,
+  "call": "upper.set_transform(Matrix::translation(Tuple::vector(0., 1., 0.)))",
+  "x": "upper",
+  "rhs": "Plane::default()",
+  "T": "Plane",
+  "f": "default",
+  "alvos": [
+   "impl Default for Plane::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Plane"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:409",
+  "teste": true,
+  "call": "world.objects.push(Object::from(upper))",
+  "x": "world",
+  "rhs": "World::default()",
+  "T": "World",
+  "f": "default",
+  "alvos": [
+   "impl Default for World::default -> Self"
+  ],
+  "tipo_gravado": [
+   "World"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:413",
+  "teste": true,
+  "call": "world.color_at(ray, 4)",
+  "x": "world",
+  "rhs": "World::default()",
+  "T": "World",
+  "f": "default",
+  "alvos": [
+   "impl Default for World::default -> Self"
+  ],
+  "tipo_gravado": [
+   "World"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:423",
+  "teste": true,
+  "call": "plane.set_transform(Matrix::translation(Tuple::vector(0., -1., 0.)))",
+  "x": "plane",
+  "rhs": "Plane::default()",
+  "T": "Plane",
+  "f": "default",
+  "alvos": [
+   "impl Default for Plane::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Plane"
+  ]
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:424",
+  "teste": true,
+  "call": "world.objects.push(Object::from(plane))",
+  "x": "world",
+  "rhs": "create_default_world()",
+  "f": "create_default_world",
+  "mesmo_arquivo": true,
+  "alvos": [
+   "tests_world::create_default_world (src/world.rs) -> World",
+   "tests_camera::create_default_world (src/camera.rs) -> World"
+  ],
+  "tipo_gravado": [
+   "World"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:430",
+  "teste": true,
+  "call": "intersection.prepare_computations(ray, &xs)",
+  "x": "intersection",
+  "rhs": "Intersection::new(f64::from(2.).sqrt(), Object::fr",
+  "T": "Intersection",
+  "f": "new",
+  "alvos": [
+   "impl Intersection::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Intersection"
+  ]
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:431",
+  "teste": true,
+  "call": "world.reflected_color(comps, 0)",
+  "x": "world",
+  "rhs": "create_default_world()",
+  "f": "create_default_world",
+  "mesmo_arquivo": true,
+  "alvos": [
+   "tests_world::create_default_world (src/world.rs) -> World",
+   "tests_camera::create_default_world (src/camera.rs) -> World"
+  ],
+  "tipo_gravado": [
+   "World"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:446",
+  "teste": true,
+  "call": "xs.data[0].prepare_computations(ray, &xs)",
+  "x": "xs",
+  "rhs": "Intersections::new(vec![intersect1, intersect2])",
+  "T": "Intersections",
+  "f": "new",
+  "alvos": [
+   "impl Intersections::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Intersections"
+  ]
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:447",
+  "teste": true,
+  "call": "world.refracted_color(comp, 5)",
+  "x": "world",
+  "rhs": "create_default_world()",
+  "f": "create_default_world",
+  "mesmo_arquivo": true,
+  "alvos": [
+   "tests_world::create_default_world (src/world.rs) -> World",
+   "tests_camera::create_default_world (src/camera.rs) -> World"
+  ],
+  "tipo_gravado": [
+   "World"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:466",
+  "teste": true,
+  "call": "xs.data[0].prepare_computations(ray, &xs)",
+  "x": "xs",
+  "rhs": "Intersections::new(vec![intersect1, intersect2])",
+  "T": "Intersections",
+  "f": "new",
+  "alvos": [
+   "impl Intersections::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Intersections"
+  ]
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:467",
+  "teste": true,
+  "call": "world.refracted_color(comp, 0)",
+  "x": "world",
+  "rhs": "create_default_world()",
+  "f": "create_default_world",
+  "mesmo_arquivo": true,
+  "alvos": [
+   "tests_world::create_default_world (src/world.rs) -> World",
+   "tests_camera::create_default_world (src/camera.rs) -> World"
+  ],
+  "tipo_gravado": [
+   "World"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:487",
+  "teste": true,
+  "call": "xs.data[1].prepare_computations(ray, &xs)",
+  "x": "xs",
+  "rhs": "Intersections::new(vec![intersect1, intersect2])",
+  "T": "Intersections",
+  "f": "new",
+  "alvos": [
+   "impl Intersections::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Intersections"
+  ]
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:488",
+  "teste": true,
+  "call": "world.refracted_color(comp, 5)",
+  "x": "world",
+  "rhs": "create_default_world()",
+  "f": "create_default_world",
+  "mesmo_arquivo": true,
+  "alvos": [
+   "tests_world::create_default_world (src/world.rs) -> World",
+   "tests_camera::create_default_world (src/camera.rs) -> World"
+  ],
+  "tipo_gravado": [
+   "World"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:516",
+  "teste": true,
+  "call": "xs.data[2].prepare_computations(ray, &xs)",
+  "x": "xs",
+  "rhs": "Intersections::new(vec![intersect1, intersect2, in",
+  "T": "Intersections",
+  "f": "new",
+  "alvos": [
+   "impl Intersections::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Intersections"
+  ]
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:518",
+  "teste": true,
+  "call": "world.refracted_color(comp, 5)",
+  "x": "world",
+  "rhs": "create_default_world()",
+  "f": "create_default_world",
+  "mesmo_arquivo": true,
+  "alvos": [
+   "tests_world::create_default_world (src/world.rs) -> World",
+   "tests_camera::create_default_world (src/camera.rs) -> World"
+  ],
+  "tipo_gravado": [
+   "World"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:526",
+  "teste": true,
+  "call": "floor.set_transform(Matrix::translation(Tuple::vector(0., -1., 0.)))",
+  "x": "floor",
+  "rhs": "Plane::default()",
+  "T": "Plane",
+  "f": "default",
+  "alvos": [
+   "impl Default for Plane::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Plane"
+  ]
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:530",
+  "teste": true,
+  "call": "world.objects.push(Object::from(floor))",
+  "x": "world",
+  "rhs": "create_default_world()",
+  "f": "create_default_world",
+  "mesmo_arquivo": true,
+  "alvos": [
+   "tests_world::create_default_world (src/world.rs) -> World",
+   "tests_camera::create_default_world (src/camera.rs) -> World"
+  ],
+  "tipo_gravado": [
+   "World"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:535",
+  "teste": true,
+  "call": "ball.set_transform(Matrix::translation(Tuple::vector(0., -3.5, -0.5)))",
+  "x": "ball",
+  "rhs": "Sphere::default()",
+  "T": "Sphere",
+  "f": "default",
+  "alvos": [
+   "impl Default for Sphere::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Sphere"
+  ]
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:537",
+  "teste": true,
+  "call": "world.objects.push(Object::from(ball))",
+  "x": "world",
+  "rhs": "create_default_world()",
+  "f": "create_default_world",
+  "mesmo_arquivo": true,
+  "alvos": [
+   "tests_world::create_default_world (src/world.rs) -> World",
+   "tests_camera::create_default_world (src/camera.rs) -> World"
+  ],
+  "tipo_gravado": [
+   "World"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:544",
+  "teste": true,
+  "call": "xs.data[0].prepare_computations(ray, &xs)",
+  "x": "xs",
+  "rhs": "Intersections::new(vec![intersect])",
+  "T": "Intersections",
+  "f": "new",
+  "alvos": [
+   "impl Intersections::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Intersections"
+  ]
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:545",
+  "teste": true,
+  "call": "world.shade_hit(comp, 5)",
+  "x": "world",
+  "rhs": "create_default_world()",
+  "f": "create_default_world",
+  "mesmo_arquivo": true,
+  "alvos": [
+   "tests_world::create_default_world (src/world.rs) -> World",
+   "tests_camera::create_default_world (src/camera.rs) -> World"
+  ],
+  "tipo_gravado": [
+   "World"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:553",
+  "teste": true,
+  "call": "floor.set_transform(Matrix::translation(Tuple::vector(0., -1., 0.)))",
+  "x": "floor",
+  "rhs": "Plane::default()",
+  "T": "Plane",
+  "f": "default",
+  "alvos": [
+   "impl Default for Plane::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Plane"
+  ]
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:558",
+  "teste": true,
+  "call": "world.objects.push(Object::from(floor))",
+  "x": "world",
+  "rhs": "create_default_world()",
+  "f": "create_default_world",
+  "mesmo_arquivo": true,
+  "alvos": [
+   "tests_world::create_default_world (src/world.rs) -> World",
+   "tests_camera::create_default_world (src/camera.rs) -> World"
+  ],
+  "tipo_gravado": [
+   "World"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:563",
+  "teste": true,
+  "call": "ball.set_transform(Matrix::translation(Tuple::vector(0., -3.5, -0.5)))",
+  "x": "ball",
+  "rhs": "Sphere::default()",
+  "T": "Sphere",
+  "f": "default",
+  "alvos": [
+   "impl Default for Sphere::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Sphere"
+  ]
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:565",
+  "teste": true,
+  "call": "world.objects.push(Object::from(ball))",
+  "x": "world",
+  "rhs": "create_default_world()",
+  "f": "create_default_world",
+  "mesmo_arquivo": true,
+  "alvos": [
+   "tests_world::create_default_world (src/world.rs) -> World",
+   "tests_camera::create_default_world (src/camera.rs) -> World"
+  ],
+  "tipo_gravado": [
+   "World"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:572",
+  "teste": true,
+  "call": "xs.data[0].prepare_computations(ray, &xs)",
+  "x": "xs",
+  "rhs": "Intersections::new(vec![intersect])",
+  "T": "Intersections",
+  "f": "new",
+  "alvos": [
+   "impl Intersections::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Intersections"
+  ]
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:573",
+  "teste": true,
+  "call": "world.shade_hit(comp, 5)",
+  "x": "world",
+  "rhs": "create_default_world()",
+  "f": "create_default_world",
+  "mesmo_arquivo": true,
+  "alvos": [
+   "tests_world::create_default_world (src/world.rs) -> World",
+   "tests_camera::create_default_world (src/camera.rs) -> World"
+  ],
+  "tipo_gravado": [
+   "World"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:155",
+  "teste": true,
+  "call": "sphere.set_material(material)",
+  "x": "sphere",
+  "rhs": "Sphere::default()",
+  "T": "Sphere",
+  "f": "default",
+  "alvos": [
+   "impl Default for Sphere::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Sphere"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:158",
+  "teste": true,
+  "call": "sphere_2.set_transform(Matrix::scaling(Tuple::vector(0.5, 0.5, 0.5)))",
+  "x": "sphere_2",
+  "rhs": "Sphere::default()",
+  "T": "Sphere",
+  "f": "default",
+  "alvos": [
+   "impl Default for Sphere::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Sphere"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:184",
+  "teste": true,
+  "call": "sphere.set_material(material)",
+  "x": "sphere",
+  "rhs": "Sphere::default()",
+  "T": "Sphere",
+  "f": "default",
+  "alvos": [
+   "impl Default for Sphere::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Sphere"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:187",
+  "teste": true,
+  "call": "sphere_2.set_transform(Matrix::scaling(Tuple::vector(0.5, 0.5, 0.5)))",
+  "x": "sphere_2",
+  "rhs": "Sphere::default()",
+  "T": "Sphere",
+  "f": "default",
+  "alvos": [
+   "impl Default for Sphere::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Sphere"
+  ]
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:208",
+  "teste": true,
+  "call": "w.intersect_world(ray)",
+  "x": "w",
+  "rhs": "create_default_world()",
+  "f": "create_default_world",
+  "mesmo_arquivo": true,
+  "alvos": [
+   "tests_world::create_default_world (src/world.rs) -> World",
+   "tests_camera::create_default_world (src/camera.rs) -> World"
+  ],
+  "tipo_gravado": [
+   "World"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:224",
+  "teste": true,
+  "call": "intersection.prepare_computations(ray, &xs)",
+  "x": "intersection",
+  "rhs": "Intersection::new(4., s)",
+  "T": "Intersection",
+  "f": "new",
+  "alvos": [
+   "impl Intersection::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Intersection"
+  ]
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:225",
+  "teste": true,
+  "call": "w.shade_hit(comps, 4)",
+  "x": "w",
+  "rhs": "create_default_world()",
+  "f": "create_default_world",
+  "mesmo_arquivo": true,
+  "alvos": [
+   "tests_world::create_default_world (src/world.rs) -> World",
+   "tests_camera::create_default_world (src/camera.rs) -> World"
+  ],
+  "tipo_gravado": [
+   "World"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:239",
+  "teste": true,
+  "call": "intersection.prepare_computations(ray, &xs)",
+  "x": "intersection",
+  "rhs": "Intersection::new(0.5, s)",
+  "T": "Intersection",
+  "f": "new",
+  "alvos": [
+   "impl Intersection::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Intersection"
+  ]
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:240",
+  "teste": true,
+  "call": "w.shade_hit(comps, 4)",
+  "x": "w",
+  "rhs": "create_default_world()",
+  "f": "create_default_world",
+  "mesmo_arquivo": true,
+  "alvos": [
+   "tests_world::create_default_world (src/world.rs) -> World",
+   "tests_camera::create_default_world (src/camera.rs) -> World"
+  ],
+  "tipo_gravado": [
+   "World"
+  ]
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:249",
+  "teste": true,
+  "call": "w.color_at(ray, 4)",
+  "x": "w",
+  "rhs": "create_default_world()",
+  "f": "create_default_world",
+  "mesmo_arquivo": true,
+  "alvos": [
+   "tests_world::create_default_world (src/world.rs) -> World",
+   "tests_camera::create_default_world (src/camera.rs) -> World"
+  ],
+  "tipo_gravado": [
+   "World"
+  ]
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:258",
+  "teste": true,
+  "call": "w.color_at(ray, 4)",
+  "x": "w",
+  "rhs": "create_default_world()",
+  "f": "create_default_world",
+  "mesmo_arquivo": true,
+  "alvos": [
+   "tests_world::create_default_world (src/world.rs) -> World",
+   "tests_camera::create_default_world (src/camera.rs) -> World"
+  ],
+  "tipo_gravado": [
+   "World"
+  ]
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:282",
+  "teste": true,
+  "call": "w.color_at(ray, 4)",
+  "x": "w",
+  "rhs": "create_default_world()",
+  "f": "create_default_world",
+  "mesmo_arquivo": true,
+  "alvos": [
+   "tests_world::create_default_world (src/world.rs) -> World",
+   "tests_camera::create_default_world (src/camera.rs) -> World"
+  ],
+  "tipo_gravado": [
+   "World"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:300",
+  "teste": true,
+  "call": "sphere.set_material(material)",
+  "x": "sphere",
+  "rhs": "Sphere::default()",
+  "T": "Sphere",
+  "f": "default",
+  "alvos": [
+   "impl Default for Sphere::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Sphere"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:303",
+  "teste": true,
+  "call": "sphere_2.set_transform(Matrix::scaling(Tuple::vector(0.5, 0.5, 0.5)))",
+  "x": "sphere_2",
+  "rhs": "Sphere::default()",
+  "T": "Sphere",
+  "f": "default",
+  "alvos": [
+   "impl Default for Sphere::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Sphere"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:319",
+  "teste": true,
+  "call": "from.view_transform(to, up)",
+  "x": "from",
+  "rhs": "Tuple::point(0., 0., -5.)",
+  "T": "Tuple",
+  "f": "point",
+  "alvos": [
+   "impl Tuple::point -> Self"
+  ],
+  "tipo_gravado": [
+   "Tuple"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:322",
+  "teste": true,
+  "call": "camera.render(world)",
+  "x": "camera",
+  "rhs": "Camera::new(11, 11, PI/2.).with_transform(\r\n      ",
+  "T": "Camera",
+  "f": "new",
+  "alvos": [
+   "impl Camera::new -> Self"
+  ],
+  "tipo_gravado": null
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:332",
+  "teste": true,
+  "call": "floor.set_transform(Matrix::translation(Tuple::vector(0., -1., 0.)))",
+  "x": "floor",
+  "rhs": "crate::plane::Plane::default()",
+  "T": "Plane",
+  "f": "default",
+  "alvos": [
+   "impl Default for Plane::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Plane"
+  ]
+ },
+ {
+  "forma": "f()",
+  "at": "src/camera.rs:336",
+  "teste": true,
+  "call": "world.objects.push(Object::from(floor))",
+  "x": "world",
+  "rhs": "create_default_world()",
+  "f": "create_default_world",
+  "mesmo_arquivo": true,
+  "alvos": [
+   "tests_world::create_default_world (src/world.rs) -> World",
+   "tests_camera::create_default_world (src/camera.rs) -> World"
+  ],
+  "tipo_gravado": [
+   "World"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:342",
+  "teste": true,
+  "call": "camera.render(world)",
+  "x": "camera",
+  "rhs": "Camera::new(24, 16, PI / 3.).with_transform(\r\n    ",
+  "T": "Camera",
+  "f": "new",
+  "alvos": [
+   "impl Camera::new -> Self"
+  ],
+  "tipo_gravado": null
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:349",
+  "teste": true,
+  "call": "digest.update(((value / crate::EPSILON).round() as i64).to_le_bytes())",
+  "x": "digest",
+  "rhs": "Sha256::new()",
+  "T": "Sha256",
+  "f": "new",
+  "alvos": [],
+  "tipo_gravado": []
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:379",
+  "teste": true,
+  "call": "digest.update(((value / crate::EPSILON).round() as i64).to_le_bytes())",
+  "x": "digest",
+  "rhs": "Sha256::new()",
+  "T": "Sha256",
+  "f": "new",
+  "alvos": [],
+  "tipo_gravado": []
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:152",
+  "teste": false,
+  "call": "sphere.set_material(material)",
+  "x": "sphere",
+  "rhs": "crate::sphere::Sphere::default()",
+  "T": "Sphere",
+  "f": "default",
+  "alvos": [
+   "impl Default for Sphere::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Sphere"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:155",
+  "teste": false,
+  "call": "sphere_2.set_transform(crate::matrix::Matrix::scaling(Tuple::vector(0.",
+  "x": "sphere_2",
+  "rhs": "crate::sphere::Sphere::default()",
+  "T": "Sphere",
+  "f": "default",
+  "alvos": [
+   "impl Default for Sphere::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Sphere"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:159",
+  "teste": false,
+  "call": "camera.benchmark_render(world, warmups, samples)",
+  "x": "camera",
+  "rhs": "Camera::new(width, height, std::f64::consts::PI / ",
+  "T": "Camera",
+  "f": "new",
+  "alvos": [
+   "impl Camera::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Camera"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:169",
+  "teste": false,
+  "call": "floor.set_transform(crate::matrix::Matrix::translation(Tuple::vector(0",
+  "x": "floor",
+  "rhs": "crate::plane::Plane::default()",
+  "T": "Plane",
+  "f": "default",
+  "alvos": [
+   "impl Default for Plane::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Plane"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:188",
+  "teste": false,
+  "call": "sphere.set_transform(\r",
+  "x": "sphere",
+  "rhs": "crate::sphere::Sphere::default()",
+  "T": "Sphere",
+  "f": "default",
+  "alvos": [
+   "impl Default for Sphere::default -> Self"
+  ],
+  "tipo_gravado": [
+   "Sphere"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:263",
+  "teste": true,
+  "call": "c.ray_from_pixel(100, 50)",
+  "x": "c",
+  "rhs": "Camera::new(201, 101, PI/2.)",
+  "T": "Camera",
+  "f": "new",
+  "alvos": [
+   "impl Camera::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Camera"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:273",
+  "teste": true,
+  "call": "c.ray_from_pixel(0, 0)",
+  "x": "c",
+  "rhs": "Camera::new(201, 101, PI/2.)",
+  "T": "Camera",
+  "f": "new",
+  "alvos": [
+   "impl Camera::new -> Self"
+  ],
+  "tipo_gravado": [
+   "Camera"
+  ]
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:285",
+  "teste": true,
+  "call": "c.ray_from_pixel(100, 50)",
+  "x": "c",
+  "rhs": "Camera::new(201, 101, PI/2.).with_transform(\r\n    ",
+  "T": "Camera",
+  "f": "new",
+  "alvos": [
+   "impl Camera::new -> Self"
+  ],
+  "tipo_gravado": null
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:103",
+  "teste": false,
+  "call": "canvas_mutex.lock()",
+  "x": "canvas_mutex",
+  "rhs": "Mutex::new(Canvas::new(self.horizontal_size, self.",
+  "T": "Mutex",
+  "f": "new",
+  "alvos": [],
+  "tipo_gravado": []
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:103",
+  "teste": false,
+  "call": "canvas_mutex.lock().unwrap()",
+  "x": "canvas_mutex",
+  "rhs": "Mutex::new(Canvas::new(self.horizontal_size, self.",
+  "T": "Mutex",
+  "f": "new",
+  "alvos": [],
+  "tipo_gravado": []
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:106",
+  "teste": false,
+  "call": "canvas_mutex.into_inner()",
+  "x": "canvas_mutex",
+  "rhs": "Mutex::new(Canvas::new(self.horizontal_size, self.",
+  "T": "Mutex",
+  "f": "new",
+  "alvos": [],
+  "tipo_gravado": []
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:106",
+  "teste": false,
+  "call": "canvas_mutex.into_inner().unwrap()",
+  "x": "canvas_mutex",
+  "rhs": "Mutex::new(Canvas::new(self.horizontal_size, self.",
+  "T": "Mutex",
+  "f": "new",
+  "alvos": [],
+  "tipo_gravado": []
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:121",
+  "teste": false,
+  "call": "timings.push(start.elapsed().as_nanos())",
+  "x": "timings",
+  "rhs": "Vec::with_capacity(samples)",
+  "T": "Vec",
+  "f": "with_capacity",
+  "alvos": [],
+  "tipo_gravado": []
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:121",
+  "teste": false,
+  "call": "start.elapsed()",
+  "x": "start",
+  "rhs": "Instant::now()",
+  "T": "Instant",
+  "f": "now",
+  "alvos": [],
+  "tipo_gravado": []
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:121",
+  "teste": false,
+  "call": "start.elapsed().as_nanos()",
+  "x": "start",
+  "rhs": "Instant::now()",
+  "T": "Instant",
+  "f": "now",
+  "alvos": [],
+  "tipo_gravado": []
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:125",
+  "teste": false,
+  "call": "timings.clone()",
+  "x": "timings",
+  "rhs": "Vec::with_capacity(samples)",
+  "T": "Vec",
+  "f": "with_capacity",
+  "alvos": [],
+  "tipo_gravado": []
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:55",
+  "teste": false,
+  "call": "transform.inverse()",
+  "x": "transform",
+  "rhs": "Matrix::identity()",
+  "T": "Matrix",
+  "f": "identity",
+  "alvos": [
+   "impl Matrix<4>::identity -> Self"
+  ],
+  "tipo_gravado": [
+   "Matrix"
+  ]
+ }
+]

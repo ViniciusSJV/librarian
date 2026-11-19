@@ -1091,3 +1091,22 @@ Escrever o teste de regressão do P1 **antes** da correção: uma função Pytho
   - Perguntas 01–14: H1–H3 aprovados.
   - DEC-30: 56 de 56.
 - **Amostra:** estratos novos HC-61 a HC-75 e RT-56 a RT-62. A verdade, proposta pelo agente, foi validada pelo usuário em 19/11/2026 (HC-66, HC-69 e RT-62 conferidos no editor). A linha de base proposta passou a ser `tools/precisao/linha-de-base.json`: Python (75) 21/1/12/8/33 e Rust (62) 36/0/1/10/15.
+
+## 25. Passo 2.3: Parada 1 e subpasso 2.3a-0 (19/11/2026)
+
+**Estado nesta data.** O estado vigente fica no [ESTADO-ATUAL.md](ESTADO-ATUAL.md). Relatório da Parada 1: [docs/reports/fase-2/2.3-parada-1.md](docs/reports/fase-2/2.3-parada-1.md); dados em [docs/reports/fase-2/dados/2.3/](docs/reports/fase-2/dados/2.3/).
+
+- **Portão antes de começar:** aprovado contra a linha de base do 2.2, sem mudança (Python 21/1/12/8/33, Rust 36/0/1/10/15, fatos 16/8/1/1).
+- **Parada 1 (diagnóstico, sem código de produção):**
+  - Método: o dump de `/api/calls` de todos os símbolos, um leitor de tipos do Python sobre a edition (`tipos23.rs`, com o parser do extrator) e um simulador do 2.3a que parte do dump (`sim23.js`, `eval23.js`).
+  - Previsão do 2.3a: Python 21/1/12/8/33 → 27/1/12/2/33 (HC-51 a HC-56 ambíguas → corretas), Rust sem mudança, HC-F6 suspeito → correto.
+  - Rust: as 204 funções `f` do projeto em `let x = T::f(..)` retornam `Self`; ler o retorno não muda nenhum resultado no ray tracer.
+  - Dono: 7 chamadas presas a campo do `__init__` e 783 em decoradores no Healthchecks (103 em produção).
+  - Achado: a regra `receiver` acima do teto do 2.2 nunca valia para o Python, porque os métodos eram indexados pelo último trecho depois de `::`, e o rótulo Python é `Classe.metodo`.
+- **Decisões do usuário na Parada 1:** Q1–Q5, Q7, Q8 e Q12 aprovadas; Q6 (`Protocol`) sem link único, verdade "ambígua"; Q9 adiada para a Parada 1 do 2.3b; Q10 como subpasso próprio (2.3a-0); DEC-39 aprovada com a exceção do `__getattr__`, para entrar no DECISOES.md no commit do 2.3a.
+- **Subpasso 2.3a-0** (`8c689d4`):
+  - `resolve.rs`: a chave de `methods_by_name` passa a ser o último trecho do rótulo, depois de `::` ou de `.`.
+  - Teste `self_dot_m_above_the_limit_is_receiver_in_python` (com o controle da função aninhada).
+  - `cargo test --workspace --locked`: 482 aprovados, 0 falhas, 2 ignorados.
+  - Portão: aprovado, relatório igual ao da linha de base, salvo a data.
+  - `/api/calls` antes × depois: 109 chamadas mudam no Healthchecks, todas previstas e todas de teste (`self._setup_data(..)`, `above_candidate_limit (9)` → `receiver (9)`); 0 no ray tracer; o grafo do run novo é igual ao antigo.

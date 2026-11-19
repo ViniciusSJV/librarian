@@ -165,7 +165,7 @@ Precedência, sempre sobre os admitidos: `chosen` > `unique` > `import` > `recei
 | `chosen` | A pessoa escolheu este entre os candidatos admitidos | `graph_edge` |
 | `unique` | Um só admitido, e ele era o único candidato do grafo, ou a chamada não tem receptor, ou o receptor é módulo do projeto | `graph_edge` |
 | `import` | `x.m()` com `x` ligado a um módulo do projeto: havia vários candidatos, e só uma função daquele nome no arquivo do módulo. Python | `import` |
-| `receiver` | A chamada é `self.m()` (o receptor da linguagem e nada mais antes do nome) e só este homônimo está no bloco de quem chama. Acima do teto, pelas declarações desse bloco. `self.x.m()` nunca é `receiver` | `graph_edge` |
+| `receiver` | A chamada é `self.m()` (o receptor da linguagem e nada mais antes do nome) e só este homônimo está no bloco de quem chama. Acima do teto, pelas declarações desse bloco, em Rust e, desde o passo 2.3a-0, em Python (até então o método do Python era procurado pelo rótulo inteiro, `Classe.metodo`). `self.x.m()` nunca é `receiver` | `graph_edge` |
 | `type` | Método do tipo escrito do receptor: `receiver_type` do extrator ou caminho `T::f`. Hoje só o Rust registra | `type` |
 | `trait_default` | O tipo escrito não define o método; é o padrão de um trait que ele implementa | `type` |
 | `homonym` | Nada decide; cada admitido aparece, e nenhum é seguido. Inclui um só admitido que sobrou de vários num `x.m()` | `graph_edge` |
