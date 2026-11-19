@@ -43,7 +43,7 @@ corretas, lacunas explícitas e fatos aguardando aprovação humana.
   a chamada ao próprio método que a contém. Erra nas 17 chamadas da
   população (4 no Healthchecks, 13 no ray tracer), e o inventário usa a
   mesma regra antes da regra por tipo (`inventory.rs:635-639`).
-  Implementado em 19/11 (CTX seção 23); aguarda commit.
+  Commitado em 19/11 (`c316bf7`, `3b4e1c6`, `6525fb4`), sem push; CTX seção 23.
 - 2.2 Chamada de método não casa com função solta (Rust direto; Python
   com tabela mínima de imports para modulo.f()). Meta: os 197 links;
   F6, F7, F14 e F17. Quando o tipo do receptor é conhecido e não tem o
