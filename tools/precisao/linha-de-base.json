@@ -1,7 +1,7 @@
 {
  "projetos": {
   "hc": {
-   "run_novo": "20261119-015043",
+   "run_novo": "20261119-044753",
    "grafo_novo_igual_ao_de_referencia": true,
    "populacao": {
     "total": 1956,
@@ -9,25 +9,23 @@
      "no_candidate_in_project": 1186,
      "unique": 442,
      "above_candidate_limit": 78,
-     "homonym": 246,
-     "receiver": 4
+     "homonym": 250
     },
     "por_estrato": {
      "no_candidate_in_project": 1186,
      "unique->outro": 245,
      "above_candidate_limit": 78,
-     "homonym": 246,
-     "unique->function": 197,
-     "receiver": 4
+     "homonym": 250,
+     "unique->function": 197
     },
     "metodo_para_funcao": 197
    },
    "amostra_contagem": {
     "sem_candidato": 14,
     "correta": 9,
-    "link_falso": 17,
-    "candidatos_falsos": 10,
-    "ambigua": 10
+    "link_falso": 13,
+    "candidatos_falsos": 12,
+    "ambigua": 12
    },
    "parte_c_contagem": {
     "sem_candidato": 12,
@@ -36,9 +34,9 @@
    },
    "estimativa_populacao": {
     "correta": 221,
-    "link_falso": 226,
-    "candidatos_falsos": 176,
-    "ambigua": 148,
+    "link_falso": 222,
+    "candidatos_falsos": 179,
+    "ambigua": 149,
     "sem_candidato": 1186
    },
    "amostra": [
@@ -494,74 +492,77 @@
      "id": "HC-57",
      "estrato": "receiver",
      "parte_c": false,
-     "categoria": "link_falso",
-     "resposta": "receiver (3) → LineModeNode.render (hc/front/templatetags/linemode.py:14)",
+     "categoria": "candidatos_falsos",
+     "resposta": "homonym (3)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
     {
      "id": "HC-58",
      "estrato": "receiver",
      "parte_c": false,
-     "categoria": "link_falso",
-     "resposta": "receiver (2) → Project.num_checks_available (hc/accounts/models.py:471)",
+     "categoria": "ambigua",
+     "resposta": "homonym (2)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
     {
      "id": "HC-59",
      "estrato": "receiver",
      "parte_c": false,
-     "categoria": "link_falso",
-     "resposta": "receiver (2) → Member.can_accept (hc/accounts/models.py:625)",
+     "categoria": "ambigua",
+     "resposta": "homonym (2)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
     {
      "id": "HC-60",
      "estrato": "receiver",
      "parte_c": false,
-     "categoria": "link_falso",
-     "resposta": "receiver (3) → TableNode.render (hc/front/templatetags/asciitable.py:47)",
+     "categoria": "candidatos_falsos",
+     "resposta": "homonym (3)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     }
    ]
   },
   "rt": {
-   "run_novo": "20261119-015302",
+   "run_novo": "20261119-045018",
    "grafo_novo_igual_ao_de_referencia": true,
    "populacao": {
     "total": 515,
     "por_resolution": {
      "no_candidate_in_project": 313,
-     "homonym": 71,
-     "above_candidate_limit": 14,
+     "type": 53,
+     "trait_default": 7,
      "unique": 104,
-     "receiver": 13
+     "homonym": 35,
+     "above_candidate_limit": 3
     },
     "por_estrato": {
      "no_candidate_in_project": 313,
-     "homonym": 71,
-     "above_candidate_limit": 14,
+     "type": 53,
+     "trait_default": 7,
      "unique->outro": 102,
-     "receiver": 13,
-     "unique->function": 2
+     "homonym": 35,
+     "unique->function": 2,
+     "above_candidate_limit": 3
     },
     "metodo_para_funcao": 2
    },
    "amostra_contagem": {
-    "correta": 5,
-    "ambigua": 11,
+    "correta": 36,
     "sem_candidato": 7,
-    "link_falso": 7
+    "ambigua": 9,
+    "link_falso": 2,
+    "candidatos_falsos": 1
    },
    "parte_c_contagem": {
-    "correta": 2,
-    "ambigua": 2,
-    "sem_candidato": 6
+    "correta": 3,
+    "sem_candidato": 6,
+    "ambigua": 1
    },
    "estimativa_populacao": {
-    "correta": 102,
-    "link_falso": 15,
+    "correta": 169,
+    "link_falso": 2,
     "candidatos_falsos": 0,
-    "ambigua": 85,
+    "ambigua": 31,
     "sem_candidato": 313
    },
    "amostra": [
@@ -577,8 +578,8 @@
      "id": "RT-02",
      "estrato": "homonym",
      "parte_c": true,
-     "categoria": "ambigua",
-     "resposta": "homonym (7)",
+     "categoria": "correta",
+     "resposta": "type (7) → impl Incuse for Checkers::color_at (src/patterns.rs:255)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
     {
@@ -737,24 +738,24 @@
      "id": "RT-22",
      "estrato": "above_candidate_limit",
      "parte_c": false,
-     "categoria": "ambigua",
-     "resposta": "above_candidate_limit (9)",
+     "categoria": "correta",
+     "resposta": "type (9) → impl Intersectable for Plane::set_transform (src/plane.rs:54)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
     {
      "id": "RT-23",
      "estrato": "above_candidate_limit",
      "parte_c": false,
-     "categoria": "ambigua",
-     "resposta": "above_candidate_limit (9)",
+     "categoria": "correta",
+     "resposta": "type (9) → impl Intersectable for Sphere::set_transform (src/sphere.rs:68)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
     {
      "id": "RT-24",
      "estrato": "above_candidate_limit",
      "parte_c": false,
-     "categoria": "ambigua",
-     "resposta": "above_candidate_limit (9)",
+     "categoria": "correta",
+     "resposta": "type (9) → impl Ray::set_transform (src/ray.rs:22)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
     {
@@ -769,41 +770,241 @@
      "id": "RT-26",
      "estrato": "receiver",
      "parte_c": false,
-     "categoria": "link_falso",
-     "resposta": "receiver (8) → impl Equivalence<Color> for Color::equivalent (src/color.rs:34)",
+     "categoria": "ambigua",
+     "resposta": "homonym (8)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
     {
      "id": "RT-27",
      "estrato": "receiver",
      "parte_c": false,
-     "categoria": "link_falso",
-     "resposta": "receiver (5) → impl SceneSpec::validate (src/scene.rs:127)",
+     "categoria": "correta",
+     "resposta": "type (5) → impl CameraSpec::validate (src/scene.rs:12)",
      "validada": "usuário (revisada, 18/11)"
     },
     {
      "id": "RT-28",
      "estrato": "receiver",
      "parte_c": false,
-     "categoria": "link_falso",
-     "resposta": "receiver (2) → impl IntoIterator for Intersections::into_iter (src/intersection.rs:133)",
+     "categoria": "candidatos_falsos",
+     "resposta": "homonym (2)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
     {
      "id": "RT-29",
      "estrato": "receiver",
      "parte_c": false,
-     "categoria": "link_falso",
-     "resposta": "receiver (8) → impl Equivalence<Color> for Color::equivalent (src/color.rs:34)",
+     "categoria": "ambigua",
+     "resposta": "homonym (8)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
     {
      "id": "RT-30",
      "estrato": "receiver",
      "parte_c": false,
-     "categoria": "link_falso",
-     "resposta": "receiver (5) → impl ObjectSpec::validate (src/scene.rs:49)",
+     "categoria": "correta",
+     "resposta": "type (5) → impl MaterialSpec::validate (src/scene.rs:66)",
      "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "RT-31",
+     "estrato": "type",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "type (8) → impl Intersectable for Plane::set_material (src/plane.rs:50)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-32",
+     "estrato": "type",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "type (8) → impl Intersectable for Plane::set_material (src/plane.rs:50)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-33",
+     "estrato": "type",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "type (7) → impl Incuse for Checkers::set_pattern_transform (src/patterns.rs:251)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-34",
+     "estrato": "type",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "type (2) → impl Site::hit (src/count.rs:31)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-35",
+     "estrato": "type",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "type (2) → impl Groups::intersect (src/groups.rs:86)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-36",
+     "estrato": "type_caminho",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "type (22) → impl Ray::new (src/ray.rs:11)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-37",
+     "estrato": "type_caminho",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "type (22) → impl Ray::new (src/ray.rs:11)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-38",
+     "estrato": "type_caminho",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "type (14) → impl From<[[f64; D]; D]> for Matrix<D>::from (src/matrix.rs:12)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-39",
+     "estrato": "type_caminho",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "type (22) → impl Tuple::new (src/tuple.rs:13)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-40",
+     "estrato": "type_caminho",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "type (22) → impl Triangle::new (src/triangle.rs:24)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-41",
+     "estrato": "type_caminho",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "type (12) → impl Default for Sphere::default (src/sphere.rs:26)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-42",
+     "estrato": "type_fora",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "type (8) → impl Intersectable for Object::material (src/object.rs:113)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-43",
+     "estrato": "type_fora",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "type (9) → impl Intersectable for Sphere::set_transform (src/sphere.rs:68)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-44",
+     "estrato": "type_fora",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "type (7) → impl Incuse for Patterns::color_at (src/patterns.rs:333)",
+     "validada": "usuário (revisada, conferida no editor, 19/11)"
+    },
+    {
+     "id": "RT-45",
+     "estrato": "type_fora",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "type (2) → impl Transform for Tuple::view_transform (src/transformations.rs:9)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-46",
+     "estrato": "trait_default",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "trait_default (2) → Intersectable::intersect (src/object.rs:29)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-47",
+     "estrato": "trait_default",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "trait_default (2) → Intersectable::intersect (src/object.rs:29)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-48",
+     "estrato": "trait_default",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "trait_default (2) → Intersectable::intersect (src/object.rs:29)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-49",
+     "estrato": "trait_default",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "trait_default (2) → Incuse::color_at_object (src/patterns.rs:13)",
+     "validada": "usuário (revisada, conferida no editor, 19/11)"
+    },
+    {
+     "id": "RT-50",
+     "estrato": "trait_default",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "trait_default (2) → Intersectable::intersect (src/object.rs:29)",
+     "validada": "usuário (revisada, conferida no editor, 19/11)"
+    },
+    {
+     "id": "RT-51",
+     "estrato": "type_variavel",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "type (15) → impl Intersectable for Object::transform (src/object.rs:124)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-52",
+     "estrato": "type_variavel",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "type (9) → impl Ray::set_transform (src/ray.rs:22)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-53",
+     "estrato": "type_variavel",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "type (15) → impl Intersectable for Object::transform (src/object.rs:124)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-54",
+     "estrato": "type_variavel",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "type (9) → impl Intersectable for Plane::set_transform (src/plane.rs:54)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-55",
+     "estrato": "type_variavel",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "type (15) → impl Intersectable for Object::transform (src/object.rs:124)",
+     "validada": "usuário (revisada, 19/11)"
     }
    ]
   }
@@ -1554,12 +1755,10 @@
     ]
    },
    "agora": {
-    "resolution": "homonym",
+    "resolution": "type",
     "candidates": 3,
     "alvos": [
-     "impl Cliente::new (src/models.rs:6)",
-     "impl Fornecedor::new (src/models.rs:18)",
-     "impl Repo::new (src/models.rs:30)"
+     "impl Cliente::new (src/models.rs:6)"
     ]
    },
    "alvo": {
@@ -1568,7 +1767,7 @@
     "passo": "2.1",
     "por_que": "caminho Cliente::new; o inventário já resolve"
    },
-   "estado": "igual ao atual"
+   "estado": "no alvo"
   },
   {
    "id": "N1-rs",
@@ -1582,12 +1781,10 @@
     ]
    },
    "agora": {
-    "resolution": "homonym",
+    "resolution": "type",
     "candidates": 3,
     "alvos": [
-     "impl Cliente::salvar (src/models.rs:10)",
-     "impl Fornecedor::salvar (src/models.rs:22)",
-     "impl Repo::salvar (src/models.rs:34)"
+     "impl Cliente::salvar (src/models.rs:10)"
     ]
    },
    "alvo": {
@@ -1596,7 +1793,7 @@
     "passo": "2.1",
     "por_que": "receiver_type a -> Cliente; o inventário já resolve"
    },
-   "estado": "igual ao atual"
+   "estado": "no alvo"
   },
   {
    "id": "N2-rs",
@@ -1610,12 +1807,10 @@
     ]
    },
    "agora": {
-    "resolution": "homonym",
+    "resolution": "type",
     "candidates": 3,
     "alvos": [
-     "impl Cliente::salvar (src/models.rs:10)",
-     "impl Fornecedor::salvar (src/models.rs:22)",
-     "impl Repo::salvar (src/models.rs:34)"
+     "impl Cliente::salvar (src/models.rs:10)"
     ]
    },
    "alvo": {
@@ -1624,7 +1819,7 @@
     "passo": "2.1",
     "por_que": "a: &Cliente; o inventário já resolve"
    },
-   "estado": "igual ao atual"
+   "estado": "no alvo"
   },
   {
    "id": "N3-rs",
@@ -1666,12 +1861,10 @@
     ]
    },
    "agora": {
-    "resolution": "homonym",
+    "resolution": "type",
     "candidates": 3,
     "alvos": [
-     "impl Cliente::salvar (src/models.rs:10)",
-     "impl Fornecedor::salvar (src/models.rs:22)",
-     "impl Repo::salvar (src/models.rs:34)"
+     "impl Cliente::salvar (src/models.rs:10)"
     ]
    },
    "alvo": {
@@ -1680,7 +1873,7 @@
     "passo": "2.1",
     "por_que": "fabrica_local() -> Cliente no mesmo arquivo; o inventário já resolve"
    },
-   "estado": "igual ao atual"
+   "estado": "no alvo"
   },
   {
    "id": "N4-rs",
@@ -1694,11 +1887,9 @@
     ]
    },
    "agora": {
-    "resolution": "homonym",
+    "resolution": "type",
     "candidates": 3,
     "alvos": [
-     "impl Cliente::salvar (src/models.rs:10)",
-     "impl Fornecedor::salvar (src/models.rs:22)",
      "impl Repo::salvar (src/models.rs:34)"
     ]
    },
@@ -1708,7 +1899,7 @@
     "passo": "2.1",
     "por_que": "campo repo: Repo; o inventário já resolve"
    },
-   "estado": "igual ao atual"
+   "estado": "no alvo"
   },
   {
    "id": "N5-rs",
@@ -1723,13 +1914,10 @@
     ]
    },
    "agora": {
-    "resolution": "homonym",
+    "resolution": "type",
     "candidates": 4,
     "alvos": [
-     "Notifica::notify (src/models.rs:40)",
-     "impl Fila::notify (src/models.rs:65)",
-     "impl Notifica for Email::notify (src/models.rs:51)",
-     "impl Notifica for Sms::notify (src/models.rs:57)"
+     "impl Notifica for Email::notify (src/models.rs:51)"
     ]
    },
    "alvo": {
@@ -1738,7 +1926,7 @@
     "passo": "2.1",
     "por_que": "e: &Email; o inventário já resolve"
    },
-   "estado": "igual ao atual"
+   "estado": "no alvo"
   },
   {
    "id": "N5-rs-padrao",
@@ -1751,11 +1939,10 @@
     ]
    },
    "agora": {
-    "resolution": "homonym",
+    "resolution": "trait_default",
     "candidates": 2,
     "alvos": [
-     "Notifica::padrao (src/models.rs:42)",
-     "impl Fila::padrao (src/models.rs:69)"
+     "Notifica::padrao (src/models.rs:42)"
     ]
    },
    "alvo": {
@@ -1764,7 +1951,7 @@
     "passo": "2.1",
     "por_que": "Email não define padrao; vale o padrão do trait; o inventário já resolve"
    },
-   "estado": "igual ao atual"
+   "estado": "no alvo"
   },
   {
    "id": "N6-rs",

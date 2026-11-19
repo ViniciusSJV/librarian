@@ -5,7 +5,7 @@
 ## Onde estamos
 
 - **Fase 1 — Piloto 1b: concluída em 18/11/2026.** Relatório final: [docs/reports/piloto-1b/00-resumo.md](docs/reports/piloto-1b/00-resumo.md).
-- **Fase 2 — Precisão das relações: em andamento.** O passo 2.0 (portão) está em `2b05b8c`. O **passo 2.1** (regra única de resolução, `receiver` corrigido, resolução `type`) está commitado desde 19/11/2026 (`c316bf7` portão, `3b4e1c6` resolver e testes, `6525fb4` documentação), sem push. Falta a validação da amostra RT-31 a RT-55 e, depois dela, a troca da linha de base. Detalhe no CTX, seção 23.
+- **Fase 2 — Precisão das relações: em andamento.** O passo 2.0 (portão) está em `2b05b8c`. O **passo 2.1** (regra única de resolução, `receiver` corrigido, resolução `type`) está commitado desde 19/11/2026 (`c316bf7` portão, `3b4e1c6` resolver e testes, `6525fb4` documentação), sem push. A amostra RT-31 a RT-55 foi validada pelo usuário em 19/11, e a linha de base foi trocada. Detalhe no CTX, seção 23.
 - **Próximo passo: 2.2**, chamada de método que não casa com função solta. Cada passo depende de autorização.
 - **Portão de cada passo da Fase 2:** `node tools/precisao/portao.js --studio .studio --base tools/precisao/linha-de-base.json` (cerca de 4 minutos). Reprova se `link_falso` subir ou as corretas caírem, em Python ou em Rust, se uma edition antiga mudar ou se o `.studio` original mudar. Exceção só com justificativa caso a caso e aprovação do usuário (DEC-34).
 - **Feito no 1b:** P1 (`987d7a8`), G3 (`aae51d7`), Partes A–E do diagnóstico, a Q6 (run `20261118-205150`, avaliada em 18/11), a consolidação documental (`a8e4074`) e o relatório final. Relatórios em [docs/reports/piloto-1b/](docs/reports/piloto-1b/) (`0c4bcab`).
@@ -53,17 +53,18 @@ Cite sempre com o prefixo. As tabelas de abreviações e de prefixos estão em [
 - Push feito em 18/11 e CI verde em `955537e`, inclusive no `d949f91`, o que fecha a pendência do CTX:883.
 
 **Fase 2**
-- **Linha de base do portão (binário de `aae51d7`, amostra validada):**
-  - Python, 60 chamadas: 9 corretas, 17 `link_falso`, 10 `candidatos_falsos`, 10 ambíguas e 14 sem candidato.
-  - Rust, 30 chamadas: 5 corretas, 7 `link_falso`, 0 `candidatos_falsos`, 11 ambíguas e 7 sem candidato.
+- **Linha de base do portão (binário de `3b4e1c6`, passo 2.1; amostra validada, trocada em 19/11/2026):**
+  - Python, 60 chamadas: 9 corretas, 13 `link_falso`, 12 `candidatos_falsos`, 12 ambíguas e 14 sem candidato.
+  - Rust, 55 chamadas: 36 corretas, 2 `link_falso`, 1 `candidatos_falsos`, 9 ambíguas e 7 sem candidato.
+  - A linha de base anterior (binário de `aae51d7`: Python 9/17/10/10/14, Rust com 30 chamadas 5/7/0/11/7) está no histórico do Git.
   - Fatos: 15 não dependem, 6 corretos, 2 suspeitos e 3 errados.
   - Detalhe em [tools/precisao/linha-de-base.json](tools/precisao/linha-de-base.json).
-- **Do 2.1, aguardando o usuário:**
-  - a validação da verdade proposta de RT-31 a RT-55, na fixture, e dos 60 links `type`/`trait_default` da população, em [docs/reports/fase-2/2.1-links-type.md](docs/reports/fase-2/2.1-links-type.md);
-  - a nova linha de base, em [tools/precisao/linha-de-base-proposta.json](tools/precisao/linha-de-base-proposta.json): Rust com 55 chamadas, 36 corretas e 2 `link_falso`; Python igual;
+- **Do 2.1:** a verdade de RT-31 a RT-55 foi validada pelo usuário em 19/11/2026 (folha em [docs/reports/fase-2/2.1-revisao-amostra.md](docs/reports/fase-2/2.1-revisao-amostra.md)). Ainda aguardando o usuário:
+  - a validação dos 60 links `type`/`trait_default` da população, em [docs/reports/fase-2/2.1-links-type.md](docs/reports/fase-2/2.1-links-type.md);
   - o novo status da DEC-11, proposto (a DEC-37 foi aprovada em 19/11);
   - as respostas da Parada 3, em [docs/reports/fase-2/2.1-parada-3.md](docs/reports/fase-2/2.1-parada-3.md), com a verificação de tela (DEC-30: 51 de 51);
   - o push dos commits do 2.1.
+- **Para o 2.2:** um `self.m()` acima do teto de homônimos sai com `basis` `type`, e não `receiver`, porque o `receiver` só decide entre arestas candidatas (RT-55, `object.rs:173`). O alvo está certo; o rótulo, não.
 - **Para o 2.3:** o extrator do Rust toma `T` como o tipo de `let x = T::f(..)` sem ler o retorno de `f` (32 dos 38 links `type` por variável acima do teto; certos aqui, porque as cinco funções retornam `Self`), e o grafo não guarda qual regra deu o tipo do receptor.
 - **Para o 2.3:** a chamada de um decorador roda na carga do módulo, mas é atribuída à função decorada (HC-19). É a mesma questão de dono do `Repo()` preso ao campo.
 - Achados sem correção: a ordem de `unresolved` não segue arquivo/linha/coluna; o corte do `node_limit` segue a ordem dos ids das arestas; `self.repo = Repo()` deixa `Repo()` preso ao campo; 197 dos 442 links únicos de método vão para função solta (meta do 2.2); o tipo é comparado sem os genéricos (`Matrix<3>` = `Matrix<4>`), o que deixa como `homonym` em "o que chama?" o resultado com vários impls.

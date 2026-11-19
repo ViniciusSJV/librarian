@@ -701,7 +701,7 @@
    },
    "certeza": "alta",
    "justificativa": "floor = Plane::default() (cena_video.rs:95); Plane não define set_material fora do impl Intersectable.",
-   "verdade_validada_por": "proposta pelo agente (passo 2.1, 19/11); aguarda validação do usuário"
+   "verdade_validada_por": "usuário (revisada, 19/11)"
   },
   {
    "id": "RT-32",
@@ -721,7 +721,7 @@
    },
    "certeza": "alta",
    "justificativa": "wall = Plane::default() (librarian_measure_mesh.rs:68).",
-   "verdade_validada_por": "proposta pelo agente (passo 2.1, 19/11); aguarda validação do usuário"
+   "verdade_validada_por": "usuário (revisada, 19/11)"
   },
   {
    "id": "RT-33",
@@ -741,7 +741,7 @@
    },
    "certeza": "alta",
    "justificativa": "Padrão Patterns::Checkers(ref mut checkers): checkers é Checkers.",
-   "verdade_validada_por": "proposta pelo agente (passo 2.1, 19/11); aguarda validação do usuário"
+   "verdade_validada_por": "usuário (revisada, 19/11)"
   },
   {
    "id": "RT-34",
@@ -761,7 +761,7 @@
    },
    "certeza": "alta",
    "justificativa": "site: &'static Site no parâmetro de Guard::enter (count.rs:48).",
-   "verdade_validada_por": "proposta pelo agente (passo 2.1, 19/11); aguarda validação do usuário"
+   "verdade_validada_por": "usuário (revisada, 19/11)"
   },
   {
    "id": "RT-35",
@@ -781,7 +781,7 @@
    },
    "certeza": "alta",
    "justificativa": "subgroup vem de self.subgroups: Vec<Groups> (groups.rs:13).",
-   "verdade_validada_por": "proposta pelo agente (passo 2.1, 19/11); aguarda validação do usuário"
+   "verdade_validada_por": "usuário (revisada, 19/11)"
   },
   {
    "id": "RT-36",
@@ -801,7 +801,7 @@
    },
    "certeza": "alta",
    "justificativa": "Chamada por caminho Ray::new; impl Ray::new é o único new de Ray.",
-   "verdade_validada_por": "proposta pelo agente (passo 2.1, 19/11); aguarda validação do usuário"
+   "verdade_validada_por": "usuário (revisada, 19/11)"
   },
   {
    "id": "RT-37",
@@ -821,7 +821,7 @@
    },
    "certeza": "alta",
    "justificativa": "Chamada por caminho Ray::new.",
-   "verdade_validada_por": "proposta pelo agente (passo 2.1, 19/11); aguarda validação do usuário"
+   "verdade_validada_por": "usuário (revisada, 19/11)"
   },
   {
    "id": "RT-38",
@@ -841,7 +841,7 @@
    },
    "certeza": "alta",
    "justificativa": "Matrix::from([[..]]) com let mat4: Matrix<4>: o From<[[f64; D]; D]> for Matrix<D>.",
-   "verdade_validada_por": "proposta pelo agente (passo 2.1, 19/11); aguarda validação do usuário"
+   "verdade_validada_por": "usuário (revisada, 19/11)"
   },
   {
    "id": "RT-39",
@@ -861,7 +861,7 @@
    },
    "certeza": "alta",
    "justificativa": "Chamada por caminho Tuple::new.",
-   "verdade_validada_por": "proposta pelo agente (passo 2.1, 19/11); aguarda validação do usuário"
+   "verdade_validada_por": "usuário (revisada, 19/11)"
   },
   {
    "id": "RT-40",
@@ -881,7 +881,7 @@
    },
    "certeza": "alta",
    "justificativa": "Chamada por caminho Triangle::new.",
-   "verdade_validada_por": "proposta pelo agente (passo 2.1, 19/11); aguarda validação do usuário"
+   "verdade_validada_por": "usuário (revisada, 19/11)"
   },
   {
    "id": "RT-41",
@@ -901,7 +901,7 @@
    },
    "certeza": "alta",
    "justificativa": "crate::sphere::Sphere::default: o impl Default for Sphere (sphere.rs:26).",
-   "verdade_validada_por": "proposta pelo agente (passo 2.1, 19/11); aguarda validação do usuário"
+   "verdade_validada_por": "usuário (revisada, 19/11)"
   },
   {
    "id": "RT-42",
@@ -921,7 +921,7 @@
    },
    "certeza": "alta",
    "justificativa": "let mut b: Object (world.rs:502); Object implementa Intersectable::material.",
-   "verdade_validada_por": "proposta pelo agente (passo 2.1, 19/11); aguarda validação do usuário"
+   "verdade_validada_por": "usuário (revisada, 19/11)"
   },
   {
    "id": "RT-43",
@@ -941,7 +941,7 @@
    },
    "certeza": "alta",
    "justificativa": "a = Sphere::grass(1.), que retorna Self (sphere.rs:18).",
-   "verdade_validada_por": "proposta pelo agente (passo 2.1, 19/11); aguarda validação do usuário"
+   "verdade_validada_por": "usuário (revisada, 19/11)"
   },
   {
    "id": "RT-44",
@@ -961,7 +961,7 @@
    },
    "certeza": "alta",
    "justificativa": "pattern = Patterns::from(LinearGradient::new(..)), From<..> for Patterns retorna Self.",
-   "verdade_validada_por": "proposta pelo agente (passo 2.1, 19/11); aguarda validação do usuário"
+   "verdade_validada_por": "usuário (revisada, conferida no editor, 19/11)"
   },
   {
    "id": "RT-45",
@@ -981,7 +981,7 @@
    },
    "certeza": "alta",
    "justificativa": "from = Tuple::point(..): Tuple; impl Transform for Tuple.",
-   "verdade_validada_por": "proposta pelo agente (passo 2.1, 19/11); aguarda validação do usuário"
+   "verdade_validada_por": "usuário (revisada, 19/11)"
   },
   {
    "id": "RT-46",
@@ -1001,7 +1001,7 @@
    },
    "certeza": "alta",
    "justificativa": "cyl = Cylinder::default(); Cylinder não sobrescreve intersect: vale o padrão de Intersectable (object.rs:29).",
-   "verdade_validada_por": "proposta pelo agente (passo 2.1, 19/11); aguarda validação do usuário"
+   "verdade_validada_por": "usuário (revisada, 19/11)"
   },
   {
    "id": "RT-47",
@@ -1021,7 +1021,7 @@
    },
    "certeza": "alta",
    "justificativa": "c = Cube::default(); Cube não sobrescreve intersect.",
-   "verdade_validada_por": "proposta pelo agente (passo 2.1, 19/11); aguarda validação do usuário"
+   "verdade_validada_por": "usuário (revisada, 19/11)"
   },
   {
    "id": "RT-48",
@@ -1041,7 +1041,7 @@
    },
    "certeza": "alta",
    "justificativa": "sphere = Sphere::new(..); Sphere não sobrescreve intersect.",
-   "verdade_validada_por": "proposta pelo agente (passo 2.1, 19/11); aguarda validação do usuário"
+   "verdade_validada_por": "usuário (revisada, 19/11)"
   },
   {
    "id": "RT-49",
@@ -1061,7 +1061,7 @@
    },
    "certeza": "alta",
    "justificativa": "Padrão Patterns::Checkers(ref checkers); Checkers não define color_at_object: vale o padrão de Incuse (patterns.rs:13).",
-   "verdade_validada_por": "proposta pelo agente (passo 2.1, 19/11); aguarda validação do usuário"
+   "verdade_validada_por": "usuário (revisada, conferida no editor, 19/11)"
   },
   {
    "id": "RT-50",
@@ -1081,7 +1081,7 @@
    },
    "certeza": "alta",
    "justificativa": "child vem de self.children: Vec<Object> (groups.rs:12); Object não sobrescreve intersect.",
-   "verdade_validada_por": "proposta pelo agente (passo 2.1, 19/11); aguarda validação do usuário"
+   "verdade_validada_por": "usuário (revisada, conferida no editor, 19/11)"
   },
   {
    "id": "RT-51",
@@ -1101,7 +1101,7 @@
    },
    "certeza": "alta",
    "justificativa": "Origem: item de coleção. object vem de for (i, object) in self.objects.iter().enumerate() (world.rs:31), com objects: Vec<Object> (world.rs:12). Object não tem transform inerente; o do impl Intersectable for Object é o único.",
-   "verdade_validada_por": "proposta pelo agente (passo 2.1, Parada 3, 19/11); aguarda validação do usuário"
+   "verdade_validada_por": "usuário (revisada, 19/11)"
   },
   {
    "id": "RT-52",
@@ -1121,7 +1121,7 @@
    },
    "certeza": "alta",
    "justificativa": "Origem: parâmetro anotado. intersect_world(&self, ray: Ray) (world.rs:28); set_transform inerente de Ray.",
-   "verdade_validada_por": "proposta pelo agente (passo 2.1, Parada 3, 19/11); aguarda validação do usuário"
+   "verdade_validada_por": "usuário (revisada, 19/11)"
   },
   {
    "id": "RT-53",
@@ -1141,7 +1141,7 @@
    },
    "certeza": "alta",
    "justificativa": "Origem: parâmetro anotado, dentro do corpo padrão de um trait. color_at_object(&self, object: Object, ..) (patterns.rs:13).",
-   "verdade_validada_por": "proposta pelo agente (passo 2.1, Parada 3, 19/11); aguarda validação do usuário"
+   "verdade_validada_por": "usuário (revisada, 19/11)"
   },
   {
    "id": "RT-54",
@@ -1161,7 +1161,7 @@
    },
    "certeza": "alta",
    "justificativa": "Origem: construtor por caminho completo. let mut floor = crate::plane::Plane::default() (camera.rs:168); Default for Plane retorna Plane (plane.rs:20).",
-   "verdade_validada_por": "proposta pelo agente (passo 2.1, Parada 3, 19/11); aguarda validação do usuário"
+   "verdade_validada_por": "usuário (revisada, 19/11)"
   },
   {
    "id": "RT-55",
@@ -1181,7 +1181,7 @@
    },
    "certeza": "alta",
    "justificativa": "Origem: self no impl. self.m() acima do teto não tem aresta candidata, então o receiver não se aplica e o tipo do impl (Object) resolve. bounds e transform estão no mesmo impl Intersectable for Object.",
-   "verdade_validada_por": "proposta pelo agente (passo 2.1, Parada 3, 19/11); aguarda validação do usuário"
+   "verdade_validada_por": "usuário (revisada, 19/11)"
   }
  ]
 }
