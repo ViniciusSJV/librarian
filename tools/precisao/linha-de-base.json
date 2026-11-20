@@ -1,7 +1,7 @@
 {
  "projetos": {
   "hc": {
-   "run_novo": "20261120-073441",
+   "run_novo": "20261120-083437",
    "grafo_novo_igual_ao_de_referencia": false,
    "populacao": {
     "total": 1956,
@@ -9,16 +9,16 @@
      "no_candidate_in_project": 1313,
      "unique": 325,
      "above_candidate_limit": 27,
-     "homonym": 214,
-     "type": 61,
+     "homonym": 206,
+     "type": 69,
      "import": 16
     },
     "por_estrato": {
      "no_candidate_in_project": 1313,
      "unique->outro": 309,
      "above_candidate_limit": 27,
-     "homonym": 214,
-     "type": 61,
+     "homonym": 206,
+     "type": 69,
      "import": 16,
      "unique->function": 16
     },
@@ -26,19 +26,19 @@
    },
    "amostra_contagem": {
     "sem_candidato": 39,
-    "correta": 42,
+    "correta": 53,
     "link_falso": 1,
-    "candidatos_falsos": 12,
-    "ambigua": 3
+    "candidatos_falsos": 14,
+    "ambigua": 5
    },
    "parte_c_contagem": {
     "sem_candidato": 16,
     "correta": 4
    },
    "estimativa_populacao": {
-    "correta": 366,
+    "correta": 364,
     "link_falso": 31,
-    "candidatos_falsos": 138,
+    "candidatos_falsos": 132,
     "ambigua": 0,
     "sem_candidato": 1344
    },
@@ -915,6 +915,141 @@
      "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (20/11/2026; conferido no editor)"
+    },
+    {
+     "id": "HC-98",
+     "estrato": "retorno_py",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (2) → Response.json (hc/lib/curl.py:37)",
+     "validada": "usuário (20/11/2026, na Parada 2)"
+    },
+    {
+     "id": "HC-99",
+     "estrato": "retorno_py",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (2) → Response.json (hc/lib/curl.py:37)",
+     "validada": "usuário (20/11/2026, na Parada 2)"
+    },
+    {
+     "id": "HC-100",
+     "estrato": "retorno_py",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (2) → Project.num_checks_available (hc/accounts/models.py:471)",
+     "validada": "usuário (20/11/2026, na Parada 2; conferido no editor)"
+    },
+    {
+     "id": "HC-101",
+     "estrato": "retorno_py",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (2) → Project.num_checks_available (hc/accounts/models.py:471)",
+     "validada": "usuário (20/11/2026, na Parada 2)"
+    },
+    {
+     "id": "HC-102",
+     "estrato": "campo_outro_arquivo",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (2) → Profile.projects (hc/accounts/models.py:203)",
+     "validada": "usuário (20/11/2026, na Parada 2)"
+    },
+    {
+     "id": "HC-103",
+     "estrato": "campo_outro_arquivo",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (2) → Profile.projects (hc/accounts/models.py:203)",
+     "validada": "usuário (20/11/2026, na Parada 2)"
+    },
+    {
+     "id": "HC-104",
+     "estrato": "campo_outro_arquivo",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (2) → Project.num_checks_available (hc/accounts/models.py:471)",
+     "validada": "usuário (20/11/2026, na Parada 2)"
+    },
+    {
+     "id": "HC-105",
+     "estrato": "retorno_confirma",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → Check.going_down_after (hc/api/models.py:339)",
+     "validada": "usuário (20/11/2026, na Parada 2)"
+    },
+    {
+     "id": "HC-106",
+     "estrato": "retorno_confirma",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → Ping.formatted_kind_created (hc/api/models.py:828)",
+     "validada": "usuário (20/11/2026, na Parada 2)"
+    },
+    {
+     "id": "HC-107",
+     "estrato": "retorno_confirma",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → Profile.send_instant_login_link (hc/accounts/models.py:144)",
+     "validada": "usuário (20/11/2026, na Parada 2)"
+    },
+    {
+     "id": "HC-108",
+     "estrato": "liga_nao_fecha",
+     "parte_c": false,
+     "categoria": "ambigua",
+     "categoria_regra_anterior": "ambigua",
+     "resposta": "homonym (1)",
+     "validada": "usuário (20/11/2026, na Parada 2)"
+    },
+    {
+     "id": "HC-109",
+     "estrato": "liga_nao_fecha",
+     "parte_c": false,
+     "categoria": "ambigua",
+     "categoria_regra_anterior": "ambigua",
+     "resposta": "homonym (1)",
+     "validada": "usuário (20/11/2026, na Parada 2)"
+    },
+    {
+     "id": "HC-110",
+     "estrato": "liga_nao_fecha",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (2) → Member.can_accept (hc/accounts/models.py:625)",
+     "validada": "usuário (20/11/2026, na Parada 2; conferido no editor)"
+    },
+    {
+     "id": "HC-111",
+     "estrato": "cadeia",
+     "parte_c": false,
+     "categoria": "candidatos_falsos",
+     "categoria_regra_anterior": "candidatos_falsos",
+     "resposta": "homonym (7)",
+     "validada": "usuário (20/11/2026, na Parada 2)"
+    },
+    {
+     "id": "HC-112",
+     "estrato": "cadeia",
+     "parte_c": false,
+     "categoria": "candidatos_falsos",
+     "categoria_regra_anterior": "candidatos_falsos",
+     "resposta": "homonym (7)",
+     "validada": "usuário (20/11/2026, na Parada 2)"
     }
    ],
    "executores": [
@@ -945,7 +1080,7 @@
    ]
   },
   "rt": {
-   "run_novo": "20261120-073723",
+   "run_novo": "20261120-083729",
    "grafo_novo_igual_ao_de_referencia": false,
    "populacao": {
     "total": 515,
@@ -968,7 +1103,7 @@
     "metodo_para_funcao": 0
    },
    "amostra_contagem": {
-    "correta": 39,
+    "correta": 41,
     "sem_candidato": 15,
     "ambigua": 10,
     "candidatos_falsos": 1
@@ -1570,6 +1705,24 @@
      "categoria_regra_anterior": "correta",
      "resposta": "type (2) → Patterns::Stripe (src/patterns.rs:26) [instancia]",
      "validada": "usuário (20/11/2026)"
+    },
+    {
+     "id": "RT-66",
+     "estrato": "retorno_rs",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → impl Bounds::add_point (src/bounds.rs:23)",
+     "validada": "usuário (20/11/2026, na Parada 2)"
+    },
+    {
+     "id": "RT-67",
+     "estrato": "retorno_rs",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (7) → impl World::color_at (src/world.rs:109)",
+     "validada": "usuário (20/11/2026, na Parada 2; conferido no editor)"
     }
    ],
    "executores": []
@@ -1935,7 +2088,7 @@
    "alvo": {
     "alvo": "livre (pkg/models.py:63)",
     "resolution": "import",
-    "passo": "a definir",
+    "passo": "2.4",
     "por_que": "from pkg.models import livre; chamada simples, fora do escopo do 2.2 (receptor)"
    },
    "estado": "igual ao atual"
@@ -2058,13 +2211,10 @@
     ]
    },
    "agora": {
-    "resolution": "homonym",
+    "resolution": "type",
     "candidates": 4,
     "alvos": [
-     "Arquivo.salvar (pkg/models.py:20)",
-     "Cliente.salvar (pkg/models.py:5)",
-     "Fornecedor.salvar (pkg/models.py:10)",
-     "Repo.salvar (pkg/models.py:15)"
+     "Cliente.salvar (pkg/models.py:5)"
     ],
     "relacao": "calls"
    },
@@ -2074,7 +2224,7 @@
     "passo": "2.3",
     "por_que": "fabrica() -> Cliente, em outro arquivo"
    },
-   "estado": "igual ao atual"
+   "estado": "no alvo"
   },
   {
    "id": "N4-py",
@@ -2308,7 +2458,7 @@
    "alvo": {
     "alvo": "livre (src/models.rs:78)",
     "resolution": "import",
-    "passo": "a definir",
+    "passo": "2.4",
     "por_que": "use crate::models::{livre, ...}; chamada simples, fora do escopo do 2.2 (receptor)"
    },
    "estado": "igual ao atual"
@@ -2430,12 +2580,10 @@
     ]
    },
    "agora": {
-    "resolution": "homonym",
+    "resolution": "type",
     "candidates": 3,
     "alvos": [
-     "impl Cliente::salvar (src/models.rs:10)",
-     "impl Fornecedor::salvar (src/models.rs:22)",
-     "impl Repo::salvar (src/models.rs:34)"
+     "impl Cliente::salvar (src/models.rs:10)"
     ],
     "relacao": "calls"
    },
@@ -2445,7 +2593,7 @@
     "passo": "2.3",
     "por_que": "fabrica() -> Cliente em outro arquivo (N3 entre arquivos)"
    },
-   "estado": "igual ao atual"
+   "estado": "no alvo"
   },
   {
    "id": "N3b-rs",
@@ -2693,6 +2841,476 @@
     "resolution": "type",
     "passo": "2.4",
     "por_que": "c = C::new(\"x\"), C é alias de Cliente"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "N3c-py-mesmo",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Nota.fechar (pkg/retorno.py:18)",
+     "Pedido.fechar (pkg/retorno.py:7)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 2,
+    "alvos": [
+     "Pedido.fechar (pkg/retorno.py:7)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Pedido.fechar (pkg/retorno.py:7)",
+    "resolution": "type",
+    "passo": "2.3c",
+    "por_que": "novo_pedido() -> Pedido, no mesmo arquivo; acrescentado no 2.3c, com o binário do 2.3b como atual"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N3c-py-metodo",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Nota.fechar (pkg/retorno.py:18)",
+     "Pedido.fechar (pkg/retorno.py:7)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 2,
+    "alvos": [
+     "Pedido.fechar (pkg/retorno.py:7)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Pedido.fechar (pkg/retorno.py:7)",
+    "resolution": "type",
+    "passo": "2.3c",
+    "por_que": "p = fab.pedido(), Fabrica.pedido -> Pedido; acrescentado no 2.3c, com o binário do 2.3b como atual"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N3c-py-opcional",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Nota.fechar (pkg/retorno.py:18)",
+     "Pedido.fechar (pkg/retorno.py:7)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 2,
+    "alvos": [
+     "Pedido.fechar (pkg/retorno.py:7)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Pedido.fechar (pkg/retorno.py:7)",
+    "resolution": "type",
+    "passo": "2.3c",
+    "por_que": "opcional() -> Pedido | None; acrescentado no 2.3c, com o binário do 2.3b como atual"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N3c-py-campo",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Nota.fechar (pkg/retorno.py:18)",
+     "Pedido.fechar (pkg/retorno.py:7)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 2,
+    "alvos": [
+     "Pedido.fechar (pkg/retorno.py:7)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Pedido.fechar (pkg/retorno.py:7)",
+    "resolution": "type",
+    "passo": "2.3c",
+    "por_que": "r: Requisicao, campo pedido: Pedido em pkg/requisicao.py; acrescentado no 2.3c, com o binário do 2.3b como atual"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N3c-py-fora",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Nota.fechar (pkg/retorno.py:18)",
+     "Pedido.fechar (pkg/retorno.py:7)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Nota.fechar (pkg/retorno.py:18)",
+     "Pedido.fechar (pkg/retorno.py:7)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.3c",
+    "por_que": "agora() -> datetime, de fora do projeto: não decide; acrescentado no 2.3c, com o binário do 2.3b como atual"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "N3c-py-generico",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Nota.fechar (pkg/retorno.py:18)",
+     "Pedido.fechar (pkg/retorno.py:7)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Nota.fechar (pkg/retorno.py:18)",
+     "Pedido.fechar (pkg/retorno.py:7)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.3c",
+    "por_que": "pedidos() -> list[Pedido]: genérico, 2.6; acrescentado no 2.3c, com o binário do 2.3b como atual"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "N3c-py-sem-anotacao",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Nota.fechar (pkg/retorno.py:18)",
+     "Pedido.fechar (pkg/retorno.py:7)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Nota.fechar (pkg/retorno.py:18)",
+     "Pedido.fechar (pkg/retorno.py:7)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.3c",
+    "por_que": "sem_anotacao() sem retorno anotado: o corpo não é lido; acrescentado no 2.3c, com o binário do 2.3b como atual"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "N3c-py-dois-alvos",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Nota.fechar (pkg/retorno.py:18)",
+     "Pedido.fechar (pkg/retorno.py:7)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Nota.fechar (pkg/retorno.py:18)",
+     "Pedido.fechar (pkg/retorno.py:7)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.3c",
+    "por_que": "duplo() em dois arquivos, -> Pedido e -> Nota: os candidatos discordam (caso d); acrescentado no 2.3c, com o binário do 2.3b como atual"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "N3c-py-cadeia",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Nota.fechar (pkg/retorno.py:18)",
+     "Pedido.fechar (pkg/retorno.py:7)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Nota.fechar (pkg/retorno.py:18)",
+     "Pedido.fechar (pkg/retorno.py:7)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.3c",
+    "por_que": "n = p.nota(), e p só tem tipo pelo retorno: um segundo nível não é seguido; acrescentado no 2.3c, com o binário do 2.3b como atual"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "N3c-py-laco",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Nota.fechar (pkg/retorno.py:18)",
+     "Pedido.fechar (pkg/retorno.py:7)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Nota.fechar (pkg/retorno.py:18)",
+     "Pedido.fechar (pkg/retorno.py:7)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.3c",
+    "por_que": "x = x.proximo(): a chamada que liga é resolvida sem o retorno, e a consulta termina; acrescentado no 2.3c, com o binário do 2.3b como atual"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "N3c-rs-outro",
+   "atual_registrado": {
+    "resolution": "type",
+    "candidates": 2,
+    "alvos": [
+     "impl Pedido::fechar (src/retorno.rs:25)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 2,
+    "alvos": [
+     "impl Nota::fechar (src/retorno.rs:37)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "impl Nota::fechar (src/retorno.rs:37)",
+    "resolution": "type",
+    "passo": "2.3c",
+    "por_que": "Pedido::nota_nova() -> Nota: o retorno, e não o T do caminho; acrescentado no 2.3c, com o binário do 2.3b como atual"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N3c-rs-option",
+   "atual_registrado": {
+    "resolution": "type",
+    "candidates": 2,
+    "alvos": [
+     "impl Pedido::take (src/retorno.rs:28)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "impl Nota::take (src/retorno.rs:40)",
+     "impl Pedido::take (src/retorno.rs:28)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.3c",
+    "por_que": "Pedido::talvez() -> Option<Self>: invólucro, não decide (roda Option::take); acrescentado no 2.3c, com o binário do 2.3b como atual"
+   },
+   "estado": "mudou"
+  },
+  {
+   "id": "N3c-rs-box",
+   "atual_registrado": {
+    "resolution": "type",
+    "candidates": 2,
+    "alvos": [
+     "impl Pedido::fechar (src/retorno.rs:25)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "impl Nota::fechar (src/retorno.rs:37)",
+     "impl Pedido::fechar (src/retorno.rs:25)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.3c",
+    "por_que": "Pedido::caixa() -> Box<Self>: invólucro, não decide (Q2; perda declarada); acrescentado no 2.3c, com o binário do 2.3b como atual"
+   },
+   "estado": "mudou"
+  },
+  {
+   "id": "N3c-rs-ref",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "impl Nota::fechar (src/retorno.rs:37)",
+     "impl Pedido::fechar (src/retorno.rs:25)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 2,
+    "alvos": [
+     "impl Pedido::fechar (src/retorno.rs:25)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "impl Pedido::fechar (src/retorno.rs:25)",
+    "resolution": "type",
+    "passo": "2.3c",
+    "por_que": "referencia(&p) -> &Pedido, em outro arquivo; acrescentado no 2.3c, com o binário do 2.3b como atual"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N3c-rs-fora",
+   "atual_registrado": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "impl Pedido::tamanho (src/retorno.rs:31)"
+    ]
+   },
+   "agora": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": [],
+    "relacao": null
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "no_candidate_in_project",
+    "passo": "2.3c",
+    "por_que": "Pedido::texto() -> String: tipo de fora, derruba o método inerente de Pedido; acrescentado no 2.3c, com o binário do 2.3b como atual"
+   },
+   "estado": "mudou"
+  },
+  {
+   "id": "N3c-rs-concordam",
+   "atual_registrado": {
+    "resolution": "type",
+    "candidates": 2,
+    "alvos": [
+     "impl Pedido::fechar (src/retorno.rs:25)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 2,
+    "alvos": [
+     "impl Pedido::fechar (src/retorno.rs:25)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "impl Pedido::fechar (src/retorno.rs:25)",
+    "resolution": "type",
+    "passo": "2.3c",
+    "por_que": "feito() em dois arquivos, ambos -> Pedido (caso b); acrescentado no 2.3c, com o binário do 2.3b como atual"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N3c-rs-discordam",
+   "atual_registrado": {
+    "resolution": "type",
+    "candidates": 2,
+    "alvos": [
+     "impl Pedido::fechar (src/retorno.rs:25)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "impl Nota::fechar (src/retorno.rs:37)",
+     "impl Pedido::fechar (src/retorno.rs:25)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "impl Pedido::fechar (src/retorno.rs:25)",
+    "resolution": "type",
+    "passo": "2.4",
+    "por_que": "misto() em dois arquivos, -> Pedido e -> Nota (caso d da DEC-41: sem tipo no 2.3c); o Rust chama o misto do próprio módulo, a chamada simples resolvida pelo escopo, como o N0-livre; acrescentado no 2.3c, com o binário do 2.3b como atual"
+   },
+   "estado": "mudou"
+  },
+  {
+   "id": "N3c-rs-q",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "impl Nota::fechar (src/retorno.rs:37)",
+     "impl Pedido::fechar (src/retorno.rs:25)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "impl Nota::fechar (src/retorno.rs:37)",
+     "impl Pedido::fechar (src/retorno.rs:25)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.3c",
+    "por_que": "let p = Pedido::tentar()?: nenhuma ligação é lida (limite declarado, Q2); acrescentado no 2.3c, com o binário do 2.3b como atual"
    },
    "estado": "igual ao atual"
   }

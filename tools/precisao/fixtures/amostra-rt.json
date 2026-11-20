@@ -1,7 +1,7 @@
 {
  "projeto": "renderer-9b78f3a9",
  "fonte": "Projetos/renderer @ e38254b",
- "selecao": "tools/precisao/amostra.js sobre a linha de base de 18/11/2026 (binário de aae51d7); RT-31 a RT-50: estratos do passo 2.1 (type, type_caminho, type_fora, trait_default), sorteados pela ordem do sha256 do id da ocorrência, arquivos distintos primeiro; RT-51 a RT-55: chamadas por variável acima do teto, escolhidas à mão na Parada 3 do passo 2.1, uma por origem do tipo (item de coleção, parâmetro anotado, parâmetro no corpo de trait, construtor por caminho completo, self acima do teto); RT-56 a RT-62: estratos do passo 2.2 (tipo_derruba, com um caso de controle, e espelho), escolhidos à mão na Parada 1 do 2.2; RT-63 a RT-65: estrato instancia do passo 2.3a",
+ "selecao": "tools/precisao/amostra.js sobre a linha de base de 18/11/2026 (binário de aae51d7); RT-31 a RT-50: estratos do passo 2.1 (type, type_caminho, type_fora, trait_default), sorteados pela ordem do sha256 do id da ocorrência, arquivos distintos primeiro; RT-51 a RT-55: chamadas por variável acima do teto, escolhidas à mão na Parada 3 do passo 2.1, uma por origem do tipo (item de coleção, parâmetro anotado, parâmetro no corpo de trait, construtor por caminho completo, self acima do teto); RT-56 a RT-62: estratos do passo 2.2 (tipo_derruba, com um caso de controle, e espelho), escolhidos à mão na Parada 1 do 2.2; RT-63 a RT-65: estrato instancia do passo 2.3a; RT-66 e RT-67: estrato retorno_rs do passo 2.3c, de conferência (nenhuma chamada do ray tracer muda pelo retorno)",
  "chamadas": [
   {
    "id": "RT-01",
@@ -1411,6 +1411,50 @@
    "certeza": "alta",
    "justificativa": "`Patterns::Stripe(..)`: variante do enum Patterns; a struct Stripe tem o mesmo nome.",
    "verdade_validada_por": "usuário (20/11/2026)"
+  },
+  {
+   "id": "RT-66",
+   "parte_c": false,
+   "estrato": "retorno_rs",
+   "ocorrencia": "src/bounds.rs@1648-1699",
+   "local": "src/bounds.rs:52",
+   "texto": "result.add_point(transform * Tuple::point(x, y, z))",
+   "dono": "impl Bounds::transformed",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "impl Bounds::add_point (src/bounds.rs:23)"
+    ]
+   },
+   "verdade": {
+    "alvo": "impl Bounds::add_point (src/bounds.rs:23)"
+   },
+   "certeza": "alta",
+   "justificativa": "`let mut result = Self::empty()`, e `Bounds::empty` retorna `Self`.",
+   "verdade_validada_por": "usuário (20/11/2026, na Parada 2)"
+  },
+  {
+   "id": "RT-67",
+   "parte_c": false,
+   "estrato": "retorno_rs",
+   "ocorrencia": "src/world.rs@9513-9531",
+   "local": "src/world.rs:282",
+   "texto": "w.color_at(ray, 4)",
+   "dono": "tests_world::the_color_with_an_intersection_behind_the_ray",
+   "linha_de_base": {
+    "resolution": "type",
+    "candidates": 7,
+    "alvos": [
+     "impl World::color_at (src/world.rs:109)"
+    ]
+   },
+   "verdade": {
+    "alvo": "impl World::color_at (src/world.rs:109)"
+   },
+   "certeza": "alta",
+   "justificativa": "`let w = create_default_world()`: dois candidatos (src/world.rs e o módulo de testes de src/camera.rs), ambos retornam `World` (caso (b) da Q1).",
+   "verdade_validada_por": "usuário (20/11/2026, na Parada 2; conferido no editor)"
   }
  ]
 }

@@ -13,11 +13,14 @@
   - **Decorador:** uma chamada num decorador sai com `relation: decorates` e não é seguida.
   - **Campo:** o método responde também pelas chamadas dos campos que declara, com `via`.
   - **Resultado:** portão APROVADO, igual à linha de base; 69 links passam a `decorates` e 7 chamadas de campo aparecem no `__init__`, nenhuma mudança fora da previsão; `used_by` igual em todos os símbolos. CTX seção 27.
-- **Próximo passo: 2.3c** (N3 entre arquivos, retorno de `T::f`). Cada passo depende de autorização.
+- **Passo 2.3c** (tipo pelo retorno anotado, no mesmo arquivo e entre arquivos; campo de classe de outro arquivo; retorno de `T::f` no Rust; sem perfil novo; DEC-41, vigente desde 20/11/2026, com o risco do caso b): Parada 1 aprovada em 20/11/2026 ([2.3c-parada-1.md](docs/reports/fase-2/2.3c-parada-1.md)), com a regra da Q1 em quatro casos: (a) a chamada que liga fecha com um alvo; (b) não fecha, mas todos os candidatos declaram o mesmo retorno; (c) não tem candidato no projeto: vale o que valia; (d) os candidatos discordam: sem tipo. Parada 2 validada em 20/11/2026 ([2.3c-parada-2.md](docs/reports/fase-2/2.3c-parada-2.md)). Commitado em 20/11/2026: `efb346a` (código, testes e interface), `4924ae9` (documentação) e, depois, linha de base, fixtures e folha. A verdade de HC-98 a HC-112, RT-66 e RT-67 foi validada pelo usuário na Parada 2 (HC-100, HC-110 e RT-67 conferidos no editor), e a linha de base foi trocada.
+  - **Resultado:** portão APROVADO; 8 chamadas do Python passam de `homonym` a `type` (HC-110 pelo caso b), nenhuma no Rust; o grafo não muda. Linha de base: Python (112) 53/1/14/5/39, Rust (67) 41/0/1/10/15, fatos 16/9/0/1. CTX seção 28.
+  - **O 2.3 está fechado** (fechamento no PLANO).
+- **Próximo passo: 2.4** (herança, N5; alias local, N8; a chamada simples resolvida pelo escopo, N0-livre, com a perda do caso d da DEC-41). Cada passo depende de autorização.
 - **Portão de cada passo da Fase 2:** `node tools/precisao/portao.js --studio .studio --base tools/precisao/linha-de-base.json` (cerca de 4 minutos). Reprova se `link_falso` subir ou as corretas caírem, em Python ou em Rust, se uma edition antiga mudar ou se o `.studio` original mudar. Exceção só com justificativa caso a caso e aprovação do usuário (DEC-34).
 - **Feito no 1b:** P1 (`987d7a8`), G3 (`aae51d7`), Partes A–E do diagnóstico, a Q6 (run `20261118-205150`, avaliada em 18/11), a consolidação documental (`a8e4074`) e o relatório final. Relatórios em [docs/reports/piloto-1b/](docs/reports/piloto-1b/) (`0c4bcab`).
-- **Git:** `main`; a referência é `origin/main` (ver `git log`). Último marco: passo 2.3b (`6b424a0` portão, `5a26630` código, `944fd0a` documentação e o commit da linha de base, em 20/11/2026); antes, o passo 2.3a (`5589912`, `04943c5`, `a11a582`), o passo 2.3a-0 (`8c689d4`, `1152875`), o passo 2.2 (`a34059c`, `950c4f4`), o passo 2.1 (`c316bf7` a `078fd0e`) e o passo 2.0 (`2b05b8c`, `aee6915`).
-- **Suíte:** `cargo test --workspace --locked`: 497 aprovados, 0 falhas, 2 ignorados (20/11, passo 2.3b; conferido também numa worktree do commit `5a26630`).
+- **Git:** `main`; a referência é `origin/main` (ver `git log`). Último marco: passo 2.3c (`efb346a` código, `4924ae9` documentação e o commit da linha de base, em 20/11/2026); antes, o passo 2.3b (`6b424a0`, `5a26630`, `944fd0a`, `f50b8f8`), o passo 2.3a (`5589912`, `04943c5`, `a11a582`), o passo 2.3a-0 (`8c689d4`, `1152875`), o passo 2.2 (`a34059c`, `950c4f4`), o passo 2.1 (`c316bf7` a `078fd0e`) e o passo 2.0 (`2b05b8c`, `aee6915`).
+- **Suíte:** `cargo test --workspace --locked`: 509 aprovados, 0 falhas, 2 ignorados (20/11, passo 2.3c; 12 testes novos em `tests/retorno_2_3c.rs`; conferido também numa worktree do commit `efb346a`).
 - **Roadmap:** [PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#roadmap). Nenhum agente nem orquestrador existe.
 
 ## Para onde vamos
@@ -75,10 +78,10 @@ Cite sempre com o prefixo. As tabelas de abreviações e de prefixos estão em [
   - O portão compila o binário antes de rodar e registra o hash dele.
   - As 48 chamadas soltas no topo dos arquivos Python estão registradas na Fase 2B do PLANO (Q2).
   - Limite: o módulo, que é quem roda um decorador de topo, não é símbolo e não aparece em lugar nenhum (lacuna declarada; Fase 2B).
-- **Para o 2.3c:** o extrator do Rust toma `T` como o tipo de `let x = T::f(..)` sem ler o retorno de `f` (no ray tracer, as 204 funções `f` do projeto retornam `Self`, e nada muda); desde o 2.3a, a regra fica gravada como `caminho`. Também do 2.3c: o campo de uma classe de outro arquivo e o tipo pelo retorno anotado, no Python.
+- **Do 2.3c:** o grafo continua gravando `caminho` em `let x = T::f(..)`; a regra efetiva sai no `type_rule` do `/api/calls` (`retorno`, `campo`). Limites: `let x = T::f(..)?` perde o tipo (Q2); `Box<Self>` não decide; campo de struct de outro arquivo no Rust não é lido; no caso (d), o retorno gravado do mesmo arquivo deixa de valer (nenhum caso nos dados; vai para o 2.4 com o N0-livre). Risco do caso (b), escrito na DEC-41: um `homonym` de um só candidato dá tipo; único efeito, a HC-110.
 - **Limites do 2.2:** um receptor ligado a import de fora do projeto, acima do teto de homônimos, continua `above_candidate_limit` (não há aresta para tirar); `Box`, `Rc`, `Arc`, referência e `Deref` não deixam o tipo de fora do projeto derrubar nada, mesmo quando derrubaria certo.
 - Achados sem correção: a ordem de `unresolved` não segue arquivo/linha/coluna; o corte do `node_limit` segue a ordem dos ids das arestas; o tipo é comparado sem os genéricos (`Matrix<3>` = `Matrix<4>`), o que deixa como `homonym` em "o que chama?" o resultado com vários impls.
-- `R30-7` (tipo do receptor): feito no Rust desde o 2.1 e no Python com o 2.3a (dentro do arquivo; entre arquivos é o 2.3c).
+- `R30-7` (tipo do receptor): feito no Rust desde o 2.1 e no Python com o 2.3a (dentro do arquivo) e o 2.3c (entre arquivos, pelo retorno e pelo campo).
 - Links errados ou ambíguos nos fatos, depois do 2.3a: `HC-F1` (errado: o manager do Django é externo, Fase 2B). `HC-F6` passou a correto no 2.3a; `HC-F7` e `HC-F17`, no 2.2; `HC-F14` não depende de link. Pela leitura do agente, sem revisão humana, os fatos estão corretos sobre o código; o risco é seguir o grafo a partir deles.
 
 **Fase 3**
@@ -96,7 +99,7 @@ Cite sempre com o prefixo. As tabelas de abreviações e de prefixos estão em [
 
 ## Links
 
-- [PLANO](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md): roadmap · [DECISOES](DECISOES.md) · [CTX](CONTEXTO-CONTINUIDADE.md): diário, última seção 27 · [Histórico](docs/historico/README.md)
+- [PLANO](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md): roadmap · [DECISOES](DECISOES.md) · [CTX](CONTEXTO-CONTINUIDADE.md): diário, última seção 28 · [Histórico](docs/historico/README.md)
 - Piloto 1: [PIL](docs/reports/PILOTO-1-HEALTHCHECKS.md) · Piloto 1b: [00 resumo](docs/reports/piloto-1b/00-resumo.md), [01 G3](docs/reports/piloto-1b/01-g3.md), [02 Partes A–C](docs/reports/piloto-1b/02-fechamento-g3-e-diagnostico.md), [03 inventário e Parte E](docs/reports/piloto-1b/03-inventario-e-auditoria.md), [04 Q6](docs/reports/piloto-1b/04-q6.md)
 - Direção: [ARQ](docs/ARQUITETURA-EVIDENCIAS-MULTIAGENTE.md) · Frontend: [ESP](docs/ESPECIFICACAO-FUNCIONAL-STUDIO.md), [EST](docs/ESTADO-IMPLEMENTACAO-STUDIO.md) · Manual: [STUDIO.md](STUDIO.md)
 - Componentes: [Ingest](crates/librarian-ingest/README.md) · [Evidence Builder](crates/librarian-evidence/README.md) · [LLM Engine](crates/librarian-llm-engine/CLAIMS.md) · [Graph Engine](crates/librarian-graph-engine/WORKFLOW-V0.1.md)

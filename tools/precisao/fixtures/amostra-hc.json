@@ -1,7 +1,7 @@
 {
  "projeto": "healthchecks-25597e41",
  "fonte": "Projetos/pilotos/healthchecks @ 6c05a7a",
- "selecao": "tools/precisao/amostra.js sobre a linha de base de 18/11/2026 (binário de aae51d7); HC-61 a HC-75: estratos do passo 2.2 (metodo_funcao, modulo_f, espelho), escolhidos à mão na Parada 1 do 2.2, equilibrando código de teste e de produção; HC-76 a HC-87: estratos do passo 2.3a (tipo_py, instancia, receiver_py_teto), escolhidos à mão na Parada 1 do 2.3",
+ "selecao": "tools/precisao/amostra.js sobre a linha de base de 18/11/2026 (binário de aae51d7); HC-61 a HC-75: estratos do passo 2.2 (metodo_funcao, modulo_f, espelho), escolhidos à mão na Parada 1 do 2.2, equilibrando código de teste e de produção; HC-76 a HC-87: estratos do passo 2.3a (tipo_py, instancia, receiver_py_teto), escolhidos à mão na Parada 1 do 2.3; HC-88 a HC-97: estratos do passo 2.3b (decorador, campo_init), escolhidos à mão na Parada 1 do 2.3b; HC-98 a HC-112: estratos do passo 2.3c (retorno_py, campo_outro_arquivo, retorno_confirma, liga_nao_fecha, cadeia), escolhidos à mão na Parada 1 do 2.3c",
  "chamadas": [
   {
    "id": "HC-01",
@@ -2186,6 +2186,356 @@
    "certeza": "alta",
    "justificativa": "Classe do pacote fido2, dentro de uma comprehension no valor de `self.credentials` do `__init__`.",
    "verdade_validada_por": "usuário (20/11/2026; conferido no editor)"
+  },
+  {
+   "id": "HC-98",
+   "parte_c": false,
+   "estrato": "retorno_py",
+   "ocorrencia": "hc/integrations/slack/views.py@3241-3254",
+   "local": "hc/integrations/slack/views.py:105",
+   "texto": "result.json()",
+   "dono": "add_complete",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Channel.json (hc/api/models.py:1192)",
+     "Response.json (hc/lib/curl.py:37)"
+    ]
+   },
+   "verdade": {
+    "alvo": "Response.json (hc/lib/curl.py:37)"
+   },
+   "certeza": "alta",
+   "justificativa": "`result = curl.post(..)`, e `curl.post` (hc/lib/curl.py:224) retorna `Response`, declarada no outro arquivo.",
+   "verdade_validada_por": "usuário (20/11/2026, na Parada 2)"
+  },
+  {
+   "id": "HC-99",
+   "parte_c": false,
+   "estrato": "retorno_py",
+   "ocorrencia": "hc/integrations/discord/views.py@2415-2428",
+   "local": "hc/integrations/discord/views.py:71",
+   "texto": "result.json()",
+   "dono": "add_complete",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Channel.json (hc/api/models.py:1192)",
+     "Response.json (hc/lib/curl.py:37)"
+    ]
+   },
+   "verdade": {
+    "alvo": "Response.json (hc/lib/curl.py:37)"
+   },
+   "certeza": "alta",
+   "justificativa": "Igual a HC-98, na integração do Discord.",
+   "verdade_validada_por": "usuário (20/11/2026, na Parada 2)"
+  },
+  {
+   "id": "HC-100",
+   "parte_c": false,
+   "estrato": "retorno_py",
+   "ocorrencia": "hc/front/views.py@17740-17770",
+   "local": "hc/front/views.py:533",
+   "texto": "project.num_checks_available()",
+   "dono": "add_check",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Profile.num_checks_available (hc/accounts/models.py:350)",
+     "Project.num_checks_available (hc/accounts/models.py:471)"
+    ]
+   },
+   "verdade": {
+    "alvo": "Project.num_checks_available (hc/accounts/models.py:471)"
+   },
+   "certeza": "alta",
+   "justificativa": "`project = _get_rw_project_for_user(..)`, do mesmo arquivo (hc/front/views.py:187), retorna `Project`.",
+   "verdade_validada_por": "usuário (20/11/2026, na Parada 2; conferido no editor)"
+  },
+  {
+   "id": "HC-101",
+   "parte_c": false,
+   "estrato": "retorno_py",
+   "ocorrencia": "hc/front/views.py@36857-36894",
+   "local": "hc/front/views.py:1072",
+   "texto": "target_project.num_checks_available()",
+   "dono": "transfer",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Profile.num_checks_available (hc/accounts/models.py:350)",
+     "Project.num_checks_available (hc/accounts/models.py:471)"
+    ]
+   },
+   "verdade": {
+    "alvo": "Project.num_checks_available (hc/accounts/models.py:471)"
+   },
+   "certeza": "alta",
+   "justificativa": "`target_project = _get_rw_project_for_user(..)`, do mesmo arquivo, retorna `Project`.",
+   "verdade_validada_por": "usuário (20/11/2026, na Parada 2)"
+  },
+  {
+   "id": "HC-102",
+   "parte_c": false,
+   "estrato": "campo_outro_arquivo",
+   "ocorrencia": "hc/front/views.py@14049-14075",
+   "local": "hc/front/views.py:425",
+   "texto": "request.profile.projects()",
+   "dono": "projects_menu",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Profile.projects (hc/accounts/models.py:203)",
+     "ProfileAdmin.projects (hc/accounts/admin.py:198)"
+    ]
+   },
+   "verdade": {
+    "alvo": "Profile.projects (hc/accounts/models.py:203)"
+   },
+   "certeza": "alta",
+   "justificativa": "`request: AuthenticatedHttpRequest`, cujo campo `profile: Profile` está em hc/accounts/http.py.",
+   "verdade_validada_por": "usuário (20/11/2026, na Parada 2)"
+  },
+  {
+   "id": "HC-103",
+   "parte_c": false,
+   "estrato": "campo_outro_arquivo",
+   "ocorrencia": "hc/integrations/telegram/views.py@4229-4255",
+   "local": "hc/integrations/telegram/views.py:131",
+   "texto": "request.profile.projects()",
+   "dono": "add",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Profile.projects (hc/accounts/models.py:203)",
+     "ProfileAdmin.projects (hc/accounts/admin.py:198)"
+    ]
+   },
+   "verdade": {
+    "alvo": "Profile.projects (hc/accounts/models.py:203)"
+   },
+   "certeza": "alta",
+   "justificativa": "Igual a HC-102, na integração do Telegram.",
+   "verdade_validada_por": "usuário (20/11/2026, na Parada 2)"
+  },
+  {
+   "id": "HC-104",
+   "parte_c": false,
+   "estrato": "campo_outro_arquivo",
+   "ocorrencia": "hc/api/views.py@16323-16361",
+   "local": "hc/api/views.py:465",
+   "texto": "request.project.num_checks_available()",
+   "dono": "create_check",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Profile.num_checks_available (hc/accounts/models.py:350)",
+     "Project.num_checks_available (hc/accounts/models.py:471)"
+    ]
+   },
+   "verdade": {
+    "alvo": "Project.num_checks_available (hc/accounts/models.py:471)"
+   },
+   "certeza": "alta",
+   "justificativa": "`request: ApiRequest`, cujo campo `project: Project` está em hc/api/decorators.py.",
+   "verdade_validada_por": "usuário (20/11/2026, na Parada 2)"
+  },
+  {
+   "id": "HC-105",
+   "parte_c": false,
+   "estrato": "retorno_confirma",
+   "ocorrencia": "hc/front/views.py@21466-21490",
+   "local": "hc/front/views.py:640",
+   "texto": "check.going_down_after()",
+   "dono": "update_timeout",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Check.going_down_after (hc/api/models.py:339)"
+    ]
+   },
+   "verdade": {
+    "alvo": "Check.going_down_after (hc/api/models.py:339)"
+   },
+   "certeza": "alta",
+   "justificativa": "`check = _get_rw_check_for_user(..)` retorna `Check`; o `unique` de hoje é confirmado.",
+   "verdade_validada_por": "usuário (20/11/2026, na Parada 2)"
+  },
+  {
+   "id": "HC-106",
+   "parte_c": false,
+   "estrato": "retorno_confirma",
+   "ocorrencia": "hc/integrations/googlechat/transport.py@1481-1510",
+   "local": "hc/integrations/googlechat/transport.py:44",
+   "texto": "ping.formatted_kind_created()",
+   "dono": "GoogleChat.notify",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Ping.formatted_kind_created (hc/api/models.py:828)"
+    ]
+   },
+   "verdade": {
+    "alvo": "Ping.formatted_kind_created (hc/api/models.py:828)"
+   },
+   "certeza": "alta",
+   "justificativa": "`ping = self.last_ping(flip)` retorna `Ping | None`; o `unique` de hoje é confirmado.",
+   "verdade_validada_por": "usuário (20/11/2026, na Parada 2)"
+  },
+  {
+   "id": "HC-107",
+   "parte_c": false,
+   "estrato": "retorno_confirma",
+   "ocorrencia": "hc/accounts/views.py@5848-5906",
+   "local": "hc/accounts/views.py:181",
+   "texto": "profile.send_instant_login_link(redirect_url=redirect_url)",
+   "dono": "login",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Profile.send_instant_login_link (hc/accounts/models.py:144)"
+    ]
+   },
+   "verdade": {
+    "alvo": "Profile.send_instant_login_link (hc/accounts/models.py:144)"
+   },
+   "certeza": "alta",
+   "justificativa": "`profile = Profile.objects.for_user(..)`, e `ProfileManager.for_user` retorna `Profile`; o `unique` de hoje é confirmado.",
+   "verdade_validada_por": "usuário (20/11/2026, na Parada 2)"
+  },
+  {
+   "id": "HC-108",
+   "parte_c": false,
+   "estrato": "liga_nao_fecha",
+   "ocorrencia": "hc/api/management/commands/smtpd.py@3015-3213",
+   "local": "hc/api/management/commands/smtpd.py:91",
+   "texto": "check.ping(",
+   "dono": "_process_message",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 1,
+    "alvos": [
+     "Check.ping (hc/api/models.py:493)"
+    ]
+   },
+   "verdade": {
+    "alvo": "Check.ping (hc/api/models.py:493)"
+   },
+   "certeza": "alta",
+   "justificativa": "`check = Check.objects.get(..)`: o `get` é do gerenciador do Django, e os candidatos do projeto são métodos de teste; nenhum tipo é dado.",
+   "verdade_validada_por": "usuário (20/11/2026, na Parada 2)"
+  },
+  {
+   "id": "HC-109",
+   "parte_c": false,
+   "estrato": "liga_nao_fecha",
+   "ocorrencia": "hc/accounts/backends.py@1014-1040",
+   "local": "hc/accounts/backends.py:38",
+   "texto": "profile.check_token(token)",
+   "dono": "ProfileBackend.authenticate",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 1,
+    "alvos": [
+     "Profile.check_token (hc/accounts/models.py:136)"
+    ]
+   },
+   "verdade": {
+    "alvo": "Profile.check_token (hc/accounts/models.py:136)"
+   },
+   "certeza": "alta",
+   "justificativa": "`profile = profiles.get(..)`, um QuerySet do Django; nenhum tipo é dado.",
+   "verdade_validada_por": "usuário (20/11/2026, na Parada 2)"
+  },
+  {
+   "id": "HC-110",
+   "parte_c": false,
+   "estrato": "liga_nao_fecha",
+   "ocorrencia": "hc/accounts/views.py@18237-18252",
+   "local": "hc/accounts/views.py:512",
+   "texto": "tr.can_accept()",
+   "dono": "project",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Member.can_accept (hc/accounts/models.py:625)",
+     "Profile.can_accept (hc/accounts/models.py:353)"
+    ]
+   },
+   "verdade": {
+    "alvo": "Member.can_accept (hc/accounts/models.py:625)"
+   },
+   "certeza": "alta",
+   "justificativa": "`tr = project.transfer_request()`, `homonym` com um só candidato, `Project.transfer_request -> Member | None`: pelo caso (b) da Q1, o tipo é `Member`.",
+   "verdade_validada_por": "usuário (20/11/2026, na Parada 2; conferido no editor)"
+  },
+  {
+   "id": "HC-111",
+   "parte_c": false,
+   "estrato": "cadeia",
+   "ocorrencia": "hc/integrations/slack/views.py@3296-3309",
+   "local": "hc/integrations/slack/views.py:106",
+   "texto": "doc.get(\"ok\")",
+   "dono": "add_complete",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 7,
+    "alvos": [
+     "AuthTestCase.get (hc/api/tests/test_auth.py:9)",
+     "GetBadgesTestCase.get (hc/api/tests/test_get_badges.py:23)",
+     "GetCheckTestCase.get (hc/api/tests/test_get_check.py:37)",
+     "GetFlipsTestCase.get (hc/api/tests/test_get_flips.py:32)",
+     "GetPingsTestCase.get (hc/api/tests/test_get_pings.py:38)",
+     "ListChannelsTestCase.get (hc/api/tests/test_list_channels.py:18)",
+     "ListChecksTestCase.get (hc/api/tests/test_list_checks.py:39)"
+    ]
+   },
+   "verdade": {
+    "externo": "dict.get (doc é JSONValue)"
+   },
+   "certeza": "alta",
+   "justificativa": "`doc = result.json()`: `result` só tem tipo pelo retorno, e um segundo nível não é seguido; `Response.json` retorna `JSONValue`.",
+   "verdade_validada_por": "usuário (20/11/2026, na Parada 2)"
+  },
+  {
+   "id": "HC-112",
+   "parte_c": false,
+   "estrato": "cadeia",
+   "ocorrencia": "hc/integrations/discord/views.py@2463-2478",
+   "local": "hc/integrations/discord/views.py:72",
+   "texto": "doc.get(\"code\")",
+   "dono": "add_complete",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 7,
+    "alvos": [
+     "AuthTestCase.get (hc/api/tests/test_auth.py:9)",
+     "GetBadgesTestCase.get (hc/api/tests/test_get_badges.py:23)",
+     "GetCheckTestCase.get (hc/api/tests/test_get_check.py:37)",
+     "GetFlipsTestCase.get (hc/api/tests/test_get_flips.py:32)",
+     "GetPingsTestCase.get (hc/api/tests/test_get_pings.py:38)",
+     "ListChannelsTestCase.get (hc/api/tests/test_list_channels.py:18)",
+     "ListChecksTestCase.get (hc/api/tests/test_list_checks.py:39)"
+    ]
+   },
+   "verdade": {
+    "externo": "dict.get (doc é JSONValue)"
+   },
+   "certeza": "alta",
+   "justificativa": "Igual a HC-111, na integração do Discord.",
+   "verdade_validada_por": "usuário (20/11/2026, na Parada 2)"
   }
  ]
 }
