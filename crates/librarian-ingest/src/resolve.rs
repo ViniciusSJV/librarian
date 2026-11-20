@@ -27,7 +27,7 @@ use std::sync::Arc;
 
 /// Resolutions a consumer may take as the one declaration a call reaches. `calls_from` reports
 /// them only with a single target.
-pub const SETTLED: [&str; 5] = ["unique", "import", "receiver", "type", "trait_default"];
+pub const SETTLED: [&str; 6] = ["unique", "import", "scope", "receiver", "type", "trait_default"];
 
 /// Step 2.3a (DEC-39): kinds of declaration that a settled call builds instead of calling: a
 /// Python class, a Rust tuple struct or variant. Its link is `instantiates`.
@@ -62,6 +62,12 @@ pub struct CallFacts {
     /// Step 2.3c (Python): a receiver `a.x` whose base has a written type: the base's written type,
     /// where it is written, and the field's name. The field is read in the file of the base's class.
     pub field_receivers: BTreeMap<(usize, usize), (String, usize, String)>,
+    /// Step 2.4a (Rust): the file's modules; the first is the file itself.
+    pub modules: Vec<RustModule>,
+    /// Step 2.4a (Rust): the names each function binds as a variable (parameters, `let`, closure
+    /// parameters, patterns), by the function's declaration span. A call `f()` with `f` one of them
+    /// calls a value, not an item.
+    pub variables: BTreeMap<(usize, usize), BTreeSet<String>>,
 }
 
 /// Step 2.3c: what a written return type gives a receiver bound to the call.
@@ -99,6 +105,54 @@ pub struct NameScope {
     /// Names bound otherwise: parameters, assignments, `for`/`with`/`except` targets, nested
     /// definitions. They win over an import of the same name in the same scope.
     pub locals: BTreeSet<String>,
+    /// Step 2.4a (DEC-42): every binding of each name in this scope, in the order of the text. The
+    /// rule of a plain call (`f()`) and of a type alias reads these; `imports` and `locals` stay as
+    /// the 2.2 left them, for the receiver's rule.
+    pub bindings: BTreeMap<String, Vec<Binding>>,
+    /// Step 2.4a: the scope has a `from x import *` (outside `TYPE_CHECKING`): a name it does not
+    /// bind otherwise may come from there.
+    pub star: bool,
+}
+
+/// Step 2.4a (DEC-42, Python): one binding of a name in a scope.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Binding {
+    /// Where the binding statement starts.
+    pub at: usize,
+    /// For a `def` or a `class`: where its declaration ends (the graph's `end_byte`).
+    pub end: usize,
+    pub kind: Bound,
+    /// Inside an `if`, `for`, `while`, `try` or `match` of its own scope: it may not run.
+    pub conditional: bool,
+    /// Inside `if TYPE_CHECKING:`: it exists for the type checker, not when the code runs.
+    pub type_checking: bool,
+}
+
+/// Step 2.4a: what a binding binds a name to.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Bound {
+    /// A `def` or a `class` of this file.
+    Def,
+    Import(Import),
+    /// A parameter, an assignment, a `for`/`with`/`except` target: a variable.
+    Local,
+    /// `X = Name`, `X = m.Name` or `X: TypeAlias = Name`: another name for what `Name` names.
+    Alias(String),
+}
+
+/// Step 2.4a (DEC-42, Rust): a module of a file (the file itself, or a `mod x { .. }`), by the span
+/// of its declaration, with what its `use` items and type aliases bind.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub struct RustModule {
+    pub start: usize,
+    pub end: usize,
+    /// `use a::b::c` binds `c` to `[a, b, c]`; `use a::b as d` binds `d` to `[a, b]`;
+    /// `use a::b::{self}` binds `b` to `[a, b]`.
+    pub uses: BTreeMap<String, Vec<String>>,
+    /// `use a::b::*`: `[a, b]`.
+    pub globs: Vec<Vec<String>>,
+    /// `type X = a::Y<..>;`: `X` to `Y` (the last segment).
+    pub aliases: BTreeMap<String, String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -126,8 +180,12 @@ pub enum How {
     /// The written name matches only this declaration, among those the call's form reaches.
     Unique,
     /// `module.f()`: the receiver is bound to a module of the project, and only this function of
-    /// that module has the name.
+    /// that module has the name. Step 2.4a (DEC-42): also a plain call `f()` whose name the
+    /// caller's scope binds by an import (`from p import f`, `use a::f`, `use a::*`).
     Import,
+    /// Step 2.4a (DEC-42): a plain call `f()` whose name the caller's scope binds to a definition of
+    /// its own file: the module's (Python), a module's or a block's (Rust).
+    Scope,
     /// `self.m()` (the language's receiver, nothing else before the name) and only this
     /// candidate shares the caller's container.
     Receiver,
@@ -145,6 +203,7 @@ impl How {
             How::Chosen => "chosen",
             How::Unique => "unique",
             How::Import => "import",
+            How::Scope => "scope",
             How::Receiver => "receiver",
             How::Type => "type",
             How::TraitDefault => "trait_default",
@@ -152,11 +211,13 @@ impl How {
         }
     }
     /// Where the resolution comes from: the graph alone (`graph_edge`), the receiver's written
-    /// type (`type`), or the file's imports (`import`).
+    /// type (`type`), the file's imports (`import`), or a definition the caller's scope binds the
+    /// name to (`scope`, step 2.4a).
     pub fn basis(self) -> &'static str {
         match self {
             How::Type | How::TraitDefault => "type",
             How::Import => "import",
+            How::Scope => "scope",
             _ => "graph_edge",
         }
     }
@@ -217,6 +278,37 @@ pub struct Resolver<'g> {
     inner: Cell<bool>,
     /// Step 2.3c: what the return rule gave each method call (None: it does not apply).
     by_return_cache: RefCell<BTreeMap<String, Option<ByReturn<'g>>>>,
+    /// Step 2.4a: each declaration's span in its file.
+    declared_span: BTreeMap<&'g str, (usize, usize)>,
+    /// Step 2.4a (Python): a function, method or class by its file and where its declaration ends.
+    declared_end: BTreeMap<(&'g str, usize), Vec<&'g str>>,
+    /// Step 2.4a (Rust): the items a plain name may name, by file, container (a `mod {}`, a
+    /// function for an item of its block, none for the file's top level) and name.
+    rust_items: BTreeMap<(&'g str, Option<&'g str>, String), Vec<&'g str>>,
+}
+
+/// Step 2.4a (DEC-42): what the caller's scope says a plain call's name is.
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum Scoped<'g> {
+    /// A declaration of the project: by a definition of the caller's file (`Scope`) or by an
+    /// import (`Import`).
+    Target(&'g str, How),
+    /// Something that is not a declaration of the project: an import from outside it, a variable,
+    /// a builtin. The call has no candidate.
+    Nothing,
+    /// The scope does not tell (a star import, a glob from outside the crate, conditional bindings
+    /// that disagree, `TYPE_CHECKING`, a module called): the rule decides as before.
+    Undecided,
+}
+
+/// Step 2.4a (Rust): where a `use` path's module is.
+enum RustPlace<'g> {
+    /// A module of the project: its file, its `mod {}` (none for the file's top) and its path.
+    Project(&'g str, Option<&'g str>, Vec<String>),
+    /// Another crate (`std`, a dependency).
+    Outside,
+    /// A path of the crate that names no module the rule finds.
+    Unknown,
 }
 
 /// Step 2.3c (DEC-41): the type a receiver bound to a call takes from the written return of the
@@ -257,6 +349,9 @@ impl<'g> Resolver<'g> {
             type_names: BTreeSet::new(),
             inner: Cell::new(false),
             by_return_cache: RefCell::new(BTreeMap::new()),
+            declared_span: BTreeMap::new(),
+            declared_end: BTreeMap::new(),
+            rust_items: BTreeMap::new(),
         };
         for e in &graph.edges {
             match e.kind.as_str() {
@@ -267,6 +362,10 @@ impl<'g> Resolver<'g> {
                 "declares" => {
                     r.declared_in.insert(&e.to, &e.evidence.path);
                     r.declared_at.insert(&e.to, e.evidence.start_byte);
+                    r.declared_span.insert(&e.to, (e.evidence.start_byte, e.evidence.end_byte));
+                    if matches!(graph.nodes.get(&e.to).map(|n| n.kind.as_str()), Some("function" | "method" | "class")) {
+                        r.declared_end.entry((e.evidence.path.as_str(), e.evidence.end_byte)).or_default().push(&e.to);
+                    }
                 }
                 "observes" => {
                     r.call_evidence.insert(&e.to, &e.evidence);
@@ -317,6 +416,22 @@ impl<'g> Resolver<'g> {
                     r.impl_traits.push((ty, tr));
                 }
             }
+        }
+        // Step 2.4a: the Rust items by file, container and name. An item of an `impl` or a trait is
+        // not named by a plain path.
+        for (id, node) in &graph.nodes {
+            if node.category != "symbol" || node.language != "rust" {
+                continue;
+            }
+            if !matches!(node.kind.as_str(), "function" | "struct" | "enum" | "union" | "trait" | "type" | "const" | "static" | "module") {
+                continue;
+            }
+            let container = r.parent.get(id.as_str()).copied();
+            if container.is_some_and(|c| !matches!(graph.nodes[c].kind.as_str(), "module" | "function" | "method")) {
+                continue;
+            }
+            let Some(path) = r.declared_in.get(id.as_str()).copied() else { continue };
+            r.rust_items.entry((path, container, last_segment(&node.label))).or_default().push(id);
         }
         r
     }
@@ -385,7 +500,17 @@ impl<'g> Resolver<'g> {
             if receiver == "Self" {
                 return self.container(caller).filter(|c| self.kind(c) == "impl").and_then(|c| impl_parts(self.label(c)).0).into_iter().collect();
             }
-            return if receiver.starts_with(|c: char| c.is_uppercase()) { vec![receiver] } else { vec![] };
+            if !receiver.starts_with(|c: char| c.is_uppercase()) {
+                return vec![];
+            }
+            // Step 2.4a (N8): `use a::Cliente as C;` or `type C = Cliente;`: `C::new` is `Cliente`'s
+            // (a `type` alias is itself a declaration of the project, so it is asked first).
+            if self.graph.nodes[caller].language == "rust" {
+                if let Some(named) = self.call_evidence.get(occurrence).and_then(|e| self.rust_alias(&e.path, e.start_byte, &receiver)) {
+                    return vec![named];
+                }
+            }
+            return vec![receiver];
         }
         // Step 2.3c (DEC-41): the written return of the call that binds the receiver, when it
         // applies, replaces the type the path names (`let x = T::f(..)`).
@@ -397,8 +522,18 @@ impl<'g> Resolver<'g> {
                 };
             }
         }
-        let Some((written, _)) = self.receiver_type_node(occurrence) else { return vec![] };
+        let Some((written, span)) = self.receiver_type_node(occurrence) else { return vec![] };
         let names: BTreeSet<String> = self.candidates(written).iter().map(|t| last_segment(self.label(&t.to))).collect();
+        // Step 2.4a (N8, Rust): a written type no declaration has may be an alias of one.
+        if names.is_empty() && self.graph.nodes[caller].language == "rust" {
+            if let Some(path) = self.call_evidence.get(occurrence).map(|e| e.path.as_str()) {
+                if let Some((text, _)) = self.file_facts(path).and_then(|f| f.receiver_types.get(&span).cloned()) {
+                    if let Some(named) = self.rust_alias(path, span.0, &text) {
+                        return vec![named];
+                    }
+                }
+            }
+        }
         names.into_iter().collect()
     }
 
@@ -548,7 +683,14 @@ impl<'g> Resolver<'g> {
             classes = self.classes_by_name.get(name).cloned().unwrap_or_default();
         }
         if classes.is_empty() {
-            return None;
+            // Step 2.4a (N8): a name no class has may be an alias of one.
+            if self.graph.nodes[caller].language != "python" {
+                return None;
+            }
+            let path = self.call_evidence.get(occurrence)?.path.as_str();
+            let facts = self.file_facts(path)?;
+            let (text, _) = facts.receiver_types.get(&span)?;
+            return self.class_named(path, span.0, text, &[]);
         }
         if self.graph.nodes[written].type_rule.as_deref() == Some("self") {
             let mut at = self.container(caller);
@@ -574,8 +716,15 @@ impl<'g> Resolver<'g> {
         let declared = |file: &str, name: &str| classes.iter().copied().find(|c| self.declared_in.get(c) == Some(&file) && self.label(c) == name);
         match text.split_once('.') {
             None => match self.bound(&facts, at, text)? {
-                None => declared(path, text),
+                // Step 2.4a (N8): a local or module name may be an alias (`D = C`, `D: TypeAlias = C`).
+                None => declared(path, text).or_else(|| self.python_alias_class(path, at, text)),
                 Some(Import::From(package, name)) if name == *text => self.class_in_module(path, &package, &name, &declared, 0),
+                // Step 2.4a (N8): `from p import C as D`.
+                Some(Import::From(package, name)) => {
+                    let named = self.classes_named(&name);
+                    let declared = |file: &str, n: &str| named.iter().copied().find(|c| self.declared_in.get(c) == Some(&file) && self.label(c) == n);
+                    self.class_in_module(path, &package, &name, &declared, 0)
+                }
                 Some(_) => None,
             },
             Some((head, _)) => {
@@ -744,9 +893,20 @@ impl<'g> Resolver<'g> {
         }
         let facts = self.file_facts(&file)?;
         let module_scope = facts.scopes.iter().max_by_key(|s| s.end - s.start)?;
-        match module_scope.imports.get(name)? {
-            Import::From(p, n) if n == name => self.class_in_module(&file, p, name, declared, hops + 1),
-            _ => None,
+        match module_scope.imports.get(name) {
+            Some(Import::From(p, n)) if n == name => self.class_in_module(&file, p, name, declared, hops + 1),
+            // Step 2.4a (N8): a re-export under another name (`from x import C as D`).
+            Some(Import::From(p, n)) => {
+                let named = self.classes_named(n);
+                let declared = |f: &str, x: &str| named.iter().copied().find(|c| self.declared_in.get(c) == Some(&f) && self.label(c) == x);
+                self.class_in_module(&file, p, n, &declared, hops + 1)
+            }
+            Some(_) => None,
+            // Step 2.4a (N8): an alias the module writes (`D = C`).
+            None => match self.python_in_module(&file, name, hops + 1) {
+                Scoped::Target(t, _) if self.kind(t) == "class" => Some(t),
+                _ => None,
+            },
         }
     }
 
@@ -814,6 +974,392 @@ impl<'g> Resolver<'g> {
         (edges.to_vec(), false)
     }
 
+    /// Step 2.4a: the graph's own copy of a source path.
+    fn path_ref(&self, path: &str) -> Option<&'g str> {
+        self.paths.get(path).copied()
+    }
+
+    /// Step 2.4a (DEC-42): what the caller's scope says a plain call's name is (Python `f()`;
+    /// Rust `f()`, `super::f()`, `m::f()`). Read from the file, as the language binds names.
+    fn scoped(&self, caller: &str, occurrence: &str) -> Scoped<'g> {
+        if self.kind(occurrence) != "call_observed" {
+            return Scoped::Undecided;
+        }
+        let Some(evidence) = self.call_evidence.get(occurrence) else { return Scoped::Undecided };
+        let text = self.label(occurrence);
+        match self.graph.nodes[caller].language.as_str() {
+            "python" if !text.is_empty() && text.chars().all(|c| c.is_alphanumeric() || c == '_') => {
+                self.python_name(&evidence.path, evidence.start_byte, text, 0)
+            }
+            "rust" => self.rust_scoped(caller, &evidence.path, evidence.start_byte, text),
+            _ => Scoped::Undecided,
+        }
+    }
+
+    /// Step 2.4a (Python): what `name`, written at `at` in `path`, is bound to. The innermost scope
+    /// that binds it decides (a class body is not seen from the functions inside it); a binding
+    /// under `TYPE_CHECKING` does not exist when the code runs; at the module's own level (or a
+    /// class body in it) the code runs in order, so only what is bound before counts. Bindings of
+    /// which one may not run (`if`, `try`, loops) must agree; otherwise the last one counts (the
+    /// implementation after its `@overload`s). No scope binds it: a builtin, or nothing.
+    fn python_name(&self, path: &str, at: usize, name: &str, depth: usize) -> Scoped<'g> {
+        if depth > 3 {
+            return Scoped::Undecided;
+        }
+        let Some(facts) = self.file_facts(path) else { return Scoped::Undecided };
+        let mut scopes: Vec<&NameScope> = facts.scopes.iter().filter(|s| s.start <= at && at < s.end).collect();
+        scopes.sort_by_key(|s| s.end - s.start);
+        let outermost = scopes.len().saturating_sub(1);
+        for (i, s) in scopes.iter().enumerate() {
+            if i > 0 && s.class {
+                continue;
+            }
+            if let Some(all) = s.bindings.get(name) {
+                let in_order = i == outermost && scopes[..i].iter().all(|s| s.class);
+                let live: Vec<&Binding> = all.iter().filter(|b| !b.type_checking && !(in_order && b.at >= at)).collect();
+                if live.is_empty() {
+                    if all.iter().all(|b| b.type_checking) {
+                        return Scoped::Undecided;
+                    }
+                    continue;
+                }
+                return self.python_bindings(path, name, &live, true, depth);
+            }
+            if s.star {
+                return Scoped::Undecided;
+            }
+        }
+        Scoped::Nothing
+    }
+
+    /// Step 2.4a: what the live bindings of a name say. `own`: they are the caller's own scope's
+    /// (a variable there is a variable; one reached through an import may hold anything).
+    fn python_bindings(&self, path: &str, name: &str, live: &[&Binding], own: bool, depth: usize) -> Scoped<'g> {
+        let outcomes: Vec<Scoped<'g>> = live.iter().map(|b| self.python_bound(path, name, b, own, depth)).collect();
+        if live.iter().any(|b| b.conditional) && outcomes.iter().any(|o| *o != outcomes[0]) {
+            return Scoped::Undecided;
+        }
+        outcomes.last().cloned().unwrap_or(Scoped::Undecided)
+    }
+
+    /// Step 2.4a: what one binding binds a name to.
+    fn python_bound(&self, path: &str, name: &str, binding: &Binding, own: bool, depth: usize) -> Scoped<'g> {
+        match &binding.kind {
+            Bound::Def => {
+                let Some(file) = self.path_ref(path) else { return Scoped::Undecided };
+                let found = self.declared_end.get(&(file, binding.end)).and_then(|ids| ids.iter().copied().find(|id| self.label(id).rsplit('.').next() == Some(name)));
+                found.map_or(Scoped::Undecided, |id| Scoped::Target(id, How::Scope))
+            }
+            Bound::Import(Import::From(package, imported)) => self.python_from(path, package, imported, depth),
+            // A module called (`import m; m()`): not a declaration.
+            Bound::Import(Import::Module(_)) => Scoped::Undecided,
+            Bound::Local if own => Scoped::Nothing,
+            Bound::Local => Scoped::Undecided,
+            Bound::Alias(value) => self.python_alias(path, binding.at, value, depth),
+        }
+    }
+
+    /// Step 2.4a: `from package import name`: the name as that module binds it (a `def` there, or
+    /// what it imports in turn, up to three steps). From outside the project: nothing in it.
+    fn python_from(&self, path: &str, package: &str, name: &str, depth: usize) -> Scoped<'g> {
+        let submodule = format!("{package}{}{name}", if package.ends_with('.') { "" } else { "." });
+        if self.module_file(path, &submodule).is_some() {
+            return Scoped::Undecided;
+        }
+        match self.module_file(path, package) {
+            Some(file) => match self.python_in_module(&file, name, depth + 1) {
+                Scoped::Target(t, _) => Scoped::Target(t, How::Import),
+                other => other,
+            },
+            None if self.project_module(path, package) => Scoped::Undecided,
+            None => Scoped::Nothing,
+        }
+    }
+
+    /// Step 2.4a: what a module of the project binds `name` to at its top level, once loaded.
+    fn python_in_module(&self, file: &str, name: &str, depth: usize) -> Scoped<'g> {
+        if depth > 3 {
+            return Scoped::Undecided;
+        }
+        let Some(facts) = self.file_facts(file) else { return Scoped::Undecided };
+        let Some(module) = facts.scopes.iter().max_by_key(|s| s.end - s.start) else { return Scoped::Undecided };
+        let Some(all) = module.bindings.get(name) else { return Scoped::Undecided };
+        let live: Vec<&Binding> = all.iter().filter(|b| !b.type_checking).collect();
+        if live.is_empty() {
+            return Scoped::Undecided;
+        }
+        self.python_bindings(file, name, &live, false, depth)
+    }
+
+    /// Step 2.4a (N8): `X = value` names what `value` names where it is written: `Name` by the same
+    /// rule, `m.Name` in the module `m` of the project.
+    fn python_alias(&self, path: &str, at: usize, value: &str, depth: usize) -> Scoped<'g> {
+        if depth >= 3 {
+            return Scoped::Undecided;
+        }
+        let Some((module, last)) = value.rsplit_once('.') else { return self.python_name(path, at, value, depth + 1) };
+        let Some(facts) = self.file_facts(path) else { return Scoped::Undecided };
+        let head = module.split('.').next().unwrap_or_default();
+        let dotted = match self.bound(&facts, at, head) {
+            Some(Some(Import::Module(m))) if module == head || module.starts_with(&format!("{head}.")) => format!("{m}{}", &module[head.len()..]),
+            Some(Some(Import::From(p, n))) if module == head => format!("{p}{}{n}", if p.ends_with('.') { "" } else { "." }),
+            _ => return Scoped::Undecided,
+        };
+        match self.module_file(path, &dotted) {
+            Some(file) => match self.python_in_module(&file, last, depth + 1) {
+                Scoped::Target(t, _) => Scoped::Target(t, How::Import),
+                other => other,
+            },
+            None if self.project_module(path, &dotted) => Scoped::Undecided,
+            None => Scoped::Nothing,
+        }
+    }
+
+    /// Step 2.4a (N8): the class a name written at `at` names through an alias (`from p import C as
+    /// D`, `D = C`, `D: TypeAlias = C`).
+    fn python_alias_class(&self, path: &str, at: usize, text: &str) -> Option<&'g str> {
+        match self.python_name(path, at, text, 0) {
+            Scoped::Target(t, _) if self.kind(t) == "class" => Some(t),
+            _ => None,
+        }
+    }
+
+    /// Step 2.4a (Rust): a plain call or a module path, by the caller's scope: a variable of an
+    /// enclosing function (a closure, a function value: not decided), an item of an enclosing
+    /// function's block, an item of the caller's module, a `use` of it, a `use ..::*` of it.
+    fn rust_scoped(&self, caller: &str, path: &'g str, _at: usize, text: &str) -> Scoped<'g> {
+        let segments: Vec<String> = text.split("::").map(|s| s.trim().to_owned()).collect();
+        let Some(facts) = self.file_facts(path) else { return Scoped::Undecided };
+        let module_node = self.rust_module_of(caller);
+        let Some(here) = self.rust_module_segments(path, module_node) else { return Scoped::Undecided };
+        let Some(module) = self.rust_facts_module(&facts, module_node) else { return Scoped::Undecided };
+        if segments.len() == 1 {
+            let name = segments[0].as_str();
+            if name.is_empty() || name == "Self" {
+                return Scoped::Undecided;
+            }
+            let mut c = Some(caller);
+            while let Some(f) = c.filter(|f| matches!(self.kind(f), "function" | "method")) {
+                if self.declared_span.get(f).is_some_and(|span| facts.variables.get(span).is_some_and(|v| v.contains(name))) {
+                    return Scoped::Undecided;
+                }
+                if let Some(ids) = self.rust_items.get(&(path, Some(f), name.to_owned())) {
+                    return Scoped::Target(ids[0], How::Scope);
+                }
+                c = self.container(f);
+            }
+            if let Some(ids) = self.rust_items.get(&(path, module_node, name.to_owned())) {
+                return Scoped::Target(ids[0], How::Scope);
+            }
+            if let Some(target) = module.uses.get(name) {
+                return self.rust_use(path, &here, target, 0);
+            }
+            let (mut found, mut outside) = (vec![], false);
+            for glob in &module.globs {
+                match self.rust_module(path, &here, glob) {
+                    RustPlace::Project(file, node, segs) => {
+                        if let Scoped::Target(t, _) = self.rust_in_module(file, node, &segs, name, 0) {
+                            if !found.contains(&t) {
+                                found.push(t);
+                            }
+                        }
+                    }
+                    RustPlace::Outside => outside = true,
+                    RustPlace::Unknown => return Scoped::Undecided,
+                }
+            }
+            return match found.len() {
+                1 => Scoped::Target(found[0], How::Import),
+                0 if !outside => Scoped::Nothing,
+                _ => Scoped::Undecided,
+            };
+        }
+        // A module path: `super::f`, `m::f` (`m` a module of the project, or bound by a `use`).
+        // `T::f` is the type's rule.
+        if !segments[0].starts_with(|c: char| c.is_lowercase()) {
+            return Scoped::Undecided;
+        }
+        let (name, mut module_path) = (segments[segments.len() - 1].clone(), segments[..segments.len() - 1].to_vec());
+        if let Some(bound) = module.uses.get(&module_path[0]) {
+            module_path = bound.iter().cloned().chain(module_path[1..].iter().cloned()).collect();
+        }
+        match self.rust_module(path, &here, &module_path) {
+            RustPlace::Project(file, node, segs) => match self.rust_in_module(file, node, &segs, &name, 0) {
+                Scoped::Target(t, _) => Scoped::Target(t, How::Import),
+                _ => Scoped::Undecided,
+            },
+            _ => Scoped::Undecided,
+        }
+    }
+
+    /// Step 2.4a (Rust): an item a `use` names: from outside the crate, nothing of the project.
+    fn rust_use(&self, path: &str, here: &[String], target: &[String], hops: usize) -> Scoped<'g> {
+        let Some((name, module_path)) = target.split_last() else { return Scoped::Undecided };
+        match self.rust_module(path, here, module_path) {
+            RustPlace::Project(file, node, segs) => match self.rust_in_module(file, node, &segs, name, hops + 1) {
+                Scoped::Target(t, _) => Scoped::Target(t, How::Import),
+                _ => Scoped::Undecided,
+            },
+            RustPlace::Outside => Scoped::Nothing,
+            RustPlace::Unknown => Scoped::Undecided,
+        }
+    }
+
+    /// Step 2.4a (Rust): an item of a module, or one its `use` brings (a re-export), up to three
+    /// steps.
+    fn rust_in_module(&self, file: &'g str, node: Option<&'g str>, segs: &[String], name: &str, hops: usize) -> Scoped<'g> {
+        if let Some(ids) = self.rust_items.get(&(file, node, name.to_owned())) {
+            return Scoped::Target(ids[0], How::Scope);
+        }
+        if hops >= 3 {
+            return Scoped::Undecided;
+        }
+        let Some(facts) = self.file_facts(file) else { return Scoped::Undecided };
+        let Some(module) = self.rust_facts_module(&facts, node) else { return Scoped::Undecided };
+        match module.uses.get(name) {
+            Some(target) => self.rust_use(file, segs, target, hops),
+            None => Scoped::Undecided,
+        }
+    }
+
+    /// Step 2.4a (Rust): the nearest `mod {}` that contains a declaration; none at a file's top.
+    fn rust_module_of(&self, id: &str) -> Option<&'g str> {
+        let mut at = self.container(id);
+        while let Some(c) = at {
+            if self.kind(c) == "module" {
+                return Some(c);
+            }
+            at = self.container(c);
+        }
+        None
+    }
+
+    /// Step 2.4a (Rust): the facts of a module: the file's own, or the `mod {}` with the node's span.
+    fn rust_facts_module<'f>(&self, facts: &'f CallFacts, node: Option<&str>) -> Option<&'f RustModule> {
+        match node {
+            None => facts.modules.first(),
+            Some(n) => {
+                let span = *self.declared_span.get(n)?;
+                facts.modules.iter().skip(1).find(|m| (m.start, m.end) == span)
+            }
+        }
+    }
+
+    /// Step 2.4a (Rust): the crate a file belongs to: the folder that holds `src/`, and its root
+    /// file (`src/lib.rs`, `src/main.rs`, or the binary's own file under `src/bin/`).
+    fn rust_crate(&self, path: &str) -> Option<(String, String)> {
+        let at = path.rfind("src/")?;
+        let dir = path[..at + 4].to_owned();
+        if path[dir.len()..].starts_with("bin/") {
+            return Some((dir, path.to_owned()));
+        }
+        let root = ["lib.rs", "main.rs"].iter().map(|f| format!("{dir}{f}")).find(|f| self.paths.contains(f.as_str()))?;
+        Some((dir, root))
+    }
+
+    /// Step 2.4a (Rust): a module's path from its crate's root: the file's (`src/a/b.rs` is `a::b`)
+    /// and the `mod {}` around it.
+    fn rust_module_segments(&self, path: &str, node: Option<&str>) -> Option<Vec<String>> {
+        let (dir, root) = self.rust_crate(path)?;
+        let mut segs: Vec<String> = vec![];
+        if path != root {
+            segs = path[dir.len()..].trim_end_matches(".rs").split('/').map(str::to_owned).collect();
+            if segs.last().is_some_and(|s| s == "mod") {
+                segs.pop();
+            }
+        }
+        let mut inline = vec![];
+        let mut at = node;
+        while let Some(m) = at {
+            inline.push(last_segment(self.label(m)));
+            at = self.rust_module_of(m);
+        }
+        inline.reverse();
+        segs.extend(inline);
+        Some(segs)
+    }
+
+    /// Step 2.4a (Rust): where a `use` path's module is: in the project (its file, its `mod {}` and
+    /// its path), outside the crate, or a path of the crate that names no module (a type, a
+    /// variant, a module written with `#[path]`).
+    fn rust_module(&self, path: &str, here: &[String], target: &[String]) -> RustPlace<'g> {
+        let Some((dir, root)) = self.rust_crate(path) else { return RustPlace::Unknown };
+        let mut base: Vec<String> = match target.first().map(String::as_str) {
+            Some("crate") => target[1..].to_vec(),
+            Some("self") => here.iter().chain(&target[1..]).cloned().collect(),
+            Some("super") => {
+                let supers = target.iter().take_while(|s| *s == "super").count();
+                if supers > here.len() {
+                    return RustPlace::Unknown;
+                }
+                here[..here.len() - supers].iter().chain(&target[supers..]).cloned().collect()
+            }
+            Some(first) => {
+                // A child of this module (paths are relative since the 2018 edition), or, from a
+                // binary, the library of the same package.
+                let child: Vec<String> = here.iter().chain(target).cloned().collect();
+                if self.rust_find(&dir, &root, &child).is_some() {
+                    child
+                } else if !matches!(first, "std" | "core" | "alloc") && root.contains("/bin/") {
+                    let lib = format!("{dir}lib.rs");
+                    if !self.paths.contains(lib.as_str()) {
+                        return RustPlace::Outside;
+                    }
+                    return match self.rust_find(&dir, &lib, &target[1..]) {
+                        Some((file, node)) => RustPlace::Project(file, node, target[1..].to_vec()),
+                        None => RustPlace::Outside,
+                    };
+                } else {
+                    return RustPlace::Outside;
+                }
+            }
+            None => here.to_vec(),
+        };
+        base.retain(|s| !s.is_empty());
+        match self.rust_find(&dir, &root, &base) {
+            Some((file, node)) => RustPlace::Project(file, node, base),
+            None => RustPlace::Unknown,
+        }
+    }
+
+    /// Step 2.4a (Rust): the file and the `mod {}` of a module path from a crate's root.
+    fn rust_find(&self, dir: &str, root: &str, segs: &[String]) -> Option<(&'g str, Option<&'g str>)> {
+        let mut file = self.path_ref(root)?;
+        let mut node: Option<&'g str> = None;
+        for seg in segs {
+            // A `mod seg { .. }` here: a module node whose span is a module of the file's facts.
+            let inline = self.rust_items.get(&(file, node, seg.clone())).and_then(|ids| {
+                let facts = self.file_facts(file)?;
+                ids.iter().copied().find(|id| self.kind(id) == "module" && self.rust_facts_module(&facts, Some(id)).is_some())
+            });
+            if let Some(m) = inline {
+                node = Some(m);
+                continue;
+            }
+            if node.is_some() {
+                return None;
+            }
+            let folder = if file == root || file.starts_with(&format!("{dir}bin/")) {
+                dir.to_owned()
+            } else if let Some(stem) = file.strip_suffix("mod.rs") {
+                stem.to_owned()
+            } else {
+                format!("{}/", file.trim_end_matches(".rs"))
+            };
+            file = [format!("{folder}{seg}.rs"), format!("{folder}{seg}/mod.rs")].iter().find_map(|f| self.path_ref(f))?;
+        }
+        Some((file, node))
+    }
+
+    /// Step 2.4a (Rust, N8): the type of the project a name names through a `use .. as` or a
+    /// `type X = Y;` of the module written around `at`.
+    fn rust_alias(&self, path: &str, at: usize, name: &str) -> Option<String> {
+        let facts = self.file_facts(path)?;
+        let module = facts.modules.iter().filter(|m| m.start <= at && at < m.end).min_by_key(|m| m.end - m.start)?;
+        let named = module.uses.get(name).and_then(|p| p.last().cloned()).or_else(|| module.aliases.get(name).cloned())?;
+        (named != name && self.type_names.contains(&named)).then_some(named)
+    }
+
     /// The rule. `caller` is the symbol whose body writes the call; `chosen`, the candidate the
     /// person picked for this occurrence, if any.
     pub fn resolve(&self, caller: &str, occurrence: &str, chosen: Option<&str>) -> Resolution<'g> {
@@ -822,8 +1368,20 @@ impl<'g> Resolver<'g> {
         if let Some(e) = chosen.and_then(|c| edges.iter().find(|e| e.to == c)) {
             return Resolution::Linked(How::Chosen, vec![&e.to]);
         }
+        // Step 2.4a (DEC-42): a plain call by the caller's scope. A `unique` it confirms keeps its
+        // label; otherwise it settles among homonyms and above the limit, or rules the candidates out.
         let text = self.label(occurrence);
         let plain = call_parts(text).is_some_and(|(receiver, _)| receiver.is_empty());
+        match self.scoped(caller, occurrence) {
+            Scoped::Nothing => return Resolution::NoCandidate,
+            Scoped::Target(to, how) => {
+                if edges.len() == 1 && edges[0].to == to && (all.len() == 1 || plain) {
+                    return Resolution::Linked(How::Unique, vec![&edges[0].to]);
+                }
+                return Resolution::Linked(how, vec![to]);
+            }
+            Scoped::Undecided => {}
+        }
         if edges.len() == 1 {
             let to = edges[0].to.as_str();
             if module && all.len() > 1 {

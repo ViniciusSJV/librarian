@@ -381,8 +381,9 @@ fn a_field_of_init_and_self_in_a_closure_type_the_receiver() {
 #[test]
 fn the_class_is_found_by_the_files_imports() {
     let s = setup();
-    // `C` is `Cliente as C`: an alias is the 2.4's (N8); no type.
-    assert_eq!(resolved(&s, "n_alias", "c.salvar()").0, "homonym");
+    // `C` is `Cliente as C`: since the step 2.4a (N8, DEC-42) the alias names `Cliente`; until then,
+    // no type.
+    assert_eq!(resolved(&s, "n_alias", "c.salvar()"), r("type", &["Cliente.salvar"]));
     // `Apprise` comes from outside the project: the project's homonymous class is not its type,
     // and a type from outside rules nothing out in Python.
     assert_eq!(resolved(&s, "n_externo", "a.notify()"), r("unique", &["Apprise.notify"]));

@@ -1,7 +1,7 @@
 //! Python adapter (rustpython-parser). Only syntactic declarations and occurrences.
 //! No import resolution, dynamic dispatch, decorator evaluation or runtime behavior.
 use super::{Extraction, Extractor, Occurrence, OwnerSyntax};
-use crate::resolve::{CallFacts, Import, NameScope};
+use crate::resolve::{Binding, Bound as Binds, CallFacts, Import, NameScope};
 use crate::{hash, Chunk, Diagnostic, Source, Symbol};
 use rustpython_ast::{self as ast, text_size::TextRange, Ranged, Visitor};
 use rustpython_parser::Parse;
@@ -140,7 +140,15 @@ impl Extractor for Python {
         let Ok(text) = std::str::from_utf8(bytes) else { return CallFacts::default() };
         let Ok((suite, offset)) = parse(text) else { return CallFacts::default() };
         let suite_for_types = if self.v9 { suite.clone() } else { vec![] };
-        let mut scopes = Scopes { offset, open: vec![0], scopes: vec![NameScope { start: 0, end: usize::MAX, ..Default::default() }], globals: vec![Default::default()], decorators: vec![] };
+        let mut scopes = Scopes {
+            offset,
+            open: vec![0],
+            scopes: vec![NameScope { start: 0, end: usize::MAX, ..Default::default() }],
+            globals: vec![Default::default()],
+            decorators: vec![],
+            conditional: vec![0],
+            type_checking: 0,
+        };
         for stmt in suite {
             scopes.visit_stmt(stmt);
         }
@@ -171,9 +179,59 @@ struct Scopes {
     globals: Vec<std::collections::BTreeSet<String>>,
     /// Step 2.3b: the span of every decorator expression, in source order.
     decorators: Vec<(usize, usize)>,
+    /// Step 2.4a: how many `if`, `for`, `while`, `try` or `match` of each open scope are around.
+    conditional: Vec<usize>,
+    /// Step 2.4a: how many `if TYPE_CHECKING:` bodies are around.
+    type_checking: usize,
 }
 
 impl Scopes {
+    /// Step 2.4a (DEC-42): one more binding of `name` in the open scope, in the order of the text.
+    fn bind(&mut self, name: &str, kind: Binds, at: usize, end: usize) {
+        let binding = Binding {
+            at,
+            end,
+            kind,
+            conditional: self.conditional.last().copied().unwrap_or(0) > 0,
+            type_checking: self.type_checking > 0,
+        };
+        self.top().bindings.entry(name.to_owned()).or_default().push(binding);
+    }
+
+    fn at(&self, range: TextRange) -> (usize, usize) {
+        (usize::from(range.start()) + self.offset, usize::from(range.end()) + self.offset)
+    }
+
+    /// Step 2.4a: the statements of a block that may not run.
+    fn conditional_block(&mut self, stmts: Vec<ast::Stmt>) {
+        if let Some(c) = self.conditional.last_mut() {
+            *c += 1;
+        }
+        for stmt in stmts {
+            self.visit_stmt(stmt);
+        }
+        if let Some(c) = self.conditional.last_mut() {
+            *c -= 1;
+        }
+    }
+
+    /// Step 2.4a (N8): the name an alias's value is: `Name` or `a.b.Name`.
+    fn dotted(expr: &ast::Expr) -> Option<String> {
+        match expr {
+            ast::Expr::Name(n) => Some(n.id.to_string()),
+            ast::Expr::Attribute(a) => Some(format!("{}.{}", Self::dotted(&a.value)?, a.attr)),
+            _ => None,
+        }
+    }
+
+    /// Step 2.4a: the last binding of `name` in the open scope becomes an alias of `value`.
+    fn alias(&mut self, name: &str, value: String) {
+        if let Some(last) = self.top().bindings.get_mut(name).and_then(|b| b.last_mut()) {
+            if last.kind == Binds::Local {
+                last.kind = Binds::Alias(value);
+            }
+        }
+    }
     /// Step 2.3b: a decorator runs in the enclosing scope, when the `def` or `class` runs.
     fn decorator(&mut self, decorator: ast::Expr) {
         let range = decorator.range();
@@ -186,11 +244,14 @@ impl Scopes {
         self.scopes.push(NameScope { start, end, class, ..Default::default() });
         self.open.push(self.scopes.len() - 1);
         self.globals.push(Default::default());
+        self.conditional.push(0);
     }
 
     fn leave(&mut self) {
         let (Some(i), Some(globals)) = (self.open.pop(), self.globals.pop()) else { return };
+        self.conditional.pop();
         self.scopes[i].locals.retain(|n| !globals.contains(n));
+        self.scopes[i].bindings.retain(|n, _| !globals.contains(n));
     }
 
     fn top(&mut self) -> &mut NameScope {
@@ -198,14 +259,17 @@ impl Scopes {
         &mut self.scopes[i]
     }
 
-    fn local(&mut self, name: &str) {
+    /// A name bound as a variable at `at` (step 2.4a: also one more binding of it).
+    fn local(&mut self, name: &str, at: usize) {
         self.top().locals.insert(name.to_owned());
+        self.bind(name, Binds::Local, at, at);
     }
 
     fn parameters(&mut self, arguments: &ast::Arguments) {
         let params = arguments.posonlyargs.iter().chain(&arguments.args).chain(&arguments.kwonlyargs).map(|a| &a.def);
         for arg in params.chain(arguments.vararg.as_deref()).chain(arguments.kwarg.as_deref()) {
-            self.local(&arg.arg);
+            let (at, _) = self.at(arg.range);
+            self.local(&arg.arg, at);
         }
     }
 
@@ -218,7 +282,9 @@ impl Scopes {
 
     /// A function: its name in the enclosing scope, then its own scope.
     fn function(&mut self, name: &str, range: TextRange, arguments: ast::Arguments, body: Vec<ast::Stmt>, decorators: Vec<ast::Expr>) {
-        self.local(name);
+        self.top().locals.insert(name.to_owned());
+        let (at, end) = self.at(range);
+        self.bind(name, Binds::Def, at, end);
         for decorator in decorators {
             self.decorator(decorator);
         }
@@ -254,7 +320,9 @@ impl Visitor for Scopes {
     }
 
     fn visit_stmt_class_def(&mut self, node: ast::StmtClassDef) {
-        self.local(&node.name);
+        self.top().locals.insert(node.name.to_string());
+        let (at, end) = self.at(node.range);
+        self.bind(&node.name, Binds::Def, at, end);
         for decorator in node.decorator_list {
             self.decorator(decorator);
         }
@@ -305,21 +373,25 @@ impl Visitor for Scopes {
 
     fn visit_expr_name(&mut self, node: ast::ExprName) {
         if !matches!(node.ctx, ast::ExprContext::Load) {
-            self.local(&node.id);
+            let (at, _) = self.at(node.range);
+            self.local(&node.id, at);
         }
     }
 
     fn visit_stmt_import(&mut self, node: ast::StmtImport) {
+        let (at, _) = self.at(node.range);
         for alias in node.names {
             let name = alias.name.to_string();
             match alias.asname {
                 Some(bound) => {
-                    self.top().imports.insert(bound.to_string(), Import::Module(name));
+                    self.top().imports.insert(bound.to_string(), Import::Module(name.clone()));
+                    self.bind(bound.as_str(), Binds::Import(Import::Module(name)), at, at);
                 }
                 None => {
                     // `import a.b` binds `a`; `a.b` written whole is the module `a.b`.
                     let head = name.split('.').next().unwrap_or_default().to_owned();
-                    self.top().imports.insert(head.clone(), Import::Module(head));
+                    self.top().imports.insert(head.clone(), Import::Module(head.clone()));
+                    self.bind(&head, Binds::Import(Import::Module(head.clone())), at, at);
                     if name.contains('.') {
                         self.top().imports.insert(name.clone(), Import::Module(name));
                     }
@@ -329,20 +401,119 @@ impl Visitor for Scopes {
     }
 
     fn visit_stmt_import_from(&mut self, node: ast::StmtImportFrom) {
+        let (at, _) = self.at(node.range);
         let dots = ".".repeat(node.level.map_or(0, |l| l.to_usize()));
         let package = format!("{dots}{}", node.module.as_ref().map_or("", |m| m.as_str()));
         for alias in node.names {
             if alias.name.as_str() == "*" {
+                // Step 2.4a: a name not bound otherwise may come from it.
+                if self.type_checking == 0 {
+                    self.top().star = true;
+                }
                 continue;
             }
             let bound = alias.asname.as_ref().unwrap_or(&alias.name).to_string();
-            self.top().imports.insert(bound, Import::From(package.clone(), alias.name.to_string()));
+            let import = Import::From(package.clone(), alias.name.to_string());
+            self.top().imports.insert(bound.clone(), import.clone());
+            self.bind(&bound, Binds::Import(import), at, at);
+        }
+    }
+
+    // Step 2.4a (N8): `X = Name` and `X = m.Name` are aliases; any other value makes a variable.
+    fn visit_stmt_assign(&mut self, node: ast::StmtAssign) {
+        let alias = match (node.targets.as_slice(), Self::dotted(&node.value)) {
+            ([ast::Expr::Name(target)], Some(value)) => Some((target.id.to_string(), value)),
+            _ => None,
+        };
+        self.generic_visit_stmt_assign(node);
+        if let Some((name, value)) = alias {
+            self.alias(&name, value);
+        }
+    }
+
+    // Step 2.4a (N8): `X: TypeAlias = Name`; any other annotated assignment makes a variable.
+    fn visit_stmt_ann_assign(&mut self, node: ast::StmtAnnAssign) {
+        let type_alias = matches!(node.annotation.as_ref(), ast::Expr::Name(n) if n.id.as_str() == "TypeAlias")
+            || matches!(node.annotation.as_ref(), ast::Expr::Attribute(a) if a.attr.as_str() == "TypeAlias");
+        let alias = match (node.target.as_ref(), node.value.as_deref().and_then(Self::dotted)) {
+            (ast::Expr::Name(target), Some(value)) if type_alias => Some((target.id.to_string(), value)),
+            _ => None,
+        };
+        self.generic_visit_stmt_ann_assign(node);
+        if let Some((name, value)) = alias {
+            self.alias(&name, value);
+        }
+    }
+
+    // Step 2.4a: what an `if` binds may not run; under `if TYPE_CHECKING:`, it never runs.
+    fn visit_stmt_if(&mut self, node: ast::StmtIf) {
+        let checking = matches!(node.test.as_ref(), ast::Expr::Name(n) if n.id.as_str() == "TYPE_CHECKING")
+            || matches!(node.test.as_ref(), ast::Expr::Attribute(a) if a.attr.as_str() == "TYPE_CHECKING");
+        self.visit_expr(*node.test);
+        if checking {
+            self.type_checking += 1;
+        }
+        self.conditional_block(node.body);
+        if checking {
+            self.type_checking -= 1;
+        }
+        self.conditional_block(node.orelse);
+    }
+
+    fn visit_stmt_for(&mut self, node: ast::StmtFor) {
+        self.visit_expr(*node.target);
+        self.visit_expr(*node.iter);
+        self.conditional_block(node.body);
+        self.conditional_block(node.orelse);
+    }
+
+    fn visit_stmt_async_for(&mut self, node: ast::StmtAsyncFor) {
+        self.visit_expr(*node.target);
+        self.visit_expr(*node.iter);
+        self.conditional_block(node.body);
+        self.conditional_block(node.orelse);
+    }
+
+    fn visit_stmt_while(&mut self, node: ast::StmtWhile) {
+        self.visit_expr(*node.test);
+        self.conditional_block(node.body);
+        self.conditional_block(node.orelse);
+    }
+
+    fn visit_stmt_try(&mut self, node: ast::StmtTry) {
+        if let Some(c) = self.conditional.last_mut() {
+            *c += 1;
+        }
+        self.generic_visit_stmt_try(node);
+        if let Some(c) = self.conditional.last_mut() {
+            *c -= 1;
+        }
+    }
+
+    fn visit_stmt_try_star(&mut self, node: ast::StmtTryStar) {
+        if let Some(c) = self.conditional.last_mut() {
+            *c += 1;
+        }
+        self.generic_visit_stmt_try_star(node);
+        if let Some(c) = self.conditional.last_mut() {
+            *c -= 1;
+        }
+    }
+
+    fn visit_stmt_match(&mut self, node: ast::StmtMatch) {
+        if let Some(c) = self.conditional.last_mut() {
+            *c += 1;
+        }
+        self.generic_visit_stmt_match(node);
+        if let Some(c) = self.conditional.last_mut() {
+            *c -= 1;
         }
     }
 
     fn visit_excepthandler_except_handler(&mut self, node: ast::ExceptHandlerExceptHandler) {
         if let Some(name) = &node.name {
-            self.local(name);
+            let (at, _) = self.at(node.range);
+            self.local(name, at);
         }
         self.generic_visit_excepthandler_except_handler(node);
     }
@@ -367,20 +538,23 @@ impl Visitor for Scopes {
 
     fn visit_pattern_match_as(&mut self, node: ast::PatternMatchAs) {
         if let Some(name) = &node.name {
-            self.local(name);
+            let (at, _) = self.at(node.range);
+            self.local(name, at);
         }
         self.generic_visit_pattern_match_as(node);
     }
 
     fn visit_pattern_match_star(&mut self, node: ast::PatternMatchStar) {
         if let Some(name) = &node.name {
-            self.local(name);
+            let (at, _) = self.at(node.range);
+            self.local(name, at);
         }
     }
 
     fn visit_pattern_match_mapping(&mut self, node: ast::PatternMatchMapping) {
         if let Some(rest) = &node.rest {
-            self.local(rest);
+            let (at, _) = self.at(node.range);
+            self.local(rest, at);
         }
         self.generic_visit_pattern_match_mapping(node);
     }

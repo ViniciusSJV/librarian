@@ -108,6 +108,8 @@ def de_fora() -> Pedido:
 const CASOS: &str = "from pkg.modelos import Fabrica, novo_pedido, opcional, agora, pedidos, sem_anotacao, nota_nova
 from pkg.apoio import Requisicao, de_fora
 from pkg import modelos
+from pkg.modelos import *
+from pkg.apoio import *
 
 
 def mesmo():
@@ -448,6 +450,8 @@ fn python_no_type_from_outside_a_generic_or_no_annotation() {
 #[test]
 fn python_candidates_that_agree_give_the_type_and_that_disagree_give_none() {
     let s = setup();
+    // `igual` and `duplo` come by `import *` from both modules: the scope does not decide (step
+    // 2.4a, DEC-42), and the binding call is read as in the 2.3c.
     // (b) `igual()` is declared twice, and both return `Pedido`.
     assert_eq!(resolved(&s, "concordam", "d.fechar()"), r("type", &["Pedido.fechar"]));
     // (d) `duplo()` returns `Pedido` in one file and `Nota` in the other.
@@ -528,5 +532,8 @@ fn rust_a_return_from_outside_follows_the_rule_of_a_type_from_outside() {
 fn rust_candidates_that_agree_give_the_type_and_that_disagree_give_none() {
     let s = setup();
     assert_eq!(resolved(&s, "r_concordam", "p.fechar()"), r("type", &["impl Pedido::fechar"]));
-    assert_eq!(resolved(&s, "r_discordam", "p.fechar()"), homonym("impl Nota::fechar", "impl Pedido::fechar"));
+    // Step 2.4a (DEC-42): `misto()` is the one of the caller's own module (`-> Pedido`), by the
+    // case (a); until then the two `misto` disagreed (d) and gave no type. The (d) in Rust is in
+    // `tests/escopo_2_4a.rs` (two globs).
+    assert_eq!(resolved(&s, "r_discordam", "p.fechar()"), r("type", &["impl Pedido::fechar"]));
 }

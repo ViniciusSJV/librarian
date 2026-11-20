@@ -136,10 +136,16 @@ impl Extractor for Rust {
         observer.visit_file(&tree);
         let mut returns = Returns { offset, out: BTreeMap::new() };
         returns.visit_file(&tree);
+        // Step 2.4a (DEC-42): the file's modules, their `use` items and type aliases, and the
+        // variables of each function.
+        let mut modules = Modules { offset, modules: vec![crate::resolve::RustModule { start: 0, end: usize::MAX, ..Default::default() }], open: vec![0], variables: BTreeMap::new() };
+        modules.visit_file(&tree);
         crate::resolve::CallFacts {
             receiver_types: observer.written.unwrap_or_default(),
             bound_calls: observer.bound_calls.unwrap_or_default(),
             returns: returns.out,
+            modules: modules.modules,
+            variables: modules.variables,
             ..Default::default()
         }
     }
@@ -510,6 +516,113 @@ fn is_iterator(expr: &syn::Expr) -> bool {
             ITERATOR_SOURCES.contains(&name.as_str()) || (ITERATOR_ADAPTERS.contains(&name.as_str()) && is_iterator(&m.receiver))
         }
         _ => false,
+    }
+}
+
+/// Step 2.4a (DEC-42): a file's modules (the file, and each `mod x { .. }` by the span of its
+/// declaration, as `Declarations` records it), what their `use` items and `type` aliases bind, and
+/// the names each function binds as variables. A `use` inside a function counts for its module.
+struct Modules {
+    offset: usize,
+    modules: Vec<crate::resolve::RustModule>,
+    open: Vec<usize>,
+    variables: BTreeMap<(usize, usize), std::collections::BTreeSet<String>>,
+}
+
+impl Modules {
+    fn top(&mut self) -> &mut crate::resolve::RustModule {
+        let i = self.open.last().copied().unwrap_or(0);
+        &mut self.modules[i]
+    }
+
+    fn span(&self, span: Span) -> (usize, usize) {
+        let range = span.byte_range();
+        (range.start + self.offset, range.end + self.offset)
+    }
+
+    /// `use a::{b, c::d as e, f::*}`: each name bound, with the path it names.
+    fn tree(&mut self, prefix: &mut Vec<String>, tree: &syn::UseTree) {
+        match tree {
+            syn::UseTree::Path(p) => {
+                prefix.push(p.ident.to_string());
+                self.tree(prefix, &p.tree);
+                prefix.pop();
+            }
+            syn::UseTree::Name(n) if n.ident == "self" => {
+                if let Some(last) = prefix.last().cloned() {
+                    self.top().uses.insert(last, prefix.clone());
+                }
+            }
+            syn::UseTree::Name(n) => {
+                let mut path = prefix.clone();
+                path.push(n.ident.to_string());
+                self.top().uses.insert(n.ident.to_string(), path);
+            }
+            syn::UseTree::Rename(r) => {
+                let mut path = prefix.clone();
+                if r.ident != "self" {
+                    path.push(r.ident.to_string());
+                }
+                self.top().uses.insert(r.rename.to_string(), path);
+            }
+            syn::UseTree::Glob(_) => {
+                let path = prefix.clone();
+                self.top().globs.push(path);
+            }
+            syn::UseTree::Group(g) => {
+                for item in &g.items {
+                    self.tree(prefix, item);
+                }
+            }
+        }
+    }
+
+    fn function(&mut self, span: Span, sig: &syn::Signature, block: &syn::Block) {
+        let mut names = Bindings::default();
+        for input in &sig.inputs {
+            names.visit_fn_arg(input);
+        }
+        names.visit_block(block);
+        let at = self.span(span);
+        self.variables.insert(at, names.0);
+    }
+}
+
+impl<'ast> Visit<'ast> for Modules {
+    fn visit_item_mod(&mut self, value: &'ast syn::ItemMod) {
+        if value.content.is_none() {
+            return;
+        }
+        let (start, end) = self.span(value.span());
+        self.modules.push(crate::resolve::RustModule { start, end, ..Default::default() });
+        self.open.push(self.modules.len() - 1);
+        visit::visit_item_mod(self, value);
+        self.open.pop();
+    }
+
+    fn visit_item_use(&mut self, value: &'ast syn::ItemUse) {
+        let mut prefix = vec![];
+        if value.leading_colon.is_some() {
+            prefix.push(String::new());
+        }
+        self.tree(&mut prefix, &value.tree);
+    }
+
+    fn visit_item_type(&mut self, value: &'ast syn::ItemType) {
+        if let Some(name) = type_name(&value.ty) {
+            self.top().aliases.insert(value.ident.to_string(), name);
+        }
+        visit::visit_item_type(self, value);
+    }
+
+    fn visit_item_fn(&mut self, value: &'ast syn::ItemFn) {
+        self.function(value.span(), &value.sig, &value.block);
+        visit::visit_item_fn(self, value);
+    }
+
+    fn visit_impl_item_fn(&mut self, value: &'ast syn::ImplItemFn) {
+        self.function(value.span(), &value.sig, &value.block);
+        visit::visit_impl_item_fn(self, value);
     }
 }
 

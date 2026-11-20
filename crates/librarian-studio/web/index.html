@@ -1207,7 +1207,8 @@ const STRINGS = {
   'path.chosenCount': [' {n} escolha(s) sua(s).', ' {n} choice(s) of yours.'],
   'path.callsClick': [' Clique numa linha tracejada para escolher o candidato.', ' Click a dashed line to choose the candidate.'],
   'path.resolution.unique': ['seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta', 'followed: among the declarations the call\'s form reaches, the name matches only this one'],
-  'path.resolution.import': ['seguida: o receptor é um módulo do projeto (import), e só esta função dele tem o nome', 'followed: the receiver is a module of the project (import), and only this function of it has the name'],
+  'path.resolution.import': ['seguida pelo import do arquivo: o receptor é um módulo do projeto e só esta função dele tem o nome, ou o nome chamado vem de um import (from p import f, use a::f, use a::*) e é esta declaração', 'followed by the file\'s import: the receiver is a module of the project and only this function of it has the name, or the called name comes from an import (from p import f, use a::f, use a::*) and is this declaration'],
+  'path.resolution.scope': ['seguida pelo escopo: o nome chamado é definido no próprio arquivo de quem chama (no módulo, ou no corpo da função em volta), e é esta definição', 'followed by the scope: the called name is defined in the caller\'s own file (in the module, or in the body of the function around it), and it is this definition'],
   'path.resolution.receiver': ['seguida: chamada do próprio receptor (self.m()), e só este homônimo está na mesma classe ou impl', 'followed: the receiver\'s own call (self.m()), and only this homonym is in the same class or impl'],
   'path.resolution.type': ['seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante)', 'followed: a method of the receiver\'s written type (annotation, constructor, self, field; in Rust, also path, return, item and variant)'],
   'path.relation.instantiates': ['instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui', 'instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here'],
@@ -1518,7 +1519,9 @@ const STRINGS = {
   'inventory.step.trait_default': ['padrão do trait', 'trait default'],
   'inventory.step.trait_default.help': ['O tipo escrito não tem o método; segue o método padrão de um trait que o tipo implementa.', 'The written type lacks the method; follows the default of a trait the type implements.'],
   'inventory.step.import': ['pelo import', 'by import'],
-  'inventory.step.import.help': ['Seguida pelo import do arquivo: o receptor é um módulo do projeto, e só esta função dele tem o nome.', 'Followed by the file\'s import: the receiver is a module of the project, and only this function of it has the name.'],
+  'inventory.step.import.help': ['Seguida pelo import do arquivo: o receptor é um módulo do projeto e só esta função dele tem o nome, ou o nome chamado vem de um import e é esta declaração.', 'Followed by the file\'s import: the receiver is a module of the project and only this function of it has the name, or the called name comes from an import and is this declaration.'],
+  'inventory.step.scope': ['pelo escopo', 'by scope'],
+  'inventory.step.scope.help': ['Seguida pelo escopo: o nome chamado é definido no próprio arquivo de quem chama (no módulo, ou no corpo da função em volta).', 'Followed by the scope: the called name is defined in the caller\'s own file (in the module, or in the body of the function around it).'],
   'inventory.step.trait': ['uma das implementações', 'one of the implementations'],
   'inventory.step.trait.help': ['Candidata: o tipo do receptor não está escrito e todos os homônimos implementam o mesmo trait; cada implementação é seguida.', 'Candidate: the receiver\'s type is not written and every homonym implements the same trait; each implementation is followed.'],
   'inventory.boundList': ['lista atribuída na linha {lines}', 'list assigned on line {lines}'],
@@ -7188,7 +7191,7 @@ function renderInventory() {
     ...measuredTags(o));
   // A step and, when it was not followed by a unique name, how it was followed.
   const stepParts = (s, k) => [k ? ' → ' : '', goTo(s.to, s.to_name), ...declarationTags(s.to),
-    ['type', 'trait_default', 'trait', 'import'].includes(s.resolution)
+    ['type', 'trait_default', 'trait', 'import', 'scope'].includes(s.resolution)
       ? el('span', { className: 'muted', style: 'font-size: 11px', title: t(`inventory.step.${s.resolution}.help`), textContent: ` (${t(`inventory.step.${s.resolution}`)})` }) : null,
     where(s.path, s.line)];
   // The operations a chain reaches in one declaration are one line, as in the terminal.
