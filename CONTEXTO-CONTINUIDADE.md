@@ -1110,3 +1110,22 @@ Escrever o teste de regressão do P1 **antes** da correção: uma função Pytho
   - `cargo test --workspace --locked`: 482 aprovados, 0 falhas, 2 ignorados.
   - Portão: aprovado, relatório igual ao da linha de base, salvo a data.
   - `/api/calls` antes × depois: 109 chamadas mudam no Healthchecks, todas previstas e todas de teste (`self._setup_data(..)`, `above_candidate_limit (9)` → `receiver (9)`); 0 no ray tracer; o grafo do run novo é igual ao antigo.
+
+## 26. Passo 2.3a: tipos do Python no arquivo e instanciação (20/11/2026)
+
+**Estado nesta data.** O estado vigente fica no [ESTADO-ATUAL.md](ESTADO-ATUAL.md). Relatório: [Parada 2](docs/reports/fase-2/2.3a-parada-2.md); folha: [2.3-revisao-amostra.md](docs/reports/fase-2/2.3-revisao-amostra.md); dados em [docs/reports/fase-2/dados/2.3/](docs/reports/fase-2/dados/2.3/). Código, testes e interface em `5589912`.
+
+- **Commits e push do 2.3a-0:** `8c689d4` (código e teste) e `1152875` (documentação), com push em 19/11/2026; CI verde (run `44621157811`).
+- **Uma interrupção:** a sessão parou no meio da implementação, por falta de energia prevista; o estado foi registrado numa nota de retomada, apagada depois, e o trabalho foi retomado.
+- **Previsão antes da implementação:** o simulador foi estendido para `modulo.Classe(..)`, `T::V(..)`, `Protocol` e `__getattr__`, como pedido na aprovação da Parada 1.
+- **Perfil V9** (`librarian-ingest/0.9.0;...;rust-structural-v7;python-structural-v5`, grafo `rust-python-syntax-graph-v6`):
+  - o nó `receiver_type` ganha `type_rule`, nos dois extratores;
+  - o Python grava `receiver_type` (parâmetro, anotação, construtor, `self`, campo do mesmo arquivo) e tem `class` entre os candidatos de chamada de método;
+  - qual classe o nome nomeia é lido na consulta, pelo arquivo e pelos imports do 2.2.
+- **Regra:** `type` para o método que a classe declara; derrubada sem base, salvo `__getattr__` e `Protocol`; `T::V(..)` pela variante; `relation: instantiates` com `runs` (o `__init__` próprio), seguido no lugar da classe (DEC-39).
+- **Divergência corrigida:** com 17 classes `Command`, acima do teto, o tipo ficava sem aresta (HC-81); a classe passou a ser procurada pelo nome escrito, com teste.
+- **Portão:** aprovado, igual à previsão. Python 21/1/12/8/33 → 27/1/12/2/33 (HC-51 a HC-56); Rust igual; fatos 16/8/1/1 → 16/9/0/1; N1-py, N1-py-construtor, N2-py e N4-py no alvo.
+- **/api/calls antes × depois:** 171 mudanças no Healthchecks e 11 no ray tracer, todas previstas, nenhuma fora da previsão; "instancia" 655 e 13, todas previstas (574 e 2 só ganharam `relation`; 81 e 11 são links novos, contados entre as que mudam).
+- **B5:** a pergunta congelada passou a gerar a edition no perfil V8, em que foi congelada; não exercita o V9.
+- **Validação:** `cargo test --workspace --locked` 493 aprovados (11 testes novos em `tests/tipos_2_3a.rs`); perguntas 01–14 com H1–H3; DEC-30 84 de 84, depois de corrigir o texto do `__init__` que a página procurava entre os nós desenhados.
+- **Validação do usuário (20/11/2026):** a verdade de HC-76 a HC-87 e RT-63 a RT-65 foi validada (HC-76, HC-81 e RT-63 conferidos no editor; HC-79 na Q6), e a DEC-39 foi aprovada. A linha de base nova (Python 87 chamadas 38/1/12/3/33, Rust 65 chamadas 39/0/1/10/15; fatos 16/9/0/1) passou a ser `tools/precisao/linha-de-base.json`; o portão contra ela deu APROVADO, sem nenhuma chamada mudando de categoria.

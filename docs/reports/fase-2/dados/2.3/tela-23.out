@@ -1,0 +1,419 @@
+run novo renderer-9b78f3a9: 20261120-023153
+run novo healthchecks-25597e41: 20261120-023153
+PASSA  PT check.ping (tipo por anotação, HC-F6): /api/calls dá type (1) → /^Check\.ping$/  -> {"resolution":"type","to":"Check.ping","basis":"type","candidate_edge":"edge:34e270b39d0ca2926003dfdde07d5db66a39db4144c0c55729f09350de2a1ce0","candidates":1}
+PASSA  PT check.ping (tipo por anotação, HC-F6): basis type, candidate_edge presente  -> type edge:34e270b39d0ca2926003dfdde07d5db66a39db4144c0c55729f09350de2a1ce0
+PASSA  PT check.ping (tipo por anotação, HC-F6): o detalhe da linha diz o texto da resolução  -> seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante) || ping → Check.ping
+Fechar
+chama: check.ping(remote_addr, scheme, method, ua, body, action, rid, exitstatus)
+hc/api/views.py:255
+seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante)
+PASSA  PT check.ping (tipo por anotação, HC-F6): relation calls  -> calls
+PASSA  PT check.ping (tipo por anotação, HC-F6): nenhuma chave crua nem código sem texto  -> ping → Check.ping
+Fechar
+chama: check.ping(remote_addr, scheme, method, ua, body, action, rid, exitstatus)
+hc/api/views.py:255
+seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante)
+      [pt-type.png] ping → Check.ping ⏎ Fechar ⏎ chama: check.ping(remote_addr, scheme, method, ua, body, action, rid, exitstatus) ⏎ hc/api/views.py:255 ⏎ seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante)
+PASSA  PT fields.add (construtor, acima do teto, HC-51): /api/calls dá type (29) → /^SlackFields\.add$/  -> {"resolution":"type","to":"SlackFields.add","basis":"type","candidate_edge":null,"candidates":29}
+PASSA  PT fields.add (construtor, acima do teto, HC-51): basis type, candidate_edge null  -> type null
+PASSA  PT fields.add (construtor, acima do teto, HC-51): o detalhe da linha diz o texto da resolução  -> seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante) || RocketChat.payload → SlackFields.add
+Fechar
+chama: fields.add("Description", check.desc, short=False)
+hc/integrations/rocketchat/transport.py:31
+seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante)
+chama: fields.add("Project", check.project.name)
+hc/integrations/rocketchat/transport.py:34
+seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante)
+chama: fields.add("Tags", " ".join(f"`{tag}`" for tag in tags))
+hc/integrations/rocketchat/transport.py:37
+seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante)
+chama: fields.add("Period", format_duration(check.timeout))
+hc/integrations/rocketchat/transport.py:40
+seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante)
+chama: fields.add("Schedule", self.fix_asterisks(check.schedule))
+hc/integrations/rocketchat/tr
+PASSA  PT fields.add (construtor, acima do teto, HC-51): relation calls  -> calls
+PASSA  PT fields.add (construtor, acima do teto, HC-51): nenhuma chave crua nem código sem texto  -> RocketChat.payload → SlackFields.add
+Fechar
+chama: fields.add("Description", check.desc, short=False)
+hc/integrations/rocketchat/transport.py:31
+seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante)
+chama: fields.add("Project", check.project.name)
+hc/integrations/rocketchat/transport.py:34
+seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante)
+chama: fields.add("Tags", " ".join(f"`{tag}`" for tag in tags))
+hc/integrations/rocketchat/transport.py:37
+seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante)
+chama: fields.add("Period", format_duration(check.timeout))
+hc/integrations/rocketchat/transport.py:40
+seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante)
+chama: fields.add("Schedule", self.fix_asterisks(check.schedule))
+hc/integrations/rocketchat/transport.py:43
+seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e
+      [pt-type-sem-aresta.png] RocketChat.payload → SlackFields.add ⏎ Fechar ⏎ chama: fields.add("Description", check.desc, short=False) ⏎ hc/integrations/rocketchat/transport.py:31 ⏎ seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante) ⏎ chama: fields.add("Project", check.project.name) ⏎ hc/integrations/rocketchat/transport.py:34 ⏎ seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante) ⏎ chama: fields.add("Tags", " ".join(f"`{tag}`" for tag in tags)) ⏎ hc/integrations/rocketchat/transport.py:37 ⏎ seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante) ⏎ chama: fields.add("Period", format_duration(check.timeout)) ⏎ hc/integrations/rocketchat/transport.py:40 ⏎ seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante) ⏎ chama: fields.add("Schedule", self.fix_asterisks(check.schedule)) ⏎ hc/integrations/rocketchat/transport.py:43 ⏎ seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante) ⏎ chama: fields.add("Time Zone", check.tz) ⏎ hc/integrations/rocketchat/transport.py:44 ⏎ seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante) ⏎ chama: fields.add("Total Pings", str(ping.n)) ⏎ hc/integrations/rocketchat/transport.py:47 ⏎ seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante) ⏎ chama: fields.add("Last Ping", ping.formatted_kind_created()) ⏎ hc/integrations/rocketchat/transport.py:48 ⏎ seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante) ⏎ chama: fields.add("Last Ping Body", text) ⏎ hc/integrations/rocketchat/transport.py:53 ⏎ seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante) ⏎ chama: fields.add("Total Pings", "0") ⏎ hc/integrations/rocketchat/transport.py:55 ⏎ seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante) ⏎ chama: fields.add("Last Ping", "Never") ⏎ hc/integrations/rocketchat/transport.py:56 ⏎ seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante)
+PASSA  PT TransportError (instancia, roda o __init__): /api/calls dá unique (1) → /^TransportError$/  -> {"resolution":"unique","to":"TransportError","basis":"graph_edge","candidate_edge":"edge:25b22b63074fd521c3abb9ae6059acadcb178950e61654b69e9a60d7496a66c7","candidates":1}
+PASSA  PT TransportError (instancia, roda o __init__): basis graph_edge, candidate_edge presente  -> graph_edge edge:25b22b63074fd521c3abb9ae6059acadcb178950e61654b69e9a60d7496a66c7
+PASSA  PT TransportError (instancia, roda o __init__): o detalhe da linha diz o texto da resolução  -> seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta || GitHub.notify → TransportError
+Fechar
+instancia: TransportError
+hc/integrations/github/transport.py:53
+seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; o percurso segue no TransportError.__init__
+instancia: TransportError
+hc/integrations/github/transport.py:29
+seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; o percurso segue no TransportError.__init__
+PASSA  PT TransportError (instancia, roda o __init__): relation instantiates  -> instantiates
+PASSA  PT TransportError (instancia, roda o __init__): runs /^TransportError\.__init__$/  -> src:09216d7e52d9ea25534c3d3d9f6516ed7e4bb873736169a7c99b005901d8049c:267d3600b536a8b0eca384cb40f9088dd98b297d5b44210a73c0838d4cf86b7a:method:1663:1797
+PASSA  PT TransportError (instancia, roda o __init__): o detalhe diz que instancia  -> instancia: a chamada cria um objeto deste tipo, não chama a classe; o percurso segue no TransportError.__init__ || GitHub.notify → TransportError
+Fechar
+instancia: TransportError
+hc/integrations/github/transport.py:53
+seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; o percurso segue no TransportError.__init__
+instancia: TransportError
+hc/integrations/github/transport.py:29
+seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; o percurso segue no TransportError.__init__
+PASSA  PT TransportError (instancia, roda o __init__): a linha da chamada começa por "instancia:", não por "chama"  -> GitHub.notify → TransportError
+Fechar
+instancia: TransportError
+hc/integrations/github/transport.py:53
+seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; o percurso segue no TransportError.__init__
+instancia: TransportError
+hc/integrations/github/transport.py:29
+seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; o percurso segue no TransportError.__init__
+PASSA  PT TransportError (instancia, roda o __init__): nenhuma chave crua nem código sem texto  -> GitHub.notify → TransportError
+Fechar
+instancia: TransportError
+hc/integrations/github/transport.py:53
+seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; o percurso segue no TransportError.__init__
+instancia: TransportError
+hc/integrations/github/transport.py:29
+seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; o percurso segue no TransportError.__init__
+      [pt-unique.png] GitHub.notify → TransportError ⏎ Fechar ⏎ instancia: TransportError ⏎ hc/integrations/github/transport.py:53 ⏎ seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta ⏎ instancia: a chamada cria um objeto deste tipo, não chama a classe; o percurso segue no TransportError.__init__ ⏎ instancia: TransportError ⏎ hc/integrations/github/transport.py:29 ⏎ seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta ⏎ instancia: a chamada cria um objeto deste tipo, não chama a classe; o percurso segue no TransportError.__init__
+PASSA  PT forms.WebhookForm (modulo.Classe, instancia, sem __init__): /api/calls dá unique (1) → /^WebhookForm$/  -> {"resolution":"unique","to":"WebhookForm","basis":"graph_edge","candidate_edge":"edge:47509956730600ba012a1b4857558a92040336bbaeba85148e275291b0386d1d","candidates":1}
+PASSA  PT forms.WebhookForm (modulo.Classe, instancia, sem __init__): basis graph_edge, candidate_edge presente  -> graph_edge edge:47509956730600ba012a1b4857558a92040336bbaeba85148e275291b0386d1d
+PASSA  PT forms.WebhookForm (modulo.Classe, instancia, sem __init__): o detalhe da linha diz o texto da resolução  -> seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta || webhook_form → WebhookForm
+Fechar
+instancia: forms.WebhookForm()
+hc/integrations/webhook/views.py:32
+seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui
+instancia: forms.WebhookForm(doc)
+hc/integrations/webhook/views.py:42
+seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui
+instancia: forms.WebhookForm(request.POST)
+hc/integrations/webhook/views.py:21
+seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui
+PASSA  PT forms.WebhookForm (modulo.Classe, instancia, sem __init__): relation instantiates  -> instantiates
+PASSA  PT forms.WebhookForm (modulo.Classe, instancia, sem __init__): runs ausente
+PASSA  PT forms.WebhookForm (modulo.Classe, instancia, sem __init__): o detalhe diz que instancia  -> instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui || webhook_form → WebhookForm
+Fechar
+instancia: forms.WebhookForm()
+hc/integrations/webhook/views.py:32
+seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui
+instancia: forms.WebhookForm(doc)
+hc/integrations/webhook/views.py:42
+seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui
+instancia: forms.WebhookForm(request.POST)
+hc/integrations/webhook/views.py:21
+seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui
+PASSA  PT forms.WebhookForm (modulo.Classe, instancia, sem __init__): a linha da chamada começa por "instancia:", não por "chama"  -> webhook_form → WebhookForm
+Fechar
+instancia: forms.WebhookForm()
+hc/integrations/webhook/views.py:32
+seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui
+instancia: forms.WebhookForm(doc)
+hc/integrations/webhook/views.py:42
+seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui
+instancia: forms.WebhookForm(request.POST)
+hc/integrations/webhook/views.py:21
+seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui
+PASSA  PT forms.WebhookForm (modulo.Classe, instancia, sem __init__): nenhuma chave crua nem código sem texto  -> webhook_form → WebhookForm
+Fechar
+instancia: forms.WebhookForm()
+hc/integrations/webhook/views.py:32
+seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui
+instancia: forms.WebhookForm(doc)
+hc/integrations/webhook/views.py:42
+seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui
+instancia: forms.WebhookForm(request.POST)
+hc/integrations/webhook/views.py:21
+seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui
+      [pt-unique.png] webhook_form → WebhookForm ⏎ Fechar ⏎ instancia: forms.WebhookForm() ⏎ hc/integrations/webhook/views.py:32 ⏎ seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta ⏎ instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui ⏎ instancia: forms.WebhookForm(doc) ⏎ hc/integrations/webhook/views.py:42 ⏎ seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta ⏎ instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui ⏎ instancia: forms.WebhookForm(request.POST) ⏎ hc/integrations/webhook/views.py:21 ⏎ seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta ⏎ instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui
+PASSA  PT Object::Cone (variante pelo caminho): /api/calls dá type (2) → /^Object::Cone$/  -> {"resolution":"type","to":"Object::Cone","basis":"type","candidate_edge":"edge:098ce171a13d9c5157d7bf80439597db233babee6020db84d4cf7e8836ebaa1d","candidates":2}
+PASSA  PT Object::Cone (variante pelo caminho): basis type, candidate_edge presente  -> type edge:098ce171a13d9c5157d7bf80439597db233babee6020db84d4cf7e8836ebaa1d
+PASSA  PT Object::Cone (variante pelo caminho): o detalhe da linha diz o texto da resolução  -> seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante) || impl From<Cone> for Object::from → Object::Cone
+Fechar
+instancia: Object::Cone
+src/object.rs:80
+seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante)
+instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui
+PASSA  PT Object::Cone (variante pelo caminho): relation instantiates  -> instantiates
+PASSA  PT Object::Cone (variante pelo caminho): runs ausente
+PASSA  PT Object::Cone (variante pelo caminho): o detalhe diz que instancia  -> instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui || impl From<Cone> for Object::from → Object::Cone
+Fechar
+instancia: Object::Cone
+src/object.rs:80
+seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante)
+instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui
+PASSA  PT Object::Cone (variante pelo caminho): a linha da chamada começa por "instancia:", não por "chama"  -> impl From<Cone> for Object::from → Object::Cone
+Fechar
+instancia: Object::Cone
+src/object.rs:80
+seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante)
+instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui
+PASSA  PT Object::Cone (variante pelo caminho): nenhuma chave crua nem código sem texto  -> impl From<Cone> for Object::from → Object::Cone
+Fechar
+instancia: Object::Cone
+src/object.rs:80
+seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante)
+instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui
+      [pt-type.png] impl From<Cone> for Object::from → Object::Cone ⏎ Fechar ⏎ instancia: Object::Cone ⏎ src/object.rs:80 ⏎ seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante) ⏎ instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui
+PASSA  PT: textos novos em português
+PASSA  PT: nenhum erro de página
+PASSA  PT: nada além de abrir o projeto (POST /api/project = store.open) e /api/calls
+PASSA  EN check.ping (tipo por anotação, HC-F6): /api/calls dá type (1) → /^Check\.ping$/  -> {"resolution":"type","to":"Check.ping","basis":"type","candidate_edge":"edge:34e270b39d0ca2926003dfdde07d5db66a39db4144c0c55729f09350de2a1ce0","candidates":1}
+PASSA  EN check.ping (tipo por anotação, HC-F6): basis type, candidate_edge presente  -> type edge:34e270b39d0ca2926003dfdde07d5db66a39db4144c0c55729f09350de2a1ce0
+PASSA  EN check.ping (tipo por anotação, HC-F6): o detalhe da linha diz o texto da resolução  -> followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant) || ping → Check.ping
+Close
+calls: check.ping(remote_addr, scheme, method, ua, body, action, rid, exitstatus)
+hc/api/views.py:255
+followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant)
+PASSA  EN check.ping (tipo por anotação, HC-F6): relation calls  -> calls
+PASSA  EN check.ping (tipo por anotação, HC-F6): nenhuma chave crua nem código sem texto  -> ping → Check.ping
+Close
+calls: check.ping(remote_addr, scheme, method, ua, body, action, rid, exitstatus)
+hc/api/views.py:255
+followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant)
+      [en-type.png] ping → Check.ping ⏎ Close ⏎ calls: check.ping(remote_addr, scheme, method, ua, body, action, rid, exitstatus) ⏎ hc/api/views.py:255 ⏎ followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant)
+PASSA  EN fields.add (construtor, acima do teto, HC-51): /api/calls dá type (29) → /^SlackFields\.add$/  -> {"resolution":"type","to":"SlackFields.add","basis":"type","candidate_edge":null,"candidates":29}
+PASSA  EN fields.add (construtor, acima do teto, HC-51): basis type, candidate_edge null  -> type null
+PASSA  EN fields.add (construtor, acima do teto, HC-51): o detalhe da linha diz o texto da resolução  -> followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant) || RocketChat.payload → SlackFields.add
+Close
+calls: fields.add("Description", check.desc, short=False)
+hc/integrations/rocketchat/transport.py:31
+followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant)
+calls: fields.add("Project", check.project.name)
+hc/integrations/rocketchat/transport.py:34
+followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant)
+calls: fields.add("Tags", " ".join(f"`{tag}`" for tag in tags))
+hc/integrations/rocketchat/transport.py:37
+followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant)
+calls: fields.add("Period", format_duration(check.timeout))
+hc/integrations/rocketchat/transport.py:40
+followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant)
+calls: fields.add("Schedule", self.fix_asterisks(check.schedule))
+hc/integra
+PASSA  EN fields.add (construtor, acima do teto, HC-51): relation calls  -> calls
+PASSA  EN fields.add (construtor, acima do teto, HC-51): nenhuma chave crua nem código sem texto  -> RocketChat.payload → SlackFields.add
+Close
+calls: fields.add("Description", check.desc, short=False)
+hc/integrations/rocketchat/transport.py:31
+followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant)
+calls: fields.add("Project", check.project.name)
+hc/integrations/rocketchat/transport.py:34
+followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant)
+calls: fields.add("Tags", " ".join(f"`{tag}`" for tag in tags))
+hc/integrations/rocketchat/transport.py:37
+followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant)
+calls: fields.add("Period", format_duration(check.timeout))
+hc/integrations/rocketchat/transport.py:40
+followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant)
+calls: fields.add("Schedule", self.fix_asterisks(check.schedule))
+hc/integrations/rocketchat/transport.py:43
+followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also pa
+      [en-type-sem-aresta.png] RocketChat.payload → SlackFields.add ⏎ Close ⏎ calls: fields.add("Description", check.desc, short=False) ⏎ hc/integrations/rocketchat/transport.py:31 ⏎ followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant) ⏎ calls: fields.add("Project", check.project.name) ⏎ hc/integrations/rocketchat/transport.py:34 ⏎ followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant) ⏎ calls: fields.add("Tags", " ".join(f"`{tag}`" for tag in tags)) ⏎ hc/integrations/rocketchat/transport.py:37 ⏎ followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant) ⏎ calls: fields.add("Period", format_duration(check.timeout)) ⏎ hc/integrations/rocketchat/transport.py:40 ⏎ followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant) ⏎ calls: fields.add("Schedule", self.fix_asterisks(check.schedule)) ⏎ hc/integrations/rocketchat/transport.py:43 ⏎ followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant) ⏎ calls: fields.add("Time Zone", check.tz) ⏎ hc/integrations/rocketchat/transport.py:44 ⏎ followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant) ⏎ calls: fields.add("Total Pings", str(ping.n)) ⏎ hc/integrations/rocketchat/transport.py:47 ⏎ followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant) ⏎ calls: fields.add("Last Ping", ping.formatted_kind_created()) ⏎ hc/integrations/rocketchat/transport.py:48 ⏎ followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant) ⏎ calls: fields.add("Last Ping Body", text) ⏎ hc/integrations/rocketchat/transport.py:53 ⏎ followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant) ⏎ calls: fields.add("Total Pings", "0") ⏎ hc/integrations/rocketchat/transport.py:55 ⏎ followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant) ⏎ calls: fields.add("Last Ping", "Never") ⏎ hc/integrations/rocketchat/transport.py:56 ⏎ followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant)
+PASSA  EN TransportError (instancia, roda o __init__): /api/calls dá unique (1) → /^TransportError$/  -> {"resolution":"unique","to":"TransportError","basis":"graph_edge","candidate_edge":"edge:25b22b63074fd521c3abb9ae6059acadcb178950e61654b69e9a60d7496a66c7","candidates":1}
+PASSA  EN TransportError (instancia, roda o __init__): basis graph_edge, candidate_edge presente  -> graph_edge edge:25b22b63074fd521c3abb9ae6059acadcb178950e61654b69e9a60d7496a66c7
+PASSA  EN TransportError (instancia, roda o __init__): o detalhe da linha diz o texto da resolução  -> followed: among the declarations the call's form reaches, the name matches only this one || GitHub.notify → TransportError
+Close
+instantiates: TransportError
+hc/integrations/github/transport.py:53
+followed: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the walk goes on in TransportError.__init__
+instantiates: TransportError
+hc/integrations/github/transport.py:29
+followed: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the walk goes on in TransportError.__init__
+PASSA  EN TransportError (instancia, roda o __init__): relation instantiates  -> instantiates
+PASSA  EN TransportError (instancia, roda o __init__): runs /^TransportError\.__init__$/  -> src:09216d7e52d9ea25534c3d3d9f6516ed7e4bb873736169a7c99b005901d8049c:267d3600b536a8b0eca384cb40f9088dd98b297d5b44210a73c0838d4cf86b7a:method:1663:1797
+PASSA  EN TransportError (instancia, roda o __init__): o detalhe diz que instancia  -> instantiates: the call builds an object of this type, it does not call the class; the walk goes on in TransportError.__init__ || GitHub.notify → TransportError
+Close
+instantiates: TransportError
+hc/integrations/github/transport.py:53
+followed: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the walk goes on in TransportError.__init__
+instantiates: TransportError
+hc/integrations/github/transport.py:29
+followed: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the walk goes on in TransportError.__init__
+PASSA  EN TransportError (instancia, roda o __init__): a linha da chamada começa por "instantiates:", não por "chama"  -> GitHub.notify → TransportError
+Close
+instantiates: TransportError
+hc/integrations/github/transport.py:53
+followed: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the walk goes on in TransportError.__init__
+instantiates: TransportError
+hc/integrations/github/transport.py:29
+followed: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the walk goes on in TransportError.__init__
+PASSA  EN TransportError (instancia, roda o __init__): nenhuma chave crua nem código sem texto  -> GitHub.notify → TransportError
+Close
+instantiates: TransportError
+hc/integrations/github/transport.py:53
+followed: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the walk goes on in TransportError.__init__
+instantiates: TransportError
+hc/integrations/github/transport.py:29
+followed: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the walk goes on in TransportError.__init__
+      [en-unique.png] GitHub.notify → TransportError ⏎ Close ⏎ instantiates: TransportError ⏎ hc/integrations/github/transport.py:53 ⏎ followed: among the declarations the call's form reaches, the name matches only this one ⏎ instantiates: the call builds an object of this type, it does not call the class; the walk goes on in TransportError.__init__ ⏎ instantiates: TransportError ⏎ hc/integrations/github/transport.py:29 ⏎ followed: among the declarations the call's form reaches, the name matches only this one ⏎ instantiates: the call builds an object of this type, it does not call the class; the walk goes on in TransportError.__init__
+PASSA  EN forms.WebhookForm (modulo.Classe, instancia, sem __init__): /api/calls dá unique (1) → /^WebhookForm$/  -> {"resolution":"unique","to":"WebhookForm","basis":"graph_edge","candidate_edge":"edge:47509956730600ba012a1b4857558a92040336bbaeba85148e275291b0386d1d","candidates":1}
+PASSA  EN forms.WebhookForm (modulo.Classe, instancia, sem __init__): basis graph_edge, candidate_edge presente  -> graph_edge edge:47509956730600ba012a1b4857558a92040336bbaeba85148e275291b0386d1d
+PASSA  EN forms.WebhookForm (modulo.Classe, instancia, sem __init__): o detalhe da linha diz o texto da resolução  -> followed: among the declarations the call's form reaches, the name matches only this one || webhook_form → WebhookForm
+Close
+instantiates: forms.WebhookForm()
+hc/integrations/webhook/views.py:32
+followed: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here
+instantiates: forms.WebhookForm(doc)
+hc/integrations/webhook/views.py:42
+followed: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here
+instantiates: forms.WebhookForm(request.POST)
+hc/integrations/webhook/views.py:21
+followed: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here
+PASSA  EN forms.WebhookForm (modulo.Classe, instancia, sem __init__): relation instantiates  -> instantiates
+PASSA  EN forms.WebhookForm (modulo.Classe, instancia, sem __init__): runs ausente
+PASSA  EN forms.WebhookForm (modulo.Classe, instancia, sem __init__): o detalhe diz que instancia  -> instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here || webhook_form → WebhookForm
+Close
+instantiates: forms.WebhookForm()
+hc/integrations/webhook/views.py:32
+followed: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here
+instantiates: forms.WebhookForm(doc)
+hc/integrations/webhook/views.py:42
+followed: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here
+instantiates: forms.WebhookForm(request.POST)
+hc/integrations/webhook/views.py:21
+followed: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here
+PASSA  EN forms.WebhookForm (modulo.Classe, instancia, sem __init__): a linha da chamada começa por "instantiates:", não por "chama"  -> webhook_form → WebhookForm
+Close
+instantiates: forms.WebhookForm()
+hc/integrations/webhook/views.py:32
+followed: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here
+instantiates: forms.WebhookForm(doc)
+hc/integrations/webhook/views.py:42
+followed: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here
+instantiates: forms.WebhookForm(request.POST)
+hc/integrations/webhook/views.py:21
+followed: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here
+PASSA  EN forms.WebhookForm (modulo.Classe, instancia, sem __init__): nenhuma chave crua nem código sem texto  -> webhook_form → WebhookForm
+Close
+instantiates: forms.WebhookForm()
+hc/integrations/webhook/views.py:32
+followed: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here
+instantiates: forms.WebhookForm(doc)
+hc/integrations/webhook/views.py:42
+followed: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here
+instantiates: forms.WebhookForm(request.POST)
+hc/integrations/webhook/views.py:21
+followed: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here
+      [en-unique.png] webhook_form → WebhookForm ⏎ Close ⏎ instantiates: forms.WebhookForm() ⏎ hc/integrations/webhook/views.py:32 ⏎ followed: among the declarations the call's form reaches, the name matches only this one ⏎ instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here ⏎ instantiates: forms.WebhookForm(doc) ⏎ hc/integrations/webhook/views.py:42 ⏎ followed: among the declarations the call's form reaches, the name matches only this one ⏎ instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here ⏎ instantiates: forms.WebhookForm(request.POST) ⏎ hc/integrations/webhook/views.py:21 ⏎ followed: among the declarations the call's form reaches, the name matches only this one ⏎ instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here
+PASSA  EN Object::Cone (variante pelo caminho): /api/calls dá type (2) → /^Object::Cone$/  -> {"resolution":"type","to":"Object::Cone","basis":"type","candidate_edge":"edge:098ce171a13d9c5157d7bf80439597db233babee6020db84d4cf7e8836ebaa1d","candidates":2}
+PASSA  EN Object::Cone (variante pelo caminho): basis type, candidate_edge presente  -> type edge:098ce171a13d9c5157d7bf80439597db233babee6020db84d4cf7e8836ebaa1d
+PASSA  EN Object::Cone (variante pelo caminho): o detalhe da linha diz o texto da resolução  -> followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant) || impl From<Cone> for Object::from → Object::Cone
+Close
+instantiates: Object::Cone
+src/object.rs:80
+followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant)
+instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here
+PASSA  EN Object::Cone (variante pelo caminho): relation instantiates  -> instantiates
+PASSA  EN Object::Cone (variante pelo caminho): runs ausente
+PASSA  EN Object::Cone (variante pelo caminho): o detalhe diz que instancia  -> instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here || impl From<Cone> for Object::from → Object::Cone
+Close
+instantiates: Object::Cone
+src/object.rs:80
+followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant)
+instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here
+PASSA  EN Object::Cone (variante pelo caminho): a linha da chamada começa por "instantiates:", não por "chama"  -> impl From<Cone> for Object::from → Object::Cone
+Close
+instantiates: Object::Cone
+src/object.rs:80
+followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant)
+instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here
+PASSA  EN Object::Cone (variante pelo caminho): nenhuma chave crua nem código sem texto  -> impl From<Cone> for Object::from → Object::Cone
+Close
+instantiates: Object::Cone
+src/object.rs:80
+followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant)
+instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here
+      [en-type.png] impl From<Cone> for Object::from → Object::Cone ⏎ Close ⏎ instantiates: Object::Cone ⏎ src/object.rs:80 ⏎ followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant) ⏎ instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here
+PASSA  EN: textos novos em inglês
+PASSA  EN: nenhum erro de página
+PASSA  EN: nada além de abrir o projeto (POST /api/project = store.open) e /api/calls
+PASSA  tema escuro: o detalhe aparece com o texto de instancia  -> GitHub.notify → TransportError
+Fechar
+instancia: TransportError
+hc/integrations/github/transport.py:53
+seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; o percurso segue no TransportError.__init__
+instancia: TransportError
+hc/integrations/github/transport.py:29
+seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; o percurso segue no TransportError.__init__
+PASSA  tema escuro: tema aplicado (dark), texto rgb(143, 142, 134) sobre rgb(35, 35, 33)  -> {"color":"rgb(143, 142, 134)","bg":"rgb(35, 35, 33)","theme":"dark","overflow":false,"detailRight":1006,"width":1440}
+PASSA  tema escuro: nenhum erro de página
+PASSA  tema claro: o detalhe aparece com o texto de instancia  -> GitHub.notify → TransportError
+Fechar
+instancia: TransportError
+hc/integrations/github/transport.py:53
+seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; o percurso segue no TransportError.__init__
+instancia: TransportError
+hc/integrations/github/transport.py:29
+seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; o percurso segue no TransportError.__init__
+PASSA  tema claro: tema aplicado (light), texto rgb(122, 121, 116) sobre rgb(255, 255, 255)  -> {"color":"rgb(122, 121, 116)","bg":"rgb(255, 255, 255)","theme":"light","overflow":false,"detailRight":1006,"width":1440}
+PASSA  tema claro: nenhum erro de página
+PASSA  tela estreita (390 px): o detalhe aparece com o texto de instancia  -> GitHub.notify → TransportError
+Fechar
+instancia: TransportError
+hc/integrations/github/transport.py:53
+seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; o percurso segue no TransportError.__init__
+instancia: TransportError
+hc/integrations/github/transport.py:29
+seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; o percurso segue no TransportError.__init__
+PASSA  tela estreita (390 px): sem rolagem horizontal da página  -> {"color":"rgb(122, 121, 116)","bg":"rgb(255, 255, 255)","theme":"(sistema)","overflow":false,"detailRight":376,"width":390}
+PASSA  tela estreita (390 px): nenhum erro de página
+PASSA  .studio original igual antes e depois
+
+84 passam, 0 falham. Capturas em C:/Users/beatl/AppData/Local/Temp/claude/09139e964f85837f/27105ad5-53d1-4ce2-8db5-a3fea15f7a8f/scratchpad/tela-23

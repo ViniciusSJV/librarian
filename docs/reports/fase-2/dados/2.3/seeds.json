@@ -1,0 +1,22 @@
+{
+ "hc/integrations/webhook/views.py:21": {
+  "seed": "src:05a1108f50bb42072835b63edd3670afaa0ff08b9858302d6c869e78cd4002c7:c16da82f74f40d21ac9f6b10df51d1888d101c6b581d1d780e389bc17670599d:function:474:1609",
+  "text": "forms.WebhookForm(request.POST)"
+ },
+ "hc/integrations/github/transport.py:53": {
+  "seed": "src:6197169a9a8a8934bec74d331be34c36761dd187cab31bdabf3932fb46ce486c:6acfba9a20a56d676b45108fc6da2ed862bc3df5dd5dd3c72ea0d8993edc834e:method:806:1944",
+  "text": "TransportError"
+ },
+ "hc/api/views.py:255": {
+  "seed": "src:627a48233053768114a51eadccf97aadd78ac0fc450648e2b5da871ba305777e:d0121156422dcefcd2035b4c7f2222f23eba84765c7abf28520153d051ca673d:function:6860:9238",
+  "text": "check.ping(remote_addr, scheme, method, ua, body, action, rid, exitstatus)"
+ },
+ "hc/integrations/rocketchat/transport.py:37": {
+  "seed": "src:ef45013cfe5a0f9bf1a56868b9d5626ea6a345b4b03ba3abf4b36b189a308ee1:55019d8f6e0cb8777138cdc71947ad7c6715e31fb697dce0435ceacf46d1d20a:method:598:2241",
+  "text": "fields.add(\"Tags\", \" \".join(f\"`{tag}`\" for tag in tags))"
+ },
+ "src/object.rs:80": {
+  "seed": "src:6ec61590e2fd8e76c30e8f6fafef37660f5750b5f229775ad008e79945d71f2c:2f1101d1defc548461a1ef68118bc21a6e3a3829951839342dfd3a3c453bd165:method:2110:2174",
+  "text": "Object::Cone"
+ }
+}

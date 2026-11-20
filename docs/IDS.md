@@ -27,7 +27,7 @@ Muitos ids se repetem com sentidos diferentes nos documentos antigos. Daqui em d
 | `PIL-P1`–`PIL-P4` | Limitações de evidências e fatos no Piloto 1 | PIL:283–288 | `E4-P1`–`E4-P4` |
 | `PIL-Q1`–`PIL-Q6` | Perguntas do Piloto 1 (turns 01–14); `PIL-Q6/C3` é a claim C3 de uma resposta | PIL:171–186 | `ESP-Q1`–`ESP-Q12` |
 | `HC-F1`–`HC-F26` | Fatos do acervo do Healthchecks (citados também só como F1–F26) | PIL:213–246 | `ESP-F0`–`ESP-F13`, `HC-1`–`HC-60` |
-| `HC-1`–`HC-75`, `RT-1`–`RT-62` | Chamadas da amostra do portão da Fase 2: Healthchecks e ray tracer. RT-31–RT-55 vêm do passo 2.1 (validadas em 19/11); HC-61–HC-75 e RT-56–RT-62 vêm do passo 2.2 (validadas em 19/11) | [tools/precisao/fixtures/](../tools/precisao/fixtures/) (`amostra-hc.json`, `amostra-rt.json`) | `HC-F*` (fatos, não chamadas) |
+| `HC-1`–`HC-87`, `RT-1`–`RT-65` | Chamadas da amostra do portão da Fase 2: Healthchecks e ray tracer. RT-31–RT-55 vêm do passo 2.1 (validadas em 19/11); HC-61–HC-75 e RT-56–RT-62 vêm do passo 2.2 (validadas em 19/11); HC-76–HC-87 e RT-63–RT-65 vêm do passo 2.3a (validadas em 19/11 e 20/11) | [tools/precisao/fixtures/](../tools/precisao/fixtures/) (`amostra-hc.json`, `amostra-rt.json`) | `HC-F*` (fatos, não chamadas) |
 | `1B-A`–`1B-E` | Partes do diagnóstico do Piloto 1b | 1B-02, 1B-03 | — |
 | `INV-D1`–`INV-D6` | Seções do inventário dos MDs | 1B-03 | demais D |
 | `N0`–`N8` | Níveis de tipos (Python e Rust) | 1B-02, Parte B | — |

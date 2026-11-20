@@ -1,0 +1,147 @@
+{
+ "amostra": {
+  "hc": {
+   "antes": {
+    "sem_candidato": 33,
+    "correta": 21,
+    "link_falso": 1,
+    "candidatos_falsos": 12,
+    "ambigua": 8
+   },
+   "depois": {
+    "sem_candidato": 33,
+    "correta": 27,
+    "link_falso": 1,
+    "candidatos_falsos": 12,
+    "ambigua": 2
+   }
+  },
+  "rt": {
+   "antes": {
+    "correta": 36,
+    "sem_candidato": 15,
+    "ambigua": 10,
+    "candidatos_falsos": 1
+   },
+   "depois": {
+    "correta": 36,
+    "sem_candidato": 15,
+    "ambigua": 10,
+    "candidatos_falsos": 1
+   }
+  }
+ },
+ "mudam": [
+  {
+   "id": "HC-51",
+   "texto": "fields.add(\"Tags\", \" \".join(f\"`{tag}`\" for tag in tags))",
+   "de": "ambigua",
+   "para": "correta",
+   "regra": "construtor",
+   "tipo": "SlackFields (hc/integrations/slack/transport.py:18)",
+   "antes": "above_candidate_limit (29)",
+   "depois": "type → SlackFields.add (hc/integrations/slack/transport.py:21)"
+  },
+  {
+   "id": "HC-52",
+   "texto": "fields.add(\"Last Ping\", ping.formatted_kind_created())",
+   "de": "ambigua",
+   "para": "correta",
+   "regra": "construtor",
+   "tipo": "GoogleChatFields (hc/integrations/googlechat/transport.py:11)",
+   "antes": "above_candidate_limit (29)",
+   "depois": "type → GoogleChatFields.add (hc/integrations/googlechat/transport.py:14)"
+  },
+  {
+   "id": "HC-53",
+   "texto": "fields.add(\"Schedule\", check.schedule)",
+   "de": "ambigua",
+   "para": "correta",
+   "regra": "construtor",
+   "tipo": "GoogleChatFields (hc/integrations/googlechat/transport.py:11)",
+   "antes": "above_candidate_limit (29)",
+   "depois": "type → GoogleChatFields.add (hc/integrations/googlechat/transport.py:14)"
+  },
+  {
+   "id": "HC-54",
+   "texto": "form.get_value()",
+   "de": "ambigua",
+   "para": "correta",
+   "regra": "construtor*",
+   "tipo": "WebhookForm (hc/integrations/webhook/forms.py:55)",
+   "antes": "above_candidate_limit (9)",
+   "depois": "type → WebhookForm.get_value (hc/integrations/webhook/forms.py:79)"
+  },
+  {
+   "id": "HC-55",
+   "texto": "fields.add(\"Tags\", \", \".join(tags))",
+   "de": "ambigua",
+   "para": "correta",
+   "regra": "construtor",
+   "tipo": "GoogleChatFields (hc/integrations/googlechat/transport.py:11)",
+   "antes": "above_candidate_limit (29)",
+   "depois": "type → GoogleChatFields.add (hc/integrations/googlechat/transport.py:14)"
+  },
+  {
+   "id": "HC-56",
+   "texto": "fields.add(\"Project\", check.project.name)",
+   "de": "ambigua",
+   "para": "correta",
+   "regra": "construtor",
+   "tipo": "SlackFields (hc/integrations/slack/transport.py:18)",
+   "antes": "above_candidate_limit (29)",
+   "depois": "type → SlackFields.add (hc/integrations/slack/transport.py:21)"
+  }
+ ],
+ "populacao": {
+  "hc": {
+   "total": 1956,
+   "antes": {
+    "no_candidate_in_project": 1391,
+    "unique": 249,
+    "above_candidate_limit": 78,
+    "homonym": 224,
+    "import": 14
+   },
+   "depois": {
+    "no_candidate_in_project": 1313,
+    "unique": 325,
+    "above_candidate_limit": 27,
+    "homonym": 214,
+    "type": 61,
+    "import": 16
+   }
+  },
+  "rt": {
+   "total": 515,
+   "antes": {
+    "no_candidate_in_project": 323,
+    "type": 53,
+    "trait_default": 7,
+    "unique": 94,
+    "homonym": 35,
+    "above_candidate_limit": 3
+   },
+   "depois": {
+    "no_candidate_in_project": 323,
+    "type": 53,
+    "trait_default": 7,
+    "unique": 94,
+    "homonym": 35,
+    "above_candidate_limit": 3
+   }
+  }
+ },
+ "fatos": [
+  {
+   "fato": "F6",
+   "linha": 255,
+   "texto": "check.ping(",
+   "verdade": {
+    "alvo": "Check.ping (hc/api/models.py:493)"
+   },
+   "antes": "homonym (1)",
+   "depois": "type → Check.ping (hc/api/models.py:493)"
+  }
+ ]
+}

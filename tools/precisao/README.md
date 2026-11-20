@@ -46,6 +46,11 @@ O Healthchecks leva cerca de 2 minutos, porque `/api/calls` é chamado uma vez p
 | `ambigua` | `homonym` com o alvo certo entre os candidatos, ou acima do teto com alvo no projeto |
 | `sem_candidato` | Sem link (`no_candidate_in_project`) |
 
+Desde o passo 2.3a (DEC-39):
+- um link único para uma classe, uma struct de tupla ou uma variante precisa sair com `relation: instantiates`. Com `relation: calls`, é `link_falso`, mesmo com o alvo certo;
+- uma verdade `ambigua` (a regra do `dyn` no 2.1, aplicada ao `Protocol` na Q6 do 2.3) lista os corpos que podem rodar. Nenhum link único é certo (`link_falso`); um `homonym` com um deles entre os candidatos é `ambigua`, e sem nenhum é `candidatos_falsos`; acima do teto é `ambigua`.
+- nos níveis, um alvo de relação `instancia` fica "no alvo" quando o link sai com `relation: instantiates`.
+
 ## Regra do portão
 
 Um passo da Fase 2 reprova se, em Python ou em Rust:
@@ -58,7 +63,7 @@ Um passo da Fase 2 reprova se, em Python ou em Rust:
 
 `candidatos_falsos`, ambíguas, a população, os níveis e a auditoria dos fatos são registrados com a variação, mas não reprovam sozinhos.
 
-A regra compara só as chamadas que a linha de base também tem. Um estrato acrescentado à amostra depois aparece numa tabela à parte até entrar numa nova linha de base. Foi o caso de RT-31 a RT-55, do passo 2.1, que entraram na linha de base em 19/11/2026. HC-61 a HC-75 e RT-56 a RT-62, do passo 2.2, entraram na linha de base em 19/11/2026, com a verdade validada pelo usuário. Uma chamada da amostra fora da população (por caminho, como `Ray::new`, ou em testes) é procurada entre todas as chamadas do run. Com a amostra original, o veredito é o mesmo da regra anterior (DEC-37). Uma exceção só vale com justificativa caso a caso e aprovação do usuário.
+A regra compara só as chamadas que a linha de base também tem. Um estrato acrescentado à amostra depois aparece numa tabela à parte até entrar numa nova linha de base. Foi o caso de RT-31 a RT-55, do passo 2.1, que entraram na linha de base em 19/11/2026. HC-61 a HC-75 e RT-56 a RT-62, do passo 2.2, entraram na linha de base em 19/11/2026, com a verdade validada pelo usuário. HC-76 a HC-87 e RT-63 a RT-65, do passo 2.3a, entraram na linha de base em 20/11/2026, com a verdade validada pelo usuário (HC-79 na Q6 da Parada 1 do 2.3). Uma chamada da amostra fora da população (por caminho, como `Ray::new`, ou em testes) é procurada entre todas as chamadas do run. Com a amostra original, o veredito é o mesmo da regra anterior (DEC-37). Uma exceção só vale com justificativa caso a caso e aprovação do usuário.
 
 ## Arquivos
 
@@ -67,10 +72,10 @@ A regra compara só as chamadas que a linha de base também tem. Um estrato acre
 | `portao.js` | O comando |
 | `lib.js` | Cópia do `.studio`, Studio numa porta livre, hashes, o conjunto de chamadas e as respostas |
 | `amostra.js` | Como a amostra foi sorteada: rodado uma vez, sobre a linha de base de 18/11/2026. Não roda no portão |
-| `fixtures/amostra-hc.json`, `fixtures/amostra-rt.json` | 75 chamadas do Healthchecks e 62 do ray tracer (RT-31 a RT-55 vêm do passo 2.1; HC-61 a HC-75 e RT-56 a RT-62, do passo 2.2), com verdade, certeza, justificativa e `verdade_validada_por` |
+| `fixtures/amostra-hc.json`, `fixtures/amostra-rt.json` | 87 chamadas do Healthchecks e 65 do ray tracer (RT-31 a RT-55 vêm do passo 2.1; HC-61 a HC-75 e RT-56 a RT-62, do passo 2.2; HC-76 a HC-87 e RT-63 a RT-65, do passo 2.3a), com verdade, certeza, justificativa e `verdade_validada_por` |
 | `fixtures/fatos.json` | As chamadas que cada fato F1–F26 afirma, com a verdade |
 | `fixtures/niveis.json` | N0–N8: resultado atual e alvo da Fase 2, com o passo |
 | `sinteticos/py`, `sinteticos/rs` | Projetos dos níveis, copiados de `docs/reports/piloto-1b/dados/tipos/` |
-| `linha-de-base.json` | Resultado com o binário do passo 2.2, sobre as 75 chamadas do Healthchecks e as 62 do ray tracer, gravado com `--gravar-base`. Aprovada pelo usuário em 19/11/2026 (a anterior, do passo 2.1, sobre 60 + 55 chamadas, está no histórico do git) |
+| `linha-de-base.json` | Resultado com o binário do passo 2.3a, sobre as 87 chamadas do Healthchecks e as 65 do ray tracer (o mesmo conteúdo que `--gravar-base` grava). Aprovada pelo usuário em 20/11/2026 (as anteriores, do passo 2.2, sobre 75 + 62 chamadas, e do 2.1, estão no histórico do git) |
 
 A amostra é identificada pelo caminho e pelo intervalo de bytes da ocorrência (`arquivo@início-fim`), que são os mesmos em qualquer run do mesmo código-fonte. A verdade é do usuário (DEC-22). Uma verdade nova ou corrigida entra na fixture com `verdade_validada_por` indicando quem validou.

@@ -1,0 +1,34 @@
+{
+ "healthchecks-25597e41": {
+  "chamadas": 16239,
+  "faltam_no_depois": 0,
+  "novas_no_depois": 0,
+  "mudam": 171,
+  "previstas_e_iguais": 171,
+  "previstas_diferentes": [],
+  "nao_previstas": [],
+  "previstas_que_nao_mudaram": [],
+  "so_candidates": 0,
+  "instancia": {
+   "previstas": 655,
+   "iguais": 655,
+   "divergem": []
+  }
+ },
+ "renderer-9b78f3a9": {
+  "chamadas": 2545,
+  "faltam_no_depois": 0,
+  "novas_no_depois": 0,
+  "mudam": 11,
+  "previstas_e_iguais": 11,
+  "previstas_diferentes": [],
+  "nao_previstas": [],
+  "previstas_que_nao_mudaram": [],
+  "so_candidates": 0,
+  "instancia": {
+   "previstas": 13,
+   "iguais": 13,
+   "divergem": []
+  }
+ }
+}

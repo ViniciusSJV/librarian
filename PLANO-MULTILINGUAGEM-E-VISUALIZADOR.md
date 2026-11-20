@@ -60,6 +60,12 @@ corretas, lacunas explícitas e fatos aguardando aprovação humana.
   "chama") → N4 (corrige Repo() preso ao campo) → N3 entre arquivos
   (também Rust). Na mesma questão de dono: a chamada de um decorador
   roda na carga do módulo, não na função decorada (HC-19 da amostra).
+  Dividido na Parada 1 (19/11): 2.3a-0 (chave dos métodos no Python,
+  `8c689d4`, com push), 2.3a (tipos no arquivo, "instancia", regra no
+  receiver_type; DEC-39; validado e commitado em 20/11, `5589912`;
+  amostra Python 21 → 27 corretas, HC-F6 correto), 2.3b
+  (dono do campo e do decorador) e 2.3c (N3 entre arquivos, retorno de
+  T::f).
 - 2.4 Herança (N5) e alias local (N8).
 - 2.5 PIL-G5/N7: relação "passa referência", nunca "chama".
 - 2.6 Genéricos (N6), por último (ch.notify: 33 → 1).

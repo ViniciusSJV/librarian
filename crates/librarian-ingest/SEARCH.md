@@ -108,7 +108,8 @@ derivado de qualquer edition verificada, inclusive v1; o padrão continua `v1`.
 
 - Nó: `id`, `category` (`source`, `symbol` ou `occurrence`), `kind` (vocabulário
   do extractor; `file` para fontes), `language` (classificação da edition) e `label`.
-  Opcional: `ambiguous_candidates` (perfil v3), ausente quando não se aplica.
+  Opcional: `ambiguous_candidates` (perfil v3), ausente quando não se aplica; `type_rule`
+  (perfil v9, passo 2.3a), só num nó `receiver_type`: a regra que deu o tipo escrito.
   Chunks continuam registros de inspeção, não nós.
 - Aresta: `id`, `from`, `to`, `kind`, `resolution` e `evidence`. Os tipos de
   relação são só `declares`, `contains`, `observes` e `name_candidate`; o tipo da
@@ -144,7 +145,7 @@ forma escrita alcança. As arestas do grafo não mudam; a regra é que deixa de 
 | Forma | Candidatos admitidos |
 |---|---|
 | `x.m()`, `self.m()` | Todos menos a função solta |
-| `x.m()` com `x` ligado a um módulo do projeto (`import m`, `import m as a`, `from p import m`, `import a.b` com receptor `a.b`). Python | Só as funções do arquivo desse módulo |
+| `x.m()` com `x` ligado a um módulo do projeto (`import m`, `import m as a`, `from p import m`, `import a.b` com receptor `a.b`). Python | Só as funções e, desde o perfil v9 (2.3a), as classes do arquivo desse módulo (`forms.WebhookForm(..)`) |
 | `x.m()` com `x` ligado a um import de fora do projeto (`import time`, `from django.contrib import auth`). Python | Nenhum |
 | `f()`, sem receptor | Todos menos os métodos. Exceção: no corpo de uma classe, ou num método dela, os métodos da própria classe continuam |
 
@@ -166,7 +167,7 @@ Precedência, sempre sobre os admitidos: `chosen` > `unique` > `import` > `recei
 | `unique` | Um só admitido, e ele era o único candidato do grafo, ou a chamada não tem receptor, ou o receptor é módulo do projeto | `graph_edge` |
 | `import` | `x.m()` com `x` ligado a um módulo do projeto: havia vários candidatos, e só uma função daquele nome no arquivo do módulo. Python | `import` |
 | `receiver` | A chamada é `self.m()` (o receptor da linguagem e nada mais antes do nome) e só este homônimo está no bloco de quem chama. Acima do teto, pelas declarações desse bloco, em Rust e, desde o passo 2.3a-0, em Python (até então o método do Python era procurado pelo rótulo inteiro, `Classe.metodo`). `self.x.m()` nunca é `receiver` | `graph_edge` |
-| `type` | Método do tipo escrito do receptor: `receiver_type` do extrator ou caminho `T::f`. Hoje só o Rust registra | `type` |
+| `type` | Método do tipo escrito do receptor: `receiver_type` do extrator ou caminho `T::f`. No Rust, também a variante de `T::V(..)` (2.3a). No Python, desde o perfil v9 (2.3a), o método que a própria classe do receptor declara | `type` |
 | `trait_default` | O tipo escrito não define o método; é o padrão de um trait que ele implementa | `type` |
 | `homonym` | Nada decide; cada admitido aparece, e nenhum é seguido. Inclui um só admitido que sobrou de vários num `x.m()` | `graph_edge` |
 
@@ -191,7 +192,41 @@ do extrator, e não inferido como um compilador faria. As regras e os limites es
 
 Os nomes `Vec`, `iter` e `enumerate` são lidos sem resolver os caminhos. Uma nova
 declaração do mesmo nome vale para a função inteira, porque blocos não são escopos. O grafo
-não guarda qual regra deu o tipo, nem o nome de um tipo que não é do projeto.
+não guarda o nome de um tipo que não é do projeto. Desde o perfil v9 (2.3a), cada `receiver_type`
+guarda a regra que deu o tipo (`type_rule`): `parametro`, `anotacao`, `self`, `construtor`
+(`T { .. }`), `caminho` (`T::f(..)`: o tipo nomeado no caminho, sem ler o retorno de `f`, que é
+o 2.3c), `retorno` (`f(..)` de função do mesmo arquivo), `campo`, `item` e `variante`.
+
+**Tipos em Python (passo 2.3a, perfil v9; DEC-39).** O extrator grava um `receiver_type` quando o
+tipo do receptor está escrito no arquivo, com a regra:
+- `parametro` e `anotacao`: `T`, `m.T`, `"T"`, `T | None`, `Optional[T]`, `Union[T, None]`,
+  `Annotated[T, ..]`. A anotação vale para a função inteira: uma atribuição sem anotação não a troca.
+- `construtor`: `x = T(..)`, `x = m.T(..)` e `T(..).m()`. Sem anotação, todas as atribuições de `x`
+  na função precisam concordar; um `None` não conta; um `for`, `with`, `except`, desempacotamento,
+  `global` ou `case` tira o tipo.
+- `self`: o primeiro parâmetro de um método (não `staticmethod` nem `classmethod`), também numa
+  função aninhada.
+- `campo`: `self.x` (ou `a.x`, com `a` de uma classe do mesmo arquivo), com `self.x = T(..)` ou
+  `self.x = p` (`p: T`) no `__init__`, `self.x: T` num método ou `x: T` no corpo da classe. Uma
+  escrita em outro método, salvo `None`, tira o tipo. `x = T()` no corpo da classe não conta
+  (descritor do Django).
+
+O candidato do `receiver_type` é o nome escrito; qual classe ele nomeia é lido na consulta: a classe
+de topo do próprio arquivo, a de um `from p import Nome` (seguindo até três reexportações) ou a
+classe `T` do módulo do projeto `m`. Um `as` não vale (N8, 2.4). Um nome que não é classe do
+projeto (de fora, embutido, `Any`) não dá tipo. Acima do teto de homônimos, a classe é procurada
+pelo nome escrito. Com a classe, a regra:
+- `type`: os métodos daquele nome que a própria classe declara;
+- sem nenhum, a classe derruba os candidatos, salvo se tiver base (herança é do 2.4), definir
+  `__getattr__` ou `__getattribute__`, ou for um `Protocol`;
+- um `Protocol` não dá link único: o método dele é só a assinatura, e o corpo que roda é o do
+  objeto passado;
+- um tipo de fora do projeto não derruba nada em Python.
+
+**Instanciação (passo 2.3a; DEC-39).** Uma chamada que a regra liga a uma classe (Python), a uma
+struct de tupla ou a uma variante (Rust) instancia; não chama. O link sai com `relation:
+instantiates` e a mesma `resolution`. O percurso não entra na declaração construída: segue para
+o `__init__` que a classe declara (`runs`) e, sem ele, para ali. O inventário segue igual.
 
 `basis: "import"` quer dizer que o alvo veio da tabela de imports do arquivo, lida do texto
 com o parser do extrator, sem executar nada.
@@ -202,7 +237,8 @@ comparados) aparece como `homonym` sobre os candidatos admitidos, sem ser seguid
 inventário segue todos eles.
 
 Cada link traz `from`, `to`, `occurrence`, `occurrence_kind`, `text`, `candidates`,
-`resolution`, `candidate_edge`, `basis` e `evidence`.
+`resolution`, `candidate_edge`, `basis`, `relation` (2.3a: `calls` ou `instantiates`), `runs`
+(só numa instanciação com `__init__` próprio) e `evidence`.
 - `candidates` conta os candidatos admitidos pela forma da chamada, não todas as declarações
   com o nome. Desde o 2.2, num link `receiver` (`self.m()`), a função solta homônima não é
   admitida e sai da contagem: o link e o alvo são os mesmos, mas `candidates` pode ser menor
