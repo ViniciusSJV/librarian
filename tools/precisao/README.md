@@ -59,6 +59,8 @@ Desde o passo 2.3b (DEC-40):
 - uma verdade pode ter `executor`, a declaração que roda a chamada (o `__init__` de um campo). O portão registra se o `/api/calls` dela mostra a chamada, sem reprovar;
 - cada chamada da amostra é classificada também pela regra anterior (a do 2.3a, congelada em `classifyBefore40`), e o relatório lista as que dão veredito diferente. Nas 152 chamadas da linha de base do 2.3a, nenhuma.
 
+Desde o passo 2.4a (DEC-42): `scope` é resolução de alvo único, como `import` (`LINKED`). Na linha de base do 2.3c nenhuma chamada tem `scope`, e o veredito sobre ela não muda (prova na Parada 2 do 2.4a).
+
 ## Regra do portão
 
 Um passo da Fase 2 reprova se, em Python ou em Rust:

@@ -15,7 +15,9 @@ const L = require('./lib');
 const FIX = path.join(__dirname, 'fixtures');
 const LANGS = { hc: 'Python (Healthchecks)', rt: 'Rust (ray tracer)' };
 const CATS = ['correta', 'link_falso', 'candidatos_falsos', 'ambigua', 'sem_candidato'];
-const LINKED = new Set(['unique', 'receiver', 'type', 'trait_default', 'import', 'chosen']);
+// `scope` (step 2.4a, DEC-42): a plain call settled by a definition in the caller's own module or
+// block. A single-target link like the others.
+const LINKED = new Set(['unique', 'receiver', 'type', 'trait_default', 'import', 'scope', 'chosen']);
 /** Kinds a settled call builds instead of calling (DEC-39). */
 const INSTANTIATED = new Set(['class', 'struct', 'variant']);
 
