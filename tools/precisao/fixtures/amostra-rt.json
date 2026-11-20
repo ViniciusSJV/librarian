@@ -1,7 +1,7 @@
 {
  "projeto": "renderer-9b78f3a9",
  "fonte": "Projetos/renderer @ e38254b",
- "selecao": "tools/precisao/amostra.js sobre a linha de base de 18/11/2026 (binário de aae51d7); RT-31 a RT-50: estratos do passo 2.1 (type, type_caminho, type_fora, trait_default), sorteados pela ordem do sha256 do id da ocorrência, arquivos distintos primeiro; RT-51 a RT-55: chamadas por variável acima do teto, escolhidas à mão na Parada 3 do passo 2.1, uma por origem do tipo (item de coleção, parâmetro anotado, parâmetro no corpo de trait, construtor por caminho completo, self acima do teto); RT-56 a RT-62: estratos do passo 2.2 (tipo_derruba, com um caso de controle, e espelho), escolhidos à mão na Parada 1 do 2.2",
+ "selecao": "tools/precisao/amostra.js sobre a linha de base de 18/11/2026 (binário de aae51d7); RT-31 a RT-50: estratos do passo 2.1 (type, type_caminho, type_fora, trait_default), sorteados pela ordem do sha256 do id da ocorrência, arquivos distintos primeiro; RT-51 a RT-55: chamadas por variável acima do teto, escolhidas à mão na Parada 3 do passo 2.1, uma por origem do tipo (item de coleção, parâmetro anotado, parâmetro no corpo de trait, construtor por caminho completo, self acima do teto); RT-56 a RT-62: estratos do passo 2.2 (tipo_derruba, com um caso de controle, e espelho), escolhidos à mão na Parada 1 do 2.2; RT-63 a RT-65: estrato instancia do passo 2.3a",
  "chamadas": [
   {
    "id": "RT-01",
@@ -1343,6 +1343,74 @@
    "certeza": "alta",
    "justificativa": "let mut next = || ... (obj.rs:63): next() chama a closure local. O link atual vai para impl Sorteio::next (src/bin/cena_video.rs:29).",
    "verdade_validada_por": "usuário (revisada, conferida no editor, 19/11)"
+  },
+  {
+   "id": "RT-63",
+   "parte_c": false,
+   "estrato": "instancia",
+   "ocorrencia": "src/bin/cena_video.rs@4440-4447",
+   "local": "src/bin/cena_video.rs:104",
+   "texto": "Sorteio",
+   "dono": "main",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Sorteio (src/bin/cena_video.rs:25)"
+    ]
+   },
+   "verdade": {
+    "alvo": "Sorteio (src/bin/cena_video.rs:25)"
+   },
+   "certeza": "alta",
+   "justificativa": "`Sorteio(..)`: struct de tupla declarada no mesmo arquivo.",
+   "verdade_validada_por": "usuário (20/11/2026, conferido no editor)"
+  },
+  {
+   "id": "RT-64",
+   "parte_c": false,
+   "estrato": "instancia",
+   "ocorrencia": "src/object.rs@2149-2161",
+   "local": "src/object.rs:80",
+   "texto": "Object::Cone",
+   "dono": "impl From<Cone> for Object::from",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Cone (src/cone.rs:11)",
+     "Object::Cone (src/object.rs:50)"
+    ]
+   },
+   "verdade": {
+    "alvo": "Object::Cone (src/object.rs:50)"
+   },
+   "certeza": "alta",
+   "justificativa": "`Object::Cone(..)`: variante do enum Object; a struct Cone tem o mesmo nome.",
+   "verdade_validada_por": "usuário (20/11/2026)"
+  },
+  {
+   "id": "RT-65",
+   "parte_c": false,
+   "estrato": "instancia",
+   "ocorrencia": "src/patterns.rs@1268-1284",
+   "local": "src/patterns.rs:48",
+   "texto": "Patterns::Stripe",
+   "dono": "impl From<Stripe> for Patterns::from",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Patterns::Stripe (src/patterns.rs:26)",
+     "Stripe (src/patterns.rs:33)"
+    ]
+   },
+   "verdade": {
+    "alvo": "Patterns::Stripe (src/patterns.rs:26)"
+   },
+   "certeza": "alta",
+   "justificativa": "`Patterns::Stripe(..)`: variante do enum Patterns; a struct Stripe tem o mesmo nome.",
+   "verdade_validada_por": "usuário (20/11/2026)"
   }
  ]
 }

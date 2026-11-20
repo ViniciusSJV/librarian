@@ -1,44 +1,46 @@
 {
  "projetos": {
   "hc": {
-   "run_novo": "20261119-084124",
-   "grafo_novo_igual_ao_de_referencia": true,
+   "run_novo": "20261120-020910",
+   "grafo_novo_igual_ao_de_referencia": false,
    "populacao": {
     "total": 1956,
     "por_resolution": {
-     "no_candidate_in_project": 1391,
-     "unique": 249,
-     "above_candidate_limit": 78,
-     "homonym": 224,
-     "import": 14
+     "no_candidate_in_project": 1313,
+     "unique": 325,
+     "above_candidate_limit": 27,
+     "homonym": 214,
+     "type": 61,
+     "import": 16
     },
     "por_estrato": {
-     "no_candidate_in_project": 1391,
-     "unique->outro": 233,
-     "above_candidate_limit": 78,
-     "homonym": 224,
-     "import": 14,
+     "no_candidate_in_project": 1313,
+     "unique->outro": 309,
+     "above_candidate_limit": 27,
+     "homonym": 214,
+     "type": 61,
+     "import": 16,
      "unique->function": 16
     },
     "metodo_para_funcao": 30
    },
    "amostra_contagem": {
     "sem_candidato": 33,
-    "correta": 21,
+    "correta": 38,
     "link_falso": 1,
     "candidatos_falsos": 12,
-    "ambigua": 8
+    "ambigua": 3
    },
    "parte_c_contagem": {
     "sem_candidato": 16,
     "correta": 4
    },
    "estimativa_populacao": {
-    "correta": 274,
-    "link_falso": 23,
-    "candidatos_falsos": 144,
-    "ambigua": 78,
-    "sem_candidato": 1423
+    "correta": 366,
+    "link_falso": 31,
+    "candidatos_falsos": 138,
+    "ambigua": 0,
+    "sem_candidato": 1344
    },
    "amostra": [
     {
@@ -445,48 +447,48 @@
      "id": "HC-51",
      "estrato": "above_candidate_limit",
      "parte_c": false,
-     "categoria": "ambigua",
-     "resposta": "above_candidate_limit (29)",
+     "categoria": "correta",
+     "resposta": "type (29) → SlackFields.add (hc/integrations/slack/transport.py:21)",
      "validada": "usuário (revisada, 18/11)"
     },
     {
      "id": "HC-52",
      "estrato": "above_candidate_limit",
      "parte_c": false,
-     "categoria": "ambigua",
-     "resposta": "above_candidate_limit (29)",
+     "categoria": "correta",
+     "resposta": "type (29) → GoogleChatFields.add (hc/integrations/googlechat/transport.py:14)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
     {
      "id": "HC-53",
      "estrato": "above_candidate_limit",
      "parte_c": false,
-     "categoria": "ambigua",
-     "resposta": "above_candidate_limit (29)",
+     "categoria": "correta",
+     "resposta": "type (29) → GoogleChatFields.add (hc/integrations/googlechat/transport.py:14)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
     {
      "id": "HC-54",
      "estrato": "above_candidate_limit",
      "parte_c": false,
-     "categoria": "ambigua",
-     "resposta": "above_candidate_limit (9)",
+     "categoria": "correta",
+     "resposta": "type (9) → WebhookForm.get_value (hc/integrations/webhook/forms.py:79)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
     {
      "id": "HC-55",
      "estrato": "above_candidate_limit",
      "parte_c": false,
-     "categoria": "ambigua",
-     "resposta": "above_candidate_limit (29)",
+     "categoria": "correta",
+     "resposta": "type (29) → GoogleChatFields.add (hc/integrations/googlechat/transport.py:14)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
     {
      "id": "HC-56",
      "estrato": "above_candidate_limit",
      "parte_c": false,
-     "categoria": "ambigua",
-     "resposta": "above_candidate_limit (29)",
+     "categoria": "correta",
+     "resposta": "type (29) → SlackFields.add (hc/integrations/slack/transport.py:21)",
      "validada": "usuário (revisada, 18/11)"
     },
     {
@@ -640,12 +642,108 @@
      "categoria": "correta",
      "resposta": "unique (1) → send (hc/lib/emails.py:71)",
      "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "HC-76",
+     "estrato": "tipo_py",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "type (1) → Check.ping (hc/api/models.py:493)",
+     "validada": "usuário (20/11/2026, conferido no editor)"
+    },
+    {
+     "id": "HC-77",
+     "estrato": "tipo_py",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "type (29) → DowntimeRecorder.add (hc/api/models.py:184)",
+     "validada": "usuário (20/11/2026)"
+    },
+    {
+     "id": "HC-78",
+     "estrato": "tipo_py",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "type (2) → CreateHelper.verify (hc/lib/webauthn.py:46)",
+     "validada": "usuário (20/11/2026)"
+    },
+    {
+     "id": "HC-79",
+     "estrato": "tipo_py",
+     "parte_c": false,
+     "categoria": "ambigua",
+     "resposta": "homonym (2)",
+     "validada": "usuário (Q6 da Parada 1 do 2.3, 19/11)"
+    },
+    {
+     "id": "HC-80",
+     "estrato": "tipo_py",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "type (4) → Check.to_dict (hc/api/models.py:439)",
+     "validada": "usuário (20/11/2026)"
+    },
+    {
+     "id": "HC-81",
+     "estrato": "tipo_py",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "type (17) → Command.handle (hc/logs/management/commands/sendlogs.py:17)",
+     "validada": "usuário (20/11/2026, conferido no editor)"
+    },
+    {
+     "id": "HC-82",
+     "estrato": "instancia",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "unique (1) → Flip (hc/api/models.py:1361) [instancia]",
+     "validada": "usuário (20/11/2026)"
+    },
+    {
+     "id": "HC-83",
+     "estrato": "instancia",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "unique (1) → WebhookForm (hc/integrations/webhook/forms.py:55) [instancia]",
+     "validada": "usuário (20/11/2026)"
+    },
+    {
+     "id": "HC-84",
+     "estrato": "instancia",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "unique (1) → TransportError (hc/api/transports.py:56) [instancia]",
+     "validada": "usuário (20/11/2026)"
+    },
+    {
+     "id": "HC-85",
+     "estrato": "instancia",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "unique (1) → Check (hc/api/models.py:192) [instancia]",
+     "validada": "usuário (20/11/2026)"
+    },
+    {
+     "id": "HC-86",
+     "estrato": "instancia",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "unique (1) → FakeCurl (hc/lib/tests/test_curl.py:13) [instancia]",
+     "validada": "usuário (20/11/2026)"
+    },
+    {
+     "id": "HC-87",
+     "estrato": "receiver_py_teto",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "receiver (9) → NotifySlackTestCase._setup_data (hc/integrations/slack/tests/test_notify.py:16)",
+     "validada": "usuário (20/11/2026)"
     }
    ]
   },
   "rt": {
-   "run_novo": "20261119-084400",
-   "grafo_novo_igual_ao_de_referencia": true,
+   "run_novo": "20261120-021149",
+   "grafo_novo_igual_ao_de_referencia": false,
    "populacao": {
     "total": 515,
     "por_resolution": {
@@ -667,7 +765,7 @@
     "metodo_para_funcao": 0
    },
    "amostra_contagem": {
-    "correta": 36,
+    "correta": 39,
     "sem_candidato": 15,
     "ambigua": 10,
     "candidatos_falsos": 1
@@ -1180,6 +1278,30 @@
      "categoria": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (revisada, conferida no editor, 19/11)"
+    },
+    {
+     "id": "RT-63",
+     "estrato": "instancia",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "unique (1) → Sorteio (src/bin/cena_video.rs:25) [instancia]",
+     "validada": "usuário (20/11/2026, conferido no editor)"
+    },
+    {
+     "id": "RT-64",
+     "estrato": "instancia",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "type (2) → Object::Cone (src/object.rs:50) [instancia]",
+     "validada": "usuário (20/11/2026)"
+    },
+    {
+     "id": "RT-65",
+     "estrato": "instancia",
+     "parte_c": false,
+     "categoria": "correta",
+     "resposta": "type (2) → Patterns::Stripe (src/patterns.rs:26) [instancia]",
+     "validada": "usuário (20/11/2026)"
     }
    ]
   }
@@ -1190,14 +1312,14 @@
    "run": "20261118-061046",
    "ok": true,
    "detalhe": "",
-   "grafo_novo_igual": true
+   "grafo_novo_igual": false
   },
   {
    "projeto": "renderer-9b78f3a9",
    "run": "20261118-020654",
    "ok": true,
    "detalhe": "",
-   "grafo_novo_igual": true
+   "grafo_novo_igual": false
   }
  ],
  "fatos": [
@@ -1255,13 +1377,13 @@
   },
   {
    "id": "F6",
-   "classificacao": "suspeito",
+   "classificacao": "correto",
    "chamadas": [
     {
      "linha": 255,
      "texto": "check.ping(",
-     "classificacao": "suspeito",
-     "resposta": "homonym (1)"
+     "classificacao": "correto",
+     "resposta": "type (1)"
     }
    ]
   },
@@ -1538,7 +1660,8 @@
     "alvos": [
      "livre (pkg/models.py:63)",
      "livre (pkg/outro.py:1)"
-    ]
+    ],
+    "relacao": "calls"
    },
    "alvo": {
     "alvo": "livre (pkg/models.py:63)",
@@ -1562,7 +1685,8 @@
     "candidates": 1,
     "alvos": [
      "unica (pkg/models.py:67)"
-    ]
+    ],
+    "relacao": "calls"
    },
    "alvo": {
     "alvo": "unica (pkg/models.py:67)",
@@ -1585,7 +1709,8 @@
     "candidates": 1,
     "alvos": [
      "Cliente (pkg/models.py:1)"
-    ]
+    ],
+    "relacao": "instantiates"
    },
    "alvo": {
     "alvo": "Cliente (pkg/models.py:1)",
@@ -1593,7 +1718,7 @@
     "passo": "2.3",
     "por_que": "construtor: relação \"instancia\", separada de \"chama\""
    },
-   "estado": "igual ao atual (sai como \"chama\", fora do alvo)"
+   "estado": "no alvo"
   },
   {
    "id": "N1-py",
@@ -1608,14 +1733,12 @@
     ]
    },
    "agora": {
-    "resolution": "homonym",
+    "resolution": "type",
     "candidates": 4,
     "alvos": [
-     "Arquivo.salvar (pkg/models.py:20)",
-     "Cliente.salvar (pkg/models.py:5)",
-     "Fornecedor.salvar (pkg/models.py:10)",
-     "Repo.salvar (pkg/models.py:15)"
-    ]
+     "Cliente.salvar (pkg/models.py:5)"
+    ],
+    "relacao": "calls"
    },
    "alvo": {
     "alvo": "Cliente.salvar (pkg/models.py:5)",
@@ -1623,7 +1746,7 @@
     "passo": "2.3",
     "por_que": "A = Cliente(\"a\")"
    },
-   "estado": "igual ao atual"
+   "estado": "no alvo"
   },
   {
    "id": "N2-py",
@@ -1638,14 +1761,12 @@
     ]
    },
    "agora": {
-    "resolution": "homonym",
+    "resolution": "type",
     "candidates": 4,
     "alvos": [
-     "Arquivo.salvar (pkg/models.py:20)",
-     "Cliente.salvar (pkg/models.py:5)",
-     "Fornecedor.salvar (pkg/models.py:10)",
-     "Repo.salvar (pkg/models.py:15)"
-    ]
+     "Cliente.salvar (pkg/models.py:5)"
+    ],
+    "relacao": "calls"
    },
    "alvo": {
     "alvo": "Cliente.salvar (pkg/models.py:5)",
@@ -1653,7 +1774,7 @@
     "passo": "2.3",
     "por_que": "a: Cliente"
    },
-   "estado": "igual ao atual"
+   "estado": "no alvo"
   },
   {
    "id": "N3-py",
@@ -1675,7 +1796,8 @@
      "Cliente.salvar (pkg/models.py:5)",
      "Fornecedor.salvar (pkg/models.py:10)",
      "Repo.salvar (pkg/models.py:15)"
-    ]
+    ],
+    "relacao": "calls"
    },
    "alvo": {
     "alvo": "Cliente.salvar (pkg/models.py:5)",
@@ -1698,14 +1820,12 @@
     ]
    },
    "agora": {
-    "resolution": "homonym",
+    "resolution": "type",
     "candidates": 4,
     "alvos": [
-     "Arquivo.salvar (pkg/models.py:20)",
-     "Cliente.salvar (pkg/models.py:5)",
-     "Fornecedor.salvar (pkg/models.py:10)",
      "Repo.salvar (pkg/models.py:15)"
-    ]
+    ],
+    "relacao": "calls"
    },
    "alvo": {
     "alvo": "Repo.salvar (pkg/models.py:15)",
@@ -1713,7 +1833,7 @@
     "passo": "2.3",
     "por_que": "self.repo = Repo() no __init__"
    },
-   "estado": "igual ao atual"
+   "estado": "no alvo"
   },
   {
    "id": "N5-py",
@@ -1731,7 +1851,8 @@
     "alvos": [
      "Base.herdado (pkg/models.py:25)",
      "Outro.herdado (pkg/models.py:35)"
-    ]
+    ],
+    "relacao": "calls"
    },
    "alvo": {
     "alvo": "Base.herdado (pkg/models.py:25)",
@@ -1757,7 +1878,8 @@
     "alvos": [
      "Base.herdado (pkg/models.py:25)",
      "Outro.herdado (pkg/models.py:35)"
-    ]
+    ],
+    "relacao": "calls"
    },
    "alvo": {
     "alvo": "Base.herdado (pkg/models.py:25)",
@@ -1788,7 +1910,8 @@
      "Email.notify (pkg/models.py:45)",
      "Fila.notify (pkg/models.py:55)",
      "Sms.notify (pkg/models.py:50)"
-    ]
+    ],
+    "relacao": "calls"
    },
    "alvo": {
     "alvo": "Canal.notify (pkg/models.py:40)",
@@ -1808,7 +1931,8 @@
    "agora": {
     "resolution": "no_candidate_in_project",
     "candidates": 0,
-    "alvos": []
+    "alvos": [],
+    "relacao": null
    },
    "alvo": {
     "alvo": "notify (pkg/casos.py:42)",
@@ -1828,7 +1952,8 @@
    "agora": {
     "resolution": "no_candidate_in_project",
     "candidates": 0,
-    "alvos": []
+    "alvos": [],
+    "relacao": null
    },
    "alvo": {
     "alvo": "Cliente (pkg/models.py:1)",
@@ -1858,7 +1983,8 @@
      "Cliente.salvar (pkg/models.py:5)",
      "Fornecedor.salvar (pkg/models.py:10)",
      "Repo.salvar (pkg/models.py:15)"
-    ]
+    ],
+    "relacao": "calls"
    },
    "alvo": {
     "alvo": "Cliente.salvar (pkg/models.py:5)",
@@ -1884,7 +2010,8 @@
     "alvos": [
      "livre (src/models.rs:78)",
      "livre (src/outro.rs:1)"
-    ]
+    ],
+    "relacao": "calls"
    },
    "alvo": {
     "alvo": "livre (src/models.rs:78)",
@@ -1908,7 +2035,8 @@
     "candidates": 1,
     "alvos": [
      "unica (src/models.rs:82)"
-    ]
+    ],
+    "relacao": "calls"
    },
    "alvo": {
     "alvo": "unica (src/models.rs:82)",
@@ -1933,7 +2061,8 @@
     "candidates": 3,
     "alvos": [
      "impl Cliente::new (src/models.rs:6)"
-    ]
+    ],
+    "relacao": "calls"
    },
    "alvo": {
     "alvo": "impl Cliente::new (src/models.rs:6)",
@@ -1959,7 +2088,8 @@
     "candidates": 3,
     "alvos": [
      "impl Cliente::salvar (src/models.rs:10)"
-    ]
+    ],
+    "relacao": "calls"
    },
    "alvo": {
     "alvo": "impl Cliente::salvar (src/models.rs:10)",
@@ -1985,7 +2115,8 @@
     "candidates": 3,
     "alvos": [
      "impl Cliente::salvar (src/models.rs:10)"
-    ]
+    ],
+    "relacao": "calls"
    },
    "alvo": {
     "alvo": "impl Cliente::salvar (src/models.rs:10)",
@@ -2013,7 +2144,8 @@
      "impl Cliente::salvar (src/models.rs:10)",
      "impl Fornecedor::salvar (src/models.rs:22)",
      "impl Repo::salvar (src/models.rs:34)"
-    ]
+    ],
+    "relacao": "calls"
    },
    "alvo": {
     "alvo": "impl Cliente::salvar (src/models.rs:10)",
@@ -2039,7 +2171,8 @@
     "candidates": 3,
     "alvos": [
      "impl Cliente::salvar (src/models.rs:10)"
-    ]
+    ],
+    "relacao": "calls"
    },
    "alvo": {
     "alvo": "impl Cliente::salvar (src/models.rs:10)",
@@ -2065,7 +2198,8 @@
     "candidates": 3,
     "alvos": [
      "impl Repo::salvar (src/models.rs:34)"
-    ]
+    ],
+    "relacao": "calls"
    },
    "alvo": {
     "alvo": "impl Repo::salvar (src/models.rs:34)",
@@ -2092,7 +2226,8 @@
     "candidates": 4,
     "alvos": [
      "impl Notifica for Email::notify (src/models.rs:51)"
-    ]
+    ],
+    "relacao": "calls"
    },
    "alvo": {
     "alvo": "impl Notifica for Email::notify (src/models.rs:51)",
@@ -2117,7 +2252,8 @@
     "candidates": 2,
     "alvos": [
      "Notifica::padrao (src/models.rs:42)"
-    ]
+    ],
+    "relacao": "calls"
    },
    "alvo": {
     "alvo": "Notifica::padrao (src/models.rs:42)",
@@ -2147,7 +2283,8 @@
      "impl Fila::notify (src/models.rs:65)",
      "impl Notifica for Email::notify (src/models.rs:51)",
      "impl Notifica for Sms::notify (src/models.rs:57)"
-    ]
+    ],
+    "relacao": "calls"
    },
    "alvo": {
     "alvo": "impl Notifica for Email::notify (src/models.rs:51)",
@@ -2177,7 +2314,8 @@
      "impl Fila::notify (src/models.rs:65)",
      "impl Notifica for Email::notify (src/models.rs:51)",
      "impl Notifica for Sms::notify (src/models.rs:57)"
-    ]
+    ],
+    "relacao": "calls"
    },
    "alvo": {
     "alvo": "Notifica::notify (src/models.rs:40)",
@@ -2197,7 +2335,8 @@
    "agora": {
     "resolution": "no_candidate_in_project",
     "candidates": 0,
-    "alvos": []
+    "alvos": [],
+    "relacao": null
    },
    "alvo": {
     "alvo": "notify_one (src/casos.rs:62)",
@@ -2225,7 +2364,8 @@
      "impl Cliente::new (src/models.rs:6)",
      "impl Fornecedor::new (src/models.rs:18)",
      "impl Repo::new (src/models.rs:30)"
-    ]
+    ],
+    "relacao": "calls"
    },
    "alvo": {
     "alvo": "impl Cliente::new (src/models.rs:6)",
@@ -2253,7 +2393,8 @@
      "impl Cliente::salvar (src/models.rs:10)",
      "impl Fornecedor::salvar (src/models.rs:22)",
      "impl Repo::salvar (src/models.rs:34)"
-    ]
+    ],
+    "relacao": "calls"
    },
    "alvo": {
     "alvo": "impl Cliente::salvar (src/models.rs:10)",

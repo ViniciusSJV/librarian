@@ -1,7 +1,7 @@
 {
  "projeto": "healthchecks-25597e41",
  "fonte": "Projetos/pilotos/healthchecks @ 6c05a7a",
- "selecao": "tools/precisao/amostra.js sobre a linha de base de 18/11/2026 (binário de aae51d7); HC-61 a HC-75: estratos do passo 2.2 (metodo_funcao, modulo_f, espelho), escolhidos à mão na Parada 1 do 2.2, equilibrando código de teste e de produção",
+ "selecao": "tools/precisao/amostra.js sobre a linha de base de 18/11/2026 (binário de aae51d7); HC-61 a HC-75: estratos do passo 2.2 (metodo_funcao, modulo_f, espelho), escolhidos à mão na Parada 1 do 2.2, equilibrando código de teste e de produção; HC-76 a HC-87: estratos do passo 2.3a (tipo_py, instancia, receiver_py_teto), escolhidos à mão na Parada 1 do 2.3",
  "chamadas": [
   {
    "id": "HC-01",
@@ -1704,6 +1704,272 @@
    "certeza": "alta",
    "justificativa": "from hc.lib.emails import EmailThread, send (test_emails.py:9). Código de teste.",
    "verdade_validada_por": "usuário (revisada, 19/11)"
+  },
+  {
+   "id": "HC-76",
+   "parte_c": false,
+   "estrato": "tipo_py",
+   "ocorrencia": "hc/api/views.py@8940-9014",
+   "local": "hc/api/views.py:255",
+   "texto": "check.ping(remote_addr, scheme, method, ua, body, action, rid, exitstatus)",
+   "dono": "ping",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 1,
+    "alvos": [
+     "Check.ping (hc/api/models.py:493)"
+    ]
+   },
+   "verdade": {
+    "alvo": "Check.ping (hc/api/models.py:493)"
+   },
+   "certeza": "alta",
+   "justificativa": "Parâmetro anotado `check: Check | None = None` (views.py:201), reatribuído por `Check.objects.get(..)`, de fora do projeto; a anotação vale para a função inteira. É o HC-F6.",
+   "verdade_validada_por": "usuário (20/11/2026, conferido no editor)"
+  },
+  {
+   "id": "HC-77",
+   "parte_c": false,
+   "estrato": "tipo_py",
+   "ocorrencia": "hc/api/models.py@25885-25912",
+   "local": "hc/api/models.py:640",
+   "texto": "summary.add(prev_dt, delta)",
+   "dono": "Check.downtimes_by_boundary",
+   "linha_de_base": {
+    "resolution": "above_candidate_limit",
+    "candidates": 29,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "DowntimeRecorder.add (hc/api/models.py:184)"
+   },
+   "certeza": "alta",
+   "justificativa": "`summary = DowntimeRecorder(..)` no mesmo método; DowntimeRecorder declara add.",
+   "verdade_validada_por": "usuário (20/11/2026)"
+  },
+  {
+   "id": "HC-78",
+   "parte_c": false,
+   "estrato": "tipo_py",
+   "ocorrencia": "hc/accounts/views.py@26310-26361",
+   "local": "hc/accounts/views.py:736",
+   "texto": "helper.verify(state, form.cleaned_data[\"response\"])",
+   "dono": "add_webauthn",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "CreateHelper.verify (hc/lib/webauthn.py:46)",
+     "GetHelper.verify (hc/lib/webauthn.py:62)"
+    ]
+   },
+   "verdade": {
+    "alvo": "CreateHelper.verify (hc/lib/webauthn.py:46)"
+   },
+   "certeza": "alta",
+   "justificativa": "`helper = CreateHelper(..)`, com `from hc.lib.webauthn import CreateHelper`.",
+   "verdade_validada_por": "usuário (20/11/2026)"
+  },
+  {
+   "id": "HC-79",
+   "parte_c": false,
+   "estrato": "tipo_py",
+   "ocorrencia": "hc/api/management/commands/smtpd.py@4045-4070",
+   "local": "hc/api/management/commands/smtpd.py:122",
+   "texto": "self.stdout.write(result)",
+   "dono": "Server.process_message",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "LogSink.write (hc/api/management/commands/smtpd.py:29)",
+     "NullSink.write (hc/api/tests/test_smtpd.py:43)"
+    ]
+   },
+   "verdade": {
+    "ambigua": [
+     "NullSink.write (hc/api/tests/test_smtpd.py:43)",
+     "Django: OutputWrapper.write"
+    ]
+   },
+   "certeza": "alta",
+   "justificativa": "`self.stdout` é `LogSink`, um Protocol (campo do __init__ por `stdout: LogSink`). O corpo que roda é o do objeto passado: `OutputWrapper.write` do Django em produção (smtpd.py:140) e `NullSink.write` nos testes (test_smtpd.py:47). Regra do `dyn` no 2.1.",
+   "verdade_validada_por": "usuário (Q6 da Parada 1 do 2.3, 19/11)"
+  },
+  {
+   "id": "HC-80",
+   "parte_c": false,
+   "estrato": "tipo_py",
+   "ocorrencia": "hc/api/tests/test_check_model.py@7223-7238",
+   "local": "hc/api/tests/test_check_model.py:190",
+   "texto": "check.to_dict()",
+   "dono": "CheckModelTestCase.test_next_ping_with_cron_syntax",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 4,
+    "alvos": [
+     "Channel.to_dict (hc/api/models.py:1051)",
+     "Check.to_dict (hc/api/models.py:439)",
+     "Flip.to_dict (hc/api/models.py:1385)",
+     "Ping.to_dict (hc/api/models.py:706)"
+    ]
+   },
+   "verdade": {
+    "alvo": "Check.to_dict (hc/api/models.py:439)"
+   },
+   "certeza": "alta",
+   "justificativa": "`check = Check(..)` no mesmo teste. Código de teste.",
+   "verdade_validada_por": "usuário (20/11/2026)"
+  },
+  {
+   "id": "HC-81",
+   "parte_c": false,
+   "estrato": "tipo_py",
+   "ocorrencia": "hc/logs/tests/test_sendlogs.py@670-688",
+   "local": "hc/logs/tests/test_sendlogs.py:25",
+   "texto": "Command().handle()",
+   "dono": "SendLogsTestCase.test_it_sends_email",
+   "linha_de_base": {
+    "resolution": "above_candidate_limit",
+    "candidates": 17,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "Command.handle (hc/logs/management/commands/sendlogs.py:17)"
+   },
+   "certeza": "alta",
+   "justificativa": "`Command().handle()`, com `Command` importado de hc.logs.management.commands.sendlogs. Código de teste.",
+   "verdade_validada_por": "usuário (20/11/2026, conferido no editor)"
+  },
+  {
+   "id": "HC-82",
+   "parte_c": false,
+   "estrato": "instancia",
+   "ocorrencia": "hc/api/management/commands/sendalerts.py@6140-6144",
+   "local": "hc/api/management/commands/sendalerts.py:170",
+   "texto": "Flip",
+   "dono": "Command.handle_going_down",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Flip (hc/api/models.py:1361)"
+    ]
+   },
+   "verdade": {
+    "alvo": "Flip (hc/api/models.py:1361)"
+   },
+   "certeza": "alta",
+   "justificativa": "`Flip(owner=check)`: instancia a classe Flip, importada de hc.api.models. É o HC-F17.",
+   "verdade_validada_por": "usuário (20/11/2026)"
+  },
+  {
+   "id": "HC-83",
+   "parte_c": false,
+   "estrato": "instancia",
+   "ocorrencia": "hc/integrations/webhook/views.py@672-703",
+   "local": "hc/integrations/webhook/views.py:21",
+   "texto": "forms.WebhookForm(request.POST)",
+   "dono": "webhook_form",
+   "linha_de_base": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "WebhookForm (hc/integrations/webhook/forms.py:55)"
+   },
+   "certeza": "alta",
+   "justificativa": "`forms.WebhookForm(request.POST)`, com `from hc.integrations.webhook import forms`.",
+   "verdade_validada_por": "usuário (20/11/2026)"
+  },
+  {
+   "id": "HC-84",
+   "parte_c": false,
+   "estrato": "instancia",
+   "ocorrencia": "hc/integrations/github/transport.py@1762-1776",
+   "local": "hc/integrations/github/transport.py:53",
+   "texto": "TransportError",
+   "dono": "GitHub.notify",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "TransportError (hc/api/transports.py:56)"
+    ]
+   },
+   "verdade": {
+    "alvo": "TransportError (hc/api/transports.py:56)"
+   },
+   "certeza": "alta",
+   "justificativa": "`raise TransportError(..)`, importado de hc.api.transports.",
+   "verdade_validada_por": "usuário (20/11/2026)"
+  },
+  {
+   "id": "HC-85",
+   "parte_c": false,
+   "estrato": "instancia",
+   "ocorrencia": "hc/integrations/victorops/tests/test_notify.py@437-442",
+   "local": "hc/integrations/victorops/tests/test_notify.py:17",
+   "texto": "Check",
+   "dono": "NotifyVictorOpsTestCase.setUp",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Check (hc/api/models.py:192)"
+    ]
+   },
+   "verdade": {
+    "alvo": "Check (hc/api/models.py:192)"
+   },
+   "certeza": "alta",
+   "justificativa": "`Check(project=..)` no setUp. Código de teste.",
+   "verdade_validada_por": "usuário (20/11/2026)"
+  },
+  {
+   "id": "HC-86",
+   "parte_c": false,
+   "estrato": "instancia",
+   "ocorrencia": "hc/lib/tests/test_curl.py@2588-2596",
+   "local": "hc/lib/tests/test_curl.py:72",
+   "texto": "FakeCurl",
+   "dono": "CurlTestCase.test_it_handles_auth",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "FakeCurl (hc/lib/tests/test_curl.py:13)"
+    ]
+   },
+   "verdade": {
+    "alvo": "FakeCurl (hc/lib/tests/test_curl.py:13)"
+   },
+   "certeza": "alta",
+   "justificativa": "Dublê declarado e instanciado no próprio teste; aqui é o alvo, não o substituto de uma chamada de produção (DEC-33 não se aplica).",
+   "verdade_validada_por": "usuário (20/11/2026)"
+  },
+  {
+   "id": "HC-87",
+   "parte_c": false,
+   "estrato": "receiver_py_teto",
+   "ocorrencia": "hc/integrations/slack/tests/test_notify.py@1633-1672",
+   "local": "hc/integrations/slack/tests/test_notify.py:48",
+   "texto": "self._setup_data(\"https://example.org\")",
+   "dono": "NotifySlackTestCase.test_it_works",
+   "linha_de_base": {
+    "resolution": "receiver",
+    "candidates": 9,
+    "alvos": [
+     "NotifySlackTestCase._setup_data (hc/integrations/slack/tests/test_notify.py:16)"
+    ]
+   },
+   "verdade": {
+    "alvo": "NotifySlackTestCase._setup_data (hc/integrations/slack/tests/test_notify.py:16)"
+   },
+   "certeza": "alta",
+   "justificativa": "`self._setup_data(..)`, acima do teto (9 `_setup_data` nos testes), com um só na própria classe. Corrigido no 2.3a-0.",
+   "verdade_validada_por": "usuário (20/11/2026)"
   }
  ]
 }
