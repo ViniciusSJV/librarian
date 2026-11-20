@@ -63,7 +63,7 @@ impl Extractor for Python {
         let Ok((suite, offset)) = parse(text) else {
             return vec![];
         };
-        let typed = self.v9.then(|| super::python_types::read(&suite, offset).0);
+        let typed = self.v9.then(|| super::python_types::read(&suite, offset).typed);
         let mut walker = Walker::new(self, None, bytes, offset);
         for stmt in suite {
             walker.visit_stmt(stmt);
@@ -145,13 +145,17 @@ impl Extractor for Python {
             scopes.visit_stmt(stmt);
         }
         scopes.leave();
-        let (receiver_types, classes) = if self.v9 {
-            let (typed, classes) = super::python_types::read(&suite_for_types, offset);
-            (typed.into_iter().map(|t| ((t.start, t.end), (t.written, false))).collect(), classes)
-        } else {
-            Default::default()
-        };
-        CallFacts { scopes: scopes.scopes, receiver_types, classes, decorators: scopes.decorators }
+        let mut facts = CallFacts { scopes: scopes.scopes, decorators: scopes.decorators, ..Default::default() };
+        if self.v9 {
+            let read = super::python_types::read(&suite_for_types, offset);
+            // Step 2.3c: the calls that bind a receiver, read with the same rules as its type.
+            facts.bound_calls = read.typed.iter().filter(|t| !t.calls.is_empty()).map(|t| ((t.start, t.end), t.calls.clone())).collect();
+            facts.receiver_types = read.typed.into_iter().map(|t| ((t.start, t.end), (t.written, false))).collect();
+            facts.classes = read.classes;
+            facts.field_receivers = read.field_receivers;
+            facts.returns = read.returns;
+        }
+        facts
     }
 }
 

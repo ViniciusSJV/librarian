@@ -358,6 +358,11 @@ pub struct CallLink {
     /// Step 2.3b: as in `UnresolvedCall`, the field whose value writes the call.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub via: Option<String>,
+    /// Step 2.3c (DEC-41): for a link settled by the receiver's written type (`basis: type`), the
+    /// rule that gave the type: the one its receiver_type recorded (`parametro`, `self`, ...),
+    /// `caminho` for `T::f(..)`, or `retorno` and `campo` when the 2.3c decided. Absent otherwise.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub type_rule: Option<String>,
     pub evidence: Evidence,
 }
 
@@ -525,6 +530,7 @@ impl Graph {
                             relation: if decorates { "decorates" } else if instantiates { "instantiates" } else { "calls" }.into(),
                             runs: runs.map(str::to_owned),
                             via: via.clone(),
+                            type_rule: (basis == "type").then(|| resolver.type_rule(observer, occurrence)).flatten(),
                             evidence: evidence.clone(),
                         });
                     }

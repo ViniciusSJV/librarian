@@ -21,7 +21,7 @@
 //! candidate.
 use crate::graph::v2::{CallSyntax, Edge, Graph};
 use crate::graph::Evidence;
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 
@@ -53,6 +53,25 @@ pub struct CallFacts {
     /// any depth. A call inside one runs when the `def` or `class` runs, not when the decorated
     /// declaration is called.
     pub decorators: Vec<(usize, usize)>,
+    /// Step 2.3c (DEC-41): a receiver bound to a call's result (`x = f(..)`, `f(..).m()`,
+    /// `self.x = f(..)`; `let x = T::f(..)`, `let x = f(..)`), by the receiver's span: the span of
+    /// each call occurrence that binds it, as the extractor records the call.
+    pub bound_calls: BTreeMap<(usize, usize), Vec<(usize, usize)>>,
+    /// Step 2.3c: what each written return type names, by the span of its `declared_return`.
+    pub returns: BTreeMap<(usize, usize), Returned>,
+    /// Step 2.3c (Python): a receiver `a.x` whose base has a written type: the base's written type,
+    /// where it is written, and the field's name. The field is read in the file of the base's class.
+    pub field_receivers: BTreeMap<(usize, usize), (String, usize, String)>,
+}
+
+/// Step 2.3c: what a written return type gives a receiver bound to the call.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Returned {
+    /// A named type: `T`, `m.T` (Python), `Self`; with whether it is written as a reference (Rust).
+    Type { name: String, by_reference: bool },
+    /// Nothing decided: a wrapper (`Option`, `Result`, `Box`, `Rc`, `Arc`, `Vec`), a union, a
+    /// generic, a tuple, `impl Trait`, `None`.
+    Undecided,
 }
 
 /// Step 2.3a: what a Python class declares that decides whether its type rules a candidate out.
@@ -65,6 +84,9 @@ pub struct ClassFacts {
     /// One of its bases is `Protocol`: its methods are signatures, and the body that runs is the
     /// passed object's.
     pub protocol: bool,
+    /// Step 2.3c: the written type of each field (annotation, or `self.x = T(..)` / `self.x = p`
+    /// with `p: T` in `__init__`), as written, when every write agrees.
+    pub fields: BTreeMap<String, String>,
 }
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
@@ -179,6 +201,37 @@ pub struct Resolver<'g> {
     paths: BTreeSet<&'g str>,
     facts: Option<crate::resolve::FileFacts>,
     cache: RefCell<BTreeMap<String, Option<Arc<CallFacts>>>>,
+    /// Step 2.3c: each call occurrence by where it is written (path, start, end), with the symbol
+    /// that observes it.
+    call_at: BTreeMap<(&'g str, usize, usize), (&'g str, &'g str)>,
+    /// Step 2.3c: where each declaration starts in its file.
+    declared_at: BTreeMap<&'g str, usize>,
+    /// Step 2.3c: the `declared_return` occurrence of each function or method.
+    returns_of: BTreeMap<&'g str, &'g str>,
+    /// Step 2.3c: free functions by their written name.
+    functions_by_name: BTreeMap<&'g str, Vec<&'g str>>,
+    /// Step 2.3c (Rust): the names of the project's types (struct, enum, union, trait, type alias).
+    type_names: BTreeSet<String>,
+    /// Step 2.3c: set while the call that binds a receiver is resolved. That resolution never
+    /// reads a return, so a type comes from one level only, and no loop can start.
+    inner: Cell<bool>,
+    /// Step 2.3c: what the return rule gave each method call (None: it does not apply).
+    by_return_cache: RefCell<BTreeMap<String, Option<ByReturn<'g>>>>,
+}
+
+/// Step 2.3c (DEC-41): the type a receiver bound to a call takes from the written return of the
+/// call's targets.
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum ByReturn<'g> {
+    /// Python: a class of the project.
+    Class(&'g str),
+    /// Rust: a type of the project, by name.
+    Named(String),
+    /// Rust: a type from outside the project, and whether it is written as a reference.
+    Outside(String, bool),
+    /// No type, and nothing ruled out: a wrapper, no annotation, a name that is not a class, or
+    /// targets that disagree.
+    Undecided,
 }
 
 impl<'g> Resolver<'g> {
@@ -197,6 +250,13 @@ impl<'g> Resolver<'g> {
             paths: BTreeSet::new(),
             facts: syntax.facts.clone(),
             cache: RefCell::new(BTreeMap::new()),
+            call_at: BTreeMap::new(),
+            declared_at: BTreeMap::new(),
+            returns_of: BTreeMap::new(),
+            functions_by_name: BTreeMap::new(),
+            type_names: BTreeSet::new(),
+            inner: Cell::new(false),
+            by_return_cache: RefCell::new(BTreeMap::new()),
         };
         for e in &graph.edges {
             match e.kind.as_str() {
@@ -206,11 +266,26 @@ impl<'g> Resolver<'g> {
                 }
                 "declares" => {
                     r.declared_in.insert(&e.to, &e.evidence.path);
+                    r.declared_at.insert(&e.to, e.evidence.start_byte);
                 }
                 "observes" => {
                     r.call_evidence.insert(&e.to, &e.evidence);
-                    if graph.nodes.get(&e.to).is_some_and(|n| n.kind == "receiver_type") {
-                        r.receiver_types.entry((e.evidence.path.as_str(), e.evidence.start_byte)).or_default().push((e.evidence.end_byte, &e.to));
+                    match graph.nodes.get(&e.to).map(|n| n.kind.as_str()) {
+                        Some("receiver_type") => {
+                            r.receiver_types.entry((e.evidence.path.as_str(), e.evidence.start_byte)).or_default().push((e.evidence.end_byte, &e.to));
+                        }
+                        Some("call_observed" | "method_call_observed") => {
+                            r.call_at.insert((e.evidence.path.as_str(), e.evidence.start_byte, e.evidence.end_byte), (&e.to, &e.from));
+                        }
+                        // The signature's, the first in the text: a closure's return type (Rust)
+                        // is observed by the same function.
+                        Some("declared_return") => {
+                            let first = r.returns_of.get(e.from.as_str()).and_then(|o| r.call_evidence.get(o)).is_some_and(|ev| ev.start_byte < e.evidence.start_byte);
+                            if !first {
+                                r.returns_of.insert(&e.from, &e.to);
+                            }
+                        }
+                        _ => {}
                     }
                 }
                 _ => {}
@@ -230,6 +305,12 @@ impl<'g> Resolver<'g> {
             }
             if node.kind == "class" {
                 r.classes_by_name.entry(node.label.rsplit('.').next().unwrap_or_default()).or_default().push(id);
+            }
+            if node.kind == "function" {
+                r.functions_by_name.entry(node.label.rsplit([':', '.']).next().unwrap_or_default()).or_default().push(id);
+            }
+            if matches!(node.kind.as_str(), "struct" | "enum" | "union" | "trait" | "type") {
+                r.type_names.insert(last_segment(&node.label));
             }
             if node.kind == "impl" {
                 if let (Some(ty), Some(tr)) = impl_parts(&node.label) {
@@ -306,6 +387,16 @@ impl<'g> Resolver<'g> {
             }
             return if receiver.starts_with(|c: char| c.is_uppercase()) { vec![receiver] } else { vec![] };
         }
+        // Step 2.3c (DEC-41): the written return of the call that binds the receiver, when it
+        // applies, replaces the type the path names (`let x = T::f(..)`).
+        if self.graph.nodes[caller].language != "python" {
+            if let Some(found) = self.by_return(caller, occurrence) {
+                return match found {
+                    ByReturn::Named(name) => vec![name],
+                    _ => vec![],
+                };
+            }
+        }
         let Some((written, _)) = self.receiver_type_node(occurrence) else { return vec![] };
         let names: BTreeSet<String> = self.candidates(written).iter().map(|t| last_segment(self.label(&t.to))).collect();
         names.into_iter().collect()
@@ -339,13 +430,30 @@ impl<'g> Resolver<'g> {
         if !types.is_empty() {
             return !self.fits(target, &types);
         }
+        // Step 2.3c: a return from outside the project follows the rule of a written type from
+        // outside; any other return that applies decides nothing.
+        if self.graph.nodes[caller].language != "python" {
+            if let Some(found) = self.by_return(caller, occurrence) {
+                return match found {
+                    ByReturn::Outside(name, by_reference) => self.outside_rules_out(&name, by_reference, target),
+                    _ => false,
+                };
+            }
+        }
         let Some((written, span)) = self.receiver_type_node(occurrence) else { return false };
         if !self.candidates(written).is_empty() {
             return false;
         }
         let Some(path) = self.call_evidence.get(occurrence).map(|e| e.path.as_str()) else { return false };
         let Some((name, by_reference)) = self.file_facts(path).and_then(|f| f.receiver_types.get(&span).cloned()) else { return false };
-        if by_reference || WRAPPERS.contains(&name.as_str()) || self.impl_traits.iter().any(|(t, _)| *t == name) {
+        self.outside_rules_out(&name, by_reference, target)
+    }
+
+    /// Step 2.2: a type from outside the project rules out only an inherent method of a type of the
+    /// project, and not through a reference, a `Box`, `Rc` or `Arc`, nor a trait the project
+    /// implements for it.
+    fn outside_rules_out(&self, name: &str, by_reference: bool, target: &str) -> bool {
+        if by_reference || WRAPPERS.contains(&name) || self.impl_traits.iter().any(|(t, _)| t == name) {
             return false;
         }
         matches!(self.owner_of(target), Some((Some(_), None)))
@@ -411,6 +519,23 @@ impl<'g> Resolver<'g> {
     /// the class `T` of the project module `m`. None when the type is not a class of the project,
     /// or is an alias (`as`, 2.4).
     fn python_class(&self, caller: &str, occurrence: &str) -> Option<&'g str> {
+        if let Some(class) = self.written_class(caller, occurrence) {
+            return Some(class);
+        }
+        if self.graph.nodes[caller].language != "python" {
+            return None;
+        }
+        // Step 2.3c (DEC-41): by the written return of the call that binds the receiver, or by a
+        // field of a class of another file.
+        match self.by_return(caller, occurrence) {
+            Some(ByReturn::Class(class)) => Some(class),
+            Some(_) => None,
+            None => self.field_class(occurrence),
+        }
+    }
+
+    /// Step 2.3a: the class the receiver's written type (its receiver_type) means.
+    fn written_class(&self, caller: &str, occurrence: &str) -> Option<&'g str> {
         let (written, span) = self.receiver_type_node(occurrence)?;
         let mut classes: Vec<&'g str> = self.candidates(written).iter().map(|e| e.to.as_str()).filter(|t| self.kind(t) == "class").collect();
         // Above the limit the graph kept only the count: the classes of the written name (17
@@ -438,16 +563,24 @@ impl<'g> Resolver<'g> {
         let path = self.call_evidence.get(occurrence)?.path.as_str();
         let facts = self.file_facts(path)?;
         let (text, _) = facts.receiver_types.get(&span)?;
+        self.class_named(path, span.0, text, &classes)
+    }
+
+    /// Step 2.3a: which of `classes` a type name written at `at` in `path` means: the file's own
+    /// top-level class, the class a `from p import Name` brings, or the class `T` of the project
+    /// module `m` in `m.T`. Step 2.3c: also for a return or a field written in another file.
+    fn class_named(&self, path: &str, at: usize, text: &str, classes: &[&'g str]) -> Option<&'g str> {
+        let facts = self.file_facts(path)?;
         let declared = |file: &str, name: &str| classes.iter().copied().find(|c| self.declared_in.get(c) == Some(&file) && self.label(c) == name);
         match text.split_once('.') {
-            None => match self.bound(&facts, span.0, text)? {
+            None => match self.bound(&facts, at, text)? {
                 None => declared(path, text),
                 Some(Import::From(package, name)) if name == *text => self.class_in_module(path, &package, &name, &declared, 0),
                 Some(_) => None,
             },
             Some((head, _)) => {
                 let (module, name) = text.rsplit_once('.')?;
-                let dotted = match self.bound(&facts, span.0, head)?? {
+                let dotted = match self.bound(&facts, at, head)?? {
                     Import::Module(m) if module == head || module.starts_with(&format!("{head}.")) => format!("{m}{}", &module[head.len()..]),
                     Import::From(package, imported) if module == head => format!("{package}{}{imported}", if package.ends_with('.') { "" } else { "." }),
                     _ => return None,
@@ -455,6 +588,148 @@ impl<'g> Resolver<'g> {
                 declared(&self.module_file(path, &dotted)?, name)
             }
         }
+    }
+
+    /// Step 2.3c: the classes of the project with a written name's last segment.
+    fn classes_named(&self, text: &str) -> Vec<&'g str> {
+        self.classes_by_name.get(text.rsplit('.').next().unwrap_or_default()).cloned().unwrap_or_default()
+    }
+
+    /// Step 2.3c (DEC-41): the type a method call's receiver takes from the written return of the
+    /// call that binds it. None when the rule does not apply (no such binding, or the binding call
+    /// has no candidate in the project: then what applied before applies), and while the binding
+    /// call itself is being resolved (one level only).
+    fn by_return(&self, _caller: &str, occurrence: &str) -> Option<ByReturn<'g>> {
+        if self.inner.get() || self.kind(occurrence) != "method_call_observed" {
+            return None;
+        }
+        if let Some(hit) = self.by_return_cache.borrow().get(occurrence) {
+            return hit.clone();
+        }
+        self.inner.set(true);
+        let found = self.binding_return(occurrence);
+        self.inner.set(false);
+        self.by_return_cache.borrow_mut().insert(occurrence.to_owned(), found.clone());
+        found
+    }
+
+    /// Step 2.3c: the return every call that binds the receiver agrees on. (a) the binding call
+    /// settles one target: its return; (b) it does not, but every candidate declares the same
+    /// return: that one; (c) it has no candidate in the project: None; (d) the candidates, or the
+    /// calls, disagree: Undecided.
+    fn binding_return(&self, occurrence: &str) -> Option<ByReturn<'g>> {
+        let evidence = self.call_evidence.get(occurrence)?;
+        let end = evidence.start_byte + written_receiver(self.label(occurrence))?.len();
+        let facts = self.file_facts(&evidence.path)?;
+        let calls = facts.bound_calls.get(&(evidence.start_byte, end))?.clone();
+        let mut agreed: Option<ByReturn<'g>> = None;
+        for (start, end) in calls {
+            let &(call, observer) = self.call_at.get(&(evidence.path.as_str(), start, end))?;
+            for target in self.binding_targets(observer, call)? {
+                let returned = self.returned_type(target)?;
+                match &agreed {
+                    None => agreed = Some(returned),
+                    Some(a) if *a == returned => {}
+                    Some(_) => return Some(ByReturn::Undecided),
+                }
+            }
+        }
+        agreed
+    }
+
+    /// Step 2.3c: the declarations the call that binds a receiver may reach, by the rule without
+    /// the return and without a person's choice: its one target, its several targets, or its
+    /// admitted homonyms; above the limit, the declarations of the name (for `T::f`, those of
+    /// `T`). None when it has no candidate in the project.
+    fn binding_targets(&self, observer: &str, call: &str) -> Option<Vec<&'g str>> {
+        let text = self.label(call);
+        let path: Vec<String> = if self.kind(call) == "call_observed" { self.receiver_types(observer, call) } else { vec![] };
+        let of_path = |found: Vec<&'g str>| -> Vec<&'g str> {
+            if path.is_empty() {
+                return found;
+            }
+            found.into_iter().filter(|t| self.owner_of(t).is_some_and(|(ty, tr)| ty.is_some_and(|t| path.contains(&t)) || tr.is_some_and(|t| path.contains(&t)))).collect()
+        };
+        let targets = match self.resolve(observer, call, None) {
+            Resolution::Linked(_, targets) => targets,
+            Resolution::Homonym(targets) => of_path(targets),
+            Resolution::AboveLimit(_) => {
+                let name = call_parts(text)?.1;
+                let by_name = if !path.is_empty() || written_receiver(text).is_some() { &self.methods_by_name } else { &self.functions_by_name };
+                of_path(by_name.get(name.as_str()).cloned().unwrap_or_default())
+            }
+            Resolution::NoCandidate => vec![],
+        };
+        (!targets.is_empty()).then_some(targets)
+    }
+
+    /// Step 2.3c: what a declaration's written return gives. None for a declaration that is built,
+    /// not called (a class, a struct, a variant: the 2.3a decides).
+    fn returned_type(&self, target: &str) -> Option<ByReturn<'g>> {
+        if !matches!(self.kind(target), "function" | "method" | "trait_method") {
+            return None;
+        }
+        let Some(occurrence) = self.returns_of.get(target) else { return Some(ByReturn::Undecided) };
+        let evidence = self.call_evidence.get(occurrence)?;
+        let returned = self.file_facts(&evidence.path).and_then(|f| f.returns.get(&(evidence.start_byte, evidence.end_byte)).cloned());
+        let Some(Returned::Type { name, by_reference }) = returned else { return Some(ByReturn::Undecided) };
+        if self.graph.nodes[target].language == "python" {
+            if name == "Self" {
+                return Some(self.container(target).filter(|c| self.kind(c) == "class").map_or(ByReturn::Undecided, ByReturn::Class));
+            }
+            let classes = self.classes_named(&name);
+            return Some(self.class_named(&evidence.path, evidence.start_byte, &name, &classes).map_or(ByReturn::Undecided, ByReturn::Class));
+        }
+        let name = if name == "Self" {
+            match self.owner_of(target) {
+                Some((Some(ty), _)) => ty,
+                _ => return Some(ByReturn::Undecided),
+            }
+        } else {
+            name
+        };
+        Some(if self.type_names.contains(&name) { ByReturn::Named(name) } else { ByReturn::Outside(name, by_reference) })
+    }
+
+    /// Step 2.3c (Python): the class of a receiver `a.x` whose base `a` has a written type, by the
+    /// field `x` as the class's own file writes it.
+    fn field_class(&self, occurrence: &str) -> Option<&'g str> {
+        // One level: not while the call that binds another receiver is resolved.
+        if self.inner.get() {
+            return None;
+        }
+        let evidence = self.call_evidence.get(occurrence)?;
+        let end = evidence.start_byte + written_receiver(self.label(occurrence))?.len();
+        let facts = self.file_facts(&evidence.path)?;
+        let (base, at, field) = facts.field_receivers.get(&(evidence.start_byte, end))?;
+        let owner = self.class_named(&evidence.path, *at, base, &self.classes_named(base))?;
+        let file = *self.declared_in.get(owner)?;
+        let written = self.file_facts(file)?.classes.get(self.label(owner))?.fields.get(field)?.clone();
+        let at = self.declared_at.get(owner).copied().unwrap_or_default();
+        self.class_named(file, at, &written, &self.classes_named(&written))
+    }
+
+    /// Step 2.3c: the rule that gave a receiver's type, for a link settled by it (`type_rule` of
+    /// `/api/calls`): `retorno` or `campo` when the 2.3c decided, otherwise the rule the
+    /// receiver_type recorded, or `caminho` for `T::f(..)`.
+    pub fn type_rule(&self, caller: &str, occurrence: &str) -> Option<String> {
+        if self.kind(occurrence) == "call_observed" {
+            return call_parts(self.label(occurrence)).filter(|(r, _)| !r.is_empty()).map(|_| "caminho".to_owned());
+        }
+        if let Some(rule) = self.receiver_type_node(occurrence).and_then(|(n, _)| self.graph.nodes[n].type_rule.clone()) {
+            if self.written_class(caller, occurrence).is_some() {
+                return Some(rule);
+            }
+        }
+        match self.by_return(caller, occurrence) {
+            Some(ByReturn::Undecided) => {}
+            Some(_) => return Some("retorno".to_owned()),
+            None => {}
+        }
+        if self.graph.nodes[caller].language == "python" && self.field_class(occurrence).is_some() {
+            return Some("campo".to_owned());
+        }
+        self.receiver_type_node(occurrence).and_then(|(n, _)| self.graph.nodes[n].type_rule.clone())
     }
 
     /// The class `name` of the module `package`, imported from `from`: declared there, or brought

@@ -98,6 +98,8 @@ impl Extractor for Rust {
             rules: vec![],
             refs: vec![],
             written: None,
+            bound: vec![],
+            bound_calls: None,
         };
         observer.visit_file(&tree);
         observer.found
@@ -128,9 +130,18 @@ impl Extractor for Rust {
             rules: vec![],
             refs: vec![],
             written: Some(BTreeMap::new()),
+            bound: vec![],
+            bound_calls: Some(BTreeMap::new()),
         };
         observer.visit_file(&tree);
-        crate::resolve::CallFacts { receiver_types: observer.written.unwrap_or_default(), ..Default::default() }
+        let mut returns = Returns { offset, out: BTreeMap::new() };
+        returns.visit_file(&tree);
+        crate::resolve::CallFacts {
+            receiver_types: observer.written.unwrap_or_default(),
+            bound_calls: observer.bound_calls.unwrap_or_default(),
+            returns: returns.out,
+            ..Default::default()
+        }
     }
 
     fn candidate_kinds(&self) -> &'static [&'static str] {
@@ -341,6 +352,11 @@ struct Occurrences {
     /// Step 2.2: when Some, each receiver_type's span, type and whether it is a reference, for
     /// the rule's file facts; the occurrences themselves do not change.
     written: Option<BTreeMap<(usize, usize), (String, bool)>>,
+    /// Step 2.3c: names bound by `let x = T::f(..)` or `let x = f(..)` in each enclosing function,
+    /// with the span of the call (as the call occurrence records it).
+    bound: Vec<BTreeMap<String, (usize, usize)>>,
+    /// Step 2.3c: when Some, each receiver bound so, for the rule's file facts.
+    bound_calls: Option<BTreeMap<(usize, usize), Vec<(usize, usize)>>>,
 }
 
 use std::collections::BTreeMap;
@@ -391,6 +407,33 @@ impl<'ast> Visit<'ast> for Shapes {
                 }
             }
         }
+    }
+}
+
+/// Step 2.3c: what each written return type names, by its span (the `declared_return` span).
+struct Returns {
+    offset: usize,
+    out: BTreeMap<(usize, usize), crate::resolve::Returned>,
+}
+
+impl<'ast> Visit<'ast> for Returns {
+    fn visit_return_type(&mut self, value: &'ast syn::ReturnType) {
+        if let syn::ReturnType::Type(_, ty) = value {
+            let range = ty.span().byte_range();
+            self.out.insert((range.start + self.offset, range.end + self.offset), returned(ty));
+        }
+        visit::visit_return_type(self, value);
+    }
+}
+
+/// Step 2.3c: a written return by its last segment, through references (`&Self` is `Self`). A
+/// wrapper (`Option`, `Result`, `Box`, `Rc`, `Arc`, `Vec`), a tuple, a slice, `impl Trait` or
+/// `dyn Trait` decides nothing (the line of DEC-38).
+fn returned(ty: &syn::Type) -> crate::resolve::Returned {
+    use crate::resolve::Returned;
+    match type_name(ty) {
+        Some(name) if !matches!(name.as_str(), "Option" | "Result" | "Box" | "Rc" | "Arc" | "Vec") => Returned::Type { name, by_reference: is_reference(ty) },
+        _ => Returned::Undecided,
     }
 }
 
@@ -556,12 +599,14 @@ impl Occurrences {
             self.types.push(types);
             self.rules.push(rules);
             self.refs.push(refs);
+            self.bound.push(BTreeMap::new());
         }
         visit(self);
         if self.v6 {
             self.types.pop();
             self.rules.pop();
             self.refs.pop();
+            self.bound.pop();
         }
         self.locals.pop();
     }
@@ -898,6 +943,14 @@ impl<'ast> Visit<'ast> for Occurrences {
                 self.note(&value.receiver, value.receiver.span(), &ty);
                 self.push_type(&value.receiver, value.receiver.span(), ty);
             }
+            // Step 2.3c: a receiver bound by `let x = T::f(..)` or `let x = f(..)`.
+            if let syn::Expr::Path(p) = value.receiver.as_ref() {
+                let call = p.path.get_ident().and_then(|i| self.bound.last()?.get(&i.to_string()).copied());
+                if let (Some(call), Some(calls)) = (call, self.bound_calls.as_mut()) {
+                    let range = value.receiver.span().byte_range();
+                    calls.insert((range.start + self.offset, range.end + self.offset), vec![call]);
+                }
+            }
             // A closure run once per element: a loop from the method's name to the closure's
             // end, labelled up to its parameters (`for_each(|(x, y)|`).
             if ITERATOR_BODIES.contains(&value.method.to_string().as_str()) && is_iterator(&value.receiver) {
@@ -940,6 +993,27 @@ impl<'ast> Visit<'ast> for Occurrences {
             };
             if let (syn::Pat::Ident(ident), Some(ty)) = (pat, written) {
                 self.bind(ident.ident.to_string(), ty, by_reference, rule);
+            }
+            // Step 2.3c: `let x = T::f(..)` or `let x = f(..)`, unannotated: the call that binds
+            // `x`. Any other binding of `x` takes it away.
+            if let syn::Pat::Ident(ident) = &value.pat {
+                let call = value.init.as_ref().and_then(|i| match i.expr.as_ref() {
+                    syn::Expr::Call(call) if matches!(call.func.as_ref(), syn::Expr::Path(_)) => {
+                        let range = call.func.span().byte_range();
+                        Some((range.start + self.offset, range.end + self.offset))
+                    }
+                    _ => None,
+                });
+                if let Some(bound) = self.bound.last_mut() {
+                    match call {
+                        Some(span) => bound.insert(ident.ident.to_string(), span),
+                        None => bound.remove(&ident.ident.to_string()),
+                    };
+                }
+            } else if let syn::Pat::Type(typed) = &value.pat {
+                if let (syn::Pat::Ident(ident), Some(bound)) = (typed.pat.as_ref(), self.bound.last_mut()) {
+                    bound.remove(&ident.ident.to_string());
+                }
             }
         }
     }

@@ -2,7 +2,7 @@
 //! is written: an annotated parameter or variable, `self` in a method, a constructor call, a field
 //! of a class of the same file. Which class a written name means is not decided here: the resolver
 //! reads it at query time from the file's imports. Never inferred as a type checker would.
-use crate::resolve::ClassFacts;
+use crate::resolve::{ClassFacts, Returned};
 use rustpython_ast::{self as ast, text_size::TextRange, Ranged, Visitor};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -12,6 +12,29 @@ pub(crate) struct Typed {
     pub end: usize,
     pub written: String,
     pub rule: &'static str,
+    /// Step 2.3c: the call occurrences whose result binds the receiver (`x = f(..)`, `f(..).m()`,
+    /// `self.x = f(..)`), by the span the extractor records for each call.
+    pub calls: Vec<(usize, usize)>,
+}
+
+/// Step 2.3c: what one file says besides the typed receivers.
+pub(crate) struct Read {
+    pub typed: Vec<Typed>,
+    pub classes: BTreeMap<String, ClassFacts>,
+    /// A receiver `a.x` whose base has a written type but whose field is not of a class of this
+    /// file: the base's written type, where it starts, and the field's name.
+    pub field_receivers: BTreeMap<(usize, usize), (String, usize, String)>,
+    /// What each written return names, by the span of the return annotation.
+    pub returns: BTreeMap<(usize, usize), crate::resolve::Returned>,
+}
+
+/// Step 2.3c: the span the extractor records for a call: the whole call when the callee is an
+/// attribute (`method_call_observed`), the callee otherwise (`call_observed`).
+fn call_key(c: &ast::ExprCall, offset: usize) -> (usize, usize) {
+    match c.func.as_ref() {
+        ast::Expr::Attribute(_) => span(c.range, offset),
+        f => span(f.range(), offset),
+    }
 }
 
 /// What one binding of a name, or one write of a field, gives.
@@ -99,6 +122,9 @@ fn value(e: &ast::Expr) -> Val {
 struct Binds {
     vals: BTreeMap<String, Vec<Val>>,
     outer: BTreeSet<String>,
+    /// Step 2.3c: the spans of the calls assigned to each name.
+    calls: BTreeMap<String, Vec<(usize, usize)>>,
+    offset: usize,
 }
 
 impl Binds {
@@ -119,7 +145,16 @@ impl Binds {
     fn collect(&mut self, body: &[ast::Stmt]) {
         for s in body {
             match s {
-                ast::Stmt::Assign(a) => a.targets.iter().for_each(|t| self.target(t, value(&a.value))),
+                ast::Stmt::Assign(a) => {
+                    a.targets.iter().for_each(|t| self.target(t, value(&a.value)));
+                    if let ast::Expr::Call(c) = a.value.as_ref() {
+                        for t in &a.targets {
+                            if let ast::Expr::Name(n) = t {
+                                self.calls.entry(n.id.to_string()).or_default().push(call_key(c, self.offset));
+                            }
+                        }
+                    }
+                }
                 ast::Stmt::AnnAssign(a) => self.target(&a.target, annotation(&a.annotation).map_or(Val::Unknown, |t| Val::Ann(t, false))),
                 ast::Stmt::AugAssign(a) => self.target(&a.target, Val::Unknown),
                 ast::Stmt::For(f) => {
@@ -236,8 +271,9 @@ fn settle(vals: &[Val]) -> Option<(Val, &'static str)> {
 }
 
 /// The fields of the classes of this file, by class name: what each write gives.
+/// Step 2.3c: and the spans of the calls written to each field in `__init__`.
 #[derive(Default)]
-struct Fields(BTreeMap<String, BTreeMap<String, Vec<Val>>>);
+struct Fields(BTreeMap<String, BTreeMap<String, Vec<Val>>>, BTreeMap<String, BTreeMap<String, Vec<(usize, usize)>>>, usize);
 
 impl Fields {
     fn read(&mut self, suite: &[ast::Stmt], classes: &mut BTreeMap<String, ClassFacts>, scope: &str) {
@@ -258,6 +294,8 @@ impl Fields {
             facts.based |= c.bases.iter().any(|b| last(b).as_deref() != Some("object"));
             facts.protocol |= c.bases.iter().any(|b| last(b).as_deref() == Some("Protocol"));
             let writes = self.0.entry(c.name.to_string()).or_default();
+            let calls = self.1.entry(c.name.to_string()).or_default();
+            let offset = self.2;
             for item in &c.body {
                 match item {
                     ast::Stmt::AnnAssign(a) => {
@@ -268,10 +306,16 @@ impl Fields {
                     }
                     ast::Stmt::FunctionDef(f) => {
                         facts.getattr |= matches!(f.name.as_str(), "__getattr__" | "__getattribute__");
-                        method_writes(&f.name, &f.args, &f.body, writes);
+                        method_writes(&f.name, &f.args, &f.body, writes, calls, offset);
                     }
-                    ast::Stmt::AsyncFunctionDef(f) => method_writes(&f.name, &f.args, &f.body, writes),
+                    ast::Stmt::AsyncFunctionDef(f) => method_writes(&f.name, &f.args, &f.body, writes, calls, offset),
                     _ => {}
+                }
+            }
+            // Step 2.3c: each field's written type, read by a receiver `a.x` of another file.
+            for (field, vals) in writes.iter() {
+                if let Some((Val::Ann(t, _) | Val::Call(t), _)) = settle(vals) {
+                    facts.fields.insert(field.clone(), t);
                 }
             }
             self.read(&c.body, classes, &qualified);
@@ -281,7 +325,14 @@ impl Fields {
 
 /// The writes of `self.<field>` in one method. Only `__init__` gives a type by a constructor or
 /// by a parameter; any other write in another method, except `None`, takes the type away.
-fn method_writes(name: &str, args: &ast::Arguments, body: &[ast::Stmt], writes: &mut BTreeMap<String, Vec<Val>>) {
+fn method_writes(
+    name: &str,
+    args: &ast::Arguments,
+    body: &[ast::Stmt],
+    writes: &mut BTreeMap<String, Vec<Val>>,
+    calls: &mut BTreeMap<String, Vec<(usize, usize)>>,
+    offset: usize,
+) {
     let params: BTreeMap<String, String> = args
         .posonlyargs
         .iter()
@@ -305,6 +356,9 @@ fn method_writes(name: &str, args: &ast::Arguments, body: &[ast::Stmt], writes: 
                         ("__init__", v @ Val::Call(_)) => v,
                         _ => Val::Unknown,
                     };
+                    if let (Val::Call(_), ast::Expr::Call(c)) = (&v, a.value.as_ref()) {
+                        calls.entry(f.clone()).or_default().push(call_key(c, offset));
+                    }
                     writes.entry(f).or_default().push(v);
                 }
             }
@@ -345,43 +399,53 @@ struct Walk<'a> {
     classes: Vec<(String, usize)>,
     fields: &'a Fields,
     out: Vec<Typed>,
+    field_receivers: BTreeMap<(usize, usize), (String, usize, String)>,
 }
 
 impl Walk<'_> {
-    fn name_type(&self, name: &str) -> Option<(Val, &'static str)> {
+    /// The binding of a name, by the rule, with the spans of the calls that bind it (step 2.3c).
+    fn name_type(&self, name: &str) -> Option<(Val, &'static str, Vec<(usize, usize)>)> {
+        let found = |b: &Binds| {
+            let (v, rule) = settle(b.vals.get(name)?)?;
+            let calls = if matches!(v, Val::Call(_)) { b.calls.get(name).cloned().unwrap_or_default() } else { vec![] };
+            Some((v, rule, calls))
+        };
         for s in self.scopes.iter().rev() {
             if s.0.outer.contains(name) {
                 break;
             }
-            if let Some(v) = s.0.vals.get(name) {
-                return settle(v);
+            if s.0.vals.contains_key(name) {
+                return found(&s.0);
             }
         }
-        self.module.vals.get(name).and_then(|v| settle(v))
+        found(&self.module)
     }
 
-    /// The type a receiver is read as: the class name or written type, and the rule.
-    fn type_of(&self, e: &ast::Expr) -> Option<(String, &'static str)> {
-        let typed = |v: Val, rule| match v {
-            Val::Ann(t, _) | Val::Call(t) => Some((t, rule)),
-            Val::SelfOf(c) => Some((c, "self")),
+    /// The type a receiver is read as: the class name or written type, and the rule; with the
+    /// spans of the calls whose result binds it (step 2.3c).
+    fn type_of(&self, e: &ast::Expr) -> Option<(String, &'static str, Vec<(usize, usize)>)> {
+        let typed = |v: Val, rule, calls: Vec<(usize, usize)>| match v {
+            Val::Ann(t, _) => Some((t, rule, vec![])),
+            Val::Call(t) => Some((t, rule, calls)),
+            Val::SelfOf(c) => Some((c, "self", vec![])),
             _ => None,
         };
         match e {
             ast::Expr::Name(n) => {
-                let (v, rule) = self.name_type(n.id.as_str())?;
-                typed(v, rule)
+                let (v, rule, calls) = self.name_type(n.id.as_str())?;
+                typed(v, rule, calls)
             }
             // A field of a class of this file: `self.x`, or `a.x` with `a` of such a class.
             ast::Expr::Attribute(a) => {
-                let (base, _) = self.type_of(&a.value)?;
+                let (base, _, _) = self.type_of(&a.value)?;
                 if base.contains('.') {
                     return None;
                 }
                 let (v, _) = settle(self.fields.0.get(&base)?.get(a.attr.as_str())?)?;
-                typed(v, "campo")
+                let calls = self.fields.1.get(&base).and_then(|f| f.get(a.attr.as_str())).cloned().unwrap_or_default();
+                typed(v, "campo", calls)
             }
-            ast::Expr::Call(c) => typed(Val::Call(dotted(&c.func)?), "construtor"),
+            ast::Expr::Call(c) => typed(Val::Call(dotted(&c.func)?), "construtor", vec![call_key(c, self.offset)]),
             _ => None,
         }
     }
@@ -398,7 +462,7 @@ impl Walk<'_> {
         }
         let method = self.classes.last().is_some_and(|(_, depth)| *depth == self.scopes.len());
         let bound_first = !decorators.iter().any(|d| matches!(d, ast::Expr::Name(n) if matches!(n.id.as_str(), "staticmethod" | "classmethod")));
-        let mut binds = Binds::default();
+        let mut binds = Binds { offset: self.offset, ..Default::default() };
         for (i, p) in params.iter().enumerate() {
             let v = match p.def.annotation.as_deref().and_then(annotation) {
                 Some(t) => Val::Ann(t, true),
@@ -461,9 +525,16 @@ impl Visitor for Walk<'_> {
     }
     fn visit_expr_call(&mut self, node: ast::ExprCall) {
         if let ast::Expr::Attribute(a) = node.func.as_ref() {
-            if let Some((written, rule)) = self.type_of(&a.value) {
-                let (start, end) = span(a.value.range(), self.offset);
-                self.out.push(Typed { start, end, written, rule });
+            let (start, end) = span(a.value.range(), self.offset);
+            if let Some((written, rule, calls)) = self.type_of(&a.value) {
+                self.out.push(Typed { start, end, written, rule, calls });
+            } else if let ast::Expr::Attribute(field) = a.value.as_ref() {
+                // Step 2.3c: `a.x` with `a` of a written type whose field this file does not
+                // declare: read at query time in the file of `a`'s class.
+                if let Some((base, _, _)) = self.type_of(&field.value) {
+                    let at = usize::from(field.value.range().start()) + self.offset;
+                    self.field_receivers.insert((start, end), (base, at, field.attr.to_string()));
+                }
             }
         }
         self.generic_visit_expr_call(node);
@@ -510,16 +581,48 @@ impl Visitor for Walk<'_> {
     }
 }
 
-/// The typed receivers of one file and the facts of its classes.
-pub(crate) fn read(suite: &[ast::Stmt], offset: usize) -> (Vec<Typed>, BTreeMap<String, ClassFacts>) {
+/// Step 2.3c: what each written return names, by the span of the annotation (the span of the
+/// `declared_return` occurrence).
+struct Returns {
+    offset: usize,
+    out: BTreeMap<(usize, usize), Returned>,
+}
+
+impl Returns {
+    fn add(&mut self, returns: Option<&ast::Expr>) {
+        if let Some(r) = returns {
+            let named = annotation(r).map_or(Returned::Undecided, |name| Returned::Type { name, by_reference: false });
+            self.out.insert(span(r.range(), self.offset), named);
+        }
+    }
+}
+
+impl Visitor for Returns {
+    fn visit_stmt_function_def(&mut self, node: ast::StmtFunctionDef) {
+        self.add(node.returns.as_deref());
+        self.generic_visit_stmt_function_def(node);
+    }
+    fn visit_stmt_async_function_def(&mut self, node: ast::StmtAsyncFunctionDef) {
+        self.add(node.returns.as_deref());
+        self.generic_visit_stmt_async_function_def(node);
+    }
+}
+
+/// The typed receivers of one file and the facts of its classes; step 2.3c: and the receivers of
+/// a field of another file's class, and the written returns.
+pub(crate) fn read(suite: &[ast::Stmt], offset: usize) -> Read {
     let mut classes = BTreeMap::new();
-    let mut fields = Fields::default();
+    let mut fields = Fields(BTreeMap::new(), BTreeMap::new(), offset);
     fields.read(suite, &mut classes, "");
-    let mut module = Binds::default();
+    let mut module = Binds { offset, ..Default::default() };
     module.collect(suite);
-    let mut walk = Walk { offset, module, scopes: vec![], classes: vec![], fields: &fields, out: vec![] };
+    let mut walk = Walk { offset, module, scopes: vec![], classes: vec![], fields: &fields, out: vec![], field_receivers: BTreeMap::new() };
     for s in suite {
         walk.visit_stmt(s.clone());
     }
-    (walk.out, classes)
+    let mut returns = Returns { offset, out: BTreeMap::new() };
+    for s in suite {
+        returns.visit_stmt(s.clone());
+    }
+    Read { typed: walk.out, classes, field_receivers: walk.field_receivers, returns: returns.out }
 }
