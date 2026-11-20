@@ -1,0 +1,205 @@
+{
+ "healthchecks-25597e41": {
+  "simbolos": 4718,
+  "simbolos_depois": 4718,
+  "type_rule": {
+   "construtor": 89,
+   "retorno": 5,
+   "campo": 3,
+   "parametro": 1
+  },
+  "used_by_iguais": 4718,
+  "used_by_diferentes": [],
+  "previstas_cumpridas": [
+   {
+    "simbolo": "add_complete",
+    "at": "hc/integrations/slack/views.py@3241-3254",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "to": [
+      "Channel.json",
+      "Response.json"
+     ]
+    },
+    "depois": {
+     "res": "type",
+     "rel": "calls",
+     "via": null,
+     "to": [
+      "Response.json"
+     ]
+    }
+   },
+   {
+    "simbolo": "add_complete",
+    "at": "hc/integrations/discord/views.py@2415-2428",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "to": [
+      "Channel.json",
+      "Response.json"
+     ]
+    },
+    "depois": {
+     "res": "type",
+     "rel": "calls",
+     "via": null,
+     "to": [
+      "Response.json"
+     ]
+    }
+   },
+   {
+    "simbolo": "projects_menu",
+    "at": "hc/front/views.py@14049-14075",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "to": [
+      "Profile.projects",
+      "ProfileAdmin.projects"
+     ]
+    },
+    "depois": {
+     "res": "type",
+     "rel": "calls",
+     "via": null,
+     "to": [
+      "Profile.projects"
+     ]
+    }
+   },
+   {
+    "simbolo": "add_check",
+    "at": "hc/front/views.py@17740-17770",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "to": [
+      "Profile.num_checks_available",
+      "Project.num_checks_available"
+     ]
+    },
+    "depois": {
+     "res": "type",
+     "rel": "calls",
+     "via": null,
+     "to": [
+      "Project.num_checks_available"
+     ]
+    }
+   },
+   {
+    "simbolo": "transfer",
+    "at": "hc/front/views.py@36857-36894",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "to": [
+      "Profile.num_checks_available",
+      "Project.num_checks_available"
+     ]
+    },
+    "depois": {
+     "res": "type",
+     "rel": "calls",
+     "via": null,
+     "to": [
+      "Project.num_checks_available"
+     ]
+    }
+   },
+   {
+    "simbolo": "create_check",
+    "at": "hc/api/views.py@16323-16361",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "to": [
+      "Profile.num_checks_available",
+      "Project.num_checks_available"
+     ]
+    },
+    "depois": {
+     "res": "type",
+     "rel": "calls",
+     "via": null,
+     "to": [
+      "Project.num_checks_available"
+     ]
+    }
+   },
+   {
+    "simbolo": "add",
+    "at": "hc/integrations/telegram/views.py@4229-4255",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "to": [
+      "Profile.projects",
+      "ProfileAdmin.projects"
+     ]
+    },
+    "depois": {
+     "res": "type",
+     "rel": "calls",
+     "via": null,
+     "to": [
+      "Profile.projects"
+     ]
+    }
+   },
+   {
+    "simbolo": "project",
+    "at": "hc/accounts/views.py@18237-18252",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "to": [
+      "Member.can_accept",
+      "Profile.can_accept"
+     ]
+    },
+    "depois": {
+     "res": "type",
+     "rel": "calls",
+     "via": null,
+     "to": [
+      "Member.can_accept"
+     ]
+    }
+   }
+  ],
+  "fora_da_previsao": [],
+  "previsao_nao_cumprida": []
+ },
+ "renderer-9b78f3a9": {
+  "simbolos": 819,
+  "simbolos_depois": 819,
+  "type_rule": {
+   "caminho": 488,
+   "retorno": 120,
+   "variante": 27,
+   "parametro": 6,
+   "self": 3,
+   "campo": 2,
+   "item": 7,
+   "anotacao": 10
+  },
+  "used_by_iguais": 819,
+  "used_by_diferentes": [],
+  "previstas_cumpridas": [],
+  "fora_da_previsao": [],
+  "previsao_nao_cumprida": []
+ }
+}

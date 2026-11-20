@@ -1,0 +1,8280 @@
+[
+ {
+  "forma": "f()",
+  "at": "src/bin/bench_render.rs:15",
+  "teste": false,
+  "call": "summary.samples.iter()",
+  "rhs": "render_benchmark(64, 64, 3, 5)",
+  "gravado": null,
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "render_benchmark (src/camera.rs:143)"
+   ]
+  },
+  "retorno": "RenderBenchmarkSummary",
+  "tipo23c": {
+   "tipo": "RenderBenchmarkSummary",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "tipo muda: null -> RenderBenchmarkSummary"
+ },
+ {
+  "forma": "f()",
+  "at": "src/bin/bench_render.rs:15",
+  "teste": false,
+  "call": "summary.samples.iter().enumerate()",
+  "rhs": "render_benchmark(64, 64, 3, 5)",
+  "gravado": null,
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "render_benchmark (src/camera.rs:143)"
+   ]
+  },
+  "retorno": "RenderBenchmarkSummary",
+  "tipo23c": {
+   "tipo": "RenderBenchmarkSummary",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "tipo muda: null -> RenderBenchmarkSummary"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:392",
+  "teste": true,
+  "call": "sphere.set_transform(Matrix::scaling(Tuple::point(2., 2., 2.",
+  "rhs": "Sphere::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Sphere"
+   ],
+   "nome": "sphere"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Sphere::set_transform (src/sphere.rs:68)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Sphere::default (src/sphere.rs:26)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Sphere",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:396",
+  "teste": true,
+  "call": "pattern.color_at_object(Object::from(sphere), Tuple::point(1",
+  "rhs": "Patterns::from(Stripe::new(Color::white(), Color::",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Patterns"
+   ],
+   "nome": "pattern"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Incuse for Patterns::color_at_object (src/patterns.rs:323)"
+   ]
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:406",
+  "teste": true,
+  "call": "pattern.set_pattern_transform(Matrix::scaling(Tuple::point(2",
+  "rhs": "Patterns::from(Stripe::new(Color::white(), Color::",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Patterns"
+   ],
+   "nome": "pattern"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Incuse for Patterns::set_pattern_transform (src/patterns.rs:313)"
+   ]
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:408",
+  "teste": true,
+  "call": "pattern.color_at_object(Object::from(sphere), Tuple::point(1",
+  "rhs": "Patterns::from(Stripe::new(Color::white(), Color::",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Patterns"
+   ],
+   "nome": "pattern"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Incuse for Patterns::color_at_object (src/patterns.rs:323)"
+   ]
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:416",
+  "teste": true,
+  "call": "sphere.set_transform(Matrix::scaling(Tuple::point(2., 2., 2.",
+  "rhs": "Sphere::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Sphere"
+   ],
+   "nome": "sphere"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Sphere::set_transform (src/sphere.rs:68)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Sphere::default (src/sphere.rs:26)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Sphere",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:419",
+  "teste": true,
+  "call": "pattern.set_pattern_transform(Matrix::translation(Tuple::poi",
+  "rhs": "Patterns::from(Stripe::new(Color::white(), Color::",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Patterns"
+   ],
+   "nome": "pattern"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Incuse for Patterns::set_pattern_transform (src/patterns.rs:313)"
+   ]
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:421",
+  "teste": true,
+  "call": "pattern.color_at_object(Object::from(sphere), Tuple::point(2",
+  "rhs": "Patterns::from(Stripe::new(Color::white(), Color::",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Patterns"
+   ],
+   "nome": "pattern"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Incuse for Patterns::color_at_object (src/patterns.rs:323)"
+   ]
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:435",
+  "teste": true,
+  "call": "p.set_pattern_transform(Matrix::translation(Tuple::point(1.,",
+  "rhs": "Stripe::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Stripe"
+   ],
+   "nome": "p"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Incuse for Stripe::set_pattern_transform (src/patterns.rs:171)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Stripe::default (src/patterns.rs:41)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Stripe",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:444",
+  "teste": true,
+  "call": "pattern.color_at(Tuple::point(0.,0., 0.))",
+  "rhs": "Patterns::from(LinearGradient::new(Color::white(),",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Patterns"
+   ],
+   "nome": "pattern"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Incuse for Patterns::color_at (src/patterns.rs:333)"
+   ]
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:445",
+  "teste": true,
+  "call": "pattern.color_at(Tuple::point(0.25,0., 0.))",
+  "rhs": "Patterns::from(LinearGradient::new(Color::white(),",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Patterns"
+   ],
+   "nome": "pattern"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Incuse for Patterns::color_at (src/patterns.rs:333)"
+   ]
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:446",
+  "teste": true,
+  "call": "pattern.color_at(Tuple::point(0.5,0., 0.))",
+  "rhs": "Patterns::from(LinearGradient::new(Color::white(),",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Patterns"
+   ],
+   "nome": "pattern"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Incuse for Patterns::color_at (src/patterns.rs:333)"
+   ]
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:447",
+  "teste": true,
+  "call": "pattern.color_at(Tuple::point(0.75,0., 0.))",
+  "rhs": "Patterns::from(LinearGradient::new(Color::white(),",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Patterns"
+   ],
+   "nome": "pattern"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Incuse for Patterns::color_at (src/patterns.rs:333)"
+   ]
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:459",
+  "teste": true,
+  "call": "pattern.color_at(Tuple::point(0.,0., 0.))",
+  "rhs": "Patterns::from(Ring::new(Color::white(), Color::bl",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Patterns"
+   ],
+   "nome": "pattern"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Incuse for Patterns::color_at (src/patterns.rs:333)"
+   ]
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:460",
+  "teste": true,
+  "call": "pattern.color_at(Tuple::point(1.,0., 0.))",
+  "rhs": "Patterns::from(Ring::new(Color::white(), Color::bl",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Patterns"
+   ],
+   "nome": "pattern"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Incuse for Patterns::color_at (src/patterns.rs:333)"
+   ]
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:461",
+  "teste": true,
+  "call": "pattern.color_at(Tuple::point(0.,0., 1.))",
+  "rhs": "Patterns::from(Ring::new(Color::white(), Color::bl",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Patterns"
+   ],
+   "nome": "pattern"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Incuse for Patterns::color_at (src/patterns.rs:333)"
+   ]
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:462",
+  "teste": true,
+  "call": "pattern.color_at(Tuple::point(0.708,0., 0.708))",
+  "rhs": "Patterns::from(Ring::new(Color::white(), Color::bl",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Patterns"
+   ],
+   "nome": "pattern"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Incuse for Patterns::color_at (src/patterns.rs:333)"
+   ]
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:474",
+  "teste": true,
+  "call": "pattern.color_at(Tuple::point(0.,0., 0.))",
+  "rhs": "Patterns::from(Checkers::new(Color::white(), Color",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Patterns"
+   ],
+   "nome": "pattern"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Incuse for Patterns::color_at (src/patterns.rs:333)"
+   ]
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:475",
+  "teste": true,
+  "call": "pattern.color_at(Tuple::point(0.99,0., 0.))",
+  "rhs": "Patterns::from(Checkers::new(Color::white(), Color",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Patterns"
+   ],
+   "nome": "pattern"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Incuse for Patterns::color_at (src/patterns.rs:333)"
+   ]
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:476",
+  "teste": true,
+  "call": "pattern.color_at(Tuple::point(1.01,0., 0.))",
+  "rhs": "Patterns::from(Checkers::new(Color::white(), Color",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Patterns"
+   ],
+   "nome": "pattern"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Incuse for Patterns::color_at (src/patterns.rs:333)"
+   ]
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:487",
+  "teste": true,
+  "call": "pattern.color_at(Tuple::point(0.,0., 0.))",
+  "rhs": "Patterns::from(Checkers::new(Color::white(), Color",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Patterns"
+   ],
+   "nome": "pattern"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Incuse for Patterns::color_at (src/patterns.rs:333)"
+   ]
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:488",
+  "teste": true,
+  "call": "pattern.color_at(Tuple::point(0.,0.99, 0.))",
+  "rhs": "Patterns::from(Checkers::new(Color::white(), Color",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Patterns"
+   ],
+   "nome": "pattern"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Incuse for Patterns::color_at (src/patterns.rs:333)"
+   ]
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:489",
+  "teste": true,
+  "call": "pattern.color_at(Tuple::point(0.,1.01, 0.))",
+  "rhs": "Patterns::from(Checkers::new(Color::white(), Color",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Patterns"
+   ],
+   "nome": "pattern"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Incuse for Patterns::color_at (src/patterns.rs:333)"
+   ]
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:500",
+  "teste": true,
+  "call": "pattern.color_at(Tuple::point(0.,0., 0.))",
+  "rhs": "Patterns::from(Checkers::new(Color::white(), Color",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Patterns"
+   ],
+   "nome": "pattern"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Incuse for Patterns::color_at (src/patterns.rs:333)"
+   ]
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:501",
+  "teste": true,
+  "call": "pattern.color_at(Tuple::point(0.,0., 0.99))",
+  "rhs": "Patterns::from(Checkers::new(Color::white(), Color",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Patterns"
+   ],
+   "nome": "pattern"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Incuse for Patterns::color_at (src/patterns.rs:333)"
+   ]
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/patterns.rs:502",
+  "teste": true,
+  "call": "pattern.color_at(Tuple::point(0.,0., 1.01))",
+  "rhs": "Patterns::from(Checkers::new(Color::white(), Color",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Patterns"
+   ],
+   "nome": "pattern"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Incuse for Patterns::color_at (src/patterns.rs:333)"
+   ]
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/transformations.rs:51",
+  "teste": true,
+  "call": "from.view_transform(to, up)",
+  "rhs": "Tuple::point(0., 0., 0.)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Tuple"
+   ],
+   "nome": "from"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Transform for Tuple::view_transform (src/transformations.rs:9)"
+   ]
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Tuple::point (src/tuple.rs:21)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Tuple",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/transformations.rs:62",
+  "teste": true,
+  "call": "from.view_transform(to, up)",
+  "rhs": "Tuple::point(0., 0., 8.)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Tuple"
+   ],
+   "nome": "from"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Transform for Tuple::view_transform (src/transformations.rs:9)"
+   ]
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Tuple::point (src/tuple.rs:21)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Tuple",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/transformations.rs:73",
+  "teste": true,
+  "call": "from.view_transform(to, up)",
+  "rhs": "Tuple::point(1., 3., 2.)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Tuple"
+   ],
+   "nome": "from"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Transform for Tuple::view_transform (src/transformations.rs:9)"
+   ]
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Tuple::point (src/tuple.rs:21)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Tuple",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/transformations.rs:40",
+  "teste": true,
+  "call": "from.view_transform(to, up)",
+  "rhs": "Tuple::point(0., 0., 0.)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Tuple"
+   ],
+   "nome": "from"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Transform for Tuple::view_transform (src/transformations.rs:9)"
+   ]
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Tuple::point (src/tuple.rs:21)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Tuple",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/color.rs:147",
+  "teste": true,
+  "call": "color.clamp(0.0, 1.0)",
+  "rhs": "Color::new(2.3, -6.7, 0.8)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Color"
+   ],
+   "nome": "color"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Color::clamp (src/color.rs:24)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Color::new (src/color.rs:12)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Color",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/sphere.rs:90",
+  "teste": true,
+  "call": "sphere.intersect(ray)",
+  "rhs": "Sphere::new(Tuple::point(0., 0., 0.), 1.)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Sphere"
+   ],
+   "nome": "sphere"
+  },
+  "hoje": {
+   "resolution": "trait_default",
+   "alvos": [
+    "Intersectable::intersect (src/object.rs:29)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Sphere::new (src/sphere.rs:12)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Sphere",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/sphere.rs:105",
+  "teste": true,
+  "call": "sphere.intersect(ray)",
+  "rhs": "Sphere::new(Tuple::point(0., 0., 0.), 1.)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Sphere"
+   ],
+   "nome": "sphere"
+  },
+  "hoje": {
+   "resolution": "trait_default",
+   "alvos": [
+    "Intersectable::intersect (src/object.rs:29)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Sphere::new (src/sphere.rs:12)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Sphere",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/sphere.rs:120",
+  "teste": true,
+  "call": "sphere.intersect(ray)",
+  "rhs": "Sphere::new(Tuple::point(0., 0., 0.), 1.)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Sphere"
+   ],
+   "nome": "sphere"
+  },
+  "hoje": {
+   "resolution": "trait_default",
+   "alvos": [
+    "Intersectable::intersect (src/object.rs:29)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Sphere::new (src/sphere.rs:12)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Sphere",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/sphere.rs:133",
+  "teste": true,
+  "call": "sphere.intersect(ray)",
+  "rhs": "Sphere::new(Tuple::point(0., 0., 0.), 1.)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Sphere"
+   ],
+   "nome": "sphere"
+  },
+  "hoje": {
+   "resolution": "trait_default",
+   "alvos": [
+    "Intersectable::intersect (src/object.rs:29)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Sphere::new (src/sphere.rs:12)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Sphere",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/sphere.rs:148",
+  "teste": true,
+  "call": "sphere.intersect(ray)",
+  "rhs": "Sphere::new(Tuple::point(0., 0., 0.), 1.)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Sphere"
+   ],
+   "nome": "sphere"
+  },
+  "hoje": {
+   "resolution": "trait_default",
+   "alvos": [
+    "Intersectable::intersect (src/object.rs:29)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Sphere::new (src/sphere.rs:12)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Sphere",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/sphere.rs:166",
+  "teste": true,
+  "call": "sphere.set_transform(translation)",
+  "rhs": "Sphere::new(Tuple::point(0., 0., 0.), 1.)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Sphere"
+   ],
+   "nome": "sphere"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Sphere::set_transform (src/sphere.rs:68)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Sphere::new (src/sphere.rs:12)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Sphere",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/sphere.rs:180",
+  "teste": true,
+  "call": "sphere.set_transform(scaling)",
+  "rhs": "Sphere::new(Tuple::point(0., 0., 0.), 1.)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Sphere"
+   ],
+   "nome": "sphere"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Sphere::set_transform (src/sphere.rs:68)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Sphere::new (src/sphere.rs:12)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Sphere",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/sphere.rs:181",
+  "teste": true,
+  "call": "sphere.intersect(ray)",
+  "rhs": "Sphere::new(Tuple::point(0., 0., 0.), 1.)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Sphere"
+   ],
+   "nome": "sphere"
+  },
+  "hoje": {
+   "resolution": "trait_default",
+   "alvos": [
+    "Intersectable::intersect (src/object.rs:29)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Sphere::new (src/sphere.rs:12)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Sphere",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/sphere.rs:197",
+  "teste": true,
+  "call": "sphere.set_transform(translation)",
+  "rhs": "Sphere::new(Tuple::point(0., 0., 0.), 1.)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Sphere"
+   ],
+   "nome": "sphere"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Sphere::set_transform (src/sphere.rs:68)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Sphere::new (src/sphere.rs:12)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Sphere",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/sphere.rs:198",
+  "teste": true,
+  "call": "sphere.intersect(ray)",
+  "rhs": "Sphere::new(Tuple::point(0., 0., 0.), 1.)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Sphere"
+   ],
+   "nome": "sphere"
+  },
+  "hoje": {
+   "resolution": "trait_default",
+   "alvos": [
+    "Intersectable::intersect (src/object.rs:29)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Sphere::new (src/sphere.rs:12)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Sphere",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/sphere.rs:206",
+  "teste": true,
+  "call": "sphere.normal_at(Tuple::point(1., 0., 0.))",
+  "rhs": "Sphere::new(Tuple::point(0., 0., 0.), 1.)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Sphere"
+   ],
+   "nome": "sphere"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "Intersectable::normal_at (src/object.rs:35)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Sphere::new (src/sphere.rs:12)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Sphere",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/sphere.rs:214",
+  "teste": true,
+  "call": "sphere.normal_at(Tuple::point(0., 1., 0.))",
+  "rhs": "Sphere::new(Tuple::point(0., 0., 0.), 1.)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Sphere"
+   ],
+   "nome": "sphere"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "Intersectable::normal_at (src/object.rs:35)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Sphere::new (src/sphere.rs:12)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Sphere",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/sphere.rs:222",
+  "teste": true,
+  "call": "sphere.normal_at(Tuple::point(0., 0., 1.))",
+  "rhs": "Sphere::new(Tuple::point(0., 0., 0.), 1.)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Sphere"
+   ],
+   "nome": "sphere"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "Intersectable::normal_at (src/object.rs:35)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Sphere::new (src/sphere.rs:12)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Sphere",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/sphere.rs:230",
+  "teste": true,
+  "call": "sphere.normal_at(Tuple::point((3. as f64).sqrt() / 3., (3. a",
+  "rhs": "Sphere::new(Tuple::point(0., 0., 0.), 1.)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Sphere"
+   ],
+   "nome": "sphere"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "Intersectable::normal_at (src/object.rs:35)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Sphere::new (src/sphere.rs:12)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Sphere",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/sphere.rs:238",
+  "teste": true,
+  "call": "sphere.normal_at(Tuple::point((3. as f64).sqrt() / 3., (3. a",
+  "rhs": "Sphere::new(Tuple::point(0., 0., 0.), 1.)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Sphere"
+   ],
+   "nome": "sphere"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "Intersectable::normal_at (src/object.rs:35)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Sphere::new (src/sphere.rs:12)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Sphere",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/sphere.rs:246",
+  "teste": true,
+  "call": "sphere.set_transform(Matrix::translation(Tuple::vector(0., 1",
+  "rhs": "Sphere::new(Tuple::point(0., 0., 0.), 1.)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Sphere"
+   ],
+   "nome": "sphere"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Sphere::set_transform (src/sphere.rs:68)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Sphere::new (src/sphere.rs:12)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Sphere",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/sphere.rs:248",
+  "teste": true,
+  "call": "sphere.normal_at(Tuple::point(0., 1.70711, -FRAC_1_SQRT_2))",
+  "rhs": "Sphere::new(Tuple::point(0., 0., 0.), 1.)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Sphere"
+   ],
+   "nome": "sphere"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "Intersectable::normal_at (src/object.rs:35)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Sphere::new (src/sphere.rs:12)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Sphere",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/sphere.rs:256",
+  "teste": true,
+  "call": "sphere.set_transform(\r",
+  "rhs": "Sphere::new(Tuple::point(0., 0., 0.), 1.)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Sphere"
+   ],
+   "nome": "sphere"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Sphere::set_transform (src/sphere.rs:68)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Sphere::new (src/sphere.rs:12)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Sphere",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/sphere.rs:261",
+  "teste": true,
+  "call": "sphere.normal_at(Tuple::point(0., (2. as f64).sqrt() / 2., -",
+  "rhs": "Sphere::new(Tuple::point(0., 0., 0.), 1.)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Sphere"
+   ],
+   "nome": "sphere"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "Intersectable::normal_at (src/object.rs:35)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Sphere::new (src/sphere.rs:12)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Sphere",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/cena_video.rs:96",
+  "teste": false,
+  "call": "floor.set_material(checkers)",
+  "rhs": "Plane::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Plane"
+   ],
+   "nome": "floor"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Plane::set_material (src/plane.rs:50)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Plane::default (src/plane.rs:21)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Plane",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/cena_video.rs:98",
+  "teste": false,
+  "call": "wall.set_transform(Matrix::translation(Tuple::vector(0., 0.,",
+  "rhs": "Plane::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Plane"
+   ],
+   "nome": "wall"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Plane::set_transform (src/plane.rs:54)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Plane::default (src/plane.rs:21)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Plane",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/cena_video.rs:101",
+  "teste": false,
+  "call": "wall.set_material(wall_material)",
+  "rhs": "Plane::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Plane"
+   ],
+   "nome": "wall"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Plane::set_material (src/plane.rs:50)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Plane::default (src/plane.rs:21)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Plane",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/cena_video.rs:163",
+  "teste": false,
+  "call": "world.groups.push(glass_teapot)",
+  "rhs": "World::new(objects, lights)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "World"
+   ],
+   "nome": "world"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl World::new (src/world.rs:19)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "World",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/cena_video.rs:164",
+  "teste": false,
+  "call": "world.groups.push(mirror_teapot)",
+  "rhs": "World::new(objects, lights)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "World"
+   ],
+   "nome": "world"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl World::new (src/world.rs:19)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "World",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/cena_video.rs:165",
+  "teste": false,
+  "call": "world.groups.push(suzanne)",
+  "rhs": "World::new(objects, lights)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "World"
+   ],
+   "nome": "world"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl World::new (src/world.rs:19)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "World",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/cena_video.rs:170",
+  "teste": false,
+  "call": "from.view_transform(to, up)",
+  "rhs": "Tuple::point(0., 2.6, -7.)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Tuple"
+   ],
+   "nome": "from"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Transform for Tuple::view_transform (src/transformations.rs:9)"
+   ]
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Tuple::point (src/tuple.rs:21)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Tuple",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/cena_video.rs:173",
+  "teste": false,
+  "call": "camera.render(world)",
+  "rhs": "Camera::new(width, height, PI / 3.).with_transform",
+  "gravado": null,
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Camera::render (src/camera.rs:95)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Camera::new (src/camera.rs:38)",
+    "impl Camera::with_transform (src/camera.rs:70)"
+   ]
+  },
+  "fim": "não fecha (type, 2)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/cena_video.rs:174",
+  "teste": false,
+  "call": "start.elapsed()",
+  "rhs": "Instant::now()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [],
+   "nome": "start"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "fim": "não fecha (no_candidate_in_project, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/cena_video.rs:174",
+  "teste": false,
+  "call": "start.elapsed().as_secs_f64()",
+  "rhs": "Instant::now()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [],
+   "nome": "start"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "fim": "não fecha (no_candidate_in_project, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cylinder.rs:152",
+  "teste": true,
+  "call": "cyl.intersect(*ray)",
+  "rhs": "Cylinder::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Cylinder"
+   ],
+   "nome": "cyl"
+  },
+  "hoje": {
+   "resolution": "trait_default",
+   "alvos": [
+    "Intersectable::intersect (src/object.rs:29)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Cylinder::default (src/cylinder.rs:50)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Cylinder",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cylinder.rs:170",
+  "teste": true,
+  "call": "cyl.intersect(ray1)",
+  "rhs": "Cylinder::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Cylinder"
+   ],
+   "nome": "cyl"
+  },
+  "hoje": {
+   "resolution": "trait_default",
+   "alvos": [
+    "Intersectable::intersect (src/object.rs:29)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Cylinder::default (src/cylinder.rs:50)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Cylinder",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cylinder.rs:171",
+  "teste": true,
+  "call": "cyl.intersect(ray2)",
+  "rhs": "Cylinder::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Cylinder"
+   ],
+   "nome": "cyl"
+  },
+  "hoje": {
+   "resolution": "trait_default",
+   "alvos": [
+    "Intersectable::intersect (src/object.rs:29)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Cylinder::default (src/cylinder.rs:50)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Cylinder",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cylinder.rs:172",
+  "teste": true,
+  "call": "cyl.intersect(ray3)",
+  "rhs": "Cylinder::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Cylinder"
+   ],
+   "nome": "cyl"
+  },
+  "hoje": {
+   "resolution": "trait_default",
+   "alvos": [
+    "Intersectable::intersect (src/object.rs:29)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Cylinder::default (src/cylinder.rs:50)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Cylinder",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cylinder.rs:226",
+  "teste": true,
+  "call": "cyl.intersect(ray1)",
+  "rhs": "Cylinder::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Cylinder"
+   ],
+   "nome": "cyl"
+  },
+  "hoje": {
+   "resolution": "trait_default",
+   "alvos": [
+    "Intersectable::intersect (src/object.rs:29)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Cylinder::default (src/cylinder.rs:50)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Cylinder",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cylinder.rs:227",
+  "teste": true,
+  "call": "cyl.intersect(ray2)",
+  "rhs": "Cylinder::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Cylinder"
+   ],
+   "nome": "cyl"
+  },
+  "hoje": {
+   "resolution": "trait_default",
+   "alvos": [
+    "Intersectable::intersect (src/object.rs:29)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Cylinder::default (src/cylinder.rs:50)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Cylinder",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cylinder.rs:228",
+  "teste": true,
+  "call": "cyl.intersect(ray3)",
+  "rhs": "Cylinder::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Cylinder"
+   ],
+   "nome": "cyl"
+  },
+  "hoje": {
+   "resolution": "trait_default",
+   "alvos": [
+    "Intersectable::intersect (src/object.rs:29)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Cylinder::default (src/cylinder.rs:50)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Cylinder",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cylinder.rs:229",
+  "teste": true,
+  "call": "cyl.intersect(ray4)",
+  "rhs": "Cylinder::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Cylinder"
+   ],
+   "nome": "cyl"
+  },
+  "hoje": {
+   "resolution": "trait_default",
+   "alvos": [
+    "Intersectable::intersect (src/object.rs:29)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Cylinder::default (src/cylinder.rs:50)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Cylinder",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cylinder.rs:230",
+  "teste": true,
+  "call": "cyl.intersect(ray5)",
+  "rhs": "Cylinder::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Cylinder"
+   ],
+   "nome": "cyl"
+  },
+  "hoje": {
+   "resolution": "trait_default",
+   "alvos": [
+    "Intersectable::intersect (src/object.rs:29)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Cylinder::default (src/cylinder.rs:50)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Cylinder",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cylinder.rs:231",
+  "teste": true,
+  "call": "cyl.intersect(ray6)",
+  "rhs": "Cylinder::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Cylinder"
+   ],
+   "nome": "cyl"
+  },
+  "hoje": {
+   "resolution": "trait_default",
+   "alvos": [
+    "Intersectable::intersect (src/object.rs:29)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Cylinder::default (src/cylinder.rs:50)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Cylinder",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cylinder.rs:267",
+  "teste": true,
+  "call": "cyl.intersect(*ray)",
+  "rhs": "Cylinder::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Cylinder"
+   ],
+   "nome": "cyl"
+  },
+  "hoje": {
+   "resolution": "trait_default",
+   "alvos": [
+    "Intersectable::intersect (src/object.rs:29)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Cylinder::default (src/cylinder.rs:50)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Cylinder",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/obj.rs:69",
+  "teste": false,
+  "call": "vertices.push(transform * Tuple::point(x, y, z))",
+  "rhs": "Vec::new()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [],
+   "nome": "vertices"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/obj.rs:75",
+  "teste": false,
+  "call": "written.push(n.normalize())",
+  "rhs": "Vec::new()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [],
+   "nome": "written"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/obj.rs:102",
+  "teste": false,
+  "call": "written.get(n)",
+  "rhs": "Vec::new()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [],
+   "nome": "written"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/obj.rs:102",
+  "teste": false,
+  "call": "written.get(n).copied()",
+  "rhs": "Vec::new()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [],
+   "nome": "written"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/obj.rs:107",
+  "teste": false,
+  "call": "triangle.set_material(material)",
+  "rhs": "Triangle::smooth(vertices[a.0], vertices[b.0], ver",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Triangle"
+   ],
+   "nome": "triangle"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Triangle::set_material (src/triangle.rs:92)"
+   ]
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Triangle::smooth (src/triangle.rs:31)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Triangle",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/obj.rs:108",
+  "teste": false,
+  "call": "triangles.push(Object::from(triangle))",
+  "rhs": "Vec::new()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [],
+   "nome": "triangles"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/obj.rs:37",
+  "teste": false,
+  "call": "triangle.set_material(material)",
+  "rhs": "Triangle::new(\r\n                        vertices[i",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Triangle"
+   ],
+   "nome": "triangle"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Triangle::set_material (src/triangle.rs:92)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Triangle::new (src/triangle.rs:24)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Triangle",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/obj.rs:38",
+  "teste": false,
+  "call": "triangles.push(Object::from(triangle))",
+  "rhs": "Vec::new()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [],
+   "nome": "triangles"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/obj.rs:24",
+  "teste": false,
+  "call": "vertices.push(Tuple::point(x, y, z))",
+  "rhs": "Vec::new()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [],
+   "nome": "vertices"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/obj.rs:130",
+  "teste": false,
+  "call": "bounds.union(object.bounds())",
+  "rhs": "Bounds::empty()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Bounds"
+   ],
+   "nome": "bounds"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Bounds::union (src/bounds.rs:32)"
+   ]
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Bounds::empty (src/bounds.rs:16)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Bounds",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/matrix.rs:523",
+  "teste": true,
+  "call": "mat3.submatrix(1, 0)",
+  "rhs": "Matrix::from([\r\n            [3., 5., 0.],\r\n       ",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Matrix"
+   ],
+   "nome": "mat3"
+  },
+  "hoje": {
+   "resolution": "homonym",
+   "alvos": [
+    "impl Matrix<4>::submatrix (src/matrix.rs:91)",
+    "impl Matrix<3>::submatrix (src/matrix.rs:26)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl From<[[f64; D]; D]> for Matrix<D>::from (src/matrix.rs:12)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Matrix",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/matrix.rs:698",
+  "teste": true,
+  "call": "mat4_transform.inverse()",
+  "rhs": "Matrix::translation(Tuple::vector(5., -3., 2.))",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Matrix"
+   ],
+   "nome": "mat4_transform"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Matrix<4>::inverse (src/matrix.rs:193)"
+   ]
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Matrix<4>::translation (src/matrix.rs:127)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Matrix",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/matrix.rs:737",
+  "teste": true,
+  "call": "mat4_transform.inverse()",
+  "rhs": "Matrix::scaling(Tuple::vector(2., 3., 4.))",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Matrix"
+   ],
+   "nome": "mat4_transform"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Matrix<4>::inverse (src/matrix.rs:193)"
+   ]
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Matrix<4>::scaling (src/matrix.rs:135)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Matrix",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/matrix.rs:772",
+  "teste": true,
+  "call": "half_quarter.inverse()",
+  "rhs": "Matrix::rotation_x(PI / 4.)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Matrix"
+   ],
+   "nome": "half_quarter"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Matrix<4>::inverse (src/matrix.rs:193)"
+   ]
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Matrix<4>::rotation_x (src/matrix.rs:143)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Matrix",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/plane.rs:69",
+  "teste": true,
+  "call": "plane.local_normal_at(Tuple::point(0., 0., 0.))",
+  "rhs": "Plane::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Plane"
+   ],
+   "nome": "plane"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Plane::local_normal_at (src/plane.rs:38)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Plane::default (src/plane.rs:21)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Plane",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/plane.rs:70",
+  "teste": true,
+  "call": "plane.local_normal_at(Tuple::point(10., 0., -10.))",
+  "rhs": "Plane::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Plane"
+   ],
+   "nome": "plane"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Plane::local_normal_at (src/plane.rs:38)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Plane::default (src/plane.rs:21)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Plane",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/plane.rs:71",
+  "teste": true,
+  "call": "plane.local_normal_at(Tuple::point(-5., 0., 150.))",
+  "rhs": "Plane::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Plane"
+   ],
+   "nome": "plane"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Plane::local_normal_at (src/plane.rs:38)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Plane::default (src/plane.rs:21)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Plane",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/plane.rs:84",
+  "teste": true,
+  "call": "plane.intersect(ray)",
+  "rhs": "Plane::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Plane"
+   ],
+   "nome": "plane"
+  },
+  "hoje": {
+   "resolution": "trait_default",
+   "alvos": [
+    "Intersectable::intersect (src/object.rs:29)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Plane::default (src/plane.rs:21)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Plane",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/plane.rs:93",
+  "teste": true,
+  "call": "plane.intersect(ray)",
+  "rhs": "Plane::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Plane"
+   ],
+   "nome": "plane"
+  },
+  "hoje": {
+   "resolution": "trait_default",
+   "alvos": [
+    "Intersectable::intersect (src/object.rs:29)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Plane::default (src/plane.rs:21)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Plane",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/plane.rs:102",
+  "teste": true,
+  "call": "plane.intersect(ray)",
+  "rhs": "Plane::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Plane"
+   ],
+   "nome": "plane"
+  },
+  "hoje": {
+   "resolution": "trait_default",
+   "alvos": [
+    "Intersectable::intersect (src/object.rs:29)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Plane::default (src/plane.rs:21)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Plane",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/plane.rs:113",
+  "teste": true,
+  "call": "plane.intersect(ray)",
+  "rhs": "Plane::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Plane"
+   ],
+   "nome": "plane"
+  },
+  "hoje": {
+   "resolution": "trait_default",
+   "alvos": [
+    "Intersectable::intersect (src/object.rs:29)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Plane::default (src/plane.rs:21)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Plane",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/scene.rs:164",
+  "teste": false,
+  "call": "bad.lights.clear()",
+  "rhs": "SceneSpec::default_sample()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "SceneSpec"
+   ],
+   "nome": "bad"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "impl SceneSpec::default_sample (src/scene.rs:85)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "SceneSpec",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/triangle.rs:134",
+  "teste": true,
+  "call": "t.normal_at(Tuple::point(0., 0.5, 0.))",
+  "rhs": "Triangle::new(p1, p2, p3)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Triangle"
+   ],
+   "nome": "t"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "Intersectable::normal_at (src/object.rs:35)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Triangle::new (src/triangle.rs:24)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Triangle",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/triangle.rs:135",
+  "teste": true,
+  "call": "t.normal_at(Tuple::point(-0.5, 0.75, 0.))",
+  "rhs": "Triangle::new(p1, p2, p3)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Triangle"
+   ],
+   "nome": "t"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "Intersectable::normal_at (src/object.rs:35)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Triangle::new (src/triangle.rs:24)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Triangle",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/triangle.rs:136",
+  "teste": true,
+  "call": "t.normal_at(Tuple::point(0.5, 0.25, 0.))",
+  "rhs": "Triangle::new(p1, p2, p3)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Triangle"
+   ],
+   "nome": "t"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "Intersectable::normal_at (src/object.rs:35)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Triangle::new (src/triangle.rs:24)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Triangle",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/triangle.rs:153",
+  "teste": true,
+  "call": "t.local_intersect(ray)",
+  "rhs": "Triangle::new(p1, p2, p3)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Triangle"
+   ],
+   "nome": "t"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Triangle::local_intersect (src/triangle.rs:38)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Triangle::new (src/triangle.rs:24)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Triangle",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/triangle.rs:168",
+  "teste": true,
+  "call": "t.local_intersect(ray)",
+  "rhs": "Triangle::new(p1, p2, p3)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Triangle"
+   ],
+   "nome": "t"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Triangle::local_intersect (src/triangle.rs:38)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Triangle::new (src/triangle.rs:24)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Triangle",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/triangle.rs:183",
+  "teste": true,
+  "call": "t.local_intersect(ray)",
+  "rhs": "Triangle::new(p1, p2, p3)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Triangle"
+   ],
+   "nome": "t"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Triangle::local_intersect (src/triangle.rs:38)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Triangle::new (src/triangle.rs:24)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Triangle",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/triangle.rs:198",
+  "teste": true,
+  "call": "t.local_intersect(ray)",
+  "rhs": "Triangle::new(p1, p2, p3)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Triangle"
+   ],
+   "nome": "t"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Triangle::local_intersect (src/triangle.rs:38)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Triangle::new (src/triangle.rs:24)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Triangle",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/triangle.rs:213",
+  "teste": true,
+  "call": "t.local_intersect(ray)",
+  "rhs": "Triangle::new(p1, p2, p3)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Triangle"
+   ],
+   "nome": "t"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Triangle::local_intersect (src/triangle.rs:38)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Triangle::new (src/triangle.rs:24)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Triangle",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/object.rs:161",
+  "teste": false,
+  "call": "bounds.add_point(triangle.p1)",
+  "rhs": "Bounds::empty()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Bounds"
+   ],
+   "nome": "bounds"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Bounds::add_point (src/bounds.rs:23)"
+   ]
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Bounds::empty (src/bounds.rs:16)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Bounds",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/object.rs:162",
+  "teste": false,
+  "call": "bounds.add_point(triangle.p2)",
+  "rhs": "Bounds::empty()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Bounds"
+   ],
+   "nome": "bounds"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Bounds::add_point (src/bounds.rs:23)"
+   ]
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Bounds::empty (src/bounds.rs:16)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Bounds",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/object.rs:163",
+  "teste": false,
+  "call": "bounds.add_point(triangle.p3)",
+  "rhs": "Bounds::empty()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Bounds"
+   ],
+   "nome": "bounds"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Bounds::add_point (src/bounds.rs:23)"
+   ]
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Bounds::empty (src/bounds.rs:16)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Bounds",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/object.rs:164",
+  "teste": false,
+  "call": "bounds.transformed(triangle.transform)",
+  "rhs": "Bounds::empty()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Bounds"
+   ],
+   "nome": "bounds"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Bounds::transformed (src/bounds.rs:47)"
+   ]
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Bounds::empty (src/bounds.rs:16)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Bounds",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bounds.rs:52",
+  "teste": false,
+  "call": "result.add_point(transform * Tuple::point(x, y, z))",
+  "rhs": "Self::empty()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Bounds"
+   ],
+   "nome": "result"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Bounds::add_point (src/bounds.rs:23)"
+   ]
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Bounds::empty (src/bounds.rs:16)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Bounds",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "tipo muda: Self -> Bounds"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/intersection.rs:333",
+  "teste": true,
+  "call": "shape.set_transform(Matrix::translation(Tuple::vector(0., 0.",
+  "rhs": "Sphere::grass(1.)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Sphere"
+   ],
+   "nome": "shape"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Sphere::set_transform (src/sphere.rs:68)"
+   ]
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Sphere::grass (src/sphere.rs:18)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Sphere",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/intersection.rs:337",
+  "teste": true,
+  "call": "xs.data[0].prepare_computations(ray, &xs)",
+  "rhs": "Intersections::new(vec![intersect])",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Intersections"
+   ],
+   "nome": "xs"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Intersection::prepare_computations (src/intersection.rs:76)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersections::new (src/intersection.rs:114)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Intersections",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/intersection.rs:350",
+  "teste": true,
+  "call": "xs.data[1].prepare_computations(ray, &xs)",
+  "rhs": "Intersections::new(vec![intersect1, intersect2])",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Intersections"
+   ],
+   "nome": "xs"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Intersection::prepare_computations (src/intersection.rs:76)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersections::new (src/intersection.rs:114)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Intersections",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/intersection.rs:364",
+  "teste": true,
+  "call": "xs.data[1].prepare_computations(ray, &xs)",
+  "rhs": "Intersections::new(vec![intersect1, intersect2])",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Intersections"
+   ],
+   "nome": "xs"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Intersection::prepare_computations (src/intersection.rs:76)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersections::new (src/intersection.rs:114)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Intersections",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/intersection.rs:377",
+  "teste": true,
+  "call": "xs.data[0].prepare_computations(ray, &xs)",
+  "rhs": "Intersections::new(vec![intersect1])",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Intersections"
+   ],
+   "nome": "xs"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Intersection::prepare_computations (src/intersection.rs:76)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersections::new (src/intersection.rs:114)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Intersections",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/intersection.rs:169",
+  "teste": true,
+  "call": "sphere.intersect(ray)",
+  "rhs": "Sphere::new(Tuple::point(0., 0., 0.), 1.)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Sphere"
+   ],
+   "nome": "sphere"
+  },
+  "hoje": {
+   "resolution": "trait_default",
+   "alvos": [
+    "Intersectable::intersect (src/object.rs:29)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Sphere::new (src/sphere.rs:12)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Sphere",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/intersection.rs:232",
+  "teste": true,
+  "call": "intersect.prepare_computations(ray, &xs)",
+  "rhs": "Intersection::new(4., s)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Intersection"
+   ],
+   "nome": "intersect"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Intersection::prepare_computations (src/intersection.rs:76)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersection::new (src/intersection.rs:72)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Intersection",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/intersection.rs:247",
+  "teste": true,
+  "call": "intersect.prepare_computations(ray, &xs)",
+  "rhs": "Intersection::new(4., s)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Intersection"
+   ],
+   "nome": "intersect"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Intersection::prepare_computations (src/intersection.rs:76)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersection::new (src/intersection.rs:72)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Intersection",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/intersection.rs:261",
+  "teste": true,
+  "call": "intersection.prepare_computations(ray, &xs)",
+  "rhs": "Intersection::new(5., Object::from(shape))",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Intersection"
+   ],
+   "nome": "intersection"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Intersection::prepare_computations (src/intersection.rs:76)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersection::new (src/intersection.rs:72)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Intersection",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/intersection.rs:273",
+  "teste": true,
+  "call": "intersection.prepare_computations(ray, &xs)",
+  "rhs": "Intersection::new(f64::from(2.).sqrt(), Object::fr",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Intersection"
+   ],
+   "nome": "intersection"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Intersection::prepare_computations (src/intersection.rs:76)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersection::new (src/intersection.rs:72)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Intersection",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/intersection.rs:302",
+  "teste": true,
+  "call": "xs.data[0].prepare_computations(ray, &xs)",
+  "rhs": "Intersections::new(vec![intersect1, intersect2, in",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Intersections"
+   ],
+   "nome": "xs"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Intersection::prepare_computations (src/intersection.rs:76)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersections::new (src/intersection.rs:114)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Intersections",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/intersection.rs:303",
+  "teste": true,
+  "call": "xs.data[1].prepare_computations(ray, &xs)",
+  "rhs": "Intersections::new(vec![intersect1, intersect2, in",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Intersections"
+   ],
+   "nome": "xs"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Intersection::prepare_computations (src/intersection.rs:76)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersections::new (src/intersection.rs:114)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Intersections",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/intersection.rs:304",
+  "teste": true,
+  "call": "xs.data[2].prepare_computations(ray, &xs)",
+  "rhs": "Intersections::new(vec![intersect1, intersect2, in",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Intersections"
+   ],
+   "nome": "xs"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Intersection::prepare_computations (src/intersection.rs:76)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersections::new (src/intersection.rs:114)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Intersections",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/intersection.rs:305",
+  "teste": true,
+  "call": "xs.data[3].prepare_computations(ray, &xs)",
+  "rhs": "Intersections::new(vec![intersect1, intersect2, in",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Intersections"
+   ],
+   "nome": "xs"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Intersection::prepare_computations (src/intersection.rs:76)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersections::new (src/intersection.rs:114)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Intersections",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/intersection.rs:306",
+  "teste": true,
+  "call": "xs.data[4].prepare_computations(ray, &xs)",
+  "rhs": "Intersections::new(vec![intersect1, intersect2, in",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Intersections"
+   ],
+   "nome": "xs"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Intersection::prepare_computations (src/intersection.rs:76)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersections::new (src/intersection.rs:114)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Intersections",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/intersection.rs:307",
+  "teste": true,
+  "call": "xs.data[5].prepare_computations(ray, &xs)",
+  "rhs": "Intersections::new(vec![intersect1, intersect2, in",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Intersections"
+   ],
+   "nome": "xs"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Intersection::prepare_computations (src/intersection.rs:76)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersections::new (src/intersection.rs:114)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Intersections",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/intersection.rs:281",
+  "teste": true,
+  "call": "a.set_transform(Matrix::scaling(Tuple::vector(2., 2., 2.)))",
+  "rhs": "Sphere::grass(1.)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Sphere"
+   ],
+   "nome": "a"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Sphere::set_transform (src/sphere.rs:68)"
+   ]
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Sphere::grass (src/sphere.rs:18)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Sphere",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/intersection.rs:285",
+  "teste": true,
+  "call": "b.set_transform(Matrix::translation(Tuple::vector(0., 0., -0",
+  "rhs": "Sphere::grass(1.)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Sphere"
+   ],
+   "nome": "b"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Sphere::set_transform (src/sphere.rs:68)"
+   ]
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Sphere::grass (src/sphere.rs:18)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Sphere",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/intersection.rs:289",
+  "teste": true,
+  "call": "c.set_transform(Matrix::translation(Tuple::vector(0., 0., 0.",
+  "rhs": "Sphere::grass(1.)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Sphere"
+   ],
+   "nome": "c"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Sphere::set_transform (src/sphere.rs:68)"
+   ]
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Sphere::grass (src/sphere.rs:18)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Sphere",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/librarian_measure.rs:33",
+  "teste": false,
+  "call": "floor.set_material(material)",
+  "rhs": "Plane::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Plane"
+   ],
+   "nome": "floor"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Plane::set_material (src/plane.rs:50)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Plane::default (src/plane.rs:21)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Plane",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/librarian_measure.rs:36",
+  "teste": false,
+  "call": "wall.set_transform(Matrix::translation(Tuple::vector(0., 0.,",
+  "rhs": "Plane::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Plane"
+   ],
+   "nome": "wall"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Plane::set_transform (src/plane.rs:54)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Plane::default (src/plane.rs:21)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Plane",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/librarian_measure.rs:37",
+  "teste": false,
+  "call": "wall.set_material(material)",
+  "rhs": "Plane::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Plane"
+   ],
+   "nome": "wall"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Plane::set_material (src/plane.rs:50)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Plane::default (src/plane.rs:21)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Plane",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/librarian_measure.rs:67",
+  "teste": false,
+  "call": "from.view_transform(to, up)",
+  "rhs": "Tuple::point(0., 1.5, -5.)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Tuple"
+   ],
+   "nome": "from"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Transform for Tuple::view_transform (src/transformations.rs:9)"
+   ]
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Tuple::point (src/tuple.rs:21)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Tuple",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/librarian_measure.rs:70",
+  "teste": false,
+  "call": "camera.render(world)",
+  "rhs": "Camera::new(width, height, PI / 3.).with_transform",
+  "gravado": null,
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Camera::render (src/camera.rs:95)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Camera::new (src/camera.rs:38)",
+    "impl Camera::with_transform (src/camera.rs:70)"
+   ]
+  },
+  "fim": "não fecha (type, 2)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/librarian_measure.rs:71",
+  "teste": false,
+  "call": "start.elapsed()",
+  "rhs": "Instant::now()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [],
+   "nome": "start"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "fim": "não fecha (no_candidate_in_project, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/librarian_measure.rs:71",
+  "teste": false,
+  "call": "start.elapsed().as_secs_f64()",
+  "rhs": "Instant::now()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [],
+   "nome": "start"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "fim": "não fecha (no_candidate_in_project, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/ray.rs:67",
+  "teste": true,
+  "call": "ray.set_transform(translation)",
+  "rhs": "Ray::new(Tuple::point(1., 2., 3.), Tuple::vector(0",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Ray"
+   ],
+   "nome": "ray"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Ray::set_transform (src/ray.rs:22)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Ray::new (src/ray.rs:11)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Ray",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/ray.rs:77",
+  "teste": true,
+  "call": "ray.set_transform(scaling)",
+  "rhs": "Ray::new(Tuple::point(1., 2., 3.), Tuple::vector(0",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Ray"
+   ],
+   "nome": "ray"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Ray::set_transform (src/ray.rs:22)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Ray::new (src/ray.rs:11)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Ray",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cone.rs:160",
+  "teste": true,
+  "call": "cone.intersect(ray1)",
+  "rhs": "Cone::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Cone"
+   ],
+   "nome": "cone"
+  },
+  "hoje": {
+   "resolution": "trait_default",
+   "alvos": [
+    "Intersectable::intersect (src/object.rs:29)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Cone::default (src/cone.rs:51)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Cone",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cone.rs:161",
+  "teste": true,
+  "call": "cone.intersect(ray2)",
+  "rhs": "Cone::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Cone"
+   ],
+   "nome": "cone"
+  },
+  "hoje": {
+   "resolution": "trait_default",
+   "alvos": [
+    "Intersectable::intersect (src/object.rs:29)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Cone::default (src/cone.rs:51)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Cone",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cone.rs:162",
+  "teste": true,
+  "call": "cone.intersect(ray3)",
+  "rhs": "Cone::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Cone"
+   ],
+   "nome": "cone"
+  },
+  "hoje": {
+   "resolution": "trait_default",
+   "alvos": [
+    "Intersectable::intersect (src/object.rs:29)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Cone::default (src/cone.rs:51)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Cone",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cone.rs:182",
+  "teste": true,
+  "call": "cone.intersect(ray)",
+  "rhs": "Cone::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Cone"
+   ],
+   "nome": "cone"
+  },
+  "hoje": {
+   "resolution": "trait_default",
+   "alvos": [
+    "Intersectable::intersect (src/object.rs:29)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Cone::default (src/cone.rs:51)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Cone",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cone.rs:203",
+  "teste": true,
+  "call": "cone.intersect(ray1)",
+  "rhs": "Cone::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Cone"
+   ],
+   "nome": "cone"
+  },
+  "hoje": {
+   "resolution": "trait_default",
+   "alvos": [
+    "Intersectable::intersect (src/object.rs:29)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Cone::default (src/cone.rs:51)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Cone",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cone.rs:204",
+  "teste": true,
+  "call": "cone.intersect(ray2)",
+  "rhs": "Cone::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Cone"
+   ],
+   "nome": "cone"
+  },
+  "hoje": {
+   "resolution": "trait_default",
+   "alvos": [
+    "Intersectable::intersect (src/object.rs:29)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Cone::default (src/cone.rs:51)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Cone",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cone.rs:205",
+  "teste": true,
+  "call": "cone.intersect(ray3)",
+  "rhs": "Cone::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Cone"
+   ],
+   "nome": "cone"
+  },
+  "hoje": {
+   "resolution": "trait_default",
+   "alvos": [
+    "Intersectable::intersect (src/object.rs:29)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Cone::default (src/cone.rs:51)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Cone",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/tuple.rs:329",
+  "teste": true,
+  "call": "v.reflect(n)",
+  "rhs": "Tuple::vector(1., -1., 0.)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Tuple"
+   ],
+   "nome": "v"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Tuple::reflect (src/tuple.rs:33)"
+   ]
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Tuple::vector (src/tuple.rs:17)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Tuple",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/tuple.rs:339",
+  "teste": true,
+  "call": "v.reflect(n)",
+  "rhs": "Tuple::vector(0., -1., 0.)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Tuple"
+   ],
+   "nome": "v"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Tuple::reflect (src/tuple.rs:33)"
+   ]
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Tuple::vector (src/tuple.rs:17)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Tuple",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:148",
+  "teste": true,
+  "call": "canvas.set_pixel_color(2, 3, red)",
+  "rhs": "Canvas::new(10, 20)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Canvas"
+   ],
+   "nome": "canvas"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Canvas::set_pixel_color (src/canvas.rs:23)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Canvas::new (src/canvas.rs:11)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Canvas",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:158",
+  "teste": true,
+  "call": "canvas.to_ppm()",
+  "rhs": "Canvas::new(5, 3)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Canvas"
+   ],
+   "nome": "canvas"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Canvas::to_ppm (src/canvas.rs:84)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Canvas::new (src/canvas.rs:11)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Canvas",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:176",
+  "teste": true,
+  "call": "canvas.set_pixel_color(0,0, color_1)",
+  "rhs": "Canvas::new(5, 3)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Canvas"
+   ],
+   "nome": "canvas"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Canvas::set_pixel_color (src/canvas.rs:23)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Canvas::new (src/canvas.rs:11)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Canvas",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:177",
+  "teste": true,
+  "call": "canvas.set_pixel_color(2,1, color_2)",
+  "rhs": "Canvas::new(5, 3)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Canvas"
+   ],
+   "nome": "canvas"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Canvas::set_pixel_color (src/canvas.rs:23)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Canvas::new (src/canvas.rs:11)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Canvas",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:178",
+  "teste": true,
+  "call": "canvas.set_pixel_color(4,2, color_3)",
+  "rhs": "Canvas::new(5, 3)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Canvas"
+   ],
+   "nome": "canvas"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Canvas::set_pixel_color (src/canvas.rs:23)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Canvas::new (src/canvas.rs:11)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Canvas",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:180",
+  "teste": true,
+  "call": "canvas.to_ppm()",
+  "rhs": "Canvas::new(5, 3)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Canvas"
+   ],
+   "nome": "canvas"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Canvas::to_ppm (src/canvas.rs:84)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Canvas::new (src/canvas.rs:11)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Canvas",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:190",
+  "teste": true,
+  "call": "expected_result.extend(header)",
+  "rhs": "Vec::new()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [],
+   "nome": "expected_result"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:191",
+  "teste": true,
+  "call": "expected_result.extend(data)",
+  "rhs": "Vec::new()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [],
+   "nome": "expected_result"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:203",
+  "teste": true,
+  "call": "canvas.set_pixel_color(x,y, color)",
+  "rhs": "Canvas::new(10, 2)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Canvas"
+   ],
+   "nome": "canvas"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Canvas::set_pixel_color (src/canvas.rs:23)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Canvas::new (src/canvas.rs:11)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Canvas",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:207",
+  "teste": true,
+  "call": "canvas.to_ppm()",
+  "rhs": "Canvas::new(10, 2)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Canvas"
+   ],
+   "nome": "canvas"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Canvas::to_ppm (src/canvas.rs:84)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Canvas::new (src/canvas.rs:11)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Canvas",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:218",
+  "teste": true,
+  "call": "expected_result.extend(header)",
+  "rhs": "Vec::new()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [],
+   "nome": "expected_result"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:219",
+  "teste": true,
+  "call": "expected_result.extend(data)",
+  "rhs": "Vec::new()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [],
+   "nome": "expected_result"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:228",
+  "teste": true,
+  "call": "canvas.to_ppm()",
+  "rhs": "Canvas::new(5, 3)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Canvas"
+   ],
+   "nome": "canvas"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Canvas::to_ppm (src/canvas.rs:84)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Canvas::new (src/canvas.rs:11)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Canvas",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:89",
+  "teste": false,
+  "call": "ppm.extend(header)",
+  "rhs": "Vec::new()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [],
+   "nome": "ppm"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:90",
+  "teste": false,
+  "call": "ppm.extend(pixel_data)",
+  "rhs": "Vec::new()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [],
+   "nome": "ppm"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:114",
+  "teste": false,
+  "call": "encoder.set_color(png::ColorType::RGBA)",
+  "rhs": "png::Encoder::new(&mut pixel_data, self.width as u",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [],
+   "nome": "encoder"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:115",
+  "teste": false,
+  "call": "encoder.set_depth(png::BitDepth::Eight)",
+  "rhs": "png::Encoder::new(&mut pixel_data, self.width as u",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [],
+   "nome": "encoder"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:116",
+  "teste": false,
+  "call": "encoder.write_header()",
+  "rhs": "png::Encoder::new(&mut pixel_data, self.width as u",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [],
+   "nome": "encoder"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:116",
+  "teste": false,
+  "call": "encoder.write_header().unwrap()",
+  "rhs": "png::Encoder::new(&mut pixel_data, self.width as u",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [],
+   "nome": "encoder"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:34",
+  "teste": false,
+  "call": "header.extend(String::from(\"P3\\n\").into_bytes())",
+  "rhs": "Vec::new()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [],
+   "nome": "header"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:35",
+  "teste": false,
+  "call": "header.extend(format!(\"{} {}\\n\", self.width, self.height).in",
+  "rhs": "Vec::new()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [],
+   "nome": "header"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/canvas.rs:36",
+  "teste": false,
+  "call": "header.extend(format!(\"{}\\n\", 255).into_bytes())",
+  "rhs": "Vec::new()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [],
+   "nome": "header"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "f()",
+  "at": "src/count.rs:132",
+  "teste": true,
+  "call": "lines.iter()",
+  "rhs": "super::lines()",
+  "gravado": null,
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "lines (src/count.rs:81)"
+   ]
+  },
+  "retorno": "Vec<String>",
+  "tipo23c": {
+   "invólucro": "Vec"
+  },
+  "fim": "sem tipo (invólucro)"
+ },
+ {
+  "forma": "f()",
+  "at": "src/count.rs:132",
+  "teste": true,
+  "call": "lines.iter().find(|l| l.starts_with(\"librarian-measure cpu_m",
+  "rhs": "super::lines()",
+  "gravado": null,
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "lines (src/count.rs:81)"
+   ]
+  },
+  "retorno": "Vec<String>",
+  "tipo23c": {
+   "invólucro": "Vec"
+  },
+  "fim": "sem tipo (invólucro)"
+ },
+ {
+  "forma": "f()",
+  "at": "src/count.rs:132",
+  "teste": true,
+  "call": "lines.iter().find(|l| l.starts_with(\"librarian-measure cpu_m",
+  "rhs": "super::lines()",
+  "gravado": null,
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "lines (src/count.rs:81)"
+   ]
+  },
+  "retorno": "Vec<String>",
+  "tipo23c": {
+   "invólucro": "Vec"
+  },
+  "fim": "sem tipo (invólucro)"
+ },
+ {
+  "forma": "f()",
+  "at": "src/count.rs:150",
+  "teste": true,
+  "call": "lines.iter()",
+  "rhs": "super::lines()",
+  "gravado": null,
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "lines (src/count.rs:81)"
+   ]
+  },
+  "retorno": "Vec<String>",
+  "tipo23c": {
+   "invólucro": "Vec"
+  },
+  "fim": "sem tipo (invólucro)"
+ },
+ {
+  "forma": "f()",
+  "at": "src/count.rs:150",
+  "teste": true,
+  "call": "lines.iter().find(|l| l.starts_with(\"librarian-measure cpu_m",
+  "rhs": "super::lines()",
+  "gravado": null,
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "lines (src/count.rs:81)"
+   ]
+  },
+  "retorno": "Vec<String>",
+  "tipo23c": {
+   "invólucro": "Vec"
+  },
+  "fim": "sem tipo (invólucro)"
+ },
+ {
+  "forma": "f()",
+  "at": "src/count.rs:150",
+  "teste": true,
+  "call": "lines.iter().find(|l| l.starts_with(\"librarian-measure cpu_m",
+  "rhs": "super::lines()",
+  "gravado": null,
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "lines (src/count.rs:81)"
+   ]
+  },
+  "retorno": "Vec<String>",
+  "tipo23c": {
+   "invólucro": "Vec"
+  },
+  "fim": "sem tipo (invólucro)"
+ },
+ {
+  "forma": "f()",
+  "at": "src/bin/bench_external_render.rs:15",
+  "teste": false,
+  "call": "summary.samples.iter()",
+  "rhs": "render_external_benchmark(96, 64, 3, 5)",
+  "gravado": null,
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "render_external_benchmark (src/camera.rs:205)"
+   ]
+  },
+  "retorno": "RenderBenchmarkSummary",
+  "tipo23c": {
+   "tipo": "RenderBenchmarkSummary",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "tipo muda: null -> RenderBenchmarkSummary"
+ },
+ {
+  "forma": "f()",
+  "at": "src/bin/bench_external_render.rs:15",
+  "teste": false,
+  "call": "summary.samples.iter().enumerate()",
+  "rhs": "render_external_benchmark(96, 64, 3, 5)",
+  "gravado": null,
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "render_external_benchmark (src/camera.rs:205)"
+   ]
+  },
+  "retorno": "RenderBenchmarkSummary",
+  "tipo23c": {
+   "tipo": "RenderBenchmarkSummary",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "tipo muda: null -> RenderBenchmarkSummary"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cube.rs:123",
+  "teste": true,
+  "call": "c.intersect(ray_inside)",
+  "rhs": "Cube::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Cube"
+   ],
+   "nome": "c"
+  },
+  "hoje": {
+   "resolution": "trait_default",
+   "alvos": [
+    "Intersectable::intersect (src/object.rs:29)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Cube::default (src/cube.rs:46)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Cube",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cube.rs:126",
+  "teste": true,
+  "call": "c.intersect(*ray)",
+  "rhs": "Cube::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Cube"
+   ],
+   "nome": "c"
+  },
+  "hoje": {
+   "resolution": "trait_default",
+   "alvos": [
+    "Intersectable::intersect (src/object.rs:29)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Cube::default (src/cube.rs:46)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Cube",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/cube.rs:150",
+  "teste": true,
+  "call": "c.intersect(*ray)",
+  "rhs": "Cube::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Cube"
+   ],
+   "nome": "c"
+  },
+  "hoje": {
+   "resolution": "trait_default",
+   "alvos": [
+    "Intersectable::intersect (src/object.rs:29)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Cube::default (src/cube.rs:46)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Cube",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/materials.rs:117",
+  "teste": true,
+  "call": "material.lighting(Object::from(Sphere::default()), light, po",
+  "rhs": "Material::phong()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Material"
+   ],
+   "nome": "material"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Material::lighting (src/materials.rs:43)"
+   ]
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Material::phong (src/materials.rs:21)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Material",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/materials.rs:135",
+  "teste": true,
+  "call": "material.lighting(Object::from(Sphere::default()), light, po",
+  "rhs": "Material::phong()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Material"
+   ],
+   "nome": "material"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Material::lighting (src/materials.rs:43)"
+   ]
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Material::phong (src/materials.rs:21)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Material",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/materials.rs:153",
+  "teste": true,
+  "call": "material.lighting(Object::from(Sphere::default()), light, po",
+  "rhs": "Material::phong()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Material"
+   ],
+   "nome": "material"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Material::lighting (src/materials.rs:43)"
+   ]
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Material::phong (src/materials.rs:21)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Material",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/materials.rs:171",
+  "teste": true,
+  "call": "material.lighting(Object::from(Sphere::default()), light, po",
+  "rhs": "Material::phong()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Material"
+   ],
+   "nome": "material"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Material::lighting (src/materials.rs:43)"
+   ]
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Material::phong (src/materials.rs:21)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Material",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/materials.rs:189",
+  "teste": true,
+  "call": "material.lighting(Object::from(Sphere::default()), light, po",
+  "rhs": "Material::phong()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Material"
+   ],
+   "nome": "material"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Material::lighting (src/materials.rs:43)"
+   ]
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Material::phong (src/materials.rs:21)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Material",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/materials.rs:205",
+  "teste": true,
+  "call": "material.lighting(Object::from(Sphere::default()), light, po",
+  "rhs": "Material::phong()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Material"
+   ],
+   "nome": "material"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Material::lighting (src/materials.rs:43)"
+   ]
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Material::phong (src/materials.rs:21)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Material",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/materials.rs:223",
+  "teste": true,
+  "call": "material.lighting(Object::from(Sphere::default()), light, Tu",
+  "rhs": "Material::phong()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Material"
+   ],
+   "nome": "material"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Material::lighting (src/materials.rs:43)"
+   ]
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Material::phong (src/materials.rs:21)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Material",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/materials.rs:224",
+  "teste": true,
+  "call": "material.lighting(Object::from(Sphere::default()), light, Tu",
+  "rhs": "Material::phong()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Material"
+   ],
+   "nome": "material"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Material::lighting (src/materials.rs:43)"
+   ]
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Material::phong (src/materials.rs:21)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Material",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/librarian_measure_mesh.rs:59",
+  "teste": false,
+  "call": "start.elapsed()",
+  "rhs": "Instant::now()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [],
+   "nome": "start"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "fim": "não fecha (no_candidate_in_project, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/librarian_measure_mesh.rs:59",
+  "teste": false,
+  "call": "start.elapsed().as_secs_f64()",
+  "rhs": "Instant::now()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [],
+   "nome": "start"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "fim": "não fecha (no_candidate_in_project, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/librarian_measure_mesh.rs:66",
+  "teste": false,
+  "call": "floor.set_material(checkers)",
+  "rhs": "Plane::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Plane"
+   ],
+   "nome": "floor"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Plane::set_material (src/plane.rs:50)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Plane::default (src/plane.rs:21)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Plane",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/librarian_measure_mesh.rs:69",
+  "teste": false,
+  "call": "wall.set_transform(Matrix::translation(Tuple::vector(0., 0.,",
+  "rhs": "Plane::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Plane"
+   ],
+   "nome": "wall"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Plane::set_transform (src/plane.rs:54)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Plane::default (src/plane.rs:21)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Plane",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/librarian_measure_mesh.rs:70",
+  "teste": false,
+  "call": "wall.set_material(checkers)",
+  "rhs": "Plane::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Plane"
+   ],
+   "nome": "wall"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Plane::set_material (src/plane.rs:50)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Plane::default (src/plane.rs:21)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Plane",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/librarian_measure_mesh.rs:74",
+  "teste": false,
+  "call": "world.groups.push(glass_teapot)",
+  "rhs": "World::new(vec![Object::from(floor), Object::from(",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "World"
+   ],
+   "nome": "world"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl World::new (src/world.rs:19)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "World",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/librarian_measure_mesh.rs:75",
+  "teste": false,
+  "call": "world.groups.push(mirror_teapot)",
+  "rhs": "World::new(vec![Object::from(floor), Object::from(",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "World"
+   ],
+   "nome": "world"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl World::new (src/world.rs:19)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "World",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/librarian_measure_mesh.rs:80",
+  "teste": false,
+  "call": "from.view_transform(to, up)",
+  "rhs": "Tuple::point(0., 2.5, -6.)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Tuple"
+   ],
+   "nome": "from"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Transform for Tuple::view_transform (src/transformations.rs:9)"
+   ]
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Tuple::point (src/tuple.rs:21)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Tuple",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/librarian_measure_mesh.rs:84",
+  "teste": false,
+  "call": "camera.render(world)",
+  "rhs": "Camera::new(width, height, PI / 3.).with_transform",
+  "gravado": null,
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Camera::render (src/camera.rs:95)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Camera::new (src/camera.rs:38)",
+    "impl Camera::with_transform (src/camera.rs:70)"
+   ]
+  },
+  "fim": "não fecha (type, 2)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/librarian_measure_mesh.rs:85",
+  "teste": false,
+  "call": "start.elapsed()",
+  "rhs": "Instant::now()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [],
+   "nome": "start"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "fim": "não fecha (no_candidate_in_project, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/bin/librarian_measure_mesh.rs:85",
+  "teste": false,
+  "call": "start.elapsed().as_secs_f64()",
+  "rhs": "Instant::now()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [],
+   "nome": "start"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "fim": "não fecha (no_candidate_in_project, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/groups.rs:50",
+  "teste": false,
+  "call": "local_bounds.union(child.bounds())",
+  "rhs": "Bounds::empty()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Bounds"
+   ],
+   "nome": "local_bounds"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Bounds::union (src/bounds.rs:32)"
+   ]
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Bounds::empty (src/bounds.rs:16)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Bounds",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/groups.rs:77",
+  "teste": false,
+  "call": "local_bounds.union(subgroup.bounds())",
+  "rhs": "Bounds::empty()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Bounds"
+   ],
+   "nome": "local_bounds"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Bounds::union (src/bounds.rs:32)"
+   ]
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Bounds::empty (src/bounds.rs:16)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Bounds",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:325",
+  "teste": true,
+  "call": "world.objects.push(Object::from(s1))",
+  "rhs": "create_default_world()",
+  "gravado": {
+   "regra": "retorno",
+   "candidatos": [
+    "World"
+   ],
+   "nome": "world"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "homonym",
+   "alvos": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "fim": "não fecha (homonym, 2)"
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:329",
+  "teste": true,
+  "call": "world.objects.push(Object::from(s2))",
+  "rhs": "create_default_world()",
+  "gravado": {
+   "regra": "retorno",
+   "candidatos": [
+    "World"
+   ],
+   "nome": "world"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "homonym",
+   "alvos": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "fim": "não fecha (homonym, 2)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:335",
+  "teste": true,
+  "call": "intersection.prepare_computations(ray, &xs)",
+  "rhs": "Intersection::new(4., Object::from(s2))",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Intersection"
+   ],
+   "nome": "intersection"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Intersection::prepare_computations (src/intersection.rs:76)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersection::new (src/intersection.rs:72)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Intersection",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:336",
+  "teste": true,
+  "call": "world.shade_hit(comps, 4)",
+  "rhs": "create_default_world()",
+  "gravado": {
+   "regra": "retorno",
+   "candidatos": [
+    "World"
+   ],
+   "nome": "world"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl World::shade_hit (src/world.rs:45)"
+   ]
+  },
+  "liga": {
+   "resolution": "homonym",
+   "alvos": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "fim": "não fecha (homonym, 2)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:352",
+  "teste": true,
+  "call": "intersection.prepare_computations(ray, &xs)",
+  "rhs": "Intersection::new(1., Object::from(shape))",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Intersection"
+   ],
+   "nome": "intersection"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Intersection::prepare_computations (src/intersection.rs:76)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersection::new (src/intersection.rs:72)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Intersection",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:353",
+  "teste": true,
+  "call": "world.reflected_color(comps, 4)",
+  "rhs": "create_default_world()",
+  "gravado": {
+   "regra": "retorno",
+   "candidatos": [
+    "World"
+   ],
+   "nome": "world"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl World::reflected_color (src/world.rs:65)"
+   ]
+  },
+  "liga": {
+   "resolution": "homonym",
+   "alvos": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "fim": "não fecha (homonym, 2)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:364",
+  "teste": true,
+  "call": "plane.set_transform(Matrix::translation(Tuple::vector(0., -1",
+  "rhs": "Plane::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Plane"
+   ],
+   "nome": "plane"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Plane::set_transform (src/plane.rs:54)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Plane::default (src/plane.rs:21)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Plane",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:365",
+  "teste": true,
+  "call": "world.objects.push(Object::from(plane))",
+  "rhs": "create_default_world()",
+  "gravado": {
+   "regra": "retorno",
+   "candidatos": [
+    "World"
+   ],
+   "nome": "world"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "homonym",
+   "alvos": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "fim": "não fecha (homonym, 2)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:371",
+  "teste": true,
+  "call": "intersection.prepare_computations(ray, &xs)",
+  "rhs": "Intersection::new(f64::from(2.).sqrt(), Object::fr",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Intersection"
+   ],
+   "nome": "intersection"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Intersection::prepare_computations (src/intersection.rs:76)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersection::new (src/intersection.rs:72)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Intersection",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:372",
+  "teste": true,
+  "call": "world.reflected_color(comps, 4)",
+  "rhs": "create_default_world()",
+  "gravado": {
+   "regra": "retorno",
+   "candidatos": [
+    "World"
+   ],
+   "nome": "world"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl World::reflected_color (src/world.rs:65)"
+   ]
+  },
+  "liga": {
+   "resolution": "homonym",
+   "alvos": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "fim": "não fecha (homonym, 2)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:383",
+  "teste": true,
+  "call": "plane.set_transform(Matrix::translation(Tuple::vector(0., -1",
+  "rhs": "Plane::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Plane"
+   ],
+   "nome": "plane"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Plane::set_transform (src/plane.rs:54)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Plane::default (src/plane.rs:21)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Plane",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:384",
+  "teste": true,
+  "call": "world.objects.push(Object::from(plane))",
+  "rhs": "create_default_world()",
+  "gravado": {
+   "regra": "retorno",
+   "candidatos": [
+    "World"
+   ],
+   "nome": "world"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "homonym",
+   "alvos": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "fim": "não fecha (homonym, 2)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:390",
+  "teste": true,
+  "call": "intersection.prepare_computations(ray, &xs)",
+  "rhs": "Intersection::new(f64::from(2.).sqrt(), Object::fr",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Intersection"
+   ],
+   "nome": "intersection"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Intersection::prepare_computations (src/intersection.rs:76)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersection::new (src/intersection.rs:72)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Intersection",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:391",
+  "teste": true,
+  "call": "world.shade_hit(comps, 4)",
+  "rhs": "create_default_world()",
+  "gravado": {
+   "regra": "retorno",
+   "candidatos": [
+    "World"
+   ],
+   "nome": "world"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl World::shade_hit (src/world.rs:45)"
+   ]
+  },
+  "liga": {
+   "resolution": "homonym",
+   "alvos": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "fim": "não fecha (homonym, 2)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:399",
+  "teste": true,
+  "call": "world.lights.push(Light::point_light(Tuple::point(0., 0., 0.",
+  "rhs": "World::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "World"
+   ],
+   "nome": "world"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for World::default (src/world.rs:123)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "World",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:403",
+  "teste": true,
+  "call": "lower.set_transform(Matrix::translation(Tuple::vector(0., -1",
+  "rhs": "Plane::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Plane"
+   ],
+   "nome": "lower"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Plane::set_transform (src/plane.rs:54)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Plane::default (src/plane.rs:21)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Plane",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:404",
+  "teste": true,
+  "call": "world.objects.push(Object::from(lower))",
+  "rhs": "World::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "World"
+   ],
+   "nome": "world"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for World::default (src/world.rs:123)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "World",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:408",
+  "teste": true,
+  "call": "upper.set_transform(Matrix::translation(Tuple::vector(0., 1.",
+  "rhs": "Plane::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Plane"
+   ],
+   "nome": "upper"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Plane::set_transform (src/plane.rs:54)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Plane::default (src/plane.rs:21)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Plane",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:409",
+  "teste": true,
+  "call": "world.objects.push(Object::from(upper))",
+  "rhs": "World::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "World"
+   ],
+   "nome": "world"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for World::default (src/world.rs:123)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "World",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:413",
+  "teste": true,
+  "call": "world.color_at(ray, 4)",
+  "rhs": "World::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "World"
+   ],
+   "nome": "world"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl World::color_at (src/world.rs:109)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for World::default (src/world.rs:123)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "World",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:423",
+  "teste": true,
+  "call": "plane.set_transform(Matrix::translation(Tuple::vector(0., -1",
+  "rhs": "Plane::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Plane"
+   ],
+   "nome": "plane"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Plane::set_transform (src/plane.rs:54)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Plane::default (src/plane.rs:21)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Plane",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:424",
+  "teste": true,
+  "call": "world.objects.push(Object::from(plane))",
+  "rhs": "create_default_world()",
+  "gravado": {
+   "regra": "retorno",
+   "candidatos": [
+    "World"
+   ],
+   "nome": "world"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "homonym",
+   "alvos": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "fim": "não fecha (homonym, 2)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:430",
+  "teste": true,
+  "call": "intersection.prepare_computations(ray, &xs)",
+  "rhs": "Intersection::new(f64::from(2.).sqrt(), Object::fr",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Intersection"
+   ],
+   "nome": "intersection"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Intersection::prepare_computations (src/intersection.rs:76)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersection::new (src/intersection.rs:72)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Intersection",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:431",
+  "teste": true,
+  "call": "world.reflected_color(comps, 0)",
+  "rhs": "create_default_world()",
+  "gravado": {
+   "regra": "retorno",
+   "candidatos": [
+    "World"
+   ],
+   "nome": "world"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl World::reflected_color (src/world.rs:65)"
+   ]
+  },
+  "liga": {
+   "resolution": "homonym",
+   "alvos": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "fim": "não fecha (homonym, 2)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:446",
+  "teste": true,
+  "call": "xs.data[0].prepare_computations(ray, &xs)",
+  "rhs": "Intersections::new(vec![intersect1, intersect2])",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Intersections"
+   ],
+   "nome": "xs"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Intersection::prepare_computations (src/intersection.rs:76)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersections::new (src/intersection.rs:114)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Intersections",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:447",
+  "teste": true,
+  "call": "world.refracted_color(comp, 5)",
+  "rhs": "create_default_world()",
+  "gravado": {
+   "regra": "retorno",
+   "candidatos": [
+    "World"
+   ],
+   "nome": "world"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl World::refracted_color (src/world.rs:74)"
+   ]
+  },
+  "liga": {
+   "resolution": "homonym",
+   "alvos": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "fim": "não fecha (homonym, 2)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:466",
+  "teste": true,
+  "call": "xs.data[0].prepare_computations(ray, &xs)",
+  "rhs": "Intersections::new(vec![intersect1, intersect2])",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Intersections"
+   ],
+   "nome": "xs"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Intersection::prepare_computations (src/intersection.rs:76)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersections::new (src/intersection.rs:114)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Intersections",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:467",
+  "teste": true,
+  "call": "world.refracted_color(comp, 0)",
+  "rhs": "create_default_world()",
+  "gravado": {
+   "regra": "retorno",
+   "candidatos": [
+    "World"
+   ],
+   "nome": "world"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl World::refracted_color (src/world.rs:74)"
+   ]
+  },
+  "liga": {
+   "resolution": "homonym",
+   "alvos": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "fim": "não fecha (homonym, 2)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:487",
+  "teste": true,
+  "call": "xs.data[1].prepare_computations(ray, &xs)",
+  "rhs": "Intersections::new(vec![intersect1, intersect2])",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Intersections"
+   ],
+   "nome": "xs"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Intersection::prepare_computations (src/intersection.rs:76)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersections::new (src/intersection.rs:114)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Intersections",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:488",
+  "teste": true,
+  "call": "world.refracted_color(comp, 5)",
+  "rhs": "create_default_world()",
+  "gravado": {
+   "regra": "retorno",
+   "candidatos": [
+    "World"
+   ],
+   "nome": "world"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl World::refracted_color (src/world.rs:74)"
+   ]
+  },
+  "liga": {
+   "resolution": "homonym",
+   "alvos": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "fim": "não fecha (homonym, 2)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:516",
+  "teste": true,
+  "call": "xs.data[2].prepare_computations(ray, &xs)",
+  "rhs": "Intersections::new(vec![intersect1, intersect2, in",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Intersections"
+   ],
+   "nome": "xs"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Intersection::prepare_computations (src/intersection.rs:76)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersections::new (src/intersection.rs:114)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Intersections",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:518",
+  "teste": true,
+  "call": "world.refracted_color(comp, 5)",
+  "rhs": "create_default_world()",
+  "gravado": {
+   "regra": "retorno",
+   "candidatos": [
+    "World"
+   ],
+   "nome": "world"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl World::refracted_color (src/world.rs:74)"
+   ]
+  },
+  "liga": {
+   "resolution": "homonym",
+   "alvos": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "fim": "não fecha (homonym, 2)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:526",
+  "teste": true,
+  "call": "floor.set_transform(Matrix::translation(Tuple::vector(0., -1",
+  "rhs": "Plane::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Plane"
+   ],
+   "nome": "floor"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Plane::set_transform (src/plane.rs:54)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Plane::default (src/plane.rs:21)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Plane",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:530",
+  "teste": true,
+  "call": "world.objects.push(Object::from(floor))",
+  "rhs": "create_default_world()",
+  "gravado": {
+   "regra": "retorno",
+   "candidatos": [
+    "World"
+   ],
+   "nome": "world"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "homonym",
+   "alvos": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "fim": "não fecha (homonym, 2)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:535",
+  "teste": true,
+  "call": "ball.set_transform(Matrix::translation(Tuple::vector(0., -3.",
+  "rhs": "Sphere::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Sphere"
+   ],
+   "nome": "ball"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Sphere::set_transform (src/sphere.rs:68)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Sphere::default (src/sphere.rs:26)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Sphere",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:537",
+  "teste": true,
+  "call": "world.objects.push(Object::from(ball))",
+  "rhs": "create_default_world()",
+  "gravado": {
+   "regra": "retorno",
+   "candidatos": [
+    "World"
+   ],
+   "nome": "world"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "homonym",
+   "alvos": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "fim": "não fecha (homonym, 2)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:544",
+  "teste": true,
+  "call": "xs.data[0].prepare_computations(ray, &xs)",
+  "rhs": "Intersections::new(vec![intersect])",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Intersections"
+   ],
+   "nome": "xs"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Intersection::prepare_computations (src/intersection.rs:76)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersections::new (src/intersection.rs:114)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Intersections",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:545",
+  "teste": true,
+  "call": "world.shade_hit(comp, 5)",
+  "rhs": "create_default_world()",
+  "gravado": {
+   "regra": "retorno",
+   "candidatos": [
+    "World"
+   ],
+   "nome": "world"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl World::shade_hit (src/world.rs:45)"
+   ]
+  },
+  "liga": {
+   "resolution": "homonym",
+   "alvos": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "fim": "não fecha (homonym, 2)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:553",
+  "teste": true,
+  "call": "floor.set_transform(Matrix::translation(Tuple::vector(0., -1",
+  "rhs": "Plane::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Plane"
+   ],
+   "nome": "floor"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Plane::set_transform (src/plane.rs:54)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Plane::default (src/plane.rs:21)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Plane",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:558",
+  "teste": true,
+  "call": "world.objects.push(Object::from(floor))",
+  "rhs": "create_default_world()",
+  "gravado": {
+   "regra": "retorno",
+   "candidatos": [
+    "World"
+   ],
+   "nome": "world"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "homonym",
+   "alvos": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "fim": "não fecha (homonym, 2)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:563",
+  "teste": true,
+  "call": "ball.set_transform(Matrix::translation(Tuple::vector(0., -3.",
+  "rhs": "Sphere::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Sphere"
+   ],
+   "nome": "ball"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Sphere::set_transform (src/sphere.rs:68)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Sphere::default (src/sphere.rs:26)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Sphere",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:565",
+  "teste": true,
+  "call": "world.objects.push(Object::from(ball))",
+  "rhs": "create_default_world()",
+  "gravado": {
+   "regra": "retorno",
+   "candidatos": [
+    "World"
+   ],
+   "nome": "world"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "homonym",
+   "alvos": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "fim": "não fecha (homonym, 2)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:572",
+  "teste": true,
+  "call": "xs.data[0].prepare_computations(ray, &xs)",
+  "rhs": "Intersections::new(vec![intersect])",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Intersections"
+   ],
+   "nome": "xs"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Intersection::prepare_computations (src/intersection.rs:76)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersections::new (src/intersection.rs:114)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Intersections",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:573",
+  "teste": true,
+  "call": "world.shade_hit(comp, 5)",
+  "rhs": "create_default_world()",
+  "gravado": {
+   "regra": "retorno",
+   "candidatos": [
+    "World"
+   ],
+   "nome": "world"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl World::shade_hit (src/world.rs:45)"
+   ]
+  },
+  "liga": {
+   "resolution": "homonym",
+   "alvos": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "fim": "não fecha (homonym, 2)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:155",
+  "teste": true,
+  "call": "sphere.set_material(material)",
+  "rhs": "Sphere::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Sphere"
+   ],
+   "nome": "sphere"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Sphere::set_material (src/sphere.rs:64)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Sphere::default (src/sphere.rs:26)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Sphere",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:158",
+  "teste": true,
+  "call": "sphere_2.set_transform(Matrix::scaling(Tuple::vector(0.5, 0.",
+  "rhs": "Sphere::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Sphere"
+   ],
+   "nome": "sphere_2"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Sphere::set_transform (src/sphere.rs:68)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Sphere::default (src/sphere.rs:26)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Sphere",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:184",
+  "teste": true,
+  "call": "sphere.set_material(material)",
+  "rhs": "Sphere::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Sphere"
+   ],
+   "nome": "sphere"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Sphere::set_material (src/sphere.rs:64)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Sphere::default (src/sphere.rs:26)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Sphere",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:187",
+  "teste": true,
+  "call": "sphere_2.set_transform(Matrix::scaling(Tuple::vector(0.5, 0.",
+  "rhs": "Sphere::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Sphere"
+   ],
+   "nome": "sphere_2"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Sphere::set_transform (src/sphere.rs:68)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Sphere::default (src/sphere.rs:26)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Sphere",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:208",
+  "teste": true,
+  "call": "w.intersect_world(ray)",
+  "rhs": "create_default_world()",
+  "gravado": {
+   "regra": "retorno",
+   "candidatos": [
+    "World"
+   ],
+   "nome": "w"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl World::intersect_world (src/world.rs:28)"
+   ]
+  },
+  "liga": {
+   "resolution": "homonym",
+   "alvos": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "fim": "não fecha (homonym, 2)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:224",
+  "teste": true,
+  "call": "intersection.prepare_computations(ray, &xs)",
+  "rhs": "Intersection::new(4., s)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Intersection"
+   ],
+   "nome": "intersection"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Intersection::prepare_computations (src/intersection.rs:76)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersection::new (src/intersection.rs:72)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Intersection",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:225",
+  "teste": true,
+  "call": "w.shade_hit(comps, 4)",
+  "rhs": "create_default_world()",
+  "gravado": {
+   "regra": "retorno",
+   "candidatos": [
+    "World"
+   ],
+   "nome": "w"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl World::shade_hit (src/world.rs:45)"
+   ]
+  },
+  "liga": {
+   "resolution": "homonym",
+   "alvos": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "fim": "não fecha (homonym, 2)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/world.rs:239",
+  "teste": true,
+  "call": "intersection.prepare_computations(ray, &xs)",
+  "rhs": "Intersection::new(0.5, s)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Intersection"
+   ],
+   "nome": "intersection"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Intersection::prepare_computations (src/intersection.rs:76)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersection::new (src/intersection.rs:72)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Intersection",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:240",
+  "teste": true,
+  "call": "w.shade_hit(comps, 4)",
+  "rhs": "create_default_world()",
+  "gravado": {
+   "regra": "retorno",
+   "candidatos": [
+    "World"
+   ],
+   "nome": "w"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl World::shade_hit (src/world.rs:45)"
+   ]
+  },
+  "liga": {
+   "resolution": "homonym",
+   "alvos": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "fim": "não fecha (homonym, 2)"
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:249",
+  "teste": true,
+  "call": "w.color_at(ray, 4)",
+  "rhs": "create_default_world()",
+  "gravado": {
+   "regra": "retorno",
+   "candidatos": [
+    "World"
+   ],
+   "nome": "w"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl World::color_at (src/world.rs:109)"
+   ]
+  },
+  "liga": {
+   "resolution": "homonym",
+   "alvos": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "fim": "não fecha (homonym, 2)"
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:258",
+  "teste": true,
+  "call": "w.color_at(ray, 4)",
+  "rhs": "create_default_world()",
+  "gravado": {
+   "regra": "retorno",
+   "candidatos": [
+    "World"
+   ],
+   "nome": "w"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl World::color_at (src/world.rs:109)"
+   ]
+  },
+  "liga": {
+   "resolution": "homonym",
+   "alvos": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "fim": "não fecha (homonym, 2)"
+ },
+ {
+  "forma": "f()",
+  "at": "src/world.rs:282",
+  "teste": true,
+  "call": "w.color_at(ray, 4)",
+  "rhs": "create_default_world()",
+  "gravado": {
+   "regra": "retorno",
+   "candidatos": [
+    "World"
+   ],
+   "nome": "w"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl World::color_at (src/world.rs:109)"
+   ]
+  },
+  "liga": {
+   "resolution": "homonym",
+   "alvos": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "fim": "não fecha (homonym, 2)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:300",
+  "teste": true,
+  "call": "sphere.set_material(material)",
+  "rhs": "Sphere::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Sphere"
+   ],
+   "nome": "sphere"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Sphere::set_material (src/sphere.rs:64)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Sphere::default (src/sphere.rs:26)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Sphere",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:303",
+  "teste": true,
+  "call": "sphere_2.set_transform(Matrix::scaling(Tuple::vector(0.5, 0.",
+  "rhs": "Sphere::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Sphere"
+   ],
+   "nome": "sphere_2"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Sphere::set_transform (src/sphere.rs:68)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Sphere::default (src/sphere.rs:26)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Sphere",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:319",
+  "teste": true,
+  "call": "from.view_transform(to, up)",
+  "rhs": "Tuple::point(0., 0., -5.)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Tuple"
+   ],
+   "nome": "from"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Transform for Tuple::view_transform (src/transformations.rs:9)"
+   ]
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Tuple::point (src/tuple.rs:21)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Tuple",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:322",
+  "teste": true,
+  "call": "camera.render(world)",
+  "rhs": "Camera::new(11, 11, PI/2.).with_transform(\r\n      ",
+  "gravado": null,
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Camera::render (src/camera.rs:95)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Camera::new (src/camera.rs:38)",
+    "impl Camera::with_transform (src/camera.rs:70)"
+   ]
+  },
+  "fim": "não fecha (type, 2)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:332",
+  "teste": true,
+  "call": "floor.set_transform(Matrix::translation(Tuple::vector(0., -1",
+  "rhs": "crate::plane::Plane::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Plane"
+   ],
+   "nome": "floor"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Plane::set_transform (src/plane.rs:54)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Plane::default (src/plane.rs:21)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Plane",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "f()",
+  "at": "src/camera.rs:336",
+  "teste": true,
+  "call": "world.objects.push(Object::from(floor))",
+  "rhs": "create_default_world()",
+  "gravado": {
+   "regra": "retorno",
+   "candidatos": [
+    "World"
+   ],
+   "nome": "world"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "homonym",
+   "alvos": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "fim": "não fecha (homonym, 2)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:342",
+  "teste": true,
+  "call": "camera.render(world)",
+  "rhs": "Camera::new(24, 16, PI / 3.).with_transform(\r\n    ",
+  "gravado": null,
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Camera::render (src/camera.rs:95)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Camera::new (src/camera.rs:38)",
+    "impl Camera::with_transform (src/camera.rs:70)"
+   ]
+  },
+  "fim": "não fecha (type, 2)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:349",
+  "teste": true,
+  "call": "digest.update(((value / crate::EPSILON).round() as i64).to_l",
+  "rhs": "Sha256::new()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [],
+   "nome": "digest"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:379",
+  "teste": true,
+  "call": "digest.update(((value / crate::EPSILON).round() as i64).to_l",
+  "rhs": "Sha256::new()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [],
+   "nome": "digest"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:152",
+  "teste": false,
+  "call": "sphere.set_material(material)",
+  "rhs": "crate::sphere::Sphere::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Sphere"
+   ],
+   "nome": "sphere"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Sphere::set_material (src/sphere.rs:64)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Sphere::default (src/sphere.rs:26)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Sphere",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:155",
+  "teste": false,
+  "call": "sphere_2.set_transform(crate::matrix::Matrix::scaling(Tuple:",
+  "rhs": "crate::sphere::Sphere::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Sphere"
+   ],
+   "nome": "sphere_2"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Sphere::set_transform (src/sphere.rs:68)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Sphere::default (src/sphere.rs:26)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Sphere",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:159",
+  "teste": false,
+  "call": "camera.benchmark_render(world, warmups, samples)",
+  "rhs": "Camera::new(width, height, std::f64::consts::PI / ",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Camera"
+   ],
+   "nome": "camera"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Camera::benchmark_render (src/camera.rs:110)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Camera::new (src/camera.rs:38)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Camera",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:169",
+  "teste": false,
+  "call": "floor.set_transform(crate::matrix::Matrix::translation(Tuple",
+  "rhs": "crate::plane::Plane::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Plane"
+   ],
+   "nome": "floor"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Plane::set_transform (src/plane.rs:54)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Plane::default (src/plane.rs:21)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Plane",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:188",
+  "teste": false,
+  "call": "sphere.set_transform(\r",
+  "rhs": "crate::sphere::Sphere::default()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Sphere"
+   ],
+   "nome": "sphere"
+  },
+  "hoje": {
+   "resolution": "type",
+   "alvos": [
+    "impl Intersectable for Sphere::set_transform (src/sphere.rs:68)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Default for Sphere::default (src/sphere.rs:26)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Sphere",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:263",
+  "teste": true,
+  "call": "c.ray_from_pixel(100, 50)",
+  "rhs": "Camera::new(201, 101, PI/2.)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Camera"
+   ],
+   "nome": "c"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Camera::ray_from_pixel (src/camera.rs:81)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Camera::new (src/camera.rs:38)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Camera",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:273",
+  "teste": true,
+  "call": "c.ray_from_pixel(0, 0)",
+  "rhs": "Camera::new(201, 101, PI/2.)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Camera"
+   ],
+   "nome": "c"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Camera::ray_from_pixel (src/camera.rs:81)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Camera::new (src/camera.rs:38)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Camera",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:285",
+  "teste": true,
+  "call": "c.ray_from_pixel(100, 50)",
+  "rhs": "Camera::new(201, 101, PI/2.).with_transform(\r\n    ",
+  "gravado": null,
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Camera::ray_from_pixel (src/camera.rs:81)"
+   ]
+  },
+  "liga": {
+   "resolution": "type",
+   "alvos": [
+    "impl Camera::new (src/camera.rs:38)",
+    "impl Camera::with_transform (src/camera.rs:70)"
+   ]
+  },
+  "fim": "não fecha (type, 2)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:103",
+  "teste": false,
+  "call": "canvas_mutex.lock()",
+  "rhs": "Mutex::new(Canvas::new(self.horizontal_size, self.",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [],
+   "nome": "canvas_mutex"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:103",
+  "teste": false,
+  "call": "canvas_mutex.lock().unwrap()",
+  "rhs": "Mutex::new(Canvas::new(self.horizontal_size, self.",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [],
+   "nome": "canvas_mutex"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:106",
+  "teste": false,
+  "call": "canvas_mutex.into_inner()",
+  "rhs": "Mutex::new(Canvas::new(self.horizontal_size, self.",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [],
+   "nome": "canvas_mutex"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:106",
+  "teste": false,
+  "call": "canvas_mutex.into_inner().unwrap()",
+  "rhs": "Mutex::new(Canvas::new(self.horizontal_size, self.",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [],
+   "nome": "canvas_mutex"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "above_candidate_limit",
+   "alvos": []
+  },
+  "fim": "não fecha (above_candidate_limit, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:121",
+  "teste": false,
+  "call": "timings.push(start.elapsed().as_nanos())",
+  "rhs": "Vec::with_capacity(samples)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [],
+   "nome": "timings"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "fim": "não fecha (no_candidate_in_project, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:121",
+  "teste": false,
+  "call": "start.elapsed()",
+  "rhs": "Instant::now()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [],
+   "nome": "start"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "fim": "não fecha (no_candidate_in_project, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:121",
+  "teste": false,
+  "call": "start.elapsed().as_nanos()",
+  "rhs": "Instant::now()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [],
+   "nome": "start"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "fim": "não fecha (no_candidate_in_project, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:125",
+  "teste": false,
+  "call": "timings.clone()",
+  "rhs": "Vec::with_capacity(samples)",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [],
+   "nome": "timings"
+  },
+  "hoje": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "liga": {
+   "resolution": "no_candidate_in_project",
+   "alvos": []
+  },
+  "fim": "não fecha (no_candidate_in_project, 0)"
+ },
+ {
+  "forma": "T::f",
+  "at": "src/camera.rs:55",
+  "teste": false,
+  "call": "transform.inverse()",
+  "rhs": "Matrix::identity()",
+  "gravado": {
+   "regra": "caminho",
+   "candidatos": [
+    "Matrix"
+   ],
+   "nome": "transform"
+  },
+  "hoje": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Matrix<4>::inverse (src/matrix.rs:193)"
+   ]
+  },
+  "liga": {
+   "resolution": "unique",
+   "alvos": [
+    "impl Matrix<4>::identity (src/matrix.rs:71)"
+   ]
+  },
+  "retorno": "Self",
+  "tipo23c": {
+   "tipo": "Matrix",
+   "ref": false,
+   "projeto": true
+  },
+  "fim": "mesmo tipo de hoje"
+ }
+]

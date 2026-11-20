@@ -194,8 +194,10 @@ Os nomes `Vec`, `iter` e `enumerate` são lidos sem resolver os caminhos. Uma no
 declaração do mesmo nome vale para a função inteira, porque blocos não são escopos. O grafo
 não guarda o nome de um tipo que não é do projeto. Desde o perfil v9 (2.3a), cada `receiver_type`
 guarda a regra que deu o tipo (`type_rule`): `parametro`, `anotacao`, `self`, `construtor`
-(`T { .. }`), `caminho` (`T::f(..)`: o tipo nomeado no caminho, sem ler o retorno de `f`, que é
-o 2.3c), `retorno` (`f(..)` de função do mesmo arquivo), `campo`, `item` e `variante`.
+(`T { .. }`), `caminho` (`T::f(..)`: o tipo nomeado no caminho; desde o 2.3c, o retorno de `f`
+o substitui na consulta, ver abaixo), `retorno` (`f(..)` de função do mesmo arquivo), `campo`, `item`
+e `variante`. O grafo continua gravando o que está escrito; a regra efetiva sai no `type_rule` do
+`/api/calls`.
 
 **Tipos em Python (passo 2.3a, perfil v9; DEC-39).** O extrator grava um `receiver_type` quando o
 tipo do receptor está escrito no arquivo, com a regra:
@@ -248,6 +250,40 @@ chamada continua sendo onde ela está escrita. Muda o que a regra diz de quem a 
   o `prepare` escreve "Instanciada por" ou "Decorador de" no lugar de "Chamada por". O envelope
   dá a um decorador o motivo `decorator`, sem tipo devolvido nem tipo dono.
 
+**Tipo pelo retorno (passo 2.3c; DEC-41).** Sem perfil novo e sem gravar nada no grafo: o que liga
+o receptor à chamada, os retornos escritos e os campos das classes são lidos dos arquivos na
+consulta (`CallFacts::bound_calls`, `returns`, `field_receivers` e `ClassFacts::fields`), como os
+imports do 2.2, e valem também para os runs antigos com perfil v9 (Python) ou v6 em diante (Rust).
+- **Onde vale.** Python: `x = f(..)`, `f(..).m()` e `self.x = f(..)` no `__init__`, com `f` função ou
+  método. Rust: `let x = T::f(..)` e `let x = f(..)`, sem anotação; o último `let` de `x` decide.
+- **A chamada que liga** é resolvida pela mesma regra, sem o passo do retorno e sem a escolha da
+  pessoa (`chosen`):
+  - (a) fecha com um alvo único: vale o retorno escrito dele;
+  - (b) não fecha, mas todos os candidatos declaram o mesmo retorno (os alvos da regra, os
+    homônimos admitidos ou, acima do teto, as declarações do nome; em `T::f`, só as de `T`): vale
+    esse retorno. É o caso de `Patterns::from(..)` (cinco `impl From<X> for Patterns`, todos `-> Self`)
+    e de um `homonym` de um só candidato;
+  - (c) não tem candidato no projeto (`Vec::new()`): vale o que valia antes (o tipo do caminho, com a
+    regra do tipo de fora do 2.2, ou o `retorno` que o extrator gravou no mesmo arquivo);
+  - (d) os candidatos discordam: nenhum tipo, nem o que o extrator gravou.
+  - Uma classe, struct ou variante como alvo é construída, não chamada: vale o 2.3a.
+- **O que o retorno dá.** Python: a anotação pelas regras do 2.3a (`T`, `m.T`, `"T"`, `T | None`),
+  nomeada nos imports do arquivo de `f`; `Self` é a classe do método. Rust: o último segmento; `&T`
+  vale `T`; `Self` é o tipo do impl de `f` (num trait, nenhum). `Option`, `Result`, `Box`, `Rc`,
+  `Arc`, `Vec`, tupla, `impl` e `dyn` não decidem nada (nem tipo nem derrubada). Um tipo do projeto
+  segue a regra do tipo escrito (2.3a no Python, 2.1 no Rust); um tipo de fora, no Rust, segue a do
+  2.2 (só derruba método inerente de tipo do projeto); no Python, não decide.
+- **Campo de outro arquivo** (Python): `a.x.m()`, com `a` de tipo escrito, quando o campo `x` é de
+  uma classe de outro arquivo: o tipo do campo como esse arquivo o escreve (anotação, `self.x =
+  T(..)` ou `self.x = p` com `p: T` no `__init__`), nomeado nele.
+- **Um nível só.** A chamada que liga nunca usa o retorno nem o campo de outro arquivo; o corpo de
+  `f` nunca é lido. Em `doc = result.json()`, `result` tem tipo pelo retorno, mas `doc` não. Um laço
+  (`x = x.proximo()`) termina, porque a resolução interna não pede outra.
+- **Limites.** `let x = T::f(..)?` não é lido como ligação (o `Result<Self, E>` perde o tipo, Q2 da
+  Parada 1 do 2.3c); `Box<Self>` não decide, mesmo que o método de `T` rode por auto-deref; um campo
+  de struct de outro arquivo (Rust) não é lido; retorno sem anotação, `Any`, união e genéricos
+  (2.6), alias (2.4).
+
 `basis: "import"` quer dizer que o alvo veio da tabela de imports do arquivo, lida do texto
 com o parser do extrator, sem executar nada.
 
@@ -259,7 +295,13 @@ inventário segue todos eles.
 Cada link traz `from`, `to`, `occurrence`, `occurrence_kind`, `text`, `candidates`,
 `resolution`, `candidate_edge`, `basis`, `relation` (2.3a: `calls` ou `instantiates`; 2.3b: `decorates`), `runs`
 (só numa instanciação com `__init__` próprio), `via` (2.3b: o campo, quando o link vem do valor de um
-campo que o método declara; também nas entradas de `unresolved`) e `evidence`.
+campo que o método declara; também nas entradas de `unresolved`), `type_rule` (2.3c, só nos links com
+`basis: "type"`) e `evidence`.
+- `type_rule` é a regra que deu o tipo do receptor: a do `receiver_type` (`parametro`, `anotacao`,
+  `self`, `construtor`, `campo`, `item`, `variante`), `caminho` num `T::f(..)` ou `T::V(..)`, e
+  `retorno` ou `campo` quando o 2.3c decidiu (o retorno da chamada que liga; o campo de uma classe de
+  outro arquivo). Só os links `type` e `trait_default` têm `basis: "type"`; nos outros, o campo não
+  aparece.
 - `candidates` conta os candidatos admitidos pela forma da chamada, não todas as declarações
   com o nome. Desde o 2.2, num link `receiver` (`self.m()`), a função solta homônima não é
   admitida e sai da contagem: o link e o alvo são os mesmos, mas `candidates` pode ser menor

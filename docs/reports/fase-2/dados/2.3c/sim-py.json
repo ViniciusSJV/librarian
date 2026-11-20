@@ -1,0 +1,1926 @@
+{
+ "mudancas": [
+  {
+   "key": "hc/integrations/slack/views.py@3241-3254",
+   "at": "hc/integrations/slack/views.py:105",
+   "teste": false,
+   "text": "result.json()",
+   "rule": "construtor",
+   "binding": "curl.post(\"https://slack.com/api/oauth.v2.access\", data)",
+   "receiver_type_v9": "construtor:result",
+   "f": "post (hc/lib/curl.py:224)",
+   "retorno": "Response",
+   "tipo": "Response (hc/lib/curl.py:32)",
+   "antes": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "targets": [
+     "Response.json (hc/lib/curl.py:37)",
+     "Channel.json (hc/api/models.py:1192)"
+    ]
+   },
+   "depois": {
+    "resolution": "type",
+    "targets": [
+     "Response.json (hc/lib/curl.py:37)"
+    ]
+   }
+  },
+  {
+   "key": "hc/integrations/discord/views.py@2415-2428",
+   "at": "hc/integrations/discord/views.py:71",
+   "teste": false,
+   "text": "result.json()",
+   "rule": "construtor",
+   "binding": "curl.post(\"https://discordapp.com/api/oauth2/token\", data)",
+   "receiver_type_v9": "construtor:result",
+   "f": "post (hc/lib/curl.py:224)",
+   "retorno": "Response",
+   "tipo": "Response (hc/lib/curl.py:32)",
+   "antes": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "targets": [
+     "Response.json (hc/lib/curl.py:37)",
+     "Channel.json (hc/api/models.py:1192)"
+    ]
+   },
+   "depois": {
+    "resolution": "type",
+    "targets": [
+     "Response.json (hc/lib/curl.py:37)"
+    ]
+   }
+  },
+  {
+   "key": "hc/front/views.py@17740-17770",
+   "at": "hc/front/views.py:533",
+   "teste": false,
+   "text": "project.num_checks_available()",
+   "rule": "construtor",
+   "binding": "_get_rw_project_for_user",
+   "receiver_type_v9": "construtor:project",
+   "f": "_get_rw_project_for_user (hc/front/views.py:187)",
+   "retorno": "Project",
+   "tipo": "Project (hc/accounts/models.py:449)",
+   "antes": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "targets": [
+     "Profile.num_checks_available (hc/accounts/models.py:350)",
+     "Project.num_checks_available (hc/accounts/models.py:471)"
+    ]
+   },
+   "depois": {
+    "resolution": "type",
+    "targets": [
+     "Project.num_checks_available (hc/accounts/models.py:471)"
+    ]
+   }
+  },
+  {
+   "key": "hc/front/views.py@36857-36894",
+   "at": "hc/front/views.py:1072",
+   "teste": false,
+   "text": "target_project.num_checks_available()",
+   "rule": "construtor",
+   "binding": "_get_rw_project_for_user",
+   "receiver_type_v9": "construtor:target_project",
+   "f": "_get_rw_project_for_user (hc/front/views.py:187)",
+   "retorno": "Project",
+   "tipo": "Project (hc/accounts/models.py:449)",
+   "antes": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "targets": [
+     "Profile.num_checks_available (hc/accounts/models.py:350)",
+     "Project.num_checks_available (hc/accounts/models.py:471)"
+    ]
+   },
+   "depois": {
+    "resolution": "type",
+    "targets": [
+     "Project.num_checks_available (hc/accounts/models.py:471)"
+    ]
+   }
+  }
+ ],
+ "notas": {
+  "3 liga a uma classe (2.3a)": 351,
+  "2 a regra não fecha a chamada que liga (no_candidate_in_project)": 546,
+  "2 a regra não fecha a chamada que liga (homonym)": 55,
+  "7 retorno é classe do projeto": 27,
+  "6 retorno não achado (str)": 8,
+  "2 a regra não fecha a chamada que liga (above_candidate_limit)": 42,
+  "6 retorno de fora do projeto": 21,
+  "6 retorno alias": 38,
+  "5 retorno generico": 4,
+  "6 retorno não achado (bytes)": 3,
+  "6 retorno não achado (CheckQuerySet)": 2,
+  "0 chamada sem dono no dump": 1,
+  "8 campo de classe de outro arquivo": 11
+ },
+ "casos": [
+  {
+   "key": "hc/integrations/slack/views.py@3241-3254",
+   "at": "hc/integrations/slack/views.py:105",
+   "teste": false,
+   "text": "result.json()",
+   "rule": "construtor",
+   "binding": "curl.post(\"https://slack.com/api/oauth.v2.access\", data)",
+   "receiver_type_v9": "construtor:result",
+   "f": "post (hc/lib/curl.py:224)",
+   "retorno": "Response",
+   "tipo": "Response (hc/lib/curl.py:32)",
+   "antes": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "targets": [
+     "Response.json (hc/lib/curl.py:37)",
+     "Channel.json (hc/api/models.py:1192)"
+    ]
+   },
+   "depois": {
+    "resolution": "type",
+    "targets": [
+     "Response.json (hc/lib/curl.py:37)"
+    ]
+   },
+   "fim": "muda"
+  },
+  {
+   "key": "hc/integrations/discord/views.py@2415-2428",
+   "at": "hc/integrations/discord/views.py:71",
+   "teste": false,
+   "text": "result.json()",
+   "rule": "construtor",
+   "binding": "curl.post(\"https://discordapp.com/api/oauth2/token\", data)",
+   "receiver_type_v9": "construtor:result",
+   "f": "post (hc/lib/curl.py:224)",
+   "retorno": "Response",
+   "tipo": "Response (hc/lib/curl.py:32)",
+   "antes": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "targets": [
+     "Response.json (hc/lib/curl.py:37)",
+     "Channel.json (hc/api/models.py:1192)"
+    ]
+   },
+   "depois": {
+    "resolution": "type",
+    "targets": [
+     "Response.json (hc/lib/curl.py:37)"
+    ]
+   },
+   "fim": "muda"
+  },
+  {
+   "key": "hc/api/management/commands/smtpd.py@1107-1136",
+   "at": "hc/api/management/commands/smtpd.py:39",
+   "teste": false,
+   "text": "plain_mime_part.get_content()",
+   "rule": "construtor",
+   "binding": "message.get_body((\"plain\",))",
+   "receiver_type_v9": "construtor:plain_mime_part",
+   "f": "Ping.get_body (hc/api/models.py:772)",
+   "retorno": "str | None",
+   "fim": "retorno não achado (str)"
+  },
+  {
+   "key": "hc/api/management/commands/smtpd.py@1242-1270",
+   "at": "hc/api/management/commands/smtpd.py:43",
+   "teste": false,
+   "text": "html_mime_part.get_content()",
+   "rule": "construtor",
+   "binding": "message.get_body((\"html\",))",
+   "receiver_type_v9": "construtor:html_mime_part",
+   "f": "Ping.get_body (hc/api/models.py:772)",
+   "retorno": "str | None",
+   "fim": "retorno não achado (str)"
+  },
+  {
+   "key": "hc/lib/s3.py@2316-2360",
+   "at": "hc/lib/s3.py:87",
+   "teste": false,
+   "text": "client().get_object(settings.S3_BUCKET, key)",
+   "rule": "construtor_direto",
+   "binding": "client",
+   "receiver_type_v9": "construtor:client()",
+   "f": "client (hc/lib/s3.py:30)",
+   "retorno": "Minio",
+   "fim": "retorno de fora do projeto"
+  },
+  {
+   "key": "hc/lib/s3.py@3125-3195",
+   "at": "hc/lib/s3.py:109",
+   "teste": false,
+   "text": "client().put_object(settings.S3_BUCKET, key, BytesIO(data), len(data))",
+   "rule": "construtor_direto",
+   "binding": "client",
+   "receiver_type_v9": "construtor:client()",
+   "f": "client (hc/lib/s3.py:30)",
+   "retorno": "Minio",
+   "fim": "retorno de fora do projeto"
+  },
+  {
+   "key": "hc/lib/s3.py@3655-3729",
+   "at": "hc/lib/s3.py:127",
+   "teste": false,
+   "text": "client().list_objects(settings.S3_BUCKET, prefix, start_after=start_after)",
+   "rule": "construtor_direto",
+   "binding": "client",
+   "receiver_type_v9": "construtor:client()",
+   "f": "client (hc/lib/s3.py:30)",
+   "retorno": "Minio",
+   "fim": "retorno de fora do projeto"
+  },
+  {
+   "key": "hc/lib/s3.py@3955-4011",
+   "at": "hc/lib/s3.py:133",
+   "teste": false,
+   "text": "client().remove_objects(settings.S3_BUCKET, delete_objs)",
+   "rule": "construtor_direto",
+   "binding": "client",
+   "receiver_type_v9": "construtor:client()",
+   "f": "client (hc/lib/s3.py:30)",
+   "retorno": "Minio",
+   "fim": "retorno de fora do projeto"
+  },
+  {
+   "key": "hc/api/tests/test_list_channels.py@717-725",
+   "at": "hc/api/tests/test_list_channels.py:26",
+   "teste": true,
+   "text": "r.json()",
+   "rule": "construtor",
+   "binding": "self.get()",
+   "receiver_type_v9": "construtor:r",
+   "f": "ListChannelsTestCase.get (hc/api/tests/test_list_channels.py:18)",
+   "retorno": "TestHttpResponse",
+   "fim": "retorno alias"
+  },
+  {
+   "key": "hc/api/tests/test_list_channels.py@1357-1365",
+   "at": "hc/api/tests/test_list_channels.py:43",
+   "teste": true,
+   "text": "r.json()",
+   "rule": "construtor",
+   "binding": "self.get()",
+   "receiver_type_v9": "construtor:r",
+   "f": "ListChannelsTestCase.get (hc/api/tests/test_list_channels.py:18)",
+   "retorno": "TestHttpResponse",
+   "fim": "retorno alias"
+  },
+  {
+   "key": "hc/api/tests/test_create_check.py@1536-1544",
+   "at": "hc/api/tests/test_create_check.py:52",
+   "teste": true,
+   "text": "r.json()",
+   "rule": "construtor",
+   "binding": "self.post(",
+   "receiver_type_v9": "construtor:r",
+   "f": "CreateCheckTestCase.post (hc/api/tests/test_create_check.py:15)",
+   "retorno": "TestHttpResponse",
+   "fim": "retorno alias"
+  },
+  {
+   "key": "hc/api/tests/test_create_check.py@5580-5588",
+   "at": "hc/api/tests/test_create_check.py:154",
+   "teste": true,
+   "text": "r.json()",
+   "rule": "construtor",
+   "binding": "self.post({\"channels\": \"abc\"})",
+   "receiver_type_v9": "construtor:r",
+   "f": "CreateCheckTestCase.post (hc/api/tests/test_create_check.py:15)",
+   "retorno": "TestHttpResponse",
+   "fim": "retorno alias"
+  },
+  {
+   "key": "hc/api/tests/test_create_check.py@6071-6079",
+   "at": "hc/api/tests/test_create_check.py:165",
+   "teste": true,
+   "text": "r.json()",
+   "rule": "construtor",
+   "binding": "self.post({\"channels\": \"foo\"})",
+   "receiver_type_v9": "construtor:r",
+   "f": "CreateCheckTestCase.post (hc/api/tests/test_create_check.py:15)",
+   "retorno": "TestHttpResponse",
+   "fim": "retorno alias"
+  },
+  {
+   "key": "hc/api/tests/test_create_check.py@6478-6486",
+   "at": "hc/api/tests/test_create_check.py:175",
+   "teste": true,
+   "text": "r.json()",
+   "rule": "construtor",
+   "binding": "self.post({\"channels\": \",\"})",
+   "receiver_type_v9": "construtor:r",
+   "f": "CreateCheckTestCase.post (hc/api/tests/test_create_check.py:15)",
+   "retorno": "TestHttpResponse",
+   "fim": "retorno alias"
+  },
+  {
+   "key": "hc/api/tests/test_create_check.py@11984-11992",
+   "at": "hc/api/tests/test_create_check.py:311",
+   "teste": true,
+   "text": "r.json()",
+   "rule": "construtor",
+   "binding": "self.post({\"schedule\": \"5 * * * *\", \"tz\": \"Europe/Riga\", \"grace\": 60})",
+   "receiver_type_v9": "construtor:r",
+   "f": "CreateCheckTestCase.post (hc/api/tests/test_create_check.py:15)",
+   "retorno": "TestHttpResponse",
+   "fim": "retorno alias"
+  },
+  {
+   "key": "hc/api/tests/test_create_check.py@13516-13524",
+   "at": "hc/api/tests/test_create_check.py:350",
+   "teste": true,
+   "text": "r.json()",
+   "rule": "construtor",
+   "binding": "self.post({\"schedule\": \"* * * * *\", \"tz\": old, \"grace\": 60})",
+   "receiver_type_v9": "construtor:r",
+   "f": "CreateCheckTestCase.post (hc/api/tests/test_create_check.py:15)",
+   "retorno": "TestHttpResponse",
+   "fim": "retorno alias"
+  },
+  {
+   "key": "hc/api/tests/test_create_check.py@13775-13783",
+   "at": "hc/api/tests/test_create_check.py:357",
+   "teste": true,
+   "text": "r.json()",
+   "rule": "construtor",
+   "binding": "self.post({\"schedule\": \"12:34\", \"tz\": \"Europe/Riga\", \"grace\": 60})",
+   "receiver_type_v9": "construtor:r",
+   "f": "CreateCheckTestCase.post (hc/api/tests/test_create_check.py:15)",
+   "retorno": "TestHttpResponse",
+   "fim": "retorno alias"
+  },
+  {
+   "key": "hc/api/tests/test_create_check.py@14439-14447",
+   "at": "hc/api/tests/test_create_check.py:375",
+   "teste": true,
+   "text": "r.json()",
+   "rule": "construtor",
+   "binding": "self.post({})",
+   "receiver_type_v9": "construtor:r",
+   "f": "CreateCheckTestCase.post (hc/api/tests/test_create_check.py:15)",
+   "retorno": "TestHttpResponse",
+   "fim": "retorno alias"
+  },
+  {
+   "key": "hc/api/tests/test_create_check.py@17480-17488",
+   "at": "hc/api/tests/test_create_check.py:454",
+   "teste": true,
+   "text": "r.json()",
+   "rule": "construtor",
+   "binding": "self.post({\"name\": \"X\", \"unique\": [\"name\"]}, v=2)",
+   "receiver_type_v9": "construtor:r",
+   "f": "CreateCheckTestCase.post (hc/api/tests/test_create_check.py:15)",
+   "retorno": "TestHttpResponse",
+   "fim": "retorno alias"
+  },
+  {
+   "key": "hc/api/tests/test_create_check.py@18386-18394",
+   "at": "hc/api/tests/test_create_check.py:478",
+   "teste": true,
+   "text": "r.json()",
+   "rule": "construtor",
+   "binding": "self.post({\"name\": \"Foo\", \"slug\": slug}, v=3)",
+   "receiver_type_v9": "construtor:r",
+   "f": "CreateCheckTestCase.post (hc/api/tests/test_create_check.py:15)",
+   "retorno": "TestHttpResponse",
+   "fim": "retorno alias"
+  },
+  {
+   "key": "hc/api/tests/test_get_badges.py@914-922",
+   "at": "hc/api/tests/test_get_badges.py:31",
+   "teste": true,
+   "text": "r.json()",
+   "rule": "construtor",
+   "binding": "self.get()",
+   "receiver_type_v9": "construtor:r",
+   "f": "GetBadgesTestCase.get (hc/api/tests/test_get_badges.py:23)",
+   "retorno": "TestHttpResponse",
+   "fim": "retorno alias"
+  },
+  {
+   "key": "hc/front/views.py@12917-12932",
+   "at": "hc/front/views.py:395",
+   "teste": false,
+   "text": "summary.items()",
+   "rule": "construtor",
+   "binding": "_get_project_summary",
+   "receiver_type_v9": "construtor:summary",
+   "f": "_get_project_summary (hc/front/views.py:367)",
+   "retorno": "dict[UUID, ProjectStatus]",
+   "ann": {
+    "generico": "dict[UUID, ProjectStatus]"
+   },
+   "fim": "retorno não nomeia um tipo"
+  },
+  {
+   "key": "hc/front/views.py@17740-17770",
+   "at": "hc/front/views.py:533",
+   "teste": false,
+   "text": "project.num_checks_available()",
+   "rule": "construtor",
+   "binding": "_get_rw_project_for_user",
+   "receiver_type_v9": "construtor:project",
+   "f": "_get_rw_project_for_user (hc/front/views.py:187)",
+   "retorno": "Project",
+   "tipo": "Project (hc/accounts/models.py:449)",
+   "antes": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "targets": [
+     "Profile.num_checks_available (hc/accounts/models.py:350)",
+     "Project.num_checks_available (hc/accounts/models.py:471)"
+    ]
+   },
+   "depois": {
+    "resolution": "type",
+    "targets": [
+     "Project.num_checks_available (hc/accounts/models.py:471)"
+    ]
+   },
+   "fim": "muda"
+  },
+  {
+   "key": "hc/front/views.py@19013-19071",
+   "at": "hc/front/views.py:571",
+   "teste": false,
+   "text": "check.save(update_fields=(\"name\", \"slug\", \"tags\", \"desc\"))",
+   "rule": "construtor",
+   "binding": "_get_rw_check_for_user",
+   "receiver_type_v9": "construtor:check",
+   "f": "_get_rw_check_for_user (hc/front/views.py:140)",
+   "retorno": "Check",
+   "tipo": "Check (hc/api/models.py:192)",
+   "antes": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   },
+   "depois": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   },
+   "fim": "igual"
+  },
+  {
+   "key": "hc/front/views.py@19995-20034",
+   "at": "hc/front/views.py:601",
+   "teste": false,
+   "text": "check.save(update_fields=update_fields)",
+   "rule": "construtor",
+   "binding": "_get_rw_check_for_user",
+   "receiver_type_v9": "construtor:check",
+   "f": "_get_rw_check_for_user (hc/front/views.py:140)",
+   "retorno": "Check",
+   "tipo": "Check (hc/api/models.py:192)",
+   "antes": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   },
+   "depois": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   },
+   "fim": "igual"
+  },
+  {
+   "key": "hc/front/views.py@21466-21490",
+   "at": "hc/front/views.py:640",
+   "teste": false,
+   "text": "check.going_down_after()",
+   "rule": "construtor",
+   "binding": "_get_rw_check_for_user",
+   "receiver_type_v9": "construtor:check",
+   "f": "_get_rw_check_for_user (hc/front/views.py:140)",
+   "retorno": "Check",
+   "tipo": "Check (hc/api/models.py:192)",
+   "antes": {
+    "resolution": "unique",
+    "candidates": 1,
+    "targets": [
+     "Check.going_down_after (hc/api/models.py:339)"
+    ]
+   },
+   "depois": {
+    "resolution": "unique",
+    "candidates": 1,
+    "targets": [
+     "Check.going_down_after (hc/api/models.py:339)"
+    ]
+   },
+   "fim": "igual"
+  },
+  {
+   "key": "hc/front/views.py@22286-22335",
+   "at": "hc/front/views.py:654",
+   "teste": false,
+   "text": "check.create_flip(\"down\", mark_as_processed=True)",
+   "rule": "construtor",
+   "binding": "_get_rw_check_for_user",
+   "receiver_type_v9": "construtor:check",
+   "f": "_get_rw_check_for_user (hc/front/views.py:140)",
+   "retorno": "Check",
+   "tipo": "Check (hc/api/models.py:192)",
+   "antes": {
+    "resolution": "unique",
+    "candidates": 1,
+    "targets": [
+     "Check.create_flip (hc/api/models.py:652)"
+    ]
+   },
+   "depois": {
+    "resolution": "unique",
+    "candidates": 1,
+    "targets": [
+     "Check.create_flip (hc/api/models.py:652)"
+    ]
+   },
+   "fim": "igual"
+  },
+  {
+   "key": "hc/front/views.py@22624-22670",
+   "at": "hc/front/views.py:662",
+   "teste": false,
+   "text": "check.save(update_fields=fields + (\"status\",))",
+   "rule": "construtor",
+   "binding": "_get_rw_check_for_user",
+   "receiver_type_v9": "construtor:check",
+   "f": "_get_rw_check_for_user (hc/front/views.py:140)",
+   "retorno": "Check",
+   "tipo": "Check (hc/api/models.py:192)",
+   "antes": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   },
+   "depois": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   },
+   "fim": "igual"
+  },
+  {
+   "key": "hc/front/views.py@22790-22822",
+   "at": "hc/front/views.py:667",
+   "teste": false,
+   "text": "check.save(update_fields=fields)",
+   "rule": "construtor",
+   "binding": "_get_rw_check_for_user",
+   "receiver_type_v9": "construtor:check",
+   "f": "_get_rw_check_for_user (hc/front/views.py:140)",
+   "retorno": "Check",
+   "tipo": "Check (hc/api/models.py:192)",
+   "antes": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   },
+   "depois": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   },
+   "fim": "igual"
+  },
+  {
+   "key": "hc/front/views.py@26223-26258",
+   "at": "hc/front/views.py:776",
+   "teste": false,
+   "text": "body_bytes.decode(errors=\"replace\")",
+   "rule": "construtor",
+   "binding": "ping.get_body_bytes()",
+   "receiver_type_v9": "construtor:body_bytes",
+   "f": "Ping.get_body_bytes (hc/api/models.py:750)",
+   "retorno": "bytes | None",
+   "fim": "retorno não achado (bytes)"
+  },
+  {
+   "key": "hc/front/views.py@27527-27556",
+   "at": "hc/front/views.py:802",
+   "teste": false,
+   "text": "plain_mime_part.get_content()",
+   "rule": "construtor",
+   "binding": "parsed.get_body((\"plain\",))",
+   "receiver_type_v9": "construtor:plain_mime_part",
+   "f": "Ping.get_body (hc/api/models.py:772)",
+   "retorno": "str | None",
+   "fim": "retorno não achado (str)"
+  },
+  {
+   "key": "hc/front/views.py@27704-27732",
+   "at": "hc/front/views.py:807",
+   "teste": false,
+   "text": "html_mime_part.get_content()",
+   "rule": "construtor",
+   "binding": "parsed.get_body((\"html\",))",
+   "receiver_type_v9": "construtor:html_mime_part",
+   "f": "Ping.get_body (hc/api/models.py:772)",
+   "retorno": "str | None",
+   "fim": "retorno não achado (str)"
+  },
+  {
+   "key": "hc/front/views.py@28863-28914",
+   "at": "hc/front/views.py:842",
+   "teste": false,
+   "text": "check.create_flip(\"paused\", mark_as_processed=True)",
+   "rule": "construtor",
+   "binding": "_get_rw_check_for_user",
+   "receiver_type_v9": "construtor:check",
+   "f": "_get_rw_check_for_user (hc/front/views.py:140)",
+   "retorno": "Check",
+   "tipo": "Check (hc/api/models.py:192)",
+   "antes": {
+    "resolution": "unique",
+    "candidates": 1,
+    "targets": [
+     "Check.create_flip (hc/api/models.py:652)"
+    ]
+   },
+   "depois": {
+    "resolution": "unique",
+    "candidates": 1,
+    "targets": [
+     "Check.create_flip (hc/api/models.py:652)"
+    ]
+   },
+   "fim": "igual"
+  },
+  {
+   "key": "hc/front/views.py@29010-29075",
+   "at": "hc/front/views.py:847",
+   "teste": false,
+   "text": "check.save(update_fields=(\"status\", \"last_start\", \"alert_after\"))",
+   "rule": "construtor",
+   "binding": "_get_rw_check_for_user",
+   "receiver_type_v9": "construtor:check",
+   "f": "_get_rw_check_for_user (hc/front/views.py:140)",
+   "retorno": "Check",
+   "tipo": "Check (hc/api/models.py:192)",
+   "antes": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   },
+   "depois": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   },
+   "fim": "igual"
+  },
+  {
+   "key": "hc/front/views.py@29679-29727",
+   "at": "hc/front/views.py:867",
+   "teste": false,
+   "text": "check.create_flip(\"new\", mark_as_processed=True)",
+   "rule": "construtor",
+   "binding": "_get_rw_check_for_user",
+   "receiver_type_v9": "construtor:check",
+   "f": "_get_rw_check_for_user (hc/front/views.py:140)",
+   "retorno": "Check",
+   "tipo": "Check (hc/api/models.py:192)",
+   "antes": {
+    "resolution": "unique",
+    "candidates": 1,
+    "targets": [
+     "Check.create_flip (hc/api/models.py:652)"
+    ]
+   },
+   "depois": {
+    "resolution": "unique",
+    "candidates": 1,
+    "targets": [
+     "Check.create_flip (hc/api/models.py:652)"
+    ]
+   },
+   "fim": "igual"
+  },
+  {
+   "key": "hc/front/views.py@29848-29926",
+   "at": "hc/front/views.py:873",
+   "teste": false,
+   "text": "check.save(update_fields=(\"status\", \"last_start\", \"last_ping\", \"alert_after\"))",
+   "rule": "construtor",
+   "binding": "_get_rw_check_for_user",
+   "receiver_type_v9": "construtor:check",
+   "f": "_get_rw_check_for_user (hc/front/views.py:140)",
+   "retorno": "Check",
+   "tipo": "Check (hc/api/models.py:192)",
+   "antes": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   },
+   "depois": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   },
+   "fim": "igual"
+  },
+  {
+   "key": "hc/front/views.py@30175-30200",
+   "at": "hc/front/views.py:884",
+   "teste": false,
+   "text": "check.rename_and_delete()",
+   "rule": "construtor",
+   "binding": "_get_rw_check_for_user",
+   "receiver_type_v9": "construtor:check",
+   "f": "_get_rw_check_for_user (hc/front/views.py:140)",
+   "retorno": "Check",
+   "tipo": "Check (hc/api/models.py:192)",
+   "antes": {
+    "resolution": "unique",
+    "candidates": 1,
+    "targets": [
+     "Check.rename_and_delete (hc/api/models.py:382)"
+    ]
+   },
+   "depois": {
+    "resolution": "unique",
+    "candidates": 1,
+    "targets": [
+     "Check.rename_and_delete (hc/api/models.py:382)"
+    ]
+   },
+   "fim": "igual"
+  },
+  {
+   "key": "hc/front/views.py@30611-30837",
+   "at": "hc/front/views.py:899",
+   "teste": false,
+   "text": "check.save(",
+   "rule": "construtor",
+   "binding": "_get_rw_check_for_user",
+   "receiver_type_v9": "construtor:check",
+   "f": "_get_rw_check_for_user (hc/front/views.py:140)",
+   "retorno": "Check",
+   "tipo": "Check (hc/api/models.py:192)",
+   "antes": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   },
+   "depois": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   },
+   "fim": "igual"
+  },
+  {
+   "key": "hc/front/views.py@36183-36238",
+   "at": "hc/front/views.py:1054",
+   "teste": false,
+   "text": "request.profile.checks_from_all_projects().only(\"code\")",
+   "rule": "construtor_direto",
+   "binding": "request.profile.checks_from_all_projects()",
+   "receiver_type_v9": "construtor:request.profile.checks_from_all_projects()",
+   "f": "Profile.checks_from_all_projects (hc/accounts/models.py:207)",
+   "retorno": "CheckQuerySet",
+   "fim": "retorno não achado (CheckQuerySet)"
+  },
+  {
+   "key": "hc/front/views.py@36857-36894",
+   "at": "hc/front/views.py:1072",
+   "teste": false,
+   "text": "target_project.num_checks_available()",
+   "rule": "construtor",
+   "binding": "_get_rw_project_for_user",
+   "receiver_type_v9": "construtor:target_project",
+   "f": "_get_rw_project_for_user (hc/front/views.py:187)",
+   "retorno": "Project",
+   "tipo": "Project (hc/accounts/models.py:449)",
+   "antes": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "targets": [
+     "Profile.num_checks_available (hc/accounts/models.py:350)",
+     "Project.num_checks_available (hc/accounts/models.py:471)"
+    ]
+   },
+   "depois": {
+    "resolution": "type",
+    "targets": [
+     "Project.num_checks_available (hc/accounts/models.py:471)"
+    ]
+   },
+   "fim": "muda"
+  },
+  {
+   "key": "hc/front/views.py@37001-37039",
+   "at": "hc/front/views.py:1076",
+   "teste": false,
+   "text": "check.save(update_fields=(\"project\",))",
+   "rule": "construtor",
+   "binding": "_get_rw_check_for_user",
+   "receiver_type_v9": "construtor:check",
+   "f": "_get_rw_check_for_user (hc/front/views.py:140)",
+   "retorno": "Check",
+   "tipo": "Check (hc/api/models.py:192)",
+   "antes": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   },
+   "depois": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   },
+   "fim": "igual"
+  },
+  {
+   "key": "hc/front/views.py@37049-37076",
+   "at": "hc/front/views.py:1077",
+   "teste": false,
+   "text": "check.assign_all_channels()",
+   "rule": "construtor",
+   "binding": "_get_rw_check_for_user",
+   "receiver_type_v9": "construtor:check",
+   "f": "_get_rw_check_for_user (hc/front/views.py:140)",
+   "retorno": "Check",
+   "tipo": "Check (hc/api/models.py:192)",
+   "antes": {
+    "resolution": "unique",
+    "candidates": 1,
+    "targets": [
+     "Check.assign_all_channels (hc/api/models.py:409)"
+    ]
+   },
+   "depois": {
+    "resolution": "unique",
+    "candidates": 1,
+    "targets": [
+     "Check.assign_all_channels (hc/api/models.py:409)"
+    ]
+   },
+   "fim": "igual"
+  },
+  {
+   "key": "hc/front/views.py@45811-45825",
+   "at": "hc/front/views.py:1307",
+   "teste": false,
+   "text": "channel.save()",
+   "rule": "construtor",
+   "binding": "_get_rw_channel_for_user",
+   "receiver_type_v9": "construtor:channel",
+   "f": "_get_rw_channel_for_user (hc/front/views.py:164)",
+   "retorno": "Channel",
+   "tipo": "Channel (hc/api/models.py:1018)",
+   "antes": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   },
+   "depois": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   },
+   "fim": "igual"
+  },
+  {
+   "key": "hc/front/views.py@47301-47317",
+   "at": "hc/front/views.py:1354",
+   "teste": false,
+   "text": "channel.delete()",
+   "rule": "construtor",
+   "binding": "_get_rw_channel_for_user",
+   "receiver_type_v9": "construtor:channel",
+   "f": "_get_rw_channel_for_user (hc/front/views.py:164)",
+   "retorno": "Channel",
+   "tipo": "Channel (hc/api/models.py:1018)",
+   "antes": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   },
+   "depois": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   },
+   "fim": "igual"
+  },
+  {
+   "key": "hc/lib/tests/test_badges.py@1034-1087",
+   "at": "hc/lib/tests/test_badges.py:31",
+   "teste": true,
+   "text": "url.startswith(\"https://example.org/badge/fake-key/\")",
+   "rule": "construtor",
+   "binding": "get_badge_url",
+   "receiver_type_v9": "construtor:url",
+   "f": "get_badge_url (hc/lib/badges.py:108)",
+   "retorno": "str",
+   "fim": "retorno não achado (str)"
+  },
+  {
+   "key": "hc/lib/tests/test_signing.py@624-658",
+   "at": "hc/lib/tests/test_signing.py:24",
+   "teste": true,
+   "text": "signer.sign(\"hello world\").lower()",
+   "rule": "construtor_direto",
+   "binding": "signer.sign(\"hello world\")",
+   "receiver_type_v9": "construtor:signer.sign(\"hello world\")",
+   "f": "ShortHexTimestampSigner.sign (hc/lib/signing.py:26)",
+   "retorno": "str",
+   "fim": "retorno não achado (str)"
+  },
+  {
+   "key": "hc/accounts/models.py@10519-10538",
+   "at": "hc/accounts/models.py:264",
+   "teste": false,
+   "text": "downtimes.reverse()",
+   "rule": "construtor",
+   "binding": "check.downtimes_by_boundary(boundaries, self.tz)",
+   "receiver_type_v9": "construtor:downtimes",
+   "f": "Check.downtimes_by_boundary (hc/api/models.py:612)",
+   "retorno": "list[DowntimeRecord]",
+   "ann": {
+    "generico": "list[DowntimeRecord]"
+   },
+   "fim": "retorno não nomeia um tipo"
+  },
+  {
+   "key": "hc/accounts/models.py@13855-13908",
+   "at": "hc/accounts/models.py:357",
+   "teste": false,
+   "text": "self.checks_from_all_projects().filter(status=\"down\")",
+   "rule": "construtor_direto",
+   "binding": "self.checks_from_all_projects()",
+   "receiver_type_v9": "construtor:self.checks_from_all_projects()",
+   "f": "Profile.checks_from_all_projects (hc/accounts/models.py:207)",
+   "retorno": "CheckQuerySet",
+   "fim": "retorno não achado (CheckQuerySet)"
+  },
+  {
+   "key": "hc/accounts/models.py@18942-19012",
+   "at": "hc/accounts/models.py:491",
+   "teste": false,
+   "text": "profile.send_instant_login_link(membership=m, redirect_url=checks_url)",
+   "rule": "construtor",
+   "binding": "Profile.objects.for_user(user)",
+   "receiver_type_v9": "construtor:profile",
+   "f": "ProfileManager.for_user (hc/accounts/models.py:62)",
+   "retorno": "Profile",
+   "tipo": "Profile (hc/accounts/models.py:83)",
+   "antes": {
+    "resolution": "unique",
+    "candidates": 1,
+    "targets": [
+     "Profile.send_instant_login_link (hc/accounts/models.py:144)"
+    ]
+   },
+   "depois": {
+    "resolution": "unique",
+    "candidates": 1,
+    "targets": [
+     "Profile.send_instant_login_link (hc/accounts/models.py:144)"
+    ]
+   },
+   "fim": "igual"
+  },
+  {
+   "key": "hc/api/views.py@31447-31472",
+   "at": "hc/api/views.py:937",
+   "teste": false,
+   "text": "unsigned.startswith(\"n.\")",
+   "rule": "construtor",
+   "binding": "unsign_bounce_id",
+   "receiver_type_v9": "construtor:unsigned",
+   "f": "unsign_bounce_id (hc/lib/signing.py:46)",
+   "retorno": "str",
+   "fim": "retorno não achado (str)"
+  },
+  {
+   "key": "hc/api/views.py@32198-32223",
+   "at": "hc/api/views.py:959",
+   "teste": false,
+   "text": "unsigned.startswith(\"r.\")",
+   "rule": "construtor",
+   "binding": "unsign_bounce_id",
+   "receiver_type_v9": "construtor:unsigned",
+   "f": "unsign_bounce_id (hc/lib/signing.py:46)",
+   "retorno": "str",
+   "fim": "retorno não achado (str)"
+  },
+  {
+   "key": "hc/lib/tests/test_statsd.py@514-528",
+   "at": "hc/lib/tests/test_statsd.py:17",
+   "teste": true,
+   "text": "client.close()",
+   "rule": "construtor",
+   "binding": "get_client",
+   "receiver_type_v9": "construtor:client",
+   "f": "get_client (hc/lib/statsd.py:23)",
+   "retorno": "StatsClientBase",
+   "fim": "retorno de fora do projeto"
+  },
+  {
+   "key": "hc/lib/tests/test_statsd.py@788-802",
+   "at": "hc/lib/tests/test_statsd.py:24",
+   "teste": true,
+   "text": "client.close()",
+   "rule": "construtor",
+   "binding": "get_client",
+   "receiver_type_v9": "construtor:client",
+   "f": "get_client (hc/lib/statsd.py:23)",
+   "retorno": "StatsClientBase",
+   "fim": "retorno de fora do projeto"
+  },
+  {
+   "key": "hc/lib/tests/test_statsd.py@1000-1014",
+   "at": "hc/lib/tests/test_statsd.py:30",
+   "teste": true,
+   "text": "client.close()",
+   "rule": "construtor",
+   "binding": "get_client",
+   "receiver_type_v9": "construtor:client",
+   "f": "get_client (hc/lib/statsd.py:23)",
+   "retorno": "StatsClientBase",
+   "fim": "retorno de fora do projeto"
+  },
+  {
+   "key": "hc/api/tests/test_list_checks.py@1642-1650",
+   "at": "hc/api/tests/test_list_checks.py:53",
+   "teste": true,
+   "text": "r.json()",
+   "rule": "construtor",
+   "binding": "self.get()",
+   "receiver_type_v9": "construtor:r",
+   "f": "ListChecksTestCase.get (hc/api/tests/test_list_checks.py:39)",
+   "retorno": "TestHttpResponse",
+   "fim": "retorno alias"
+  },
+  {
+   "key": "hc/api/tests/test_list_checks.py@3483-3491",
+   "at": "hc/api/tests/test_list_checks.py:98",
+   "teste": true,
+   "text": "r.json()",
+   "rule": "construtor",
+   "binding": "self.get()",
+   "receiver_type_v9": "construtor:r",
+   "f": "ListChecksTestCase.get (hc/api/tests/test_list_checks.py:39)",
+   "retorno": "TestHttpResponse",
+   "fim": "retorno alias"
+  },
+  {
+   "key": "hc/api/tests/test_list_checks.py@6030-6038",
+   "at": "hc/api/tests/test_list_checks.py:171",
+   "teste": true,
+   "text": "r.json()",
+   "rule": "construtor",
+   "binding": "self.get()",
+   "receiver_type_v9": "construtor:r",
+   "f": "ListChecksTestCase.get (hc/api/tests/test_list_checks.py:39)",
+   "retorno": "TestHttpResponse",
+   "fim": "retorno alias"
+  },
+  {
+   "key": "hc/api/tests/test_list_checks.py@6335-6343",
+   "at": "hc/api/tests/test_list_checks.py:182",
+   "teste": true,
+   "text": "r.json()",
+   "rule": "construtor",
+   "binding": "self.get(v=2)",
+   "receiver_type_v9": "construtor:r",
+   "f": "ListChecksTestCase.get (hc/api/tests/test_list_checks.py:39)",
+   "retorno": "TestHttpResponse",
+   "fim": "retorno alias"
+  },
+  {
+   "key": "hc/api/models.py@30807-30842",
+   "at": "hc/api/models.py:779",
+   "teste": false,
+   "text": "body_bytes.decode(errors=\"replace\")",
+   "rule": "construtor",
+   "binding": "self.get_body_bytes()",
+   "receiver_type_v9": "construtor:body_bytes",
+   "f": "Ping.get_body_bytes (hc/api/models.py:750)",
+   "retorno": "bytes | None",
+   "fim": "retorno não achado (bytes)"
+  },
+  {
+   "key": "hc/lib/emails.py@3341-3396",
+   "at": "hc/lib/emails.py:104",
+   "teste": false,
+   "text": "m.attach(\"last-ping.eml\", attachment, \"message/rfc822\")",
+   "rule": "construtor",
+   "binding": "make_message",
+   "receiver_type_v9": "construtor:m",
+   "f": "make_message (hc/lib/emails.py:38)",
+   "retorno": "Message",
+   "fim": "retorno alias"
+  },
+  {
+   "key": "hc/integrations/github/views.py@2913-2925",
+   "at": "hc/integrations/github/views.py:85",
+   "teste": false,
+   "text": "repos.keys()",
+   "rule": "construtor",
+   "binding": "client.get_repos(request.session[\"add_github_token\"])",
+   "receiver_type_v9": "construtor:repos",
+   "f": "get_repos (hc/integrations/github/client.py:83)",
+   "retorno": "dict[str, int]",
+   "ann": {
+    "generico": "dict[str, int]"
+   },
+   "fim": "retorno não nomeia um tipo"
+  },
+  {
+   "key": "hc/api/tests/test_get_check.py@1565-1573",
+   "at": "hc/api/tests/test_get_check.py:49",
+   "teste": true,
+   "text": "r.json()",
+   "rule": "construtor",
+   "binding": "self.get(self.a1.code)",
+   "receiver_type_v9": "construtor:r",
+   "f": "GetCheckTestCase.get (hc/api/tests/test_get_check.py:37)",
+   "retorno": "TestHttpResponse",
+   "fim": "retorno alias"
+  },
+  {
+   "key": "hc/api/tests/test_get_check.py@3560-3568",
+   "at": "hc/api/tests/test_get_check.py:95",
+   "teste": true,
+   "text": "r.json()",
+   "rule": "construtor",
+   "binding": "self.get(self.a1.unique_key)",
+   "receiver_type_v9": "construtor:r",
+   "f": "GetCheckTestCase.get (hc/api/tests/test_get_check.py:37)",
+   "retorno": "TestHttpResponse",
+   "fim": "retorno alias"
+  },
+  {
+   "key": "hc/api/tests/test_get_check.py@4935-4943",
+   "at": "hc/api/tests/test_get_check.py:130",
+   "teste": true,
+   "text": "r.json()",
+   "rule": "construtor",
+   "binding": "self.get(self.a1.code)",
+   "receiver_type_v9": "construtor:r",
+   "f": "GetCheckTestCase.get (hc/api/tests/test_get_check.py:37)",
+   "retorno": "TestHttpResponse",
+   "fim": "retorno alias"
+  },
+  {
+   "key": "hc/api/tests/test_get_check.py@5264-5272",
+   "at": "hc/api/tests/test_get_check.py:141",
+   "teste": true,
+   "text": "r.json()",
+   "rule": "construtor",
+   "binding": "self.get(self.a1.code, v=2)",
+   "receiver_type_v9": "construtor:r",
+   "f": "GetCheckTestCase.get (hc/api/tests/test_get_check.py:37)",
+   "retorno": "TestHttpResponse",
+   "fim": "retorno alias"
+  },
+  {
+   "key": "hc/api/tests/test_get_check.py@5552-5560",
+   "at": "hc/api/tests/test_get_check.py:150",
+   "teste": true,
+   "text": "r.json()",
+   "rule": "construtor",
+   "binding": "self.get(self.a1.unique_key)",
+   "receiver_type_v9": "construtor:r",
+   "f": "GetCheckTestCase.get (hc/api/tests/test_get_check.py:37)",
+   "retorno": "TestHttpResponse",
+   "fim": "retorno alias"
+  },
+  {
+   "key": "hc/api/tests/test_get_check.py@5853-5861",
+   "at": "hc/api/tests/test_get_check.py:159",
+   "teste": true,
+   "text": "r.json()",
+   "rule": "construtor",
+   "binding": "self.get(self.a1.unique_key, v=2)",
+   "receiver_type_v9": "construtor:r",
+   "f": "GetCheckTestCase.get (hc/api/tests/test_get_check.py:37)",
+   "retorno": "TestHttpResponse",
+   "fim": "retorno alias"
+  },
+  {
+   "key": "hc/integrations/googlechat/transport.py@1481-1510",
+   "at": "hc/integrations/googlechat/transport.py:44",
+   "teste": false,
+   "text": "ping.formatted_kind_created()",
+   "rule": "construtor",
+   "binding": "self.last_ping(flip)",
+   "receiver_type_v9": "construtor:ping",
+   "f": "Transport.last_ping (hc/api/transports.py:105)",
+   "retorno": "Ping | None",
+   "tipo": "Ping (hc/api/models.py:688)",
+   "antes": {
+    "resolution": "unique",
+    "candidates": 1,
+    "targets": [
+     "Ping.formatted_kind_created (hc/api/models.py:828)"
+    ]
+   },
+   "depois": {
+    "resolution": "unique",
+    "candidates": 1,
+    "targets": [
+     "Ping.formatted_kind_created (hc/api/models.py:828)"
+    ]
+   },
+   "fim": "igual"
+  },
+  {
+   "key": "hc/integrations/email/transport.py@3842-3877",
+   "at": "hc/integrations/email/transport.py:101",
+   "teste": false,
+   "text": "body_bytes.decode(errors=\"replace\")",
+   "rule": "construtor",
+   "binding": "get_ping_body_bytes",
+   "receiver_type_v9": "construtor:body_bytes",
+   "f": "get_ping_body_bytes (hc/api/transports.py:19)",
+   "retorno": "bytes | None",
+   "fim": "retorno não achado (bytes)"
+  },
+  {
+   "key": "hc/accounts/views.py@3116-3130",
+   "at": "hc/accounts/views.py:105",
+   "teste": false,
+   "text": "profile.save()",
+   "rule": "construtor",
+   "binding": "Profile.objects.for_user(user)",
+   "receiver_type_v9": "construtor:profile",
+   "f": "ProfileManager.for_user (hc/accounts/models.py:62)",
+   "retorno": "Profile",
+   "tipo": "Profile (hc/accounts/models.py:83)",
+   "antes": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   },
+   "depois": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   },
+   "fim": "igual"
+  },
+  {
+   "key": "hc/accounts/views.py@5848-5906",
+   "at": "hc/accounts/views.py:181",
+   "teste": false,
+   "text": "profile.send_instant_login_link(redirect_url=redirect_url)",
+   "rule": "construtor",
+   "binding": "Profile.objects.for_user(magic_form.user)",
+   "receiver_type_v9": "construtor:profile",
+   "f": "ProfileManager.for_user (hc/accounts/models.py:62)",
+   "retorno": "Profile",
+   "tipo": "Profile (hc/accounts/models.py:83)",
+   "antes": {
+    "resolution": "unique",
+    "candidates": 1,
+    "targets": [
+     "Profile.send_instant_login_link (hc/accounts/models.py:144)"
+    ]
+   },
+   "depois": {
+    "resolution": "unique",
+    "candidates": 1,
+    "targets": [
+     "Profile.send_instant_login_link (hc/accounts/models.py:144)"
+    ]
+   },
+   "fim": "igual"
+  },
+  {
+   "key": "hc/accounts/views.py@7971-8004",
+   "at": "hc/accounts/views.py:239",
+   "teste": false,
+   "text": "profile.send_instant_login_link()",
+   "rule": "construtor",
+   "binding": "Profile.objects.for_user(user)",
+   "receiver_type_v9": "construtor:profile",
+   "f": "ProfileManager.for_user (hc/accounts/models.py:62)",
+   "retorno": "Profile",
+   "tipo": "Profile (hc/accounts/models.py:83)",
+   "antes": {
+    "resolution": "unique",
+    "candidates": 1,
+    "targets": [
+     "Profile.send_instant_login_link (hc/accounts/models.py:144)"
+    ]
+   },
+   "depois": {
+    "resolution": "unique",
+    "candidates": 1,
+    "targets": [
+     "Profile.send_instant_login_link (hc/accounts/models.py:144)"
+    ]
+   },
+   "fim": "igual"
+  },
+  {
+   "key": "hc/accounts/views.py@14566-14604",
+   "at": "hc/accounts/views.py:422",
+   "teste": false,
+   "text": "invite_suggestions.filter(email=email)",
+   "rule": "construtor",
+   "binding": "project.invite_suggestions()",
+   "receiver_type_v9": "construtor:invite_suggestions",
+   "f": "Project.invite_suggestions (hc/accounts/models.py:474)",
+   "retorno": "QuerySet[User]",
+   "ann": {
+    "generico": "QuerySet[User]"
+   },
+   "fim": "retorno não nomeia um tipo"
+  },
+  {
+   "key": "hc/accounts/views.py@17585-17623",
+   "at": "hc/accounts/views.py:494",
+   "teste": false,
+   "text": "profile.send_transfer_request(project)",
+   "rule": "construtor",
+   "binding": "Profile.objects.for_user(membership.user)",
+   "receiver_type_v9": "construtor:profile",
+   "f": "ProfileManager.for_user (hc/accounts/models.py:62)",
+   "retorno": "Profile",
+   "tipo": "Profile (hc/accounts/models.py:83)",
+   "antes": {
+    "resolution": "unique",
+    "candidates": 1,
+    "targets": [
+     "Profile.send_transfer_request (hc/accounts/models.py:175)"
+    ]
+   },
+   "depois": {
+    "resolution": "unique",
+    "candidates": 1,
+    "targets": [
+     "Profile.send_transfer_request (hc/accounts/models.py:175)"
+    ]
+   },
+   "fim": "igual"
+  },
+  {
+   "key": "hc/accounts/views.py@24456-24470",
+   "at": "hc/accounts/views.py:678",
+   "teste": false,
+   "text": "profile.save()",
+   "rule": "construtor",
+   "binding": "Profile.objects.for_user(user)",
+   "receiver_type_v9": "construtor:profile",
+   "f": "ProfileManager.for_user (hc/accounts/models.py:62)",
+   "retorno": "Profile",
+   "tipo": "Profile (hc/accounts/models.py:83)",
+   "antes": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   },
+   "depois": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "targets": []
+   },
+   "fim": "igual"
+  },
+  {
+   "key": "hc/api/tests/test_update_check.py@1666-1674",
+   "at": "hc/api/tests/test_update_check.py:59",
+   "teste": true,
+   "text": "r.json()",
+   "rule": "construtor",
+   "binding": "self.post(",
+   "receiver_type_v9": "construtor:r",
+   "f": "UpdateCheckTestCase.post (hc/api/tests/test_update_check.py:20)",
+   "retorno": "TestHttpResponse",
+   "fim": "retorno alias"
+  },
+  {
+   "key": "hc/api/tests/test_update_check.py@15691-15699",
+   "at": "hc/api/tests/test_update_check.py:435",
+   "teste": true,
+   "text": "r.json()",
+   "rule": "construtor",
+   "binding": "self.post(self.check.code, {})",
+   "receiver_type_v9": "construtor:r",
+   "f": "UpdateCheckTestCase.post (hc/api/tests/test_update_check.py:20)",
+   "retorno": "TestHttpResponse",
+   "fim": "retorno alias"
+  },
+  {
+   "key": "hc/api/tests/test_update_check.py@15986-15994",
+   "at": "hc/api/tests/test_update_check.py:444",
+   "teste": true,
+   "text": "r.json()",
+   "rule": "construtor",
+   "binding": "self.post(self.check.code, {}, v=2)",
+   "receiver_type_v9": "construtor:r",
+   "f": "UpdateCheckTestCase.post (hc/api/tests/test_update_check.py:20)",
+   "retorno": "TestHttpResponse",
+   "fim": "retorno alias"
+  },
+  {
+   "key": "hc/integrations/email/tests/test_notify.py@14055-14101",
+   "at": "hc/integrations/email/tests/test_notify.py:408",
+   "teste": true,
+   "text": "bytes_to_sanitized_message(sample).as_string()",
+   "rule": "construtor_direto",
+   "binding": "bytes_to_sanitized_message",
+   "receiver_type_v9": "construtor:bytes_to_sanitized_message(sample)",
+   "f": "bytes_to_sanitized_message (hc/integrations/email/transport.py:57)",
+   "retorno": "EmailMessage",
+   "fim": "retorno de fora do projeto"
+  },
+  {
+   "key": "hc/integrations/email/tests/test_notify.py@14660-14705",
+   "at": "hc/integrations/email/tests/test_notify.py:425",
+   "teste": true,
+   "text": "bytes_to_sanitized_message(sample).as_bytes()",
+   "rule": "construtor_direto",
+   "binding": "bytes_to_sanitized_message",
+   "receiver_type_v9": "construtor:bytes_to_sanitized_message(sample)",
+   "f": "bytes_to_sanitized_message (hc/integrations/email/transport.py:57)",
+   "retorno": "EmailMessage",
+   "fim": "retorno de fora do projeto"
+  },
+  {
+   "key": "hc/integrations/email/tests/test_notify.py@14895-14941",
+   "at": "hc/integrations/email/tests/test_notify.py:435",
+   "teste": true,
+   "text": "bytes_to_sanitized_message(sample).as_string()",
+   "rule": "construtor_direto",
+   "binding": "bytes_to_sanitized_message",
+   "receiver_type_v9": "construtor:bytes_to_sanitized_message(sample)",
+   "f": "bytes_to_sanitized_message (hc/integrations/email/transport.py:57)",
+   "retorno": "EmailMessage",
+   "fim": "retorno de fora do projeto"
+  },
+  {
+   "key": "hc/integrations/email/tests/test_notify.py@15574-15620",
+   "at": "hc/integrations/email/tests/test_notify.py:460",
+   "teste": true,
+   "text": "bytes_to_sanitized_message(sample).as_string()",
+   "rule": "construtor_direto",
+   "binding": "bytes_to_sanitized_message",
+   "receiver_type_v9": "construtor:bytes_to_sanitized_message(sample)",
+   "f": "bytes_to_sanitized_message (hc/integrations/email/transport.py:57)",
+   "retorno": "EmailMessage",
+   "fim": "retorno de fora do projeto"
+  },
+  {
+   "key": "hc/integrations/email/tests/test_notify.py@16103-16149",
+   "at": "hc/integrations/email/tests/test_notify.py:481",
+   "teste": true,
+   "text": "bytes_to_sanitized_message(sample).as_string()",
+   "rule": "construtor_direto",
+   "binding": "bytes_to_sanitized_message",
+   "receiver_type_v9": "construtor:bytes_to_sanitized_message(sample)",
+   "f": "bytes_to_sanitized_message (hc/integrations/email/transport.py:57)",
+   "retorno": "EmailMessage",
+   "fim": "retorno de fora do projeto"
+  },
+  {
+   "key": "hc/integrations/email/tests/test_notify.py@18075-18121",
+   "at": "hc/integrations/email/tests/test_notify.py:530",
+   "teste": true,
+   "text": "bytes_to_sanitized_message(sample).as_string()",
+   "rule": "construtor_direto",
+   "binding": "bytes_to_sanitized_message",
+   "receiver_type_v9": "construtor:bytes_to_sanitized_message(sample)",
+   "f": "bytes_to_sanitized_message (hc/integrations/email/transport.py:57)",
+   "retorno": "EmailMessage",
+   "fim": "retorno de fora do projeto"
+  },
+  {
+   "key": "hc/integrations/email/tests/test_notify.py@18549-18595",
+   "at": "hc/integrations/email/tests/test_notify.py:547",
+   "teste": true,
+   "text": "bytes_to_sanitized_message(sample).as_string()",
+   "rule": "construtor_direto",
+   "binding": "bytes_to_sanitized_message",
+   "receiver_type_v9": "construtor:bytes_to_sanitized_message(sample)",
+   "f": "bytes_to_sanitized_message (hc/integrations/email/transport.py:57)",
+   "retorno": "EmailMessage",
+   "fim": "retorno de fora do projeto"
+  },
+  {
+   "key": "hc/integrations/email/tests/test_notify.py@19004-19050",
+   "at": "hc/integrations/email/tests/test_notify.py:564",
+   "teste": true,
+   "text": "bytes_to_sanitized_message(sample).as_string()",
+   "rule": "construtor_direto",
+   "binding": "bytes_to_sanitized_message",
+   "receiver_type_v9": "construtor:bytes_to_sanitized_message(sample)",
+   "f": "bytes_to_sanitized_message (hc/integrations/email/transport.py:57)",
+   "retorno": "EmailMessage",
+   "fim": "retorno de fora do projeto"
+  },
+  {
+   "key": "hc/integrations/email/tests/test_notify.py@19320-19366",
+   "at": "hc/integrations/email/tests/test_notify.py:576",
+   "teste": true,
+   "text": "bytes_to_sanitized_message(sample).as_string()",
+   "rule": "construtor_direto",
+   "binding": "bytes_to_sanitized_message",
+   "receiver_type_v9": "construtor:bytes_to_sanitized_message(sample)",
+   "f": "bytes_to_sanitized_message (hc/integrations/email/transport.py:57)",
+   "retorno": "EmailMessage",
+   "fim": "retorno de fora do projeto"
+  },
+  {
+   "key": "hc/api/tests/test_get_flips.py@1261-1269",
+   "at": "hc/api/tests/test_get_flips.py:40",
+   "teste": true,
+   "text": "r.json()",
+   "rule": "construtor",
+   "binding": "self.get()",
+   "receiver_type_v9": "construtor:r",
+   "f": "GetFlipsTestCase.get (hc/api/tests/test_get_flips.py:32)",
+   "retorno": "TestHttpResponse",
+   "fim": "retorno alias"
+  },
+  {
+   "key": "hc/api/tests/test_get_flips.py@2705-2713",
+   "at": "hc/api/tests/test_get_flips.py:78",
+   "teste": true,
+   "text": "r.json()",
+   "rule": "construtor",
+   "binding": "self.get(qs=\"?start=1591014300\")",
+   "receiver_type_v9": "construtor:r",
+   "f": "GetFlipsTestCase.get (hc/api/tests/test_get_flips.py:32)",
+   "retorno": "TestHttpResponse",
+   "fim": "retorno alias"
+  },
+  {
+   "key": "hc/api/tests/test_get_flips.py@2918-2926",
+   "at": "hc/api/tests/test_get_flips.py:83",
+   "teste": true,
+   "text": "r.json()",
+   "rule": "construtor",
+   "binding": "self.get(qs=\"?end=1591014180\")",
+   "receiver_type_v9": "construtor:r",
+   "f": "GetFlipsTestCase.get (hc/api/tests/test_get_flips.py:32)",
+   "retorno": "TestHttpResponse",
+   "fim": "retorno alias"
+  },
+  {
+   "key": "hc/accounts/management/commands/createsuperuser.py@2835-2862",
+   "at": "hc/accounts/management/commands/createsuperuser.py:86",
+   "teste": false,
+   "text": "user.set_password(password)",
+   "rule": "construtor",
+   "binding": "_make_user",
+   "receiver_type_v9": "construtor:user",
+   "f": "_make_user (hc/accounts/views.py:76)",
+   "retorno": "User",
+   "fim": "retorno de fora do projeto"
+  },
+  {
+   "key": "hc/accounts/management/commands/createsuperuser.py@2936-2947",
+   "at": "hc/accounts/management/commands/createsuperuser.py:89",
+   "teste": false,
+   "text": "user.save()",
+   "rule": "construtor",
+   "binding": "_make_user",
+   "receiver_type_v9": "construtor:user",
+   "f": "_make_user (hc/accounts/views.py:76)",
+   "retorno": "User",
+   "fim": "retorno de fora do projeto"
+  },
+  {
+   "key": "hc/api/management/commands/pruneobjects.py@677-711",
+   "at": "hc/api/management/commands/pruneobjects.py:25",
+   "teste": false,
+   "text": "c.list_objects(settings.S3_BUCKET)",
+   "rule": "construtor",
+   "binding": "client",
+   "receiver_type_v9": "construtor:c",
+   "f": "client (hc/lib/s3.py:30)",
+   "retorno": "Minio",
+   "fim": "retorno de fora do projeto"
+  },
+  {
+   "key": "hc/api/management/commands/pruneobjects.py@1097-1139",
+   "at": "hc/api/management/commands/pruneobjects.py:37",
+   "teste": false,
+   "text": "c.list_objects(settings.S3_BUCKET, prefix)",
+   "rule": "construtor",
+   "binding": "client",
+   "receiver_type_v9": "construtor:c",
+   "f": "client (hc/lib/s3.py:30)",
+   "retorno": "Minio",
+   "fim": "retorno de fora do projeto"
+  },
+  {
+   "key": "hc/api/management/commands/pruneobjects.py@1267-1316",
+   "at": "hc/api/management/commands/pruneobjects.py:40",
+   "teste": false,
+   "text": "c.remove_objects(settings.S3_BUCKET, delete_objs)",
+   "rule": "construtor",
+   "binding": "client",
+   "receiver_type_v9": "construtor:c",
+   "f": "client (hc/lib/s3.py:30)",
+   "retorno": "Minio",
+   "fim": "retorno de fora do projeto"
+  },
+  {
+   "key": "hc/api/tests/test_get_pings.py@1402-1410",
+   "at": "hc/api/tests/test_get_pings.py:46",
+   "teste": true,
+   "text": "r.json()",
+   "rule": "construtor",
+   "binding": "self.get()",
+   "receiver_type_v9": "construtor:r",
+   "f": "GetPingsTestCase.get (hc/api/tests/test_get_pings.py:38)",
+   "retorno": "TestHttpResponse",
+   "fim": "retorno alias"
+  },
+  {
+   "key": "hc/api/tests/test_get_pings.py@2942-2959",
+   "at": "hc/api/tests/test_get_pings.py:84",
+   "teste": true,
+   "text": "self.get().json()",
+   "rule": "construtor_direto",
+   "binding": "self.get()",
+   "receiver_type_v9": "construtor:self.get()",
+   "f": "GetPingsTestCase.get (hc/api/tests/test_get_pings.py:38)",
+   "retorno": "TestHttpResponse",
+   "fim": "retorno alias"
+  },
+  {
+   "key": "hc/api/tests/test_get_pings.py@3549-3566",
+   "at": "hc/api/tests/test_get_pings.py:97",
+   "teste": true,
+   "text": "self.get().json()",
+   "rule": "construtor_direto",
+   "binding": "self.get()",
+   "receiver_type_v9": "construtor:self.get()",
+   "f": "GetPingsTestCase.get (hc/api/tests/test_get_pings.py:38)",
+   "retorno": "TestHttpResponse",
+   "fim": "retorno alias"
+  },
+  {
+   "key": "hc/api/tests/test_get_pings.py@3774-3791",
+   "at": "hc/api/tests/test_get_pings.py:105",
+   "teste": true,
+   "text": "self.get().json()",
+   "rule": "construtor_direto",
+   "binding": "self.get()",
+   "receiver_type_v9": "construtor:self.get()",
+   "f": "GetPingsTestCase.get (hc/api/tests/test_get_pings.py:38)",
+   "retorno": "TestHttpResponse",
+   "fim": "retorno alias"
+  },
+  {
+   "key": "hc/api/tests/test_get_pings.py@4017-4034",
+   "at": "hc/api/tests/test_get_pings.py:113",
+   "teste": true,
+   "text": "self.get().json()",
+   "rule": "construtor_direto",
+   "binding": "self.get()",
+   "receiver_type_v9": "construtor:self.get()",
+   "f": "GetPingsTestCase.get (hc/api/tests/test_get_pings.py:38)",
+   "retorno": "TestHttpResponse",
+   "fim": "retorno alias"
+  },
+  {
+   "key": "hc/api/tests/test_get_pings.py@4249-4266",
+   "at": "hc/api/tests/test_get_pings.py:121",
+   "teste": true,
+   "text": "self.get().json()",
+   "rule": "construtor_direto",
+   "binding": "self.get()",
+   "receiver_type_v9": "construtor:self.get()",
+   "f": "GetPingsTestCase.get (hc/api/tests/test_get_pings.py:38)",
+   "retorno": "TestHttpResponse",
+   "fim": "retorno alias"
+  },
+  {
+   "key": "hc/api/tests/test_get_pings.py@4553-4570",
+   "at": "hc/api/tests/test_get_pings.py:130",
+   "teste": true,
+   "text": "self.get().json()",
+   "rule": "construtor_direto",
+   "binding": "self.get()",
+   "receiver_type_v9": "construtor:self.get()",
+   "f": "GetPingsTestCase.get (hc/api/tests/test_get_pings.py:38)",
+   "retorno": "TestHttpResponse",
+   "fim": "retorno alias"
+  },
+  {
+   "key": "hc/api/tests/test_get_pings.py@4947-4964",
+   "at": "hc/api/tests/test_get_pings.py:142",
+   "teste": true,
+   "text": "self.get().json()",
+   "rule": "construtor_direto",
+   "binding": "self.get()",
+   "receiver_type_v9": "construtor:self.get()",
+   "f": "GetPingsTestCase.get (hc/api/tests/test_get_pings.py:38)",
+   "retorno": "TestHttpResponse",
+   "fim": "retorno alias"
+  },
+  {
+   "key": "hc/front/views.py@7283-7305",
+   "at": "hc/front/views.py:230",
+   "teste": false,
+   "text": "request.profile.save()",
+   "rule": "campo_anotacao",
+   "campo_outro_arquivo": true,
+   "tipo_lido": "Profile",
+   "antes": {
+    "resolution": "no_candidate_in_project",
+    "targets": []
+   },
+   "metodo": "save",
+   "classes_do_nome": [
+    "Profile (hc/accounts/models.py:83) não tem save base:models.Model"
+   ]
+  },
+  {
+   "key": "hc/front/views.py@14049-14075",
+   "at": "hc/front/views.py:425",
+   "teste": false,
+   "text": "request.profile.projects()",
+   "rule": "campo_anotacao",
+   "campo_outro_arquivo": true,
+   "tipo_lido": "Profile",
+   "antes": {
+    "resolution": "homonym",
+    "targets": [
+     "Profile.projects (hc/accounts/models.py:203)",
+     "ProfileAdmin.projects (hc/accounts/admin.py:198)"
+    ]
+   },
+   "metodo": "projects",
+   "classes_do_nome": [
+    "Profile (hc/accounts/models.py:83) tem projects base:models.Model"
+   ]
+  },
+  {
+   "key": "hc/front/views.py@36183-36225",
+   "at": "hc/front/views.py:1054",
+   "teste": false,
+   "text": "request.profile.checks_from_all_projects()",
+   "rule": "campo_anotacao",
+   "campo_outro_arquivo": true,
+   "tipo_lido": "Profile",
+   "antes": {
+    "resolution": "unique",
+    "targets": [
+     "Profile.checks_from_all_projects (hc/accounts/models.py:207)"
+    ]
+   },
+   "metodo": "checks_from_all_projects",
+   "classes_do_nome": [
+    "Profile (hc/accounts/models.py:83) tem checks_from_all_projects base:models.Model"
+   ]
+  },
+  {
+   "key": "hc/api/views.py@16323-16361",
+   "at": "hc/api/views.py:465",
+   "teste": false,
+   "text": "request.project.num_checks_available()",
+   "rule": "campo_anotacao",
+   "campo_outro_arquivo": true,
+   "tipo_lido": "Project",
+   "antes": {
+    "resolution": "homonym",
+    "targets": [
+     "Profile.num_checks_available (hc/accounts/models.py:350)",
+     "Project.num_checks_available (hc/accounts/models.py:471)"
+    ]
+   },
+   "metodo": "num_checks_available",
+   "classes_do_nome": [
+    "Project (hc/accounts/models.py:449) tem num_checks_available base:models.Model"
+   ]
+  },
+  {
+   "key": "hc/integrations/telegram/views.py@4229-4255",
+   "at": "hc/integrations/telegram/views.py:131",
+   "teste": false,
+   "text": "request.profile.projects()",
+   "rule": "campo_anotacao",
+   "campo_outro_arquivo": true,
+   "tipo_lido": "Profile",
+   "antes": {
+    "resolution": "homonym",
+    "targets": [
+     "Profile.projects (hc/accounts/models.py:203)",
+     "ProfileAdmin.projects (hc/accounts/admin.py:198)"
+    ]
+   },
+   "metodo": "projects",
+   "classes_do_nome": [
+    "Profile (hc/accounts/models.py:83) tem projects base:models.Model"
+   ]
+  },
+  {
+   "key": "hc/accounts/views.py@20784-20819",
+   "at": "hc/accounts/views.py:585",
+   "teste": false,
+   "text": "request.user.set_password(password)",
+   "rule": "campo_anotacao",
+   "campo_outro_arquivo": true,
+   "tipo_lido": "User",
+   "antes": {
+    "resolution": "no_candidate_in_project",
+    "targets": []
+   },
+   "metodo": "set_password",
+   "classes_do_nome": []
+  },
+  {
+   "key": "hc/accounts/views.py@20833-20852",
+   "at": "hc/accounts/views.py:586",
+   "teste": false,
+   "text": "request.user.save()",
+   "rule": "campo_anotacao",
+   "campo_outro_arquivo": true,
+   "tipo_lido": "User",
+   "antes": {
+    "resolution": "no_candidate_in_project",
+    "targets": []
+   },
+   "metodo": "save",
+   "classes_do_nome": []
+  },
+  {
+   "key": "hc/accounts/views.py@20908-20930",
+   "at": "hc/accounts/views.py:589",
+   "teste": false,
+   "text": "request.profile.save()",
+   "rule": "campo_anotacao",
+   "campo_outro_arquivo": true,
+   "tipo_lido": "Profile",
+   "antes": {
+    "resolution": "no_candidate_in_project",
+    "targets": []
+   },
+   "metodo": "save",
+   "classes_do_nome": [
+    "Profile (hc/accounts/models.py:83) não tem save base:models.Model"
+   ]
+  },
+  {
+   "key": "hc/accounts/views.py@22107-22152",
+   "at": "hc/accounts/views.py:617",
+   "teste": false,
+   "text": "request.profile.send_change_email_link(email)",
+   "rule": "campo_anotacao",
+   "campo_outro_arquivo": true,
+   "tipo_lido": "Profile",
+   "antes": {
+    "resolution": "unique",
+    "targets": [
+     "Profile.send_change_email_link (hc/accounts/models.py:160)"
+    ]
+   },
+   "metodo": "send_change_email_link",
+   "classes_do_nome": [
+    "Profile (hc/accounts/models.py:83) tem send_change_email_link base:models.Model"
+   ]
+  },
+  {
+   "key": "hc/accounts/views.py@27620-27642",
+   "at": "hc/accounts/views.py:771",
+   "teste": false,
+   "text": "request.profile.save()",
+   "rule": "campo_anotacao",
+   "campo_outro_arquivo": true,
+   "tipo_lido": "Profile",
+   "antes": {
+    "resolution": "no_candidate_in_project",
+    "targets": []
+   },
+   "metodo": "save",
+   "classes_do_nome": [
+    "Profile (hc/accounts/models.py:83) não tem save base:models.Model"
+   ]
+  },
+  {
+   "key": "hc/accounts/views.py@28445-28467",
+   "at": "hc/accounts/views.py:795",
+   "teste": false,
+   "text": "request.profile.save()",
+   "rule": "campo_anotacao",
+   "campo_outro_arquivo": true,
+   "tipo_lido": "Profile",
+   "antes": {
+    "resolution": "no_candidate_in_project",
+    "targets": []
+   },
+   "metodo": "save",
+   "classes_do_nome": [
+    "Profile (hc/accounts/models.py:83) não tem save base:models.Model"
+   ]
+  }
+ ]
+}

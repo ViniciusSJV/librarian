@@ -1165,3 +1165,32 @@ Escrever o teste de regressão do P1 **antes** da correção: uma função Pytho
   - a linha de base nova (Python 97 chamadas 42/1/12/3/39, Rust 65 chamadas 39/0/1/10/15; fatos 16/9/0/1) passou a ser `tools/precisao/linha-de-base.json`;
   - o portão contra ela deu APROVADO, sem nenhuma chamada mudando de categoria.
 - **Commits:** `6b424a0` (portão, com a prova da DEC-40), `5a26630` (código, testes e interface; `cargo test` na worktree do commit), `944fd0a` (documentação) e o da linha de base.
+
+## 28. Passo 2.3c: tipo pelo retorno e fechamento do 2.3 (20/11/2026)
+
+**Estado nesta data.** O estado vigente fica no [ESTADO-ATUAL.md](ESTADO-ATUAL.md). Relatórios: [Parada 1](docs/reports/fase-2/2.3c-parada-1.md) e [Parada 2](docs/reports/fase-2/2.3c-parada-2.md); folha: [2.3c-revisao-amostra.md](docs/reports/fase-2/2.3c-revisao-amostra.md); dados em [docs/reports/fase-2/dados/2.3c/](docs/reports/fase-2/dados/2.3c/).
+
+- **Antes de tudo:** CI do 2.3b verde (run `44697265818`, `f50b8f8`); portão APROVADO contra a linha de base (Python 42/1/12/3/39, Rust 39/0/1/10/15, fatos 16/9/0/1).
+- **Parada 1:** a recontagem da seção 5.3 do 2.3 confirmou 4 chamadas pelo retorno e 3 pelo campo de outro arquivo no Python, e nenhuma no Rust. Achado: lida ao pé da letra, a regra "se não fechar com um alvo, sem tipo" derrubaria RT-44 (`Patterns::from(..)`, acima do teto) e reprovaria o portão.
+- **Respostas do usuário (20/11):**
+  - Q1: a regra em quatro casos: (a) um alvo, o retorno dele; (b) sem alvo único, mas todos os candidatos com o mesmo retorno, esse retorno; (c) sem candidato no projeto, o que valia; (d) candidatos que discordam, sem tipo. Contar os casos antes de implementar e parar se o (d) reprovasse o portão;
+  - Q2: `Box`, `Rc` e `Arc` de `Self` não decidem; `Result<Self>` com `?` perde o tipo (limite registrado);
+  - Q3: `type_rule` no `/api/calls`, documentado no SEARCH.md;
+  - Q4: `f(..).m()` e `self.x = f(..)` entram;
+  - Q5: estratos HC-98 a HC-112, RT-66 e RT-67 e os níveis N3c;
+  - Q6: DEC-41 reescrita com a Q1, proposta na Parada 2;
+  - o IDS.md corrigido (a amostra ia até HC-97 e não estava registrada).
+- **Contagem da Q1 (antes do código):** Rust (a) 193, (b) 49 (`Patterns::from` 22, `create_default_world` 27), (c) 38, (d) 0. Python (a) 103, (b) 46, (c) 546, (d) 51, sem efeito (hoje já sem tipo). O (b) acrescentou uma mudança: `tr.can_accept()` (HC-110), ligado por um `homonym` de um só candidato.
+- **Regra (sem perfil novo):** a ligação, os retornos e os campos das classes são lidos dos arquivos na consulta; a chamada que liga é resolvida sem o retorno e sem `chosen`, por uma trava de um nível no resolver.
+- **Resultado:** portão APROVADO; 8 chamadas do Python passam de `homonym` a `type`, nenhuma no Rust; o grafo do Healthchecks é igual, byte a byte, ao do binário do 2.3b.
+- **Validação:** `cargo test --workspace --locked` 509 aprovados (12 testes novos em `tests/retorno_2_3c.rs`); perguntas 01–14 com H1–H3; a interface não muda (DEC-30 não se aplica).
+- **Antes da validação (pedido do usuário, 20/11):**
+  - o (b) de candidato único: dos 46 casos (b) do Python, 3 vêm de um `homonym` de um só candidato com receptor sem tipo, todos de `tr = project.transfer_request()`; só `tr.can_accept()` (HC-110) muda. O risco foi escrito na DEC-41;
+  - a perda do caso (d) com `misto()` foi ligada ao N0-livre (chamada simples resolvida pelo escopo) e os dois foram para o 2.4, junto do alias (N8).
+- **Fechamento do 2.3** no PLANO: o que os quatro subpassos entregaram, os níveis no alvo e o que ficou para o 2.4, o 2.6 e a Fase 2B.
+- **Validação do usuário (20/11/2026):**
+  - a Q5 da Parada 1 tinha aprovado os estratos; a verdade de HC-98 a HC-112, RT-66 e RT-67 foi validada na Parada 2 (HC-100, HC-110 e RT-67 conferidos no editor);
+  - a DEC-41 foi aprovada, com o risco do caso (b) escrito, e passou a vigente;
+  - a linha de base nova (Python 112 chamadas 53/1/14/5/39, Rust 67 chamadas 41/0/1/10/15; fatos 16/9/0/1) passou a ser `tools/precisao/linha-de-base.json`;
+  - o portão contra ela deu APROVADO, sem nenhuma chamada mudando de categoria.
+- **Commits:** código, testes e interface; documentação; e linha de base, fixtures, folha e ESTADO-ATUAL (hashes no ESTADO-ATUAL). `cargo test` na worktree do commit de código.

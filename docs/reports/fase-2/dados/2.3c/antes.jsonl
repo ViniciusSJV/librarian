@@ -1,0 +1,85 @@
+{"projeto":"py","dono":"sem_tipo","linha":87,"texto":"sem_anotacao","resolution":"unique","candidates":1,"alvos":["sem_anotacao (pkg/retorno.py:49)"],"regra":null}
+{"projeto":"py","dono":"sem_tipo","linha":88,"texto":"p.fechar()","resolution":"homonym","candidates":2,"alvos":["Nota.fechar (pkg/retorno.py:18)","Pedido.fechar (pkg/retorno.py:7)"],"regra":null}
+{"projeto":"py","dono":"dois_alvos","linha":92,"texto":"duplo","resolution":"homonym","candidates":2,"alvos":["duplo (pkg/requisicao.py:8)","duplo (pkg/retorno.py:53)"],"regra":null}
+{"projeto":"py","dono":"dois_alvos","linha":93,"texto":"d.fechar()","resolution":"homonym","candidates":2,"alvos":["Nota.fechar (pkg/retorno.py:18)","Pedido.fechar (pkg/retorno.py:7)"],"regra":null}
+{"projeto":"py","dono":"cadeia","linha":97,"texto":"novo_pedido","resolution":"unique","candidates":1,"alvos":["novo_pedido (pkg/retorno.py:33)"],"regra":null}
+{"projeto":"py","dono":"cadeia","linha":98,"texto":"p.nota()","resolution":"homonym","candidates":2,"alvos":["Nota.nota (pkg/retorno.py:21)","Pedido.nota (pkg/retorno.py:10)"],"regra":null}
+{"projeto":"py","dono":"cadeia","linha":99,"texto":"n.fechar()","resolution":"homonym","candidates":2,"alvos":["Nota.fechar (pkg/retorno.py:18)","Pedido.fechar (pkg/retorno.py:7)"],"regra":null}
+{"projeto":"py","dono":"laco","linha":103,"texto":"x.proximo()","resolution":"homonym","candidates":2,"alvos":["Nota.proximo (pkg/retorno.py:24)","Pedido.proximo (pkg/retorno.py:13)"],"regra":null}
+{"projeto":"py","dono":"laco","linha":104,"texto":"x.fechar()","resolution":"homonym","candidates":2,"alvos":["Nota.fechar (pkg/retorno.py:18)","Pedido.fechar (pkg/retorno.py:7)"],"regra":null}
+{"projeto":"py","dono":"novo_pedido","linha":34,"texto":"Pedido","resolution":"unique","candidates":1,"alvos":["Pedido (pkg/retorno.py:6)"],"regra":null}
+{"projeto":"py","dono":"agora","linha":42,"texto":"datetime.now()","resolution":"no_candidate_in_project","candidates":0,"alvos":[],"regra":null}
+{"projeto":"py","dono":"sem_anotacao","linha":50,"texto":"Pedido","resolution":"unique","candidates":1,"alvos":["Pedido (pkg/retorno.py:6)"],"regra":null}
+{"projeto":"py","dono":"duplo","linha":54,"texto":"Pedido","resolution":"unique","candidates":1,"alvos":["Pedido (pkg/retorno.py:6)"],"regra":null}
+{"projeto":"py","dono":"mesmo","linha":58,"texto":"novo_pedido","resolution":"unique","candidates":1,"alvos":["novo_pedido (pkg/retorno.py:33)"],"regra":null}
+{"projeto":"py","dono":"mesmo","linha":59,"texto":"p.fechar()","resolution":"homonym","candidates":2,"alvos":["Nota.fechar (pkg/retorno.py:18)","Pedido.fechar (pkg/retorno.py:7)"],"regra":null}
+{"projeto":"py","dono":"metodo","linha":63,"texto":"fab.pedido()","resolution":"unique","candidates":1,"alvos":["Fabrica.pedido (pkg/retorno.py:29)"],"regra":null}
+{"projeto":"py","dono":"metodo","linha":64,"texto":"p.fechar()","resolution":"homonym","candidates":2,"alvos":["Nota.fechar (pkg/retorno.py:18)","Pedido.fechar (pkg/retorno.py:7)"],"regra":null}
+{"projeto":"py","dono":"talvez","linha":68,"texto":"opcional","resolution":"unique","candidates":1,"alvos":["opcional (pkg/retorno.py:37)"],"regra":null}
+{"projeto":"py","dono":"talvez","linha":69,"texto":"p.fechar()","resolution":"homonym","candidates":2,"alvos":["Nota.fechar (pkg/retorno.py:18)","Pedido.fechar (pkg/retorno.py:7)"],"regra":null}
+{"projeto":"py","dono":"campo","linha":73,"texto":"r.pedido.fechar()","resolution":"homonym","candidates":2,"alvos":["Nota.fechar (pkg/retorno.py:18)","Pedido.fechar (pkg/retorno.py:7)"],"regra":null}
+{"projeto":"py","dono":"fora","linha":77,"texto":"agora","resolution":"unique","candidates":1,"alvos":["agora (pkg/retorno.py:41)"],"regra":null}
+{"projeto":"py","dono":"fora","linha":78,"texto":"d.fechar()","resolution":"homonym","candidates":2,"alvos":["Nota.fechar (pkg/retorno.py:18)","Pedido.fechar (pkg/retorno.py:7)"],"regra":null}
+{"projeto":"py","dono":"generico","linha":82,"texto":"pedidos","resolution":"unique","candidates":1,"alvos":["pedidos (pkg/retorno.py:45)"],"regra":null}
+{"projeto":"py","dono":"generico","linha":83,"texto":"ps.fechar()","resolution":"homonym","candidates":2,"alvos":["Nota.fechar (pkg/retorno.py:18)","Pedido.fechar (pkg/retorno.py:7)"],"regra":null}
+{"projeto":"py","dono":"Pedido.nota","linha":11,"texto":"Nota","resolution":"unique","candidates":1,"alvos":["Nota (pkg/retorno.py:17)"],"regra":null}
+{"projeto":"py","dono":"Fabrica.pedido","linha":30,"texto":"Pedido","resolution":"unique","candidates":1,"alvos":["Pedido (pkg/retorno.py:6)"],"regra":null}
+{"projeto":"py","dono":"n0","linha":6,"texto":"livre","resolution":"homonym","candidates":2,"alvos":["livre (pkg/models.py:63)","livre (pkg/outro.py:1)"],"regra":null}
+{"projeto":"py","dono":"n0","linha":7,"texto":"unica","resolution":"unique","candidates":1,"alvos":["unica (pkg/models.py:67)"],"regra":null}
+{"projeto":"py","dono":"n1","linha":11,"texto":"Cliente","resolution":"unique","candidates":1,"alvos":["Cliente (pkg/models.py:1)"],"regra":null}
+{"projeto":"py","dono":"n1","linha":12,"texto":"Cliente","resolution":"unique","candidates":1,"alvos":["Cliente (pkg/models.py:1)"],"regra":null}
+{"projeto":"py","dono":"n1","linha":13,"texto":"A.salvar()","resolution":"type","candidates":4,"alvos":["Cliente.salvar (pkg/models.py:5)"],"regra":null}
+{"projeto":"py","dono":"n2","linha":17,"texto":"a.salvar()","resolution":"type","candidates":4,"alvos":["Cliente.salvar (pkg/models.py:5)"],"regra":null}
+{"projeto":"py","dono":"n3","linha":21,"texto":"fabrica","resolution":"unique","candidates":1,"alvos":["fabrica (pkg/models.py:59)"],"regra":null}
+{"projeto":"py","dono":"n3","linha":22,"texto":"c.salvar()","resolution":"homonym","candidates":4,"alvos":["Arquivo.salvar (pkg/models.py:20)","Cliente.salvar (pkg/models.py:5)","Fornecedor.salvar (pkg/models.py:10)","Repo.salvar (pkg/models.py:15)"],"regra":null}
+{"projeto":"py","dono":"n5","linha":34,"texto":"f.herdado()","resolution":"homonym","candidates":2,"alvos":["Base.herdado (pkg/models.py:25)","Outro.herdado (pkg/models.py:35)"],"regra":null}
+{"projeto":"py","dono":"n6","linha":39,"texto":"ch.notify(1)","resolution":"homonym","candidates":4,"alvos":["Canal.notify (pkg/models.py:40)","Email.notify (pkg/models.py:45)","Fila.notify (pkg/models.py:55)","Sms.notify (pkg/models.py:50)"],"regra":null}
+{"projeto":"py","dono":"n7","linha":47,"texto":"executor.submit(notify, x)","resolution":"no_candidate_in_project","candidates":0,"alvos":[],"regra":null}
+{"projeto":"py","dono":"n8","linha":52,"texto":"c.salvar()","resolution":"homonym","candidates":4,"alvos":["Arquivo.salvar (pkg/models.py:20)","Cliente.salvar (pkg/models.py:5)","Fornecedor.salvar (pkg/models.py:10)","Repo.salvar (pkg/models.py:15)"],"regra":null}
+{"projeto":"py","dono":"n8","linha":51,"texto":"C","resolution":"no_candidate_in_project","candidates":0,"alvos":[],"regra":null}
+{"projeto":"py","dono":"Servico.__init__","linha":27,"texto":"Repo","resolution":"unique","candidates":1,"alvos":["Repo (pkg/models.py:14)"],"regra":null}
+{"projeto":"py","dono":"Servico.gravar","linha":30,"texto":"self.repo.salvar(1)","resolution":"type","candidates":4,"alvos":["Repo.salvar (pkg/models.py:15)"],"regra":null}
+{"projeto":"rs","dono":"n7","linha":67,"texto":"xs.into_iter()","resolution":"no_candidate_in_project","candidates":0,"alvos":[],"regra":null}
+{"projeto":"rs","dono":"n7","linha":67,"texto":"xs.into_iter().map(notify_one)","resolution":"no_candidate_in_project","candidates":0,"alvos":[],"regra":null}
+{"projeto":"rs","dono":"n7","linha":67,"texto":"xs.into_iter().map(notify_one).collect()","resolution":"no_candidate_in_project","candidates":0,"alvos":[],"regra":null}
+{"projeto":"rs","dono":"n8","linha":71,"texto":"C::new","resolution":"homonym","candidates":3,"alvos":["impl Cliente::new (src/models.rs:6)","impl Fornecedor::new (src/models.rs:18)","impl Repo::new (src/models.rs:30)"],"regra":null}
+{"projeto":"rs","dono":"n8","linha":72,"texto":"c.salvar()","resolution":"homonym","candidates":3,"alvos":["impl Cliente::salvar (src/models.rs:10)","impl Fornecedor::salvar (src/models.rs:22)","impl Repo::salvar (src/models.rs:34)"],"regra":null}
+{"projeto":"rs","dono":"n0","linha":5,"texto":"livre","resolution":"homonym","candidates":2,"alvos":["livre (src/models.rs:78)","livre (src/outro.rs:1)"],"regra":null}
+{"projeto":"rs","dono":"n0","linha":5,"texto":"unica","resolution":"unique","candidates":1,"alvos":["unica (src/models.rs:82)"],"regra":null}
+{"projeto":"rs","dono":"n1","linha":9,"texto":"Cliente::new","resolution":"type","candidates":3,"alvos":["impl Cliente::new (src/models.rs:6)"],"regra":null}
+{"projeto":"rs","dono":"n1","linha":10,"texto":"Cliente::new","resolution":"type","candidates":3,"alvos":["impl Cliente::new (src/models.rs:6)"],"regra":null}
+{"projeto":"rs","dono":"n1","linha":11,"texto":"a.salvar()","resolution":"type","candidates":3,"alvos":["impl Cliente::salvar (src/models.rs:10)"],"regra":null}
+{"projeto":"rs","dono":"n2","linha":15,"texto":"a.salvar()","resolution":"type","candidates":3,"alvos":["impl Cliente::salvar (src/models.rs:10)"],"regra":null}
+{"projeto":"rs","dono":"n3","linha":19,"texto":"fabrica","resolution":"unique","candidates":1,"alvos":["fabrica (src/models.rs:74)"],"regra":null}
+{"projeto":"rs","dono":"n3","linha":20,"texto":"c.salvar()","resolution":"homonym","candidates":3,"alvos":["impl Cliente::salvar (src/models.rs:10)","impl Fornecedor::salvar (src/models.rs:22)","impl Repo::salvar (src/models.rs:34)"],"regra":null}
+{"projeto":"rs","dono":"fabrica_local","linha":24,"texto":"Cliente::new","resolution":"type","candidates":3,"alvos":["impl Cliente::new (src/models.rs:6)"],"regra":null}
+{"projeto":"rs","dono":"n3b","linha":28,"texto":"fabrica_local","resolution":"unique","candidates":1,"alvos":["fabrica_local (src/casos.rs:23)"],"regra":null}
+{"projeto":"rs","dono":"n3b","linha":29,"texto":"c.salvar()","resolution":"type","candidates":3,"alvos":["impl Cliente::salvar (src/models.rs:10)"],"regra":null}
+{"projeto":"rs","dono":"n5","linha":43,"texto":"e.notify(1)","resolution":"type","candidates":4,"alvos":["impl Notifica for Email::notify (src/models.rs:51)"],"regra":null}
+{"projeto":"rs","dono":"n5","linha":43,"texto":"e.padrao()","resolution":"trait_default","candidates":2,"alvos":["Notifica::padrao (src/models.rs:42)"],"regra":null}
+{"projeto":"rs","dono":"n6","linha":49,"texto":"ch.notify(1)","resolution":"homonym","candidates":4,"alvos":["Notifica::notify (src/models.rs:40)","impl Fila::notify (src/models.rs:65)","impl Notifica for Email::notify (src/models.rs:51)","impl Notifica for Sms::notify (src/models.rs:57)"],"regra":null}
+{"projeto":"rs","dono":"n6b","linha":57,"texto":"ch.notify(1)","resolution":"homonym","candidates":4,"alvos":["Notifica::notify (src/models.rs:40)","impl Fila::notify (src/models.rs:65)","impl Notifica for Email::notify (src/models.rs:51)","impl Notifica for Sms::notify (src/models.rs:57)"],"regra":null}
+{"projeto":"rs","dono":"n6b","linha":56,"texto":"canais.iter()","resolution":"no_candidate_in_project","candidates":0,"alvos":[],"regra":null}
+{"projeto":"rs","dono":"impl Servico::gravar","linha":38,"texto":"self.repo.salvar(1)","resolution":"type","candidates":3,"alvos":["impl Repo::salvar (src/models.rs:34)"],"regra":null}
+{"projeto":"rs","dono":"r_ref","linha":68,"texto":"referencia","resolution":"unique","candidates":1,"alvos":["referencia (src/apoio.rs:3)"],"regra":null}
+{"projeto":"rs","dono":"r_ref","linha":69,"texto":"r.fechar()","resolution":"homonym","candidates":2,"alvos":["impl Nota::fechar (src/retorno.rs:37)","impl Pedido::fechar (src/retorno.rs:25)"],"regra":null}
+{"projeto":"rs","dono":"r_fora","linha":73,"texto":"Pedido::texto","resolution":"unique","candidates":1,"alvos":["impl Pedido::texto (src/retorno.rs:22)"],"regra":null}
+{"projeto":"rs","dono":"r_fora","linha":74,"texto":"s.tamanho()","resolution":"unique","candidates":1,"alvos":["impl Pedido::tamanho (src/retorno.rs:31)"],"regra":null}
+{"projeto":"rs","dono":"r_mesmo_retorno","linha":86,"texto":"feito","resolution":"homonym","candidates":2,"alvos":["feito (src/apoio.rs:7)","feito (src/retorno.rs:77)"],"regra":null}
+{"projeto":"rs","dono":"r_mesmo_retorno","linha":87,"texto":"p.fechar()","resolution":"type","candidates":2,"alvos":["impl Pedido::fechar (src/retorno.rs:25)"],"regra":null}
+{"projeto":"rs","dono":"r_discordam","linha":91,"texto":"misto","resolution":"homonym","candidates":2,"alvos":["misto (src/apoio.rs:11)","misto (src/retorno.rs:81)"],"regra":null}
+{"projeto":"rs","dono":"r_discordam","linha":92,"texto":"p.fechar()","resolution":"type","candidates":2,"alvos":["impl Pedido::fechar (src/retorno.rs:25)"],"regra":null}
+{"projeto":"rs","dono":"r_q","linha":96,"texto":"Pedido::tentar","resolution":"unique","candidates":1,"alvos":["impl Pedido::tentar (src/retorno.rs:19)"],"regra":null}
+{"projeto":"rs","dono":"r_q","linha":97,"texto":"p.fechar()","resolution":"homonym","candidates":2,"alvos":["impl Nota::fechar (src/retorno.rs:37)","impl Pedido::fechar (src/retorno.rs:25)"],"regra":null}
+{"projeto":"rs","dono":"r_q","linha":97,"texto":"Ok","resolution":"no_candidate_in_project","candidates":0,"alvos":[],"regra":null}
+{"projeto":"rs","dono":"r_self","linha":46,"texto":"Pedido::abrir","resolution":"unique","candidates":1,"alvos":["impl Pedido::abrir (src/retorno.rs:7)"],"regra":null}
+{"projeto":"rs","dono":"r_self","linha":47,"texto":"p.fechar()","resolution":"type","candidates":2,"alvos":["impl Pedido::fechar (src/retorno.rs:25)"],"regra":null}
+{"projeto":"rs","dono":"r_outro","linha":51,"texto":"Pedido::nota_nova","resolution":"unique","candidates":1,"alvos":["impl Pedido::nota_nova (src/retorno.rs:10)"],"regra":null}
+{"projeto":"rs","dono":"r_outro","linha":52,"texto":"n.fechar()","resolution":"type","candidates":2,"alvos":["impl Pedido::fechar (src/retorno.rs:25)"],"regra":null}
+{"projeto":"rs","dono":"r_option","linha":56,"texto":"Pedido::talvez","resolution":"unique","candidates":1,"alvos":["impl Pedido::talvez (src/retorno.rs:13)"],"regra":null}
+{"projeto":"rs","dono":"r_option","linha":57,"texto":"p.take()","resolution":"type","candidates":2,"alvos":["impl Pedido::take (src/retorno.rs:28)"],"regra":null}
+{"projeto":"rs","dono":"r_box","linha":62,"texto":"Pedido::caixa","resolution":"unique","candidates":1,"alvos":["impl Pedido::caixa (src/retorno.rs:16)"],"regra":null}
+{"projeto":"rs","dono":"r_box","linha":63,"texto":"b.fechar()","resolution":"type","candidates":2,"alvos":["impl Pedido::fechar (src/retorno.rs:25)"],"regra":null}
+{"projeto":"rs","dono":"impl Pedido::caixa","linha":17,"texto":"Box::new","resolution":"homonym","candidates":3,"alvos":["impl Cliente::new (src/models.rs:6)","impl Fornecedor::new (src/models.rs:18)","impl Repo::new (src/models.rs:30)"],"regra":null}
+{"projeto":"rs","dono":"impl Pedido::tentar","linha":20,"texto":"Ok","resolution":"no_candidate_in_project","candidates":0,"alvos":[],"regra":null}
+{"projeto":"rs","dono":"impl Pedido::texto","linha":23,"texto":"String::new","resolution":"homonym","candidates":3,"alvos":["impl Cliente::new (src/models.rs:6)","impl Fornecedor::new (src/models.rs:18)","impl Repo::new (src/models.rs:30)"],"regra":null}

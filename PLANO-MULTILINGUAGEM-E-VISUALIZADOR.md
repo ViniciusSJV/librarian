@@ -65,9 +65,44 @@ corretas, lacunas explícitas e fatos aguardando aprovação humana.
   receiver_type; DEC-39; validado e commitado em 20/11, `5589912`;
   amostra Python 21 → 27 corretas, HC-F6 correto), 2.3b
   (dono do campo e do decorador; opção B, pela regra, sem edition nova;
-  DEC-40; Parada 2 em 20/11, aguardando validação) e 2.3c (N3
-  entre arquivos, retorno de T::f).
-- 2.4 Herança (N5) e alias local (N8).
+  DEC-40; validado e commitado em 20/11, `5a26630`) e 2.3c (N3
+  entre arquivos, retorno de T::f; DEC-41; validado em 20/11).
+  **Fechamento do 2.3 (20/11/2026; CTX seção 28):**
+  - Entregou: a chave dos métodos do Python pelo último trecho (2.3a-0);
+    o tipo do receptor em Python escrito no arquivo, a relação
+    "instancia" e a regra no `receiver_type` (2.3a, perfil V9); o dono
+    do decorador (`decorates`) e do campo do `__init__` (`via`), pela
+    regra (2.3b); o tipo pelo retorno anotado, no mesmo arquivo e entre
+    arquivos, o campo de classe de outro arquivo (Python) e o retorno de
+    `T::f` no lugar do `T` do caminho (Rust), com o `type_rule` efetivo
+    no `/api/calls` (2.3c). Só o 2.3a pediu perfil novo.
+  - Níveis no alvo: N1, N2, N3 (Python e Rust), N4 e N4-py-dono, e os
+    N3c do 2.3c. Ficam N5 e N8 (2.4), N6 (2.6), N7 (2.5) e N0-livre
+    (2.4).
+  - Amostra: Python com 53 corretas e 1 `link_falso` em 112 chamadas,
+    Rust com 41 corretas e nenhum `link_falso` em 67 (linha de base
+    do 2.3c). HC-F6 correto; HC-F1 continua errado (Fase 2B).
+  - Para o 2.4: o `__init__` herdado; o alias (`as`, N8), que também
+    tira o tipo de 38 retornos `TestHttpResponse` nos testes.
+  - Para o 2.6: os genéricos e os elementos de coleção (`list[Check]`,
+    `Vec<..>`, `ch.notify`); `Option`, `Box`, `Rc` e `Arc` de `Self`
+    continuam sem decidir.
+  - Para a Fase 2B: o gerenciador e o QuerySet do Django
+    (`Check.objects.get(..)` não dá tipo), `Model.save`, o módulo como
+    dono do decorador de topo.
+  - Limites sem passo: `let x = T::f(..)?` (o `Result<Self, E>` perde o
+    tipo, Q2 do 2.3c); campo de struct de outro arquivo no Rust
+    (`summary.samples`).
+  - Risco do caso (b) da DEC-41: um `homonym` de um só candidato dá o
+    seu retorno como tipo, embora o 2.2 não o promova a link; único
+    efeito nos dados, a HC-110 (certo). O caso (d) com `misto()` foi
+    para o 2.4.
+- 2.4 Herança (N5) e alias local (N8). Junto: a chamada simples
+  resolvida pelo escopo, mesmo módulo e `use`/`import` (N0-livre, "a
+  definir" desde o 2.2), e a perda do caso (d) da DEC-41 que ela causa:
+  `misto()` declarado em dois módulos com retornos diferentes fica sem
+  tipo, embora o Rust chame o do próprio módulo (N3c-rs-discordam;
+  nenhum caso nos dados).
 - 2.5 PIL-G5/N7: relação "passa referência", nunca "chama".
 - 2.6 Genéricos (N6), por último (ch.notify: 33 → 1).
 - Portão de cada passo: `node tools/precisao/portao.js --studio .studio
