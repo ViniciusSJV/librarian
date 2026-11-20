@@ -151,14 +151,57 @@ function prepareBinaries(bin) {
   }
   const exe = n => path.join(dir, process.platform === 'win32' ? n + '.exe' : n);
   const sha = f => crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex');
-  return { pasta: dir, compilado: own, librarian_studio: sha(exe('librarian_studio')), librarian_ingest: sha(exe('librarian_ingest')) };
+  const studio = fs.readFileSync(exe('librarian_studio'));
+  const identity = studio.toString('latin1').match(/recorded:[0-9a-f]{40,64}:(true|false)/)?.[0] ?? 'unknown';
+  return {
+    pasta: dir, compilado: own,
+    // The lock (step 2.4, Q1): what was compiled, not the binary. The binary's hash changes with each
+    // link on Windows (timestamp and .pdb GUID) and with each commit (the identity it carries).
+    fontes: own ? sourceHash() : null,
+    identidade: identity,
+    librarian_studio: sha(exe('librarian_studio')), librarian_ingest: sha(exe('librarian_ingest')),
+  };
 }
 
-/** One line for a report: where the binaries are, whether they were just built, and their hashes. */
-const binaryLine = b => `${b.pasta} (${b.compilado ? 'compilado agora' : 'usado como estava, sem compilar'}); sha256 librarian_studio ${b.librarian_studio}, librarian_ingest ${b.librarian_ingest}`;
+/** The SHA-256 of the compiled sources, read from the folder: every file under crates/, Cargo.toml
+ *  and Cargo.lock that Git tracks or does not ignore, except the Markdown documents (SEARCH.md, the
+ *  READMEs: not compiled), plus every file a `.rs` of crates/ embeds (`include_str!`,
+ *  `include_bytes!`) that is a Markdown document or lies outside crates/ (a test's fixture under
+ *  experiments/), as lines "sha256  path" sorted by path. It is the same before and after a commit,
+ *  and changes only when what is compiled changes. */
+function sourceHash(root = REPO) {
+  const list = execFileSync('git', ['-C', root, 'ls-files', '-co', '--exclude-standard', '-z', '--', 'crates', 'Cargo.toml', 'Cargo.lock'], { encoding: 'utf8' });
+  const all = list.split('\0').filter(Boolean);
+  const files = new Set(all.filter(f => !f.endsWith('.md')));
+  for (const rel of all.filter(f => f.endsWith('.rs'))) {
+    const full = path.join(root, rel);
+    if (!fs.existsSync(full)) continue;
+    for (const m of fs.readFileSync(full, 'utf8').matchAll(/include_(?:str|bytes)!\(\s*"([^"]+)"\s*\)/g)) {
+      const embedded = path.relative(root, path.resolve(path.dirname(full), m[1])).split(path.sep).join('/');
+      if ((embedded.endsWith('.md') || !embedded.startsWith('crates/')) && fs.existsSync(path.join(root, embedded))) files.add(embedded);
+    }
+  }
+  const lines = [];
+  for (const rel of [...files].sort()) {
+    const full = path.join(root, rel);
+    if (!fs.existsSync(full)) continue; // tracked but deleted in the folder: not compiled
+    lines.push(`${crypto.createHash('sha256').update(fs.readFileSync(full)).digest('hex')}  ${rel}`);
+  }
+  return { arquivos: lines.length, sha256: crypto.createHash('sha256').update(lines.map(l => l + '\n').join('')).digest('hex') };
+}
+
+/** One line for a report: where the binaries are, whether they were just built, the hash of the
+ *  sources they were built from (the lock), the identity the studio carries and, as a record only,
+ *  the binaries' hashes. */
+const binaryLine = b => [
+  `${b.pasta} (${b.compilado ? 'compilado agora' : 'usado como estava, sem compilar'})`,
+  b.fontes ? `fontes ${b.fontes.sha256} (${b.fontes.arquivos} arquivos: crates/ sem os .md, Cargo.toml, Cargo.lock e o que um .rs embute de fora de crates/)` : 'fontes desconhecidas (binário de outra pasta)',
+  b.identidade ? `identidade ${b.identidade}` : null,
+  `sha256 librarian_studio ${b.librarian_studio}, librarian_ingest ${b.librarian_ingest} (só registro: muda a cada link)`,
+].filter(Boolean).join('; ');
 
 function gitHead(dir) {
   try { return execFileSync('git', ['-C', dir, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(); } catch { return null; }
 }
 
-module.exports = { REPO, DEFAULTS, parseArgs, hashProject, startStudio, copyStudio, loadGraph, occKey, pool, answers, withStudio, gitHead, prepareBinaries, binaryLine };
+module.exports = { REPO, DEFAULTS, parseArgs, hashProject, startStudio, copyStudio, loadGraph, occKey, pool, answers, withStudio, gitHead, prepareBinaries, sourceHash, binaryLine };

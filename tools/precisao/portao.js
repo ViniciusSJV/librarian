@@ -335,6 +335,12 @@ function report(r, base, fail) {
   const exe = n => path.join(bin, process.platform === 'win32' ? n + '.exe' : n);
   // Built first when it is this repository's target/release; the hash of what is measured goes in the report.
   const result = { binario: L.prepareBinaries(bin), quando: new Date().toISOString() };
+  // The lock (step 2.4, Q1): the measure must come from the same compiled sources as an earlier one
+  // (the Parada 2's), whatever the binary's hash.
+  if (typeof opt.fontes === 'string' && result.binario.fontes?.sha256 !== opt.fontes) {
+    console.error(`recusado: as fontes compiladas (${result.binario.fontes?.sha256 ?? 'desconhecidas'}) não são as esperadas (${opt.fontes})`);
+    process.exit(2);
+  }
   if (opt['so-sinteticos']) {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'librarian-precisao-'));
     fs.mkdirSync(path.join(root, '.studio', 'projects'), { recursive: true });
