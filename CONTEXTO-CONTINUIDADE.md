@@ -1160,3 +1160,8 @@ Escrever o teste de regressão do P1 **antes** da correção: uma função Pytho
   - o detalhe de um link que o percurso não segue (`decorates`, `instancia` sem `__init__`) passa a dizer "decidida, sem seguir" no lugar de "seguida". Tela refeita: 102 de 102;
   - o portão e o script de tela compilam o `librarian_studio` antes de rodar, quando usam o `target/release`, e registram o SHA-256 dos dois binários;
   - a DEC-40 foi aprovada com o texto final e passou a vigente.
+- **Validação do usuário (20/11/2026):**
+  - a verdade de HC-88 a HC-97 foi validada (HC-89 e HC-97 conferidos no editor);
+  - a linha de base nova (Python 97 chamadas 42/1/12/3/39, Rust 65 chamadas 39/0/1/10/15; fatos 16/9/0/1) passou a ser `tools/precisao/linha-de-base.json`;
+  - o portão contra ela deu APROVADO, sem nenhuma chamada mudando de categoria.
+- **Commits:** `6b424a0` (portão, com a prova da DEC-40), `5a26630` (código, testes e interface; `cargo test` na worktree do commit), `944fd0a` (documentação) e o da linha de base.

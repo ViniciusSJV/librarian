@@ -1970,6 +1970,222 @@
    "certeza": "alta",
    "justificativa": "`self._setup_data(..)`, acima do teto (9 `_setup_data` nos testes), com um só na própria classe. Corrigido no 2.3a-0.",
    "verdade_validada_por": "usuário (20/11/2026)"
+  },
+  {
+   "id": "HC-88",
+   "parte_c": false,
+   "estrato": "decorador",
+   "ocorrencia": "hc/integrations/slack/views.py@693-708",
+   "local": "hc/integrations/slack/views.py:24",
+   "texto": "require_setting",
+   "dono": "add",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "require_setting (hc/front/decorators.py:13)"
+    ]
+   },
+   "verdade": {
+    "alvo": "require_setting (hc/front/decorators.py:13)",
+    "relacao": "decora"
+   },
+   "certeza": "alta",
+   "justificativa": "Decorador de topo da view `add`. Roda quando o módulo carrega e devolve o embrulho que só deixa a view responder com SLACK_ENABLED. O alvo é a função do projeto; a relação é \"decora\" (DEC-40).",
+   "verdade_validada_por": "usuário (20/11/2026)"
+  },
+  {
+   "id": "HC-89",
+   "parte_c": false,
+   "estrato": "decorador",
+   "ocorrencia": "hc/api/views.py@16747-16751",
+   "local": "hc/api/views.py:480",
+   "texto": "cors",
+   "dono": "checks",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "cors (hc/api/decorators.py:96)"
+    ]
+   },
+   "verdade": {
+    "alvo": "cors (hc/api/decorators.py:96)",
+    "relacao": "decora"
+   },
+   "certeza": "alta",
+   "justificativa": "Decorador de topo da view `checks`; roda ao carregar o módulo (DEC-40).",
+   "verdade_validada_por": "usuário (20/11/2026; conferido no editor)"
+  },
+  {
+   "id": "HC-90",
+   "parte_c": false,
+   "estrato": "decorador",
+   "ocorrencia": "hc/integrations/pd/views.py@2031-2046",
+   "local": "hc/integrations/pd/views.py:61",
+   "texto": "require_setting",
+   "dono": "add_complete",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "require_setting (hc/front/decorators.py:13)"
+    ]
+   },
+   "verdade": {
+    "alvo": "require_setting (hc/front/decorators.py:13)",
+    "relacao": "decora"
+   },
+   "certeza": "alta",
+   "justificativa": "Segundo decorador empilhado sobre `add_complete` (PD_APP_ID); mesma regra do HC-88.",
+   "verdade_validada_por": "usuário (20/11/2026)"
+  },
+  {
+   "id": "HC-91",
+   "parte_c": false,
+   "estrato": "decorador",
+   "ocorrencia": "hc/api/admin.py@2265-2302",
+   "local": "hc/api/admin.py:73",
+   "texto": "admin.display(description=\"Schedule\")",
+   "dono": "ChecksAdmin.timeout_schedule",
+   "linha_de_base": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": []
+   },
+   "verdade": {
+    "externo": "Django: django.contrib.admin.display"
+   },
+   "certeza": "alta",
+   "justificativa": "Decorador de método; `admin` é import de fora do projeto (django.contrib).",
+   "verdade_validada_por": "usuário (20/11/2026)"
+  },
+  {
+   "id": "HC-92",
+   "parte_c": false,
+   "estrato": "decorador",
+   "ocorrencia": "hc/integrations/webhook/tests/test_notify.py@8922-8927",
+   "local": "hc/integrations/webhook/tests/test_notify.py:267",
+   "texto": "patch",
+   "dono": "NotifyWebhookTestCase.test_webhooks_handle_unicode_post_body",
+   "linha_de_base": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": []
+   },
+   "verdade": {
+    "externo": "unittest.mock.patch"
+   },
+   "certeza": "alta",
+   "justificativa": "Decorador de método de teste; `patch` vem de unittest.mock.",
+   "verdade_validada_por": "usuário (20/11/2026)"
+  },
+  {
+   "id": "HC-93",
+   "parte_c": false,
+   "estrato": "decorador",
+   "ocorrencia": "hc/integrations/call/tests/test_add.py@163-180",
+   "local": "hc/integrations/call/tests/test_add.py:9",
+   "texto": "override_settings",
+   "dono": "AddCallTestCase",
+   "linha_de_base": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": []
+   },
+   "verdade": {
+    "externo": "Django: django.test.override_settings"
+   },
+   "certeza": "alta",
+   "justificativa": "Decorador de classe de teste.",
+   "verdade_validada_por": "usuário (20/11/2026)"
+  },
+  {
+   "id": "HC-94",
+   "parte_c": false,
+   "estrato": "campo_init",
+   "ocorrencia": "hc/api/tests/test_smtpd.py@976-984",
+   "local": "hc/api/tests/test_smtpd.py:49",
+   "texto": "NullSink",
+   "dono": "TestServer.stdout",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "NullSink (hc/api/tests/test_smtpd.py:42)"
+    ],
+    "relacao": "instantiates"
+   },
+   "verdade": {
+    "alvo": "NullSink (hc/api/tests/test_smtpd.py:42)",
+    "executor": "TestServer.__init__ (hc/api/tests/test_smtpd.py:48)"
+   },
+   "certeza": "alta",
+   "justificativa": "`self.stdout = NullSink()` no `__init__`: instancia a classe do próprio arquivo (sem `__init__` próprio). Escrita no campo `TestServer.stdout`, roda no `TestServer.__init__`.",
+   "verdade_validada_por": "usuário (20/11/2026)"
+  },
+  {
+   "id": "HC-95",
+   "parte_c": false,
+   "estrato": "campo_init",
+   "ocorrencia": "hc/api/management/commands/sendalerts.py@2165-2183",
+   "local": "hc/api/management/commands/sendalerts.py:63",
+   "texto": "ThreadPoolExecutor",
+   "dono": "Command.executor",
+   "linha_de_base": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": []
+   },
+   "verdade": {
+    "externo": "concurrent.futures.ThreadPoolExecutor",
+    "executor": "Command.__init__ (hc/api/management/commands/sendalerts.py:61)"
+   },
+   "certeza": "alta",
+   "justificativa": "Classe da biblioteca padrão, no valor de `self.executor` do `__init__`.",
+   "verdade_validada_por": "usuário (20/11/2026)"
+  },
+  {
+   "id": "HC-96",
+   "parte_c": false,
+   "estrato": "campo_init",
+   "ocorrencia": "hc/lib/webauthn.py@539-550",
+   "local": "hc/lib/webauthn.py:20",
+   "texto": "Fido2Server",
+   "dono": "CreateHelper.server",
+   "linha_de_base": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": []
+   },
+   "verdade": {
+    "externo": "fido2.server.Fido2Server",
+    "executor": "CreateHelper.__init__ (hc/lib/webauthn.py:18)"
+   },
+   "certeza": "alta",
+   "justificativa": "Classe do pacote fido2, no valor de `self.server` do `__init__`.",
+   "verdade_validada_por": "usuário (20/11/2026)"
+  },
+  {
+   "id": "HC-97",
+   "parte_c": false,
+   "estrato": "campo_init",
+   "ocorrencia": "hc/lib/webauthn.py@2058-2080",
+   "local": "hc/lib/webauthn.py:56",
+   "texto": "AttestedCredentialData",
+   "dono": "GetHelper.credentials",
+   "linha_de_base": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": []
+   },
+   "verdade": {
+    "externo": "fido2.webauthn.AttestedCredentialData",
+    "executor": "GetHelper.__init__ (hc/lib/webauthn.py:53)"
+   },
+   "certeza": "alta",
+   "justificativa": "Classe do pacote fido2, dentro de uma comprehension no valor de `self.credentials` do `__init__`.",
+   "verdade_validada_por": "usuário (20/11/2026; conferido no editor)"
   }
  ]
 }

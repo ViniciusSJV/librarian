@@ -1,7 +1,7 @@
 {
  "projetos": {
   "hc": {
-   "run_novo": "20261120-020910",
+   "run_novo": "20261120-073441",
    "grafo_novo_igual_ao_de_referencia": false,
    "populacao": {
     "total": 1956,
@@ -25,8 +25,8 @@
     "metodo_para_funcao": 30
    },
    "amostra_contagem": {
-    "sem_candidato": 33,
-    "correta": 38,
+    "sem_candidato": 39,
+    "correta": 42,
     "link_falso": 1,
     "candidatos_falsos": 12,
     "ambigua": 3
@@ -48,6 +48,7 @@
      "estrato": "no_candidate_in_project",
      "parte_c": true,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -56,6 +57,7 @@
      "estrato": "unique->outro",
      "parte_c": true,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "unique (1) → Profile.choose_next_report_date (hc/accounts/models.py:365)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -64,6 +66,7 @@
      "estrato": "unique->function",
      "parte_c": true,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (revisada, 18/11)"
     },
@@ -72,6 +75,7 @@
      "estrato": "no_candidate_in_project",
      "parte_c": true,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -80,6 +84,7 @@
      "estrato": "no_candidate_in_project",
      "parte_c": true,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -88,6 +93,7 @@
      "estrato": "no_candidate_in_project",
      "parte_c": true,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (revisada, 18/11)"
     },
@@ -96,6 +102,7 @@
      "estrato": "no_candidate_in_project",
      "parte_c": true,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -104,6 +111,7 @@
      "estrato": "no_candidate_in_project",
      "parte_c": true,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -112,6 +120,7 @@
      "estrato": "no_candidate_in_project",
      "parte_c": true,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -120,6 +129,7 @@
      "estrato": "unique->function",
      "parte_c": true,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -128,6 +138,7 @@
      "estrato": "no_candidate_in_project",
      "parte_c": true,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -136,6 +147,7 @@
      "estrato": "no_candidate_in_project",
      "parte_c": true,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -144,6 +156,7 @@
      "estrato": "no_candidate_in_project",
      "parte_c": true,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -152,6 +165,7 @@
      "estrato": "unique->function",
      "parte_c": true,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -160,6 +174,7 @@
      "estrato": "unique->outro",
      "parte_c": true,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "unique (1) → Check.cloaked_url (hc/api/models.py:275)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -168,6 +183,7 @@
      "estrato": "no_candidate_in_project",
      "parte_c": true,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -176,6 +192,7 @@
      "estrato": "unique->outro",
      "parte_c": true,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "unique (1) → ProfileManager.for_user (hc/accounts/models.py:62)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -184,6 +201,7 @@
      "estrato": "unique->function",
      "parte_c": true,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -192,6 +210,7 @@
      "estrato": "no_candidate_in_project",
      "parte_c": true,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (revisada, 18/11)"
     },
@@ -200,6 +219,7 @@
      "estrato": "unique->outro",
      "parte_c": true,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "unique (1) → TokenBucket.authorize_pushover (hc/api/models.py:1530)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -208,6 +228,7 @@
      "estrato": "no_candidate_in_project",
      "parte_c": false,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -216,6 +237,7 @@
      "estrato": "no_candidate_in_project",
      "parte_c": false,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -224,6 +246,7 @@
      "estrato": "unique->outro",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "unique (1) → ProjectManager.for_api_key (hc/accounts/models.py:404)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -232,6 +255,7 @@
      "estrato": "unique->outro",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "unique (1) → TokenBucket.authorize_login_email (hc/api/models.py:1481)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -240,6 +264,7 @@
      "estrato": "unique->outro",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "unique (1) → Notification.status_url (hc/api/models.py:1352)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -248,6 +273,7 @@
      "estrato": "unique->outro",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "unique (1) → Check.tags_list (hc/api/models.py:413)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -256,6 +282,7 @@
      "estrato": "unique->outro",
      "parte_c": false,
      "categoria": "link_falso",
+     "categoria_regra_anterior": "link_falso",
      "resposta": "unique (1) → FakeCurl.getinfo (hc/lib/tests/test_curl.py:39)",
      "validada": "usuário (revisada, 18/11)"
     },
@@ -264,6 +291,7 @@
      "estrato": "unique->outro",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "unique (1) → AddGitHubForm.get_labels (hc/integrations/github/forms.py:10)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -272,6 +300,7 @@
      "estrato": "unique->function",
      "parte_c": false,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -280,6 +309,7 @@
      "estrato": "unique->function",
      "parte_c": false,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (revisada, 18/11)"
     },
@@ -288,6 +318,7 @@
      "estrato": "unique->function",
      "parte_c": false,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -296,6 +327,7 @@
      "estrato": "unique->function",
      "parte_c": false,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (revisada, 18/11)"
     },
@@ -304,6 +336,7 @@
      "estrato": "unique->function",
      "parte_c": false,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -312,6 +345,7 @@
      "estrato": "unique->function",
      "parte_c": false,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -320,6 +354,7 @@
      "estrato": "unique->function",
      "parte_c": false,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -328,6 +363,7 @@
      "estrato": "unique->function",
      "parte_c": false,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -336,6 +372,7 @@
      "estrato": "homonym",
      "parte_c": false,
      "categoria": "candidatos_falsos",
+     "categoria_regra_anterior": "candidatos_falsos",
      "resposta": "homonym (2)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -344,6 +381,7 @@
      "estrato": "homonym",
      "parte_c": false,
      "categoria": "candidatos_falsos",
+     "categoria_regra_anterior": "candidatos_falsos",
      "resposta": "homonym (2)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -352,6 +390,7 @@
      "estrato": "homonym",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "import (1) → post (hc/lib/curl.py:224)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -360,6 +399,7 @@
      "estrato": "homonym",
      "parte_c": false,
      "categoria": "candidatos_falsos",
+     "categoria_regra_anterior": "candidatos_falsos",
      "resposta": "homonym (7)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -368,6 +408,7 @@
      "estrato": "homonym",
      "parte_c": false,
      "categoria": "candidatos_falsos",
+     "categoria_regra_anterior": "candidatos_falsos",
      "resposta": "homonym (7)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -376,6 +417,7 @@
      "estrato": "homonym",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "import (1) → get (hc/lib/curl.py:210)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -384,6 +426,7 @@
      "estrato": "homonym",
      "parte_c": false,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -392,6 +435,7 @@
      "estrato": "homonym",
      "parte_c": false,
      "categoria": "candidatos_falsos",
+     "categoria_regra_anterior": "candidatos_falsos",
      "resposta": "homonym (7)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -400,6 +444,7 @@
      "estrato": "homonym",
      "parte_c": false,
      "categoria": "candidatos_falsos",
+     "categoria_regra_anterior": "candidatos_falsos",
      "resposta": "homonym (7)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -408,6 +453,7 @@
      "estrato": "homonym",
      "parte_c": false,
      "categoria": "candidatos_falsos",
+     "categoria_regra_anterior": "candidatos_falsos",
      "resposta": "homonym (7)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -416,6 +462,7 @@
      "estrato": "homonym",
      "parte_c": false,
      "categoria": "candidatos_falsos",
+     "categoria_regra_anterior": "candidatos_falsos",
      "resposta": "homonym (7)",
      "validada": "usuário (revisada, 18/11)"
     },
@@ -424,6 +471,7 @@
      "estrato": "homonym",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "import (1) → get (hc/lib/curl.py:210)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -432,6 +480,7 @@
      "estrato": "homonym",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "import (1) → login (hc/lib/emails.py:88)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -440,6 +489,7 @@
      "estrato": "homonym",
      "parte_c": false,
      "categoria": "candidatos_falsos",
+     "categoria_regra_anterior": "candidatos_falsos",
      "resposta": "homonym (7)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -448,6 +498,7 @@
      "estrato": "above_candidate_limit",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "type (29) → SlackFields.add (hc/integrations/slack/transport.py:21)",
      "validada": "usuário (revisada, 18/11)"
     },
@@ -456,6 +507,7 @@
      "estrato": "above_candidate_limit",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "type (29) → GoogleChatFields.add (hc/integrations/googlechat/transport.py:14)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -464,6 +516,7 @@
      "estrato": "above_candidate_limit",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "type (29) → GoogleChatFields.add (hc/integrations/googlechat/transport.py:14)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -472,6 +525,7 @@
      "estrato": "above_candidate_limit",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "type (9) → WebhookForm.get_value (hc/integrations/webhook/forms.py:79)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -480,6 +534,7 @@
      "estrato": "above_candidate_limit",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "type (29) → GoogleChatFields.add (hc/integrations/googlechat/transport.py:14)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -488,6 +543,7 @@
      "estrato": "above_candidate_limit",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "type (29) → SlackFields.add (hc/integrations/slack/transport.py:21)",
      "validada": "usuário (revisada, 18/11)"
     },
@@ -496,6 +552,7 @@
      "estrato": "receiver",
      "parte_c": false,
      "categoria": "candidatos_falsos",
+     "categoria_regra_anterior": "candidatos_falsos",
      "resposta": "homonym (3)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -504,6 +561,7 @@
      "estrato": "receiver",
      "parte_c": false,
      "categoria": "ambigua",
+     "categoria_regra_anterior": "ambigua",
      "resposta": "homonym (2)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -512,6 +570,7 @@
      "estrato": "receiver",
      "parte_c": false,
      "categoria": "ambigua",
+     "categoria_regra_anterior": "ambigua",
      "resposta": "homonym (2)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -520,6 +579,7 @@
      "estrato": "receiver",
      "parte_c": false,
      "categoria": "candidatos_falsos",
+     "categoria_regra_anterior": "candidatos_falsos",
      "resposta": "homonym (3)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -528,6 +588,7 @@
      "estrato": "metodo_funcao",
      "parte_c": false,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (revisada, 19/11)"
     },
@@ -536,6 +597,7 @@
      "estrato": "metodo_funcao",
      "parte_c": false,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (revisada, 19/11)"
     },
@@ -544,6 +606,7 @@
      "estrato": "metodo_funcao",
      "parte_c": false,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (revisada, 19/11)"
     },
@@ -552,6 +615,7 @@
      "estrato": "metodo_funcao",
      "parte_c": false,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (revisada, 19/11)"
     },
@@ -560,6 +624,7 @@
      "estrato": "metodo_funcao",
      "parte_c": false,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (revisada, 19/11)"
     },
@@ -568,6 +633,7 @@
      "estrato": "metodo_funcao",
      "parte_c": false,
      "categoria": "candidatos_falsos",
+     "categoria_regra_anterior": "candidatos_falsos",
      "resposta": "homonym (1)",
      "validada": "usuário (revisada, conferida no editor, 19/11)"
     },
@@ -576,6 +642,7 @@
      "estrato": "modulo_f",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "unique (1) → report (hc/lib/emails.py:112)",
      "validada": "usuário (revisada, 19/11)"
     },
@@ -584,6 +651,7 @@
      "estrato": "modulo_f",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "unique (1) → join (hc/integrations/matrix/client.py:26)",
      "validada": "usuário (revisada, 19/11)"
     },
@@ -592,6 +660,7 @@
      "estrato": "modulo_f",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "import (1) → request (hc/lib/curl.py:55)",
      "validada": "usuário (revisada, conferida no editor, 19/11)"
     },
@@ -600,6 +669,7 @@
      "estrato": "modulo_f",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "import (1) → transfer_request (hc/lib/emails.py:92)",
      "validada": "usuário (revisada, 19/11)"
     },
@@ -608,6 +678,7 @@
      "estrato": "modulo_f",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "import (1) → get (hc/lib/curl.py:210)",
      "validada": "usuário (revisada, 19/11)"
     },
@@ -616,6 +687,7 @@
      "estrato": "espelho",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "unique (1) → send (hc/lib/emails.py:71)",
      "validada": "usuário (revisada, 19/11)"
     },
@@ -624,6 +696,7 @@
      "estrato": "espelho",
      "parte_c": false,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (revisada, 19/11)"
     },
@@ -632,6 +705,7 @@
      "estrato": "espelho",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "unique (1) → request (hc/lib/curl.py:55)",
      "validada": "usuário (revisada, 19/11)"
     },
@@ -640,6 +714,7 @@
      "estrato": "espelho",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "unique (1) → send (hc/lib/emails.py:71)",
      "validada": "usuário (revisada, 19/11)"
     },
@@ -648,6 +723,7 @@
      "estrato": "tipo_py",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "type (1) → Check.ping (hc/api/models.py:493)",
      "validada": "usuário (20/11/2026, conferido no editor)"
     },
@@ -656,6 +732,7 @@
      "estrato": "tipo_py",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "type (29) → DowntimeRecorder.add (hc/api/models.py:184)",
      "validada": "usuário (20/11/2026)"
     },
@@ -664,6 +741,7 @@
      "estrato": "tipo_py",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "type (2) → CreateHelper.verify (hc/lib/webauthn.py:46)",
      "validada": "usuário (20/11/2026)"
     },
@@ -672,6 +750,7 @@
      "estrato": "tipo_py",
      "parte_c": false,
      "categoria": "ambigua",
+     "categoria_regra_anterior": "ambigua",
      "resposta": "homonym (2)",
      "validada": "usuário (Q6 da Parada 1 do 2.3, 19/11)"
     },
@@ -680,6 +759,7 @@
      "estrato": "tipo_py",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "type (4) → Check.to_dict (hc/api/models.py:439)",
      "validada": "usuário (20/11/2026)"
     },
@@ -688,6 +768,7 @@
      "estrato": "tipo_py",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "type (17) → Command.handle (hc/logs/management/commands/sendlogs.py:17)",
      "validada": "usuário (20/11/2026, conferido no editor)"
     },
@@ -696,6 +777,7 @@
      "estrato": "instancia",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "unique (1) → Flip (hc/api/models.py:1361) [instancia]",
      "validada": "usuário (20/11/2026)"
     },
@@ -704,6 +786,7 @@
      "estrato": "instancia",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "unique (1) → WebhookForm (hc/integrations/webhook/forms.py:55) [instancia]",
      "validada": "usuário (20/11/2026)"
     },
@@ -712,6 +795,7 @@
      "estrato": "instancia",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "unique (1) → TransportError (hc/api/transports.py:56) [instancia]",
      "validada": "usuário (20/11/2026)"
     },
@@ -720,6 +804,7 @@
      "estrato": "instancia",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "unique (1) → Check (hc/api/models.py:192) [instancia]",
      "validada": "usuário (20/11/2026)"
     },
@@ -728,6 +813,7 @@
      "estrato": "instancia",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "unique (1) → FakeCurl (hc/lib/tests/test_curl.py:13) [instancia]",
      "validada": "usuário (20/11/2026)"
     },
@@ -736,13 +822,130 @@
      "estrato": "receiver_py_teto",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "receiver (9) → NotifySlackTestCase._setup_data (hc/integrations/slack/tests/test_notify.py:16)",
      "validada": "usuário (20/11/2026)"
+    },
+    {
+     "id": "HC-88",
+     "estrato": "decorador",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → require_setting (hc/front/decorators.py:13) [decora]",
+     "validada": "usuário (20/11/2026)"
+    },
+    {
+     "id": "HC-89",
+     "estrato": "decorador",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → cors (hc/api/decorators.py:96) [decora]",
+     "validada": "usuário (20/11/2026; conferido no editor)"
+    },
+    {
+     "id": "HC-90",
+     "estrato": "decorador",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → require_setting (hc/front/decorators.py:13) [decora]",
+     "validada": "usuário (20/11/2026)"
+    },
+    {
+     "id": "HC-91",
+     "estrato": "decorador",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (20/11/2026)"
+    },
+    {
+     "id": "HC-92",
+     "estrato": "decorador",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (20/11/2026)"
+    },
+    {
+     "id": "HC-93",
+     "estrato": "decorador",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (20/11/2026)"
+    },
+    {
+     "id": "HC-94",
+     "estrato": "campo_init",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → NullSink (hc/api/tests/test_smtpd.py:42) [instancia]",
+     "validada": "usuário (20/11/2026)"
+    },
+    {
+     "id": "HC-95",
+     "estrato": "campo_init",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (20/11/2026)"
+    },
+    {
+     "id": "HC-96",
+     "estrato": "campo_init",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (20/11/2026)"
+    },
+    {
+     "id": "HC-97",
+     "estrato": "campo_init",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (20/11/2026; conferido no editor)"
+    }
+   ],
+   "executores": [
+    {
+     "id": "HC-94",
+     "executor": "TestServer.__init__ (hc/api/tests/test_smtpd.py:48)",
+     "dono_no_grafo": "TestServer.stdout",
+     "mostra": true
+    },
+    {
+     "id": "HC-95",
+     "executor": "Command.__init__ (hc/api/management/commands/sendalerts.py:61)",
+     "dono_no_grafo": "Command.executor",
+     "mostra": true
+    },
+    {
+     "id": "HC-96",
+     "executor": "CreateHelper.__init__ (hc/lib/webauthn.py:18)",
+     "dono_no_grafo": "CreateHelper.server",
+     "mostra": true
+    },
+    {
+     "id": "HC-97",
+     "executor": "GetHelper.__init__ (hc/lib/webauthn.py:53)",
+     "dono_no_grafo": "GetHelper.credentials",
+     "mostra": true
     }
    ]
   },
   "rt": {
-   "run_novo": "20261120-021149",
+   "run_novo": "20261120-073723",
    "grafo_novo_igual_ao_de_referencia": false,
    "populacao": {
     "total": 515,
@@ -788,6 +991,7 @@
      "estrato": "unique->outro",
      "parte_c": true,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "unique (1) → impl Tuple::dot (src/tuple.rs:127)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -796,6 +1000,7 @@
      "estrato": "homonym",
      "parte_c": true,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "type (7) → impl Incuse for Checkers::color_at (src/patterns.rs:255)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -804,6 +1009,7 @@
      "estrato": "no_candidate_in_project",
      "parte_c": true,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -812,6 +1018,7 @@
      "estrato": "no_candidate_in_project",
      "parte_c": true,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -820,6 +1027,7 @@
      "estrato": "unique->outro",
      "parte_c": true,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "unique (1) → impl Tuple::is_vector (src/tuple.rs:25)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -828,6 +1036,7 @@
      "estrato": "no_candidate_in_project",
      "parte_c": true,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -836,6 +1045,7 @@
      "estrato": "no_candidate_in_project",
      "parte_c": true,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (revisada, 18/11)"
     },
@@ -844,6 +1054,7 @@
      "estrato": "no_candidate_in_project",
      "parte_c": true,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -852,6 +1063,7 @@
      "estrato": "no_candidate_in_project",
      "parte_c": true,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -860,6 +1072,7 @@
      "estrato": "homonym",
      "parte_c": true,
      "categoria": "ambigua",
+     "categoria_regra_anterior": "ambigua",
      "resposta": "homonym (8)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -868,6 +1081,7 @@
      "estrato": "no_candidate_in_project",
      "parte_c": false,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -876,6 +1090,7 @@
      "estrato": "unique->outro",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "unique (1) → impl Matrix<4>::inverse (src/matrix.rs:193)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -884,6 +1099,7 @@
      "estrato": "unique->outro",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "unique (1) → impl Bounds::add_point (src/bounds.rs:23)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -892,6 +1108,7 @@
      "estrato": "unique->outro",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "unique (1) → impl Bounds::transformed (src/bounds.rs:47)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -900,6 +1117,7 @@
      "estrato": "unique->function",
      "parte_c": false,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -908,6 +1126,7 @@
      "estrato": "unique->function",
      "parte_c": false,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -916,6 +1135,7 @@
      "estrato": "homonym",
      "parte_c": false,
      "categoria": "ambigua",
+     "categoria_regra_anterior": "ambigua",
      "resposta": "homonym (8)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -924,6 +1144,7 @@
      "estrato": "homonym",
      "parte_c": false,
      "categoria": "ambigua",
+     "categoria_regra_anterior": "ambigua",
      "resposta": "homonym (8)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -932,6 +1153,7 @@
      "estrato": "homonym",
      "parte_c": false,
      "categoria": "ambigua",
+     "categoria_regra_anterior": "ambigua",
      "resposta": "homonym (8)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -940,6 +1162,7 @@
      "estrato": "homonym",
      "parte_c": false,
      "categoria": "ambigua",
+     "categoria_regra_anterior": "ambigua",
      "resposta": "homonym (8)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -948,6 +1171,7 @@
      "estrato": "homonym",
      "parte_c": false,
      "categoria": "ambigua",
+     "categoria_regra_anterior": "ambigua",
      "resposta": "homonym (2)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -956,6 +1180,7 @@
      "estrato": "above_candidate_limit",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "type (9) → impl Intersectable for Plane::set_transform (src/plane.rs:54)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -964,6 +1189,7 @@
      "estrato": "above_candidate_limit",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "type (9) → impl Intersectable for Sphere::set_transform (src/sphere.rs:68)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -972,6 +1198,7 @@
      "estrato": "above_candidate_limit",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "type (9) → impl Ray::set_transform (src/ray.rs:22)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -980,6 +1207,7 @@
      "estrato": "above_candidate_limit",
      "parte_c": false,
      "categoria": "ambigua",
+     "categoria_regra_anterior": "ambigua",
      "resposta": "above_candidate_limit (9)",
      "validada": "usuário (revisada, 18/11)"
     },
@@ -988,6 +1216,7 @@
      "estrato": "receiver",
      "parte_c": false,
      "categoria": "ambigua",
+     "categoria_regra_anterior": "ambigua",
      "resposta": "homonym (8)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -996,6 +1225,7 @@
      "estrato": "receiver",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "type (5) → impl CameraSpec::validate (src/scene.rs:12)",
      "validada": "usuário (revisada, 18/11)"
     },
@@ -1004,6 +1234,7 @@
      "estrato": "receiver",
      "parte_c": false,
      "categoria": "candidatos_falsos",
+     "categoria_regra_anterior": "candidatos_falsos",
      "resposta": "homonym (2)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -1012,6 +1243,7 @@
      "estrato": "receiver",
      "parte_c": false,
      "categoria": "ambigua",
+     "categoria_regra_anterior": "ambigua",
      "resposta": "homonym (8)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -1020,6 +1252,7 @@
      "estrato": "receiver",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "type (5) → impl MaterialSpec::validate (src/scene.rs:66)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
@@ -1028,6 +1261,7 @@
      "estrato": "type",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "type (8) → impl Intersectable for Plane::set_material (src/plane.rs:50)",
      "validada": "usuário (revisada, 19/11)"
     },
@@ -1036,6 +1270,7 @@
      "estrato": "type",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "type (8) → impl Intersectable for Plane::set_material (src/plane.rs:50)",
      "validada": "usuário (revisada, 19/11)"
     },
@@ -1044,6 +1279,7 @@
      "estrato": "type",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "type (7) → impl Incuse for Checkers::set_pattern_transform (src/patterns.rs:251)",
      "validada": "usuário (revisada, 19/11)"
     },
@@ -1052,6 +1288,7 @@
      "estrato": "type",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "type (2) → impl Site::hit (src/count.rs:31)",
      "validada": "usuário (revisada, 19/11)"
     },
@@ -1060,6 +1297,7 @@
      "estrato": "type",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "type (2) → impl Groups::intersect (src/groups.rs:86)",
      "validada": "usuário (revisada, 19/11)"
     },
@@ -1068,6 +1306,7 @@
      "estrato": "type_caminho",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "type (22) → impl Ray::new (src/ray.rs:11)",
      "validada": "usuário (revisada, 19/11)"
     },
@@ -1076,6 +1315,7 @@
      "estrato": "type_caminho",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "type (22) → impl Ray::new (src/ray.rs:11)",
      "validada": "usuário (revisada, 19/11)"
     },
@@ -1084,6 +1324,7 @@
      "estrato": "type_caminho",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "type (14) → impl From<[[f64; D]; D]> for Matrix<D>::from (src/matrix.rs:12)",
      "validada": "usuário (revisada, 19/11)"
     },
@@ -1092,6 +1333,7 @@
      "estrato": "type_caminho",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "type (22) → impl Tuple::new (src/tuple.rs:13)",
      "validada": "usuário (revisada, 19/11)"
     },
@@ -1100,6 +1342,7 @@
      "estrato": "type_caminho",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "type (22) → impl Triangle::new (src/triangle.rs:24)",
      "validada": "usuário (revisada, 19/11)"
     },
@@ -1108,6 +1351,7 @@
      "estrato": "type_caminho",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "type (12) → impl Default for Sphere::default (src/sphere.rs:26)",
      "validada": "usuário (revisada, 19/11)"
     },
@@ -1116,6 +1360,7 @@
      "estrato": "type_fora",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "type (8) → impl Intersectable for Object::material (src/object.rs:113)",
      "validada": "usuário (revisada, 19/11)"
     },
@@ -1124,6 +1369,7 @@
      "estrato": "type_fora",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "type (9) → impl Intersectable for Sphere::set_transform (src/sphere.rs:68)",
      "validada": "usuário (revisada, 19/11)"
     },
@@ -1132,6 +1378,7 @@
      "estrato": "type_fora",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "type (7) → impl Incuse for Patterns::color_at (src/patterns.rs:333)",
      "validada": "usuário (revisada, conferida no editor, 19/11)"
     },
@@ -1140,6 +1387,7 @@
      "estrato": "type_fora",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "type (2) → impl Transform for Tuple::view_transform (src/transformations.rs:9)",
      "validada": "usuário (revisada, 19/11)"
     },
@@ -1148,6 +1396,7 @@
      "estrato": "trait_default",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "trait_default (2) → Intersectable::intersect (src/object.rs:29)",
      "validada": "usuário (revisada, 19/11)"
     },
@@ -1156,6 +1405,7 @@
      "estrato": "trait_default",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "trait_default (2) → Intersectable::intersect (src/object.rs:29)",
      "validada": "usuário (revisada, 19/11)"
     },
@@ -1164,6 +1414,7 @@
      "estrato": "trait_default",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "trait_default (2) → Intersectable::intersect (src/object.rs:29)",
      "validada": "usuário (revisada, 19/11)"
     },
@@ -1172,6 +1423,7 @@
      "estrato": "trait_default",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "trait_default (2) → Incuse::color_at_object (src/patterns.rs:13)",
      "validada": "usuário (revisada, conferida no editor, 19/11)"
     },
@@ -1180,6 +1432,7 @@
      "estrato": "trait_default",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "trait_default (2) → Intersectable::intersect (src/object.rs:29)",
      "validada": "usuário (revisada, conferida no editor, 19/11)"
     },
@@ -1188,6 +1441,7 @@
      "estrato": "type_variavel",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "type (15) → impl Intersectable for Object::transform (src/object.rs:124)",
      "validada": "usuário (revisada, 19/11)"
     },
@@ -1196,6 +1450,7 @@
      "estrato": "type_variavel",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "type (9) → impl Ray::set_transform (src/ray.rs:22)",
      "validada": "usuário (revisada, 19/11)"
     },
@@ -1204,6 +1459,7 @@
      "estrato": "type_variavel",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "type (15) → impl Intersectable for Object::transform (src/object.rs:124)",
      "validada": "usuário (revisada, 19/11)"
     },
@@ -1212,6 +1468,7 @@
      "estrato": "type_variavel",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "type (9) → impl Intersectable for Plane::set_transform (src/plane.rs:54)",
      "validada": "usuário (revisada, 19/11)"
     },
@@ -1220,6 +1477,7 @@
      "estrato": "type_variavel",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "receiver (15) → impl Intersectable for Object::transform (src/object.rs:124)",
      "validada": "usuário (revisada, 19/11)"
     },
@@ -1228,6 +1486,7 @@
      "estrato": "tipo_derruba",
      "parte_c": false,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (revisada, 19/11)"
     },
@@ -1236,6 +1495,7 @@
      "estrato": "tipo_derruba",
      "parte_c": false,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (revisada, 19/11)"
     },
@@ -1244,6 +1504,7 @@
      "estrato": "tipo_derruba",
      "parte_c": false,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (revisada, 19/11)"
     },
@@ -1252,6 +1513,7 @@
      "estrato": "tipo_derruba",
      "parte_c": false,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (revisada, 19/11)"
     },
@@ -1260,6 +1522,7 @@
      "estrato": "tipo_derruba",
      "parte_c": false,
      "categoria": "ambigua",
+     "categoria_regra_anterior": "ambigua",
      "resposta": "homonym (8)",
      "validada": "usuário (revisada, 19/11)"
     },
@@ -1268,6 +1531,7 @@
      "estrato": "espelho",
      "parte_c": false,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (revisada, 19/11)"
     },
@@ -1276,6 +1540,7 @@
      "estrato": "espelho",
      "parte_c": false,
      "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
      "validada": "usuário (revisada, conferida no editor, 19/11)"
     },
@@ -1284,6 +1549,7 @@
      "estrato": "instancia",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "unique (1) → Sorteio (src/bin/cena_video.rs:25) [instancia]",
      "validada": "usuário (20/11/2026, conferido no editor)"
     },
@@ -1292,6 +1558,7 @@
      "estrato": "instancia",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "type (2) → Object::Cone (src/object.rs:50) [instancia]",
      "validada": "usuário (20/11/2026)"
     },
@@ -1300,10 +1567,12 @@
      "estrato": "instancia",
      "parte_c": false,
      "categoria": "correta",
+     "categoria_regra_anterior": "correta",
      "resposta": "type (2) → Patterns::Stripe (src/patterns.rs:26) [instancia]",
      "validada": "usuário (20/11/2026)"
     }
-   ]
+   ],
+   "executores": []
   }
  },
  "editions": [
@@ -1832,6 +2101,29 @@
     "resolution": "type",
     "passo": "2.3",
     "por_que": "self.repo = Repo() no __init__"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N4-py-dono",
+   "atual_registrado": {
+    "resolution": "ocorrência não encontrada",
+    "candidates": 0,
+    "alvos": []
+   },
+   "agora": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Repo (pkg/models.py:14)"
+    ],
+    "relacao": "instantiates"
+   },
+   "alvo": {
+    "alvo": "Repo (pkg/models.py:14)",
+    "relacao": "instancia",
+    "passo": "2.3b",
+    "por_que": "self.repo = Repo() no __init__: escrita no campo Servico.repo, roda no __init__ (DEC-40); acrescentado no 2.3b, com o binário do 2.3a como atual"
    },
    "estado": "no alvo"
   },
