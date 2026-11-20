@@ -507,7 +507,16 @@ pub fn inventory(catalog: &Catalog, project: &RuleSet) -> Result<Inventory> {
     let receiver_type = |symbol: &str, occurrence: &str| -> Vec<String> { resolver.receiver_types(symbol, occurrence) };
     let follow = |symbol: &str, occurrence: &str| -> std::result::Result<Vec<(String, &'static str)>, usize> {
         match resolver.resolve(symbol, occurrence, None) {
-            Resolution::Linked(how, targets) => Ok(targets.into_iter().map(|t| (t.to_owned(), how.as_str())).collect()),
+            // Step 2.3a (DEC-39): an instantiation goes on in the `__init__` the class declares,
+            // never in the class's body; a struct or a variant has no body to follow.
+            Resolution::Linked(how, targets) => Ok(targets
+                .into_iter()
+                .filter_map(|t| match crate::resolve::INSTANTIATED.contains(&graph.nodes[t].kind.as_str()) {
+                    true => resolver.instance_entry(t),
+                    false => Some(t),
+                })
+                .map(|t| (t.to_owned(), how.as_str()))
+                .collect()),
             Resolution::Homonym(candidates) => Err(candidates.len()),
             Resolution::AboveLimit(_) | Resolution::NoCandidate => Err(0),
         }

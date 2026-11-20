@@ -115,8 +115,9 @@ async function answers(api, key, run, G, owners) {
       const ls = c.links.filter(x => x.occurrence === id);
       const cut = c.unresolved.filter(x => x.occurrence === id && x.reason === 'node_limit');
       const targets = [...ls, ...cut].map(l => ({ label: G.g.nodes[l.to].label, kind: G.g.nodes[l.to].kind, at: G.where(l.to) }));
-      out.set(id, u ? { resolution: u.reason, candidates: u.candidates, targets: [] }
-        : { resolution: (ls[0] ?? cut[0]).resolution, candidates: (ls[0] ?? cut[0]).candidates, targets, node_limit: cut.length > 0 });
+      // `relation` (step 2.3a, DEC-39): `instantiates` or `calls`; absent before, read as `calls`.
+      out.set(id, u ? { resolution: u.reason, candidates: u.candidates, targets: [], relation: null }
+        : { resolution: (ls[0] ?? cut[0]).resolution, candidates: (ls[0] ?? cut[0]).candidates, targets, node_limit: cut.length > 0, relation: ls[0]?.relation ?? 'calls' });
     }
   }
   return out;

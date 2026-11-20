@@ -308,12 +308,10 @@ fn receiver_is_only_self_dot_m() {
     assert_eq!(resolved(&s, "impl Cena::validate", "self.check()", None), r("receiver", &["impl Cena::check"]));
     // self.camera.validate() is not the receiver's own call: it was linked to Cena::validate itself.
     assert_ne!(resolved(&s, "impl Cena::validate", "self.camera.validate()", None).0, "receiver");
-    // Python: self.salvar() is; self.repo.salvar() is not, and without types it stays a homonym.
+    // Python: self.salvar() is; self.repo.salvar() is not: since step 2.3a it is settled by the
+    // field's written type (`self.repo = Repo()` in `__init__`), never by the receiver rule.
     assert_eq!(resolved(&s, "Servico.gravar", "self.salvar()", None), r("receiver", &["Servico.salvar"]));
-    assert_eq!(
-        resolved(&s, "Servico.salvar", "self.repo.salvar()", None),
-        r("homonym", &["Cliente.salvar", "Repo.salvar", "Servico.salvar"])
-    );
+    assert_eq!(resolved(&s, "Servico.salvar", "self.repo.salvar()", None), r("type", &["Repo.salvar"]));
 }
 
 #[test]
@@ -324,8 +322,8 @@ fn type_by_the_receivers_written_type() {
     assert_eq!(resolved(&s, "impl Cena::validate", "self.camera.validate()", None), r("type", &["impl Camera::validate"]));
     // Generic arguments are not compared: M<3> names both impls of M.
     assert_eq!(resolved(&s, "n_generic", "m.det()", None), r("type", &["impl M<2>::det", "impl M<3>::det"]));
-    // Python records no receiver type: the annotation does not settle anything in this step.
-    assert_eq!(resolved(&s, "usa", "c.salvar()", None).0, "homonym");
+    // Python, since step 2.3a: the annotated parameter settles it.
+    assert_eq!(resolved(&s, "usa", "c.salvar()", None), r("type", &["Cliente.salvar"]));
 }
 
 #[test]
@@ -417,7 +415,8 @@ fn the_owner_context_takes_settled_links_only() {
     let pair = |a: &str, b: &str| (a.to_owned(), b.to_owned());
     assert_eq!(added("impl Cena::validate"), [pair("impl Camera::validate", "type"), pair("impl Cena::check", "receiver")]);
     assert_eq!(added("n_trait_default"), [pair("Notifica::padrao", "trait_default")]);
-    // Not settled: a trait's implementations, a homonym, and Python's self.repo.salvar(),
-    // which used to bring Servico.salvar itself.
-    assert!(added("n_trait").is_empty() && added("n_homonym").is_empty() && added("Servico.salvar").is_empty());
+    // Not settled: a trait's implementations, a homonym. Python's self.repo.salvar() used to bring
+    // Servico.salvar itself, then nothing; since step 2.3a, the field's type settles it on Repo.salvar.
+    assert!(added("n_trait").is_empty() && added("n_homonym").is_empty());
+    assert_eq!(added("Servico.salvar"), [pair("Repo.salvar", "type")]);
 }

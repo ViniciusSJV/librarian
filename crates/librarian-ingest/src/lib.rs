@@ -44,9 +44,13 @@ pub const EXTRACTOR_V6: &str =
 /// call's receiver.
 pub const EXTRACTOR_V7: &str =
     "librarian-ingest/0.7.0;syn/3.0.5;rustpython-parser/0.4.0;rust-structural-v5;python-structural-v4";
-/// Current profile: v7 plus, in Rust, the written type of the base of a field access or write.
+/// v7 plus, in Rust, the written type of the base of a field access or write.
 pub const EXTRACTOR_V8: &str =
     "librarian-ingest/0.8.0;syn/3.0.5;rustpython-parser/0.4.0;rust-structural-v6;python-structural-v4";
+/// Current profile (step 2.3a): v8 plus the rule that gave each receiver_type (`type_rule`), in
+/// Rust and Python; Python records receiver_type and a class as a candidate of a method call.
+pub const EXTRACTOR_V9: &str =
+    "librarian-ingest/0.9.0;syn/3.0.5;rustpython-parser/0.4.0;rust-structural-v7;python-structural-v5";
 const RECORDS: [&str; 4] = [
     "sources.jsonl",
     "symbols.jsonl",

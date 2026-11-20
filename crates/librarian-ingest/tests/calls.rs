@@ -153,10 +153,13 @@ fn calls_are_followed_only_where_the_written_name_points_to_one_declaration() {
     let python = graph.calls_from(&symbol(&graph, "World.color_at"), 1, 50, &syntax, &BTreeMap::new()).unwrap();
     let found: Vec<_> = python.links.iter().map(|l| (label(&graph, &l.to), l.resolution.as_str(), l.candidates)).collect();
     assert_eq!(found, [("World.hit".to_owned(), "receiver", 2)]);
-    // Without a receiver in the syntax (profiles before owner syntax), the call stays a homonym.
+    // Without a receiver in the syntax (profiles before owner syntax), `receiver` does not apply.
+    // Since profile v9 (step 2.3a), `self` has a written type of its own (type_rule `self`), which
+    // settles the call by `type` all the same.
     let bare = v2::CallSyntax { languages: syntax.languages.iter().map(|(l, (k, _))| (l.clone(), (k.clone(), None))).collect(), facts: None };
-    let homonyms = graph.calls_from(&symbol(&graph, "World.color_at"), 1, 50, &bare, &BTreeMap::new()).unwrap();
-    assert!(homonyms.links.iter().all(|l| l.resolution == "homonym") && homonyms.links.len() == 2);
+    let typed = graph.calls_from(&symbol(&graph, "World.color_at"), 1, 50, &bare, &BTreeMap::new()).unwrap();
+    let found: Vec<_> = typed.links.iter().map(|l| (label(&graph, &l.to), l.resolution.as_str())).collect();
+    assert_eq!(found, [("World.hit".to_owned(), "type")]);
 }
 
 #[test]

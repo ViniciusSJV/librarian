@@ -10,17 +10,21 @@ use rustpython_parser::Parse;
 /// `v5` adds module variables, names used as values or written, keyword arguments, loops and
 /// `with` blocks (profile v5). `v6` adds parameters, `x in name` comparisons and names bound to
 /// a list in a function (profile v6).
+/// `v9` (step 2.3a) adds the written type of a method call's receiver (`receiver_type`, with its
+/// rule) and a class as a candidate of a method call (profile v9).
 /// Without them, records and occurrences are exactly those of the v2 adapter.
 pub(crate) struct Python {
     g6: bool,
     v5: bool,
     v6: bool,
+    v9: bool,
 }
 
-pub(crate) static PYTHON: Python = Python { g6: false, v5: false, v6: false };
-pub(crate) static PYTHON_V3: Python = Python { g6: true, v5: false, v6: false };
-pub(crate) static PYTHON_V5: Python = Python { g6: true, v5: true, v6: false };
-pub(crate) static PYTHON_V6: Python = Python { g6: true, v5: true, v6: true };
+pub(crate) static PYTHON: Python = Python { g6: false, v5: false, v6: false, v9: false };
+pub(crate) static PYTHON_V3: Python = Python { g6: true, v5: false, v6: false, v9: false };
+pub(crate) static PYTHON_V5: Python = Python { g6: true, v5: true, v6: false, v9: false };
+pub(crate) static PYTHON_V6: Python = Python { g6: true, v5: true, v6: true, v9: false };
+pub(crate) static PYTHON_V9: Python = Python { g6: true, v5: true, v6: true, v9: true };
 
 impl Extractor for Python {
     fn extract(&self, source: &Source, bytes: &[u8]) -> Extraction {
@@ -59,9 +63,16 @@ impl Extractor for Python {
         let Ok((suite, offset)) = parse(text) else {
             return vec![];
         };
+        let typed = self.v9.then(|| super::python_types::read(&suite, offset).0);
         let mut walker = Walker::new(self, None, bytes, offset);
         for stmt in suite {
             walker.visit_stmt(stmt);
+        }
+        // Step 2.3a: a receiver with a written type, by the last segment of the type as written;
+        // which class it means is read at query time from the file's imports.
+        for t in typed.into_iter().flatten() {
+            let name = t.written.rsplit('.').next().unwrap_or_default().to_owned();
+            walker.found.push(Occurrence { kind: "receiver_type", start: t.start, end: t.end, candidate: Some(name), label_end: None, rule: Some(t.rule) });
         }
         walker.found
     }
@@ -71,6 +82,12 @@ impl Extractor for Python {
     }
 
     fn candidate_kinds_for(&self, occurrence: &str) -> &'static [&'static str] {
+        match (self.v9, occurrence) {
+            // Step 2.3a: `modulo.Classe(..)` builds a class of the module.
+            (true, "method_call_observed") => return &["method", "function", "class"],
+            (true, "receiver_type") => return &["class"],
+            _ => {}
+        }
         match (self.v5, occurrence) {
             // A module variable can name a type (`SessionDep = Annotated[...]`).
             (true, "type_reference") => return &["class", "variable"],
@@ -122,12 +139,19 @@ impl Extractor for Python {
     fn call_facts(&self, bytes: &[u8]) -> CallFacts {
         let Ok(text) = std::str::from_utf8(bytes) else { return CallFacts::default() };
         let Ok((suite, offset)) = parse(text) else { return CallFacts::default() };
+        let suite_for_types = if self.v9 { suite.clone() } else { vec![] };
         let mut scopes = Scopes { offset, open: vec![0], scopes: vec![NameScope { start: 0, end: usize::MAX, ..Default::default() }], globals: vec![Default::default()] };
         for stmt in suite {
             scopes.visit_stmt(stmt);
         }
         scopes.leave();
-        CallFacts { scopes: scopes.scopes, ..Default::default() }
+        let (receiver_types, classes) = if self.v9 {
+            let (typed, classes) = super::python_types::read(&suite_for_types, offset);
+            (typed.into_iter().map(|t| ((t.start, t.end), (t.written, false))).collect(), classes)
+        } else {
+            Default::default()
+        };
+        CallFacts { scopes: scopes.scopes, receiver_types, classes }
     }
 }
 
@@ -471,7 +495,7 @@ impl<'a> Walker<'a> {
     fn block(&mut self, kind: &'static str, range: TextRange, head_end: TextRange) {
         let (start, end) = self.span(range);
         let (_, label_end) = self.span(head_end);
-        self.found.push(Occurrence { kind, start, end, candidate: None, label_end: Some(label_end) });
+        self.found.push(Occurrence { kind, start, end, candidate: None, label_end: Some(label_end), rule: None });
     }
 
     /// The names a function body binds: parameters, assignment and loop targets, `with ... as`,
@@ -569,7 +593,7 @@ impl<'a> Walker<'a> {
 
     fn push(&mut self, kind: &'static str, range: TextRange, candidate: Option<String>) {
         let (start, end) = self.span(range);
-        self.found.push(Occurrence { kind, start, end, candidate, label_end: None });
+        self.found.push(Occurrence { kind, start, end, candidate, label_end: None, rule: None });
     }
 
     /// Names written in an annotation or base list; candidates, never resolved types.
@@ -618,7 +642,7 @@ impl<'a> Walker<'a> {
         let keyword = arguments.kwonlyargs.iter().map(|a| ("keyword_parameter", &a.def));
         for (kind, arg) in positional.chain(keyword) {
             let (start, end) = self.span(arg.range);
-            self.found.push(Occurrence { kind, start, end, candidate: None, label_end: Some(start + arg.arg.len()) });
+            self.found.push(Occurrence { kind, start, end, candidate: None, label_end: Some(start + arg.arg.len()), rule: None });
         }
     }
 

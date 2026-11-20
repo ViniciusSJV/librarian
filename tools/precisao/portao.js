@@ -16,6 +16,8 @@ const FIX = path.join(__dirname, 'fixtures');
 const LANGS = { hc: 'Python (Healthchecks)', rt: 'Rust (ray tracer)' };
 const CATS = ['correta', 'link_falso', 'candidatos_falsos', 'ambigua', 'sem_candidato'];
 const LINKED = new Set(['unique', 'receiver', 'type', 'trait_default', 'import', 'chosen']);
+/** Kinds a settled call builds instead of calling (DEC-39). */
+const INSTANTIATED = new Set(['class', 'struct', 'variant']);
 
 const readJson = f => JSON.parse(fs.readFileSync(f, 'utf8'));
 const first = t => t.split(/\r?\n/)[0].trim();
@@ -23,13 +25,28 @@ const matches = (text, want) => want.endsWith('(') ? first(text).startsWith(want
 const stratum = a => a.resolution === 'unique' ? `unique->${a.targets[0]?.kind === 'function' ? 'function' : 'outro'}` : a.resolution;
 const show = t => `${t.label} (${t.at})`;
 
-/** One call of the sample against its truth. */
+/** One call of the sample against its truth. A truth `ambigua` (Q6 of 2.3, the rule of `dyn` in
+ *  2.1) lists the bodies that may run: no single link is right, and a homonym is ambiguous when one
+ *  of them is among its candidates. A link to a class, struct or variant must be `instantiates`
+ *  (DEC-39). */
 function classify(a, truth) {
-  const shown = a.targets.map(show), right = truth.alvo && shown.includes(truth.alvo);
+  const shown = a.targets.map(show);
+  if (truth.ambigua) {
+    const any = truth.ambigua.some(t => shown.includes(t));
+    if (a.resolution === 'no_candidate_in_project') return 'sem_candidato';
+    if (a.resolution === 'above_candidate_limit') return 'ambigua';
+    if (a.resolution === 'homonym') return any ? 'ambigua' : 'candidatos_falsos';
+    return 'link_falso';
+  }
+  const right = truth.alvo && shown.includes(truth.alvo);
   if (a.resolution === 'no_candidate_in_project') return 'sem_candidato';
   if (a.resolution === 'above_candidate_limit') return truth.alvo ? 'ambigua' : 'candidatos_falsos';
   if (a.resolution === 'homonym') return right ? 'ambigua' : 'candidatos_falsos';
-  if (LINKED.has(a.resolution)) return shown.length === 1 && right ? 'correta' : 'link_falso';
+  if (LINKED.has(a.resolution)) {
+    const built = a.targets.length === 1 && INSTANTIATED.has(a.targets[0].kind);
+    if (built && a.relation !== 'instantiates') return 'link_falso';
+    return shown.length === 1 && right ? 'correta' : 'link_falso';
+  }
   throw new Error(`resolução desconhecida: ${a.resolution}`);
 }
 
@@ -47,7 +64,7 @@ async function callsOf(api, key, run, G, owner) {
   const c = await api('POST', '/api/calls', { key, run, node: owner, depth: 1, chosen: {} });
   const by = new Map();
   for (const l of c.links) {
-    const o = by.get(l.occurrence) ?? { text: l.text, line: l.evidence.start_line, resolution: l.resolution, candidates: l.candidates, targets: [] };
+    const o = by.get(l.occurrence) ?? { text: l.text, line: l.evidence.start_line, resolution: l.resolution, candidates: l.candidates, targets: [], relation: l.relation ?? 'calls' };
     o.targets.push({ label: G.g.nodes[l.to].label, kind: G.g.nodes[l.to].kind, at: G.where(l.to) }); by.set(l.occurrence, o);
   }
   for (const u of c.unresolved) {
@@ -71,13 +88,15 @@ async function levels(api, root) {
     const { key, run, G } = runs[c.projeto];
     const owner = Object.keys(G.g.nodes).find(id => G.g.nodes[id].category === 'symbol' && G.g.nodes[id].label === c.dono && G.declared[id]);
     const found = owner && (await callsOf(api, key, run, G, owner)).find(x => x.line === c.linha && matches(x.text, c.texto));
-    const now = found ? { resolution: found.resolution, candidates: found.candidates, alvos: found.targets.map(show).sort() } : null;
+    const now = found ? { resolution: found.resolution, candidates: found.candidates, alvos: found.targets.map(show).sort(), relacao: found.relation ?? null } : null;
     const same = now && now.resolution === c.atual.resolution && now.candidates === c.atual.candidates && JSON.stringify(now.alvos) === JSON.stringify([...c.atual.alvos].sort());
     let estado;
     if (!now) estado = 'ocorrência não encontrada';
     else if (c.alvo.relacao) {
-      const asCall = now.alvos.includes(c.alvo.alvo) && now.resolution !== 'homonym';
-      estado = (same ? 'igual ao atual' : 'mudou') + (asCall ? ' (sai como "chama", fora do alvo)' : '');
+      const linked = now.alvos.length === 1 && now.alvos[0] === c.alvo.alvo && now.resolution !== 'homonym';
+      // Step 2.3a: an `instancia` target is reached by a link with `relation: instantiates`.
+      if (linked && c.alvo.relacao === 'instancia' && now.relacao === 'instantiates') estado = 'no alvo';
+      else estado = (same ? 'igual ao atual' : 'mudou') + (linked ? ' (sai como "chama", fora do alvo)' : '');
     }
     else if (now.alvos.length === 1 && now.alvos[0] === c.alvo.alvo && now.resolution === c.alvo.resolution) estado = c.alvo.passo === 'já correto' ? 'no alvo (já era)' : 'no alvo';
     else estado = same ? 'igual ao atual' : 'mudou';
@@ -116,7 +135,7 @@ async function project(api, root, lang, key, run) {
   const sample = fx.chamadas.map(c => {
     const p = byKey.get(c.ocorrencia), a = p && A.get(p.occ.id);
     if (!a) return { id: c.id, estrato: c.estrato, categoria: 'ocorrência não encontrada', resposta: null };
-    return { id: c.id, estrato: c.estrato, parte_c: c.parte_c, categoria: classify(a, c.verdade), resposta: `${a.resolution} (${a.candidates})${a.targets.length && a.resolution !== 'homonym' ? ' → ' + a.targets.map(show).join(' | ') : ''}`, validada: c.verdade_validada_por };
+    return { id: c.id, estrato: c.estrato, parte_c: c.parte_c, categoria: classify(a, c.verdade), resposta: `${a.resolution} (${a.candidates})${a.targets.length && a.resolution !== 'homonym' ? ' → ' + a.targets.map(show).join(' | ') : ''}${a.relation === 'instantiates' ? ' [instancia]' : ''}`, validada: c.verdade_validada_por };
   });
   return { pop, sample, G, A };
 }

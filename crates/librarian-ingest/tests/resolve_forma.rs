@@ -461,8 +461,9 @@ fn self_dot_m_above_the_limit_is_receiver_in_python() {
     // Step 2.3a-0: ten `go` in Python, no candidate edge; the caller's class has one. Until then
     // the methods were indexed by the label's last `::` segment, the whole `S4.go` in Python.
     assert_eq!(resolved(&s, "S4.chama", "self.go()"), r("receiver", &["S4.go"], 0));
-    // A nested function's container is the method, not the class: still above the limit.
-    assert_eq!(resolved(&s, "S10.aninhada.dentro", "self.go()"), r("above_candidate_limit 10", &[], 0));
+    // A nested function's container is the method, not the class: not `receiver`. Since step 2.3a,
+    // `self` keeps its written type in the closure, and `type` settles it on the class's `go`.
+    assert_eq!(resolved(&s, "S10.aninhada.dentro", "self.go()"), r("type", &["S10.go"], 0));
 }
 
 #[test]

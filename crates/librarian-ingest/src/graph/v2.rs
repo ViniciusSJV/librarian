@@ -23,6 +23,11 @@ pub struct Node {
     /// how many. Absent in graphs of profiles before G6 and when candidates were drawn.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ambiguous_candidates: Option<usize>,
+    /// Step 2.3a: on a receiver_type occurrence, the rule that gave the written type (`parametro`,
+    /// `anotacao`, `self`, `construtor`, `caminho`, `retorno`, `campo`, `item`, `variante`).
+    /// Absent in graphs of profiles before v9 and on every other node.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub type_rule: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -82,6 +87,7 @@ impl Graph {
                     language,
                     label: n.label.clone(),
                     ambiguous_candidates: n.ambiguous_candidates,
+                    type_rule: n.type_rule.clone(),
                 };
                 (id.clone(), node)
             })
@@ -335,6 +341,13 @@ pub struct CallLink {
     /// Where the resolution comes from: `graph_edge` (the candidate edges alone: unique,
     /// receiver, chosen, homonym) or `type` (the receiver's written type, a layer over the graph).
     pub basis: String,
+    /// Step 2.3a (DEC-39): `instantiates` when the one target settled by the rule is a kind of
+    /// declaration that the call builds (`resolve::INSTANTIATED`); `calls` otherwise, homonyms included.
+    pub relation: String,
+    /// Step 2.3a: for an instantiation, the declaration it runs (`Resolver::instance_entry`), which
+    /// the walk follows instead of the target. Absent otherwise; an instantiation without it is not followed.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub runs: Option<String>,
     pub evidence: Evidence,
 }
 
@@ -450,8 +463,23 @@ impl Graph {
                             layer_of.insert(to.to_owned(), layer);
                             nodes.push(node(to, layer));
                         }
-                        if resolution != "homonym" && followed.insert(to.to_owned()) {
-                            next.push(to.to_owned());
+                        let instantiates = resolution != "homonym" && crate::resolve::INSTANTIATED.contains(&self.nodes[to].kind.as_str());
+                        let runs = if instantiates { resolver.instance_entry(to) } else { None };
+                        // An instantiation is followed into what it runs, never into the body of the
+                        // declaration it builds (DEC-39).
+                        let walk = if instantiates { runs } else { (resolution != "homonym").then_some(to) };
+                        if let Some(walk) = walk {
+                            if runs.is_some() && !layer_of.contains_key(walk) {
+                                if nodes.len() < max_nodes {
+                                    layer_of.insert(walk.to_owned(), layer);
+                                    nodes.push(node(walk, layer));
+                                } else {
+                                    truncated = true;
+                                }
+                            }
+                            if layer_of.contains_key(walk) && followed.insert(walk.to_owned()) {
+                                next.push(walk.to_owned());
+                            }
                         }
                         links.push(CallLink {
                             from: caller.clone(),
@@ -463,6 +491,8 @@ impl Graph {
                             resolution: resolution.into(),
                             candidate_edge: edge.map(|e| e.id.clone()),
                             basis: basis.into(),
+                            relation: if instantiates { "instantiates" } else { "calls" }.into(),
+                            runs: runs.map(str::to_owned),
                             evidence: evidence.clone(),
                         });
                     }

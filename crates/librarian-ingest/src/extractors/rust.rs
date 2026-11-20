@@ -21,14 +21,17 @@ pub(crate) struct Rust {
     v5: bool,
     v6: bool,
     v7: bool,
+    /// Step 2.3a: each receiver_type records the rule that gave the type.
+    v8: bool,
 }
 
-pub(crate) static RUST: Rust = Rust { g6: false, g6d: false, v5: false, v6: false, v7: false };
-pub(crate) static RUST_V3: Rust = Rust { g6: true, g6d: false, v5: false, v6: false, v7: false };
-pub(crate) static RUST_V4: Rust = Rust { g6: true, g6d: true, v5: false, v6: false, v7: false };
-pub(crate) static RUST_V5: Rust = Rust { g6: true, g6d: true, v5: true, v6: false, v7: false };
-pub(crate) static RUST_V6: Rust = Rust { g6: true, g6d: true, v5: true, v6: true, v7: false };
-pub(crate) static RUST_V7: Rust = Rust { g6: true, g6d: true, v5: true, v6: true, v7: true };
+pub(crate) static RUST: Rust = Rust { g6: false, g6d: false, v5: false, v6: false, v7: false, v8: false };
+pub(crate) static RUST_V3: Rust = Rust { g6: true, g6d: false, v5: false, v6: false, v7: false, v8: false };
+pub(crate) static RUST_V4: Rust = Rust { g6: true, g6d: true, v5: false, v6: false, v7: false, v8: false };
+pub(crate) static RUST_V5: Rust = Rust { g6: true, g6d: true, v5: true, v6: false, v7: false, v8: false };
+pub(crate) static RUST_V6: Rust = Rust { g6: true, g6d: true, v5: true, v6: true, v7: false, v8: false };
+pub(crate) static RUST_V7: Rust = Rust { g6: true, g6d: true, v5: true, v6: true, v7: true, v8: false };
+pub(crate) static RUST_V8: Rust = Rust { g6: true, g6d: true, v5: true, v6: true, v7: true, v8: true };
 
 impl Extractor for Rust {
     fn extract(&self, source: &Source, bytes: &[u8]) -> Extraction {
@@ -84,6 +87,7 @@ impl Extractor for Rust {
             v5: self.v5,
             v6: self.v6,
             v7: self.v7,
+            v8: self.v8,
             offset,
             found: vec![],
             impl_type: None,
@@ -91,6 +95,7 @@ impl Extractor for Rust {
             shapes,
             impl_name: None,
             types: vec![],
+            rules: vec![],
             refs: vec![],
             written: None,
         };
@@ -112,6 +117,7 @@ impl Extractor for Rust {
             v5: self.v5,
             v6: self.v6,
             v7: self.v7,
+            v8: self.v8,
             offset,
             found: vec![],
             impl_type: None,
@@ -119,6 +125,7 @@ impl Extractor for Rust {
             shapes,
             impl_name: None,
             types: vec![],
+            rules: vec![],
             refs: vec![],
             written: Some(BTreeMap::new()),
         };
@@ -310,6 +317,7 @@ struct Occurrences {
     v5: bool,
     v6: bool,
     v7: bool,
+    v8: bool,
     offset: usize,
     found: Vec<Occurrence>,
     /// Span of the type written in the impl being visited: it is `impl_self_type`, not also a
@@ -325,6 +333,9 @@ struct Occurrences {
     /// v6: names with a written type in each enclosing function. A later binding of the same
     /// name replaces the earlier one; blocks are not scopes.
     types: Vec<BTreeMap<String, String>>,
+    /// Step 2.3a: the rule that gave each of those types (parametro, anotacao, self, construtor,
+    /// caminho, retorno, campo, item, variante).
+    rules: Vec<BTreeMap<String, &'static str>>,
     /// Step 2.2: names whose written type is a reference, in each enclosing function.
     refs: Vec<std::collections::BTreeSet<String>>,
     /// Step 2.2: when Some, each receiver_type's span, type and whether it is a reference, for
@@ -490,7 +501,7 @@ impl Occurrences {
         if self.v7 {
             if let Some(ty) = self.type_of(base) {
                 self.note(base, base.span(), &ty);
-                self.push("receiver_type", base.span(), Some(ty));
+                self.push_type(base, base.span(), ty);
             }
         }
     }
@@ -503,6 +514,7 @@ impl Occurrences {
             end: range.end + self.offset,
             candidate,
             label_end: None,
+            rule: None,
         });
     }
 
@@ -515,6 +527,7 @@ impl Occurrences {
             end: range.end + self.offset,
             candidate: None,
             label_end: Some(head.byte_range().end + self.offset),
+            rule: None,
         });
     }
 
@@ -527,11 +540,13 @@ impl Occurrences {
         self.locals.push(bindings.0);
         if self.v6 {
             let mut types = BTreeMap::new();
+            let mut rules = BTreeMap::new();
             let mut refs = std::collections::BTreeSet::new();
             for input in &sig.inputs {
                 if let syn::FnArg::Typed(typed) = input {
                     if let (syn::Pat::Ident(ident), Some(ty)) = (typed.pat.as_ref(), self.written(&typed.ty)) {
                         types.insert(ident.ident.to_string(), ty);
+                        rules.insert(ident.ident.to_string(), "parametro");
                         if is_reference(&typed.ty) {
                             refs.insert(ident.ident.to_string());
                         }
@@ -539,11 +554,13 @@ impl Occurrences {
                 }
             }
             self.types.push(types);
+            self.rules.push(rules);
             self.refs.push(refs);
         }
         visit(self);
         if self.v6 {
             self.types.pop();
+            self.rules.pop();
             self.refs.pop();
         }
         self.locals.pop();
@@ -554,7 +571,10 @@ impl Occurrences {
         type_name(ty).and_then(|t| if t == "Self" { self.impl_name.clone() } else { Some(t) })
     }
 
-    fn bind(&mut self, name: String, ty: String, by_reference: bool) {
+    fn bind(&mut self, name: String, ty: String, by_reference: bool, rule: &'static str) {
+        if let Some(rules) = self.rules.last_mut() {
+            rules.insert(name.clone(), rule);
+        }
         if let Some(refs) = self.refs.last_mut() {
             if by_reference {
                 refs.insert(name.clone());
@@ -639,6 +659,30 @@ impl Occurrences {
             }
             _ => None,
         }
+    }
+
+    /// Step 2.3a: the rule by which `type_of` reads an expression's type, branch by branch.
+    fn rule_of(&self, expr: &syn::Expr) -> &'static str {
+        match expr {
+            syn::Expr::Paren(p) => self.rule_of(&p.expr),
+            syn::Expr::Reference(r) => self.rule_of(&r.expr),
+            syn::Expr::Path(p) if p.path.is_ident("self") => "self",
+            syn::Expr::Path(p) => p.path.get_ident().and_then(|i| self.rules.last()?.get(&i.to_string()).copied()).unwrap_or("anotacao"),
+            syn::Expr::Field(_) => "campo",
+            syn::Expr::Call(call) => match call.func.as_ref() {
+                syn::Expr::Path(p) if self.v7 && p.path.segments.len() == 1 => "retorno",
+                _ => "caminho",
+            },
+            syn::Expr::Struct(_) => "construtor",
+            _ => "anotacao",
+        }
+    }
+
+    /// Step 2.3a: a receiver_type with the rule that gave it (v8 of the adapter; none before).
+    fn push_type(&mut self, expr: &syn::Expr, span: Span, ty: String) {
+        let rule = self.v8.then(|| self.rule_of(expr));
+        let range = span.byte_range();
+        self.found.push(Occurrence { kind: "receiver_type", start: range.start + self.offset, end: range.end + self.offset, candidate: Some(ty), label_end: None, rule });
     }
 
     /// v6: the element type of what a `for` walks, when it is a field of the impl's type
@@ -782,7 +826,7 @@ impl<'ast> Visit<'ast> for Occurrences {
                 let owner = owner.ident.to_string();
                 let owner = if owner == "Self" { self.impl_name.clone() } else { Some(owner) };
                 if let Some(ty) = owner.and_then(|o| self.shapes.variants.get(&(o, variant.ident.to_string())).cloned()) {
-                    self.bind(ident.ident.to_string(), ty, false);
+                    self.bind(ident.ident.to_string(), ty, false, "variante");
                 }
             }
         }
@@ -805,7 +849,7 @@ impl<'ast> Visit<'ast> for Occurrences {
                     _ => None,
                 };
                 if let Some(name) = name {
-                    self.bind(name.to_string(), ty, false);
+                    self.bind(name.to_string(), ty, false, "item");
                 }
             }
         }
@@ -852,7 +896,7 @@ impl<'ast> Visit<'ast> for Occurrences {
             // The receiver's type only when it is written (see type_of); never inferred.
             if let Some(ty) = self.type_of(&value.receiver) {
                 self.note(&value.receiver, value.receiver.span(), &ty);
-                self.push("receiver_type", value.receiver.span(), Some(ty));
+                self.push_type(&value.receiver, value.receiver.span(), ty);
             }
             // A closure run once per element: a loop from the method's name to the closure's
             // end, labelled up to its parameters (`for_each(|(x, y)|`).
@@ -865,6 +909,7 @@ impl<'ast> Visit<'ast> for Occurrences {
                             end: closure.span().byte_range().end + self.offset,
                             candidate: None,
                             label_end: Some(closure.inputs_end.span().byte_range().end + self.offset),
+                            rule: None,
                         });
                     }
                 }
@@ -884,12 +929,17 @@ impl<'ast> Visit<'ast> for Occurrences {
         visit::visit_local(self, value);
         // v6: after the value, so `let x = x.f()` reads the earlier `x`.
         if self.v6 {
-            let (pat, written, by_reference) = match &value.pat {
-                syn::Pat::Type(typed) => (typed.pat.as_ref(), self.written(&typed.ty), is_reference(&typed.ty)),
-                pat => (pat, value.init.as_ref().and_then(|i| self.type_of(&i.expr)), value.init.as_ref().is_some_and(|i| self.by_reference(&i.expr))),
+            let (pat, written, by_reference, rule) = match &value.pat {
+                syn::Pat::Type(typed) => (typed.pat.as_ref(), self.written(&typed.ty), is_reference(&typed.ty), "anotacao"),
+                pat => (
+                    pat,
+                    value.init.as_ref().and_then(|i| self.type_of(&i.expr)),
+                    value.init.as_ref().is_some_and(|i| self.by_reference(&i.expr)),
+                    value.init.as_ref().map_or("anotacao", |i| self.rule_of(&i.expr)),
+                ),
             };
             if let (syn::Pat::Ident(ident), Some(ty)) = (pat, written) {
-                self.bind(ident.ident.to_string(), ty, by_reference);
+                self.bind(ident.ident.to_string(), ty, by_reference, rule);
             }
         }
     }

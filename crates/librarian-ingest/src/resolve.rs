@@ -29,6 +29,10 @@ use std::sync::Arc;
 /// them only with a single target.
 pub const SETTLED: [&str; 5] = ["unique", "import", "receiver", "type", "trait_default"];
 
+/// Step 2.3a (DEC-39): kinds of declaration that a settled call builds instead of calling: a
+/// Python class, a Rust tuple struct or variant. Its link is `instantiates`.
+pub const INSTANTIATED: [&str; 3] = ["class", "struct", "variant"];
+
 /// Written types that reach their contents' methods (auto-deref): a receiver of one of these is
 /// not ruled out by its type (step 2.2, conservative).
 const WRAPPERS: [&str; 3] = ["Box", "Rc", "Arc"];
@@ -42,6 +46,21 @@ pub struct CallFacts {
     /// A method call receiver's written type, by the receiver's span: the type by its last
     /// segment, and whether it is written as a reference (`&T`, `&mut T`).
     pub receiver_types: BTreeMap<(usize, usize), (String, bool)>,
+    /// Step 2.3a (Python): each class the file declares, by its qualified name, with what the rule
+    /// needs to know of it.
+    pub classes: BTreeMap<String, ClassFacts>,
+}
+
+/// Step 2.3a: what a Python class declares that decides whether its type rules a candidate out.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub struct ClassFacts {
+    /// A base is written (other than `object`): a method may come from it (inheritance is 2.4).
+    pub based: bool,
+    /// It defines `__getattr__` or `__getattribute__`: any name may be answered.
+    pub getattr: bool,
+    /// One of its bases is `Protocol`: its methods are signatures, and the body that runs is the
+    /// passed object's.
+    pub protocol: bool,
 }
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
@@ -143,6 +162,8 @@ pub struct Resolver<'g> {
     candidates: BTreeMap<&'g str, Vec<&'g Edge>>,
     parent: BTreeMap<&'g str, &'g str>,
     methods_by_name: BTreeMap<&'g str, Vec<&'g str>>,
+    /// Step 2.3a: Python classes by their written name (the label's last segment).
+    classes_by_name: BTreeMap<&'g str, Vec<&'g str>>,
     /// receiver_type occurrences by where they start: (end, occurrence).
     receiver_types: BTreeMap<(&'g str, usize), Vec<(usize, &'g str)>>,
     call_evidence: BTreeMap<&'g str, &'g Evidence>,
@@ -164,6 +185,7 @@ impl<'g> Resolver<'g> {
             candidates: BTreeMap::new(),
             parent: BTreeMap::new(),
             methods_by_name: BTreeMap::new(),
+            classes_by_name: BTreeMap::new(),
             receiver_types: BTreeMap::new(),
             call_evidence: BTreeMap::new(),
             impl_traits: vec![],
@@ -201,6 +223,9 @@ impl<'g> Resolver<'g> {
                 // The written name is the label's last segment: after `::` (`impl S::go`) or `.`
                 // (`S.go`); neither separator is part of a name (step 2.3a-0; until then, `::` only).
                 r.methods_by_name.entry(node.label.rsplit([':', '.']).next().unwrap_or_default()).or_default().push(id);
+            }
+            if node.kind == "class" {
+                r.classes_by_name.entry(node.label.rsplit('.').next().unwrap_or_default()).or_default().push(id);
             }
             if node.kind == "impl" {
                 if let (Some(ty), Some(tr)) = impl_parts(&node.label) {
@@ -292,6 +317,12 @@ impl<'g> Resolver<'g> {
         if !matches!(self.kind(target), "method" | "trait_method") {
             return false;
         }
+        // Step 2.3a: a Python class rules out a method of another class only when nothing can
+        // bring the method to it (no base, no `__getattr__`, not a `Protocol`).
+        if let Some(class) = self.python_class(caller, occurrence) {
+            let facts = self.class_facts(class);
+            return self.container(target) != Some(class) && !facts.based && !facts.getattr && !facts.protocol;
+        }
         let types = self.receiver_types(caller, occurrence);
         if !types.is_empty() {
             return !self.fits(target, &types);
@@ -348,6 +379,105 @@ impl<'g> Resolver<'g> {
         }
     }
 
+    /// Step 2.3a: what the innermost scope that binds `name` at `at` binds it to: an import, or a
+    /// local binding (a class or an assignment of the file; `Some(None)`). None when no scope binds it.
+    fn bound(&self, facts: &CallFacts, at: usize, name: &str) -> Option<Option<Import>> {
+        let mut scopes: Vec<&NameScope> = facts.scopes.iter().filter(|s| s.start <= at && at < s.end).collect();
+        scopes.sort_by_key(|s| s.end - s.start);
+        scopes.iter().enumerate().filter(|(i, s)| *i == 0 || !s.class).find_map(|(_, s)| {
+            if s.locals.contains(name) {
+                Some(None)
+            } else {
+                s.imports.get(name).map(|i| Some(i.clone()))
+            }
+        })
+    }
+
+    /// Step 2.3a: the class a Python receiver's written type means, among the classes the graph
+    /// matched by name: `self` is the caller's own class; a name is the file's own top-level class
+    /// or the class a `from p import Name` brings (following up to three re-exports); `m.T` is
+    /// the class `T` of the project module `m`. None when the type is not a class of the project,
+    /// or is an alias (`as`, 2.4).
+    fn python_class(&self, caller: &str, occurrence: &str) -> Option<&'g str> {
+        let (written, span) = self.receiver_type_node(occurrence)?;
+        let mut classes: Vec<&'g str> = self.candidates(written).iter().map(|e| e.to.as_str()).filter(|t| self.kind(t) == "class").collect();
+        // Above the limit the graph kept only the count: the classes of the written name (17
+        // `Command` in the Healthchecks), as the receiver rule does above the limit.
+        if classes.is_empty() && self.graph.nodes[written].ambiguous_candidates.is_some() {
+            let path = self.call_evidence.get(occurrence)?.path.as_str();
+            let facts = self.file_facts(path)?;
+            let (text, _) = facts.receiver_types.get(&span)?;
+            let name = text.rsplit('.').next().unwrap_or_default();
+            classes = self.classes_by_name.get(name).cloned().unwrap_or_default();
+        }
+        if classes.is_empty() {
+            return None;
+        }
+        if self.graph.nodes[written].type_rule.as_deref() == Some("self") {
+            let mut at = self.container(caller);
+            while let Some(c) = at {
+                if classes.contains(&c) {
+                    return Some(c);
+                }
+                at = self.container(c);
+            }
+            return None;
+        }
+        let path = self.call_evidence.get(occurrence)?.path.as_str();
+        let facts = self.file_facts(path)?;
+        let (text, _) = facts.receiver_types.get(&span)?;
+        let declared = |file: &str, name: &str| classes.iter().copied().find(|c| self.declared_in.get(c) == Some(&file) && self.label(c) == name);
+        match text.split_once('.') {
+            None => match self.bound(&facts, span.0, text)? {
+                None => declared(path, text),
+                Some(Import::From(package, name)) if name == *text => self.class_in_module(path, &package, &name, &declared, 0),
+                Some(_) => None,
+            },
+            Some((head, _)) => {
+                let (module, name) = text.rsplit_once('.')?;
+                let dotted = match self.bound(&facts, span.0, head)?? {
+                    Import::Module(m) if module == head || module.starts_with(&format!("{head}.")) => format!("{m}{}", &module[head.len()..]),
+                    Import::From(package, imported) if module == head => format!("{package}{}{imported}", if package.ends_with('.') { "" } else { "." }),
+                    _ => return None,
+                };
+                declared(&self.module_file(path, &dotted)?, name)
+            }
+        }
+    }
+
+    /// The class `name` of the module `package`, imported from `from`: declared there, or brought
+    /// there by another `from .. import name` (a re-export), up to three steps.
+    fn class_in_module(&self, from: &str, package: &str, name: &str, declared: &dyn Fn(&str, &str) -> Option<&'g str>, hops: usize) -> Option<&'g str> {
+        let file = self.module_file(from, package)?;
+        if let Some(c) = declared(&file, name) {
+            return Some(c);
+        }
+        if hops >= 3 {
+            return None;
+        }
+        let facts = self.file_facts(&file)?;
+        let module_scope = facts.scopes.iter().max_by_key(|s| s.end - s.start)?;
+        match module_scope.imports.get(name)? {
+            Import::From(p, n) if n == name => self.class_in_module(&file, p, name, declared, hops + 1),
+            _ => None,
+        }
+    }
+
+    /// Step 2.3a: what the file of a Python class says about it.
+    fn class_facts(&self, class: &str) -> ClassFacts {
+        let Some(file) = self.declared_in.get(class) else { return ClassFacts::default() };
+        self.file_facts(file).and_then(|f| f.classes.get(self.label(class)).cloned()).unwrap_or_default()
+    }
+
+    /// Step 2.3a: the declaration an instantiation runs: the `__init__` the class itself declares.
+    /// None for a class without one (the inherited `__init__` is 2.4), a struct or a variant.
+    pub fn instance_entry(&self, target: &str) -> Option<&'g str> {
+        if self.kind(target) != "class" {
+            return None;
+        }
+        self.methods_by_name.get("__init__")?.iter().copied().find(|m| self.container(m) == Some(target))
+    }
+
     /// The source of a dotted module, from the importing file for a relative one: `a.b` is
     /// `a/b.py` or `a/b/__init__.py`, or the one source that ends so (a package under `src/`).
     fn module_file(&self, from: &str, dotted: &str) -> Option<String> {
@@ -376,7 +506,12 @@ impl<'g> Resolver<'g> {
         if let Some(receiver) = written_receiver(text) {
             return match self.module(occurrence, receiver) {
                 Some(Module::File(file)) => {
-                    let own = edges.iter().copied().filter(|e| self.kind(&e.to) == "function" && self.declared_in.get(e.to.as_str()) == Some(&file.as_str())).collect();
+                    // Step 2.3a: and the module's classes (`forms.WebhookForm(..)` instantiates).
+                    let own = edges
+                        .iter()
+                        .copied()
+                        .filter(|e| matches!(self.kind(&e.to), "function" | "class") && self.declared_in.get(e.to.as_str()) == Some(&file.as_str()))
+                        .collect();
                     (own, true)
                 }
                 Some(Module::External) => (vec![], false),
@@ -430,8 +565,34 @@ impl<'g> Resolver<'g> {
                 return Resolution::Linked(How::Receiver, same);
             }
         }
+        // Step 2.3a, Python: the methods the receiver's class declares. Without one, the class rules
+        // every candidate out, unless something may bring the method to it (a base, `__getattr__`);
+        // a `Protocol` gives no link (its methods are signatures; the passed object's body runs).
+        if let Some(class) = self.python_class(caller, occurrence) {
+            let facts = self.class_facts(class);
+            if !facts.protocol {
+                let own: Vec<&'g str> = methods.iter().copied().filter(|m| self.container(m) == Some(class)).collect();
+                if !own.is_empty() {
+                    return Resolution::Linked(How::Type, own);
+                }
+                if !facts.based && !facts.getattr {
+                    return Resolution::NoCandidate;
+                }
+            }
+        }
         let types = self.receiver_types(caller, occurrence);
         if !types.is_empty() {
+            // Step 2.3a, Rust: `T::V(..)` builds the variant `V` of the enum `T`.
+            if self.kind(occurrence) == "call_observed" {
+                let variants: Vec<&'g str> = edges
+                    .iter()
+                    .map(|e| e.to.as_str())
+                    .filter(|t| self.kind(t) == "variant" && self.container(t).is_some_and(|e| types.contains(&last_segment(self.label(e)))))
+                    .collect();
+                if variants.len() == 1 {
+                    return Resolution::Linked(How::Type, variants);
+                }
+            }
             let own: Vec<&'g str> =
                 methods.iter().copied().filter(|m| self.owner_of(m).is_some_and(|(t, _)| t.is_some_and(|t| types.contains(&t)))).collect();
             if !own.is_empty() {

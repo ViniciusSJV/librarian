@@ -14,6 +14,9 @@ pub struct Node {
     /// how many there were. No candidate edge is drawn for it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ambiguous_candidates: Option<usize>,
+    /// Step 2.3a (profile v9): on a receiver_type occurrence, the rule that gave the written type.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub type_rule: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -141,6 +144,7 @@ impl Graph {
                 kind: kind.into(),
                 label,
                 ambiguous_candidates: None,
+                type_rule: None,
             },
         );
     }
@@ -274,6 +278,7 @@ impl Graph {
             end,
             candidate,
             label_end,
+            rule,
         } = found;
         if start >= end {
             return;
@@ -317,6 +322,7 @@ impl Graph {
         let label =
             String::from_utf8_lossy(&catalog.snapshots[source_id][start..label_end]).into_owned();
         self.node(id.clone(), kind, label);
+        self.nodes.get_mut(&id).expect("node just added").type_rule = rule.map(str::to_owned);
         let proof = evidence(catalog, source_id, start, end);
         self.edges.push(Edge {
             from: owner.id.clone(),

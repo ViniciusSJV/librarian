@@ -767,6 +767,11 @@ const PROJECT: [(&str, &[u8]); 7] = [("src/a.rs", A_RS), ("src/b.rs", B_RS), ("s
 static NEXT_PROJECT: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
 
 fn edition(files: &[(&str, &[u8])]) -> librarian_ingest::Catalog {
+    edition_with(files, None)
+}
+
+/// An edition of a given profile; None is the current one.
+fn edition_with(files: &[(&str, &[u8])], profile: Option<&str>) -> librarian_ingest::Catalog {
     let n = NEXT_PROJECT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     let dir = std::env::temp_dir().join(format!("librarian-composicao-{}-{n}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
@@ -775,7 +780,11 @@ fn edition(files: &[(&str, &[u8])]) -> librarian_ingest::Catalog {
         std::fs::write(dir.join(path), bytes).unwrap();
     }
     let out = dir.join("edition");
-    librarian_ingest::generate(&dir, &librarian_ingest::Config { project: "composicao".into(), inputs: vec!["src".into()] }, &out).unwrap();
+    let config = librarian_ingest::Config { project: "composicao".into(), inputs: vec!["src".into()] };
+    match profile {
+        Some(profile) => drop(librarian_ingest::generate_with_profile(profile, &dir, &config, &out).unwrap()),
+        None => drop(librarian_ingest::generate(&dir, &config, &out).unwrap()),
+    }
     let catalog = librarian_ingest::Catalog::load(&out).unwrap();
     let _ = std::fs::remove_dir_all(&dir);
     catalog
@@ -3191,7 +3200,9 @@ fn a4_every_fixture_passes_u1_to_u6_in_both_forms_and_radii() {
 #[test]
 fn b5_a_frozen_question_is_prepared_again_byte_for_byte() {
     let frozen = include_str!("evidence-fixtures/congelada.query.json").replace("\r\n", "\n");
-    let case = Case::of(&edition(&PROJECT), vec![target("src/d.rs", "ler", 5)], 1);
+    // Frozen with an edition of profile v8: a newer profile writes its own identity in the
+    // authorship, which is not a change in the preparation (step 2.3a).
+    let case = Case::of(&edition_with(&PROJECT, Some(librarian_ingest::EXTRACTOR_V8)), vec![target("src/d.rs", "ler", 5)], 1);
     assert_eq!(case.query, frozen);
     // And it is a query the contract takes as it is: its units come again from the snapshot.
     let composed = prose(&case).unwrap();

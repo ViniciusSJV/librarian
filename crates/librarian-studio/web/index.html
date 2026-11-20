@@ -1208,7 +1208,9 @@ const STRINGS = {
   'path.resolution.unique': ['seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta', 'followed: among the declarations the call\'s form reaches, the name matches only this one'],
   'path.resolution.import': ['seguida: o receptor é um módulo do projeto (import), e só esta função dele tem o nome', 'followed: the receiver is a module of the project (import), and only this function of it has the name'],
   'path.resolution.receiver': ['seguida: chamada do próprio receptor (self.m()), e só este homônimo está na mesma classe ou impl', 'followed: the receiver\'s own call (self.m()), and only this homonym is in the same class or impl'],
-  'path.resolution.type': ['seguida: método do tipo escrito do receptor', 'followed: a method of the receiver\'s written type'],
+  'path.resolution.type': ['seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante)', 'followed: a method of the receiver\'s written type (annotation, constructor, self, field; in Rust, also path, return, item and variant)'],
+  'path.relation.instantiates': ['instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui', 'instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here'],
+  'path.relation.instantiatesRuns': ['instancia: a chamada cria um objeto deste tipo, não chama a classe; o percurso segue no {init}', 'instantiates: the call builds an object of this type, it does not call the class; the walk goes on in {init}'],
   'path.resolution.trait_default': ['seguida: o tipo escrito do receptor não define o método; vale o padrão do trait que ele implementa', 'followed: the receiver\'s written type does not define the method; the default of a trait it implements applies'],
   'path.resolution.chosen': ['seguida: escolhida por você', 'followed: chosen by you'],
   'path.resolution.measured': ['seguida: dos homônimos, só este teve contagem no Medir tudo', 'followed: of the homonyms, only this one had a count in Measure everything'],
@@ -1233,6 +1235,7 @@ const STRINGS = {
   'use.impl_self_type': ['implementa', 'implements'],
   'use.call_observed': ['chama', 'calls'],
   'use.method_call_observed': ['chama', 'calls'],
+  'use.instantiates': ['instancia', 'instantiates'],
   'use.base_class': ['herda de', 'inherits from'],
   'use.type_reference': ['cita o tipo', 'cites the type'],
   'use.name_reference': ['usa o nome', 'uses the name'],
@@ -1506,7 +1509,7 @@ const STRINGS = {
   'inventory.loopChain': ['laço pela cadeia', 'loop through calls'],
   'inventory.wholeEachTurn': ['percorre {parameter} inteira a cada volta (recebe {argument})', 'walks all of {parameter} every turn (gets {argument})'],
   'inventory.step.type': ['pelo tipo', 'by type'],
-  'inventory.step.type.help': ['Seguida pelo tipo escrito do receptor (parâmetro anotado, self no impl, campo, padrão do enum).', 'Followed by the receiver\'s written type (annotated parameter, self in the impl, field, enum pattern).'],
+  'inventory.step.type.help': ['Seguida pelo tipo escrito do receptor (parâmetro ou variável anotados, construtor, self, campo, padrão do enum).', 'Followed by the receiver\'s written type (annotated parameter or variable, constructor, self, field, enum pattern).'],
   'inventory.step.trait_default': ['padrão do trait', 'trait default'],
   'inventory.step.trait_default.help': ['O tipo escrito não tem o método; segue o método padrão de um trait que o tipo implementa.', 'The written type lacks the method; follows the default of a trait the type implements.'],
   'inventory.step.import': ['pelo import', 'by import'],
@@ -7754,14 +7757,17 @@ function showUse(info, nodes) {
   };
   const resolution = l => el('div', { className: 'muted' }, t(l.resolution === 'homonym' && l.candidates === 1 ? 'path.resolution.homonymOne' : `path.resolution.${l.resolution}`, { n: l.candidates }),
     l.resolution === 'homonym' ? el('button', { textContent: t('path.choose'), style: 'margin-left: 8px', onclick: decide(l, true) }) : null,
-    l.resolution === 'chosen' ? el('button', { textContent: t('path.unchoose'), style: 'margin-left: 8px', onclick: decide(l, false) }) : null);
+    l.resolution === 'chosen' ? el('button', { textContent: t('path.unchoose'), style: 'margin-left: 8px', onclick: decide(l, false) }) : null,
+    // Step 2.3a (DEC-39): an instantiation builds the target; the walk goes on in what it runs.
+    l.relation === 'instantiates' ? withData(el('div', { className: 'muted' },
+      l.runs ? t('path.relation.instantiatesRuns', { init: (nodes.get(l.runs) ?? state.nodes[state.index.get(l.runs)])?.label ?? l.runs }) : t('path.relation.instantiates')), { relation: 'instantiates' }) : null);
   box.replaceChildren(
     el('div', { className: 'row', style: 'justify-content: space-between' },
       // Full labels: homonyms share the short name (color_at), only the container tells them apart.
       el('strong', { textContent: `${nodes.get(info.from).label} → ${nodes.get(info.to).label}` }),
       el('button', { textContent: t('common.close'), onclick: () => { box.hidden = true; } })),
     el('ul', { className: 'claims' }, ...info.links.map(l => el('li', {},
-      `${kind(l.occurrence_kind)}: `, el('code', { textContent: l.text.slice(0, 160) }),
+      `${l.relation === 'instantiates' ? t('use.instantiates') : kind(l.occurrence_kind)}: `, el('code', { textContent: l.text.slice(0, 160) }),
       el('div', { className: 'muted mono', textContent: `${l.evidence.path}:${l.evidence.start_line}` }),
       callsMode() ? resolution(l)
         : l.candidates > 1 ? el('div', { className: 'muted', textContent: t('path.candidates', { n: l.candidates }) }) : null))));
