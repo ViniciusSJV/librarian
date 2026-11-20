@@ -43,6 +43,33 @@ function classify(a, truth) {
   if (a.resolution === 'above_candidate_limit') return truth.alvo ? 'ambigua' : 'candidatos_falsos';
   if (a.resolution === 'homonym') return right ? 'ambigua' : 'candidatos_falsos';
   if (LINKED.has(a.resolution)) {
+    // DEC-40: a call written in a decorator is right only as `decorates`, and `decorates` is
+    // right only for a truth that says so (`relacao: decora`).
+    const decora = truth.relacao === 'decora';
+    if (decora !== (a.relation === 'decorates')) return 'link_falso';
+    const built = a.targets.length === 1 && INSTANTIATED.has(a.targets[0].kind);
+    if (!decora && built && a.relation !== 'instantiates') return 'link_falso';
+    return shown.length === 1 && right ? 'correta' : 'link_falso';
+  }
+  throw new Error(`resolução desconhecida: ${a.resolution}`);
+}
+
+/** The rule before DEC-40 (step 2.3a), frozen: the gate classifies every call by both and
+ *  reports where they differ, which is the proof that DEC-40 keeps the baseline's verdict. */
+function classifyBefore40(a, truth) {
+  const shown = a.targets.map(show);
+  if (truth.ambigua) {
+    const any = truth.ambigua.some(t => shown.includes(t));
+    if (a.resolution === 'no_candidate_in_project') return 'sem_candidato';
+    if (a.resolution === 'above_candidate_limit') return 'ambigua';
+    if (a.resolution === 'homonym') return any ? 'ambigua' : 'candidatos_falsos';
+    return 'link_falso';
+  }
+  const right = truth.alvo && shown.includes(truth.alvo);
+  if (a.resolution === 'no_candidate_in_project') return 'sem_candidato';
+  if (a.resolution === 'above_candidate_limit') return truth.alvo ? 'ambigua' : 'candidatos_falsos';
+  if (a.resolution === 'homonym') return right ? 'ambigua' : 'candidatos_falsos';
+  if (LINKED.has(a.resolution)) {
     const built = a.targets.length === 1 && INSTANTIATED.has(a.targets[0].kind);
     if (built && a.relation !== 'instantiates') return 'link_falso';
     return shown.length === 1 && right ? 'correta' : 'link_falso';
@@ -135,9 +162,21 @@ async function project(api, root, lang, key, run) {
   const sample = fx.chamadas.map(c => {
     const p = byKey.get(c.ocorrencia), a = p && A.get(p.occ.id);
     if (!a) return { id: c.id, estrato: c.estrato, categoria: 'ocorrência não encontrada', resposta: null };
-    return { id: c.id, estrato: c.estrato, parte_c: c.parte_c, categoria: classify(a, c.verdade), resposta: `${a.resolution} (${a.candidates})${a.targets.length && a.resolution !== 'homonym' ? ' → ' + a.targets.map(show).join(' | ') : ''}${a.relation === 'instantiates' ? ' [instancia]' : ''}`, validada: c.verdade_validada_por };
+    const tag = { instantiates: ' [instancia]', decorates: ' [decora]' }[a.relation] ?? '';
+    return { id: c.id, estrato: c.estrato, parte_c: c.parte_c, categoria: classify(a, c.verdade), categoria_regra_anterior: classifyBefore40(a, c.verdade),
+      resposta: `${a.resolution} (${a.candidates})${a.targets.length && a.resolution !== 'homonym' ? ' → ' + a.targets.map(show).join(' | ') : ''}${tag}`, validada: c.verdade_validada_por };
   });
-  return { pop, sample, G, A };
+  // DEC-40: the declaration that runs the call (`executor`), when the truth names one: whether its
+  // own answer shows the occurrence. Recorded; never rejects.
+  const executores = [];
+  for (const c of fx.chamadas.filter(c => c.verdade.executor)) {
+    const p = byKey.get(c.ocorrencia);
+    const id = Object.keys(G.g.nodes).find(n => G.g.nodes[n].category === 'symbol' && G.declared[n] && show({ label: G.g.nodes[n].label, at: G.where(n) }) === c.verdade.executor);
+    const answer = id && p ? await api('POST', '/api/calls', { key, run, node: id, depth: 1, chosen: {} }) : null;
+    const shows = !!answer && [...answer.links, ...answer.unresolved].some(x => x.occurrence === p.occ.id);
+    executores.push({ id: c.id, executor: c.verdade.executor, dono_no_grafo: p ? `${p.owner.label}` : null, mostra: shows });
+  }
+  return { pop, sample, executores, G, A };
 }
 
 async function facts(api, root, key, run) {
@@ -211,7 +250,7 @@ function gate(now, base) {
 function report(r, base, fail) {
   const L1 = [];
   const delta = (a, b) => b === undefined ? '' : a === b ? '' : ` (${a > b ? '+' : ''}${a - b})`;
-  L1.push(`# Portão de precisão da Fase 2`, '', `Binário: ${r.binario}. Gerado em ${r.quando}.`, '');
+  L1.push(`# Portão de precisão da Fase 2`, '', `Binário: ${typeof r.binario === 'string' ? r.binario : L.binaryLine(r.binario)}. Gerado em ${r.quando}.`, '');
   if (r.projetos) {
     L1.push('## Amostra (contagens reais)', '', '| | Corretas | link_falso | candidatos_falsos | Ambíguas | Sem candidato | Não encontradas |', '|---|---|---|---|---|---|---|');
     const added = {};
@@ -251,6 +290,23 @@ function report(r, base, fail) {
       L1.push('', '## Chamadas da amostra que mudaram de categoria', '', ...(changed.length ? changed : ['Nenhuma.']));
     }
   }
+  // DEC-40: every call of the sample by the rule before it, and the declaration that runs it.
+  if (r.projetos) {
+    const differ = [], base40 = [];
+    let all = 0;
+    for (const [lang, p] of Object.entries(r.projetos)) for (const s of p.amostra.filter(s => s.categoria_regra_anterior)) {
+      all++;
+      const inBase = !base?.projetos?.[lang] || base.projetos[lang].amostra.some(x => x.id === s.id);
+      if (inBase) base40.push(s.id);
+      if (s.categoria !== s.categoria_regra_anterior) differ.push(`- ${s.id}${inBase ? ' (na linha de base)' : ''}: ${s.categoria_regra_anterior} pela regra anterior → ${s.categoria} pela DEC-40 (${s.resposta})`);
+    }
+    L1.push('', '## Regra da DEC-40 contra a anterior', '', `Chamadas classificadas pelas duas regras: ${all}, das quais ${base40.length} estão na linha de base. Com veredito diferente:`, '', ...(differ.length ? differ : ['Nenhuma.']));
+    const ex = Object.values(r.projetos).flatMap(p => p.executores ?? []);
+    if (ex.length) {
+      L1.push('', '## Executor (DEC-40; registrado, não reprova)', '', '| Id | Executor | Dono no grafo | O /api/calls do executor mostra a chamada |', '|---|---|---|---|');
+      for (const e of ex) L1.push(`| ${e.id} | ${e.executor} | ${e.dono_no_grafo ?? '—'} | ${e.mostra ? 'sim' : 'não'} |`);
+    }
+  }
   L1.push('', '## Níveis N0–N8 (projetos sintéticos)', '', '| Caso | Atual registrado | Agora | Alvo da Fase 2 | Passo | Estado |', '|---|---|---|---|---|---|');
   for (const n of r.niveis) {
     const fmt = a => a ? `${a.resolution} (${a.candidates})` : '—';
@@ -277,7 +333,8 @@ function report(r, base, fail) {
   const opt = L.parseArgs(process.argv.slice(2));
   const bin = path.resolve(opt.bin ?? path.join(L.REPO, 'target/release'));
   const exe = n => path.join(bin, process.platform === 'win32' ? n + '.exe' : n);
-  const result = { binario: bin, quando: new Date().toISOString() };
+  // Built first when it is this repository's target/release; the hash of what is measured goes in the report.
+  const result = { binario: L.prepareBinaries(bin), quando: new Date().toISOString() };
   if (opt['so-sinteticos']) {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'librarian-precisao-'));
     fs.mkdirSync(path.join(root, '.studio', 'projects'), { recursive: true });
@@ -302,9 +359,9 @@ function report(r, base, fail) {
         const fresh = await api('POST', '/api/generate', { key });
         const old = readJson(path.join(root, '.studio', 'projects', key, 'runs', run, 'run.json'));
         process.stderr.write(`${key}: run novo ${fresh.id}; medindo...\n`);
-        const { pop, sample } = await project(api, root, lang, key, fresh.id);
+        const { pop, sample, executores } = await project(api, root, lang, key, fresh.id);
         result.projetos[lang] = { run_novo: fresh.id, grafo_novo_igual_ao_de_referencia: fresh.graph_sha256 === old.graph_sha256, populacao: pop,
-          amostra_contagem: count(sample, 'categoria'), parte_c_contagem: count(sample.filter(s => s.parte_c), 'categoria'), estimativa_populacao: estimate(sample, pop), amostra: sample };
+          amostra_contagem: count(sample, 'categoria'), parte_c_contagem: count(sample.filter(s => s.parte_c), 'categoria'), estimativa_populacao: estimate(sample, pop), amostra: sample, executores };
         if (lang === 'hc') result.fatos = await facts(api, root, key, fresh.id);
         for (const r of oldRuns[key]) {
           const dir = path.join(root, '.studio', 'projects', key, 'runs', r);

@@ -138,8 +138,27 @@ async function withStudio({ studio, bin, keys }, fn) {
   }
 }
 
+/** The binaries a measure runs: built first when `bin` is this repository's target/release (so a
+ *  stale `librarian_studio` is never measured: `cargo test` rebuilds only the ingest binary), and
+ *  the SHA-256 of each, for the report. Another folder (an older binary kept for a proof) is used
+ *  as it is, never built. */
+function prepareBinaries(bin) {
+  const dir = path.resolve(bin);
+  const own = dir === path.resolve(REPO, 'target', 'release');
+  if (own) {
+    process.stderr.write('compilando librarian_studio e librarian_ingest (cargo build --release --locked)...\n');
+    execFileSync('cargo', ['build', '--release', '--locked', '-p', 'librarian-studio', '-p', 'librarian-ingest'], { cwd: REPO, stdio: ['ignore', 'ignore', 'inherit'] });
+  }
+  const exe = n => path.join(dir, process.platform === 'win32' ? n + '.exe' : n);
+  const sha = f => crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex');
+  return { pasta: dir, compilado: own, librarian_studio: sha(exe('librarian_studio')), librarian_ingest: sha(exe('librarian_ingest')) };
+}
+
+/** One line for a report: where the binaries are, whether they were just built, and their hashes. */
+const binaryLine = b => `${b.pasta} (${b.compilado ? 'compilado agora' : 'usado como estava, sem compilar'}); sha256 librarian_studio ${b.librarian_studio}, librarian_ingest ${b.librarian_ingest}`;
+
 function gitHead(dir) {
   try { return execFileSync('git', ['-C', dir, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(); } catch { return null; }
 }
 
-module.exports = { REPO, DEFAULTS, parseArgs, hashProject, startStudio, copyStudio, loadGraph, occKey, pool, answers, withStudio, gitHead };
+module.exports = { REPO, DEFAULTS, parseArgs, hashProject, startStudio, copyStudio, loadGraph, occKey, pool, answers, withStudio, gitHead, prepareBinaries, binaryLine };
