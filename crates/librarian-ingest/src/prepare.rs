@@ -490,6 +490,25 @@ fn owner_statement(added: &Added) -> String {
     let lines = added.evidence.iter().map(|e| e.start_line.to_string()).collect::<Vec<_>>().join(", ");
     let lines = format!("{} {lines}", if added.evidence.len() == 1 { "linha" } else { "linhas" });
     let read = if fields.is_empty() { "nenhum".to_owned() } else { fields.clone() };
+    // Step 2.3b: an instantiation (DEC-39) or a decorator's call (DEC-40) is not "called by" the
+    // target; it says what the link is. A plain call keeps the texts below.
+    if let (true, Some(relation)) = (added.reason == "called", added.relation.as_deref()) {
+        let target = &added.for_target;
+        let why = match added.resolution.as_str() {
+            "receiver" => "é a declaração de mesmo nome no mesmo bloco, pelo próprio receptor",
+            "type" => "é a declaração com esse nome do tipo escrito do receptor",
+            "import" => "é a única declaração com esse nome no módulo importado",
+            _ => "é a única declaração com esse nome na edition",
+        };
+        return match relation {
+            "instantiates" => format!(
+                "Instanciada por `{target}` ({lines}): {why}. A chamada constrói um valor dela; o que roda é o `__init__` que ela declara, se declarar, e não o corpo dela."
+            ),
+            _ => format!(
+                "Decorador de `{target}` ({lines}): {why}. A chamada roda quando a declaração de `{target}` é executada (numa declaração de topo, ao carregar o módulo), não quando `{target}` é chamada; o que ela devolve envolve `{target}`."
+            ),
+        };
+    }
     match (added.reason.as_str(), added.resolution.as_str()) {
         ("called", "receiver") => format!(
             "Chamada por `{}` pelo próprio receptor ({lines}): é a declaração de mesmo nome no mesmo bloco.",

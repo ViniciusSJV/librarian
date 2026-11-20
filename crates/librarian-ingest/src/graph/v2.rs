@@ -316,13 +316,18 @@ pub struct UnresolvedCall {
     pub to: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub candidate_edge: Option<String>,
+    /// Step 2.3b: the field whose value writes the call, when `from` is the method that contains
+    /// that field (`self.x = T()` in `__init__`). Absent otherwise.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub via: Option<String>,
     /// Where the call is written: the edge observing it, or the candidate edge left out.
     pub evidence: Evidence,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 pub struct CallLink {
-    /// The symbol whose body writes the call.
+    /// The symbol whose body writes the call; since step 2.3b, also the method that contains the
+    /// field whose value writes it (then `via` names the field).
     pub from: String,
     /// A declaration the written name matches.
     pub to: String,
@@ -343,11 +348,16 @@ pub struct CallLink {
     pub basis: String,
     /// Step 2.3a (DEC-39): `instantiates` when the one target settled by the rule is a kind of
     /// declaration that the call builds (`resolve::INSTANTIATED`); `calls` otherwise, homonyms included.
+    /// Step 2.3b (DEC-40): `decorates` when the call is written inside a decorator, whatever its
+    /// target: it runs when the `def` runs; never followed.
     pub relation: String,
     /// Step 2.3a: for an instantiation, the declaration it runs (`Resolver::instance_entry`), which
     /// the walk follows instead of the target. Absent otherwise; an instantiation without it is not followed.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub runs: Option<String>,
+    /// Step 2.3b: as in `UnresolvedCall`, the field whose value writes the call.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub via: Option<String>,
     pub evidence: Evidence,
 }
 
@@ -374,6 +384,14 @@ impl Graph {
                 _ => {}
             }
         }
+        // Step 2.3b (DEC-40): the fields a function or method declares in its body (`self.x = ..`
+        // in `__init__`). Their values run when the method runs, so it answers for them too.
+        let mut fields_in: BTreeMap<&str, Vec<&str>> = BTreeMap::new();
+        for (field, method) in &parent {
+            if self.nodes[*field].kind == "field" && matches!(self.nodes[*method].kind.as_str(), "method" | "function") {
+                fields_in.entry(method).or_default().push(field);
+            }
+        }
         let container = |id: &str| parent.get(id).map(|p| self.nodes[*p].label.as_str());
         let node = |id: &str, layer: usize| {
             let n = &self.nodes[id];
@@ -396,19 +414,29 @@ impl Graph {
         let mut unresolved = vec![];
         let mut truncated = false;
         let mut frontier = vec![seed.to_owned()];
+        // Each call occurrence is reported once in an answer, whichever way it is reached.
+        let mut reported_once: std::collections::BTreeSet<&str> = std::collections::BTreeSet::new();
         for layer in 1..=depth {
             let mut next = vec![];
             for caller in &frontier {
                 let Some((kinds, _)) = syntax.languages.get(&self.nodes[caller].language) else { continue };
-                for observation in observed.get(caller.as_str()).into_iter().flatten() {
+                // The caller's own calls, then those of the fields it declares (step 2.3b), each
+                // with the symbol the graph says observes it.
+                let own = observed.get(caller.as_str()).into_iter().flatten().map(|o| (caller.as_str(), o));
+                let of_fields = fields_in.get(caller.as_str()).into_iter().flatten()
+                    .flat_map(|f| observed.get(f).into_iter().flatten().map(move |o| (*f, o)));
+                for (observer, observation) in own.chain(of_fields) {
                     let occurrence = &observation.to.as_str();
                     let written = &self.nodes[*occurrence];
-                    if !kinds.contains(&written.kind.as_str()) {
+                    if !kinds.contains(&written.kind.as_str()) || !reported_once.insert(occurrence) {
                         continue;
                     }
-                    // The candidates the call's form reaches (step 2.2).
-                    let edges = resolver.admitted(caller, occurrence);
-                    let resolved = resolver.resolve(caller, occurrence, chosen.get(*occurrence).map(String::as_str));
+                    let via = (observer != caller.as_str()).then(|| observer.to_owned());
+                    // The candidates the call's form reaches (step 2.2), decided for the symbol
+                    // that observes the call: a field's call gets the same answer in its method.
+                    let edges = resolver.admitted(observer, occurrence);
+                    let resolved = resolver.resolve(observer, occurrence, chosen.get(*occurrence).map(String::as_str));
+                    let decorates = resolver.decorates(occurrence);
                     // One target settled by the rule; or every candidate edge, as homonyms.
                     let (reported, resolution, basis): (Vec<(&str, Option<&Edge>)>, &str, &str) = match resolved {
                         Resolution::Linked(how, targets) if targets.len() == 1 => {
@@ -434,6 +462,7 @@ impl Graph {
                             resolution: None,
                             to: None,
                             candidate_edge: None,
+                            via: via.clone(),
                             evidence: observation.evidence.clone(),
                         });
                         continue;
@@ -456,6 +485,7 @@ impl Graph {
                                     resolution: Some(resolution.into()),
                                     to: Some(to.to_owned()),
                                     candidate_edge: edge.map(|e| e.id.clone()),
+                                    via: via.clone(),
                                     evidence: evidence.clone(),
                                 });
                                 continue;
@@ -463,11 +493,12 @@ impl Graph {
                             layer_of.insert(to.to_owned(), layer);
                             nodes.push(node(to, layer));
                         }
-                        let instantiates = resolution != "homonym" && crate::resolve::INSTANTIATED.contains(&self.nodes[to].kind.as_str());
+                        let instantiates = !decorates && resolution != "homonym" && crate::resolve::INSTANTIATED.contains(&self.nodes[to].kind.as_str());
                         let runs = if instantiates { resolver.instance_entry(to) } else { None };
                         // An instantiation is followed into what it runs, never into the body of the
-                        // declaration it builds (DEC-39).
-                        let walk = if instantiates { runs } else { (resolution != "homonym").then_some(to) };
+                        // declaration it builds (DEC-39). A decorator's call runs when the `def`
+                        // runs, not when the decorated declaration does: never followed (DEC-40).
+                        let walk = if decorates { None } else if instantiates { runs } else { (resolution != "homonym").then_some(to) };
                         if let Some(walk) = walk {
                             if runs.is_some() && !layer_of.contains_key(walk) {
                                 if nodes.len() < max_nodes {
@@ -491,8 +522,9 @@ impl Graph {
                             resolution: resolution.into(),
                             candidate_edge: edge.map(|e| e.id.clone()),
                             basis: basis.into(),
-                            relation: if instantiates { "instantiates" } else { "calls" }.into(),
+                            relation: if decorates { "decorates" } else if instantiates { "instantiates" } else { "calls" }.into(),
                             runs: runs.map(str::to_owned),
+                            via: via.clone(),
                             evidence: evidence.clone(),
                         });
                     }

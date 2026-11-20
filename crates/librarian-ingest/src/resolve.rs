@@ -49,6 +49,10 @@ pub struct CallFacts {
     /// Step 2.3a (Python): each class the file declares, by its qualified name, with what the rule
     /// needs to know of it.
     pub classes: BTreeMap<String, ClassFacts>,
+    /// Step 2.3b (Python; DEC-40): the byte spans of the decorator expressions the file writes, at
+    /// any depth. A call inside one runs when the `def` or `class` runs, not when the decorated
+    /// declaration is called.
+    pub decorators: Vec<(usize, usize)>,
 }
 
 /// Step 2.3a: what a Python class declares that decides whether its type rules a candidate out.
@@ -261,6 +265,14 @@ impl<'g> Resolver<'g> {
     fn file_facts(&self, path: &str) -> Option<Arc<CallFacts>> {
         let read = self.facts.as_ref()?;
         self.cache.borrow_mut().entry(path.to_owned()).or_insert_with(|| (read.0)(path).map(Arc::new)).clone()
+    }
+
+    /// Step 2.3b (DEC-40): the call is written inside a decorator (Python), read from the file's
+    /// text. It runs when the `def` or `class` runs, so its link is `decorates` and is not followed.
+    pub fn decorates(&self, occurrence: &str) -> bool {
+        let Some(evidence) = self.call_evidence.get(occurrence) else { return false };
+        let Some(facts) = self.file_facts(&evidence.path) else { return false };
+        facts.decorators.iter().any(|&(start, end)| start <= evidence.start_byte && evidence.end_byte <= end)
     }
 
     /// The type and the trait an impl or a trait names, for a method in it.

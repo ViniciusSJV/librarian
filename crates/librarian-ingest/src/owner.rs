@@ -49,6 +49,10 @@ pub struct Added {
     pub fields: Vec<String>,
     /// Where the link is written: the container's type name, or each write.
     pub evidence: Vec<Evidence>,
+    /// Step 2.3b: for a called declaration, the link's relation when it is not `calls`
+    /// (`instantiates`, DEC-39; `decorates`, DEC-40). Absent otherwise.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub relation: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -163,6 +167,7 @@ pub fn owner_context_up_to(catalog: &Catalog, graph: &Graph, targets: &[String],
             resolution: owner.resolution.into(),
             fields: read.iter().cloned().collect(),
             evidence: owner.evidence,
+            relation: None,
         });
         // Writers of the read fields, by declaration, in source order.
         let mut writers: BTreeMap<&str, (&str, BTreeSet<String>, Vec<Evidence>)> = BTreeMap::new();
@@ -239,6 +244,7 @@ pub fn owner_context_up_to(catalog: &Catalog, graph: &Graph, targets: &[String],
                 resolution: resolution.into(),
                 fields: written.into_iter().collect(),
                 evidence,
+                relation: None,
             });
         }
     }
@@ -390,14 +396,18 @@ pub fn called(catalog: &Catalog, targets: &[String], already: &[String], room: u
     let graph = crate::graph::v2::Graph::build(catalog);
     let syntax = catalog.call_syntax();
     let (mut added, mut truncated): (Vec<Added>, bool) = (vec![], false);
+    // Step 2.3b: a field's call is reached from the field and from the method that declares it;
+    // it counts once, for the first target that reaches it.
+    let mut counted: BTreeSet<String> = BTreeSet::new();
     for target in targets {
         let calls = graph.calls_from(target, 1, 64, &syntax, &BTreeMap::new())?;
         let qualified = catalog.symbols.get(target).map_or_else(|| target.clone(), |s| s.qualified_name.clone());
         for link in calls.links.iter().filter(|l| &l.from == target && SETTLED.contains(&l.resolution.as_str())) {
-            if already.contains(&link.to) {
+            if already.contains(&link.to) || !counted.insert(link.occurrence.clone()) {
                 continue;
             }
-            if let Some(known) = added.iter_mut().find(|a| a.symbol_id == link.to) {
+            let relation = (link.relation != "calls").then(|| link.relation.clone());
+            if let Some(known) = added.iter_mut().find(|a| a.symbol_id == link.to && a.relation == relation) {
                 known.evidence.push(link.evidence.clone());
                 continue;
             }
@@ -409,6 +419,7 @@ pub fn called(catalog: &Catalog, targets: &[String], already: &[String], room: u
             added.push(Added {
                 symbol_id: link.to.clone(), name: symbol.name.clone(), kind: symbol.kind.clone(), reason: "called".into(),
                 for_target: qualified.clone(), resolution: link.resolution.clone(), fields: vec![], evidence: vec![link.evidence.clone()],
+                relation,
             });
         }
     }

@@ -506,6 +506,11 @@ pub fn inventory(catalog: &Catalog, project: &RuleSet) -> Result<Inventory> {
     let resolver = Resolver::new(&graph, &syntax);
     let receiver_type = |symbol: &str, occurrence: &str| -> Vec<String> { resolver.receiver_types(symbol, occurrence) };
     let follow = |symbol: &str, occurrence: &str| -> std::result::Result<Vec<(String, &'static str)>, usize> {
+        // Step 2.3b (DEC-40): a decorator's call runs when the `def` runs, not when the decorated
+        // declaration does; the walk never goes into it.
+        if resolver.decorates(occurrence) {
+            return Ok(vec![]);
+        }
         match resolver.resolve(symbol, occurrence, None) {
             // Step 2.3a (DEC-39): an instantiation goes on in the `__init__` the class declares,
             // never in the class's body; a struct or a variant has no body to follow.

@@ -140,7 +140,7 @@ impl Extractor for Python {
         let Ok(text) = std::str::from_utf8(bytes) else { return CallFacts::default() };
         let Ok((suite, offset)) = parse(text) else { return CallFacts::default() };
         let suite_for_types = if self.v9 { suite.clone() } else { vec![] };
-        let mut scopes = Scopes { offset, open: vec![0], scopes: vec![NameScope { start: 0, end: usize::MAX, ..Default::default() }], globals: vec![Default::default()] };
+        let mut scopes = Scopes { offset, open: vec![0], scopes: vec![NameScope { start: 0, end: usize::MAX, ..Default::default() }], globals: vec![Default::default()], decorators: vec![] };
         for stmt in suite {
             scopes.visit_stmt(stmt);
         }
@@ -151,7 +151,7 @@ impl Extractor for Python {
         } else {
             Default::default()
         };
-        CallFacts { scopes: scopes.scopes, receiver_types, classes }
+        CallFacts { scopes: scopes.scopes, receiver_types, classes, decorators: scopes.decorators }
     }
 }
 
@@ -165,9 +165,18 @@ struct Scopes {
     scopes: Vec<NameScope>,
     /// Names each open scope declares `global` or `nonlocal`: not its own.
     globals: Vec<std::collections::BTreeSet<String>>,
+    /// Step 2.3b: the span of every decorator expression, in source order.
+    decorators: Vec<(usize, usize)>,
 }
 
 impl Scopes {
+    /// Step 2.3b: a decorator runs in the enclosing scope, when the `def` or `class` runs.
+    fn decorator(&mut self, decorator: ast::Expr) {
+        let range = decorator.range();
+        self.decorators.push((usize::from(range.start()) + self.offset, usize::from(range.end()) + self.offset));
+        self.visit_expr(decorator);
+    }
+
     fn enter(&mut self, range: TextRange, class: bool) {
         let (start, end) = (usize::from(range.start()) + self.offset, usize::from(range.end()) + self.offset);
         self.scopes.push(NameScope { start, end, class, ..Default::default() });
@@ -207,7 +216,7 @@ impl Scopes {
     fn function(&mut self, name: &str, range: TextRange, arguments: ast::Arguments, body: Vec<ast::Stmt>, decorators: Vec<ast::Expr>) {
         self.local(name);
         for decorator in decorators {
-            self.visit_expr(decorator);
+            self.decorator(decorator);
         }
         self.defaults(&arguments);
         self.enter(range, false);
@@ -242,8 +251,11 @@ impl Visitor for Scopes {
 
     fn visit_stmt_class_def(&mut self, node: ast::StmtClassDef) {
         self.local(&node.name);
-        for expr in node.decorator_list.into_iter().chain(node.bases) {
-            self.visit_expr(expr);
+        for decorator in node.decorator_list {
+            self.decorator(decorator);
+        }
+        for base in node.bases {
+            self.visit_expr(base);
         }
         for keyword in node.keywords {
             self.visit_keyword(keyword);

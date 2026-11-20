@@ -1165,6 +1165,7 @@ const STRINGS = {
   'why.owner_type': ['tipo dono de {t}; campos que ele lê: {fields}', 'owner type of {t}; fields it reads: {fields}'],
   'why.field_writer': ['escreve {fields}, que {t} lê ({lines})', 'writes {fields}, which {t} reads ({lines})'],
   'why.called': ['{t} chama ({lines})', '{t} calls it ({lines})'],
+  'why.decorator': ['decorador de {t} ({lines}); roda quando a declaração roda, não a cada chamada', 'decorator of {t} ({lines}); runs when the declaration runs, not on each call'],
   'why.return_type': ['tipo que {t} devolve ({lines})', 'type {t} returns ({lines})'],
   'why.called_owner': ['tipo de {t}, que é chamado', 'type of {t}, which is called'],
   'why.caller': ['chama {t} ({lines})', 'calls {t} ({lines})'],
@@ -1211,8 +1212,11 @@ const STRINGS = {
   'path.resolution.type': ['seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante)', 'followed: a method of the receiver\'s written type (annotation, constructor, self, field; in Rust, also path, return, item and variant)'],
   'path.relation.instantiates': ['instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui', 'instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here'],
   'path.relation.instantiatesRuns': ['instancia: a chamada cria um objeto deste tipo, não chama a classe; o percurso segue no {init}', 'instantiates: the call builds an object of this type, it does not call the class; the walk goes on in {init}'],
+  'path.relation.decorates': ['decora: a chamada está num decorador e roda quando a declaração roda (num def de topo, ao carregar o módulo), não a cada chamada dela; o percurso não segue', 'decorates: the call is in a decorator and runs when the declaration runs (for a top-level def, when the module loads), not on each of its calls; the walk does not follow it'],
+  'path.via': ['escrita no valor do campo {field}, que este método declara', 'written in the value of the field {field}, which this method declares'],
   'path.resolution.trait_default': ['seguida: o tipo escrito do receptor não define o método; vale o padrão do trait que ele implementa', 'followed: the receiver\'s written type does not define the method; the default of a trait it implements applies'],
   'path.resolution.chosen': ['seguida: escolhida por você', 'followed: chosen by you'],
+  'path.resolution.notWalked': ['decidida, sem seguir', 'settled, not walked'],
   'path.resolution.measured': ['seguida: dos homônimos, só este teve contagem no Medir tudo', 'followed: of the homonyms, only this one had a count in Measure everything'],
   'path.ran': ['só o que teve contagem', 'only what had a count'],
   'help.pathRan': ['Usa o último Medir tudo. Esconde as funções que foram contadas e não tiveram passagens observadas, o que não prova que não rodaram. Quando um nome combina com vários homônimos e só um deles teve contagem, segue por ele, como se você o tivesse escolhido. As caixas mostram a contagem observada de cada função e o tempo instrumentado, com a cor de azul (pouco) a vermelho (muito).', 'Uses the latest Measure everything. Hides the functions that were counted and had no passes observed, which does not prove they did not run. When a name matches several homonyms and only one of them had a count, follows it, as if you had chosen it. The boxes show the observed count and instrumented time of each function, colored from blue (little) to red (a lot).'],
@@ -1236,6 +1240,7 @@ const STRINGS = {
   'use.call_observed': ['chama', 'calls'],
   'use.method_call_observed': ['chama', 'calls'],
   'use.instantiates': ['instancia', 'instantiates'],
+  'use.decorates': ['decora', 'decorates'],
   'use.base_class': ['herda de', 'inherits from'],
   'use.type_reference': ['cita o tipo', 'cites the type'],
   'use.name_reference': ['usa o nome', 'uses the name'],
@@ -7755,19 +7760,29 @@ function showUse(info, nodes) {
     else delete pathChosen[l.occurrence];
     drawPath();
   };
-  const resolution = l => el('div', { className: 'muted' }, t(l.resolution === 'homonym' && l.candidates === 1 ? 'path.resolution.homonymOne' : `path.resolution.${l.resolution}`, { n: l.candidates }),
+  // A link the walk does not go on from (a decorator's call, DEC-40; an instantiation of a class
+  // without its own __init__, DEC-39) is settled, not followed: its text must not say "followed".
+  const notWalked = l => l.relation === 'decorates' || (l.relation === 'instantiates' && !l.runs);
+  const settledText = l => {
+    const text = t(l.resolution === 'homonym' && l.candidates === 1 ? 'path.resolution.homonymOne' : `path.resolution.${l.resolution}`, { n: l.candidates });
+    return notWalked(l) ? text.replace(/^(seguida|followed): /, `${t('path.resolution.notWalked')}: `) : text;
+  };
+  const resolution = l => el('div', { className: 'muted' }, settledText(l),
     l.resolution === 'homonym' ? el('button', { textContent: t('path.choose'), style: 'margin-left: 8px', onclick: decide(l, true) }) : null,
     l.resolution === 'chosen' ? el('button', { textContent: t('path.unchoose'), style: 'margin-left: 8px', onclick: decide(l, false) }) : null,
     // Step 2.3a (DEC-39): an instantiation builds the target; the walk goes on in what it runs.
     l.relation === 'instantiates' ? withData(el('div', { className: 'muted' },
-      l.runs ? t('path.relation.instantiatesRuns', { init: (nodes.get(l.runs) ?? state.nodes[state.index.get(l.runs)])?.label ?? l.runs }) : t('path.relation.instantiates')), { relation: 'instantiates' }) : null);
+      l.runs ? t('path.relation.instantiatesRuns', { init: (nodes.get(l.runs) ?? state.nodes[state.index.get(l.runs)])?.label ?? l.runs }) : t('path.relation.instantiates')), { relation: 'instantiates' }) : null,
+    // Step 2.3b (DEC-40): a decorator's call is not followed; a field's call is answered by its method.
+    l.relation === 'decorates' ? withData(el('div', { className: 'muted' }, t('path.relation.decorates')), { relation: 'decorates' }) : null,
+    l.via ? el('div', { className: 'muted' }, t('path.via', { field: (nodes.get(l.via) ?? state.nodes[state.index.get(l.via)])?.label ?? l.via })) : null);
   box.replaceChildren(
     el('div', { className: 'row', style: 'justify-content: space-between' },
       // Full labels: homonyms share the short name (color_at), only the container tells them apart.
       el('strong', { textContent: `${nodes.get(info.from).label} → ${nodes.get(info.to).label}` }),
       el('button', { textContent: t('common.close'), onclick: () => { box.hidden = true; } })),
     el('ul', { className: 'claims' }, ...info.links.map(l => el('li', {},
-      `${l.relation === 'instantiates' ? t('use.instantiates') : kind(l.occurrence_kind)}: `, el('code', { textContent: l.text.slice(0, 160) }),
+      `${l.relation === 'instantiates' || l.relation === 'decorates' ? t(`use.${l.relation}`) : kind(l.occurrence_kind)}: `, el('code', { textContent: l.text.slice(0, 160) }),
       el('div', { className: 'muted mono', textContent: `${l.evidence.path}:${l.evidence.start_line}` }),
       callsMode() ? resolution(l)
         : l.candidates > 1 ? el('div', { className: 'muted', textContent: t('path.candidates', { n: l.candidates }) }) : null))));

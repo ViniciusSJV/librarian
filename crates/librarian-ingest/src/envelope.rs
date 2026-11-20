@@ -137,7 +137,8 @@ pub struct Item {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Reason {
     /// `chosen`, `owner_type`, `field_writer`, `called`, `return_type` and `called_owner` (of a
-    /// called declaration), `caller`, `test_caller`, `type_reference`, `trait_impl` or `header`.
+    /// called declaration), `decorator` (step 2.3b: a decorator of the chosen declaration),
+    /// `caller`, `test_caller`, `type_reference`, `trait_impl` or `header`.
     pub code: String,
     /// The chosen declaration this item is in view for.
     pub for_target: String,
@@ -215,11 +216,24 @@ pub fn candidates(catalog: &Catalog, chosen: &[String], measure: Option<&Measure
 
     let graph = v2::Graph::build(catalog);
     let syntax = catalog.call_syntax();
+    // Step 2.3b: a field's call is reached from the field and from the method that declares it;
+    // it counts once, for the first chosen declaration that reaches it.
+    let mut counted: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
     for id in chosen {
         let target = qualified(id);
         // What it calls, when the rule of "what does it call?" settles it on one declaration.
         let calls = graph.calls_from(id, 1, 64, &syntax, &BTreeMap::new())?;
         for link in calls.links.iter().filter(|l| &l.from == id && SETTLED.contains(&l.resolution.as_str())) {
+            if !counted.insert(link.occurrence.clone()) {
+                continue;
+            }
+            // A decorator's call runs when the `def` runs (DEC-40): in view, with its own reason,
+            // and nothing it returns is followed.
+            if link.relation == "decorates" {
+                let reason = Reason { code: "decorator".into(), for_target: target.clone(), fields: vec![], lines: vec![link.evidence.start_line] };
+                push(catalog, &mut suggestion, &link.to, reason);
+                continue;
+            }
             let reason = Reason { code: "called".into(), for_target: target.clone(), fields: vec![], lines: vec![link.evidence.start_line] };
             push(catalog, &mut suggestion, &link.to, reason);
             // A change that keeps what the call returns needs the type it returns.
