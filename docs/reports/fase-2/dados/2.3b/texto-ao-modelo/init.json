@@ -1,0 +1,2 @@
+{"question": "O que o servidor de teste monta?", "top": 5, "depth": 1, "hits": 1, "radius": 0, "numbered_lines": true,
+ "targets": [{"path": "hc/api/tests/test_smtpd.py", "symbol_name": "__init__", "declaration_line": 48}], "owner_context": true, "callees": true}

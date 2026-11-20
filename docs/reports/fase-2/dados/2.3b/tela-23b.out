@@ -1,0 +1,476 @@
+compilando librarian_studio e librarian_ingest (cargo build --release --locked)...
+   Compiling librarian-evidence v0.1.0 (C:\Users\beatl\Documents\Projetos\librarian\crates\librarian-evidence)
+   Compiling librarian-studio v0.1.0 (C:\Users\beatl\Documents\Projetos\librarian\crates\librarian-studio)
+    Finished `release` profile [optimized] target(s) in 12.05s
+binário: C:\Users\beatl\Documents\Projetos\librarian\target\release (compilado agora); sha256 librarian_studio 701cfd13e11b6a1f05ba425ab0aa6d730a0c1dce9b6cc65251d380e0e61c6b63, librarian_ingest aabe7b3520dea0438448dcbb3d75ff1ce75dc53739ffd9f656aeebd02cb193e0
+run novo renderer-9b78f3a9: 20261120-073014
+run novo healthchecks-25597e41: 20261120-073014
+PASSA  PT cors (decorador de checks): o detalhe não diz "seguida"/"followed", diz "decidida, sem seguir"  -> checks → cors
+Fechar
+decora: cors
+hc/api/views.py:480
+decidida, sem seguir: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+decora: a chamada está num decorador e roda quando a declaração roda (num def de topo, ao carregar o módulo), não a cada chamada dela; o percurso não segue
+PASSA  PT cors (decorador de checks): /api/calls dá unique (1) → /^cors$/  -> {"resolution":"unique","to":"cors","basis":"graph_edge","candidate_edge":"edge:87fe1a71d8e34c21ab4428ba3a525b956aac9468bd344c95bdda2fb7ffc2713f","candidates":1}
+PASSA  PT cors (decorador de checks): basis graph_edge, candidate_edge presente  -> graph_edge edge:87fe1a71d8e34c21ab4428ba3a525b956aac9468bd344c95bdda2fb7ffc2713f
+PASSA  PT cors (decorador de checks): o detalhe da linha diz o texto da resolução  -> decidida, sem seguir: entre as declarações que a forma da chamada alcança, o nome só combina com esta || checks → cors
+Fechar
+decora: cors
+hc/api/views.py:480
+decidida, sem seguir: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+decora: a chamada está num decorador e roda quando a declaração roda (num def de topo, ao carregar o módulo), não a cada chamada dela; o percurso não segue
+PASSA  PT cors (decorador de checks): relation decorates  -> decorates
+PASSA  PT cors (decorador de checks): o detalhe diz que decora  -> checks → cors
+Fechar
+decora: cors
+hc/api/views.py:480
+decidida, sem seguir: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+decora: a chamada está num decorador e roda quando a declaração roda (num def de topo, ao carregar o módulo), não a cada chamada dela; o percurso não segue
+PASSA  PT cors (decorador de checks): a linha da chamada começa por "decora:", não por "chama"  -> checks → cors
+Fechar
+decora: cors
+hc/api/views.py:480
+decidida, sem seguir: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+decora: a chamada está num decorador e roda quando a declaração roda (num def de topo, ao carregar o módulo), não a cada chamada dela; o percurso não segue
+PASSA  PT cors (decorador de checks): runs ausente (não seguido)
+PASSA  PT cors (decorador de checks): sem via
+PASSA  PT cors (decorador de checks): nenhuma chave crua nem código sem texto  -> checks → cors
+Fechar
+decora: cors
+hc/api/views.py:480
+decidida, sem seguir: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+decora: a chamada está num decorador e roda quando a declaração roda (num def de topo, ao carregar o módulo), não a cada chamada dela; o percurso não segue
+      [pt-unique.png] checks → cors ⏎ Fechar ⏎ decora: cors ⏎ hc/api/views.py:480 ⏎ decidida, sem seguir: entre as declarações que a forma da chamada alcança, o nome só combina com esta ⏎ decora: a chamada está num decorador e roda quando a declaração roda (num def de topo, ao carregar o módulo), não a cada chamada dela; o percurso não segue
+PASSA  PT NullSink (campo do __init__, via TestServer.stdout): o detalhe não diz "seguida"/"followed", diz "decidida, sem seguir"  -> TestServer.__init__ → NullSink
+Fechar
+instancia: NullSink
+hc/api/tests/test_smtpd.py:49
+decidida, sem seguir: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui
+escrita no valor do campo TestServer.stdout, que este método declara
+PASSA  PT NullSink (campo do __init__, via TestServer.stdout): /api/calls dá unique (1) → /^NullSink$/  -> {"resolution":"unique","to":"NullSink","basis":"graph_edge","candidate_edge":"edge:47f1b2e3fc99a3c3defee62604c810e1fd2d53d632706ed55be1d585e0a4b5cb","candidates":1}
+PASSA  PT NullSink (campo do __init__, via TestServer.stdout): basis graph_edge, candidate_edge presente  -> graph_edge edge:47f1b2e3fc99a3c3defee62604c810e1fd2d53d632706ed55be1d585e0a4b5cb
+PASSA  PT NullSink (campo do __init__, via TestServer.stdout): o detalhe da linha diz o texto da resolução  -> decidida, sem seguir: entre as declarações que a forma da chamada alcança, o nome só combina com esta || TestServer.__init__ → NullSink
+Fechar
+instancia: NullSink
+hc/api/tests/test_smtpd.py:49
+decidida, sem seguir: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui
+escrita no valor do campo TestServer.stdout, que este método declara
+PASSA  PT NullSink (campo do __init__, via TestServer.stdout): relation instantiates  -> instantiates
+PASSA  PT NullSink (campo do __init__, via TestServer.stdout): runs ausente
+PASSA  PT NullSink (campo do __init__, via TestServer.stdout): o detalhe diz que instancia  -> instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui || TestServer.__init__ → NullSink
+Fechar
+instancia: NullSink
+hc/api/tests/test_smtpd.py:49
+decidida, sem seguir: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui
+escrita no valor do campo TestServer.stdout, que este método declara
+PASSA  PT NullSink (campo do __init__, via TestServer.stdout): a linha da chamada começa por "instancia:", não por "chama"  -> TestServer.__init__ → NullSink
+Fechar
+instancia: NullSink
+hc/api/tests/test_smtpd.py:49
+decidida, sem seguir: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui
+escrita no valor do campo TestServer.stdout, que este método declara
+PASSA  PT NullSink (campo do __init__, via TestServer.stdout): via /^TestServer\.stdout$/  -> src:99d0db6a58de319b370148f7d9ce1ad866d2e649be28ad248d98ad3ad5fab612:3c214c6b3aa175af64c2c0aa8278de9e3aa0094095a60cfd11612d5b380d72da:field:962:986
+PASSA  PT NullSink (campo do __init__, via TestServer.stdout): o detalhe diz o campo  -> escrita no valor do campo TestServer.stdout, que este método declara || TestServer.__init__ → NullSink
+Fechar
+instancia: NullSink
+hc/api/tests/test_smtpd.py:49
+decidida, sem seguir: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui
+escrita no valor do campo TestServer.stdout, que este método declara
+PASSA  PT NullSink (campo do __init__, via TestServer.stdout): nenhuma chave crua nem código sem texto  -> TestServer.__init__ → NullSink
+Fechar
+instancia: NullSink
+hc/api/tests/test_smtpd.py:49
+decidida, sem seguir: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui
+escrita no valor do campo TestServer.stdout, que este método declara
+      [pt-unique.png] TestServer.__init__ → NullSink ⏎ Fechar ⏎ instancia: NullSink ⏎ hc/api/tests/test_smtpd.py:49 ⏎ decidida, sem seguir: entre as declarações que a forma da chamada alcança, o nome só combina com esta ⏎ instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui ⏎ escrita no valor do campo TestServer.stdout, que este método declara
+PASSA  PT forms.WebhookForm (instancia, sem __init__; 2.3a): o detalhe não diz "seguida"/"followed", diz "decidida, sem seguir"  -> webhook_form → WebhookForm
+Fechar
+instancia: forms.WebhookForm()
+hc/integrations/webhook/views.py:32
+decidida, sem seguir: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui
+instancia: forms.WebhookForm(doc)
+hc/integrations/webhook/views.py:42
+decidida, sem seguir: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui
+instancia: forms.WebhookForm(request.POST)
+hc/integrations/webhook/views.py:21
+decidida, sem seguir: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui
+PASSA  PT forms.WebhookForm (instancia, sem __init__; 2.3a): /api/calls dá unique (1) → /^WebhookForm$/  -> {"resolution":"unique","to":"WebhookForm","basis":"graph_edge","candidate_edge":"edge:47509956730600ba012a1b4857558a92040336bbaeba85148e275291b0386d1d","candidates":1}
+PASSA  PT forms.WebhookForm (instancia, sem __init__; 2.3a): basis graph_edge, candidate_edge presente  -> graph_edge edge:47509956730600ba012a1b4857558a92040336bbaeba85148e275291b0386d1d
+PASSA  PT forms.WebhookForm (instancia, sem __init__; 2.3a): o detalhe da linha diz o texto da resolução  -> decidida, sem seguir: entre as declarações que a forma da chamada alcança, o nome só combina com esta || webhook_form → WebhookForm
+Fechar
+instancia: forms.WebhookForm()
+hc/integrations/webhook/views.py:32
+decidida, sem seguir: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui
+instancia: forms.WebhookForm(doc)
+hc/integrations/webhook/views.py:42
+decidida, sem seguir: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui
+instancia: forms.WebhookForm(request.POST)
+hc/integrations/webhook/views.py:21
+decidida, sem seguir: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui
+PASSA  PT forms.WebhookForm (instancia, sem __init__; 2.3a): relation instantiates  -> instantiates
+PASSA  PT forms.WebhookForm (instancia, sem __init__; 2.3a): runs ausente
+PASSA  PT forms.WebhookForm (instancia, sem __init__; 2.3a): o detalhe diz que instancia  -> instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui || webhook_form → WebhookForm
+Fechar
+instancia: forms.WebhookForm()
+hc/integrations/webhook/views.py:32
+decidida, sem seguir: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui
+instancia: forms.WebhookForm(doc)
+hc/integrations/webhook/views.py:42
+decidida, sem seguir: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui
+instancia: forms.WebhookForm(request.POST)
+hc/integrations/webhook/views.py:21
+decidida, sem seguir: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui
+PASSA  PT forms.WebhookForm (instancia, sem __init__; 2.3a): a linha da chamada começa por "instancia:", não por "chama"  -> webhook_form → WebhookForm
+Fechar
+instancia: forms.WebhookForm()
+hc/integrations/webhook/views.py:32
+decidida, sem seguir: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui
+instancia: forms.WebhookForm(doc)
+hc/integrations/webhook/views.py:42
+decidida, sem seguir: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui
+instancia: forms.WebhookForm(request.POST)
+hc/integrations/webhook/views.py:21
+decidida, sem seguir: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui
+PASSA  PT forms.WebhookForm (instancia, sem __init__; 2.3a): sem via
+PASSA  PT forms.WebhookForm (instancia, sem __init__; 2.3a): nenhuma chave crua nem código sem texto  -> webhook_form → WebhookForm
+Fechar
+instancia: forms.WebhookForm()
+hc/integrations/webhook/views.py:32
+decidida, sem seguir: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui
+instancia: forms.WebhookForm(doc)
+hc/integrations/webhook/views.py:42
+decidida, sem seguir: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui
+instancia: forms.WebhookForm(request.POST)
+hc/integrations/webhook/views.py:21
+decidida, sem seguir: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui
+      [pt-unique.png] webhook_form → WebhookForm ⏎ Fechar ⏎ instancia: forms.WebhookForm() ⏎ hc/integrations/webhook/views.py:32 ⏎ decidida, sem seguir: entre as declarações que a forma da chamada alcança, o nome só combina com esta ⏎ instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui ⏎ instancia: forms.WebhookForm(doc) ⏎ hc/integrations/webhook/views.py:42 ⏎ decidida, sem seguir: entre as declarações que a forma da chamada alcança, o nome só combina com esta ⏎ instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui ⏎ instancia: forms.WebhookForm(request.POST) ⏎ hc/integrations/webhook/views.py:21 ⏎ decidida, sem seguir: entre as declarações que a forma da chamada alcança, o nome só combina com esta ⏎ instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui
+PASSA  PT TransportError (instancia, roda o __init__; 2.3a sem mudança): o detalhe diz "seguida"/"followed" (o percurso segue)  -> GitHub.notify → TransportError
+Fechar
+instancia: TransportError
+hc/integrations/github/transport.py:53
+seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; o percurso segue no TransportError.__init__
+instancia: TransportError
+hc/integrations/github/transport.py:29
+seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; o percurso segue no TransportError.__init__
+PASSA  PT TransportError (instancia, roda o __init__; 2.3a sem mudança): /api/calls dá unique (1) → /^TransportError$/  -> {"resolution":"unique","to":"TransportError","basis":"graph_edge","candidate_edge":"edge:25b22b63074fd521c3abb9ae6059acadcb178950e61654b69e9a60d7496a66c7","candidates":1}
+PASSA  PT TransportError (instancia, roda o __init__; 2.3a sem mudança): basis graph_edge, candidate_edge presente  -> graph_edge edge:25b22b63074fd521c3abb9ae6059acadcb178950e61654b69e9a60d7496a66c7
+PASSA  PT TransportError (instancia, roda o __init__; 2.3a sem mudança): o detalhe da linha diz o texto da resolução  -> seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta || GitHub.notify → TransportError
+Fechar
+instancia: TransportError
+hc/integrations/github/transport.py:53
+seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; o percurso segue no TransportError.__init__
+instancia: TransportError
+hc/integrations/github/transport.py:29
+seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; o percurso segue no TransportError.__init__
+PASSA  PT TransportError (instancia, roda o __init__; 2.3a sem mudança): relation instantiates  -> instantiates
+PASSA  PT TransportError (instancia, roda o __init__; 2.3a sem mudança): runs /^TransportError\.__init__$/  -> src:09216d7e52d9ea25534c3d3d9f6516ed7e4bb873736169a7c99b005901d8049c:267d3600b536a8b0eca384cb40f9088dd98b297d5b44210a73c0838d4cf86b7a:method:1663:1797
+PASSA  PT TransportError (instancia, roda o __init__; 2.3a sem mudança): o detalhe diz que instancia  -> instancia: a chamada cria um objeto deste tipo, não chama a classe; o percurso segue no TransportError.__init__ || GitHub.notify → TransportError
+Fechar
+instancia: TransportError
+hc/integrations/github/transport.py:53
+seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; o percurso segue no TransportError.__init__
+instancia: TransportError
+hc/integrations/github/transport.py:29
+seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; o percurso segue no TransportError.__init__
+PASSA  PT TransportError (instancia, roda o __init__; 2.3a sem mudança): a linha da chamada começa por "instancia:", não por "chama"  -> GitHub.notify → TransportError
+Fechar
+instancia: TransportError
+hc/integrations/github/transport.py:53
+seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; o percurso segue no TransportError.__init__
+instancia: TransportError
+hc/integrations/github/transport.py:29
+seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; o percurso segue no TransportError.__init__
+PASSA  PT TransportError (instancia, roda o __init__; 2.3a sem mudança): sem via
+PASSA  PT TransportError (instancia, roda o __init__; 2.3a sem mudança): nenhuma chave crua nem código sem texto  -> GitHub.notify → TransportError
+Fechar
+instancia: TransportError
+hc/integrations/github/transport.py:53
+seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; o percurso segue no TransportError.__init__
+instancia: TransportError
+hc/integrations/github/transport.py:29
+seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+instancia: a chamada cria um objeto deste tipo, não chama a classe; o percurso segue no TransportError.__init__
+      [pt-unique.png] GitHub.notify → TransportError ⏎ Fechar ⏎ instancia: TransportError ⏎ hc/integrations/github/transport.py:53 ⏎ seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta ⏎ instancia: a chamada cria um objeto deste tipo, não chama a classe; o percurso segue no TransportError.__init__ ⏎ instancia: TransportError ⏎ hc/integrations/github/transport.py:29 ⏎ seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta ⏎ instancia: a chamada cria um objeto deste tipo, não chama a classe; o percurso segue no TransportError.__init__
+PASSA  PT: envelope de checks traz cors com o motivo decorator, e nenhum called para cors  -> [["checks",["chosen"]],["hc/api/views.py",["header"]],["cors",["decorator"]],["create_check",["called"]],["get_checks",["called"]]]
+PASSA  PT: texto do motivo sem chave crua ("decorador de checks (linha 480); roda quando a declaração roda, não a cada chamada")  -> decorador de checks (linha 480); roda quando a declaração roda, não a cada chamada
+PASSA  PT: textos novos em português
+PASSA  PT: nenhum erro de página
+PASSA  PT: nada além de abrir o projeto (POST /api/project = store.open), /api/calls e a sugestão do envelope
+PASSA  EN cors (decorador de checks): o detalhe não diz "seguida"/"followed", diz "settled, not walked"  -> checks → cors
+Close
+decorates: cors
+hc/api/views.py:480
+settled, not walked: among the declarations the call's form reaches, the name matches only this one
+decorates: the call is in a decorator and runs when the declaration runs (for a top-level def, when the module loads), not on each of its calls; the walk does not follow it
+PASSA  EN cors (decorador de checks): /api/calls dá unique (1) → /^cors$/  -> {"resolution":"unique","to":"cors","basis":"graph_edge","candidate_edge":"edge:87fe1a71d8e34c21ab4428ba3a525b956aac9468bd344c95bdda2fb7ffc2713f","candidates":1}
+PASSA  EN cors (decorador de checks): basis graph_edge, candidate_edge presente  -> graph_edge edge:87fe1a71d8e34c21ab4428ba3a525b956aac9468bd344c95bdda2fb7ffc2713f
+PASSA  EN cors (decorador de checks): o detalhe da linha diz o texto da resolução  -> settled, not walked: among the declarations the call's form reaches, the name matches only this one || checks → cors
+Close
+decorates: cors
+hc/api/views.py:480
+settled, not walked: among the declarations the call's form reaches, the name matches only this one
+decorates: the call is in a decorator and runs when the declaration runs (for a top-level def, when the module loads), not on each of its calls; the walk does not follow it
+PASSA  EN cors (decorador de checks): relation decorates  -> decorates
+PASSA  EN cors (decorador de checks): o detalhe diz que decora  -> checks → cors
+Close
+decorates: cors
+hc/api/views.py:480
+settled, not walked: among the declarations the call's form reaches, the name matches only this one
+decorates: the call is in a decorator and runs when the declaration runs (for a top-level def, when the module loads), not on each of its calls; the walk does not follow it
+PASSA  EN cors (decorador de checks): a linha da chamada começa por "decorates:", não por "chama"  -> checks → cors
+Close
+decorates: cors
+hc/api/views.py:480
+settled, not walked: among the declarations the call's form reaches, the name matches only this one
+decorates: the call is in a decorator and runs when the declaration runs (for a top-level def, when the module loads), not on each of its calls; the walk does not follow it
+PASSA  EN cors (decorador de checks): runs ausente (não seguido)
+PASSA  EN cors (decorador de checks): sem via
+PASSA  EN cors (decorador de checks): nenhuma chave crua nem código sem texto  -> checks → cors
+Close
+decorates: cors
+hc/api/views.py:480
+settled, not walked: among the declarations the call's form reaches, the name matches only this one
+decorates: the call is in a decorator and runs when the declaration runs (for a top-level def, when the module loads), not on each of its calls; the walk does not follow it
+      [en-unique.png] checks → cors ⏎ Close ⏎ decorates: cors ⏎ hc/api/views.py:480 ⏎ settled, not walked: among the declarations the call's form reaches, the name matches only this one ⏎ decorates: the call is in a decorator and runs when the declaration runs (for a top-level def, when the module loads), not on each of its calls; the walk does not follow it
+PASSA  EN NullSink (campo do __init__, via TestServer.stdout): o detalhe não diz "seguida"/"followed", diz "settled, not walked"  -> TestServer.__init__ → NullSink
+Close
+instantiates: NullSink
+hc/api/tests/test_smtpd.py:49
+settled, not walked: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here
+written in the value of the field TestServer.stdout, which this method declares
+PASSA  EN NullSink (campo do __init__, via TestServer.stdout): /api/calls dá unique (1) → /^NullSink$/  -> {"resolution":"unique","to":"NullSink","basis":"graph_edge","candidate_edge":"edge:47f1b2e3fc99a3c3defee62604c810e1fd2d53d632706ed55be1d585e0a4b5cb","candidates":1}
+PASSA  EN NullSink (campo do __init__, via TestServer.stdout): basis graph_edge, candidate_edge presente  -> graph_edge edge:47f1b2e3fc99a3c3defee62604c810e1fd2d53d632706ed55be1d585e0a4b5cb
+PASSA  EN NullSink (campo do __init__, via TestServer.stdout): o detalhe da linha diz o texto da resolução  -> settled, not walked: among the declarations the call's form reaches, the name matches only this one || TestServer.__init__ → NullSink
+Close
+instantiates: NullSink
+hc/api/tests/test_smtpd.py:49
+settled, not walked: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here
+written in the value of the field TestServer.stdout, which this method declares
+PASSA  EN NullSink (campo do __init__, via TestServer.stdout): relation instantiates  -> instantiates
+PASSA  EN NullSink (campo do __init__, via TestServer.stdout): runs ausente
+PASSA  EN NullSink (campo do __init__, via TestServer.stdout): o detalhe diz que instancia  -> instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here || TestServer.__init__ → NullSink
+Close
+instantiates: NullSink
+hc/api/tests/test_smtpd.py:49
+settled, not walked: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here
+written in the value of the field TestServer.stdout, which this method declares
+PASSA  EN NullSink (campo do __init__, via TestServer.stdout): a linha da chamada começa por "instantiates:", não por "chama"  -> TestServer.__init__ → NullSink
+Close
+instantiates: NullSink
+hc/api/tests/test_smtpd.py:49
+settled, not walked: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here
+written in the value of the field TestServer.stdout, which this method declares
+PASSA  EN NullSink (campo do __init__, via TestServer.stdout): via /^TestServer\.stdout$/  -> src:99d0db6a58de319b370148f7d9ce1ad866d2e649be28ad248d98ad3ad5fab612:3c214c6b3aa175af64c2c0aa8278de9e3aa0094095a60cfd11612d5b380d72da:field:962:986
+PASSA  EN NullSink (campo do __init__, via TestServer.stdout): o detalhe diz o campo  -> written in the value of the field TestServer.stdout, which this method declares || TestServer.__init__ → NullSink
+Close
+instantiates: NullSink
+hc/api/tests/test_smtpd.py:49
+settled, not walked: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here
+written in the value of the field TestServer.stdout, which this method declares
+PASSA  EN NullSink (campo do __init__, via TestServer.stdout): nenhuma chave crua nem código sem texto  -> TestServer.__init__ → NullSink
+Close
+instantiates: NullSink
+hc/api/tests/test_smtpd.py:49
+settled, not walked: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here
+written in the value of the field TestServer.stdout, which this method declares
+      [en-unique.png] TestServer.__init__ → NullSink ⏎ Close ⏎ instantiates: NullSink ⏎ hc/api/tests/test_smtpd.py:49 ⏎ settled, not walked: among the declarations the call's form reaches, the name matches only this one ⏎ instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here ⏎ written in the value of the field TestServer.stdout, which this method declares
+PASSA  EN forms.WebhookForm (instancia, sem __init__; 2.3a): o detalhe não diz "seguida"/"followed", diz "settled, not walked"  -> webhook_form → WebhookForm
+Close
+instantiates: forms.WebhookForm()
+hc/integrations/webhook/views.py:32
+settled, not walked: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here
+instantiates: forms.WebhookForm(doc)
+hc/integrations/webhook/views.py:42
+settled, not walked: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here
+instantiates: forms.WebhookForm(request.POST)
+hc/integrations/webhook/views.py:21
+settled, not walked: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here
+PASSA  EN forms.WebhookForm (instancia, sem __init__; 2.3a): /api/calls dá unique (1) → /^WebhookForm$/  -> {"resolution":"unique","to":"WebhookForm","basis":"graph_edge","candidate_edge":"edge:47509956730600ba012a1b4857558a92040336bbaeba85148e275291b0386d1d","candidates":1}
+PASSA  EN forms.WebhookForm (instancia, sem __init__; 2.3a): basis graph_edge, candidate_edge presente  -> graph_edge edge:47509956730600ba012a1b4857558a92040336bbaeba85148e275291b0386d1d
+PASSA  EN forms.WebhookForm (instancia, sem __init__; 2.3a): o detalhe da linha diz o texto da resolução  -> settled, not walked: among the declarations the call's form reaches, the name matches only this one || webhook_form → WebhookForm
+Close
+instantiates: forms.WebhookForm()
+hc/integrations/webhook/views.py:32
+settled, not walked: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here
+instantiates: forms.WebhookForm(doc)
+hc/integrations/webhook/views.py:42
+settled, not walked: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here
+instantiates: forms.WebhookForm(request.POST)
+hc/integrations/webhook/views.py:21
+settled, not walked: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here
+PASSA  EN forms.WebhookForm (instancia, sem __init__; 2.3a): relation instantiates  -> instantiates
+PASSA  EN forms.WebhookForm (instancia, sem __init__; 2.3a): runs ausente
+PASSA  EN forms.WebhookForm (instancia, sem __init__; 2.3a): o detalhe diz que instancia  -> instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here || webhook_form → WebhookForm
+Close
+instantiates: forms.WebhookForm()
+hc/integrations/webhook/views.py:32
+settled, not walked: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here
+instantiates: forms.WebhookForm(doc)
+hc/integrations/webhook/views.py:42
+settled, not walked: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here
+instantiates: forms.WebhookForm(request.POST)
+hc/integrations/webhook/views.py:21
+settled, not walked: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here
+PASSA  EN forms.WebhookForm (instancia, sem __init__; 2.3a): a linha da chamada começa por "instantiates:", não por "chama"  -> webhook_form → WebhookForm
+Close
+instantiates: forms.WebhookForm()
+hc/integrations/webhook/views.py:32
+settled, not walked: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here
+instantiates: forms.WebhookForm(doc)
+hc/integrations/webhook/views.py:42
+settled, not walked: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here
+instantiates: forms.WebhookForm(request.POST)
+hc/integrations/webhook/views.py:21
+settled, not walked: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here
+PASSA  EN forms.WebhookForm (instancia, sem __init__; 2.3a): sem via
+PASSA  EN forms.WebhookForm (instancia, sem __init__; 2.3a): nenhuma chave crua nem código sem texto  -> webhook_form → WebhookForm
+Close
+instantiates: forms.WebhookForm()
+hc/integrations/webhook/views.py:32
+settled, not walked: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here
+instantiates: forms.WebhookForm(doc)
+hc/integrations/webhook/views.py:42
+settled, not walked: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here
+instantiates: forms.WebhookForm(request.POST)
+hc/integrations/webhook/views.py:21
+settled, not walked: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here
+      [en-unique.png] webhook_form → WebhookForm ⏎ Close ⏎ instantiates: forms.WebhookForm() ⏎ hc/integrations/webhook/views.py:32 ⏎ settled, not walked: among the declarations the call's form reaches, the name matches only this one ⏎ instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here ⏎ instantiates: forms.WebhookForm(doc) ⏎ hc/integrations/webhook/views.py:42 ⏎ settled, not walked: among the declarations the call's form reaches, the name matches only this one ⏎ instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here ⏎ instantiates: forms.WebhookForm(request.POST) ⏎ hc/integrations/webhook/views.py:21 ⏎ settled, not walked: among the declarations the call's form reaches, the name matches only this one ⏎ instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here
+PASSA  EN TransportError (instancia, roda o __init__; 2.3a sem mudança): o detalhe diz "seguida"/"followed" (o percurso segue)  -> GitHub.notify → TransportError
+Close
+instantiates: TransportError
+hc/integrations/github/transport.py:53
+followed: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the walk goes on in TransportError.__init__
+instantiates: TransportError
+hc/integrations/github/transport.py:29
+followed: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the walk goes on in TransportError.__init__
+PASSA  EN TransportError (instancia, roda o __init__; 2.3a sem mudança): /api/calls dá unique (1) → /^TransportError$/  -> {"resolution":"unique","to":"TransportError","basis":"graph_edge","candidate_edge":"edge:25b22b63074fd521c3abb9ae6059acadcb178950e61654b69e9a60d7496a66c7","candidates":1}
+PASSA  EN TransportError (instancia, roda o __init__; 2.3a sem mudança): basis graph_edge, candidate_edge presente  -> graph_edge edge:25b22b63074fd521c3abb9ae6059acadcb178950e61654b69e9a60d7496a66c7
+PASSA  EN TransportError (instancia, roda o __init__; 2.3a sem mudança): o detalhe da linha diz o texto da resolução  -> followed: among the declarations the call's form reaches, the name matches only this one || GitHub.notify → TransportError
+Close
+instantiates: TransportError
+hc/integrations/github/transport.py:53
+followed: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the walk goes on in TransportError.__init__
+instantiates: TransportError
+hc/integrations/github/transport.py:29
+followed: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the walk goes on in TransportError.__init__
+PASSA  EN TransportError (instancia, roda o __init__; 2.3a sem mudança): relation instantiates  -> instantiates
+PASSA  EN TransportError (instancia, roda o __init__; 2.3a sem mudança): runs /^TransportError\.__init__$/  -> src:09216d7e52d9ea25534c3d3d9f6516ed7e4bb873736169a7c99b005901d8049c:267d3600b536a8b0eca384cb40f9088dd98b297d5b44210a73c0838d4cf86b7a:method:1663:1797
+PASSA  EN TransportError (instancia, roda o __init__; 2.3a sem mudança): o detalhe diz que instancia  -> instantiates: the call builds an object of this type, it does not call the class; the walk goes on in TransportError.__init__ || GitHub.notify → TransportError
+Close
+instantiates: TransportError
+hc/integrations/github/transport.py:53
+followed: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the walk goes on in TransportError.__init__
+instantiates: TransportError
+hc/integrations/github/transport.py:29
+followed: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the walk goes on in TransportError.__init__
+PASSA  EN TransportError (instancia, roda o __init__; 2.3a sem mudança): a linha da chamada começa por "instantiates:", não por "chama"  -> GitHub.notify → TransportError
+Close
+instantiates: TransportError
+hc/integrations/github/transport.py:53
+followed: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the walk goes on in TransportError.__init__
+instantiates: TransportError
+hc/integrations/github/transport.py:29
+followed: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the walk goes on in TransportError.__init__
+PASSA  EN TransportError (instancia, roda o __init__; 2.3a sem mudança): sem via
+PASSA  EN TransportError (instancia, roda o __init__; 2.3a sem mudança): nenhuma chave crua nem código sem texto  -> GitHub.notify → TransportError
+Close
+instantiates: TransportError
+hc/integrations/github/transport.py:53
+followed: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the walk goes on in TransportError.__init__
+instantiates: TransportError
+hc/integrations/github/transport.py:29
+followed: among the declarations the call's form reaches, the name matches only this one
+instantiates: the call builds an object of this type, it does not call the class; the walk goes on in TransportError.__init__
+      [en-unique.png] GitHub.notify → TransportError ⏎ Close ⏎ instantiates: TransportError ⏎ hc/integrations/github/transport.py:53 ⏎ followed: among the declarations the call's form reaches, the name matches only this one ⏎ instantiates: the call builds an object of this type, it does not call the class; the walk goes on in TransportError.__init__ ⏎ instantiates: TransportError ⏎ hc/integrations/github/transport.py:29 ⏎ followed: among the declarations the call's form reaches, the name matches only this one ⏎ instantiates: the call builds an object of this type, it does not call the class; the walk goes on in TransportError.__init__
+PASSA  EN: envelope de checks traz cors com o motivo decorator, e nenhum called para cors  -> [["checks",["chosen"]],["hc/api/views.py",["header"]],["cors",["decorator"]],["create_check",["called"]],["get_checks",["called"]]]
+PASSA  EN: texto do motivo sem chave crua ("decorator of checks (line 480); runs when the declaration runs, not on each call")  -> decorator of checks (line 480); runs when the declaration runs, not on each call
+PASSA  EN: textos novos em inglês
+PASSA  EN: nenhum erro de página
+PASSA  EN: nada além de abrir o projeto (POST /api/project = store.open), /api/calls e a sugestão do envelope
+PASSA  tema escuro: o detalhe aparece com o texto de decora  -> checks → cors
+Fechar
+decora: cors
+hc/api/views.py:480
+decidida, sem seguir: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+decora: a chamada está num decorador e roda quando a declaração roda (num def de topo, ao carregar o módulo), não a cada chamada dela; o percurso não segue
+PASSA  tema escuro: tema aplicado (dark), texto rgb(143, 142, 134) sobre rgb(35, 35, 33)  -> {"color":"rgb(143, 142, 134)","bg":"rgb(35, 35, 33)","theme":"dark","overflow":false,"detailRight":1006,"width":1440}
+PASSA  tema escuro: nenhum erro de página
+PASSA  tema claro: o detalhe aparece com o texto de decora  -> checks → cors
+Fechar
+decora: cors
+hc/api/views.py:480
+decidida, sem seguir: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+decora: a chamada está num decorador e roda quando a declaração roda (num def de topo, ao carregar o módulo), não a cada chamada dela; o percurso não segue
+PASSA  tema claro: tema aplicado (light), texto rgb(122, 121, 116) sobre rgb(255, 255, 255)  -> {"color":"rgb(122, 121, 116)","bg":"rgb(255, 255, 255)","theme":"light","overflow":false,"detailRight":1006,"width":1440}
+PASSA  tema claro: nenhum erro de página
+PASSA  tela estreita (390 px): o detalhe aparece com o texto de decora  -> checks → cors
+Fechar
+decora: cors
+hc/api/views.py:480
+decidida, sem seguir: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+decora: a chamada está num decorador e roda quando a declaração roda (num def de topo, ao carregar o módulo), não a cada chamada dela; o percurso não segue
+PASSA  tela estreita (390 px): sem rolagem horizontal da página  -> {"color":"rgb(122, 121, 116)","bg":"rgb(255, 255, 255)","theme":"(sistema)","overflow":false,"detailRight":376,"width":390}
+PASSA  tela estreita (390 px): nenhum erro de página
+PASSA  .studio original igual antes e depois
+
+102 passam, 0 falham. Capturas em C:/Users/beatl/AppData/Local/Temp/claude/09139e964f85837f/b9349d9b-01c2-4828-bbc4-c4be6ce8dd5c/scratchpad/tela-23b

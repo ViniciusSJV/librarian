@@ -1,0 +1,2 @@
+{"question": "O que roda quando a API lista os checks?", "top": 5, "depth": 1, "hits": 1, "radius": 0, "numbered_lines": true,
+ "targets": [{"path": "hc/api/views.py", "symbol_name": "checks", "declaration_line": 479}], "owner_context": true, "callees": true}

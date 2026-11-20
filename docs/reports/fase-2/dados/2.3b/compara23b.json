@@ -1,0 +1,26 @@
+{
+ "healthchecks-25597e41": {
+  "simbolos": 4718,
+  "simbolos_depois": 4718,
+  "relacao_decora": 69,
+  "runs_tirado": 4,
+  "via_links": 1,
+  "via_unresolved": 6,
+  "used_by_iguais": 4718,
+  "used_by_diferentes": [],
+  "fora_da_previsao": [],
+  "previsao_nao_cumprida": []
+ },
+ "renderer-9b78f3a9": {
+  "simbolos": 819,
+  "simbolos_depois": 819,
+  "relacao_decora": 0,
+  "runs_tirado": 0,
+  "via_links": 0,
+  "via_unresolved": 0,
+  "used_by_iguais": 819,
+  "used_by_diferentes": [],
+  "fora_da_previsao": [],
+  "previsao_nao_cumprida": []
+ }
+}

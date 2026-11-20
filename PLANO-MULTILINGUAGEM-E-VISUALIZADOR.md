@@ -64,8 +64,9 @@ corretas, lacunas explícitas e fatos aguardando aprovação humana.
   `8c689d4`, com push), 2.3a (tipos no arquivo, "instancia", regra no
   receiver_type; DEC-39; validado e commitado em 20/11, `5589912`;
   amostra Python 21 → 27 corretas, HC-F6 correto), 2.3b
-  (dono do campo e do decorador) e 2.3c (N3 entre arquivos, retorno de
-  T::f).
+  (dono do campo e do decorador; opção B, pela regra, sem edition nova;
+  DEC-40; Parada 2 em 20/11, aguardando validação) e 2.3c (N3
+  entre arquivos, retorno de T::f).
 - 2.4 Herança (N5) e alias local (N8).
 - 2.5 PIL-G5/N7: relação "passa referência", nunca "chama".
 - 2.6 Genéricos (N6), por último (ch.notify: 33 → 1).
@@ -76,6 +77,17 @@ corretas, lacunas explícitas e fatos aguardando aprovação humana.
 
 ### Fase 2B — Relações de workflow
 - Pontos de entrada: rotas (PIL-G4), management commands, jobs.
+- Chamadas soltas no topo dos arquivos Python (Q2 da Parada 1 do 2.3b,
+  20/11): 48 no Healthchecks ficam fora do grafo, porque nenhum símbolo
+  as contém (34 em `hc/settings.py`; os processos em `manage.py`,
+  `hc/wsgi.py`, `docker/`). Tocam a 2B estas 5:
+  `register_converter(..)` em `hc/api/urls.py:30-31` (os conversores
+  `quoted` e `sha1` das rotas), o prefixo em `hc/urls.py:12` (2
+  chamadas) e `admin.site.unregister(User)` em
+  `hc/accounts/admin.py:301`. Um símbolo de módulo dono só do que hoje
+  é descartado (sem mover os decoradores) resolve, com edition própria,
+  decidido pelas rotas. As listas de rotas (`urlpatterns = [..]`) já
+  estão no grafo, observadas pela variável.
 - Relação mediada pelo banco (PIL:161): "grava modelo X" / "lê modelo X".
 - ORM e framework (PIL-G2) como externo conhecido, não "sem candidato".
 - Testes ligados às views (PIL-G8).

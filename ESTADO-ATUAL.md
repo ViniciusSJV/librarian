@@ -1,6 +1,6 @@
 # Estado atual do Librarian
 
-**Entrada única de qualquer sessão.** Atualizado em 19/11/2026. Quando este arquivo e outro divergirem, vale este; se este estiver errado, corrija-o antes de seguir.
+**Entrada única de qualquer sessão.** Atualizado em 20/11/2026. Quando este arquivo e outro divergirem, vale este; se este estiver errado, corrija-o antes de seguir.
 
 ## Onde estamos
 
@@ -9,11 +9,15 @@
 - **Passo 2.2** (forma da chamada, `import`, o tipo que derruba o `unique`; DEC-38): commitado em 19/11/2026 (`a34059c` código, testes e interface; `950c4f4` documentação; depois, linha de base, fixtures e folha). A amostra HC-61 a HC-75 e RT-56 a RT-62 foi validada pelo usuário em 19/11, e a linha de base foi trocada. Parada 2 em [docs/reports/fase-2/2.2-parada-2.md](docs/reports/fase-2/2.2-parada-2.md); CTX seção 24.
 - **Passo 2.3: em andamento.** Parada 1 aprovada em 19/11/2026 ([docs/reports/fase-2/2.3-parada-1.md](docs/reports/fase-2/2.3-parada-1.md)), com a divisão em 2.3a-0, 2.3a, 2.3b e 2.3c. O **2.3a-0** (a chave dos métodos pelo último trecho do rótulo, que faz o `receiver` acima do teto valer em Python) está commitado em `8c689d4`, com a documentação no commit seguinte; portão aprovado, igual à linha de base; 109 chamadas de teste passam de `above_candidate_limit` a `receiver`. CTX seção 25.
 - **Passo 2.3a** (tipos do Python no arquivo, relação "instancia", `type_rule` no `receiver_type`, `modulo.Classe(..)` e `T::V(..)`; DEC-39; perfil V9, grafo `rust-python-syntax-graph-v6`): commitado em 20/11/2026 (`5589912` código, testes e interface; `04943c5` documentação; depois, linha de base, fixtures e folha). A amostra HC-76 a HC-87 e RT-63 a RT-65 foi validada pelo usuário em 20/11 (HC-76, HC-81 e RT-63 conferidos no editor; HC-79 na Q6), e a linha de base foi trocada. "Instancia": 655 links no Healthchecks (574 já iam para a classe e só ganharam `relation`; 81 são novos) e 13 no ray tracer (2 e 11). A pergunta congelada B5 (`tests/agnostic.rs`) gera a edition no perfil V8, em que foi congelada, e não exercita o V9. Parada 2 em [docs/reports/fase-2/2.3a-parada-2.md](docs/reports/fase-2/2.3a-parada-2.md); CTX seção 26.
-- **Próximo passo: 2.3b** (dono do campo e do decorador; a Q9 é respondida na Parada 1 dele). Depois, o 2.3c (N3 entre arquivos, retorno de `T::f`). Cada passo depende de autorização.
+- **Passo 2.3b** (dono do decorador e do campo; opção B, pela regra, sem edition nova; DEC-40, vigente desde 20/11/2026): Parada 1 aprovada em 20/11/2026 ([2.3b-parada-1.md](docs/reports/fase-2/2.3b-parada-1.md)). Parada 2 feita em 20/11/2026 e **aguardando validação**, sem commit ([2.3b-parada-2.md](docs/reports/fase-2/2.3b-parada-2.md)).
+  - **Decorador:** uma chamada num decorador sai com `relation: decorates` e não é seguida.
+  - **Campo:** o método responde também pelas chamadas dos campos que declara, com `via`.
+  - **Resultado:** portão APROVADO, igual à linha de base; 69 links passam a `decorates` e 7 chamadas de campo aparecem no `__init__`, nenhuma mudança fora da previsão; `used_by` igual em todos os símbolos. CTX seção 27.
+- **Próximo passo:** a validação do 2.3b (verdade de HC-88 a HC-97 e linha de base proposta), depois os commits. Depois, o 2.3c (N3 entre arquivos, retorno de `T::f`). Cada passo depende de autorização.
 - **Portão de cada passo da Fase 2:** `node tools/precisao/portao.js --studio .studio --base tools/precisao/linha-de-base.json` (cerca de 4 minutos). Reprova se `link_falso` subir ou as corretas caírem, em Python ou em Rust, se uma edition antiga mudar ou se o `.studio` original mudar. Exceção só com justificativa caso a caso e aprovação do usuário (DEC-34).
 - **Feito no 1b:** P1 (`987d7a8`), G3 (`aae51d7`), Partes A–E do diagnóstico, a Q6 (run `20261118-205150`, avaliada em 18/11), a consolidação documental (`a8e4074`) e o relatório final. Relatórios em [docs/reports/piloto-1b/](docs/reports/piloto-1b/) (`0c4bcab`).
 - **Git:** `main`; a referência é `origin/main` (ver `git log`). Último marco: passo 2.3a (`5589912` código, `04943c5` documentação e o commit da linha de base, em 20/11/2026); antes, o passo 2.3a-0 (`8c689d4`, `1152875`), o passo 2.2 (`a34059c`, `950c4f4`), o passo 2.1 (`c316bf7` a `078fd0e`) e o passo 2.0 (`2b05b8c`, `aee6915`).
-- **Suíte:** `cargo test --workspace --locked`: 493 aprovados, 0 falhas, 2 ignorados (20/11, passo 2.3a; conferido também numa worktree do commit `5589912`).
+- **Suíte:** `cargo test --workspace --locked`: 497 aprovados, 0 falhas, 2 ignorados (20/11, passo 2.3b, sem commit; no 2.3a eram 493, conferidos também numa worktree do commit `5589912`).
 - **Roadmap:** [PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#roadmap). Nenhum agente nem orquestrador existe.
 
 ## Para onde vamos
@@ -66,12 +70,15 @@ Cite sempre com o prefixo. As tabelas de abreviações e de prefixos estão em [
 - **Do 2.2:** a verdade de HC-61 a HC-75 e RT-56 a RT-62 foi validada pelo usuário em 19/11/2026 (HC-66, HC-69 e RT-62 conferidos no editor; folha em [docs/reports/fase-2/2.2-revisao-amostra.md](docs/reports/fase-2/2.2-revisao-amostra.md)), e a DEC-38 foi aprovada. Pendente:
   - as contagens da Q1 e da Q2 no `logistica-api`. Ficam pendentes: o projeto não está disponível nesta máquina (19/11/2026: `Projetos\logistica-api` não existe, a busca em `C:\`, a única unidade, não o achou, e a única distribuição WSL é a do Docker). No Healthchecks, as duas deram 0 caso. Elas são feitas quando o projeto voltar.
 - **Do 2.3a:** a verdade de HC-76 a HC-87 e RT-63 a RT-65 foi validada pelo usuário (folha em [docs/reports/fase-2/2.3-revisao-amostra.md](docs/reports/fase-2/2.3-revisao-amostra.md)), e a DEC-39 foi aprovada. HC-F6 ficou correto (`type` → `Check.ping`, pela anotação). Limites: o `__init__` herdado não é seguido (2.4); o `__init__` que uma instanciação roda aparece no detalhe, mas não como caixa na profundidade 1.
-- **Para o 2.3b:**
-  - Q9 (dono do decorador e do campo, opção A ou B) foi adiada para a Parada 1 do 2.3b, que responde se, com a opção B, o `used_by` e o contexto do dono continuam dizendo que a chamada do decorador pertence à função decorada.
+- **Do 2.3b (aguardando validação):**
+  - a verdade de HC-88 a HC-97, proposta pelo agente ([2.3b-revisao-amostra.md](docs/reports/fase-2/2.3b-revisao-amostra.md));
+  - a DEC-40 foi aprovada pelo usuário em 20/11/2026, com o texto final, e está vigente;
+  - a linha de base proposta ([tools/precisao/linha-de-base-proposta.json](tools/precisao/linha-de-base-proposta.json));
+  - o texto do detalhe, a pedido do usuário: um link que o percurso não segue (`decorates`, ou `instancia` sem `__init__`) diz "decidida, sem seguir", não "seguida"; o portão e a tela compilam o binário antes de rodar e registram o hash dele.
+  - As 48 chamadas soltas no topo dos arquivos Python estão registradas na Fase 2B do PLANO (Q2).
 - **Para o 2.3c:** o extrator do Rust toma `T` como o tipo de `let x = T::f(..)` sem ler o retorno de `f` (no ray tracer, as 204 funções `f` do projeto retornam `Self`, e nada muda); desde o 2.3a, a regra fica gravada como `caminho`. Também do 2.3c: o campo de uma classe de outro arquivo e o tipo pelo retorno anotado, no Python.
-- **Também para o 2.3b:** a chamada de um decorador roda na carga do módulo, mas é atribuída à função decorada (HC-19). É a mesma questão de dono do `Repo()` preso ao campo.
 - **Limites do 2.2:** um receptor ligado a import de fora do projeto, acima do teto de homônimos, continua `above_candidate_limit` (não há aresta para tirar); `Box`, `Rc`, `Arc`, referência e `Deref` não deixam o tipo de fora do projeto derrubar nada, mesmo quando derrubaria certo.
-- Achados sem correção: a ordem de `unresolved` não segue arquivo/linha/coluna; o corte do `node_limit` segue a ordem dos ids das arestas; `self.repo = Repo()` deixa `Repo()` preso ao campo; o tipo é comparado sem os genéricos (`Matrix<3>` = `Matrix<4>`), o que deixa como `homonym` em "o que chama?" o resultado com vários impls.
+- Achados sem correção: a ordem de `unresolved` não segue arquivo/linha/coluna; o corte do `node_limit` segue a ordem dos ids das arestas; o tipo é comparado sem os genéricos (`Matrix<3>` = `Matrix<4>`), o que deixa como `homonym` em "o que chama?" o resultado com vários impls.
 - `R30-7` (tipo do receptor): feito no Rust desde o 2.1 e no Python com o 2.3a (dentro do arquivo; entre arquivos é o 2.3c).
 - Links errados ou ambíguos nos fatos, depois do 2.3a: `HC-F1` (errado: o manager do Django é externo, Fase 2B). `HC-F6` passou a correto no 2.3a; `HC-F7` e `HC-F17`, no 2.2; `HC-F14` não depende de link. Pela leitura do agente, sem revisão humana, os fatos estão corretos sobre o código; o risco é seguir o grafo a partir deles.
 
@@ -90,7 +97,7 @@ Cite sempre com o prefixo. As tabelas de abreviações e de prefixos estão em [
 
 ## Links
 
-- [PLANO](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md): roadmap · [DECISOES](DECISOES.md) · [CTX](CONTEXTO-CONTINUIDADE.md): diário, última seção 26 · [Histórico](docs/historico/README.md)
+- [PLANO](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md): roadmap · [DECISOES](DECISOES.md) · [CTX](CONTEXTO-CONTINUIDADE.md): diário, última seção 27 · [Histórico](docs/historico/README.md)
 - Piloto 1: [PIL](docs/reports/PILOTO-1-HEALTHCHECKS.md) · Piloto 1b: [00 resumo](docs/reports/piloto-1b/00-resumo.md), [01 G3](docs/reports/piloto-1b/01-g3.md), [02 Partes A–C](docs/reports/piloto-1b/02-fechamento-g3-e-diagnostico.md), [03 inventário e Parte E](docs/reports/piloto-1b/03-inventario-e-auditoria.md), [04 Q6](docs/reports/piloto-1b/04-q6.md)
 - Direção: [ARQ](docs/ARQUITETURA-EVIDENCIAS-MULTIAGENTE.md) · Frontend: [ESP](docs/ESPECIFICACAO-FUNCIONAL-STUDIO.md), [EST](docs/ESTADO-IMPLEMENTACAO-STUDIO.md) · Manual: [STUDIO.md](STUDIO.md)
 - Componentes: [Ingest](crates/librarian-ingest/README.md) · [Evidence Builder](crates/librarian-evidence/README.md) · [LLM Engine](crates/librarian-llm-engine/CLAIMS.md) · [Graph Engine](crates/librarian-graph-engine/WORKFLOW-V0.1.md)

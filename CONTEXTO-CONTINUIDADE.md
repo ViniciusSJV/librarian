@@ -1129,3 +1129,34 @@ Escrever o teste de regressão do P1 **antes** da correção: uma função Pytho
 - **B5:** a pergunta congelada passou a gerar a edition no perfil V8, em que foi congelada; não exercita o V9.
 - **Validação:** `cargo test --workspace --locked` 493 aprovados (11 testes novos em `tests/tipos_2_3a.rs`); perguntas 01–14 com H1–H3; DEC-30 84 de 84, depois de corrigir o texto do `__init__` que a página procurava entre os nós desenhados.
 - **Validação do usuário (20/11/2026):** a verdade de HC-76 a HC-87 e RT-63 a RT-65 foi validada (HC-76, HC-81 e RT-63 conferidos no editor; HC-79 na Q6), e a DEC-39 foi aprovada. A linha de base nova (Python 87 chamadas 38/1/12/3/33, Rust 65 chamadas 39/0/1/10/15; fatos 16/9/0/1) passou a ser `tools/precisao/linha-de-base.json`; o portão contra ela deu APROVADO, sem nenhuma chamada mudando de categoria.
+
+## 27. Passo 2.3b: dono do decorador e do campo (20/11/2026)
+
+**Estado nesta data.** O estado vigente fica no [ESTADO-ATUAL.md](ESTADO-ATUAL.md). Relatórios: [Parada 1](docs/reports/fase-2/2.3b-parada-1.md) e [Parada 2](docs/reports/fase-2/2.3b-parada-2.md); folha: [2.3b-revisao-amostra.md](docs/reports/fase-2/2.3b-revisao-amostra.md); dados em [docs/reports/fase-2/dados/2.3b/](docs/reports/fase-2/dados/2.3b/). Nada commitado nesta data.
+
+- **Parada 1 (Q9):** a opção B (pela regra) contra a A (módulo dono, edition V10) e uma A reduzida. B ganhou porque mantém no grafo a ligação entre a view e a guarda (`require_setting`, `cors`, `authorize`), que a Fase 2B usa. A A reduzida a moveria para o módulo e não resolveria o campo.
+- **Respostas do usuário (20/11):**
+  - Q1: B com duas correções (o campo pela contenção; o `called` lendo a `relation`), com a condição de cada chamada ser contada uma vez;
+  - Q2: as 48 chamadas soltas no topo vão para a Fase 2B do PLANO;
+  - Q3: DEC-40 aprovada no conteúdo, proposta até a prova em código;
+  - Q4: o texto de `instancia` corrigido junto;
+  - Q5: estratos HC-88 a HC-97 e o nível N4-py-dono.
+- **778 × 783:** o leitor da Parada 1 não entrava nos argumentos nomeados; o certo é 783. Os 5 que faltavam incluem 4 `CurlError(..)` (classe do projeto) em `@patch(.., side_effect=..)`: 69 links passam a `decorates`, não 65.
+- **Regra (sem edition):**
+  - os intervalos dos decoradores são lidos do arquivo na consulta;
+  - `relation: decorates`, não seguido nem no inventário;
+  - o método responde pelos campos que contém, com `via`, decidido pelo campo;
+  - uma ocorrência por resposta;
+  - `called` e envelope não repetem ocorrência; "Decorador de" e "Instanciada por" no `prepare`; motivo `decorator` no envelope.
+- **Portão:**
+  - a regra da DEC-40 e a anterior congelada, lado a lado. Com o binário do 2.3a, as 152 chamadas da linha de base dão o mesmo veredito, e o portão aprova;
+  - com o do 2.3b, aprovado e igual à linha de base. Estratos novos: decorador 3 corretas e 3 sem candidato; campo 1 correta e 3 sem candidato; os 4 executores mostram a chamada; N4-py-dono no alvo.
+- **Antes × depois de todos os símbolos:** 0 mudanças fora da previsão; `used_by` igual em 4.718 + 819 símbolos.
+- **Validação:** `cargo test --workspace --locked` 497 aprovados (4 testes novos em `tests/dono_2_3b.rs`); perguntas 01–14 com H1–H3; DEC-30 76 de 76.
+- **Tropeços:**
+  - o `cargo test` não recompila o `librarian_studio`, e a primeira rodada da tela usou um studio velho. Tudo o que usa o studio foi refeito com o binário final;
+  - o nível N4-py-dono tinha a linha errada na fixture (12 em vez de 14).
+- **Antes da validação (pedido do usuário, 20/11):**
+  - o detalhe de um link que o percurso não segue (`decorates`, `instancia` sem `__init__`) passa a dizer "decidida, sem seguir" no lugar de "seguida". Tela refeita: 102 de 102;
+  - o portão e o script de tela compilam o `librarian_studio` antes de rodar, quando usam o `target/release`, e registram o SHA-256 dos dois binários;
+  - a DEC-40 foi aprovada com o texto final e passou a vigente.

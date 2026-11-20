@@ -1,0 +1,35 @@
+=== checks (binário do 2.3a)
+E1: function `checks` declarado em hc/api/views.py, linhas 479–485.
+E2: function `cors` declarado em hc/api/decorators.py, linhas 96–120. Chamada por `checks` (linha 480): é a única declaração com esse nome na edition.
+E3: function `create_check` declarado em hc/api/views.py, linhas 455–476. Chamada por `checks` (linha 483): é a única declaração com esse nome na edition.
+E4: function `get_checks` declarado em hc/api/views.py, linhas 430–452. Chamada por `checks` (linha 485): é a única declaração com esse nome na edition.
+
+=== checks (binário do 2.3b)
+E1: function `checks` declarado em hc/api/views.py, linhas 479–485.
+E2: function `cors` declarado em hc/api/decorators.py, linhas 96–120. Decorador de `checks` (linha 480): é a única declaração com esse nome na edition. A chamada roda quando a declaração de `checks` é executada (numa declaração de topo, ao carregar o módulo), não quando `checks` é chamada; o que ela devolve envolve `checks`.
+E3: function `create_check` declarado em hc/api/views.py, linhas 455–476. Chamada por `checks` (linha 483): é a única declaração com esse nome na edition.
+E4: function `get_checks` declarado em hc/api/views.py, linhas 430–452. Chamada por `checks` (linha 485): é a única declaração com esse nome na edition.
+
+=== init (binário do 2.3a)
+E1: method `TestServer.__init__` declarado em hc/api/tests/test_smtpd.py, linhas 48–49.
+E2: class `TestServer` declarado em hc/api/tests/test_smtpd.py, linhas 47–49. Contexto do dono: declaração que contém `TestServer.__init__`; campos que ele lê: nenhum.
+
+=== init (binário do 2.3b)
+E1: method `TestServer.__init__` declarado em hc/api/tests/test_smtpd.py, linhas 48–49.
+E2: class `TestServer` declarado em hc/api/tests/test_smtpd.py, linhas 47–49. Contexto do dono: declaração que contém `TestServer.__init__`; campos que ele lê: nenhum.
+E3: class `NullSink` declarado em hc/api/tests/test_smtpd.py, linhas 42–44. Instanciada por `TestServer.__init__` (linha 49): é a única declaração com esse nome na edition. A chamada constrói um valor dela; o que roda é o `__init__` que ela declara, se declarar, e não o corpo dela.
+
+=== add (binário do 2.3a)
+E1: function `add` declarado em hc/integrations/webhook/views.py, linhas 53–58.
+E2: function `require_setting` declarado em hc/front/decorators.py, linhas 13–24. Chamada por `add` (linha 53): é a única declaração com esse nome na edition.
+E3: function `_get_rw_project_for_user` declarado em hc/front/views.py, linhas 187–194. Chamada por `add` (linha 56): é a única declaração com esse nome na edition.
+E4: class `Channel` declarado em hc/api/models.py, linhas 1018–1336. Chamada por `add` (linha 57): é a única declaração com esse nome na edition.
+E5: function `webhook_form` declarado em hc/integrations/webhook/views.py, linhas 17–50. Chamada por `add` (linha 58): é a única declaração com esse nome na edition.
+
+=== add (binário do 2.3b)
+E1: function `add` declarado em hc/integrations/webhook/views.py, linhas 53–58.
+E2: function `require_setting` declarado em hc/front/decorators.py, linhas 13–24. Decorador de `add` (linha 53): é a única declaração com esse nome na edition. A chamada roda quando a declaração de `add` é executada (numa declaração de topo, ao carregar o módulo), não quando `add` é chamada; o que ela devolve envolve `add`.
+E3: function `_get_rw_project_for_user` declarado em hc/front/views.py, linhas 187–194. Chamada por `add` (linha 56): é a única declaração com esse nome na edition.
+E4: class `Channel` declarado em hc/api/models.py, linhas 1018–1336. Instanciada por `add` (linha 57): é a única declaração com esse nome na edition. A chamada constrói um valor dela; o que roda é o `__init__` que ela declara, se declarar, e não o corpo dela.
+E5: function `webhook_form` declarado em hc/integrations/webhook/views.py, linhas 17–50. Chamada por `add` (linha 58): é a única declaração com esse nome na edition.
+

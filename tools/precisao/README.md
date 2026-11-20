@@ -4,7 +4,7 @@ Um comando mede a precisão das relações de "o que chama?" e decide se um pass
 
 ## Como rodar
 
-Na raiz do repositório, com o binário do passo em teste já compilado (`cargo build --release`):
+Na raiz do repositório (o comando compila o binário do passo em teste antes de medir; ver o passo 0 abaixo):
 
 ```
 node tools/precisao/portao.js --studio .studio --base tools/precisao/linha-de-base.json
@@ -27,6 +27,7 @@ O Healthchecks leva cerca de 2 minutos, porque `/api/calls` é chamado uma vez p
 
 ## O que o comando faz
 
+0. Com o `--bin` padrão (`target/release` deste repositório), compila antes os dois binários (`cargo build --release --locked -p librarian-studio -p librarian-ingest`): o `cargo test` recompila só o `librarian_ingest`, e um `librarian_studio` velho daria uma medida errada sem aviso. Com outra pasta em `--bin` (um binário antigo guardado para uma prova), usa os binários como estão. Nos dois casos, o relatório e o `resultado.json` registram a pasta, se compilou e o SHA-256 de cada binário (`lib.js`, `prepareBinaries`).
 1. Copia os dois projetos do `.studio` para uma pasta temporária e sobe o `librarian_studio` sobre a cópia, numa porta livre.
 2. Gera um run novo de cada projeto com o binário em teste. É nele que tudo é medido.
 3. Mede a população de chamadas `obj.metodo()` fora de testes, sem `self.m()`. Dá a contagem por `resolution` e por estrato, e os links de método para função solta.
@@ -51,6 +52,11 @@ Desde o passo 2.3a (DEC-39):
 - uma verdade `ambigua` (a regra do `dyn` no 2.1, aplicada ao `Protocol` na Q6 do 2.3) lista os corpos que podem rodar. Nenhum link único é certo (`link_falso`); um `homonym` com um deles entre os candidatos é `ambigua`, e sem nenhum é `candidatos_falsos`; acima do teto é `ambigua`.
 - nos níveis, um alvo de relação `instancia` fica "no alvo" quando o link sai com `relation: instantiates`.
 
+Desde o passo 2.3b (DEC-40):
+- uma verdade com `relacao: decora` (chamada escrita num decorador) é `correta` só com o link para o alvo certo e `relation: decorates`; com `relation: calls`, é `link_falso`. Um link `decorates` para uma verdade sem `relacao: decora` é `link_falso`. As outras categorias não mudam;
+- uma verdade pode ter `executor`, a declaração que roda a chamada (o `__init__` de um campo). O portão registra se o `/api/calls` dela mostra a chamada, sem reprovar;
+- cada chamada da amostra é classificada também pela regra anterior (a do 2.3a, congelada em `classifyBefore40`), e o relatório lista as que dão veredito diferente. Nas 152 chamadas da linha de base do 2.3a, nenhuma.
+
 ## Regra do portão
 
 Um passo da Fase 2 reprova se, em Python ou em Rust:
@@ -72,9 +78,9 @@ A regra compara só as chamadas que a linha de base também tem. Um estrato acre
 | `portao.js` | O comando |
 | `lib.js` | Cópia do `.studio`, Studio numa porta livre, hashes, o conjunto de chamadas e as respostas |
 | `amostra.js` | Como a amostra foi sorteada: rodado uma vez, sobre a linha de base de 18/11/2026. Não roda no portão |
-| `fixtures/amostra-hc.json`, `fixtures/amostra-rt.json` | 87 chamadas do Healthchecks e 65 do ray tracer (RT-31 a RT-55 vêm do passo 2.1; HC-61 a HC-75 e RT-56 a RT-62, do passo 2.2; HC-76 a HC-87 e RT-63 a RT-65, do passo 2.3a), com verdade, certeza, justificativa e `verdade_validada_por` |
+| `fixtures/amostra-hc.json`, `fixtures/amostra-rt.json` | 97 chamadas do Healthchecks e 65 do ray tracer (RT-31 a RT-55 vêm do passo 2.1; HC-61 a HC-75 e RT-56 a RT-62, do passo 2.2; HC-76 a HC-87 e RT-63 a RT-65, do passo 2.3a; HC-88 a HC-97, do passo 2.3b, com a verdade proposta pelo agente até a validação), com verdade, certeza, justificativa e `verdade_validada_por` |
 | `fixtures/fatos.json` | As chamadas que cada fato F1–F26 afirma, com a verdade |
-| `fixtures/niveis.json` | N0–N8: resultado atual e alvo da Fase 2, com o passo |
+| `fixtures/niveis.json` | N0–N8: resultado atual e alvo da Fase 2, com o passo (N4-py-dono, do 2.3b: o `Repo()` do campo, perguntado ao `__init__`) |
 | `sinteticos/py`, `sinteticos/rs` | Projetos dos níveis, copiados de `docs/reports/piloto-1b/dados/tipos/` |
 | `linha-de-base.json` | Resultado com o binário do passo 2.3a, sobre as 87 chamadas do Healthchecks e as 65 do ray tracer (o mesmo conteúdo que `--gravar-base` grava). Aprovada pelo usuário em 20/11/2026 (as anteriores, do passo 2.2, sobre 75 + 62 chamadas, e do 2.1, estão no histórico do git) |
 

@@ -228,6 +228,26 @@ struct de tupla ou a uma variante (Rust) instancia; não chama. O link sai com `
 instantiates` e a mesma `resolution`. O percurso não entra na declaração construída: segue para
 o `__init__` que a classe declara (`runs`) e, sem ele, para ali. O inventário segue igual.
 
+**Decorador e campo (passo 2.3b; DEC-40).** Nada muda no grafo nem no perfil: quem observa uma
+chamada continua sendo onde ela está escrita. Muda o que a regra diz de quem a roda.
+- **Decorador** (Python). Uma chamada escrita num decorador, em qualquer nível (`@cors("GET")`,
+  `@patch(.., side_effect=Erro(..))`), roda quando o `def` ou a `class` roda, não quando a
+  declaração decorada é chamada. O link sai com `relation: decorates` e a mesma `resolution`, na
+  declaração decorada, e o percurso não o segue, nem para um `__init__`; o inventário também não.
+  Os intervalos dos decoradores são lidos do arquivo na consulta (`CallFacts::decorators`), como os
+  imports do 2.2, e valem também para os runs antigos.
+- **Campo do `__init__`**. O valor de `self.x = T()` num método é observado pelo campo
+  `Classe.x`, que o método contém (`contains`). O `/api/calls` do método responde também por essas
+  chamadas, com `from` = o método e `via` = o campo; a resposta é a mesma que o campo dá, porque a
+  regra decide pelo símbolo que observa. O campo continua respondendo pelas suas, sem `via`.
+- **Contagem única.** Numa resposta, cada ocorrência aparece uma vez. Quem conta chamadas por dono
+  conta pelo `observes` do grafo (inventário, população do portão) ou ignora a ocorrência já contada
+  (`called` do contexto do dono e do envelope). O `used_by` não muda: mostra o campo, com o
+  `container` (o método).
+- **Consumidores.** O `called` do contexto do dono guarda a `relation` quando ela não é `calls`, e
+  o `prepare` escreve "Instanciada por" ou "Decorador de" no lugar de "Chamada por". O envelope
+  dá a um decorador o motivo `decorator`, sem tipo devolvido nem tipo dono.
+
 `basis: "import"` quer dizer que o alvo veio da tabela de imports do arquivo, lida do texto
 com o parser do extrator, sem executar nada.
 
@@ -237,8 +257,9 @@ comparados) aparece como `homonym` sobre os candidatos admitidos, sem ser seguid
 inventário segue todos eles.
 
 Cada link traz `from`, `to`, `occurrence`, `occurrence_kind`, `text`, `candidates`,
-`resolution`, `candidate_edge`, `basis`, `relation` (2.3a: `calls` ou `instantiates`), `runs`
-(só numa instanciação com `__init__` próprio) e `evidence`.
+`resolution`, `candidate_edge`, `basis`, `relation` (2.3a: `calls` ou `instantiates`; 2.3b: `decorates`), `runs`
+(só numa instanciação com `__init__` próprio), `via` (2.3b: o campo, quando o link vem do valor de um
+campo que o método declara; também nas entradas de `unresolved`) e `evidence`.
 - `candidates` conta os candidatos admitidos pela forma da chamada, não todas as declarações
   com o nome. Desde o 2.2, num link `receiver` (`self.m()`), a função solta homônima não é
   admitida e sai da contagem: o link e o alvo são os mesmos, mas `candidates` pode ser menor
