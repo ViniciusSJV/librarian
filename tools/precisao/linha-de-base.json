@@ -1,33 +1,33 @@
 {
  "projetos": {
   "hc": {
-   "run_novo": "20261125-010702",
+   "run_novo": "20261125-034533",
    "grafo_novo_igual_ao_de_referencia": false,
    "populacao": {
     "total": 1956,
     "por_resolution": {
      "no_candidate_in_project": 1313,
      "unique": 325,
-     "above_candidate_limit": 27,
-     "homonym": 206,
-     "type": 69,
+     "above_candidate_limit": 24,
+     "homonym": 203,
+     "type": 75,
      "import": 16
     },
     "por_estrato": {
      "no_candidate_in_project": 1313,
      "unique->outro": 309,
-     "above_candidate_limit": 27,
-     "homonym": 206,
-     "type": 69,
+     "above_candidate_limit": 24,
+     "homonym": 203,
+     "type": 75,
      "import": 16,
      "unique->function": 16
     },
     "metodo_para_funcao": 30
    },
    "amostra_contagem": {
-    "sem_candidato": 43,
-    "correta": 60,
-    "link_falso": 1,
+    "sem_candidato": 48,
+    "correta": 73,
+    "link_falso": 3,
     "candidatos_falsos": 14,
     "ambigua": 5
    },
@@ -36,9 +36,9 @@
     "correta": 4
    },
    "estimativa_populacao": {
-    "correta": 364,
+    "correta": 360,
     "link_falso": 31,
-    "candidatos_falsos": 132,
+    "candidatos_falsos": 131,
     "ambigua": 0,
     "sem_candidato": 1344
    },
@@ -560,9 +560,9 @@
      "id": "HC-58",
      "estrato": "receiver",
      "parte_c": false,
-     "categoria": "ambigua",
-     "categoria_regra_anterior": "ambigua",
-     "resposta": "homonym (2)",
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (2) → Profile.num_checks_available (hc/accounts/models.py:350)",
      "validada": "usuário (aceita por amostragem, 18/11)"
     },
     {
@@ -1058,7 +1058,7 @@
      "categoria": "correta",
      "categoria_regra_anterior": "correta",
      "resposta": "scope (3) → envsecret (hc/settings.py:49)",
-     "validada": "proposta pelo agente (20/11/2026, Parada 2 do 2.4a); aguarda a validação do usuário na folha"
+     "validada": "usuário (24/11/2026, folha da Parada 2 do 2.4a; conferido no editor)"
     },
     {
      "id": "HC-114",
@@ -1067,7 +1067,7 @@
      "categoria": "correta",
      "categoria_regra_anterior": "correta",
      "resposta": "scope (3) → envsecret (hc/settings.py:49)",
-     "validada": "proposta pelo agente (20/11/2026, Parada 2 do 2.4a); aguarda a validação do usuário na folha"
+     "validada": "usuário (24/11/2026, folha da Parada 2 do 2.4a)"
     },
     {
      "id": "HC-115",
@@ -1076,7 +1076,7 @@
      "categoria": "correta",
      "categoria_regra_anterior": "correta",
      "resposta": "scope (2) → Response (hc/lib/curl.py:32) [instancia]",
-     "validada": "proposta pelo agente (20/11/2026, Parada 2 do 2.4a); aguarda a validação do usuário na folha"
+     "validada": "usuário (24/11/2026, folha da Parada 2 do 2.4a)"
     },
     {
      "id": "HC-116",
@@ -1085,7 +1085,7 @@
      "categoria": "sem_candidato",
      "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
-     "validada": "proposta pelo agente (20/11/2026, Parada 2 do 2.4a); aguarda a validação do usuário na folha"
+     "validada": "usuário (24/11/2026, folha da Parada 2 do 2.4a)"
     },
     {
      "id": "HC-117",
@@ -1094,7 +1094,7 @@
      "categoria": "sem_candidato",
      "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
-     "validada": "proposta pelo agente (20/11/2026, Parada 2 do 2.4a); aguarda a validação do usuário na folha"
+     "validada": "usuário (24/11/2026, folha da Parada 2 do 2.4a)"
     },
     {
      "id": "HC-118",
@@ -1103,7 +1103,7 @@
      "categoria": "sem_candidato",
      "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
-     "validada": "proposta pelo agente (20/11/2026, Parada 2 do 2.4a); aguarda a validação do usuário na folha"
+     "validada": "usuário (24/11/2026, folha da Parada 2 do 2.4a)"
     },
     {
      "id": "HC-119",
@@ -1112,7 +1112,7 @@
      "categoria": "sem_candidato",
      "categoria_regra_anterior": "sem_candidato",
      "resposta": "no_candidate_in_project (0)",
-     "validada": "proposta pelo agente (20/11/2026, Parada 2 do 2.4a); aguarda a validação do usuário na folha"
+     "validada": "usuário (24/11/2026, folha da Parada 2 do 2.4a; conferido no editor)"
     },
     {
      "id": "HC-120",
@@ -1121,7 +1121,7 @@
      "categoria": "correta",
      "categoria_regra_anterior": "correta",
      "resposta": "import (33) → notify (hc/api/management/commands/sendalerts.py:24)",
-     "validada": "proposta pelo agente (20/11/2026, Parada 2 do 2.4a); aguarda a validação do usuário na folha"
+     "validada": "usuário (24/11/2026, folha da Parada 2 do 2.4a)"
     },
     {
      "id": "HC-121",
@@ -1130,7 +1130,7 @@
      "categoria": "correta",
      "categoria_regra_anterior": "correta",
      "resposta": "import (17) → Command (hc/logs/management/commands/sendlogs.py:14) [instancia]",
-     "validada": "proposta pelo agente (20/11/2026, Parada 2 do 2.4a); aguarda a validação do usuário na folha"
+     "validada": "usuário (24/11/2026, folha da Parada 2 do 2.4a)"
     },
     {
      "id": "HC-122",
@@ -1139,7 +1139,7 @@
      "categoria": "correta",
      "categoria_regra_anterior": "correta",
      "resposta": "scope (2) → setup_mock (hc/integrations/signal/tests/test_signal_captcha.py:43)",
-     "validada": "proposta pelo agente (20/11/2026, Parada 2 do 2.4a); aguarda a validação do usuário na folha"
+     "validada": "usuário (24/11/2026, folha da Parada 2 do 2.4a)"
     },
     {
      "id": "HC-123",
@@ -1148,7 +1148,187 @@
      "categoria": "correta",
      "categoria_regra_anterior": "correta",
      "resposta": "scope (2) → counts (hc/accounts/tests/test_senddeletionscheduled.py:19)",
-     "validada": "proposta pelo agente (20/11/2026, Parada 2 do 2.4a); aguarda a validação do usuário na folha"
+     "validada": "usuário (24/11/2026, folha da Parada 2 do 2.4a)"
+    },
+    {
+     "id": "HC-124",
+     "estrato": "heranca_self",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (5) → HttpTransport.post (hc/api/transports.py:199)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4b)"
+    },
+    {
+     "id": "HC-125",
+     "estrato": "heranca_self",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (3) → Slackalike.payload (hc/integrations/slack/transport.py:31)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4b)"
+    },
+    {
+     "id": "HC-126",
+     "estrato": "heranca_self",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (1) → HttpTransport.request (hc/api/transports.py:166)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4b)"
+    },
+    {
+     "id": "HC-127",
+     "estrato": "heranca_self",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → BaseTestCase.set_sudo_flag (hc/test.py:74)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4b)"
+    },
+    {
+     "id": "HC-128",
+     "estrato": "heranca_tipo",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → Server.process_message (hc/api/management/commands/smtpd.py:117)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4b)"
+    },
+    {
+     "id": "HC-129",
+     "estrato": "heranca_super",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (30) → TransportError.__init__ (hc/api/transports.py:57)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4b)"
+    },
+    {
+     "id": "HC-130",
+     "estrato": "heranca_super",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (30) → TransportError.__init__ (hc/api/transports.py:57)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4b)"
+    },
+    {
+     "id": "HC-131",
+     "estrato": "heranca_super",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (140) → BaseTestCase.setUp (hc/test.py:25)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4b)"
+    },
+    {
+     "id": "HC-132",
+     "estrato": "heranca_super",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (140) → BaseTestCase.setUp (hc/test.py:25)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4b)"
+    },
+    {
+     "id": "HC-133",
+     "estrato": "fora_da_cadeia",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4b)"
+    },
+    {
+     "id": "HC-134",
+     "estrato": "fora_da_cadeia",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4b)"
+    },
+    {
+     "id": "HC-135",
+     "estrato": "fora_da_cadeia",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4b)"
+    },
+    {
+     "id": "HC-136",
+     "estrato": "fora_da_cadeia",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4b)"
+    },
+    {
+     "id": "HC-137",
+     "estrato": "fora_da_cadeia",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4b; conferido no editor)"
+    },
+    {
+     "id": "HC-138",
+     "estrato": "cls",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (1) → HttpTransport.request (hc/api/transports.py:166)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4b)"
+    },
+    {
+     "id": "HC-139",
+     "estrato": "cls",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (5) → HttpTransport.post (hc/api/transports.py:199)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4b)"
+    },
+    {
+     "id": "HC-140",
+     "estrato": "cls",
+     "parte_c": false,
+     "categoria": "link_falso",
+     "categoria_regra_anterior": "link_falso",
+     "resposta": "type (12) → HttpTransport.raise_for_response (hc/api/transports.py:133)",
+     "validada": "usuário (25/11/2026, verdade corrigida pelo usuário na folha da Parada 2 do 2.4b)"
+    },
+    {
+     "id": "HC-141",
+     "estrato": "propriedade",
+     "parte_c": false,
+     "categoria": "ambigua",
+     "categoria_regra_anterior": "ambigua",
+     "resposta": "homonym (30)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4b; conferido no editor)"
+    },
+    {
+     "id": "HC-142",
+     "estrato": "propriedade",
+     "parte_c": false,
+     "categoria": "link_falso",
+     "categoria_regra_anterior": "link_falso",
+     "resposta": "type (14) → Transport.is_noop (hc/api/transports.py:76)",
+     "validada": "usuário (25/11/2026, verdade corrigida pelo usuário na folha da Parada 2 do 2.4b)"
+    },
+    {
+     "id": "HC-143",
+     "estrato": "propriedade",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → ZulipConf.formatted_to (hc/api/models.py:958)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4b)"
     }
    ],
    "executores": [
@@ -1179,7 +1359,7 @@
    ]
   },
   "rt": {
-   "run_novo": "20261125-011000",
+   "run_novo": "20261125-034841",
    "grafo_novo_igual_ao_de_referencia": false,
    "populacao": {
     "total": 515,
@@ -1830,7 +2010,7 @@
      "categoria": "correta",
      "categoria_regra_anterior": "correta",
      "resposta": "scope (2) → tests_world::create_default_world (src/world.rs:146)",
-     "validada": "proposta pelo agente (20/11/2026, Parada 2 do 2.4a); aguarda a validação do usuário na folha"
+     "validada": "usuário (24/11/2026, folha da Parada 2 do 2.4a)"
     },
     {
      "id": "RT-69",
@@ -1839,7 +2019,7 @@
      "categoria": "correta",
      "categoria_regra_anterior": "correta",
      "resposta": "scope (2) → tests_camera::create_default_world (src/camera.rs:291)",
-     "validada": "proposta pelo agente (20/11/2026, Parada 2 do 2.4a); aguarda a validação do usuário na folha"
+     "validada": "usuário (24/11/2026, folha da Parada 2 do 2.4a; conferido no editor)"
     },
     {
      "id": "RT-70",
@@ -1848,7 +2028,7 @@
      "categoria": "correta",
      "categoria_regra_anterior": "correta",
      "resposta": "unique (1) → render_benchmark (src/camera.rs:143)",
-     "validada": "proposta pelo agente (20/11/2026, Parada 2 do 2.4a); aguarda a validação do usuário na folha"
+     "validada": "usuário (24/11/2026, folha da Parada 2 do 2.4a)"
     }
    ],
    "executores": []
@@ -2145,13 +2325,13 @@
   },
   {
    "id": "F23",
-   "classificacao": "nao_depende",
+   "classificacao": "suspeito",
    "chamadas": [
     {
      "linha": 1173,
      "texto": "self.transport.notify(",
-     "classificacao": "nao_depende",
-     "resposta": "above_candidate_limit (33)"
+     "classificacao": "suspeito",
+     "resposta": "homonym (30)"
     }
    ]
   },
@@ -2413,11 +2593,10 @@
     ]
    },
    "agora": {
-    "resolution": "homonym",
+    "resolution": "type",
     "candidates": 2,
     "alvos": [
-     "Base.herdado (pkg/models.py:25)",
-     "Outro.herdado (pkg/models.py:35)"
+     "Base.herdado (pkg/models.py:25)"
     ],
     "relacao": "calls"
    },
@@ -2427,7 +2606,7 @@
     "passo": "2.4",
     "por_que": "f: Filho, e Filho(Base) herda herdado"
    },
-   "estado": "igual ao atual"
+   "estado": "no alvo"
   },
   {
    "id": "N5-py-self",
@@ -2440,11 +2619,10 @@
     ]
    },
    "agora": {
-    "resolution": "homonym",
+    "resolution": "type",
     "candidates": 2,
     "alvos": [
-     "Base.herdado (pkg/models.py:25)",
-     "Outro.herdado (pkg/models.py:35)"
+     "Base.herdado (pkg/models.py:25)"
     ],
     "relacao": "calls"
    },
@@ -2454,7 +2632,7 @@
     "passo": "2.4",
     "por_que": "self é Filho, que herda de Base"
    },
-   "estado": "igual ao atual"
+   "estado": "no alvo"
   },
   {
    "id": "N6-py",
@@ -3883,6 +4061,784 @@
     "por_que": "type Cl = Cliente; let c = Cl::new(..); acrescentado no 2.4a, com o binário do 2.3c como atual"
    },
    "estado": "no alvo"
+  },
+  {
+   "id": "N5-py-cadeia",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Alheia.topo (pkg/heranca_apoio.py:17)",
+     "Raiz.topo (pkg/heranca_apoio.py:5)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 2,
+    "alvos": [
+     "Raiz.topo (pkg/heranca_apoio.py:5)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Raiz.topo (pkg/heranca_apoio.py:5)",
+    "resolution": "type",
+    "passo": "2.4b",
+    "por_que": "duas bases acima, em outro arquivo"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N5-py-generica",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Alheia.topo (pkg/heranca_apoio.py:17)",
+     "Raiz.topo (pkg/heranca_apoio.py:5)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 2,
+    "alvos": [
+     "Raiz.topo (pkg/heranca_apoio.py:5)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Raiz.topo (pkg/heranca_apoio.py:5)",
+    "resolution": "type",
+    "passo": "2.4b",
+    "por_que": "base genérica, Caixa[int]"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N5-py-apelido",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Alheia.topo (pkg/heranca_apoio.py:17)",
+     "Raiz.topo (pkg/heranca_apoio.py:5)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 2,
+    "alvos": [
+     "Raiz.topo (pkg/heranca_apoio.py:5)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Raiz.topo (pkg/heranca_apoio.py:5)",
+    "resolution": "type",
+    "passo": "2.4b",
+    "por_que": "a base é um alias (as)"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N5-py-construtor",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Alheia.topo (pkg/heranca_apoio.py:17)",
+     "Raiz.topo (pkg/heranca_apoio.py:5)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 2,
+    "alvos": [
+     "Raiz.topo (pkg/heranca_apoio.py:5)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Raiz.topo (pkg/heranca_apoio.py:5)",
+    "resolution": "type",
+    "passo": "2.4b",
+    "por_que": "n = HNeto()"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N5-py-fora-depois",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Alheia.topo (pkg/heranca_apoio.py:17)",
+     "Raiz.topo (pkg/heranca_apoio.py:5)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 2,
+    "alvos": [
+     "Raiz.topo (pkg/heranca_apoio.py:5)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Raiz.topo (pkg/heranca_apoio.py:5)",
+    "resolution": "type",
+    "passo": "2.4b",
+    "por_que": "a base do projeto vem antes da de fora"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N5-py-fora-antes",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Alheia.topo (pkg/heranca_apoio.py:17)",
+     "Raiz.topo (pkg/heranca_apoio.py:5)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 1,
+    "alvos": [
+     "Raiz.topo (pkg/heranca_apoio.py:5)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4b",
+    "por_que": "a base de fora vem antes: não decide; só sai o candidato fora da cadeia"
+   },
+   "estado": "mudou"
+  },
+  {
+   "id": "N5-py-diamante",
+   "atual_registrado": {
+    "resolution": "above_candidate_limit",
+    "candidates": 9,
+    "alvos": []
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 9,
+    "alvos": [
+     "DC.mm (pkg/heranca.py:64)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "DC.mm (pkg/heranca.py:64)",
+    "resolution": "type",
+    "passo": "2.4b",
+    "por_que": "C3; em profundidade seria DA.mm"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N5-py-sobrescrita",
+   "atual_registrado": {
+    "resolution": "type",
+    "candidates": 3,
+    "alvos": [
+     "Raiz.passo (pkg/heranca_apoio.py:8)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 3,
+    "alvos": [
+     "Raiz.passo (pkg/heranca_apoio.py:8)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Raiz.passo (pkg/heranca_apoio.py:8)",
+    "resolution": "type",
+    "passo": "2.4b",
+    "por_que": "o tipo estático decide"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N5-py-atributo",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Alheia.escondido (pkg/heranca_apoio.py:35)",
+     "BaseEsc.escondido (pkg/heranca.py:119)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Alheia.escondido (pkg/heranca_apoio.py:35)",
+     "BaseEsc.escondido (pkg/heranca.py:119)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4b",
+    "por_que": "a classe liga o nome a uma função solta: não decide"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "N5-py-instancia",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Alheia.escondido (pkg/heranca_apoio.py:35)",
+     "BaseEsc.escondido (pkg/heranca.py:119)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Alheia.escondido (pkg/heranca_apoio.py:35)",
+     "BaseEsc.escondido (pkg/heranca.py:119)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4b",
+    "por_que": "a instância liga o nome: não decide"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "N5-py-getattr",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Alheia.topo (pkg/heranca_apoio.py:17)",
+     "Raiz.topo (pkg/heranca_apoio.py:5)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Alheia.topo (pkg/heranca_apoio.py:17)",
+     "Raiz.topo (pkg/heranca_apoio.py:5)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4b",
+    "por_que": "__getattr__: não decide"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "N5-py-condicional",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Alheia.topo (pkg/heranca_apoio.py:17)",
+     "Raiz.topo (pkg/heranca_apoio.py:5)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Alheia.topo (pkg/heranca_apoio.py:17)",
+     "Raiz.topo (pkg/heranca_apoio.py:5)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4b",
+    "por_que": "a base é ligada em if/else: não decide"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "N5-py-derruba",
+   "atual_registrado": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Alheia.inexistente (pkg/heranca_apoio.py:38)"
+    ]
+   },
+   "agora": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": [],
+    "relacao": null
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "no_candidate_in_project",
+    "passo": "2.4b",
+    "por_que": "a cadeia é toda do projeto e ninguém declara: sem candidato"
+   },
+   "estado": "mudou"
+  },
+  {
+   "id": "N5-py-so-fora",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Alheia.topo (pkg/heranca_apoio.py:17)",
+     "Raiz.topo (pkg/heranca_apoio.py:5)"
+    ]
+   },
+   "agora": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": [],
+    "relacao": null
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "no_candidate_in_project",
+    "passo": "2.4b",
+    "por_que": "só base de fora: nenhum candidato está na cadeia"
+   },
+   "estado": "mudou"
+  },
+  {
+   "id": "N5-py-super",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 3,
+    "alvos": [
+     "Alheia.passo (pkg/heranca_apoio.py:20)",
+     "HFilho.passo (pkg/heranca.py:12)",
+     "Raiz.passo (pkg/heranca_apoio.py:8)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 3,
+    "alvos": [
+     "Raiz.passo (pkg/heranca_apoio.py:8)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Raiz.passo (pkg/heranca_apoio.py:8)",
+    "resolution": "type",
+    "passo": "2.4b",
+    "por_que": "super()"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N5-py-super-args",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 3,
+    "alvos": [
+     "Alheia.passo (pkg/heranca_apoio.py:20)",
+     "HFilho.passo (pkg/heranca.py:12)",
+     "Raiz.passo (pkg/heranca_apoio.py:8)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 3,
+    "alvos": [
+     "Raiz.passo (pkg/heranca_apoio.py:8)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Raiz.passo (pkg/heranca_apoio.py:8)",
+    "resolution": "type",
+    "passo": "2.4b",
+    "por_que": "super(C, self)"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N5-py-super-coop",
+   "atual_registrado": {
+    "resolution": "above_candidate_limit",
+    "candidates": 9,
+    "alvos": []
+   },
+   "agora": {
+    "resolution": "above_candidate_limit",
+    "candidates": 9,
+    "alvos": [],
+    "relacao": null
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "above_candidate_limit",
+    "passo": "2.4b",
+    "por_que": "em CoopD continua em CoopB: não decide"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "N5-py-super-mixin",
+   "atual_registrado": {
+    "resolution": "above_candidate_limit",
+    "candidates": 9,
+    "alvos": []
+   },
+   "agora": {
+    "resolution": "above_candidate_limit",
+    "candidates": 9,
+    "alvos": [],
+    "relacao": null
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "above_candidate_limit",
+    "passo": "2.4b",
+    "por_que": "mixin sem base: não derruba"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "N5-py-mixin",
+   "atual_registrado": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": []
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 1,
+    "alvos": [
+     "Vizinha.vizinho (pkg/heranca.py:73)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4b",
+    "por_que": "em Junta é Vizinha.vizinho: não derruba (até o 2.4a, derrubava)"
+   },
+   "estado": "mudou"
+  },
+  {
+   "id": "N5-py-cls",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Alheia.criar (pkg/heranca_apoio.py:23)",
+     "Raiz.criar (pkg/heranca_apoio.py:11)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 2,
+    "alvos": [
+     "Raiz.criar (pkg/heranca_apoio.py:11)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Raiz.criar (pkg/heranca_apoio.py:11)",
+    "resolution": "type",
+    "passo": "2.4b",
+    "por_que": "cls num classmethod"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N5-py-prop",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 3,
+    "alvos": [
+     "Alheia.enviar (pkg/heranca_apoio.py:26)",
+     "Rapido.enviar (pkg/heranca_apoio.py:48)",
+     "Transporte.enviar (pkg/heranca_apoio.py:43)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 3,
+    "alvos": [
+     "Transporte.enviar (pkg/heranca_apoio.py:43)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Transporte.enviar (pkg/heranca_apoio.py:43)",
+    "resolution": "type",
+    "passo": "2.4b",
+    "por_que": "@property com retorno anotado"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N5-py-prop-herdada",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 3,
+    "alvos": [
+     "Alheia.enviar (pkg/heranca_apoio.py:26)",
+     "Rapido.enviar (pkg/heranca_apoio.py:48)",
+     "Transporte.enviar (pkg/heranca_apoio.py:43)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 3,
+    "alvos": [
+     "Transporte.enviar (pkg/heranca_apoio.py:43)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Transporte.enviar (pkg/heranca_apoio.py:43)",
+    "resolution": "type",
+    "passo": "2.4b",
+    "por_que": "a @property é da base"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N5-py-prop-sem-tipo",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 3,
+    "alvos": [
+     "Alheia.enviar (pkg/heranca_apoio.py:26)",
+     "Rapido.enviar (pkg/heranca_apoio.py:48)",
+     "Transporte.enviar (pkg/heranca_apoio.py:43)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 3,
+    "alvos": [
+     "Alheia.enviar (pkg/heranca_apoio.py:26)",
+     "Rapido.enviar (pkg/heranca_apoio.py:48)",
+     "Transporte.enviar (pkg/heranca_apoio.py:43)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4b",
+    "por_que": "@property sem anotação: não decide"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "N5-py-abstrato",
+   "atual_registrado": {
+    "resolution": "type",
+    "candidates": 5,
+    "alvos": [
+     "Envio.mandar (pkg/heranca_regras.py:9)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "EnvioA.mandar (pkg/heranca_regras.py:21)",
+     "EnvioC.mandar (pkg/heranca_regras.py:33)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4b",
+    "por_que": "abstrato: homonym com as sobrescritas EnvioA e EnvioC"
+   },
+   "estado": "mudou"
+  },
+  {
+   "id": "N5-py-abstrato-meio",
+   "atual_registrado": {
+    "resolution": "type",
+    "candidates": 5,
+    "alvos": [
+     "EnvioA.mandar (pkg/heranca_regras.py:21)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 5,
+    "alvos": [
+     "EnvioA.mandar (pkg/heranca_regras.py:21)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "EnvioA.mandar (pkg/heranca_regras.py:21)",
+    "resolution": "type",
+    "passo": "2.4b",
+    "por_que": "o tipo do meio é concreto"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N5-py-abstrato-construtor",
+   "atual_registrado": {
+    "resolution": "type",
+    "candidates": 5,
+    "alvos": [
+     "Envio.mandar (pkg/heranca_regras.py:9)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 5,
+    "alvos": [
+     "Envio.mandar (pkg/heranca_regras.py:9)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Envio.mandar (pkg/heranca_regras.py:9)",
+    "resolution": "type",
+    "passo": "2.4b",
+    "por_que": "construtor exato: roda o corpo abstrato"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N5-py-abstrato-super",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 3,
+    "alvos": [
+     "Envio.vazio (pkg/heranca_regras.py:13)",
+     "EnvioA.vazio (pkg/heranca_regras.py:24)",
+     "EnvioSuper.vazio (pkg/heranca_regras.py:38)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 3,
+    "alvos": [
+     "Envio.vazio (pkg/heranca_regras.py:13)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Envio.vazio (pkg/heranca_regras.py:13)",
+    "resolution": "type",
+    "passo": "2.4b",
+    "por_que": "super(): roda o corpo abstrato"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N5-py-abc",
+   "atual_registrado": {
+    "resolution": "type",
+    "candidates": 5,
+    "alvos": [
+     "ComAbc.mandar (pkg/heranca_regras.py:48)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 1,
+    "alvos": [
+     "ComAbcFilha.mandar (pkg/heranca_regras.py:54)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4b",
+    "por_que": "@abstractmethod: homonym com a sobrescrita"
+   },
+   "estado": "mudou"
+  },
+  {
+   "id": "N5-py-base-dinamica",
+   "atual_registrado": {
+    "resolution": "above_candidate_limit",
+    "candidates": 9,
+    "alvos": []
+   },
+   "agora": {
+    "resolution": "above_candidate_limit",
+    "candidates": 9,
+    "alvos": [],
+    "relacao": null
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "above_candidate_limit",
+    "passo": "2.4b",
+    "por_que": "a base é uma expressão: não decide"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "N5-py-meta",
+   "atual_registrado": {
+    "resolution": "above_candidate_limit",
+    "candidates": 9,
+    "alvos": []
+   },
+   "agora": {
+    "resolution": "above_candidate_limit",
+    "candidates": 9,
+    "alvos": [],
+    "relacao": null
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "above_candidate_limit",
+    "passo": "2.4b",
+    "por_que": "metaclass: não decide"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "N5-py-decorador",
+   "atual_registrado": {
+    "resolution": "above_candidate_limit",
+    "candidates": 9,
+    "alvos": []
+   },
+   "agora": {
+    "resolution": "above_candidate_limit",
+    "candidates": 9,
+    "alvos": [],
+    "relacao": null
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "above_candidate_limit",
+    "passo": "2.4b",
+    "por_que": "decorador de classe: não decide"
+   },
+   "estado": "igual ao atual"
   }
  ],
  "studio_original": {

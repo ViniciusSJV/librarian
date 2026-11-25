@@ -1,7 +1,7 @@
 {
  "projeto": "healthchecks-25597e41",
  "fonte": "Projetos/pilotos/healthchecks @ 6c05a7a",
- "selecao": "tools/precisao/amostra.js sobre a linha de base de 18/11/2026 (binário de aae51d7); HC-61 a HC-75: estratos do passo 2.2 (metodo_funcao, modulo_f, espelho), escolhidos à mão na Parada 1 do 2.2, equilibrando código de teste e de produção; HC-76 a HC-87: estratos do passo 2.3a (tipo_py, instancia, receiver_py_teto), escolhidos à mão na Parada 1 do 2.3; HC-88 a HC-97: estratos do passo 2.3b (decorador, campo_init), escolhidos à mão na Parada 1 do 2.3b; HC-98 a HC-112: estratos do passo 2.3c (retorno_py, campo_outro_arquivo, retorno_confirma, liga_nao_fecha, cadeia), escolhidos à mão na Parada 1 do 2.3c; HC-113 a HC-123: estratos do passo 2.4a (escopo_modulo, escopo_fora, escopo_local, escopo_import), escolhidos à mão na Parada 1 do 2.4",
+ "selecao": "tools/precisao/amostra.js sobre a linha de base de 18/11/2026 (binário de aae51d7); HC-61 a HC-75: estratos do passo 2.2 (metodo_funcao, modulo_f, espelho), escolhidos à mão na Parada 1 do 2.2, equilibrando código de teste e de produção; HC-76 a HC-87: estratos do passo 2.3a (tipo_py, instancia, receiver_py_teto), escolhidos à mão na Parada 1 do 2.3; HC-88 a HC-97: estratos do passo 2.3b (decorador, campo_init), escolhidos à mão na Parada 1 do 2.3b; HC-98 a HC-112: estratos do passo 2.3c (retorno_py, campo_outro_arquivo, retorno_confirma, liga_nao_fecha, cadeia), escolhidos à mão na Parada 1 do 2.3c; HC-113 a HC-123: estratos do passo 2.4a (escopo_modulo, escopo_fora, escopo_local, escopo_import), escolhidos à mão na Parada 1 do 2.4; HC-124 a HC-143: estratos do passo 2.4b (heranca_self, heranca_tipo, heranca_super, fora_da_cadeia, cls, propriedade), escolhidos à mão na Parada 1 do 2.4b",
  "chamadas": [
   {
    "id": "HC-01",
@@ -2783,6 +2783,507 @@
    "certeza": "alta",
    "justificativa": "`counts` é a função do próprio arquivo; o homônimo está em hc/accounts/tests/test_sendinactivitynotices.py.",
    "verdade_validada_por": "usuário (24/11/2026, folha da Parada 2 do 2.4a)"
+  },
+  {
+   "id": "HC-124",
+   "parte_c": false,
+   "estrato": "heranca_self",
+   "ocorrencia": "hc/integrations/slack/transport.py@3650-3716",
+   "local": "hc/integrations/slack/transport.py:97",
+   "texto": "self.post(self.channel.slack_webhook_url, json=self.payload(flip))",
+   "dono": "Slackalike.notify",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 5,
+    "alvos": [
+     "AuthTestCase.post (hc/api/tests/test_auth.py:12)",
+     "BounceTestCase.post (hc/api/tests/test_bounces.py:32)",
+     "CreateCheckTestCase.post (hc/api/tests/test_create_check.py:15)",
+     "HttpTransport.post (hc/api/transports.py:199)",
+     "UpdateCheckTestCase.post (hc/api/tests/test_update_check.py:20)"
+    ]
+   },
+   "verdade": {
+    "alvo": "HttpTransport.post (hc/api/transports.py:199)"
+   },
+   "certeza": "alta",
+   "justificativa": "`Slackalike(HttpTransport)` não declara `post`; a cadeia é Slackalike, HttpTransport, Transport.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4b)"
+  },
+  {
+   "id": "HC-125",
+   "parte_c": false,
+   "estrato": "heranca_self",
+   "ocorrencia": "hc/integrations/mattermost/transport.py@481-499",
+   "local": "hc/integrations/mattermost/transport.py:15",
+   "texto": "self.payload(flip)",
+   "dono": "Mattermost.notify",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 3,
+    "alvos": [
+     "MsTeamsWorkflow.payload (hc/integrations/msteamsw/transport.py:18)",
+     "RocketChat.payload (hc/integrations/rocketchat/transport.py:18)",
+     "Slackalike.payload (hc/integrations/slack/transport.py:31)"
+    ]
+   },
+   "verdade": {
+    "alvo": "Slackalike.payload (hc/integrations/slack/transport.py:31)"
+   },
+   "certeza": "alta",
+   "justificativa": "`Mattermost(Slackalike)` não declara `payload`.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4b)"
+  },
+  {
+   "id": "HC-126",
+   "parte_c": false,
+   "estrato": "heranca_self",
+   "ocorrencia": "hc/integrations/webhook/transport.py@3446-3518",
+   "local": "hc/integrations/webhook/transport.py:96",
+   "texto": "self.request(method, url, retry=retry, data=body_bytes, headers=headers)",
+   "dono": "Webhook.notify",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 1,
+    "alvos": [
+     "HttpTransport.request (hc/api/transports.py:166)"
+    ]
+   },
+   "verdade": {
+    "alvo": "HttpTransport.request (hc/api/transports.py:166)"
+   },
+   "certeza": "alta",
+   "justificativa": "`Webhook(HttpTransport)` não declara `request`.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4b)"
+  },
+  {
+   "id": "HC-127",
+   "parte_c": false,
+   "estrato": "heranca_self",
+   "ocorrencia": "hc/accounts/tests/test_close_account.py@1916-1936",
+   "local": "hc/accounts/tests/test_close_account.py:52",
+   "texto": "self.set_sudo_flag()",
+   "dono": "CloseAccountTestCase.test_it_requires_confirmation",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "BaseTestCase.set_sudo_flag (hc/test.py:74)"
+    ]
+   },
+   "verdade": {
+    "alvo": "BaseTestCase.set_sudo_flag (hc/test.py:74)"
+   },
+   "certeza": "alta",
+   "justificativa": "A classe de teste herda de `BaseTestCase`, que declara `set_sudo_flag`, antes de `TestCase`.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4b)"
+  },
+  {
+   "id": "HC-128",
+   "parte_c": false,
+   "estrato": "heranca_tipo",
+   "ocorrencia": "hc/api/tests/test_smtpd.py@7592-7709",
+   "local": "hc/api/tests/test_smtpd.py:216",
+   "texto": "TestServer().process_message(\r\n            (\"127.0.0.1\", 2345), \"foo@example.org\", rcpttos, b\"hello world\"\r\n        )",
+   "dono": "SmtpdTestCase.test_it_handles_multiple_recipients",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Server.process_message (hc/api/management/commands/smtpd.py:117)"
+    ]
+   },
+   "verdade": {
+    "alvo": "Server.process_message (hc/api/management/commands/smtpd.py:117)"
+   },
+   "certeza": "alta",
+   "justificativa": "`TestServer(Server)` não declara `process_message`.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4b)"
+  },
+  {
+   "id": "HC-129",
+   "parte_c": false,
+   "estrato": "heranca_super",
+   "ocorrencia": "hc/integrations/telegram/transport.py@417-458",
+   "local": "hc/integrations/telegram/transport.py:15",
+   "texto": "super().__init__(message, permanent=True)",
+   "dono": "MigrationRequiredError.__init__",
+   "linha_de_base": {
+    "resolution": "above_candidate_limit",
+    "candidates": 30,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "TransportError.__init__ (hc/api/transports.py:57)"
+   },
+   "certeza": "alta",
+   "justificativa": "`MigrationRequiredError(TransportError)`; `TransportError` declara `__init__`.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4b)"
+  },
+  {
+   "id": "HC-130",
+   "parte_c": false,
+   "estrato": "heranca_super",
+   "ocorrencia": "hc/integrations/signal/transport.py@533-575",
+   "local": "hc/integrations/signal/transport.py:22",
+   "texto": "super().__init__(\"CAPTCHA proof required\")",
+   "dono": "SignalRateLimitFailure.__init__",
+   "linha_de_base": {
+    "resolution": "above_candidate_limit",
+    "candidates": 30,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "TransportError.__init__ (hc/api/transports.py:57)"
+   },
+   "certeza": "alta",
+   "justificativa": "`SignalRateLimitFailure(TransportError)`.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4b)"
+  },
+  {
+   "id": "HC-131",
+   "parte_c": false,
+   "estrato": "heranca_super",
+   "ocorrencia": "hc/integrations/pd/tests/test_add.py@311-326",
+   "local": "hc/integrations/pd/tests/test_add.py:14",
+   "texto": "super().setUp()",
+   "dono": "AddPdTestCase.setUp",
+   "linha_de_base": {
+    "resolution": "above_candidate_limit",
+    "candidates": 140,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "BaseTestCase.setUp (hc/test.py:25)"
+   },
+   "certeza": "alta",
+   "justificativa": "A classe de teste herda de `BaseTestCase`, que declara `setUp`.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4b)"
+  },
+  {
+   "id": "HC-132",
+   "parte_c": false,
+   "estrato": "heranca_super",
+   "ocorrencia": "hc/accounts/tests/test_add_webauthn.py@331-346",
+   "local": "hc/accounts/tests/test_add_webauthn.py:14",
+   "texto": "super().setUp()",
+   "dono": "AddWebauthnTestCase.setUp",
+   "linha_de_base": {
+    "resolution": "above_candidate_limit",
+    "candidates": 140,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "BaseTestCase.setUp (hc/test.py:25)"
+   },
+   "certeza": "alta",
+   "justificativa": "Igual a HC-131.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4b)"
+  },
+  {
+   "id": "HC-133",
+   "parte_c": false,
+   "estrato": "fora_da_cadeia",
+   "ocorrencia": "hc/integrations/webhook/forms.py@2141-2156",
+   "local": "hc/integrations/webhook/forms.py:70",
+   "texto": "super().clean()",
+   "dono": "WebhookForm.clean",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 6,
+    "alvos": [
+     "EmailForm.clean (hc/integrations/email/forms.py:14)",
+     "LowercaseEmailField.clean (hc/accounts/forms.py:19)",
+     "PasswordLoginForm.clean (hc/accounts/forms.py:99)",
+     "PhoneUpDownForm.clean (hc/front/forms.py:159)",
+     "SignalForm.clean (hc/integrations/signal/forms.py:36)",
+     "WebhookForm.clean (hc/integrations/webhook/forms.py:69)"
+    ]
+   },
+   "verdade": {
+    "externo": "Django: Form.clean"
+   },
+   "certeza": "alta",
+   "justificativa": "`WebhookForm(forms.Form)`: só há base de fora depois da própria classe.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4b)"
+  },
+  {
+   "id": "HC-134",
+   "parte_c": false,
+   "estrato": "fora_da_cadeia",
+   "ocorrencia": "hc/test.py@826-841",
+   "local": "hc/test.py:26",
+   "texto": "super().setUp()",
+   "dono": "BaseTestCase.setUp",
+   "linha_de_base": {
+    "resolution": "above_candidate_limit",
+    "candidates": 140,
+    "alvos": []
+   },
+   "verdade": {
+    "externo": "Django: TestCase.setUp"
+   },
+   "certeza": "alta",
+   "justificativa": "`BaseTestCase(TestCase)`: só há base de fora depois da própria classe.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4b)"
+  },
+  {
+   "id": "HC-135",
+   "parte_c": false,
+   "estrato": "fora_da_cadeia",
+   "ocorrencia": "hc/lib/signing.py@1208-1227",
+   "local": "hc/lib/signing.py:29",
+   "texto": "super().sign(value)",
+   "dono": "ShortHexTimestampSigner.sign",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "ShortHexTimestampSigner.sign (hc/lib/signing.py:26)"
+    ]
+   },
+   "verdade": {
+    "externo": "Django: Signer.sign"
+   },
+   "certeza": "alta",
+   "justificativa": "`super()` nunca alcança a própria classe; a base é do Django.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4b)"
+  },
+  {
+   "id": "HC-136",
+   "parte_c": false,
+   "estrato": "fora_da_cadeia",
+   "ocorrencia": "hc/integrations/webhook/forms.py@1238-1261",
+   "local": "hc/integrations/webhook/forms.py:49",
+   "texto": "super().validate(value)",
+   "dono": "HeadersField.validate",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "HeadersField.validate (hc/integrations/webhook/forms.py:48)"
+    ]
+   },
+   "verdade": {
+    "externo": "Django: forms.Field.validate"
+   },
+   "certeza": "alta",
+   "justificativa": "`super()` nunca alcança a própria classe; a base é do Django.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4b)"
+  },
+  {
+   "id": "HC-137",
+   "parte_c": false,
+   "estrato": "fora_da_cadeia",
+   "ocorrencia": "hc/api/models.py@39747-39770",
+   "local": "hc/api/models.py:1049",
+   "texto": "self.get_kind_display()",
+   "dono": "Channel.__str__",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Ping.get_kind_display (hc/api/models.py:790)"
+    ]
+   },
+   "verdade": {
+    "externo": "Django: o get_kind_display gerado para o campo Channel.kind"
+   },
+   "certeza": "alta",
+   "justificativa": "`Ping.get_kind_display` não está na cadeia de `Channel` (só `models.Model`); o Django gera o método do campo com `choices`.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4b; conferido no editor)"
+  },
+  {
+   "id": "HC-138",
+   "parte_c": false,
+   "estrato": "cls",
+   "ocorrencia": "hc/api/transports.py@6474-6692",
+   "local": "hc/api/transports.py:211",
+   "texto": "cls.request(\r\n            \"post\",\r\n            url,\r\n            retry=retry,\r\n            params=params,\r\n            data=data,\r\n            json=json,\r\n            headers=headers,\r\n            auth=auth,\r\n        )",
+   "dono": "HttpTransport.post",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 1,
+    "alvos": [
+     "HttpTransport.request (hc/api/transports.py:166)"
+    ]
+   },
+   "verdade": {
+    "alvo": "HttpTransport.request (hc/api/transports.py:166)"
+   },
+   "certeza": "alta",
+   "justificativa": "`cls` é o primeiro parâmetro do `@classmethod` `post`, de `HttpTransport`.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4b)"
+  },
+  {
+   "id": "HC-139",
+   "parte_c": false,
+   "estrato": "cls",
+   "ocorrencia": "hc/integrations/telegram/transport.py@2367-2397",
+   "local": "hc/integrations/telegram/transport.py:65",
+   "texto": "cls.post(cls.SM, json=payload)",
+   "dono": "Telegram.send",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 5,
+    "alvos": [
+     "AuthTestCase.post (hc/api/tests/test_auth.py:12)",
+     "BounceTestCase.post (hc/api/tests/test_bounces.py:32)",
+     "CreateCheckTestCase.post (hc/api/tests/test_create_check.py:15)",
+     "HttpTransport.post (hc/api/transports.py:199)",
+     "UpdateCheckTestCase.post (hc/api/tests/test_update_check.py:20)"
+    ]
+   },
+   "verdade": {
+    "alvo": "HttpTransport.post (hc/api/transports.py:199)"
+   },
+   "certeza": "alta",
+   "justificativa": "`cls` no `@classmethod` `Telegram.send`; `Telegram(HttpTransport)` não declara `post`.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4b)"
+  },
+  {
+   "id": "HC-140",
+   "parte_c": false,
+   "estrato": "cls",
+   "ocorrencia": "hc/api/transports.py@5026-5051",
+   "local": "hc/api/transports.py:162",
+   "texto": "cls.raise_for_response(r)",
+   "dono": "HttpTransport._request",
+   "linha_de_base": {
+    "resolution": "above_candidate_limit",
+    "candidates": 12,
+    "alvos": []
+   },
+   "verdade": {
+    "ambigua": [
+     "HttpTransport.raise_for_response (hc/api/transports.py:133)",
+     "Call.raise_for_response (hc/integrations/call/transport.py:23)",
+     "Discord.raise_for_response (hc/integrations/discord/transport.py:12)",
+     "GitHub.raise_for_response (hc/integrations/github/transport.py:17)",
+     "Opsgenie.raise_for_response (hc/integrations/opsgenie/transport.py:19)",
+     "Pushover.raise_for_response (hc/integrations/po/transport.py:23)",
+     "Slack.raise_for_response (hc/integrations/slack/transport.py:101)",
+     "Sms.raise_for_response (hc/integrations/sms/transport.py:22)",
+     "Telegram.raise_for_response (hc/integrations/telegram/transport.py:37)",
+     "VictorOps.raise_for_response (hc/integrations/victorops/transport.py:13)",
+     "WhatsApp.raise_for_response (hc/integrations/whatsapp/transport.py:23)",
+     "Zulip.raise_for_response (hc/integrations/zulip/transport.py:17)"
+    ],
+    "observacao": "despacho polimórfico com corpo não abstrato: o método do tipo estático e as sobrescritas podem rodar (2.4c)"
+   },
+   "certeza": "alta",
+   "justificativa": "`cls` no `@classmethod` `_request`, de `HttpTransport`. 11 subclasses do projeto o sobrescrevem, e o objeto pode ser de qualquer uma. Link falso conhecido; o 2.4c o corrige.",
+   "verdade_validada_por": "usuário (25/11/2026, verdade corrigida pelo usuário na folha da Parada 2 do 2.4b)"
+  },
+  {
+   "id": "HC-141",
+   "parte_c": false,
+   "estrato": "propriedade",
+   "ocorrencia": "hc/api/models.py@44279-44322",
+   "local": "hc/api/models.py:1173",
+   "texto": "self.transport.notify(flip, notification=n)",
+   "dono": "Channel.notify",
+   "linha_de_base": {
+    "resolution": "above_candidate_limit",
+    "candidates": 33,
+    "alvos": []
+   },
+   "verdade": {
+    "ambigua": [
+     "Apprise.notify (hc/integrations/apprise/transport.py:17)",
+     "Call.notify (hc/integrations/call/transport.py:39)",
+     "Discord.notify (hc/integrations/discord/transport.py:19)",
+     "Email.notify (hc/integrations/email/transport.py:64)",
+     "GitHub.notify (hc/integrations/github/transport.py:27)",
+     "GoogleChat.notify (hc/integrations/googlechat/transport.py:19)",
+     "Gotify.notify (hc/integrations/gotify/transport.py:18)",
+     "Group.notify (hc/integrations/group/transport.py:8)",
+     "Matrix.notify (hc/integrations/matrix/transport.py:21)",
+     "Mattermost.notify (hc/integrations/mattermost/transport.py:11)",
+     "MsTeamsWorkflow.notify (hc/integrations/msteamsw/transport.py:110)",
+     "Ntfy.notify (hc/integrations/ntfy/transport.py:18)",
+     "Opsgenie.notify (hc/integrations/opsgenie/transport.py:30)",
+     "PagerDuty.notify (hc/integrations/pd/transport.py:14)",
+     "PagerTree.notify (hc/integrations/pagertree/transport.py:10)",
+     "Pushbullet.notify (hc/integrations/pushbullet/transport.py:10)",
+     "Pushover.notify (hc/integrations/po/transport.py:48)",
+     "RocketChat.notify (hc/integrations/rocketchat/transport.py:60)",
+     "Shell.notify (hc/integrations/shell/transport.py:23)",
+     "Signal.notify (hc/integrations/signal/transport.py:159)",
+     "Slack.notify (hc/integrations/slack/transport.py:122)",
+     "Slackalike.notify (hc/integrations/slack/transport.py:96)",
+     "Sms.notify (hc/integrations/sms/transport.py:42)",
+     "Spike.notify (hc/integrations/spike/transport.py:10)",
+     "Telegram.notify (hc/integrations/telegram/transport.py:67)",
+     "Trello.notify (hc/integrations/trello/transport.py:15)",
+     "VictorOps.notify (hc/integrations/victorops/transport.py:20)",
+     "Webhook.notify (hc/integrations/webhook/transport.py:69)",
+     "WhatsApp.notify (hc/integrations/whatsapp/transport.py:45)",
+     "Zulip.notify (hc/integrations/zulip/transport.py:28)"
+    ],
+    "observacao": "Transport.notify é abstrato (raise NotImplementedError); roda o da subclasse escolhida por Channel.transport (DEC-43)"
+   },
+   "certeza": "alta",
+   "justificativa": "`Channel.transport -> transports.Transport`; `Transport.notify` só levanta NotImplementedError, e 30 subclasses o sobrescrevem (a verdade do F23).",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4b; conferido no editor)"
+  },
+  {
+   "id": "HC-142",
+   "parte_c": false,
+   "estrato": "propriedade",
+   "ocorrencia": "hc/api/models.py@43640-43679",
+   "local": "hc/api/models.py:1153",
+   "texto": "self.transport.is_noop(flip.new_status)",
+   "dono": "Channel.notify",
+   "linha_de_base": {
+    "resolution": "above_candidate_limit",
+    "candidates": 14,
+    "alvos": []
+   },
+   "verdade": {
+    "ambigua": [
+     "Transport.is_noop (hc/api/transports.py:76)",
+     "Call.is_noop (hc/integrations/call/transport.py:36)",
+     "Email.is_noop (hc/integrations/email/transport.py:115)",
+     "GitHub.is_noop (hc/integrations/github/transport.py:14)",
+     "Gotify.is_noop (hc/integrations/gotify/transport.py:15)",
+     "Ntfy.is_noop (hc/integrations/ntfy/transport.py:15)",
+     "Pushover.is_noop (hc/integrations/po/transport.py:38)",
+     "RemovedTransport.is_noop (hc/api/transports.py:128)",
+     "Shell.is_noop (hc/integrations/shell/transport.py:14)",
+     "Signal.is_noop (hc/integrations/signal/transport.py:54)",
+     "Sms.is_noop (hc/integrations/sms/transport.py:36)",
+     "Trello.is_noop (hc/integrations/trello/transport.py:12)",
+     "Webhook.is_noop (hc/integrations/webhook/transport.py:63)",
+     "WhatsApp.is_noop (hc/integrations/whatsapp/transport.py:39)"
+    ],
+    "observacao": "despacho polimórfico com corpo não abstrato: o método do tipo estático e as sobrescritas podem rodar (2.4c)"
+   },
+   "certeza": "alta",
+   "justificativa": "`Channel.transport -> transports.Transport`. 13 subclasses do projeto o sobrescrevem, e o objeto pode ser de qualquer uma. Link falso conhecido; o 2.4c o corrige.",
+   "verdade_validada_por": "usuário (25/11/2026, verdade corrigida pelo usuário na folha da Parada 2 do 2.4b)"
+  },
+  {
+   "id": "HC-143",
+   "parte_c": false,
+   "estrato": "propriedade",
+   "ocorrencia": "hc/integrations/zulip/transport.py@1527-1560",
+   "local": "hc/integrations/zulip/transport.py:48",
+   "texto": "self.channel.zulip.formatted_to()",
+   "dono": "Zulip.notify",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "ZulipConf.formatted_to (hc/api/models.py:958)"
+    ]
+   },
+   "verdade": {
+    "alvo": "ZulipConf.formatted_to (hc/api/models.py:958)"
+   },
+   "certeza": "alta",
+   "justificativa": "`Channel.zulip -> ZulipConf`.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4b)"
   }
  ]
 }
