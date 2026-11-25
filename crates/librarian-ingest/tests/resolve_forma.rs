@@ -321,9 +321,9 @@ fn resolved(s: &Setup, caller: &str, text: &str) -> (String, Vec<String>, usize)
     let graph = resolver.candidates(&occurrence).len();
     match resolver.resolve(&caller, &occurrence, None) {
         Resolution::Linked(how, targets) => (how.as_str().to_owned(), labels(targets), graph),
-        Resolution::Homonym(targets) => ("homonym".to_owned(), labels(targets), graph),
+        Resolution::Homonym(targets) | Resolution::Overrides(targets) => ("homonym".to_owned(), labels(targets), graph),
         Resolution::AboveLimit(n) => (format!("above_candidate_limit {n}"), vec![], graph),
-        Resolution::NoCandidate => ("no_candidate_in_project".to_owned(), vec![], graph),
+        Resolution::NoCandidate | Resolution::OutOfChain => ("no_candidate_in_project".to_owned(), vec![], graph),
     }
 }
 

@@ -164,6 +164,8 @@ impl Extractor for Python {
             facts.classes = read.classes;
             facts.field_receivers = read.field_receivers;
             facts.returns = read.returns;
+            facts.cls_receivers = read.cls_receivers;
+            facts.methods = read.methods;
         }
         facts
     }

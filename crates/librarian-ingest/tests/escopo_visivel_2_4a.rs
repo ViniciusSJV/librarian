@@ -284,9 +284,9 @@ fn resolved(s: &Setup, file: &str, caller: &str, text: &str) -> (String, Vec<Str
     };
     match Resolver::new(g, &s.syntax).resolve(&found[0].from, &found[0].to, None) {
         Resolution::Linked(how, targets) => (how.as_str().to_owned(), labels(targets)),
-        Resolution::Homonym(targets) => ("homonym".to_owned(), labels(targets)),
+        Resolution::Homonym(targets) | Resolution::Overrides(targets) => ("homonym".to_owned(), labels(targets)),
         Resolution::AboveLimit(n) => (format!("above_candidate_limit {n}"), vec![]),
-        Resolution::NoCandidate => ("no_candidate_in_project".to_owned(), vec![]),
+        Resolution::NoCandidate | Resolution::OutOfChain => ("no_candidate_in_project".to_owned(), vec![]),
     }
 }
 

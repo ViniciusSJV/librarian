@@ -267,9 +267,9 @@ fn resolved(s: &Setup, caller: &str, text: &str, chosen: Option<&str>) -> (Strin
     };
     match resolver.resolve(&caller, &occurrence, chosen.as_deref()) {
         Resolution::Linked(how, targets) => (how.as_str().to_owned(), labels(targets)),
-        Resolution::Homonym(targets) => ("homonym".to_owned(), labels(targets)),
+        Resolution::Homonym(targets) | Resolution::Overrides(targets) => ("homonym".to_owned(), labels(targets)),
         Resolution::AboveLimit(n) => (format!("above_candidate_limit {n}"), vec![]),
-        Resolution::NoCandidate => ("no_candidate_in_project".to_owned(), vec![]),
+        Resolution::NoCandidate | Resolution::OutOfChain => ("no_candidate_in_project".to_owned(), vec![]),
     }
 }
 

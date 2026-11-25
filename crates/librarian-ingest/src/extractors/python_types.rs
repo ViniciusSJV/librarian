@@ -2,7 +2,7 @@
 //! is written: an annotated parameter or variable, `self` in a method, a constructor call, a field
 //! of a class of the same file. Which class a written name means is not decided here: the resolver
 //! reads it at query time from the file's imports. Never inferred as a type checker would.
-use crate::resolve::{ClassFacts, Returned};
+use crate::resolve::{ClassFacts, MethodFacts, Returned};
 use rustpython_ast::{self as ast, text_size::TextRange, Ranged, Visitor};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -26,6 +26,10 @@ pub(crate) struct Read {
     pub field_receivers: BTreeMap<(usize, usize), (String, usize, String)>,
     /// What each written return names, by the span of the return annotation.
     pub returns: BTreeMap<(usize, usize), crate::resolve::Returned>,
+    /// Step 2.4b: the receivers that are a `classmethod`'s first parameter (`cls.m()`).
+    pub cls_receivers: BTreeSet<(usize, usize)>,
+    /// Step 2.4b: what each function or method is, by where its declaration ends.
+    pub methods: BTreeMap<usize, MethodFacts>,
 }
 
 /// Step 2.3c: the span the extractor records for a call: the whole call when the callee is an
@@ -46,6 +50,8 @@ enum Val {
     Call(String),
     /// The method's own receiver: the class.
     SelfOf(String),
+    /// Step 2.4b: a `classmethod`'s first parameter; not a type the extractor records.
+    Cls,
     None,
     /// Another name (`self.x = p`): read through the method's parameter annotations.
     Name(String),
@@ -290,12 +296,41 @@ impl Fields {
                 },
                 _ => None,
             };
+            let offset = self.2;
             let facts = classes.entry(qualified.clone()).or_default();
+            // Step 2.4b: the bases as written, where the header is, and the names the class or its
+            // instances bind to anything that is not a method. Two classes of one name: not read.
+            facts.repeated |= facts.at.is_some();
+            facts.at = Some(span(c.range, offset).0);
+            for base in &c.bases {
+                let inner = match base {
+                    ast::Expr::Subscript(s) => s.value.as_ref(),
+                    b => b,
+                };
+                match dotted(inner) {
+                    Some(name) if name == "object" => {}
+                    written => facts.bases.push(written),
+                }
+            }
+            facts.dynamic |= !c.decorator_list.is_empty() || !c.keywords.is_empty();
+            let mut names = Binds::default();
+            for item in &c.body {
+                if !matches!(item, ast::Stmt::FunctionDef(_) | ast::Stmt::AsyncFunctionDef(_)) {
+                    names.collect(std::slice::from_ref(item));
+                }
+            }
+            facts.names.extend(names.vals.into_keys());
+            let mut stores = Stores::default();
+            for item in &c.body {
+                if matches!(item, ast::Stmt::FunctionDef(_) | ast::Stmt::AsyncFunctionDef(_)) {
+                    stores.visit_stmt(item.clone());
+                }
+            }
+            facts.stored.extend(stores.0);
             facts.based |= c.bases.iter().any(|b| last(b).as_deref() != Some("object"));
             facts.protocol |= c.bases.iter().any(|b| last(b).as_deref() == Some("Protocol"));
             let writes = self.0.entry(c.name.to_string()).or_default();
             let calls = self.1.entry(c.name.to_string()).or_default();
-            let offset = self.2;
             for item in &c.body {
                 match item {
                     ast::Stmt::AnnAssign(a) => {
@@ -388,6 +423,19 @@ fn method_writes(
     }
 }
 
+/// Step 2.4b: the attributes written through `self` or `cls`.
+#[derive(Default)]
+struct Stores(BTreeSet<String>);
+
+impl Visitor for Stores {
+    fn visit_expr_attribute(&mut self, node: ast::ExprAttribute) {
+        if matches!(node.ctx, ast::ExprContext::Store) && matches!(node.value.as_ref(), ast::Expr::Name(n) if matches!(n.id.as_str(), "self" | "cls")) {
+            self.0.insert(node.attr.to_string());
+        }
+        self.generic_visit_expr_attribute(node);
+    }
+}
+
 /// One function's bindings (a lambda's or a comprehension's: its parameters or targets, unknown).
 struct Scope(Binds);
 
@@ -400,6 +448,7 @@ struct Walk<'a> {
     fields: &'a Fields,
     out: Vec<Typed>,
     field_receivers: BTreeMap<(usize, usize), (String, usize, String)>,
+    cls_receivers: BTreeSet<(usize, usize)>,
 }
 
 impl Walk<'_> {
@@ -419,6 +468,11 @@ impl Walk<'_> {
             }
         }
         found(&self.module)
+    }
+
+    /// Step 2.4b: the name is a `classmethod`'s first parameter, and nothing else binds it.
+    fn is_cls(&self, name: &str) -> bool {
+        self.scopes.iter().rev().find_map(|s| s.0.vals.get(name)).is_some_and(|v| v.iter().all(|v| *v == Val::Cls))
     }
 
     /// The type a receiver is read as: the class name or written type, and the rule; with the
@@ -466,6 +520,7 @@ impl Walk<'_> {
         for (i, p) in params.iter().enumerate() {
             let v = match p.def.annotation.as_deref().and_then(annotation) {
                 Some(t) => Val::Ann(t, true),
+                None if i == 0 && method && decorators.iter().any(|d| matches!(d, ast::Expr::Name(n) if n.id.as_str() == "classmethod")) => Val::Cls,
                 None if i == 0 && method && bound_first => Val::SelfOf(self.classes.last().map(|(c, _)| c.clone()).unwrap_or_default()),
                 None => Val::Unknown,
             };
@@ -526,6 +581,9 @@ impl Visitor for Walk<'_> {
     fn visit_expr_call(&mut self, node: ast::ExprCall) {
         if let ast::Expr::Attribute(a) = node.func.as_ref() {
             let (start, end) = span(a.value.range(), self.offset);
+            if matches!(a.value.as_ref(), ast::Expr::Name(n) if self.is_cls(n.id.as_str())) {
+                self.cls_receivers.insert((start, end));
+            }
             if let Some((written, rule, calls)) = self.type_of(&a.value) {
                 self.out.push(Typed { start, end, written, rule, calls });
             } else if let ast::Expr::Attribute(field) = a.value.as_ref() {
@@ -586,6 +644,7 @@ impl Visitor for Walk<'_> {
 struct Returns {
     offset: usize,
     out: BTreeMap<(usize, usize), Returned>,
+    methods: BTreeMap<usize, MethodFacts>,
 }
 
 impl Returns {
@@ -597,12 +656,48 @@ impl Returns {
     }
 }
 
+/// Step 2.4b: what a function's decorators and body say: a `@property`; an abstract method
+/// (`@abstractmethod`, or a body that, without its docstring, is only `raise NotImplementedError`,
+/// `pass` or `...`); a `@staticmethod`.
+fn method_facts(decorators: &[ast::Expr], body: &[ast::Stmt]) -> MethodFacts {
+    let named = |name: &str| decorators.iter().any(|d| dotted(d).is_some_and(|d| d.rsplit('.').next() == Some(name)));
+    let constant = |s: &ast::Stmt| match s {
+        ast::Stmt::Expr(e) => match e.value.as_ref() {
+            ast::Expr::Constant(c) => Some(c.value.clone()),
+            _ => None,
+        },
+        _ => None,
+    };
+    let docstring = body.first().and_then(constant).is_some_and(|c| matches!(c, ast::Constant::Str(_)));
+    let rest = &body[usize::from(docstring)..];
+    let only = match rest {
+        [ast::Stmt::Pass(_)] => true,
+        [ast::Stmt::Raise(r)] => {
+            let raised = match r.exc.as_deref() {
+                Some(ast::Expr::Call(c)) => dotted(&c.func),
+                Some(e) => dotted(e),
+                None => None,
+            };
+            raised.as_deref() == Some("NotImplementedError")
+        }
+        [s] => constant(s) == Some(ast::Constant::Ellipsis),
+        _ => false,
+    };
+    MethodFacts {
+        property: decorators.iter().any(|d| matches!(d, ast::Expr::Name(n) if n.id.as_str() == "property")),
+        is_static: named("staticmethod"),
+        is_abstract: only || named("abstractmethod"),
+    }
+}
+
 impl Visitor for Returns {
     fn visit_stmt_function_def(&mut self, node: ast::StmtFunctionDef) {
+        self.methods.insert(span(node.range, self.offset).1, method_facts(&node.decorator_list, &node.body));
         self.add(node.returns.as_deref());
         self.generic_visit_stmt_function_def(node);
     }
     fn visit_stmt_async_function_def(&mut self, node: ast::StmtAsyncFunctionDef) {
+        self.methods.insert(span(node.range, self.offset).1, method_facts(&node.decorator_list, &node.body));
         self.add(node.returns.as_deref());
         self.generic_visit_stmt_async_function_def(node);
     }
@@ -616,13 +711,13 @@ pub(crate) fn read(suite: &[ast::Stmt], offset: usize) -> Read {
     fields.read(suite, &mut classes, "");
     let mut module = Binds { offset, ..Default::default() };
     module.collect(suite);
-    let mut walk = Walk { offset, module, scopes: vec![], classes: vec![], fields: &fields, out: vec![], field_receivers: BTreeMap::new() };
+    let mut walk = Walk { offset, module, scopes: vec![], classes: vec![], fields: &fields, out: vec![], field_receivers: BTreeMap::new(), cls_receivers: BTreeSet::new() };
     for s in suite {
         walk.visit_stmt(s.clone());
     }
-    let mut returns = Returns { offset, out: BTreeMap::new() };
+    let mut returns = Returns { offset, out: BTreeMap::new(), methods: BTreeMap::new() };
     for s in suite {
         returns.visit_stmt(s.clone());
     }
-    Read { typed: walk.out, classes, field_receivers: walk.field_receivers, returns: returns.out }
+    Read { typed: walk.out, classes, field_receivers: walk.field_receivers, returns: returns.out, cls_receivers: walk.cls_receivers, methods: returns.methods }
 }

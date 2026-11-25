@@ -1210,8 +1210,12 @@ const STRINGS = {
   'path.resolution.import': ['seguida pelo import do arquivo: o receptor é um módulo do projeto e só esta função dele tem o nome, ou o nome chamado vem de um import (from p import f, use a::f, use a::*) e é esta declaração', 'followed by the file\'s import: the receiver is a module of the project and only this function of it has the name, or the called name comes from an import (from p import f, use a::f, use a::*) and is this declaration'],
   'path.resolution.scope': ['seguida pelo escopo: o nome chamado é definido no próprio arquivo de quem chama (no módulo, ou no corpo da função em volta), e é esta definição', 'followed by the scope: the called name is defined in the caller\'s own file (in the module, or in the body of the function around it), and it is this definition'],
   'path.resolution.receiver': ['seguida: chamada do próprio receptor (self.m()), e só este homônimo está na mesma classe ou impl', 'followed: the receiver\'s own call (self.m()), and only this homonym is in the same class or impl'],
-  'path.resolution.type': ['seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante)', 'followed: a method of the receiver\'s written type (annotation, constructor, self, field; in Rust, also path, return, item and variant)'],
-  'path.relation.instantiates': ['instancia: a chamada cria um objeto deste tipo, não chama a classe; a classe não declara __init__ próprio, e o percurso para aqui', 'instantiates: the call builds an object of this type, it does not call the class; the class declares no __init__ of its own, and the walk stops here'],
+  'path.resolution.type': ['seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante); no Python, declarado nele ou herdado das bases dele, e também cls, super() e @property', 'followed: a method of the receiver\'s written type (annotation, constructor, self, field; in Rust, also path, return, item and variant); in Python, declared by it or inherited from its bases, and also cls, super() and @property'],
+  'path.resolution.overrides': ['não seguida: o método do tipo é abstrato, e {n} subclasse(s) do projeto o sobrescrevem; roda o do objeto', 'not followed: the type\'s method is abstract, and {n} subclass(es) of the project override it; the object\'s own runs'],
+  'path.many': ['{n} candidatas', '{n} candidates'],
+  'path.manyTitle': ['{text}: {n} candidatas, numa caixa só (mais de 8 não viram linhas)\nclique: ver a lista e escolher', '{text}: {n} candidates, in one box (more than 8 are not drawn as lines)\nclick: see the list and choose'],
+  'path.manyList': ['A lista completa; escolha uma para o percurso seguir por ela:', 'The full list; choose one for the walk to go on through it:'],
+  'path.relation.instantiates': ['instancia: a chamada cria um objeto deste tipo, não chama a classe; não há um __init__ da classe, nem herdado de base do projeto, que a regra siga, e o percurso para aqui', 'instantiates: the call builds an object of this type, it does not call the class; there is no __init__, of the class or inherited from a base of the project, that the rule follows, and the walk stops here'],
   'path.relation.instantiatesRuns': ['instancia: a chamada cria um objeto deste tipo, não chama a classe; o percurso segue no {init}', 'instantiates: the call builds an object of this type, it does not call the class; the walk goes on in {init}'],
   'path.relation.decorates': ['decora: a chamada está num decorador e roda quando a declaração roda (num def de topo, ao carregar o módulo), não a cada chamada dela; o percurso não segue', 'decorates: the call is in a decorator and runs when the declaration runs (for a top-level def, when the module loads), not on each of its calls; the walk does not follow it'],
   'path.via': ['escrita no valor do campo {field}, que este método declara', 'written in the value of the field {field}, which this method declares'],
@@ -7581,11 +7585,12 @@ async function drawPath() {
       setPathState('empty');
       return;
     }
-    const { graph, nodes, edges } = pathGraph(data);
+    const drawn = calls ? foldMany(data, full) : data;
+    const { graph, nodes, edges } = pathGraph(drawn);
     const layout = await elk.layout(graph);
     if (!current()) return;
-    renderPath(data, layout, nodes, edges);
-    setPathState(data.truncated ? 'truncated' : 'ready', data.nodes.length);
+    renderPath(drawn, layout, nodes, edges);
+    setPathState(data.truncated ? 'truncated' : 'ready', drawn.nodes.length);
   } catch (error) {
     if (!current()) return;
     note.textContent = error.message;
@@ -7644,6 +7649,36 @@ function filterPath(data) {
   }
   return { ...data, nodes: data.nodes.filter(n => reached.has(n.id)), links: links.filter(l => reached.has(l.from) && reached.has(l.to)),
     hidden: data.nodes.length - reached.size };
+}
+
+// DEC-43 and DEC-06: more than 8 candidates of one call are one box, never as many lines; the full list,
+// with the choice, is in the box's detail. The list is the server's, filters and drawing limit apart.
+const MANY = 8;
+const isMany = id => String(id).startsWith('many:');
+function foldMany(data, full) {
+  const lists = new Map();
+  const places = new Map(full.nodes.map(n => [n.id, n.path ? `${n.path}:${n.line}` : '']));
+  const add = (occurrence, link) => { if (!lists.has(occurrence)) lists.set(occurrence, []); lists.get(occurrence).push({ ...link, place: places.get(link.to) }); };
+  for (const l of full.links) if (dashed(l)) add(l.occurrence, l);
+  for (const u of full.unresolved ?? []) if (u.reason === 'node_limit' && u.resolution === 'homonym') add(u.occurrence, { ...u, basis: u.candidate_edge ? 'graph_edge' : 'type' });
+  const many = new Map([...lists].filter(([, ls]) => ls.length > MANY));
+  if (!many.size) return data;
+  const links = [], boxes = [], seen = new Set();
+  for (const l of data.links) {
+    if (!many.has(l.occurrence) || !dashed(l)) { links.push(l); continue; }
+    if (seen.has(l.occurrence)) continue;
+    seen.add(l.occurrence);
+    const list = many.get(l.occurrence), id = `many:${l.occurrence}`, from = data.nodes.find(n => n.id === l.from);
+    const short = shortName(state.nodes[state.index.get(l.to)]?.label ?? l.text);
+    boxes.push({ id, label: short, kind: l.occurrence_kind, layer: (from?.layer ?? 0) + 1, container: t('path.many', { n: list.length }), path: l.evidence.path, line: l.evidence.start_line, many: list });
+    links.push({ ...l, to: id, many: list });
+  }
+  const reached = new Set([data.seed]);
+  for (let grew = true; grew;) {
+    grew = false;
+    for (const l of links) if (reached.has(l.from) && !reached.has(l.to)) { reached.add(l.to); grew = true; }
+  }
+  return { ...data, links, nodes: [...data.nodes, ...boxes].filter(n => reached.has(n.id)) };
 }
 
 // A flat flow chart: each point a box with its file, each edge the links of one pair, in the order
@@ -7711,16 +7746,17 @@ function renderPath(data, layout, nodes, edges) {
       svg('text', { x: n.x + 13, y: n.y + 18 }, info.text),
       svg('text', { class: 'where', x: n.x + 13, y: n.y + 34 }, info.where),
       info.count ? svg('text', { class: 'count', x: n.x + 13, y: n.y + 50 }, info.count) : null,
-      title(t(callsMode() ? 'path.callsNodeTitle' : 'path.nodeTitle', { label: info.label, kind: info.kind, location: `${info.path}:${info.line}` })));
+      title(info.many ? t('path.manyTitle', { text: info.many[0].text.slice(0, 80), n: info.many.length }) : t(callsMode() ? 'path.callsNodeTitle' : 'path.nodeTitle', { label: info.label, kind: info.kind, location: `${info.path}:${info.line}` })));
     node.addEventListener('click', () => {
       root.querySelectorAll('.node.selected').forEach(x => x.classList.remove('selected'));
       node.classList.add('selected');
+      if (info.many) { showUse([...edges.values()].find(e => e.to === n.id), nodes); return; }
       const i = state.index.get(n.id);
       if (i != null) selectNode(i);
       pathPointId = n.id;
       renderPathPoint();
     });
-    node.addEventListener('dblclick', () => openPath(n.id, pathMode, false));
+    if (!info.many) node.addEventListener('dblclick', () => openPath(n.id, pathMode, false));
     root.append(node);
   }
   for (const e of layout.edges) {
@@ -7767,11 +7803,16 @@ function showUse(info, nodes) {
   // without its own __init__, DEC-39) is settled, not followed: its text must not say "followed".
   const notWalked = l => l.relation === 'decorates' || (l.relation === 'instantiates' && !l.runs);
   const settledText = l => {
+    if (l.resolution === 'homonym' && l.basis === 'type') return t('path.resolution.overrides', { n: l.candidates });
     const text = t(l.resolution === 'homonym' && l.candidates === 1 ? 'path.resolution.homonymOne' : `path.resolution.${l.resolution}`, { n: l.candidates });
     return notWalked(l) ? text.replace(/^(seguida|followed): /, `${t('path.resolution.notWalked')}: `) : text;
   };
   const resolution = l => el('div', { className: 'muted' }, settledText(l),
-    l.resolution === 'homonym' ? el('button', { textContent: t('path.choose'), style: 'margin-left: 8px', onclick: decide(l, true) }) : null,
+    l.many ? el('div', {}, t('path.manyList'), el('ul', { className: 'many-list', style: 'max-height: 320px; overflow: auto' }, ...l.many.map(c => {
+      const at = state.nodes[state.index.get(c.to)];
+      return el('li', {}, el('code', { textContent: at?.label ?? c.to }), c.place ? el('span', { className: 'muted mono', textContent: ` ${c.place}` }) : null,
+        el('button', { textContent: t('path.choose'), style: 'margin-left: 8px', onclick: decide(c, true) }));
+    }))) : l.resolution === 'homonym' ? el('button', { textContent: t('path.choose'), style: 'margin-left: 8px', onclick: decide(l, true) }) : null,
     l.resolution === 'chosen' ? el('button', { textContent: t('path.unchoose'), style: 'margin-left: 8px', onclick: decide(l, false) }) : null,
     // Step 2.3a (DEC-39): an instantiation builds the target; the walk goes on in what it runs.
     l.relation === 'instantiates' ? withData(el('div', { className: 'muted' },

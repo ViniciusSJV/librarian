@@ -340,8 +340,9 @@ pub struct CallLink {
     /// unique, receiver, type, trait_default, chosen or homonym; homonym links are reported,
     /// never followed.
     pub resolution: String,
-    /// The name_candidate edge to `to`. Null only for a `type` or `trait_default` link of a call
-    /// above the candidate limit: the graph kept only the count of its candidates.
+    /// The name_candidate edge to `to`. Null only for a `type`, `trait_default` or `receiver` link, or an
+    /// abstract method's override (step 2.4b), of a call above the candidate limit: the graph kept only
+    /// the count of its candidates. And for an inherited method the written name does not match.
     pub candidate_edge: Option<String>,
     /// Where the resolution comes from: `graph_edge` (the candidate edges alone: unique,
     /// receiver, chosen, homonym) or `type` (the receiver's written type, a layer over the graph).
@@ -443,19 +444,25 @@ impl Graph {
                     let resolved = resolver.resolve(observer, occurrence, chosen.get(*occurrence).map(String::as_str));
                     let decorates = resolver.decorates(occurrence);
                     // One target settled by the rule; or every candidate edge, as homonyms.
+                    let out_of_chain = matches!(resolved, Resolution::OutOfChain);
+                    let overrides = matches!(resolved, Resolution::Overrides(_));
                     let (reported, resolution, basis): (Vec<(&str, Option<&Edge>)>, &str, &str) = match resolved {
                         Resolution::Linked(how, targets) if targets.len() == 1 => {
                             (vec![(targets[0], edges.iter().copied().find(|e| e.to == targets[0]))], how.as_str(), how.basis())
                         }
                         // Ruled out by the receiver's written type (step 2.2): no link.
-                        Resolution::NoCandidate => (vec![], "homonym", "graph_edge"),
+                        Resolution::NoCandidate | Resolution::OutOfChain => (vec![], "homonym", "graph_edge"),
+                        // Step 2.4b (DEC-43): an abstract method's overrides, as homonyms, by the type.
+                        Resolution::Overrides(ref targets) => {
+                            (targets.iter().map(|t| (*t, resolver.candidates(occurrence).iter().copied().find(|e| e.to == *t))).collect(), "homonym", "type")
+                        }
                         _ => (edges.iter().map(|e| (e.to.as_str(), Some(*e))).collect(), "homonym", "graph_edge"),
                     };
                     // No candidate edge and nothing settled: what the graph recorded says why.
                     if reported.is_empty() {
                         let (reason, candidates) = match written.ambiguous_candidates {
-                            Some(count) => ("above_candidate_limit", count),
-                            None => ("no_candidate_in_project", 0),
+                            Some(count) if !out_of_chain => ("above_candidate_limit", count),
+                            _ => ("no_candidate_in_project", 0),
                         };
                         unresolved.push(UnresolvedCall {
                             from: caller.clone(),
@@ -473,7 +480,8 @@ impl Graph {
                         continue;
                     }
                     // Above the limit, a type link counts the declarations the graph recorded.
-                    let count = if edges.is_empty() { written.ambiguous_candidates.unwrap_or(0) } else { edges.len() };
+                    // An abstract method counts its overrides (step 2.4b).
+                    let count = if overrides { reported.len() } else if edges.is_empty() { written.ambiguous_candidates.unwrap_or(0) } else { edges.len() };
                     for (to, edge) in reported {
                         let evidence = edge.map_or(&observation.evidence, |e| &e.evidence);
                         if !layer_of.contains_key(to) {

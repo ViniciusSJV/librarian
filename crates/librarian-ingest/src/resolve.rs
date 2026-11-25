@@ -62,6 +62,10 @@ pub struct CallFacts {
     /// Step 2.3c (Python): a receiver `a.x` whose base has a written type: the base's written type,
     /// where it is written, and the field's name. The field is read in the file of the base's class.
     pub field_receivers: BTreeMap<(usize, usize), (String, usize, String)>,
+    /// Step 2.4b (Python): the spans of the receivers that are a `classmethod`'s first parameter.
+    pub cls_receivers: BTreeSet<(usize, usize)>,
+    /// Step 2.4b (Python): what each function or method is, by where its declaration ends.
+    pub methods: BTreeMap<usize, MethodFacts>,
     /// Step 2.4a (Rust): the file's modules; the first is the file itself.
     pub modules: Vec<RustModule>,
     /// Step 2.4a (Rust): the blocks that declare items, with what their own `use` and `type` bind:
@@ -96,6 +100,28 @@ pub struct ClassFacts {
     /// Step 2.3c: the written type of each field (annotation, or `self.x = T(..)` / `self.x = p`
     /// with `p: T` in `__init__`), as written, when every write agrees.
     pub fields: BTreeMap<String, String>,
+    /// Step 2.4b (DEC-43): the bases as written, without `object` and without a subscript; None for an
+    /// expression that is not a name.
+    pub bases: Vec<Option<String>>,
+    /// Step 2.4b: where the class statement starts: its bases are named there.
+    pub at: Option<usize>,
+    /// Step 2.4b: the file declares two classes of this qualified name.
+    pub repeated: bool,
+    /// Step 2.4b: a class decorator, a `metaclass` or another keyword: it may bring methods.
+    pub dynamic: bool,
+    /// Step 2.4b: the names the class body binds to anything but a method declared in it.
+    pub names: BTreeSet<String>,
+    /// Step 2.4b: the attributes its methods write through `self` or `cls`.
+    pub stored: BTreeSet<String>,
+}
+
+/// Step 2.4b (Python): what a function or method is.
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub struct MethodFacts {
+    pub property: bool,
+    pub is_static: bool,
+    /// `@abstractmethod`, or a body that only raises `NotImplementedError`, `pass` or `...`.
+    pub is_abstract: bool,
 }
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
@@ -250,6 +276,64 @@ pub enum Resolution<'g> {
     /// More same-named declarations than the profile links, and no written type settles it.
     AboveLimit(usize),
     NoCandidate,
+    /// Step 2.4b (DEC-43): an abstract method's overrides in the project: which one runs is the
+    /// object's. Never followed; the targets may have no candidate edge.
+    Overrides(Vec<&'g str>),
+    /// Step 2.4b (DEC-43): no class that may answer the receiver declares the name: no candidate, also
+    /// above the limit.
+    OutOfChain,
+}
+
+/// Step 2.4b: an element of a Python class's linearization.
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum Base<'g> {
+    Class(&'g str),
+    /// A base from outside the project, by its full name.
+    Outside(String),
+    /// A base the rule cannot name (an expression, a variable, bindings that disagree).
+    Unknown,
+}
+
+/// Step 2.4b: what the search of a name along a linearization finds.
+enum Search<'g> {
+    /// The methods of that name the first project class that has it declares.
+    Found(Vec<&'g str>, &'g str),
+    /// A base from outside the project comes first.
+    Outside,
+    /// An unnamed base, `__getattr__`, `Protocol`, or a name bound to something that is not a method.
+    Undecided,
+    /// Every class is the project's, and none declares it.
+    Nobody,
+}
+
+/// Step 2.4b: the static class of a Python receiver.
+struct PyReceiver<'g> {
+    class: &'g str,
+    /// `super()`: the search starts after the class.
+    parent: bool,
+    /// A constructor: the object is exactly of the class.
+    exact: bool,
+}
+
+/// Step 2.4b (DEC-43): what the receiver's static class says of the call.
+enum Chain<'g> {
+    /// The methods that answer.
+    Methods(Vec<&'g str>),
+    /// The method found is abstract: the overrides in the subclasses.
+    Overrides(Vec<&'g str>),
+    /// The candidates that may answer, by the chain (the rest is never the target).
+    Only(BTreeSet<&'g str>),
+    /// None may.
+    Nobody,
+    /// It says nothing.
+    Unknown,
+}
+
+/// Step 2.4b: the linearization of every class of the project and the subclasses of each.
+#[derive(Default)]
+struct Hierarchy<'g> {
+    mro: BTreeMap<&'g str, Option<Vec<Base<'g>>>>,
+    subclasses: BTreeMap<&'g str, Vec<&'g str>>,
 }
 
 /// What a receiver bound by an import is, for the rule.
@@ -296,6 +380,9 @@ pub struct Resolver<'g> {
     inner: Cell<bool>,
     /// Step 2.3c: what the return rule gave each method call (None: it does not apply).
     by_return_cache: RefCell<BTreeMap<String, Option<ByReturn<'g>>>>,
+    /// Step 2.4b: the linearizations read so far, and the whole project's, once needed.
+    mro_cache: RefCell<BTreeMap<&'g str, Option<Vec<Base<'g>>>>>,
+    hierarchy: std::cell::OnceCell<Hierarchy<'g>>,
     /// Step 2.4a: each declaration's span in its file.
     declared_span: BTreeMap<&'g str, (usize, usize)>,
     /// Step 2.4a (Rust): the declaration with a span of a file.
@@ -369,6 +456,8 @@ impl<'g> Resolver<'g> {
             type_names: BTreeSet::new(),
             inner: Cell::new(false),
             by_return_cache: RefCell::new(BTreeMap::new()),
+            mro_cache: RefCell::new(BTreeMap::new()),
+            hierarchy: std::cell::OnceCell::new(),
             declared_span: BTreeMap::new(),
             declared_by_span: BTreeMap::new(),
             declared_end: BTreeMap::new(),
@@ -464,9 +553,20 @@ impl<'g> Resolver<'g> {
         self.candidates.get(occurrence).map_or(&[], Vec::as_slice)
     }
 
-    /// The candidate edges the call's form reaches (step 2.2): the ones the rule decides among.
+    /// The candidate edges the call's form reaches (step 2.2) and, since the step 2.4b, the receiver's
+    /// chain of bases allows: the ones the rule decides among.
     pub fn admitted(&self, caller: &str, occurrence: &str) -> Vec<&'g Edge> {
-        self.admit(caller, occurrence).0
+        let (edges, module) = self.admit(caller, occurrence);
+        self.in_chain(edges, &self.chain(caller, occurrence, module))
+    }
+
+    /// Step 2.4b (DEC-43): the candidates a chain leaves. One that is not a method is not its matter.
+    fn in_chain(&self, edges: Vec<&'g Edge>, chain: &Chain<'g>) -> Vec<&'g Edge> {
+        match chain {
+            Chain::Only(left) => edges.into_iter().filter(|e| self.kind(&e.to) != "method" || left.contains(e.to.as_str())).collect(),
+            Chain::Nobody => edges.into_iter().filter(|e| self.kind(&e.to) != "method").collect(),
+            _ => edges,
+        }
     }
 
     fn label(&self, id: &str) -> &'g str {
@@ -581,8 +681,8 @@ impl<'g> Resolver<'g> {
         // Step 2.3a: a Python class rules out a method of another class only when nothing can
         // bring the method to it (no base, no `__getattr__`, not a `Protocol`).
         if let Some(class) = self.python_class(caller, occurrence) {
-            let facts = self.class_facts(class);
-            return self.container(target) != Some(class) && !facts.based && !facts.getattr && !facts.protocol;
+            // Step 2.4b: with a base too, by the chain (`chain`); this is the class without one.
+            return self.container(target) != Some(class) && self.baseless(class) && !self.subclass_reaches(class, target);
         }
         let types = self.receiver_types(caller, occurrence);
         if !types.is_empty() {
@@ -688,7 +788,7 @@ impl<'g> Resolver<'g> {
         match self.by_return(caller, occurrence) {
             Some(ByReturn::Class(class)) => Some(class),
             Some(_) => None,
-            None => self.field_class(occurrence),
+            None => self.field_class(occurrence).or_else(|| self.property_class(occurrence)),
         }
     }
 
@@ -830,7 +930,8 @@ impl<'g> Resolver<'g> {
                 let by_name = if !path.is_empty() || written_receiver(text).is_some() { &self.methods_by_name } else { &self.functions_by_name };
                 of_path(by_name.get(name.as_str()).cloned().unwrap_or_default())
             }
-            Resolution::NoCandidate => vec![],
+            Resolution::Overrides(targets) => targets,
+            Resolution::NoCandidate | Resolution::OutOfChain => vec![],
         };
         (!targets.is_empty()).then_some(targets)
     }
@@ -898,8 +999,20 @@ impl<'g> Resolver<'g> {
             Some(_) => return Some("retorno".to_owned()),
             None => {}
         }
-        if self.graph.nodes[caller].language == "python" && self.field_class(occurrence).is_some() {
-            return Some("campo".to_owned());
+        if self.graph.nodes[caller].language == "python" {
+            if self.field_class(occurrence).is_some() {
+                return Some("campo".to_owned());
+            }
+            // Step 2.4b.
+            if self.property_class(occurrence).is_some() {
+                return Some("propriedade".to_owned());
+            }
+            if self.super_class(caller, occurrence).is_some() {
+                return Some("super".to_owned());
+            }
+            if self.cls_class(caller, occurrence).is_some() {
+                return Some("cls".to_owned());
+            }
         }
         self.receiver_type_node(occurrence).and_then(|(n, _)| self.graph.nodes[n].type_rule.clone())
     }
@@ -940,12 +1053,28 @@ impl<'g> Resolver<'g> {
     }
 
     /// Step 2.3a: the declaration an instantiation runs: the `__init__` the class itself declares.
-    /// None for a class without one (the inherited `__init__` is 2.4), a struct or a variant.
+    /// Step 2.4b: or the one it inherits. None for a class without one, a struct or a variant.
     pub fn instance_entry(&self, target: &str) -> Option<&'g str> {
         if self.kind(target) != "class" {
             return None;
         }
-        self.methods_by_name.get("__init__")?.iter().copied().find(|m| self.container(m) == Some(target))
+        let own = self.methods_by_name.get("__init__")?.iter().copied().find(|m| self.container(m) == Some(target));
+        if own.is_some() || self.graph.nodes[target].language != "python" {
+            return own;
+        }
+        // Step 2.4b (DEC-43): the inherited one, by the same search; not when a class decorator, a
+        // `metaclass` or a `__new__` may change what the construction runs.
+        let target = self.graph.nodes.get_key_value(target)?.0.as_str();
+        let Search::Found(found, at) = self.search(target, "__init__", true) else { return None };
+        let changed = |c: &str| self.class_facts(c).dynamic || self.methods_by_name.get("__new__").is_some_and(|ms| ms.iter().any(|m| self.container(m) == Some(c)));
+        for base in self.mro(target)? {
+            match base {
+                Base::Class(c) if changed(c) => return None,
+                Base::Class(c) if c == at => break,
+                _ => {}
+            }
+        }
+        (found.len() == 1).then(|| found[0])
     }
 
     /// The source of a dotted module, from the importing file for a relative one: `a.b` is
@@ -995,6 +1124,327 @@ impl<'g> Resolver<'g> {
             return (edges.iter().copied().filter(kept).collect(), false);
         }
         (edges.to_vec(), false)
+    }
+
+    /// Step 2.4b: the class of the method, or of a field of it, that writes a call.
+    fn enclosing_method_class(&self, caller: &str) -> Option<(&'g str, &'g str)> {
+        let mut at = self.graph.nodes.get_key_value(caller).map(|(id, _)| id.as_str());
+        while let Some(symbol) = at {
+            let container = self.container(symbol);
+            if self.kind(symbol) == "method" {
+                return container.filter(|c| self.kind(c) == "class").map(|c| (symbol, c));
+            }
+            at = container;
+        }
+        None
+    }
+
+    /// Step 2.4b: what a function or method is, read from its file.
+    fn method_facts(&self, method: &str) -> MethodFacts {
+        let (Some(path), Some((_, end))) = (self.declared_in.get(method), self.declared_span.get(method)) else { return MethodFacts::default() };
+        self.file_facts(path).and_then(|f| f.methods.get(end).copied()).unwrap_or_default()
+    }
+
+    /// Step 2.4b: the class a `super().m()` or `super(C, self).m()` starts after: the enclosing method's.
+    fn super_class(&self, caller: &str, occurrence: &str) -> Option<&'g str> {
+        if self.graph.nodes[caller].language != "python" || self.kind(occurrence) != "method_call_observed" {
+            return None;
+        }
+        let inside = written_receiver(self.label(occurrence))?.strip_prefix("super(")?.strip_suffix(')')?.trim();
+        let (method, class) = self.enclosing_method_class(caller)?;
+        if self.method_facts(method).is_static {
+            return None;
+        }
+        let named = match inside.split_once(',') {
+            None => inside.is_empty(),
+            Some((c, _)) => Some(c.trim()) == self.label(class).rsplit('.').next(),
+        };
+        named.then_some(class)
+    }
+
+    /// Step 2.4b: the class of `cls.m()`, with `cls` a `classmethod`'s first parameter.
+    fn cls_class(&self, caller: &str, occurrence: &str) -> Option<&'g str> {
+        if self.graph.nodes[caller].language != "python" || self.kind(occurrence) != "method_call_observed" {
+            return None;
+        }
+        let evidence = self.call_evidence.get(occurrence)?;
+        let end = evidence.start_byte + written_receiver(self.label(occurrence))?.len();
+        self.file_facts(&evidence.path)?.cls_receivers.contains(&(evidence.start_byte, end)).then(|| self.enclosing_method_class(caller))?.map(|(_, c)| c)
+    }
+
+    /// Step 2.4b: the class of a receiver `a.p` whose base `a` has a written type, when `p` is a
+    /// `@property` with one `def` and an annotated return, found along the chain of `a`'s class.
+    fn property_class(&self, occurrence: &str) -> Option<&'g str> {
+        // One level, as the return of a call (DEC-41).
+        if self.inner.get() {
+            return None;
+        }
+        let evidence = self.call_evidence.get(occurrence)?;
+        let end = evidence.start_byte + written_receiver(self.label(occurrence))?.len();
+        let facts = self.file_facts(&evidence.path)?;
+        let (base, at, name) = facts.field_receivers.get(&(evidence.start_byte, end))?;
+        let owner = self.class_named(&evidence.path, *at, base, &self.classes_named(base))?;
+        let Search::Found(found, _) = self.search(owner, name, false) else { return None };
+        if found.len() != 1 || !self.method_facts(found[0]).property {
+            return None;
+        }
+        match self.returned_type(found[0]) {
+            Some(ByReturn::Class(class)) => Some(class),
+            _ => None,
+        }
+    }
+
+    /// Step 2.4b: the static class of a Python receiver, by any rule.
+    fn python_receiver(&self, caller: &str, occurrence: &str) -> Option<PyReceiver<'g>> {
+        if self.graph.nodes[caller].language != "python" || self.kind(occurrence) != "method_call_observed" {
+            return None;
+        }
+        if let Some(class) = self.super_class(caller, occurrence) {
+            return Some(PyReceiver { class, parent: true, exact: false });
+        }
+        if let Some(class) = self.cls_class(caller, occurrence) {
+            return Some(PyReceiver { class, parent: false, exact: false });
+        }
+        let class = self.python_class(caller, occurrence)?;
+        let constructed = self.receiver_type_node(occurrence).is_some_and(|(n, _)| self.graph.nodes[n].type_rule.as_deref() == Some("construtor"));
+        Some(PyReceiver { class, parent: false, exact: constructed && self.written_class(caller, occurrence) == Some(class) })
+    }
+
+    /// Step 2.4b: what a base written at `at` in `path` is, named as the language binds it there
+    /// (DEC-42).
+    fn base(&self, path: &str, at: usize, written: &str) -> Base<'g> {
+        let scoped = match written.contains('.') {
+            true => self.python_alias(path, at, written, 0),
+            false => self.python_name(path, at, written, 0),
+        };
+        match scoped {
+            Scoped::Target(t, _) if self.kind(t) == "class" => Base::Class(t),
+            Scoped::Nothing => {
+                let head = written.split('.').next().unwrap_or_default();
+                match self.file_facts(path).and_then(|f| self.bound(&f, at, head)) {
+                    Some(Some(Import::Module(m))) => Base::Outside(format!("{m}{}", &written[head.len()..])),
+                    Some(Some(Import::From(p, n))) => Base::Outside(format!("{p}.{n}{}", &written[head.len()..])),
+                    // A builtin.
+                    None => Base::Outside(written.to_owned()),
+                    Some(None) => Base::Unknown,
+                }
+            }
+            _ => Base::Unknown,
+        }
+    }
+
+    /// Step 2.4b: the C3 linearization of a Python class, the language's own, over its written bases;
+    /// a base from outside the project is one opaque element. None when the order is inconsistent or
+    /// the class's file says nothing of it.
+    fn mro(&self, class: &'g str) -> Option<Vec<Base<'g>>> {
+        if let Some(hit) = self.mro_cache.borrow().get(class) {
+            return hit.clone();
+        }
+        // A class that reaches itself has no order.
+        self.mro_cache.borrow_mut().insert(class, None);
+        let found = self.linearize(class);
+        self.mro_cache.borrow_mut().insert(class, found.clone());
+        found
+    }
+
+    fn linearize(&self, class: &'g str) -> Option<Vec<Base<'g>>> {
+        let path = *self.declared_in.get(class)?;
+        let facts = self.file_facts(path)?.classes.get(self.label(class))?.clone();
+        if facts.repeated {
+            return None;
+        }
+        let at = facts.at?;
+        let bases: Vec<Base<'g>> = facts.bases.iter().map(|b| b.as_deref().map_or(Base::Unknown, |b| self.base(path, at, b))).collect();
+        let mut lists: Vec<Vec<Base<'g>>> = vec![];
+        for base in &bases {
+            lists.push(match base {
+                Base::Class(c) => self.mro(c)?,
+                other => vec![other.clone()],
+            });
+        }
+        lists.push(bases);
+        let mut out = vec![Base::Class(class)];
+        loop {
+            lists.retain(|l| !l.is_empty());
+            if lists.is_empty() {
+                return Some(out);
+            }
+            // An unnamed base is never the same as another one.
+            let head = lists.iter().map(|l| &l[0]).find(|h| !lists.iter().any(|l| l[1..].contains(h)))?.clone();
+            for l in &mut lists {
+                if l[0] == head {
+                    l.remove(0);
+                }
+            }
+            out.push(head);
+        }
+    }
+
+    /// Step 2.4b: the methods of a name that a class itself declares.
+    fn own_methods(&self, class: &str, name: &str) -> Vec<&'g str> {
+        self.methods_by_name.get(name).map_or(&[][..], Vec::as_slice).iter().copied().filter(|m| self.kind(m) == "method" && self.container(m) == Some(class)).collect()
+    }
+
+    /// Step 2.4b (DEC-43): a name along a class's linearization (after the class itself, for `super()`
+    /// and an inherited `__init__`).
+    fn search(&self, class: &'g str, name: &str, after: bool) -> Search<'g> {
+        if !after && !self.class_facts(class).protocol {
+            let own = self.own_methods(class, name);
+            if !own.is_empty() {
+                return Search::Found(own, class);
+            }
+        }
+        let Some(mro) = self.mro(class) else { return Search::Undecided };
+        for base in mro.iter().skip(usize::from(after)) {
+            let c = match base {
+                Base::Class(c) => *c,
+                Base::Outside(_) => return Search::Outside,
+                Base::Unknown => return Search::Undecided,
+            };
+            let facts = self.class_facts(c);
+            if facts.protocol {
+                return Search::Undecided;
+            }
+            let found = self.own_methods(c, name);
+            if !found.is_empty() {
+                // A subclass's or a base's method may have written an attribute of that name.
+                let stored = !after && mro.iter().any(|b| matches!(b, Base::Class(k) if self.class_facts(k).stored.contains(name)));
+                return if stored { Search::Undecided } else { Search::Found(found, c) };
+            }
+            if facts.names.contains(name) || facts.stored.contains(name) || facts.getattr {
+                return Search::Undecided;
+            }
+        }
+        Search::Nobody
+    }
+
+    /// Step 2.4b: the linearization of every Python class of the project, and the subclasses of each.
+    fn hierarchy(&self) -> &Hierarchy<'g> {
+        self.hierarchy.get_or_init(|| {
+            let mut h = Hierarchy::default();
+            for class in self.classes_by_name.values().flatten().copied().filter(|c| self.graph.nodes[*c].language == "python") {
+                let mro = self.mro(class);
+                for base in mro.iter().flatten().skip(1) {
+                    if let Base::Class(b) = base {
+                        h.subclasses.entry(b).or_default().push(class);
+                    }
+                }
+                h.mro.insert(class, mro);
+            }
+            h
+        })
+    }
+
+    fn subclasses(&self, class: &str) -> &[&'g str] {
+        self.hierarchy().subclasses.get(class).map_or(&[], Vec::as_slice)
+    }
+
+    /// Step 2.3a: a class without a base, `__getattr__` or `Protocol` rules a candidate out.
+    fn baseless(&self, class: &str) -> bool {
+        let facts = self.class_facts(class);
+        !facts.based && !facts.getattr && !facts.protocol
+    }
+
+    /// Step 2.4b (DEC-43, changes the DEC-39): a subclass of the project may bring the method (a mixin).
+    fn subclass_reaches(&self, class: &str, method: &str) -> bool {
+        let owner = self.container(method);
+        self.subclasses(class).iter().any(|s| match self.hierarchy().mro.get(s) {
+            Some(Some(mro)) => mro.iter().any(|b| matches!(b, Base::Unknown) || matches!(b, Base::Class(c) if Some(*c) == owner)),
+            _ => true,
+        })
+    }
+
+    /// Step 2.4b (DEC-43): the classes whose method may answer: the receiver's chain and that of its
+    /// subclasses; in a `super()`, only what comes after the class. None when one of them may bring
+    /// methods the rule does not see.
+    fn chain_classes(&self, receiver: &PyReceiver<'g>, name: &str) -> Option<BTreeSet<&'g str>> {
+        let mut out = BTreeSet::new();
+        for start in std::iter::once(receiver.class).chain(self.subclasses(receiver.class).iter().copied()) {
+            let mro = self.mro(start)?;
+            let from = if receiver.parent { mro.iter().position(|b| *b == Base::Class(receiver.class))? + 1 } else { 0 };
+            for base in &mro[from..] {
+                match base {
+                    Base::Class(c) => {
+                        out.insert(*c);
+                    }
+                    Base::Outside(_) => {}
+                    Base::Unknown => return None,
+                }
+            }
+        }
+        let opens = |c: &&str| {
+            let f = self.class_facts(c);
+            f.dynamic || f.protocol || f.names.contains(name) || (!receiver.parent && (f.getattr || f.stored.contains(name)))
+        };
+        (!out.iter().any(opens)).then_some(out)
+    }
+
+    /// Step 2.4b (DEC-43): what the receiver's static class says of a call, by its chain of bases.
+    fn chain(&self, caller: &str, occurrence: &str, module: bool) -> Chain<'g> {
+        if module {
+            return Chain::Unknown;
+        }
+        let Some(receiver) = self.python_receiver(caller, occurrence) else { return Chain::Unknown };
+        let Some((_, name)) = call_parts(self.label(occurrence)) else { return Chain::Unknown };
+        let class = receiver.class;
+        match self.search(class, &name, receiver.parent) {
+            Search::Found(found, at) => {
+                // `super()` decides only if every subclass goes on to the same method.
+                if receiver.parent && self.subclasses(class).iter().any(|s| !self.continues_to(s, class, &name, at)) {
+                    return self.left_by_chain(&receiver, occurrence, &name);
+                }
+                // An abstract method that subclasses override: the object's body runs.
+                if !receiver.parent && !receiver.exact && found.len() == 1 && self.method_facts(found[0]).is_abstract {
+                    let overrides: Vec<&'g str> =
+                        self.subclasses(class).iter().flat_map(|s| self.own_methods(s, &name)).filter(|m| !self.method_facts(m).is_abstract).collect();
+                    if !overrides.is_empty() {
+                        return Chain::Overrides(overrides);
+                    }
+                }
+                Chain::Methods(found)
+            }
+            _ => self.left_by_chain(&receiver, occurrence, &name),
+        }
+    }
+
+    /// Step 2.4b: in the linearization of `subclass`, the first class after `class` that has the name
+    /// is `at`, before any base from outside.
+    fn continues_to(&self, subclass: &'g str, class: &str, name: &str, at: &str) -> bool {
+        let Some(mro) = self.mro(subclass) else { return false };
+        let Some(start) = mro.iter().position(|b| matches!(b, Base::Class(c) if *c == class)) else { return false };
+        for base in &mro[start + 1..] {
+            let Base::Class(c) = base else { return false };
+            if *c == at {
+                return true;
+            }
+            let facts = self.class_facts(c);
+            if !self.own_methods(c, name).is_empty() || facts.names.contains(name) || facts.getattr {
+                return false;
+            }
+        }
+        false
+    }
+
+    /// Step 2.4b: a method of a class outside the chain is never the target. Without a base nothing else
+    /// brings it, and the step 2.3a's rule stays.
+    fn left_by_chain(&self, receiver: &PyReceiver<'g>, occurrence: &str, name: &str) -> Chain<'g> {
+        let declared = self.methods_by_name.get(name).map_or(&[][..], Vec::as_slice);
+        let written: Vec<&'g str> = match self.graph.nodes[occurrence].ambiguous_candidates {
+            Some(_) => declared.iter().copied().filter(|m| self.graph.nodes[*m].language == "python").collect(),
+            None => self.candidates(occurrence).iter().map(|e| e.to.as_str()).filter(|t| self.kind(t) == "method").collect(),
+        };
+        if written.is_empty() {
+            return Chain::Unknown;
+        }
+        let left: BTreeSet<&'g str> = match self.chain_classes(receiver, name) {
+            Some(classes) => written.into_iter().filter(|m| self.container(m).is_some_and(|c| classes.contains(c))).collect(),
+            None if !receiver.parent && self.baseless(receiver.class) => written.into_iter().filter(|m| self.subclass_reaches(receiver.class, m)).collect(),
+            None => return Chain::Unknown,
+        };
+        if left.is_empty() {
+            return Chain::Nobody;
+        }
+        Chain::Only(left)
     }
 
     /// Step 2.4a: the graph's own copy of a source path.
@@ -1411,6 +1861,18 @@ impl<'g> Resolver<'g> {
     pub fn resolve(&self, caller: &str, occurrence: &str, chosen: Option<&str>) -> Resolution<'g> {
         let all = self.candidates(occurrence);
         let (edges, module) = self.admit(caller, occurrence);
+        // Step 2.4b (DEC-43): the receiver's static class, by its chain of bases.
+        let chain = self.chain(caller, occurrence, module);
+        if let Chain::Overrides(overrides) = &chain {
+            return match chosen.and_then(|c| overrides.iter().find(|o| **o == c)) {
+                Some(picked) => Resolution::Linked(How::Chosen, vec![picked]),
+                None => Resolution::Overrides(overrides.clone()),
+            };
+        }
+        let edges = self.in_chain(edges, &chain);
+        if matches!(chain, Chain::Nobody) && edges.is_empty() && (!all.is_empty() || self.graph.nodes[occurrence].ambiguous_candidates.is_some()) {
+            return Resolution::OutOfChain;
+        }
         if let Some(e) = chosen.and_then(|c| edges.iter().find(|e| e.to == c)) {
             return Resolution::Linked(How::Chosen, vec![&e.to]);
         }
@@ -1437,6 +1899,12 @@ impl<'g> Resolver<'g> {
                 if self.type_rules_out(caller, occurrence, to) {
                     return Resolution::NoCandidate;
                 }
+                // Step 2.4b: the chain's method, when it is not this candidate.
+                if let Chain::Methods(found) = &chain {
+                    if !found.contains(&to) {
+                        return Resolution::Linked(How::Type, found.clone());
+                    }
+                }
                 return Resolution::Linked(How::Unique, vec![to]);
             }
         }
@@ -1459,17 +1927,9 @@ impl<'g> Resolver<'g> {
         // Step 2.3a, Python: the methods the receiver's class declares. Without one, the class rules
         // every candidate out, unless something may bring the method to it (a base, `__getattr__`);
         // a `Protocol` gives no link (its methods are signatures; the passed object's body runs).
-        if let Some(class) = self.python_class(caller, occurrence) {
-            let facts = self.class_facts(class);
-            if !facts.protocol {
-                let own: Vec<&'g str> = methods.iter().copied().filter(|m| self.container(m) == Some(class)).collect();
-                if !own.is_empty() {
-                    return Resolution::Linked(How::Type, own);
-                }
-                if !facts.based && !facts.getattr {
-                    return Resolution::NoCandidate;
-                }
-            }
+        // Step 2.4b: or the one it inherits (`chain`).
+        if let Chain::Methods(found) = chain {
+            return Resolution::Linked(How::Type, found);
         }
         let types = self.receiver_types(caller, occurrence);
         if !types.is_empty() {

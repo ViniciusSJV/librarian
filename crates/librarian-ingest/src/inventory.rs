@@ -523,7 +523,8 @@ pub fn inventory(catalog: &Catalog, project: &RuleSet) -> Result<Inventory> {
                 .map(|t| (t.to_owned(), how.as_str()))
                 .collect()),
             Resolution::Homonym(candidates) => Err(candidates.len()),
-            Resolution::AboveLimit(_) | Resolution::NoCandidate => Err(0),
+            Resolution::Overrides(candidates) => Err(candidates.len()),
+            Resolution::AboveLimit(_) | Resolution::NoCandidate | Resolution::OutOfChain => Err(0),
         }
     };
     let calls_of = |symbol: &str| -> Vec<&v2::Edge> {
