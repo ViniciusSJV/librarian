@@ -98,17 +98,17 @@ fn an_inherited_method_is_found_along_the_c3_order() {
         ("c_fora_depois", "x.topo()", "Raiz.topo"),
         // Depth first would give `DA.mm`.
         ("c_diamante", "x.mm()", "DC.mm"),
-        // The static type decides, whatever the object is.
-        ("c_sobrescrita", "x.passo()", "Raiz.passo"),
         ("HFilho.h_proprio", "self.topo()", "Raiz.topo"),
         ("HFilho.fabrica_cls", "cls.criar()", "Raiz.criar"),
         ("HFilho.passo", "super().passo()", "Raiz.passo"),
         ("HFilho.passo_velho", "super(HFilho, self).passo()", "Raiz.passo"),
-        ("c_prop", "x.transporte.enviar()", "Transporte.enviar"),
-        ("c_prop_herdada", "x.transporte.enviar()", "Transporte.enviar"),
     ] {
         check(&s, caller, text, "type", &[target]);
     }
+    // Step 2.4c (DEC-44): a subclass overrides it, and the object's body runs.
+    check(&s, "c_sobrescrita", "x.passo()", "overrides", &["HFilho.passo", "Raiz.passo"]);
+    check(&s, "c_prop", "x.transporte.enviar()", "overrides", &["Rapido.enviar", "Transporte.enviar"]);
+    check(&s, "c_prop_herdada", "x.transporte.enviar()", "overrides", &["Rapido.enviar", "Transporte.enviar"]);
 }
 
 #[test]

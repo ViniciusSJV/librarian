@@ -120,8 +120,10 @@ pub struct ClassFacts {
 pub struct MethodFacts {
     pub property: bool,
     pub is_static: bool,
-    /// `@abstractmethod`, or a body that only raises `NotImplementedError`, `pass` or `...`.
+    /// `@abstractmethod`.
     pub is_abstract: bool,
+    /// A body that, without the docstring, only raises `NotImplementedError`, or is `pass` or `...`.
+    pub is_empty: bool,
 }
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
@@ -277,7 +279,8 @@ pub enum Resolution<'g> {
     AboveLimit(usize),
     NoCandidate,
     /// Step 2.4b (DEC-43): an abstract method's overrides in the project: which one runs is the
-    /// object's. Never followed; the targets may have no candidate edge.
+    /// object's. Step 2.4c (DEC-44): also the static type's own body and its overrides. Never
+    /// followed; the targets may have no candidate edge.
     Overrides(Vec<&'g str>),
     /// Step 2.4b (DEC-43): no class that may answer the receiver declares the name: no candidate, also
     /// above the limit.
@@ -319,7 +322,7 @@ struct PyReceiver<'g> {
 enum Chain<'g> {
     /// The methods that answer.
     Methods(Vec<&'g str>),
-    /// The method found is abstract: the overrides in the subclasses.
+    /// The bodies that may run: the overrides in the subclasses, and the method found, unless abstract.
     Overrides(Vec<&'g str>),
     /// The candidates that may answer, by the chain (the rest is never the target).
     Only(BTreeSet<&'g str>),
@@ -383,6 +386,9 @@ pub struct Resolver<'g> {
     /// Step 2.4b: the linearizations read so far, and the whole project's, once needed.
     mro_cache: RefCell<BTreeMap<&'g str, Option<Vec<Base<'g>>>>>,
     hierarchy: std::cell::OnceCell<Hierarchy<'g>>,
+    /// Step 2.4c: the names that a class binds to something that is not a method, or that are written
+    /// or read as an attribute (Python): what may hide a method, before any file is read.
+    attribute_names: std::cell::OnceCell<BTreeSet<&'g str>>,
     /// Step 2.4a: each declaration's span in its file.
     declared_span: BTreeMap<&'g str, (usize, usize)>,
     /// Step 2.4a (Rust): the declaration with a span of a file.
@@ -458,6 +464,7 @@ impl<'g> Resolver<'g> {
             by_return_cache: RefCell::new(BTreeMap::new()),
             mro_cache: RefCell::new(BTreeMap::new()),
             hierarchy: std::cell::OnceCell::new(),
+            attribute_names: std::cell::OnceCell::new(),
             declared_span: BTreeMap::new(),
             declared_by_span: BTreeMap::new(),
             declared_end: BTreeMap::new(),
@@ -1207,7 +1214,18 @@ impl<'g> Resolver<'g> {
         }
         let class = self.python_class(caller, occurrence)?;
         let constructed = self.receiver_type_node(occurrence).is_some_and(|(n, _)| self.graph.nodes[n].type_rule.as_deref() == Some("construtor"));
-        Some(PyReceiver { class, parent: false, exact: constructed && self.written_class(caller, occurrence) == Some(class) })
+        let exact = constructed && self.written_class(caller, occurrence) == Some(class) && !self.construction_changed(class);
+        Some(PyReceiver { class, parent: false, exact })
+    }
+
+    /// Step 2.4c (DEC-44): a `__new__`, a class decorator or a keyword (`metaclass`) of the class or of
+    /// a project base: the call may build something else, such as a subclass.
+    fn construction_changed(&self, class: &'g str) -> bool {
+        let changed = |c: &'g str| self.class_facts(c).dynamic || !self.own_methods(c, "__new__").is_empty();
+        match self.mro(class) {
+            Some(mro) => mro.iter().any(|b| matches!(b, Base::Class(c) if changed(c))),
+            None => changed(class),
+        }
     }
 
     /// Step 2.4b: what a base written at `at` in `path` is, named as the language binds it there
@@ -1393,18 +1411,96 @@ impl<'g> Resolver<'g> {
                 if receiver.parent && self.subclasses(class).iter().any(|s| !self.continues_to(s, class, &name, at)) {
                     return self.left_by_chain(&receiver, occurrence, &name);
                 }
-                // An abstract method that subclasses override: the object's body runs.
-                if !receiver.parent && !receiver.exact && found.len() == 1 && self.method_facts(found[0]).is_abstract {
-                    let overrides: Vec<&'g str> =
-                        self.subclasses(class).iter().flat_map(|s| self.own_methods(s, &name)).filter(|m| !self.method_facts(m).is_abstract).collect();
-                    if !overrides.is_empty() {
-                        return Chain::Overrides(overrides);
+                // Subclasses that override it: the object's body runs (DEC-43 and DEC-44).
+                if !receiver.parent && !receiver.exact {
+                    if let Some(bodies) = self.dispatch(class, &name, &found) {
+                        return Chain::Overrides(bodies);
                     }
                 }
                 Chain::Methods(found)
             }
             _ => self.left_by_chain(&receiver, occurrence, &name),
         }
+    }
+
+    /// Steps 2.4b and 2.4c (DEC-43, DEC-44): a method that does not run by itself: `@abstractmethod`, or an
+    /// empty body without a concrete one above it, along the order of the class that declares it. Over
+    /// a concrete body, an empty one is an override like any other, and it runs.
+    fn abstract_method(&self, method: &'g str, name: &str) -> bool {
+        let facts = self.method_facts(method);
+        if facts.is_abstract || !facts.is_empty {
+            return facts.is_abstract;
+        }
+        let Some((class, _)) = self.container(method).and_then(|c| self.graph.nodes.get_key_value(c)) else { return true };
+        let concrete = |c: &str| self.own_methods(c, name).iter().any(|m| { let f = self.method_facts(m); !f.is_abstract && !f.is_empty });
+        !self.mro(class).iter().flatten().skip(1).any(|b| matches!(b, Base::Class(c) if concrete(c)))
+    }
+
+    /// Step 2.4c: the static type's method, left out of the `bodies` of a dispatched call because it is
+    /// abstract (it does not run).
+    pub fn abstract_left_out(&self, caller: &str, occurrence: &str, bodies: &[&str]) -> Option<&'g str> {
+        let receiver = self.python_receiver(caller, occurrence)?;
+        let (_, name) = call_parts(self.label(occurrence))?;
+        match self.search(receiver.class, &name, receiver.parent) {
+            Search::Found(found, _) if found.len() == 1 && !bodies.contains(&found[0]) => Some(found[0]),
+            _ => None,
+        }
+    }
+
+    /// Step 2.4c (DEC-44): the bodies that may run for a receiver of static type `class`, when a subclass
+    /// of the project has another one: the method found (not an abstract one) and, of each subclass,
+    /// the method its own linearization reaches. A subclass that binds the name to something else has
+    /// a body the rule does not know: no single link either. A base from outside, before the class in
+    /// a subclass, does not count. None: the method found is the only one.
+    fn dispatch(&self, class: &'g str, name: &str, found: &[&'g str]) -> Option<Vec<&'g str>> {
+        // `__m` is private to the class that writes it: no subclass overrides it.
+        if name.starts_with("__") && !name.ends_with("__") {
+            return None;
+        }
+        let declared = self.methods_by_name.get(name).map_or(0, Vec::len);
+        if declared <= found.len() && !self.attribute_names().contains(name) {
+            return None;
+        }
+        let is_abstract = found.len() == 1 && self.abstract_method(found[0], name);
+        let own: BTreeSet<&str> = self.mro(class).iter().flatten().filter_map(|b| if let Base::Class(c) = b { Some(*c) } else { None }).collect();
+        let (mut bodies, mut hidden): (Vec<&'g str>, bool) = (vec![], false);
+        for subclass in self.subclasses(class) {
+            let Some(mro) = self.mro(subclass) else { continue };
+            // An attribute that the subclass, or a base only it has, writes.
+            hidden |= mro.iter().any(|b| matches!(b, Base::Class(c) if !own.contains(c) && self.class_facts(c).stored.contains(name)));
+            for base in &mro {
+                let Base::Class(c) = base else { break };
+                let methods = self.own_methods(c, name);
+                if !methods.is_empty() {
+                    bodies.extend(methods.into_iter().filter(|m| !found.contains(m) && !self.abstract_method(m, name)));
+                    break;
+                }
+                if self.class_facts(c).names.contains(name) {
+                    hidden = true;
+                    break;
+                }
+            }
+        }
+        if bodies.is_empty() && !hidden {
+            return None;
+        }
+        let mut all: Vec<&'g str> = if is_abstract && !bodies.is_empty() { vec![] } else { found.to_vec() };
+        for body in bodies {
+            if !all.contains(&body) {
+                all.push(body);
+            }
+        }
+        Some(all)
+    }
+
+    fn attribute_names(&self) -> &BTreeSet<&'g str> {
+        self.attribute_names.get_or_init(|| {
+            let bound = |id: &str, n: &crate::graph::v2::Node| match n.category.as_str() {
+                "symbol" => n.kind != "method" && self.container(id).is_some_and(|c| self.kind(c) == "class"),
+                _ => n.kind == "attribute_access",
+            };
+            self.graph.nodes.iter().filter(|(id, n)| n.language == "python" && bound(id, n)).filter_map(|(_, n)| n.label.rsplit('.').next()).map(str::trim).collect()
+        })
     }
 
     /// Step 2.4b: in the linearization of `subclass`, the first class after `class` that has the name

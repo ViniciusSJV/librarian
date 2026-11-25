@@ -364,6 +364,10 @@ pub struct CallLink {
     /// `caminho` for `T::f(..)`, or `retorno` and `campo` when the 2.3c decided. Absent otherwise.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub type_rule: Option<String>,
+    /// Step 2.4c (DEC-44): for the bodies of a dispatched call, the static type's method, when it is
+    /// abstract: it does not run, and for that it is not among them. Absent otherwise.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub abstract_method: Option<String>,
     pub evidence: Evidence,
 }
 
@@ -452,7 +456,7 @@ impl Graph {
                         }
                         // Ruled out by the receiver's written type (step 2.2): no link.
                         Resolution::NoCandidate | Resolution::OutOfChain => (vec![], "homonym", "graph_edge"),
-                        // Step 2.4b (DEC-43): an abstract method's overrides, as homonyms, by the type.
+                        // Steps 2.4b and 2.4c (DEC-43, DEC-44): the bodies that may run, as homonyms, by the type.
                         Resolution::Overrides(ref targets) => {
                             (targets.iter().map(|t| (*t, resolver.candidates(occurrence).iter().copied().find(|e| e.to == *t))).collect(), "homonym", "type")
                         }
@@ -480,8 +484,14 @@ impl Graph {
                         continue;
                     }
                     // Above the limit, a type link counts the declarations the graph recorded.
-                    // An abstract method counts its overrides (step 2.4b).
+                    // A dispatched call counts its bodies (steps 2.4b and 2.4c).
                     let count = if overrides { reported.len() } else if edges.is_empty() { written.ambiguous_candidates.unwrap_or(0) } else { edges.len() };
+                    let abstract_method = if overrides {
+                        let bodies: Vec<&str> = reported.iter().map(|(t, _)| *t).collect();
+                        resolver.abstract_left_out(observer, occurrence, &bodies).map(str::to_owned)
+                    } else {
+                        None
+                    };
                     for (to, edge) in reported {
                         let evidence = edge.map_or(&observation.evidence, |e| &e.evidence);
                         if !layer_of.contains_key(to) {
@@ -539,6 +549,7 @@ impl Graph {
                             runs: runs.map(str::to_owned),
                             via: via.clone(),
                             type_rule: (basis == "type").then(|| resolver.type_rule(observer, occurrence)).flatten(),
+                            abstract_method: abstract_method.clone(),
                             evidence: evidence.clone(),
                         });
                     }

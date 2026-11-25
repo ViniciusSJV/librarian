@@ -686,7 +686,8 @@ fn method_facts(decorators: &[ast::Expr], body: &[ast::Stmt]) -> MethodFacts {
     MethodFacts {
         property: decorators.iter().any(|d| matches!(d, ast::Expr::Name(n) if n.id.as_str() == "property")),
         is_static: named("staticmethod"),
-        is_abstract: only || named("abstractmethod"),
+        is_abstract: named("abstractmethod"),
+        is_empty: only,
     }
 }
 

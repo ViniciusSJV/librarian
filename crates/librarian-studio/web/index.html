@@ -1211,7 +1211,8 @@ const STRINGS = {
   'path.resolution.scope': ['seguida pelo escopo: o nome chamado é definido no próprio arquivo de quem chama (no módulo, ou no corpo da função em volta), e é esta definição', 'followed by the scope: the called name is defined in the caller\'s own file (in the module, or in the body of the function around it), and it is this definition'],
   'path.resolution.receiver': ['seguida: chamada do próprio receptor (self.m()), e só este homônimo está na mesma classe ou impl', 'followed: the receiver\'s own call (self.m()), and only this homonym is in the same class or impl'],
   'path.resolution.type': ['seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante); no Python, declarado nele ou herdado das bases dele, e também cls, super() e @property', 'followed: a method of the receiver\'s written type (annotation, constructor, self, field; in Rust, also path, return, item and variant); in Python, declared by it or inherited from its bases, and also cls, super() and @property'],
-  'path.resolution.overrides': ['não seguida: o método do tipo é abstrato, e {n} subclasse(s) do projeto o sobrescrevem; roda o do objeto', 'not followed: the type\'s method is abstract, and {n} subclass(es) of the project override it; the object\'s own runs'],
+  'path.resolution.overrides': ['não seguida: roda o corpo da classe do objeto; {n} corpo(s) do projeto podem rodar, do tipo escrito ou de uma subclasse que o sobrescreve', 'not followed: the body of the object\'s class runs; {n} bodies of the project may run, the written type\'s or that of a subclass that overrides it'],
+  'path.resolution.overridesAbstract': ['não seguida: {method}, do tipo escrito, é abstrato: não roda, e por isso saiu da lista; roda o corpo da classe do objeto, e {n} corpo(s) de subclasses do projeto podem rodar', 'not followed: {method}, the written type\'s, is abstract: it does not run, so it is not in the list; the body of the object\'s class runs, and {n} bodies of the project\'s subclasses may run'],
   'path.many': ['{n} candidatas', '{n} candidates'],
   'path.manyTitle': ['{text}: {n} candidatas, numa caixa só (mais de 8 não viram linhas)\nclique: ver a lista e escolher', '{text}: {n} candidates, in one box (more than 8 are not drawn as lines)\nclick: see the list and choose'],
   'path.manyList': ['A lista completa; escolha uma para o percurso seguir por ela:', 'The full list; choose one for the walk to go on through it:'],
@@ -7803,7 +7804,9 @@ function showUse(info, nodes) {
   // without its own __init__, DEC-39) is settled, not followed: its text must not say "followed".
   const notWalked = l => l.relation === 'decorates' || (l.relation === 'instantiates' && !l.runs);
   const settledText = l => {
-    if (l.resolution === 'homonym' && l.basis === 'type') return t('path.resolution.overrides', { n: l.candidates });
+    if (l.resolution === 'homonym' && l.basis === 'type') return l.abstract_method
+      ? t('path.resolution.overridesAbstract', { n: l.candidates, method: state.nodes[state.index.get(l.abstract_method)]?.label ?? l.abstract_method })
+      : t('path.resolution.overrides', { n: l.candidates });
     const text = t(l.resolution === 'homonym' && l.candidates === 1 ? 'path.resolution.homonymOne' : `path.resolution.${l.resolution}`, { n: l.candidates });
     return notWalked(l) ? text.replace(/^(seguida|followed): /, `${t('path.resolution.notWalked')}: `) : text;
   };

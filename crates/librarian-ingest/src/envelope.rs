@@ -264,7 +264,7 @@ pub fn candidates(catalog: &Catalog, chosen: &[String], measure: Option<&Measure
                 continue;
             }
             let shown: Vec<&&v2::CallLink> = if ran.is_empty() { links.iter().collect() } else { ran };
-            // Step 2.4b (DEC-43): an abstract method's overrides may pass the cap on homonyms (DEC-06): their count.
+            // Steps 2.4b and 2.4c (DEC-43, DEC-44): the bodies that may run may pass the cap on homonyms (DEC-06): their count.
             let shown = if shown.len() > 8 { vec![] } else { shown };
             suggestion.gaps.push(Gap { code: "homonym_call".into(), for_target: target.clone(), text: links[0].text.clone(), path: links[0].evidence.path.clone(), line: Some(links[0].evidence.start_line),
                 candidates: shown.iter().filter_map(|l| catalog.symbols.get(&l.to).map(|s| s.qualified_name.clone())).collect(), count: Some(links[0].candidates) });
