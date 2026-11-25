@@ -1,7 +1,7 @@
 {
  "projetos": {
   "hc": {
-   "run_novo": "20261125-065259",
+   "run_novo": "20261125-093653",
    "grafo_novo_igual_ao_de_referencia": false,
    "populacao": {
     "total": 1956,
@@ -9,38 +9,38 @@
      "no_candidate_in_project": 1313,
      "unique": 325,
      "above_candidate_limit": 24,
-     "homonym": 205,
-     "type": 73,
+     "homonym": 187,
+     "type": 91,
      "import": 16
     },
     "por_estrato": {
      "no_candidate_in_project": 1313,
      "unique->outro": 309,
      "above_candidate_limit": 24,
-     "homonym": 205,
-     "type": 73,
+     "homonym": 187,
+     "type": 91,
      "import": 16,
      "unique->function": 16
     },
     "metodo_para_funcao": 30
    },
    "amostra_contagem": {
-    "sem_candidato": 48,
-    "correta": 85,
+    "sem_candidato": 51,
+    "correta": 96,
     "link_falso": 1,
-    "candidatos_falsos": 14,
-    "ambigua": 9
+    "candidatos_falsos": 15,
+    "ambigua": 8
    },
    "parte_c_contagem": {
     "sem_candidato": 16,
     "correta": 4
    },
    "estimativa_populacao": {
-    "correta": 361,
+    "correta": 356,
     "link_falso": 31,
-    "candidatos_falsos": 132,
+    "candidatos_falsos": 120,
     "ambigua": 0,
-    "sem_candidato": 1344
+    "sem_candidato": 1342
    },
    "amostra": [
     {
@@ -1442,9 +1442,9 @@
      "id": "HC-156",
      "estrato": "despacho_classe",
      "parte_c": false,
-     "categoria": "ambigua",
-     "categoria_regra_anterior": "ambigua",
-     "resposta": "homonym (2)",
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (2) → Telegram.send (hc/integrations/telegram/transport.py:55)",
      "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4c; conferido no editor)"
     },
     {
@@ -1455,6 +1455,132 @@
      "categoria_regra_anterior": "correta",
      "resposta": "unique (1) → TokenBucket.authorize_login_email (hc/api/models.py:1481)",
      "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4c)"
+    },
+    {
+     "id": "HC-158",
+     "estrato": "classe_pelo_nome",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (1) → TokenBucket.authorize (hc/api/models.py:1442)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4d-0; conferido no editor)"
+    },
+    {
+     "id": "HC-159",
+     "estrato": "classe_pelo_nome",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (1) → TokenBucket.authorize (hc/api/models.py:1442)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4d-0)"
+    },
+    {
+     "id": "HC-160",
+     "estrato": "classe_pelo_nome",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (3) → PdConf.load (hc/api/models.py:909)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4d-0)"
+    },
+    {
+     "id": "HC-161",
+     "estrato": "classe_pelo_nome",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (3) → EmailConf.load (hc/api/models.py:929)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4d-0)"
+    },
+    {
+     "id": "HC-162",
+     "estrato": "classe_pelo_nome",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (3) → TelegramCallback.load (hc/integrations/telegram/views.py:42)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4d-0; conferido no editor)"
+    },
+    {
+     "id": "HC-163",
+     "estrato": "classe_pelo_nome",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (2) → Signal.send (hc/integrations/signal/transport.py:60)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4d-0; conferido no editor)"
+    },
+    {
+     "id": "HC-164",
+     "estrato": "classe_pelo_nome_unica",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → TokenBucket.authorize_telegram (hc/api/models.py:1510)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4d-0; conferido no editor)"
+    },
+    {
+     "id": "HC-165",
+     "estrato": "classe_pelo_nome_unica",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → Signal._read_replies (hc/integrations/signal/transport.py:105)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4d-0)"
+    },
+    {
+     "id": "HC-166",
+     "estrato": "classe_pelo_nome_unica",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → TokenBucket.record_s3_get_object_error (hc/api/models.py:1583)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4d-0)"
+    },
+    {
+     "id": "HC-167",
+     "estrato": "classe_pelo_nome_fora",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4d-0; conferido no editor)"
+    },
+    {
+     "id": "HC-168",
+     "estrato": "classe_pelo_nome_fora",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4d-0)"
+    },
+    {
+     "id": "HC-169",
+     "estrato": "classe_pelo_nome_fora",
+     "parte_c": false,
+     "categoria": "candidatos_falsos",
+     "categoria_regra_anterior": "candidatos_falsos",
+     "resposta": "above_candidate_limit (30)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4d-0; conferido no editor)"
+    },
+    {
+     "id": "HC-170",
+     "estrato": "classe_pelo_nome_atributo",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4d-0)"
+    },
+    {
+     "id": "HC-171",
+     "estrato": "classe_pelo_nome_atributo",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → Ping.GetBodyError (hc/api/models.py:703) [instancia]",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4d-0)"
     }
    ],
    "executores": [
@@ -1485,7 +1611,7 @@
    ]
   },
   "rt": {
-   "run_novo": "20261125-065625",
+   "run_novo": "20261125-094020",
    "grafo_novo_igual_ao_de_referencia": false,
    "populacao": {
     "total": 515,
@@ -5507,23 +5633,20 @@
     ]
    },
    "agora": {
-    "resolution": "homonym",
+    "resolution": "type",
     "candidates": 4,
     "alvos": [
-     "Carro.andar (pkg/despacho.py:41)",
-     "Irma.andar (pkg/despacho.py:68)",
-     "Moto.andar (pkg/despacho.py:60)",
      "Veiculo.andar (pkg/despacho.py:10)"
     ],
     "relacao": "calls"
    },
    "alvo": {
-    "alvo": "sem tipo",
-    "resolution": "homonym",
-    "passo": "2.4c",
-    "por_que": "T.m() pelo nome da classe: a regra não lhe dá tipo, e vale o que valia"
+    "alvo": "Veiculo.andar (pkg/despacho.py:10)",
+    "resolution": "type",
+    "passo": "2.4d-0",
+    "por_que": "a resposta mudou no 2.4d-0 (DEC-45): até o 2.4c, o nome da classe não dava tipo e a chamada saía homonym, com os quatro andar; agora a classe é usada, e Veiculo.andar(self) roda o corpo da classe escrita (o Python confirma), nunca o de uma subclasse"
    },
-   "estado": "igual ao atual"
+   "estado": "no alvo"
   },
   {
    "id": "DP-py-fora-antes",
@@ -5549,6 +5672,1304 @@
     "por_que": "base de fora antes, na subclasse: não conta (limite)"
    },
    "estado": "no alvo"
+  },
+  {
+   "id": "CN-py-importada",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 6,
+    "alvos": [
+     "CnBase.somar_cn (pkg/classe_nome.py:14)",
+     "CnFilha.somar_cn (pkg/classe_nome.py:33)",
+     "CnLocal.CnConf.somar_cn (pkg/classe_nome_usos.py:22)",
+     "CnLocal.somar_cn (pkg/classe_nome_usos.py:14)",
+     "CnOutra.CnDentro.somar_cn (pkg/classe_nome.py:57)",
+     "CnTrocada.CnDentro.somar_cn (pkg/classe_nome.py:48)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 6,
+    "alvos": [
+     "CnBase.somar_cn (pkg/classe_nome.py:14)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "CnBase.somar_cn (pkg/classe_nome.py:14)",
+    "resolution": "type",
+    "passo": "2.4d-0",
+    "por_que": "from p import C"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "CN-py-mesmo-modulo",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 6,
+    "alvos": [
+     "CnBase.somar_cn (pkg/classe_nome.py:14)",
+     "CnFilha.somar_cn (pkg/classe_nome.py:33)",
+     "CnLocal.CnConf.somar_cn (pkg/classe_nome_usos.py:22)",
+     "CnLocal.somar_cn (pkg/classe_nome_usos.py:14)",
+     "CnOutra.CnDentro.somar_cn (pkg/classe_nome.py:57)",
+     "CnTrocada.CnDentro.somar_cn (pkg/classe_nome.py:48)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 6,
+    "alvos": [
+     "CnLocal.somar_cn (pkg/classe_nome_usos.py:14)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "CnLocal.somar_cn (pkg/classe_nome_usos.py:14)",
+    "resolution": "type",
+    "passo": "2.4d-0",
+    "por_que": "classe do mesmo módulo"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "CN-py-alias-import",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 6,
+    "alvos": [
+     "CnBase.somar_cn (pkg/classe_nome.py:14)",
+     "CnFilha.somar_cn (pkg/classe_nome.py:33)",
+     "CnLocal.CnConf.somar_cn (pkg/classe_nome_usos.py:22)",
+     "CnLocal.somar_cn (pkg/classe_nome_usos.py:14)",
+     "CnOutra.CnDentro.somar_cn (pkg/classe_nome.py:57)",
+     "CnTrocada.CnDentro.somar_cn (pkg/classe_nome.py:48)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 6,
+    "alvos": [
+     "CnBase.somar_cn (pkg/classe_nome.py:14)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "CnBase.somar_cn (pkg/classe_nome.py:14)",
+    "resolution": "type",
+    "passo": "2.4d-0",
+    "por_que": "import C as D"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "CN-py-alias-modulo",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 6,
+    "alvos": [
+     "CnBase.somar_cn (pkg/classe_nome.py:14)",
+     "CnFilha.somar_cn (pkg/classe_nome.py:33)",
+     "CnLocal.CnConf.somar_cn (pkg/classe_nome_usos.py:22)",
+     "CnLocal.somar_cn (pkg/classe_nome_usos.py:14)",
+     "CnOutra.CnDentro.somar_cn (pkg/classe_nome.py:57)",
+     "CnTrocada.CnDentro.somar_cn (pkg/classe_nome.py:48)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 6,
+    "alvos": [
+     "CnFilha.somar_cn (pkg/classe_nome.py:33)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "CnFilha.somar_cn (pkg/classe_nome.py:33)",
+    "resolution": "type",
+    "passo": "2.4d-0",
+    "por_que": "D = C no módulo"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "CN-py-alias-local",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 6,
+    "alvos": [
+     "CnBase.somar_cn (pkg/classe_nome.py:14)",
+     "CnFilha.somar_cn (pkg/classe_nome.py:33)",
+     "CnLocal.CnConf.somar_cn (pkg/classe_nome_usos.py:22)",
+     "CnLocal.somar_cn (pkg/classe_nome_usos.py:14)",
+     "CnOutra.CnDentro.somar_cn (pkg/classe_nome.py:57)",
+     "CnTrocada.CnDentro.somar_cn (pkg/classe_nome.py:48)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 6,
+    "alvos": [
+     "CnFilha.somar_cn (pkg/classe_nome.py:33)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "CnFilha.somar_cn (pkg/classe_nome.py:33)",
+    "resolution": "type",
+    "passo": "2.4d-0",
+    "por_que": "k = C na função"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "CN-py-reexportada",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 6,
+    "alvos": [
+     "CnBase.somar_cn (pkg/classe_nome.py:14)",
+     "CnFilha.somar_cn (pkg/classe_nome.py:33)",
+     "CnLocal.CnConf.somar_cn (pkg/classe_nome_usos.py:22)",
+     "CnLocal.somar_cn (pkg/classe_nome_usos.py:14)",
+     "CnOutra.CnDentro.somar_cn (pkg/classe_nome.py:57)",
+     "CnTrocada.CnDentro.somar_cn (pkg/classe_nome.py:48)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 6,
+    "alvos": [
+     "CnFilha.somar_cn (pkg/classe_nome.py:33)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "CnFilha.somar_cn (pkg/classe_nome.py:33)",
+    "resolution": "type",
+    "passo": "2.4d-0",
+    "por_que": "a reexportação de outro módulo (DEC-42)"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "CN-py-modulo",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 6,
+    "alvos": [
+     "CnBase.somar_cn (pkg/classe_nome.py:14)",
+     "CnFilha.somar_cn (pkg/classe_nome.py:33)",
+     "CnLocal.CnConf.somar_cn (pkg/classe_nome_usos.py:22)",
+     "CnLocal.somar_cn (pkg/classe_nome_usos.py:14)",
+     "CnOutra.CnDentro.somar_cn (pkg/classe_nome.py:57)",
+     "CnTrocada.CnDentro.somar_cn (pkg/classe_nome.py:48)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 6,
+    "alvos": [
+     "CnBase.somar_cn (pkg/classe_nome.py:14)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "CnBase.somar_cn (pkg/classe_nome.py:14)",
+    "resolution": "type",
+    "passo": "2.4d-0",
+    "por_que": "modulo.C.m()"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "CN-py-modulo-as",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 6,
+    "alvos": [
+     "CnBase.somar_cn (pkg/classe_nome.py:14)",
+     "CnFilha.somar_cn (pkg/classe_nome.py:33)",
+     "CnLocal.CnConf.somar_cn (pkg/classe_nome_usos.py:22)",
+     "CnLocal.somar_cn (pkg/classe_nome_usos.py:14)",
+     "CnOutra.CnDentro.somar_cn (pkg/classe_nome.py:57)",
+     "CnTrocada.CnDentro.somar_cn (pkg/classe_nome.py:48)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 6,
+    "alvos": [
+     "CnFilha.somar_cn (pkg/classe_nome.py:33)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "CnFilha.somar_cn (pkg/classe_nome.py:33)",
+    "resolution": "type",
+    "passo": "2.4d-0",
+    "por_que": "import a.b as m"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "CN-py-modulo-pontos",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 6,
+    "alvos": [
+     "CnBase.somar_cn (pkg/classe_nome.py:14)",
+     "CnFilha.somar_cn (pkg/classe_nome.py:33)",
+     "CnLocal.CnConf.somar_cn (pkg/classe_nome_usos.py:22)",
+     "CnLocal.somar_cn (pkg/classe_nome_usos.py:14)",
+     "CnOutra.CnDentro.somar_cn (pkg/classe_nome.py:57)",
+     "CnTrocada.CnDentro.somar_cn (pkg/classe_nome.py:48)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 6,
+    "alvos": [
+     "CnFilha.somar_cn (pkg/classe_nome.py:33)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "CnFilha.somar_cn (pkg/classe_nome.py:33)",
+    "resolution": "type",
+    "passo": "2.4d-0",
+    "por_que": "a.b.C.m()"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "CN-py-aninhada",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 6,
+    "alvos": [
+     "CnBase.somar_cn (pkg/classe_nome.py:14)",
+     "CnFilha.somar_cn (pkg/classe_nome.py:33)",
+     "CnLocal.CnConf.somar_cn (pkg/classe_nome_usos.py:22)",
+     "CnLocal.somar_cn (pkg/classe_nome_usos.py:14)",
+     "CnOutra.CnDentro.somar_cn (pkg/classe_nome.py:57)",
+     "CnTrocada.CnDentro.somar_cn (pkg/classe_nome.py:48)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 6,
+    "alvos": [
+     "CnOutra.CnDentro.somar_cn (pkg/classe_nome.py:57)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "CnOutra.CnDentro.somar_cn (pkg/classe_nome.py:57)",
+    "resolution": "type",
+    "passo": "2.4d-0",
+    "por_que": "classe aninhada no próprio corpo"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "CN-py-aninhada-modulo",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 6,
+    "alvos": [
+     "CnBase.somar_cn (pkg/classe_nome.py:14)",
+     "CnFilha.somar_cn (pkg/classe_nome.py:33)",
+     "CnLocal.CnConf.somar_cn (pkg/classe_nome_usos.py:22)",
+     "CnLocal.somar_cn (pkg/classe_nome_usos.py:14)",
+     "CnOutra.CnDentro.somar_cn (pkg/classe_nome.py:57)",
+     "CnTrocada.CnDentro.somar_cn (pkg/classe_nome.py:48)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 6,
+    "alvos": [
+     "CnOutra.CnDentro.somar_cn (pkg/classe_nome.py:57)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "CnOutra.CnDentro.somar_cn (pkg/classe_nome.py:57)",
+    "resolution": "type",
+    "passo": "2.4d-0",
+    "por_que": "modulo.C.D.m()"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "CN-py-aninhada-herdada",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 6,
+    "alvos": [
+     "CnBase.somar_cn (pkg/classe_nome.py:14)",
+     "CnFilha.somar_cn (pkg/classe_nome.py:33)",
+     "CnLocal.CnConf.somar_cn (pkg/classe_nome_usos.py:22)",
+     "CnLocal.somar_cn (pkg/classe_nome_usos.py:14)",
+     "CnOutra.CnDentro.somar_cn (pkg/classe_nome.py:57)",
+     "CnTrocada.CnDentro.somar_cn (pkg/classe_nome.py:48)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 6,
+    "alvos": [
+     "CnBase.somar_cn (pkg/classe_nome.py:14)",
+     "CnFilha.somar_cn (pkg/classe_nome.py:33)",
+     "CnLocal.CnConf.somar_cn (pkg/classe_nome_usos.py:22)",
+     "CnLocal.somar_cn (pkg/classe_nome_usos.py:14)",
+     "CnOutra.CnDentro.somar_cn (pkg/classe_nome.py:57)",
+     "CnTrocada.CnDentro.somar_cn (pkg/classe_nome.py:48)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4d-0",
+    "por_que": "limite: a classe aninhada herdada não é lida"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "CN-py-aninhada-trocada",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 6,
+    "alvos": [
+     "CnBase.somar_cn (pkg/classe_nome.py:14)",
+     "CnFilha.somar_cn (pkg/classe_nome.py:33)",
+     "CnLocal.CnConf.somar_cn (pkg/classe_nome_usos.py:22)",
+     "CnLocal.somar_cn (pkg/classe_nome_usos.py:14)",
+     "CnOutra.CnDentro.somar_cn (pkg/classe_nome.py:57)",
+     "CnTrocada.CnDentro.somar_cn (pkg/classe_nome.py:48)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 6,
+    "alvos": [
+     "CnBase.somar_cn (pkg/classe_nome.py:14)",
+     "CnFilha.somar_cn (pkg/classe_nome.py:33)",
+     "CnLocal.CnConf.somar_cn (pkg/classe_nome_usos.py:22)",
+     "CnLocal.somar_cn (pkg/classe_nome_usos.py:14)",
+     "CnOutra.CnDentro.somar_cn (pkg/classe_nome.py:57)",
+     "CnTrocada.CnDentro.somar_cn (pkg/classe_nome.py:48)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4d-0",
+    "por_que": "o corpo liga o nome da aninhada a outra classe: não decide"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "CN-py-import-local",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 6,
+    "alvos": [
+     "CnBase.rotulo_cn (pkg/classe_nome.py:18)",
+     "CnContrato.rotulo_cn (pkg/classe_nome.py:114)",
+     "CnFilha.rotulo_cn (pkg/classe_nome.py:37)",
+     "CnNeta.rotulo_cn (pkg/classe_nome.py:42)",
+     "CnOutra.CnDentro.rotulo_cn (pkg/classe_nome.py:61)",
+     "CnOutra.rotulo_cn (pkg/classe_nome.py:73)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 6,
+    "alvos": [
+     "CnNeta.rotulo_cn (pkg/classe_nome.py:42)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "CnNeta.rotulo_cn (pkg/classe_nome.py:42)",
+    "resolution": "type",
+    "passo": "2.4d-0",
+    "por_que": "import dentro da função"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "CN-py-classmethod",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "CnBase.criar_cn (pkg/classe_nome.py:10)",
+     "CnOutra.criar_cn (pkg/classe_nome.py:65)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 2,
+    "alvos": [
+     "CnBase.criar_cn (pkg/classe_nome.py:10)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "CnBase.criar_cn (pkg/classe_nome.py:10)",
+    "resolution": "type",
+    "passo": "2.4d-0",
+    "por_que": "classmethod"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "CN-py-staticmethod",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 6,
+    "alvos": [
+     "CnBase.somar_cn (pkg/classe_nome.py:14)",
+     "CnFilha.somar_cn (pkg/classe_nome.py:33)",
+     "CnLocal.CnConf.somar_cn (pkg/classe_nome_usos.py:22)",
+     "CnLocal.somar_cn (pkg/classe_nome_usos.py:14)",
+     "CnOutra.CnDentro.somar_cn (pkg/classe_nome.py:57)",
+     "CnTrocada.CnDentro.somar_cn (pkg/classe_nome.py:48)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 6,
+    "alvos": [
+     "CnFilha.somar_cn (pkg/classe_nome.py:33)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "CnFilha.somar_cn (pkg/classe_nome.py:33)",
+    "resolution": "type",
+    "passo": "2.4d-0",
+    "por_que": "staticmethod"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "CN-py-instancia",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 6,
+    "alvos": [
+     "CnBase.rotulo_cn (pkg/classe_nome.py:18)",
+     "CnContrato.rotulo_cn (pkg/classe_nome.py:114)",
+     "CnFilha.rotulo_cn (pkg/classe_nome.py:37)",
+     "CnNeta.rotulo_cn (pkg/classe_nome.py:42)",
+     "CnOutra.CnDentro.rotulo_cn (pkg/classe_nome.py:61)",
+     "CnOutra.rotulo_cn (pkg/classe_nome.py:73)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 6,
+    "alvos": [
+     "CnBase.rotulo_cn (pkg/classe_nome.py:18)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "CnBase.rotulo_cn (pkg/classe_nome.py:18)",
+    "resolution": "type",
+    "passo": "2.4d-0",
+    "por_que": "objeto explícito; a subclasse sobrescreve, e roda o da classe escrita"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "CN-py-base-self",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 6,
+    "alvos": [
+     "CnBase.rotulo_cn (pkg/classe_nome.py:18)",
+     "CnContrato.rotulo_cn (pkg/classe_nome.py:114)",
+     "CnFilha.rotulo_cn (pkg/classe_nome.py:37)",
+     "CnNeta.rotulo_cn (pkg/classe_nome.py:42)",
+     "CnOutra.CnDentro.rotulo_cn (pkg/classe_nome.py:61)",
+     "CnOutra.rotulo_cn (pkg/classe_nome.py:73)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 6,
+    "alvos": [
+     "CnBase.rotulo_cn (pkg/classe_nome.py:18)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "CnBase.rotulo_cn (pkg/classe_nome.py:18)",
+    "resolution": "type",
+    "passo": "2.4d-0",
+    "por_que": "Base.m(self)"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "CN-py-init",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 8,
+    "alvos": [
+     "Cliente.__init__ (pkg/models.py:2)",
+     "CnBase.__init__ (pkg/classe_nome.py:7)",
+     "CnFilha.__init__ (pkg/classe_nome.py:29)",
+     "Delegado.__init__ (pkg/heranca_regras.py:68)",
+     "Garagem.__init__ (pkg/despacho.py:142)",
+     "NomeDaInstancia.__init__ (pkg/heranca.py:128)",
+     "Raiz.__init__ (pkg/heranca_apoio.py:2)",
+     "Servico.__init__ (pkg/casos.py:26)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 8,
+    "alvos": [
+     "CnBase.__init__ (pkg/classe_nome.py:7)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "CnBase.__init__ (pkg/classe_nome.py:7)",
+    "resolution": "type",
+    "passo": "2.4d-0",
+    "por_que": "Base.__init__(self): chamada, não instancia"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "CN-py-init-herdado",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 8,
+    "alvos": [
+     "Cliente.__init__ (pkg/models.py:2)",
+     "CnBase.__init__ (pkg/classe_nome.py:7)",
+     "CnFilha.__init__ (pkg/classe_nome.py:29)",
+     "Delegado.__init__ (pkg/heranca_regras.py:68)",
+     "Garagem.__init__ (pkg/despacho.py:142)",
+     "NomeDaInstancia.__init__ (pkg/heranca.py:128)",
+     "Raiz.__init__ (pkg/heranca_apoio.py:2)",
+     "Servico.__init__ (pkg/casos.py:26)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 8,
+    "alvos": [
+     "CnFilha.__init__ (pkg/classe_nome.py:29)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "CnFilha.__init__ (pkg/classe_nome.py:29)",
+    "resolution": "type",
+    "passo": "2.4d-0",
+    "por_que": "__init__ herdado"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "CN-py-init-ninguem",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 8,
+    "alvos": [
+     "Cliente.__init__ (pkg/models.py:2)",
+     "CnBase.__init__ (pkg/classe_nome.py:7)",
+     "CnFilha.__init__ (pkg/classe_nome.py:29)",
+     "Delegado.__init__ (pkg/heranca_regras.py:68)",
+     "Garagem.__init__ (pkg/despacho.py:142)",
+     "NomeDaInstancia.__init__ (pkg/heranca.py:128)",
+     "Raiz.__init__ (pkg/heranca_apoio.py:2)",
+     "Servico.__init__ (pkg/casos.py:26)"
+    ]
+   },
+   "agora": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": [],
+    "relacao": null
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "no_candidate_in_project",
+    "passo": "2.4d-0",
+    "por_que": "ninguém na cadeia declara __init__"
+   },
+   "estado": "mudou"
+  },
+  {
+   "id": "CN-py-herdado",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "CnBase.herdado_cn (pkg/classe_nome.py:21)",
+     "CnOutra.herdado_cn (pkg/classe_nome.py:69)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 2,
+    "alvos": [
+     "CnBase.herdado_cn (pkg/classe_nome.py:21)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "CnBase.herdado_cn (pkg/classe_nome.py:21)",
+    "resolution": "type",
+    "passo": "2.4d-0",
+    "por_que": "método de uma base"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "CN-py-herdado-meio",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 6,
+    "alvos": [
+     "CnBase.somar_cn (pkg/classe_nome.py:14)",
+     "CnFilha.somar_cn (pkg/classe_nome.py:33)",
+     "CnLocal.CnConf.somar_cn (pkg/classe_nome_usos.py:22)",
+     "CnLocal.somar_cn (pkg/classe_nome_usos.py:14)",
+     "CnOutra.CnDentro.somar_cn (pkg/classe_nome.py:57)",
+     "CnTrocada.CnDentro.somar_cn (pkg/classe_nome.py:48)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 6,
+    "alvos": [
+     "CnFilha.somar_cn (pkg/classe_nome.py:33)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "CnFilha.somar_cn (pkg/classe_nome.py:33)",
+    "resolution": "type",
+    "passo": "2.4d-0",
+    "por_que": "para na primeira que declara"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "CN-py-solta",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 1,
+    "alvos": [
+     "CnBalde.autorizar_cn (pkg/classe_nome.py:169)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 1,
+    "alvos": [
+     "CnBalde.autorizar_cn (pkg/classe_nome.py:169)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "CnBalde.autorizar_cn (pkg/classe_nome.py:169)",
+    "resolution": "type",
+    "passo": "2.4d-0",
+    "por_que": "função solta com o mesmo nome (DEC-38)"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "CN-py-sombra-variavel",
+   "atual_registrado": {
+    "resolution": "type",
+    "candidates": 6,
+    "alvos": [
+     "CnOutra.rotulo_cn (pkg/classe_nome.py:73)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 6,
+    "alvos": [
+     "CnOutra.rotulo_cn (pkg/classe_nome.py:73)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "CnOutra.rotulo_cn (pkg/classe_nome.py:73)",
+    "resolution": "type",
+    "passo": "2.4d-0",
+    "por_que": "variável com o nome da classe: vale o construtor dela"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "CN-py-sombra-parametro",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "CnBase.herdado_cn (pkg/classe_nome.py:21)",
+     "CnOutra.herdado_cn (pkg/classe_nome.py:69)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "CnBase.herdado_cn (pkg/classe_nome.py:21)",
+     "CnOutra.herdado_cn (pkg/classe_nome.py:69)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4d-0",
+    "por_que": "parâmetro com o nome da classe: não decide"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "CN-py-sombra-for",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "CnBase.herdado_cn (pkg/classe_nome.py:21)",
+     "CnOutra.herdado_cn (pkg/classe_nome.py:69)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "CnBase.herdado_cn (pkg/classe_nome.py:21)",
+     "CnOutra.herdado_cn (pkg/classe_nome.py:69)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4d-0",
+    "por_que": "alvo de for: não decide"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "CN-py-sombra-compreensao",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "CnBase.herdado_cn (pkg/classe_nome.py:21)",
+     "CnOutra.herdado_cn (pkg/classe_nome.py:69)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "CnBase.herdado_cn (pkg/classe_nome.py:21)",
+     "CnOutra.herdado_cn (pkg/classe_nome.py:69)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4d-0",
+    "por_que": "alvo de compreensão: não decide"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "CN-py-condicional",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 6,
+    "alvos": [
+     "CnBase.somar_cn (pkg/classe_nome.py:14)",
+     "CnFilha.somar_cn (pkg/classe_nome.py:33)",
+     "CnLocal.CnConf.somar_cn (pkg/classe_nome_usos.py:22)",
+     "CnLocal.somar_cn (pkg/classe_nome_usos.py:14)",
+     "CnOutra.CnDentro.somar_cn (pkg/classe_nome.py:57)",
+     "CnTrocada.CnDentro.somar_cn (pkg/classe_nome.py:48)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 6,
+    "alvos": [
+     "CnBase.somar_cn (pkg/classe_nome.py:14)",
+     "CnFilha.somar_cn (pkg/classe_nome.py:33)",
+     "CnLocal.CnConf.somar_cn (pkg/classe_nome_usos.py:22)",
+     "CnLocal.somar_cn (pkg/classe_nome_usos.py:14)",
+     "CnOutra.CnDentro.somar_cn (pkg/classe_nome.py:57)",
+     "CnTrocada.CnDentro.somar_cn (pkg/classe_nome.py:48)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4d-0",
+    "por_que": "duas classes possíveis: não decide"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "CN-py-sombra-condicional",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "CnBase.herdado_cn (pkg/classe_nome.py:21)",
+     "CnOutra.herdado_cn (pkg/classe_nome.py:69)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "CnBase.herdado_cn (pkg/classe_nome.py:21)",
+     "CnOutra.herdado_cn (pkg/classe_nome.py:69)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4d-0",
+    "por_que": "alias que um if troca: não decide"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "CN-py-atributo",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "CnOutra.tarefa_cn (pkg/classe_nome.py:76)",
+     "CnReligada.tarefa_cn (pkg/classe_nome.py:107)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "CnOutra.tarefa_cn (pkg/classe_nome.py:76)",
+     "CnReligada.tarefa_cn (pkg/classe_nome.py:107)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4d-0",
+    "por_que": "o nome é atributo, não método: não decide"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "CN-py-religada",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "CnOutra.tarefa_cn (pkg/classe_nome.py:76)",
+     "CnReligada.tarefa_cn (pkg/classe_nome.py:107)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "CnOutra.tarefa_cn (pkg/classe_nome.py:76)",
+     "CnReligada.tarefa_cn (pkg/classe_nome.py:107)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4d-0",
+    "por_que": "def m e depois m = outra: não decide"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "CN-py-religada-objeto",
+   "atual_registrado": {
+    "resolution": "type",
+    "candidates": 2,
+    "alvos": [
+     "CnReligada.tarefa_cn (pkg/classe_nome.py:107)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 2,
+    "alvos": [
+     "CnReligada.tarefa_cn (pkg/classe_nome.py:107)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "solta_tarefa_cn (pkg/classe_nome.py:97)",
+    "passo": "2.4d-0",
+    "por_que": "LINK FALSO CONHECIDO das regras antigas (2.4b): o Python roda solta_tarefa_cn. 0 casos no Healthchecks; se aparecer um, corrigir antes do passo seguinte"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "CN-py-protocolo",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 6,
+    "alvos": [
+     "CnBase.rotulo_cn (pkg/classe_nome.py:18)",
+     "CnContrato.rotulo_cn (pkg/classe_nome.py:114)",
+     "CnFilha.rotulo_cn (pkg/classe_nome.py:37)",
+     "CnNeta.rotulo_cn (pkg/classe_nome.py:42)",
+     "CnOutra.CnDentro.rotulo_cn (pkg/classe_nome.py:61)",
+     "CnOutra.rotulo_cn (pkg/classe_nome.py:73)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 6,
+    "alvos": [
+     "CnBase.rotulo_cn (pkg/classe_nome.py:18)",
+     "CnContrato.rotulo_cn (pkg/classe_nome.py:114)",
+     "CnFilha.rotulo_cn (pkg/classe_nome.py:37)",
+     "CnNeta.rotulo_cn (pkg/classe_nome.py:42)",
+     "CnOutra.CnDentro.rotulo_cn (pkg/classe_nome.py:61)",
+     "CnOutra.rotulo_cn (pkg/classe_nome.py:73)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4d-0",
+    "por_que": "limite: Protocol pelo nome não decide"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "CN-py-metaclasse",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "CnFabrica.fabricar_cn (pkg/classe_nome.py:155)",
+     "CnMeta.fabricar_cn (pkg/classe_nome.py:146)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "CnFabrica.fabricar_cn (pkg/classe_nome.py:155)",
+     "CnMeta.fabricar_cn (pkg/classe_nome.py:146)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4d-0",
+    "por_que": "limite: método da metaclasse não decide"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "CN-py-privado",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "CnCofre2.__cofre_cn (pkg/classe_nome.py:133)",
+     "CnPrivada.__cofre_cn (pkg/classe_nome.py:123)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 2,
+    "alvos": [
+     "CnPrivada.__cofre_cn (pkg/classe_nome.py:123)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "CnPrivada.__cofre_cn (pkg/classe_nome.py:123)",
+    "resolution": "type",
+    "passo": "2.4d-0",
+    "por_que": "nome privado dentro da própria classe"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "CN-py-privado-fora",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "CnCofre2.__cofre_cn (pkg/classe_nome.py:133)",
+     "CnPrivada.__cofre_cn (pkg/classe_nome.py:123)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "CnCofre2.__cofre_cn (pkg/classe_nome.py:133)",
+     "CnPrivada.__cofre_cn (pkg/classe_nome.py:123)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4d-0",
+    "por_que": "nome privado escrito em outra classe: não decide"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "CN-py-ninguem",
+   "atual_registrado": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "CnOutra.so_outra_cn (pkg/classe_nome.py:84)"
+    ]
+   },
+   "agora": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": [],
+    "relacao": null
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "no_candidate_in_project",
+    "passo": "2.4d-0",
+    "por_que": "ninguém na cadeia declara: o candidato de outra classe sai"
+   },
+   "estado": "mudou"
+  },
+  {
+   "id": "CN-py-so-de-fora",
+   "atual_registrado": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "CnCorredor.run (pkg/classe_nome_fora.py:28)"
+    ]
+   },
+   "agora": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": [],
+    "relacao": null
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "no_candidate_in_project",
+    "passo": "2.4d-0",
+    "por_que": "método da base de fora"
+   },
+   "estado": "mudou"
+  },
+  {
+   "id": "CN-py-fora-classmethod",
+   "atual_registrado": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "CnCorredor.fromkeys (pkg/classe_nome_fora.py:32)"
+    ]
+   },
+   "agora": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": [],
+    "relacao": null
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "no_candidate_in_project",
+    "passo": "2.4d-0",
+    "por_que": "classmethod da base de fora"
+   },
+   "estado": "mudou"
+  },
+  {
+   "id": "CN-py-fora-propria",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "CnOutra.rodar_fora_cn (pkg/classe_nome.py:88)",
+     "CnTarefaPropria.rodar_fora_cn (pkg/classe_nome_fora.py:14)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 2,
+    "alvos": [
+     "CnTarefaPropria.rodar_fora_cn (pkg/classe_nome_fora.py:14)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "CnTarefaPropria.rodar_fora_cn (pkg/classe_nome_fora.py:14)",
+    "resolution": "type",
+    "passo": "2.4d-0",
+    "por_que": "a própria classe declara, antes da base de fora"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "CN-py-fora-antes",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 6,
+    "alvos": [
+     "CnBase.rotulo_cn (pkg/classe_nome.py:18)",
+     "CnContrato.rotulo_cn (pkg/classe_nome.py:114)",
+     "CnFilha.rotulo_cn (pkg/classe_nome.py:37)",
+     "CnNeta.rotulo_cn (pkg/classe_nome.py:42)",
+     "CnOutra.CnDentro.rotulo_cn (pkg/classe_nome.py:61)",
+     "CnOutra.rotulo_cn (pkg/classe_nome.py:73)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 1,
+    "alvos": [
+     "CnBase.rotulo_cn (pkg/classe_nome.py:18)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4d-0",
+    "por_que": "limite: base de fora antes da do projeto (DEC-43)"
+   },
+   "estado": "mudou"
+  },
+  {
+   "id": "CN-py-fora-depois",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 6,
+    "alvos": [
+     "CnBase.rotulo_cn (pkg/classe_nome.py:18)",
+     "CnContrato.rotulo_cn (pkg/classe_nome.py:114)",
+     "CnFilha.rotulo_cn (pkg/classe_nome.py:37)",
+     "CnNeta.rotulo_cn (pkg/classe_nome.py:42)",
+     "CnOutra.CnDentro.rotulo_cn (pkg/classe_nome.py:61)",
+     "CnOutra.rotulo_cn (pkg/classe_nome.py:73)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 6,
+    "alvos": [
+     "CnBase.rotulo_cn (pkg/classe_nome.py:18)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "CnBase.rotulo_cn (pkg/classe_nome.py:18)",
+    "resolution": "type",
+    "passo": "2.4d-0",
+    "por_que": "base de fora depois"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "CN-py-retorno",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "CnBase.liberar_cn (pkg/classe_nome.py:24)",
+     "CnOutra.liberar_cn (pkg/classe_nome.py:80)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 2,
+    "alvos": [
+     "CnBase.liberar_cn (pkg/classe_nome.py:24)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "CnBase.liberar_cn (pkg/classe_nome.py:24)",
+    "resolution": "type",
+    "passo": "2.4d-0",
+    "por_que": "o retorno do método pelo nome da classe (DEC-41)"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "CN-py-type-self",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 6,
+    "alvos": [
+     "CnBase.rotulo_cn (pkg/classe_nome.py:18)",
+     "CnContrato.rotulo_cn (pkg/classe_nome.py:114)",
+     "CnFilha.rotulo_cn (pkg/classe_nome.py:37)",
+     "CnNeta.rotulo_cn (pkg/classe_nome.py:42)",
+     "CnOutra.CnDentro.rotulo_cn (pkg/classe_nome.py:61)",
+     "CnOutra.rotulo_cn (pkg/classe_nome.py:73)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 6,
+    "alvos": [
+     "CnBase.rotulo_cn (pkg/classe_nome.py:18)",
+     "CnContrato.rotulo_cn (pkg/classe_nome.py:114)",
+     "CnFilha.rotulo_cn (pkg/classe_nome.py:37)",
+     "CnNeta.rotulo_cn (pkg/classe_nome.py:42)",
+     "CnOutra.CnDentro.rotulo_cn (pkg/classe_nome.py:61)",
+     "CnOutra.rotulo_cn (pkg/classe_nome.py:73)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4d-0",
+    "por_que": "limite: type(x).m() não é o nome da classe"
+   },
+   "estado": "igual ao atual"
   }
  ],
  "studio_original": {

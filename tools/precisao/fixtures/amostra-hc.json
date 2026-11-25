@@ -1,7 +1,7 @@
 {
  "projeto": "healthchecks-25597e41",
  "fonte": "Projetos/pilotos/healthchecks @ 6c05a7a",
- "selecao": "tools/precisao/amostra.js sobre a linha de base de 18/11/2026 (binário de aae51d7); HC-61 a HC-75: estratos do passo 2.2 (metodo_funcao, modulo_f, espelho), escolhidos à mão na Parada 1 do 2.2, equilibrando código de teste e de produção; HC-76 a HC-87: estratos do passo 2.3a (tipo_py, instancia, receiver_py_teto), escolhidos à mão na Parada 1 do 2.3; HC-88 a HC-97: estratos do passo 2.3b (decorador, campo_init), escolhidos à mão na Parada 1 do 2.3b; HC-98 a HC-112: estratos do passo 2.3c (retorno_py, campo_outro_arquivo, retorno_confirma, liga_nao_fecha, cadeia), escolhidos à mão na Parada 1 do 2.3c; HC-113 a HC-123: estratos do passo 2.4a (escopo_modulo, escopo_fora, escopo_local, escopo_import), escolhidos à mão na Parada 1 do 2.4; HC-124 a HC-143: estratos do passo 2.4b (heranca_self, heranca_tipo, heranca_super, fora_da_cadeia, cls, propriedade), escolhidos à mão na Parada 1 do 2.4b; HC-144 a HC-157: estratos do passo 2.4c (despacho, despacho_sem_sobrescrita, despacho_irma, despacho_construtor, despacho_classe), escolhidos à mão na Parada 1 do 2.4c",
+ "selecao": "tools/precisao/amostra.js sobre a linha de base de 18/11/2026 (binário de aae51d7); HC-61 a HC-75: estratos do passo 2.2 (metodo_funcao, modulo_f, espelho), escolhidos à mão na Parada 1 do 2.2, equilibrando código de teste e de produção; HC-76 a HC-87: estratos do passo 2.3a (tipo_py, instancia, receiver_py_teto), escolhidos à mão na Parada 1 do 2.3; HC-88 a HC-97: estratos do passo 2.3b (decorador, campo_init), escolhidos à mão na Parada 1 do 2.3b; HC-98 a HC-112: estratos do passo 2.3c (retorno_py, campo_outro_arquivo, retorno_confirma, liga_nao_fecha, cadeia), escolhidos à mão na Parada 1 do 2.3c; HC-113 a HC-123: estratos do passo 2.4a (escopo_modulo, escopo_fora, escopo_local, escopo_import), escolhidos à mão na Parada 1 do 2.4; HC-124 a HC-143: estratos do passo 2.4b (heranca_self, heranca_tipo, heranca_super, fora_da_cadeia, cls, propriedade), escolhidos à mão na Parada 1 do 2.4b; HC-144 a HC-157: estratos do passo 2.4c (despacho, despacho_sem_sobrescrita, despacho_irma, despacho_construtor, despacho_classe), escolhidos à mão na Parada 1 do 2.4c; HC-158 a HC-171: estratos do passo 2.4d-0 (classe_pelo_nome, classe_pelo_nome_unica, classe_pelo_nome_fora, classe_pelo_nome_atributo), escolhidos à mão na Parada 1 do 2.4d-0",
  "chamadas": [
   {
    "id": "HC-01",
@@ -3597,6 +3597,314 @@
    "certeza": "alta",
    "justificativa": "A chamada pelo nome da classe roda o método dela.",
    "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4c)"
+  },
+  {
+   "id": "HC-158",
+   "parte_c": false,
+   "estrato": "classe_pelo_nome",
+   "ocorrencia": "hc/api/models.py@54483-54521",
+   "local": "hc/api/models.py:1479",
+   "texto": "TokenBucket.authorize(value, 20, 3600)",
+   "dono": "TokenBucket.authorize_auth_ip",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 1,
+    "alvos": [
+     "TokenBucket.authorize (hc/api/models.py:1442)"
+    ]
+   },
+   "verdade": {
+    "alvo": "TokenBucket.authorize (hc/api/models.py:1442)"
+   },
+   "certeza": "alta",
+   "justificativa": "Staticmethod, mesmo módulo; a função solta homônima é hc/api/decorators.py:33 (DEC-38).",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4d-0; conferido no editor)"
+  },
+  {
+   "id": "HC-159",
+   "parte_c": false,
+   "estrato": "classe_pelo_nome",
+   "ocorrencia": "hc/api/models.py@58553-58616",
+   "local": "hc/api/models.py:1587",
+   "texto": "TokenBucket.authorize(\"s3_get_object_error\", 3, 60, force=True)",
+   "dono": "TokenBucket.record_s3_get_object_error",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 1,
+    "alvos": [
+     "TokenBucket.authorize (hc/api/models.py:1442)"
+    ]
+   },
+   "verdade": {
+    "alvo": "TokenBucket.authorize (hc/api/models.py:1442)"
+   },
+   "certeza": "alta",
+   "justificativa": "Staticmethod, mesmo módulo, com palavra-chave.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4d-0)"
+  },
+  {
+   "id": "HC-160",
+   "parte_c": false,
+   "estrato": "classe_pelo_nome",
+   "ocorrencia": "hc/api/models.py@47841-47864",
+   "local": "hc/api/models.py:1293",
+   "texto": "PdConf.load(self.value)",
+   "dono": "Channel.pd",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 3,
+    "alvos": [
+     "EmailConf.load (hc/api/models.py:929)",
+     "PdConf.load (hc/api/models.py:909)",
+     "TelegramCallback.load (hc/integrations/telegram/views.py:42)"
+    ]
+   },
+   "verdade": {
+    "alvo": "PdConf.load (hc/api/models.py:909)"
+   },
+   "certeza": "alta",
+   "justificativa": "Classmethod, mesmo módulo, entre três load.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4d-0)"
+  },
+  {
+   "id": "HC-161",
+   "parte_c": false,
+   "estrato": "classe_pelo_nome",
+   "ocorrencia": "hc/api/models.py@48274-48300",
+   "local": "hc/api/models.py:1307",
+   "texto": "EmailConf.load(self.value)",
+   "dono": "Channel.email",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 3,
+    "alvos": [
+     "EmailConf.load (hc/api/models.py:929)",
+     "PdConf.load (hc/api/models.py:909)",
+     "TelegramCallback.load (hc/integrations/telegram/views.py:42)"
+    ]
+   },
+   "verdade": {
+    "alvo": "EmailConf.load (hc/api/models.py:929)"
+   },
+   "certeza": "alta",
+   "justificativa": "Classmethod, mesmo módulo, entre três load.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4d-0)"
+  },
+  {
+   "id": "HC-162",
+   "parte_c": false,
+   "estrato": "classe_pelo_nome",
+   "ocorrencia": "hc/integrations/telegram/views.py@1907-1942",
+   "local": "hc/integrations/telegram/views.py:57",
+   "texto": "TelegramCallback.load(request.body)",
+   "dono": "telegram_bot",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 3,
+    "alvos": [
+     "EmailConf.load (hc/api/models.py:929)",
+     "PdConf.load (hc/api/models.py:909)",
+     "TelegramCallback.load (hc/integrations/telegram/views.py:42)"
+    ]
+   },
+   "verdade": {
+    "alvo": "TelegramCallback.load (hc/integrations/telegram/views.py:42)"
+   },
+   "certeza": "alta",
+   "justificativa": "Classmethod, mesmo módulo, entre três load.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4d-0; conferido no editor)"
+  },
+  {
+   "id": "HC-163",
+   "parte_c": false,
+   "estrato": "classe_pelo_nome",
+   "ocorrencia": "hc/integrations/signal/views.py@4171-4236",
+   "local": "hc/integrations/signal/views.py:119",
+   "texto": "Signal.send(recipient, f\"Test message from {settings.SITE_NAME}\")",
+   "dono": "verify_signal_number",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Signal.send (hc/integrations/signal/transport.py:60)",
+     "Telegram.send (hc/integrations/telegram/transport.py:55)"
+    ]
+   },
+   "verdade": {
+    "alvo": "Signal.send (hc/integrations/signal/transport.py:60)"
+   },
+   "certeza": "alta",
+   "justificativa": "Classmethod, importada, entre dois send.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4d-0; conferido no editor)"
+  },
+  {
+   "id": "HC-164",
+   "parte_c": false,
+   "estrato": "classe_pelo_nome_unica",
+   "ocorrencia": "hc/integrations/telegram/transport.py@2536-2592",
+   "local": "hc/integrations/telegram/transport.py:70",
+   "texto": "TokenBucket.authorize_telegram(self.channel.telegram.id)",
+   "dono": "Telegram.notify",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "TokenBucket.authorize_telegram (hc/api/models.py:1510)"
+    ]
+   },
+   "verdade": {
+    "alvo": "TokenBucket.authorize_telegram (hc/api/models.py:1510)"
+   },
+   "certeza": "alta",
+   "justificativa": "Import dentro da função.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4d-0; conferido no editor)"
+  },
+  {
+   "id": "HC-165",
+   "parte_c": false,
+   "estrato": "classe_pelo_nome_unica",
+   "ocorrencia": "hc/integrations/signal/views.py@2863-2898",
+   "local": "hc/integrations/signal/views.py:84",
+   "texto": "Signal._read_replies(payload_bytes)",
+   "dono": "signal_captcha",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Signal._read_replies (hc/integrations/signal/transport.py:105)"
+    ]
+   },
+   "verdade": {
+    "alvo": "Signal._read_replies (hc/integrations/signal/transport.py:105)"
+   },
+   "certeza": "alta",
+   "justificativa": "Classmethod, importada.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4d-0)"
+  },
+  {
+   "id": "HC-166",
+   "parte_c": false,
+   "estrato": "classe_pelo_nome_unica",
+   "ocorrencia": "hc/api/tests/test_tokenbucket.py@2329-2369",
+   "local": "hc/api/tests/test_tokenbucket.py:71",
+   "texto": "TokenBucket.record_s3_get_object_error()",
+   "dono": "TokenBucketTestCase.test_record_s3_get_object_error_works",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "TokenBucket.record_s3_get_object_error (hc/api/models.py:1583)"
+    ]
+   },
+   "verdade": {
+    "alvo": "TokenBucket.record_s3_get_object_error (hc/api/models.py:1583)"
+   },
+   "certeza": "alta",
+   "justificativa": "Em teste.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4d-0)"
+  },
+  {
+   "id": "HC-167",
+   "parte_c": false,
+   "estrato": "classe_pelo_nome_fora",
+   "ocorrencia": "hc/integrations/telegram/transport.py@1344-1401",
+   "local": "hc/integrations/telegram/transport.py:41",
+   "texto": "Telegram.ErrorModel.model_validate_json(response.content)",
+   "dono": "Telegram.raise_for_response",
+   "linha_de_base": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": []
+   },
+   "verdade": {
+    "externo": "pydantic: BaseModel.model_validate_json"
+   },
+   "certeza": "alta",
+   "justificativa": "Classe aninhada; o método é do pydantic, na base de fora.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4d-0; conferido no editor)"
+  },
+  {
+   "id": "HC-168",
+   "parte_c": false,
+   "estrato": "classe_pelo_nome_fora",
+   "ocorrencia": "hc/integrations/telegram/views.py@1742-1791",
+   "local": "hc/integrations/telegram/views.py:50",
+   "texto": "TelegramCallback.model_validate(doc, strict=True)",
+   "dono": "TelegramCallback.load",
+   "linha_de_base": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": []
+   },
+   "verdade": {
+    "externo": "pydantic: BaseModel.model_validate"
+   },
+   "certeza": "alta",
+   "justificativa": "A classe declara load; model_validate é do pydantic.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4d-0)"
+  },
+  {
+   "id": "HC-169",
+   "parte_c": false,
+   "estrato": "classe_pelo_nome_fora",
+   "ocorrencia": "hc/lib/emails.py@515-536",
+   "local": "hc/lib/emails.py:19",
+   "texto": "Thread.__init__(self)",
+   "dono": "EmailThread.__init__",
+   "linha_de_base": {
+    "resolution": "above_candidate_limit",
+    "candidates": 30,
+    "alvos": []
+   },
+   "verdade": {
+    "externo": "threading: Thread.__init__"
+   },
+   "certeza": "alta",
+   "justificativa": "Objeto explícito; Thread é de fora.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4d-0; conferido no editor)"
+  },
+  {
+   "id": "HC-170",
+   "parte_c": false,
+   "estrato": "classe_pelo_nome_atributo",
+   "ocorrencia": "hc/api/models.py@53225-53271",
+   "local": "hc/api/models.py:1447",
+   "texto": "TokenBucket.objects.get_or_create(value=value)",
+   "dono": "TokenBucket.authorize",
+   "linha_de_base": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": []
+   },
+   "verdade": {
+    "externo": "Django: Manager.get_or_create"
+   },
+   "certeza": "alta",
+   "justificativa": "Objects é atributo da classe, não classe; o gerenciador é do Django.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4d-0)"
+  },
+  {
+   "id": "HC-171",
+   "parte_c": false,
+   "estrato": "classe_pelo_nome_atributo",
+   "ocorrencia": "hc/integrations/email/tests/test_notify.py@6703-6722",
+   "local": "hc/integrations/email/tests/test_notify.py:187",
+   "texto": "Ping.GetBodyError()",
+   "dono": "NotifyEmailTestCase.test_it_handles_getbodyerror_exception",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Ping.GetBodyError (hc/api/models.py:703)"
+    ]
+   },
+   "verdade": {
+    "alvo": "Ping.GetBodyError (hc/api/models.py:703)",
+    "relacao": "instancia"
+   },
+   "certeza": "alta",
+   "justificativa": "Classe aninhada construída; em teste.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4d-0)"
   }
  ]
 }
