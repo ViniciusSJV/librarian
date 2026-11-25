@@ -1,0 +1,27 @@
+{
+ "hc/lib/curl.py:206": {
+  "seed": "src:1217e3f3db7013976777ededd998c09f43a4ff32ac139353913ce53a0dc4f125:ed6b8de98871534ece094c2a53a489ef089d6bde4656087bddb4bd03ab22a945:function:1309:6760",
+  "text": "Response",
+  "dono": "request"
+ },
+ "hc/integrations/signal/tests/test_signal_captcha.py:66": {
+  "seed": "src:715528a1638a1fb16de13322273730e3c429f51cdf8bde009761c59fbda364ba:609b7032a27318448233ca64fa60a21998e413384477151791990a7ce6cc42df:method:1700:2256",
+  "text": "setup_mock",
+  "dono": "SignalCaptchaTestCase.test_it_works"
+ },
+ "hc/api/tests/test_sendalerts.py:116": {
+  "seed": "src:801e43fbf495800e3a5e91554a4be13083a67f58c2d54acdcf5bf5be063ab480:76495a2e2fe87e9c3c3381d958bd410ca1793298f3d9f1067f1f74afc00ba276:method:3574:4431",
+  "text": "notify",
+  "dono": "SendAlertsTestCase.test_it_sets_next_nag_date"
+ },
+ "hc/api/views.py:463": {
+  "seed": "src:627a48233053768114a51eadccf97aadd78ac0fc450648e2b5da871ba305777e:d0121156422dcefcd2035b4c7f2222f23eba84765c7abf28520153d051ca673d:function:15972:16726",
+  "text": "_lookup",
+  "dono": "create_check"
+ },
+ "src/world.rs:192": {
+  "seed": "src:e6dd259bfdeeca4e2cbfd0644f1b4798b16642266a8ee788775ccbd62878aea7:f198aa9669a8161b4148d3dd012bb2346e1f49fb59081cd1dd2bb4ae4df98bbf:function:5789:6689",
+  "text": "create_default_world",
+  "dono": "tests_world::the_default_world"
+ }
+}

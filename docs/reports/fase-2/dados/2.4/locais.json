@@ -1,0 +1,114 @@
+[
+ {
+  "at": "hc/front/views.py:740",
+  "text": "validator",
+  "test": false,
+  "now": "no_candidate_in_project",
+  "targets": [],
+  "como": "atribuição",
+  "valor": "CronValidator()",
+  "binding": "nada"
+ },
+ {
+  "at": "hc/accounts/migrations/0018_auto_20190112_1426.py:16",
+  "text": "Project",
+  "test": false,
+  "now": "unique",
+  "targets": [
+   "Project (hc/accounts/models.py:449)"
+  ],
+  "como": "atribuição",
+  "valor": "apps.get_model(\"accounts\", \"Project\")",
+  "binding": "nada"
+ },
+ {
+  "at": "hc/front/forms.py:66",
+  "text": "cron_validator",
+  "test": false,
+  "now": "no_candidate_in_project",
+  "targets": [],
+  "como": "atribuição",
+  "valor": "CronValidator()",
+  "binding": "nada"
+ },
+ {
+  "at": "hc/front/forms.py:69",
+  "text": "oncalendar_validator",
+  "test": false,
+  "now": "no_candidate_in_project",
+  "targets": [],
+  "como": "atribuição",
+  "valor": "OnCalendarValidator()",
+  "binding": "nada"
+ },
+ {
+  "at": "hc/api/models.py:1150",
+  "text": "cls",
+  "test": false,
+  "now": "no_candidate_in_project",
+  "targets": [],
+  "como": "atribuição",
+  "valor": "getattr(import_module(modulename), classname)",
+  "binding": "nada"
+ },
+ {
+  "at": "hc/lib/tests/test_curl.py:32",
+  "text": "callback",
+  "test": true,
+  "now": "no_candidate_in_project",
+  "targets": [],
+  "como": "atribuição",
+  "valor": "self.opts[pycurl.OPENSOCKETFUNCTION]",
+  "binding": "nada"
+ },
+ {
+  "at": "hc/api/decorators.py:91",
+  "text": "f",
+  "test": false,
+  "now": "no_candidate_in_project",
+  "targets": [],
+  "como": "parâmetro",
+  "valor": null,
+  "binding": "nada"
+ },
+ {
+  "at": "hc/api/decorators.py:108",
+  "text": "f",
+  "test": false,
+  "now": "no_candidate_in_project",
+  "targets": [],
+  "como": "parâmetro",
+  "valor": null,
+  "binding": "nada"
+ },
+ {
+  "at": "hc/api/decorators.py:66",
+  "text": "f",
+  "test": false,
+  "now": "no_candidate_in_project",
+  "targets": [],
+  "como": "parâmetro",
+  "valor": null,
+  "binding": "nada"
+ },
+ {
+  "at": "hc/front/decorators.py:20",
+  "text": "f",
+  "test": false,
+  "now": "no_candidate_in_project",
+  "targets": [],
+  "como": "parâmetro",
+  "valor": null,
+  "binding": "nada"
+ },
+ {
+  "at": "hc/accounts/decorators.py:33",
+  "text": "f",
+  "test": false,
+  "now": "no_candidate_in_project",
+  "targets": [],
+  "como": "parâmetro",
+  "valor": null,
+  "binding": "nada"
+ }
+]

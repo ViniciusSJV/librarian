@@ -1,0 +1,2579 @@
+[
+ {
+  "at": "src/bin/bench_render.rs:4",
+  "text": "render_benchmark",
+  "test": false,
+  "mod": "BIN:src/bin/bench_render.rs",
+  "now": {
+   "res": "unique",
+   "targets": [
+    "render_benchmark (src/camera.rs:143)"
+   ],
+   "cands": [
+    "render_benchmark (src/camera.rs:143)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "use",
+   "to": "render_benchmark (src/camera.rs:143)"
+  },
+  "mudanca": "confirma"
+ },
+ {
+  "at": "src/bin/cena_video.rs:44",
+  "text": "channel",
+  "test": false,
+  "mod": "BIN:src/bin/cena_video.rs",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "livre",
+   "how": "nada (prelude ou de fora)",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/bin/cena_video.rs:44",
+  "text": "channel",
+  "test": false,
+  "mod": "BIN:src/bin/cena_video.rs",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "livre",
+   "how": "nada (prelude ou de fora)",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/bin/cena_video.rs:44",
+  "text": "channel",
+  "test": false,
+  "mod": "BIN:src/bin/cena_video.rs",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "livre",
+   "how": "nada (prelude ou de fora)",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/bin/cena_video.rs:70",
+  "text": "load_bvh_smooth",
+  "test": false,
+  "mod": "BIN:src/bin/cena_video.rs",
+  "now": {
+   "res": "unique",
+   "targets": [
+    "load_bvh_smooth (src/obj.rs:157)"
+   ],
+   "cands": [
+    "load_bvh_smooth (src/obj.rs:157)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "use",
+   "to": "load_bvh_smooth (src/obj.rs:157)"
+  },
+  "mudanca": "confirma"
+ },
+ {
+  "at": "src/bin/cena_video.rs:72",
+  "text": "load_bvh_smooth",
+  "test": false,
+  "mod": "BIN:src/bin/cena_video.rs",
+  "now": {
+   "res": "unique",
+   "targets": [
+    "load_bvh_smooth (src/obj.rs:157)"
+   ],
+   "cands": [
+    "load_bvh_smooth (src/obj.rs:157)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "use",
+   "to": "load_bvh_smooth (src/obj.rs:157)"
+  },
+  "mudanca": "confirma"
+ },
+ {
+  "at": "src/bin/cena_video.rs:84",
+  "text": "load_bvh_smooth",
+  "test": false,
+  "mod": "BIN:src/bin/cena_video.rs",
+  "now": {
+   "res": "unique",
+   "targets": [
+    "load_bvh_smooth (src/obj.rs:157)"
+   ],
+   "cands": [
+    "load_bvh_smooth (src/obj.rs:157)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "use",
+   "to": "load_bvh_smooth (src/obj.rs:157)"
+  },
+  "mudanca": "confirma"
+ },
+ {
+  "at": "src/bin/cena_video.rs:104",
+  "text": "Sorteio",
+  "test": false,
+  "mod": "BIN:src/bin/cena_video.rs",
+  "now": {
+   "res": "unique",
+   "targets": [
+    "Sorteio (src/bin/cena_video.rs:25)"
+   ],
+   "cands": [
+    "Sorteio (src/bin/cena_video.rs:25)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "mesmo módulo",
+   "to": "Sorteio (src/bin/cena_video.rs:25)"
+  },
+  "mudanca": "confirma"
+ },
+ {
+  "at": "src/bin/cena_video.rs:131",
+  "text": "Sorteio",
+  "test": false,
+  "mod": "BIN:src/bin/cena_video.rs",
+  "now": {
+   "res": "unique",
+   "targets": [
+    "Sorteio (src/bin/cena_video.rs:25)"
+   ],
+   "cands": [
+    "Sorteio (src/bin/cena_video.rs:25)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "mesmo módulo",
+   "to": "Sorteio (src/bin/cena_video.rs:25)"
+  },
+  "mudanca": "confirma"
+ },
+ {
+  "at": "src/bin/cena_video.rs:150",
+  "text": "hue",
+  "test": false,
+  "mod": "BIN:src/bin/cena_video.rs",
+  "now": {
+   "res": "unique",
+   "targets": [
+    "hue (src/bin/cena_video.rs:38)"
+   ],
+   "cands": [
+    "hue (src/bin/cena_video.rs:38)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "mesmo módulo",
+   "to": "hue (src/bin/cena_video.rs:38)"
+  },
+  "mudanca": "confirma"
+ },
+ {
+  "at": "src/bin/cena_video.rs:48",
+  "text": "std::env::args",
+  "test": false,
+  "mod": "BIN:src/bin/cena_video.rs",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "caminho de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/bin/cena_video.rs:91",
+  "text": "Some",
+  "test": false,
+  "mod": "BIN:src/bin/cena_video.rs",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "livre",
+   "how": "nada (prelude ou de fora)",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/bin/cena_video.rs:175",
+  "text": "write",
+  "test": false,
+  "mod": "BIN:src/bin/cena_video.rs",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "use de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/cylinder.rs:80",
+  "text": "swap",
+  "test": false,
+  "mod": "cylinder",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "use de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/obj.rs:64",
+  "text": "next",
+  "test": false,
+  "mod": "obj",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": [
+    "impl Sorteio::next (src/bin/cena_video.rs:29)"
+   ]
+  },
+  "binding": {
+   "kind": "livre",
+   "how": "nada (prelude ou de fora)",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/obj.rs:64",
+  "text": "next",
+  "test": false,
+  "mod": "obj",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": [
+    "impl Sorteio::next (src/bin/cena_video.rs:29)"
+   ]
+  },
+  "binding": {
+   "kind": "livre",
+   "how": "nada (prelude ou de fora)",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/obj.rs:64",
+  "text": "next",
+  "test": false,
+  "mod": "obj",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": [
+    "impl Sorteio::next (src/bin/cena_video.rs:29)"
+   ]
+  },
+  "binding": {
+   "kind": "livre",
+   "how": "nada (prelude ou de fora)",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/obj.rs:68",
+  "text": "xyz",
+  "test": false,
+  "mod": "obj",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "livre",
+   "how": "nada (prelude ou de fora)",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/obj.rs:72",
+  "text": "xyz",
+  "test": false,
+  "mod": "obj",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "livre",
+   "how": "nada (prelude ou de fora)",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/obj.rs:94",
+  "text": "fans",
+  "test": false,
+  "mod": "obj",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "livre",
+   "how": "nada (prelude ou de fora)",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/obj.rs:105",
+  "text": "fans",
+  "test": false,
+  "mod": "obj",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "livre",
+   "how": "nada (prelude ou de fora)",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/obj.rs:106",
+  "text": "normal",
+  "test": false,
+  "mod": "obj",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "livre",
+   "how": "nada (prelude ou de fora)",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/obj.rs:106",
+  "text": "normal",
+  "test": false,
+  "mod": "obj",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "livre",
+   "how": "nada (prelude ou de fora)",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/obj.rs:106",
+  "text": "normal",
+  "test": false,
+  "mod": "obj",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "livre",
+   "how": "nada (prelude ou de fora)",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/obj.rs:116",
+  "text": "parse_obj",
+  "test": false,
+  "mod": "obj",
+  "now": {
+   "res": "unique",
+   "targets": [
+    "parse_obj (src/obj.rs:11)"
+   ],
+   "cands": [
+    "parse_obj (src/obj.rs:11)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "mesmo módulo",
+   "to": "parse_obj (src/obj.rs:11)"
+  },
+  "mudanca": "confirma"
+ },
+ {
+  "at": "src/obj.rs:115",
+  "text": "read_to_string",
+  "test": false,
+  "mod": "obj",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "use de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/obj.rs:161",
+  "text": "build_bvh",
+  "test": false,
+  "mod": "obj",
+  "now": {
+   "res": "unique",
+   "targets": [
+    "build_bvh (src/obj.rs:121)"
+   ],
+   "cands": [
+    "build_bvh (src/obj.rs:121)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "mesmo módulo",
+   "to": "build_bvh (src/obj.rs:121)"
+  },
+  "mudanca": "confirma"
+ },
+ {
+  "at": "src/obj.rs:161",
+  "text": "parse_obj_smooth",
+  "test": false,
+  "mod": "obj",
+  "now": {
+   "res": "unique",
+   "targets": [
+    "parse_obj_smooth (src/obj.rs:48)"
+   ],
+   "cands": [
+    "parse_obj_smooth (src/obj.rs:48)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "mesmo módulo",
+   "to": "parse_obj_smooth (src/obj.rs:48)"
+  },
+  "mudanca": "confirma"
+ },
+ {
+  "at": "src/obj.rs:159",
+  "text": "read_to_string",
+  "test": false,
+  "mod": "obj",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "use de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/obj.rs:166",
+  "text": "load_model",
+  "test": false,
+  "mod": "obj",
+  "now": {
+   "res": "unique",
+   "targets": [
+    "load_model (src/obj.rs:114)"
+   ],
+   "cands": [
+    "load_model (src/obj.rs:114)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "mesmo módulo",
+   "to": "load_model (src/obj.rs:114)"
+  },
+  "mudanca": "confirma"
+ },
+ {
+  "at": "src/obj.rs:168",
+  "text": "build_bvh",
+  "test": false,
+  "mod": "obj",
+  "now": {
+   "res": "unique",
+   "targets": [
+    "build_bvh (src/obj.rs:121)"
+   ],
+   "cands": [
+    "build_bvh (src/obj.rs:121)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "mesmo módulo",
+   "to": "build_bvh (src/obj.rs:121)"
+  },
+  "mudanca": "confirma"
+ },
+ {
+  "at": "src/obj.rs:183",
+  "text": "parse_obj",
+  "test": false,
+  "mod": "obj::tests_obj",
+  "now": {
+   "res": "unique",
+   "targets": [
+    "parse_obj (src/obj.rs:11)"
+   ],
+   "cands": [
+    "parse_obj (src/obj.rs:11)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "use",
+   "to": "parse_obj (src/obj.rs:11)"
+  },
+  "mudanca": "confirma"
+ },
+ {
+  "at": "src/obj.rs:199",
+  "text": "build_bvh",
+  "test": false,
+  "mod": "obj::tests_obj",
+  "now": {
+   "res": "unique",
+   "targets": [
+    "build_bvh (src/obj.rs:121)"
+   ],
+   "cands": [
+    "build_bvh (src/obj.rs:121)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "use",
+   "to": "build_bvh (src/obj.rs:121)"
+  },
+  "mudanca": "confirma"
+ },
+ {
+  "at": "src/obj.rs:199",
+  "text": "parse_obj",
+  "test": false,
+  "mod": "obj::tests_obj",
+  "now": {
+   "res": "unique",
+   "targets": [
+    "parse_obj (src/obj.rs:11)"
+   ],
+   "cands": [
+    "parse_obj (src/obj.rs:11)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "use",
+   "to": "parse_obj (src/obj.rs:11)"
+  },
+  "mudanca": "confirma"
+ },
+ {
+  "at": "src/obj.rs:207",
+  "text": "leaves",
+  "test": false,
+  "mod": "obj::tests_obj",
+  "now": {
+   "res": "unique",
+   "targets": [
+    "tests_obj::a_bvh_keeps_every_object_in_leaves_of_at_most_eight::leaves (src/obj.rs:201)"
+   ],
+   "cands": [
+    "tests_obj::a_bvh_keeps_every_object_in_leaves_of_at_most_eight::leaves (src/obj.rs:201)"
+   ]
+  },
+  "binding": {
+   "kind": "livre",
+   "how": "nada (prelude ou de fora)",
+   "to": null
+  },
+  "mudanca": "link->? (escopo não acha no projeto)"
+ },
+ {
+  "at": "src/matrix.rs:761",
+  "text": "f64::from",
+  "test": false,
+  "mod": "matrix::tests_matrix",
+  "now": {
+   "res": "above_candidate_limit",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "caminho de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/matrix.rs:761",
+  "text": "f64::from",
+  "test": false,
+  "mod": "matrix::tests_matrix",
+  "now": {
+   "res": "above_candidate_limit",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "caminho de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/matrix.rs:774",
+  "text": "f64::from",
+  "test": false,
+  "mod": "matrix::tests_matrix",
+  "now": {
+   "res": "above_candidate_limit",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "caminho de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/matrix.rs:774",
+  "text": "f64::from",
+  "test": false,
+  "mod": "matrix::tests_matrix",
+  "now": {
+   "res": "above_candidate_limit",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "caminho de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/matrix.rs:785",
+  "text": "f64::from",
+  "test": false,
+  "mod": "matrix::tests_matrix",
+  "now": {
+   "res": "above_candidate_limit",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "caminho de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/matrix.rs:785",
+  "text": "f64::from",
+  "test": false,
+  "mod": "matrix::tests_matrix",
+  "now": {
+   "res": "above_candidate_limit",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "caminho de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/matrix.rs:798",
+  "text": "f64::from",
+  "test": false,
+  "mod": "matrix::tests_matrix",
+  "now": {
+   "res": "above_candidate_limit",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "caminho de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/matrix.rs:798",
+  "text": "f64::from",
+  "test": false,
+  "mod": "matrix::tests_matrix",
+  "now": {
+   "res": "above_candidate_limit",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "caminho de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/scene.rs:51",
+  "text": "Err",
+  "test": false,
+  "mod": "scene",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "livre",
+   "how": "nada (prelude ou de fora)",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/scene.rs:68",
+  "text": "Err",
+  "test": false,
+  "mod": "scene",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "livre",
+   "how": "nada (prelude ou de fora)",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/scene.rs:71",
+  "text": "Err",
+  "test": false,
+  "mod": "scene",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "livre",
+   "how": "nada (prelude ou de fora)",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/scene.rs:73",
+  "text": "Ok",
+  "test": false,
+  "mod": "scene",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "livre",
+   "how": "nada (prelude ou de fora)",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/scene.rs:14",
+  "text": "Err",
+  "test": false,
+  "mod": "scene",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "livre",
+   "how": "nada (prelude ou de fora)",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/scene.rs:17",
+  "text": "Err",
+  "test": false,
+  "mod": "scene",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "livre",
+   "how": "nada (prelude ou de fora)",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/scene.rs:19",
+  "text": "Ok",
+  "test": false,
+  "mod": "scene",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "livre",
+   "how": "nada (prelude ou de fora)",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/scene.rs:130",
+  "text": "Err",
+  "test": false,
+  "mod": "scene",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "livre",
+   "how": "nada (prelude ou de fora)",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/scene.rs:133",
+  "text": "Err",
+  "test": false,
+  "mod": "scene",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "livre",
+   "how": "nada (prelude ou de fora)",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/scene.rs:141",
+  "text": "Ok",
+  "test": false,
+  "mod": "scene",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "livre",
+   "how": "nada (prelude ou de fora)",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/scene.rs:35",
+  "text": "Ok",
+  "test": false,
+  "mod": "scene",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "livre",
+   "how": "nada (prelude ou de fora)",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/scene.rs:37",
+  "text": "Err",
+  "test": false,
+  "mod": "scene",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "livre",
+   "how": "nada (prelude ou de fora)",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/triangle.rs:33",
+  "text": "Some",
+  "test": false,
+  "mod": "triangle",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "livre",
+   "how": "nada (prelude ou de fora)",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/bounds.rs:75",
+  "text": "std::mem::swap",
+  "test": false,
+  "mod": "bounds",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "caminho de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/intersection.rs:346",
+  "text": "f64::from",
+  "test": false,
+  "mod": "intersection::tests_intersection",
+  "now": {
+   "res": "above_candidate_limit",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "caminho de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/intersection.rs:347",
+  "text": "f64::from",
+  "test": false,
+  "mod": "intersection::tests_intersection",
+  "now": {
+   "res": "above_candidate_limit",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "caminho de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/intersection.rs:348",
+  "text": "f64::from",
+  "test": false,
+  "mod": "intersection::tests_intersection",
+  "now": {
+   "res": "above_candidate_limit",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "caminho de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/intersection.rs:270",
+  "text": "f64::from",
+  "test": false,
+  "mod": "intersection::tests_intersection",
+  "now": {
+   "res": "above_candidate_limit",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "caminho de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/intersection.rs:270",
+  "text": "f64::from",
+  "test": false,
+  "mod": "intersection::tests_intersection",
+  "now": {
+   "res": "above_candidate_limit",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "caminho de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/intersection.rs:271",
+  "text": "f64::from",
+  "test": false,
+  "mod": "intersection::tests_intersection",
+  "now": {
+   "res": "above_candidate_limit",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "caminho de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/intersection.rs:122",
+  "text": "Some",
+  "test": false,
+  "mod": "intersection",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "livre",
+   "how": "nada (prelude ou de fora)",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/bin/librarian_measure.rs:73",
+  "text": "write",
+  "test": false,
+  "mod": "BIN:src/bin/librarian_measure.rs",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "use de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/bin/librarian_measure.rs:24",
+  "text": "std::env::args",
+  "test": false,
+  "mod": "BIN:src/bin/librarian_measure.rs",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "caminho de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/cone.rs:87",
+  "text": "swap",
+  "test": false,
+  "mod": "cone",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "use de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/canvas.rs:118",
+  "text": "drop",
+  "test": false,
+  "mod": "canvas",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": [
+    "impl Drop for Guard::drop (src/count.rs:59)"
+   ]
+  },
+  "binding": {
+   "kind": "livre",
+   "how": "nada (prelude ou de fora)",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/count.rs:111",
+  "text": "lines",
+  "test": false,
+  "mod": "count",
+  "now": {
+   "res": "unique",
+   "targets": [
+    "lines (src/count.rs:81)"
+   ],
+   "cands": [
+    "lines (src/count.rs:81)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "mesmo módulo",
+   "to": "lines (src/count.rs:81)"
+  },
+  "mudanca": "confirma"
+ },
+ {
+  "at": "src/count.rs:127",
+  "text": "counted",
+  "test": false,
+  "mod": "count::tests_count",
+  "now": {
+   "res": "unique",
+   "targets": [
+    "tests_count::each_counted_line_reports_how_many_times_it_ran_and_for_how_long::counted (src/count.rs:122)"
+   ],
+   "cands": [
+    "tests_count::each_counted_line_reports_how_many_times_it_ran_and_for_how_long::counted (src/count.rs:122)"
+   ]
+  },
+  "binding": {
+   "kind": "livre",
+   "how": "nada (prelude ou de fora)",
+   "to": null
+  },
+  "mudanca": "link->? (escopo não acha no projeto)"
+ },
+ {
+  "at": "src/count.rs:130",
+  "text": "super::lines",
+  "test": false,
+  "mod": "count::tests_count",
+  "now": {
+   "res": "unique",
+   "targets": [
+    "lines (src/count.rs:81)"
+   ],
+   "cands": [
+    "lines (src/count.rs:81)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "caminho de módulo",
+   "to": "lines (src/count.rs:81)"
+  },
+  "mudanca": "confirma"
+ },
+ {
+  "at": "src/count.rs:124",
+  "text": "std::thread::sleep",
+  "test": false,
+  "mod": "count::tests_count",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "caminho de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/count.rs:146",
+  "text": "down",
+  "test": false,
+  "mod": "count::tests_count",
+  "now": {
+   "res": "unique",
+   "targets": [
+    "tests_count::a_recursion_counts_every_call_but_the_time_once::down (src/count.rs:139)"
+   ],
+   "cands": [
+    "tests_count::a_recursion_counts_every_call_but_the_time_once::down (src/count.rs:139)"
+   ]
+  },
+  "binding": {
+   "kind": "livre",
+   "how": "nada (prelude ou de fora)",
+   "to": null
+  },
+  "mudanca": "link->? (escopo não acha no projeto)"
+ },
+ {
+  "at": "src/count.rs:148",
+  "text": "super::lines",
+  "test": false,
+  "mod": "count::tests_count",
+  "now": {
+   "res": "unique",
+   "targets": [
+    "lines (src/count.rs:81)"
+   ],
+   "cands": [
+    "lines (src/count.rs:81)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "caminho de módulo",
+   "to": "lines (src/count.rs:81)"
+  },
+  "mudanca": "confirma"
+ },
+ {
+  "at": "src/count.rs:143",
+  "text": "down",
+  "test": false,
+  "mod": "count::tests_count",
+  "now": {
+   "res": "unique",
+   "targets": [
+    "tests_count::a_recursion_counts_every_call_but_the_time_once::down (src/count.rs:139)"
+   ],
+   "cands": [
+    "tests_count::a_recursion_counts_every_call_but_the_time_once::down (src/count.rs:139)"
+   ]
+  },
+  "binding": {
+   "kind": "livre",
+   "how": "nada (prelude ou de fora)",
+   "to": null
+  },
+  "mudanca": "link->? (escopo não acha no projeto)"
+ },
+ {
+  "at": "src/count.rs:141",
+  "text": "std::thread::sleep",
+  "test": false,
+  "mod": "count::tests_count",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "caminho de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/bin/bench_external_render.rs:4",
+  "text": "render_external_benchmark",
+  "test": false,
+  "mod": "BIN:src/bin/bench_external_render.rs",
+  "now": {
+   "res": "unique",
+   "targets": [
+    "render_external_benchmark (src/camera.rs:205)"
+   ],
+   "cands": [
+    "render_external_benchmark (src/camera.rs:205)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "use",
+   "to": "render_external_benchmark (src/camera.rs:205)"
+  },
+  "mudanca": "confirma"
+ },
+ {
+  "at": "src/cube.rs:38",
+  "text": "swap",
+  "test": false,
+  "mod": "cube",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "use de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/bin/librarian_measure_mesh.rs:49",
+  "text": "load_bvh",
+  "test": false,
+  "mod": "BIN:src/bin/librarian_measure_mesh.rs",
+  "now": {
+   "res": "unique",
+   "targets": [
+    "load_bvh (src/obj.rs:164)"
+   ],
+   "cands": [
+    "load_bvh (src/obj.rs:164)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "use",
+   "to": "load_bvh (src/obj.rs:164)"
+  },
+  "mudanca": "confirma"
+ },
+ {
+  "at": "src/bin/librarian_measure_mesh.rs:54",
+  "text": "load_bvh",
+  "test": false,
+  "mod": "BIN:src/bin/librarian_measure_mesh.rs",
+  "now": {
+   "res": "unique",
+   "targets": [
+    "load_bvh (src/obj.rs:164)"
+   ],
+   "cands": [
+    "load_bvh (src/obj.rs:164)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "use",
+   "to": "load_bvh (src/obj.rs:164)"
+  },
+  "mudanca": "confirma"
+ },
+ {
+  "at": "src/bin/librarian_measure_mesh.rs:82",
+  "text": "renderer::count::reset",
+  "test": false,
+  "mod": "BIN:src/bin/librarian_measure_mesh.rs",
+  "now": {
+   "res": "unique",
+   "targets": [
+    "reset (src/count.rs:101)"
+   ],
+   "cands": [
+    "reset (src/count.rs:101)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "caminho de módulo",
+   "to": "reset (src/count.rs:101)"
+  },
+  "mudanca": "confirma"
+ },
+ {
+  "at": "src/bin/librarian_measure_mesh.rs:92",
+  "text": "renderer::count::report",
+  "test": false,
+  "mod": "BIN:src/bin/librarian_measure_mesh.rs",
+  "now": {
+   "res": "unique",
+   "targets": [
+    "report (src/count.rs:110)"
+   ],
+   "cands": [
+    "report (src/count.rs:110)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "caminho de módulo",
+   "to": "report (src/count.rs:110)"
+  },
+  "mudanca": "confirma"
+ },
+ {
+  "at": "src/bin/librarian_measure_mesh.rs:62",
+  "text": "Some",
+  "test": false,
+  "mod": "BIN:src/bin/librarian_measure_mesh.rs",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "livre",
+   "how": "nada (prelude ou de fora)",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/bin/librarian_measure_mesh.rs:87",
+  "text": "write",
+  "test": false,
+  "mod": "BIN:src/bin/librarian_measure_mesh.rs",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "use de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/bin/librarian_measure_mesh.rs:25",
+  "text": "std::env::args",
+  "test": false,
+  "mod": "BIN:src/bin/librarian_measure_mesh.rs",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "caminho de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/world.rs:305",
+  "text": "create_default_world",
+  "test": false,
+  "mod": "world::tests_world",
+  "now": {
+   "res": "homonym",
+   "targets": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ],
+   "cands": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "mesmo módulo",
+   "to": "tests_world::create_default_world (src/world.rs:146)"
+  },
+  "mudanca": "homonym->escopo"
+ },
+ {
+  "at": "src/world.rs:313",
+  "text": "create_default_world",
+  "test": false,
+  "mod": "world::tests_world",
+  "now": {
+   "res": "homonym",
+   "targets": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ],
+   "cands": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "mesmo módulo",
+   "to": "tests_world::create_default_world (src/world.rs:146)"
+  },
+  "mudanca": "homonym->escopo"
+ },
+ {
+  "at": "src/world.rs:321",
+  "text": "create_default_world",
+  "test": false,
+  "mod": "world::tests_world",
+  "now": {
+   "res": "homonym",
+   "targets": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ],
+   "cands": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "mesmo módulo",
+   "to": "tests_world::create_default_world (src/world.rs:146)"
+  },
+  "mudanca": "homonym->escopo"
+ },
+ {
+  "at": "src/world.rs:343",
+  "text": "create_default_world",
+  "test": false,
+  "mod": "world::tests_world",
+  "now": {
+   "res": "homonym",
+   "targets": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ],
+   "cands": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "mesmo módulo",
+   "to": "tests_world::create_default_world (src/world.rs:146)"
+  },
+  "mudanca": "homonym->escopo"
+ },
+ {
+  "at": "src/world.rs:360",
+  "text": "create_default_world",
+  "test": false,
+  "mod": "world::tests_world",
+  "now": {
+   "res": "homonym",
+   "targets": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ],
+   "cands": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "mesmo módulo",
+   "to": "tests_world::create_default_world (src/world.rs:146)"
+  },
+  "mudanca": "homonym->escopo"
+ },
+ {
+  "at": "src/world.rs:367",
+  "text": "f64::from",
+  "test": false,
+  "mod": "world::tests_world",
+  "now": {
+   "res": "above_candidate_limit",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "caminho de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/world.rs:367",
+  "text": "f64::from",
+  "test": false,
+  "mod": "world::tests_world",
+  "now": {
+   "res": "above_candidate_limit",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "caminho de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/world.rs:369",
+  "text": "f64::from",
+  "test": false,
+  "mod": "world::tests_world",
+  "now": {
+   "res": "above_candidate_limit",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "caminho de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/world.rs:379",
+  "text": "create_default_world",
+  "test": false,
+  "mod": "world::tests_world",
+  "now": {
+   "res": "homonym",
+   "targets": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ],
+   "cands": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "mesmo módulo",
+   "to": "tests_world::create_default_world (src/world.rs:146)"
+  },
+  "mudanca": "homonym->escopo"
+ },
+ {
+  "at": "src/world.rs:386",
+  "text": "f64::from",
+  "test": false,
+  "mod": "world::tests_world",
+  "now": {
+   "res": "above_candidate_limit",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "caminho de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/world.rs:386",
+  "text": "f64::from",
+  "test": false,
+  "mod": "world::tests_world",
+  "now": {
+   "res": "above_candidate_limit",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "caminho de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/world.rs:388",
+  "text": "f64::from",
+  "test": false,
+  "mod": "world::tests_world",
+  "now": {
+   "res": "above_candidate_limit",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "caminho de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/world.rs:419",
+  "text": "create_default_world",
+  "test": false,
+  "mod": "world::tests_world",
+  "now": {
+   "res": "homonym",
+   "targets": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ],
+   "cands": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "mesmo módulo",
+   "to": "tests_world::create_default_world (src/world.rs:146)"
+  },
+  "mudanca": "homonym->escopo"
+ },
+ {
+  "at": "src/world.rs:426",
+  "text": "f64::from",
+  "test": false,
+  "mod": "world::tests_world",
+  "now": {
+   "res": "above_candidate_limit",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "caminho de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/world.rs:426",
+  "text": "f64::from",
+  "test": false,
+  "mod": "world::tests_world",
+  "now": {
+   "res": "above_candidate_limit",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "caminho de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/world.rs:428",
+  "text": "f64::from",
+  "test": false,
+  "mod": "world::tests_world",
+  "now": {
+   "res": "above_candidate_limit",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "caminho de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/world.rs:438",
+  "text": "create_default_world",
+  "test": false,
+  "mod": "world::tests_world",
+  "now": {
+   "res": "homonym",
+   "targets": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ],
+   "cands": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "mesmo módulo",
+   "to": "tests_world::create_default_world (src/world.rs:146)"
+  },
+  "mudanca": "homonym->escopo"
+ },
+ {
+  "at": "src/world.rs:454",
+  "text": "create_default_world",
+  "test": false,
+  "mod": "world::tests_world",
+  "now": {
+   "res": "homonym",
+   "targets": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ],
+   "cands": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "mesmo módulo",
+   "to": "tests_world::create_default_world (src/world.rs:146)"
+  },
+  "mudanca": "homonym->escopo"
+ },
+ {
+  "at": "src/world.rs:474",
+  "text": "create_default_world",
+  "test": false,
+  "mod": "world::tests_world",
+  "now": {
+   "res": "homonym",
+   "targets": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ],
+   "cands": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "mesmo módulo",
+   "to": "tests_world::create_default_world (src/world.rs:146)"
+  },
+  "mudanca": "homonym->escopo"
+ },
+ {
+  "at": "src/world.rs:481",
+  "text": "f64::from",
+  "test": false,
+  "mod": "world::tests_world",
+  "now": {
+   "res": "above_candidate_limit",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "caminho de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/world.rs:483",
+  "text": "f64::from",
+  "test": false,
+  "mod": "world::tests_world",
+  "now": {
+   "res": "above_candidate_limit",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "caminho de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/world.rs:484",
+  "text": "f64::from",
+  "test": false,
+  "mod": "world::tests_world",
+  "now": {
+   "res": "above_candidate_limit",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "caminho de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/world.rs:495",
+  "text": "create_default_world",
+  "test": false,
+  "mod": "world::tests_world",
+  "now": {
+   "res": "homonym",
+   "targets": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ],
+   "cands": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "mesmo módulo",
+   "to": "tests_world::create_default_world (src/world.rs:146)"
+  },
+  "mudanca": "homonym->escopo"
+ },
+ {
+  "at": "src/world.rs:524",
+  "text": "create_default_world",
+  "test": false,
+  "mod": "world::tests_world",
+  "now": {
+   "res": "homonym",
+   "targets": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ],
+   "cands": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "mesmo módulo",
+   "to": "tests_world::create_default_world (src/world.rs:146)"
+  },
+  "mudanca": "homonym->escopo"
+ },
+ {
+  "at": "src/world.rs:539",
+  "text": "f64::from",
+  "test": false,
+  "mod": "world::tests_world",
+  "now": {
+   "res": "above_candidate_limit",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "caminho de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/world.rs:539",
+  "text": "f64::from",
+  "test": false,
+  "mod": "world::tests_world",
+  "now": {
+   "res": "above_candidate_limit",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "caminho de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/world.rs:541",
+  "text": "f64::from",
+  "test": false,
+  "mod": "world::tests_world",
+  "now": {
+   "res": "above_candidate_limit",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "caminho de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/world.rs:551",
+  "text": "create_default_world",
+  "test": false,
+  "mod": "world::tests_world",
+  "now": {
+   "res": "homonym",
+   "targets": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ],
+   "cands": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "mesmo módulo",
+   "to": "tests_world::create_default_world (src/world.rs:146)"
+  },
+  "mudanca": "homonym->escopo"
+ },
+ {
+  "at": "src/world.rs:567",
+  "text": "f64::from",
+  "test": false,
+  "mod": "world::tests_world",
+  "now": {
+   "res": "above_candidate_limit",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "caminho de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/world.rs:567",
+  "text": "f64::from",
+  "test": false,
+  "mod": "world::tests_world",
+  "now": {
+   "res": "above_candidate_limit",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "caminho de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/world.rs:569",
+  "text": "f64::from",
+  "test": false,
+  "mod": "world::tests_world",
+  "now": {
+   "res": "above_candidate_limit",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "caminho de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/world.rs:192",
+  "text": "create_default_world",
+  "test": false,
+  "mod": "world::tests_world",
+  "now": {
+   "res": "homonym",
+   "targets": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ],
+   "cands": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "mesmo módulo",
+   "to": "tests_world::create_default_world (src/world.rs:146)"
+  },
+  "mudanca": "homonym->escopo"
+ },
+ {
+  "at": "src/world.rs:205",
+  "text": "create_default_world",
+  "test": false,
+  "mod": "world::tests_world",
+  "now": {
+   "res": "homonym",
+   "targets": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ],
+   "cands": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "mesmo módulo",
+   "to": "tests_world::create_default_world (src/world.rs:146)"
+  },
+  "mudanca": "homonym->escopo"
+ },
+ {
+  "at": "src/world.rs:219",
+  "text": "create_default_world",
+  "test": false,
+  "mod": "world::tests_world",
+  "now": {
+   "res": "homonym",
+   "targets": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ],
+   "cands": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "mesmo módulo",
+   "to": "tests_world::create_default_world (src/world.rs:146)"
+  },
+  "mudanca": "homonym->escopo"
+ },
+ {
+  "at": "src/world.rs:232",
+  "text": "create_default_world",
+  "test": false,
+  "mod": "world::tests_world",
+  "now": {
+   "res": "homonym",
+   "targets": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ],
+   "cands": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "mesmo módulo",
+   "to": "tests_world::create_default_world (src/world.rs:146)"
+  },
+  "mudanca": "homonym->escopo"
+ },
+ {
+  "at": "src/world.rs:247",
+  "text": "create_default_world",
+  "test": false,
+  "mod": "world::tests_world",
+  "now": {
+   "res": "homonym",
+   "targets": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ],
+   "cands": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "mesmo módulo",
+   "to": "tests_world::create_default_world (src/world.rs:146)"
+  },
+  "mudanca": "homonym->escopo"
+ },
+ {
+  "at": "src/world.rs:256",
+  "text": "create_default_world",
+  "test": false,
+  "mod": "world::tests_world",
+  "now": {
+   "res": "homonym",
+   "targets": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ],
+   "cands": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "mesmo módulo",
+   "to": "tests_world::create_default_world (src/world.rs:146)"
+  },
+  "mudanca": "homonym->escopo"
+ },
+ {
+  "at": "src/world.rs:265",
+  "text": "create_default_world",
+  "test": false,
+  "mod": "world::tests_world",
+  "now": {
+   "res": "homonym",
+   "targets": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ],
+   "cands": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "mesmo módulo",
+   "to": "tests_world::create_default_world (src/world.rs:146)"
+  },
+  "mudanca": "homonym->escopo"
+ },
+ {
+  "at": "src/world.rs:289",
+  "text": "create_default_world",
+  "test": false,
+  "mod": "world::tests_world",
+  "now": {
+   "res": "homonym",
+   "targets": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ],
+   "cands": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "mesmo módulo",
+   "to": "tests_world::create_default_world (src/world.rs:146)"
+  },
+  "mudanca": "homonym->escopo"
+ },
+ {
+  "at": "src/world.rs:297",
+  "text": "create_default_world",
+  "test": false,
+  "mod": "world::tests_world",
+  "now": {
+   "res": "homonym",
+   "targets": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ],
+   "cands": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "mesmo módulo",
+   "to": "tests_world::create_default_world (src/world.rs:146)"
+  },
+  "mudanca": "homonym->escopo"
+ },
+ {
+  "at": "src/camera.rs:313",
+  "text": "create_default_world",
+  "test": false,
+  "mod": "camera::tests_camera",
+  "now": {
+   "res": "homonym",
+   "targets": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ],
+   "cands": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "mesmo módulo",
+   "to": "tests_camera::create_default_world (src/camera.rs:291)"
+  },
+  "mudanca": "homonym->escopo"
+ },
+ {
+  "at": "src/camera.rs:330",
+  "text": "create_default_world",
+  "test": false,
+  "mod": "camera::tests_camera",
+  "now": {
+   "res": "homonym",
+   "targets": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ],
+   "cands": [
+    "tests_world::create_default_world (src/world.rs:146)",
+    "tests_camera::create_default_world (src/camera.rs:291)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "mesmo módulo",
+   "to": "tests_camera::create_default_world (src/camera.rs:291)"
+  },
+  "mudanca": "homonym->escopo"
+ },
+ {
+  "at": "src/camera.rs:359",
+  "text": "render_benchmark",
+  "test": false,
+  "mod": "camera::tests_camera",
+  "now": {
+   "res": "unique",
+   "targets": [
+    "render_benchmark (src/camera.rs:143)"
+   ],
+   "cands": [
+    "render_benchmark (src/camera.rs:143)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "use glob",
+   "to": "render_benchmark (src/camera.rs:143)"
+  },
+  "mudanca": "confirma"
+ },
+ {
+  "at": "src/camera.rs:386",
+  "text": "external_benchmark_scene",
+  "test": false,
+  "mod": "camera::tests_camera",
+  "now": {
+   "res": "unique",
+   "targets": [
+    "external_benchmark_scene (src/camera.rs:162)"
+   ],
+   "cands": [
+    "external_benchmark_scene (src/camera.rs:162)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "use glob",
+   "to": "external_benchmark_scene (src/camera.rs:162)"
+  },
+  "mudanca": "confirma"
+ },
+ {
+  "at": "src/camera.rs:387",
+  "text": "digest",
+  "test": false,
+  "mod": "camera::tests_camera",
+  "now": {
+   "res": "unique",
+   "targets": [
+    "tests_camera::external_scene_render_is_visually_stable::digest (src/camera.rs:373)"
+   ],
+   "cands": [
+    "tests_camera::external_scene_render_is_visually_stable::digest (src/camera.rs:373)"
+   ]
+  },
+  "binding": {
+   "kind": "livre",
+   "how": "nada (prelude ou de fora)",
+   "to": null
+  },
+  "mudanca": "link->? (escopo não acha no projeto)"
+ },
+ {
+  "at": "src/camera.rs:388",
+  "text": "digest",
+  "test": false,
+  "mod": "camera::tests_camera",
+  "now": {
+   "res": "unique",
+   "targets": [
+    "tests_camera::external_scene_render_is_visually_stable::digest (src/camera.rs:373)"
+   ],
+   "cands": [
+    "tests_camera::external_scene_render_is_visually_stable::digest (src/camera.rs:373)"
+   ]
+  },
+  "binding": {
+   "kind": "livre",
+   "how": "nada (prelude ou de fora)",
+   "to": null
+  },
+  "mudanca": "link->? (escopo não acha no projeto)"
+ },
+ {
+  "at": "src/camera.rs:206",
+  "text": "external_benchmark_scene",
+  "test": false,
+  "mod": "camera",
+  "now": {
+   "res": "unique",
+   "targets": [
+    "external_benchmark_scene (src/camera.rs:162)"
+   ],
+   "cands": [
+    "external_benchmark_scene (src/camera.rs:162)"
+   ]
+  },
+  "binding": {
+   "kind": "item",
+   "how": "mesmo módulo",
+   "to": "external_benchmark_scene (src/camera.rs:162)"
+  },
+  "mudanca": "confirma"
+ },
+ {
+  "at": "src/camera.rs:114",
+  "text": "std::hint::black_box",
+  "test": false,
+  "mod": "camera",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "caminho de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/camera.rs:120",
+  "text": "std::hint::black_box",
+  "test": false,
+  "mod": "camera",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": []
+  },
+  "binding": {
+   "kind": "de-fora",
+   "how": "caminho de fora",
+   "to": null
+  },
+  "mudanca": "igual"
+ },
+ {
+  "at": "src/camera.rs:122",
+  "text": "drop",
+  "test": false,
+  "mod": "camera",
+  "now": {
+   "res": "no_candidate_in_project",
+   "targets": [],
+   "cands": [
+    "impl Drop for Guard::drop (src/count.rs:59)"
+   ]
+  },
+  "binding": {
+   "kind": "livre",
+   "how": "nada (prelude ou de fora)",
+   "to": null
+  },
+  "mudanca": "igual"
+ }
+]

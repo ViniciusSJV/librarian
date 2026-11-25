@@ -158,14 +158,16 @@ forma escrita alcança. As arestas do grafo não mudam; a regra é que deixa de 
   - `mod.Classe.m()` também segue a regra comum.
 - **Leitura sem gravação.** Os imports, as ligações locais e o tipo escrito do receptor que não é do projeto são lidos dos snapshots da edition, pelo extrator da linguagem, no arquivo de quem chama e só quando a regra precisa (`CallSyntax::facts`, `Extractor::call_facts`). Nada disso é gravado no grafo, e o perfil não muda.
 
-Precedência, sempre sobre os admitidos: `chosen` > `unique` > `import` > `receiver` > `type` >
+Precedência, sempre sobre os admitidos: `chosen` > escopo da chamada simples (2.4a: `unique`
+confirmado, `scope`, `import` ou sem candidato) > `unique` > `import` > `receiver` > `type` >
 `trait_default` > tipo derruba > `trait` > `homonym`.
 
 | `resolution` | Quando | `basis` |
 |---|---|---|
 | `chosen` | A pessoa escolheu este entre os candidatos admitidos | `graph_edge` |
-| `unique` | Um só admitido, e ele era o único candidato do grafo, ou a chamada não tem receptor, ou o receptor é módulo do projeto | `graph_edge` |
-| `import` | `x.m()` com `x` ligado a um módulo do projeto: havia vários candidatos, e só uma função daquele nome no arquivo do módulo. Python | `import` |
+| `unique` | Um só admitido, e ele era o único candidato do grafo, ou a chamada não tem receptor, ou o receptor é módulo do projeto. Desde o 2.4a, numa chamada simples, também quando o escopo confirma esse candidato | `graph_edge` |
+| `import` | `x.m()` com `x` ligado a um módulo do projeto: havia vários candidatos, e só uma função daquele nome no arquivo do módulo. Python. Desde o 2.4a (DEC-42), também a chamada simples cujo nome o escopo de quem chama liga por um import (`from p import f`, `use a::f`, `use a::*`) ou um caminho de módulo (`m::f()`, `super::f()`), quando isso decide entre homônimos ou acima do teto | `import` |
+| `scope` | Desde o 2.4a (DEC-42): a chamada simples cujo nome o escopo de quem chama liga a uma definição do próprio arquivo (a `def` do módulo ou aninhada, no Python; o item do módulo ou do bloco da função, no Rust), quando isso decide entre homônimos ou acima do teto | `scope` |
 | `receiver` | A chamada é `self.m()` (o receptor da linguagem e nada mais antes do nome) e só este homônimo está no bloco de quem chama. Acima do teto, pelas declarações desse bloco, em Rust e, desde o passo 2.3a-0, em Python (até então o método do Python era procurado pelo rótulo inteiro, `Classe.metodo`). `self.x.m()` nunca é `receiver` | `graph_edge` |
 | `type` | Método do tipo escrito do receptor: `receiver_type` do extrator ou caminho `T::f`. No Rust, também a variante de `T::V(..)` (2.3a). No Python, desde o perfil v9 (2.3a), o método que a própria classe do receptor declara | `type` |
 | `trait_default` | O tipo escrito não define o método; é o padrão de um trait que ele implementa | `type` |
@@ -215,7 +217,8 @@ tipo do receptor está escrito no arquivo, com a regra:
 
 O candidato do `receiver_type` é o nome escrito; qual classe ele nomeia é lido na consulta: a classe
 de topo do próprio arquivo, a de um `from p import Nome` (seguindo até três reexportações) ou a
-classe `T` do módulo do projeto `m`. Um `as` não vale (N8, 2.4). Um nome que não é classe do
+classe `T` do módulo do projeto `m`. Desde o 2.4a (N8), um alias vale: `from p import C as D`, a
+reexportação com `as`, `D = C` e `D: TypeAlias = C` no módulo ou na função. Um nome que não é classe do
 projeto (de fora, embutido, `Any`) não dá tipo. Acima do teto de homônimos, a classe é procurada
 pelo nome escrito. Com a classe, a regra:
 - `type`: os métodos daquele nome que a própria classe declara;
@@ -282,10 +285,47 @@ imports do 2.2, e valem também para os runs antigos com perfil v9 (Python) ou v
 - **Limites.** `let x = T::f(..)?` não é lido como ligação (o `Result<Self, E>` perde o tipo, Q2 da
   Parada 1 do 2.3c); `Box<Self>` não decide, mesmo que o método de `T` rode por auto-deref; um campo
   de struct de outro arquivo (Rust) não é lido; retorno sem anotação, `Any`, união e genéricos
-  (2.6), alias (2.4).
+  (2.6). Um retorno escrito com um alias vale desde o 2.4a.
+
+**Escopo da chamada simples e alias (passo 2.4a; DEC-42).** Sem perfil novo e sem gravar nada no
+grafo: as ligações de cada escopo são lidas dos arquivos na consulta (`NameScope::bindings` e `star`
+no Python; `CallFacts::modules` e `variables` no Rust), como os imports do 2.2, e valem também para os
+runs antigos. A regra vem antes das outras, logo depois de `chosen`.
+- **Python, `f()`.** Decide o escopo mais interno que liga o nome (o corpo de uma classe não é visto das
+  funções dentro dela): a `def` aninhada ou a ligação da função, depois o módulo, depois nada.
+  - No nível do próprio módulo (ou no corpo de uma classe nele), o código roda em ordem: só vale o
+    que foi ligado antes da chamada.
+  - Várias ligações do mesmo nome: vale a última (a implementação depois das `@overload`); se alguma
+    está num `if`, `for`, `while`, `try` ou `match`, todas precisam dar o mesmo, senão não decide.
+  - Uma ligação em `if TYPE_CHECKING:` não existe quando o código roda: não decide a chamada.
+  - `def`/`class` do arquivo: `scope`. `from p import f`: o que o módulo `p` liga a `f` (a `def` dele ou
+    a reexportação, até três passos), com `import`. Um import de fora do projeto, uma variável da
+    própria função (parâmetro, atribuição, alvo de `for`/`with`/`except`) ou um nome que nenhum escopo
+    liga (embutido): sem candidato, o que derruba um `unique`.
+  - Não decide (vale o que valia): `import *` no escopo, ramos que discordam, `TYPE_CHECKING`, um
+    módulo chamado, uma variável alcançada por um import.
+- **Rust, `f()`.** Uma variável de uma função em volta (closure, valor de função) não decide; depois,
+  o item do bloco de uma função em volta e o item do módulo (`scope`); o `use` explícito do módulo;
+  o `use ..::*` (um só achado: `import`; dois: não decide; nenhum, com um glob de fora do crate: não
+  decide). Nada disso: sem candidato. O `use` segue `crate::`, `self::`, `super::`, o módulo filho e,
+  num binário, a biblioteca do pacote; um `use` de fora do crate dá sem candidato.
+- **Rust, `m::f()`, `super::f()`, `crate::a::f()`.** O item do módulo nomeado (com `m` também por um
+  `use`), com `import`; fora do projeto, vale o que valia.
+- **Confirmação.** Um `unique` que o escopo confirma continua `unique`; o escopo decide entre homônimos,
+  acima do teto (sem aresta de candidato: `candidate_edge` nulo) e para derrubar.
+- **Alias (N8).** `from p import C as D` e `D = C`/`D: TypeAlias = C` (Python) e `use a::C as D` e
+  `type D = C;` (Rust) nomeiam `C` em toda regra que nomeia um tipo ou um alvo: a chamada `D(..)`, o tipo
+  do receptor, o retorno e o caminho `D::f`. Um alias de algo de fora é de fora; um genérico é do 2.6.
+- **Efeito no 2.3c.** A chamada que liga um receptor é resolvida pela mesma regra; com o escopo, um
+  `misto()` declarado em dois módulos vai para o do próprio módulo (caso a), e o caso (d) deixa de
+  valer ali.
+- **Limites.** `type X = ...` do Python 3.12, `#[path]`, `include!` e macros não são lidos; um `use`
+  dentro de uma função conta para o módulo dela; a regra não executa nada, então um nome criado por
+  `globals()`/`exec` não é visto.
 
 `basis: "import"` quer dizer que o alvo veio da tabela de imports do arquivo, lida do texto
-com o parser do extrator, sem executar nada.
+com o parser do extrator, sem executar nada. `basis: "scope"` (2.4a) quer dizer que o alvo é uma
+definição do próprio arquivo que o escopo de quem chama liga ao nome, lida da mesma forma.
 
 Um resultado com vários alvos (`trait`, em que todos os candidatos são de um trait, ou um
 tipo que nomeia vários impls, como `Matrix<3>` e `Matrix<4>`, porque os genéricos não são

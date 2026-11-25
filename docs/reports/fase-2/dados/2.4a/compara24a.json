@@ -1,0 +1,4031 @@
+{
+ "healthchecks-25597e41": {
+  "simbolos": 4718,
+  "simbolos_depois": 4718,
+  "used_by_iguais": 4718,
+  "used_by_diferentes": [],
+  "previstas_cumpridas": [
+   {
+    "simbolo": "S3_SECRET_KEY",
+    "at": "hc/settings.py:344",
+    "texto": "envsecret",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 3,
+     "rule": null,
+     "to": [
+      "envsecret",
+      "envsecret",
+      "envsecret"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 3,
+     "rule": null,
+     "to": [
+      "envsecret"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "envsecret"
+    }
+   },
+   {
+    "simbolo": "DISCORD_CLIENT_SECRET",
+    "at": "hc/settings.py:362",
+    "texto": "envsecret",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 3,
+     "rule": null,
+     "to": [
+      "envsecret",
+      "envsecret",
+      "envsecret"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 3,
+     "rule": null,
+     "to": [
+      "envsecret"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "envsecret"
+    }
+   },
+   {
+    "simbolo": "GITHUB_CLIENT_SECRET",
+    "at": "hc/settings.py:366",
+    "texto": "envsecret",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 3,
+     "rule": null,
+     "to": [
+      "envsecret",
+      "envsecret",
+      "envsecret"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 3,
+     "rule": null,
+     "to": [
+      "envsecret"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "envsecret"
+    }
+   },
+   {
+    "simbolo": "GITHUB_PRIVATE_KEY",
+    "at": "hc/settings.py:367",
+    "texto": "envsecret",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 3,
+     "rule": null,
+     "to": [
+      "envsecret",
+      "envsecret",
+      "envsecret"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 3,
+     "rule": null,
+     "to": [
+      "envsecret"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "envsecret"
+    }
+   },
+   {
+    "simbolo": "MATRIX_ACCESS_TOKEN",
+    "at": "hc/settings.py:373",
+    "texto": "envsecret",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 3,
+     "rule": null,
+     "to": [
+      "envsecret",
+      "envsecret",
+      "envsecret"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 3,
+     "rule": null,
+     "to": [
+      "envsecret"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "envsecret"
+    }
+   },
+   {
+    "simbolo": "NTFY_SH_TOKEN",
+    "at": "hc/settings.py:382",
+    "texto": "envsecret",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 3,
+     "rule": null,
+     "to": [
+      "envsecret",
+      "envsecret",
+      "envsecret"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 3,
+     "rule": null,
+     "to": [
+      "envsecret"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "envsecret"
+    }
+   },
+   {
+    "simbolo": "PUSHOVER_API_TOKEN",
+    "at": "hc/settings.py:398",
+    "texto": "envsecret",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 3,
+     "rule": null,
+     "to": [
+      "envsecret",
+      "envsecret",
+      "envsecret"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 3,
+     "rule": null,
+     "to": [
+      "envsecret"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "envsecret"
+    }
+   },
+   {
+    "simbolo": "PUSHBULLET_CLIENT_SECRET",
+    "at": "hc/settings.py:405",
+    "texto": "envsecret",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 3,
+     "rule": null,
+     "to": [
+      "envsecret",
+      "envsecret",
+      "envsecret"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 3,
+     "rule": null,
+     "to": [
+      "envsecret"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "envsecret"
+    }
+   },
+   {
+    "simbolo": "SLACK_CLIENT_SECRET",
+    "at": "hc/settings.py:418",
+    "texto": "envsecret",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 3,
+     "rule": null,
+     "to": [
+      "envsecret",
+      "envsecret",
+      "envsecret"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 3,
+     "rule": null,
+     "to": [
+      "envsecret"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "envsecret"
+    }
+   },
+   {
+    "simbolo": "TELEGRAM_TOKEN",
+    "at": "hc/settings.py:426",
+    "texto": "envsecret",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 3,
+     "rule": null,
+     "to": [
+      "envsecret",
+      "envsecret",
+      "envsecret"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 3,
+     "rule": null,
+     "to": [
+      "envsecret"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "envsecret"
+    }
+   },
+   {
+    "simbolo": "TWILIO_AUTH",
+    "at": "hc/settings.py:430",
+    "texto": "envsecret",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 3,
+     "rule": null,
+     "to": [
+      "envsecret",
+      "envsecret",
+      "envsecret"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 3,
+     "rule": null,
+     "to": [
+      "envsecret"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "envsecret"
+    }
+   },
+   {
+    "simbolo": "TRELLO_APP_KEY",
+    "at": "hc/settings.py:438",
+    "texto": "envsecret",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 3,
+     "rule": null,
+     "to": [
+      "envsecret",
+      "envsecret",
+      "envsecret"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 3,
+     "rule": null,
+     "to": [
+      "envsecret"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "envsecret"
+    }
+   },
+   {
+    "simbolo": "SECRET_KEY",
+    "at": "hc/settings.py:69",
+    "texto": "envsecret",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 3,
+     "rule": null,
+     "to": [
+      "envsecret",
+      "envsecret",
+      "envsecret"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 3,
+     "rule": null,
+     "to": [
+      "envsecret"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "envsecret"
+    }
+   },
+   {
+    "simbolo": "request",
+    "at": "hc/lib/curl.py:206",
+    "texto": "Response",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "Response",
+      "Signal.Response"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "instantiates",
+     "via": null,
+     "runs": "src:1217e3f3db7013976777ededd998c09f43a4ff32ac139353913ce53a0dc4f125:ed6b8de98871534ece094c2a53a489ef089d6bde4656087bddb4bd03ab22a945:method:745:878",
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "Response"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "Response"
+    }
+   },
+   {
+    "simbolo": "SendLogsTestCase.test_it_sends_email",
+    "at": "hc/logs/tests/test_sendlogs.py:25",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "SendFlappingNoticesTestCase.test_it_sends_notice",
+    "at": "hc/accounts/tests/test_sendflappingnotices.py:27",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "create_projects",
+    "at": "hc/accounts/migrations/0018_auto_20190112_1426.py:16",
+    "texto": "Project",
+    "antes": {
+     "res": "unique",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 1,
+     "rule": null,
+     "to": [
+      "Project"
+     ]
+    },
+    "depois": {
+     "res": "no_candidate_in_project",
+     "via": null,
+     "cands": 0,
+     "to": []
+    },
+    "previsto": {
+     "res": "no_candidate_in_project",
+     "to": null
+    }
+   },
+   {
+    "simbolo": "setup_mock",
+    "at": "hc/integrations/signal/tests/test_signal_captcha.py:45",
+    "texto": "MockSocket",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "MockSocket",
+      "MockSocket"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "instantiates",
+     "via": null,
+     "runs": "src:715528a1638a1fb16de13322273730e3c429f51cdf8bde009761c59fbda364ba:609b7032a27318448233ca64fa60a21998e413384477151791990a7ce6cc42df:method:324:478",
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "MockSocket"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "MockSocket"
+    }
+   },
+   {
+    "simbolo": "SignalCaptchaTestCase.test_it_works",
+    "at": "hc/integrations/signal/tests/test_signal_captcha.py:66",
+    "texto": "setup_mock",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock",
+      "setup_mock"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "setup_mock"
+    }
+   },
+   {
+    "simbolo": "SignalCaptchaTestCase.test_it_removes_protocol_prefix",
+    "at": "hc/integrations/signal/tests/test_signal_captcha.py:79",
+    "texto": "setup_mock",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock",
+      "setup_mock"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "setup_mock"
+    }
+   },
+   {
+    "simbolo": "SignalCaptchaTestCase.test_it_checks_jsonrpc_id",
+    "at": "hc/integrations/signal/tests/test_signal_captcha.py:109",
+    "texto": "setup_mock",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock",
+      "setup_mock"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "setup_mock"
+    }
+   },
+   {
+    "simbolo": "SendDeletionScheduledTestCase.test_it_sends_notice",
+    "at": "hc/accounts/tests/test_senddeletionscheduled.py:44",
+    "texto": "counts",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "counts",
+      "counts"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "counts"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "counts"
+    }
+   },
+   {
+    "simbolo": "SendDeletionScheduledTestCase.test_it_sends_notice",
+    "at": "hc/accounts/tests/test_senddeletionscheduled.py:42",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "SendDeletionScheduledTestCase.test_it_sends_notice_to_team_members",
+    "at": "hc/accounts/tests/test_senddeletionscheduled.py:67",
+    "texto": "counts",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "counts",
+      "counts"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "counts"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "counts"
+    }
+   },
+   {
+    "simbolo": "SendDeletionScheduledTestCase.test_it_sends_notice_to_team_members",
+    "at": "hc/accounts/tests/test_senddeletionscheduled.py:65",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "SendDeletionScheduledTestCase.test_it_skips_profiles_with_deletion_scheduled_date_not_set",
+    "at": "hc/accounts/tests/test_senddeletionscheduled.py:74",
+    "texto": "counts",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "counts",
+      "counts"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "counts"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "counts"
+    }
+   },
+   {
+    "simbolo": "SendDeletionScheduledTestCase.test_it_skips_profiles_with_deletion_scheduled_date_not_set",
+    "at": "hc/accounts/tests/test_senddeletionscheduled.py:72",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "SendDeletionScheduledTestCase.test_it_skips_profiles_with_deletion_scheduled_date_in_past",
+    "at": "hc/accounts/tests/test_senddeletionscheduled.py:83",
+    "texto": "counts",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "counts",
+      "counts"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "counts"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "counts"
+    }
+   },
+   {
+    "simbolo": "SendDeletionScheduledTestCase.test_it_skips_profiles_with_deletion_scheduled_date_in_past",
+    "at": "hc/accounts/tests/test_senddeletionscheduled.py:81",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "SendDeletionScheduledTestCase.test_it_avoids_duplicate_recipients",
+    "at": "hc/accounts/tests/test_senddeletionscheduled.py:98",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "SendDeletionScheduledTestCase.test_it_notifies_channel",
+    "at": "hc/accounts/tests/test_senddeletionscheduled.py:107",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "SendDeletionScheduledTestCase.test_it_does_not_notify_channels_if_more_than_14_days_left",
+    "at": "hc/accounts/tests/test_senddeletionscheduled.py:118",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "SendDeletionScheduledTestCase.test_it_skips_email_channels_of_team_members",
+    "at": "hc/accounts/tests/test_senddeletionscheduled.py:130",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "SendAlertsTestCase.test_it_processes_flip",
+    "at": "hc/api/tests/test_sendalerts.py:65",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": "src:04fd8532fcf9ba2615bc6ac62bffcbaee859b92e9af51ab808de06275c96a4f1:97769054348c8f590cabd15a0e44140664305d224bad550e9548ec2e674770e9:method:2050:2273",
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "SendAlertsTestCase.test_it_updates_alert_after",
+    "at": "hc/api/tests/test_sendalerts.py:87",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": "src:04fd8532fcf9ba2615bc6ac62bffcbaee859b92e9af51ab808de06275c96a4f1:97769054348c8f590cabd15a0e44140664305d224bad550e9548ec2e674770e9:method:2050:2273",
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "SendAlertsTestCase.test_it_sets_next_nag_date",
+    "at": "hc/api/tests/test_sendalerts.py:116",
+    "texto": "notify",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 33,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 33,
+     "rule": null,
+     "to": [
+      "notify"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "notify"
+    }
+   },
+   {
+    "simbolo": "SendAlertsTestCase.test_it_handles_grace_period",
+    "at": "hc/api/tests/test_sendalerts.py:22",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": "src:04fd8532fcf9ba2615bc6ac62bffcbaee859b92e9af51ab808de06275c96a4f1:97769054348c8f590cabd15a0e44140664305d224bad550e9548ec2e674770e9:method:2050:2273",
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "SendAlertsTestCase.test_it_clears_next_nag_date",
+    "at": "hc/api/tests/test_sendalerts.py:144",
+    "texto": "notify",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 33,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 33,
+     "rule": null,
+     "to": [
+      "notify"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "notify"
+    }
+   },
+   {
+    "simbolo": "SendAlertsTestCase.test_it_does_not_touch_already_set_next_nag_dates",
+    "at": "hc/api/tests/test_sendalerts.py:169",
+    "texto": "notify",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 33,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 33,
+     "rule": null,
+     "to": [
+      "notify"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "notify"
+    }
+   },
+   {
+    "simbolo": "SendAlertsTestCase.test_it_does_not_clobber_check_status",
+    "at": "hc/api/tests/test_sendalerts.py:190",
+    "texto": "notify",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 33,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 33,
+     "rule": null,
+     "to": [
+      "notify"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "notify"
+    }
+   },
+   {
+    "simbolo": "SendAlertsTestCase.test_it_increases_statsd_success_counter",
+    "at": "hc/api/tests/test_sendalerts.py:217",
+    "texto": "notify",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 33,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 33,
+     "rule": null,
+     "to": [
+      "notify"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "notify"
+    }
+   },
+   {
+    "simbolo": "SendAlertsTestCase.test_it_increases_statsd_fail_counter",
+    "at": "hc/api/tests/test_sendalerts.py:242",
+    "texto": "notify",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 33,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 33,
+     "rule": null,
+     "to": [
+      "notify"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "notify"
+    }
+   },
+   {
+    "simbolo": "SendAlertsTestCase.test_it_creates_a_flip_when_check_goes_down",
+    "at": "hc/api/tests/test_sendalerts.py:34",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": "src:04fd8532fcf9ba2615bc6ac62bffcbaee859b92e9af51ab808de06275c96a4f1:97769054348c8f590cabd15a0e44140664305d224bad550e9548ec2e674770e9:method:2050:2273",
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "SendInactivityNoticesTestCase.test_it_sends_notice",
+    "at": "hc/accounts/tests/test_sendinactivitynotices.py:42",
+    "texto": "counts",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "counts",
+      "counts"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "counts"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "counts"
+    }
+   },
+   {
+    "simbolo": "SendInactivityNoticesTestCase.test_it_sends_notice",
+    "at": "hc/accounts/tests/test_sendinactivitynotices.py:40",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "SendInactivityNoticesTestCase.test_it_checks_last_login",
+    "at": "hc/accounts/tests/test_sendinactivitynotices.py:56",
+    "texto": "counts",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "counts",
+      "counts"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "counts"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "counts"
+    }
+   },
+   {
+    "simbolo": "SendInactivityNoticesTestCase.test_it_checks_last_login",
+    "at": "hc/accounts/tests/test_sendinactivitynotices.py:55",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "SendInactivityNoticesTestCase.test_it_checks_date_joined",
+    "at": "hc/accounts/tests/test_sendinactivitynotices.py:67",
+    "texto": "counts",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "counts",
+      "counts"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "counts"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "counts"
+    }
+   },
+   {
+    "simbolo": "SendInactivityNoticesTestCase.test_it_checks_date_joined",
+    "at": "hc/accounts/tests/test_sendinactivitynotices.py:66",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "SendInactivityNoticesTestCase.test_it_checks_deletion_notice_date",
+    "at": "hc/accounts/tests/test_sendinactivitynotices.py:78",
+    "texto": "counts",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "counts",
+      "counts"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "counts"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "counts"
+    }
+   },
+   {
+    "simbolo": "SendInactivityNoticesTestCase.test_it_checks_deletion_notice_date",
+    "at": "hc/accounts/tests/test_sendinactivitynotices.py:77",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "SendInactivityNoticesTestCase.test_it_checks_subscription",
+    "at": "hc/accounts/tests/test_sendinactivitynotices.py:85",
+    "texto": "counts",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "counts",
+      "counts"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "counts"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "counts"
+    }
+   },
+   {
+    "simbolo": "SendInactivityNoticesTestCase.test_it_checks_subscription",
+    "at": "hc/accounts/tests/test_sendinactivitynotices.py:84",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "SendInactivityNoticesTestCase.test_it_checks_recently_active_team_members",
+    "at": "hc/accounts/tests/test_sendinactivitynotices.py:97",
+    "texto": "counts",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "counts",
+      "counts"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "counts"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "counts"
+    }
+   },
+   {
+    "simbolo": "SendInactivityNoticesTestCase.test_it_checks_recently_active_team_members",
+    "at": "hc/accounts/tests/test_sendinactivitynotices.py:96",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "SendInactivityNoticesTestCase.test_it_checks_recently_logged_in_team_members",
+    "at": "hc/accounts/tests/test_sendinactivitynotices.py:109",
+    "texto": "counts",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "counts",
+      "counts"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "counts"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "counts"
+    }
+   },
+   {
+    "simbolo": "SendInactivityNoticesTestCase.test_it_checks_recently_logged_in_team_members",
+    "at": "hc/accounts/tests/test_sendinactivitynotices.py:108",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "SendInactivityNoticesTestCase.test_it_checks_recently_signed_up_team_members",
+    "at": "hc/accounts/tests/test_sendinactivitynotices.py:119",
+    "texto": "counts",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "counts",
+      "counts"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "counts"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "counts"
+    }
+   },
+   {
+    "simbolo": "SendInactivityNoticesTestCase.test_it_checks_recently_signed_up_team_members",
+    "at": "hc/accounts/tests/test_sendinactivitynotices.py:118",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "SendInactivityNoticesTestCase.test_it_ignores_inactive_team_members",
+    "at": "hc/accounts/tests/test_sendinactivitynotices.py:133",
+    "texto": "counts",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "counts",
+      "counts"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "counts"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "counts"
+    }
+   },
+   {
+    "simbolo": "SendInactivityNoticesTestCase.test_it_ignores_inactive_team_members",
+    "at": "hc/accounts/tests/test_sendinactivitynotices.py:130",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "SendInactivityNoticesTestCase.test_it_checks_recent_pings",
+    "at": "hc/accounts/tests/test_sendinactivitynotices.py:146",
+    "texto": "counts",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "counts",
+      "counts"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "counts"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "counts"
+    }
+   },
+   {
+    "simbolo": "SendInactivityNoticesTestCase.test_it_checks_recent_pings",
+    "at": "hc/accounts/tests/test_sendinactivitynotices.py:145",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "SendInactivityNoticesTestCase.test_it_checks_last_active_date",
+    "at": "hc/accounts/tests/test_sendinactivitynotices.py:157",
+    "texto": "counts",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "counts",
+      "counts"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "counts"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "counts"
+    }
+   },
+   {
+    "simbolo": "SendInactivityNoticesTestCase.test_it_checks_last_active_date",
+    "at": "hc/accounts/tests/test_sendinactivitynotices.py:156",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "setup_mock",
+    "at": "hc/integrations/signal/tests/test_notify.py:63",
+    "texto": "MockSocket",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "MockSocket",
+      "MockSocket"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "instantiates",
+     "via": null,
+     "runs": "src:b2e72a0a6d40284d07bd0b6d85a85e97220540cefe93656eab1eff950cea6864:8e900bf1273ad09a6972bd0dbcf48cec3f92bfa59c1e8eb17321accab2e4498f:method:619:942",
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "MockSocket"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "MockSocket"
+    }
+   },
+   {
+    "simbolo": "NotifySignalTestCase.test_it_lists_other_down_checks",
+    "at": "hc/integrations/signal/tests/test_notify.py:301",
+    "texto": "setup_mock",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock",
+      "setup_mock"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "setup_mock"
+    }
+   },
+   {
+    "simbolo": "NotifySignalTestCase.test_it_handles_other_checks_with_no_last_ping",
+    "at": "hc/integrations/signal/tests/test_notify.py:318",
+    "texto": "setup_mock",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock",
+      "setup_mock"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "setup_mock"
+    }
+   },
+   {
+    "simbolo": "NotifySignalTestCase.test_it_does_not_show_more_than_10_other_checks",
+    "at": "hc/integrations/signal/tests/test_notify.py:329",
+    "texto": "setup_mock",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock",
+      "setup_mock"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "setup_mock"
+    }
+   },
+   {
+    "simbolo": "NotifySignalTestCase.test_it_handles_unexpected_payload",
+    "at": "hc/integrations/signal/tests/test_notify.py:347",
+    "texto": "setup_mock",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock",
+      "setup_mock"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "setup_mock"
+    }
+   },
+   {
+    "simbolo": "NotifySignalTestCase.test_it_handles_unregistered_failure",
+    "at": "hc/integrations/signal/tests/test_notify.py:372",
+    "texto": "setup_mock",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock",
+      "setup_mock"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "setup_mock"
+    }
+   },
+   {
+    "simbolo": "NotifySignalTestCase.test_it_handles_unregistered_and_null_number",
+    "at": "hc/integrations/signal/tests/test_notify.py:407",
+    "texto": "setup_mock",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock",
+      "setup_mock"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "setup_mock"
+    }
+   },
+   {
+    "simbolo": "NotifySignalTestCase.test_it_handles_error_code",
+    "at": "hc/integrations/signal/tests/test_notify.py:420",
+    "texto": "setup_mock",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock",
+      "setup_mock"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "setup_mock"
+    }
+   },
+   {
+    "simbolo": "NotifySignalTestCase.test_it_handles_oserror",
+    "at": "hc/integrations/signal/tests/test_notify.py:435",
+    "texto": "setup_mock",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock",
+      "setup_mock"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "setup_mock"
+    }
+   },
+   {
+    "simbolo": "NotifySignalTestCase.test_it_checks_jsonrpc_id",
+    "at": "hc/integrations/signal/tests/test_notify.py:445",
+    "texto": "setup_mock",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock",
+      "setup_mock"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "setup_mock"
+    }
+   },
+   {
+    "simbolo": "NotifySignalTestCase.test_it_handles_missing_jsonrpc_id",
+    "at": "hc/integrations/signal/tests/test_notify.py:459",
+    "texto": "setup_mock",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock",
+      "setup_mock"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "setup_mock"
+    }
+   },
+   {
+    "simbolo": "NotifySignalTestCase.test_it_handles_rate_limit_failure",
+    "at": "hc/integrations/signal/tests/test_notify.py:490",
+    "texto": "setup_mock",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock",
+      "setup_mock"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "setup_mock"
+    }
+   },
+   {
+    "simbolo": "NotifySignalTestCase.test_it_handles_null_data",
+    "at": "hc/integrations/signal/tests/test_notify.py:534",
+    "texto": "setup_mock",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock",
+      "setup_mock"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "setup_mock"
+    }
+   },
+   {
+    "simbolo": "NotifySignalTestCase.test_it_retries_network_failure",
+    "at": "hc/integrations/signal/tests/test_notify.py:558",
+    "texto": "setup_mock",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock",
+      "setup_mock"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "setup_mock"
+    }
+   },
+   {
+    "simbolo": "NotifySignalTestCase.test_it_handles_username",
+    "at": "hc/integrations/signal/tests/test_notify.py:573",
+    "texto": "setup_mock",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock",
+      "setup_mock"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "setup_mock"
+    }
+   },
+   {
+    "simbolo": "NotifySignalTestCase.test_it_works",
+    "at": "hc/integrations/signal/tests/test_notify.py:115",
+    "texto": "setup_mock",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock",
+      "setup_mock"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "setup_mock"
+    }
+   },
+   {
+    "simbolo": "NotifySignalTestCase.test_it_handles_reason_fail",
+    "at": "hc/integrations/signal/tests/test_notify.py:143",
+    "texto": "setup_mock",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock",
+      "setup_mock"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "setup_mock"
+    }
+   },
+   {
+    "simbolo": "NotifySignalTestCase.test_it_reports_down_duration",
+    "at": "hc/integrations/signal/tests/test_notify.py:153",
+    "texto": "setup_mock",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock",
+      "setup_mock"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "setup_mock"
+    }
+   },
+   {
+    "simbolo": "NotifySignalTestCase.test_it_shows_exitstatus",
+    "at": "hc/integrations/signal/tests/test_notify.py:168",
+    "texto": "setup_mock",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock",
+      "setup_mock"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "setup_mock"
+    }
+   },
+   {
+    "simbolo": "NotifySignalTestCase.test_it_shows_cron_schedule_and_tz",
+    "at": "hc/integrations/signal/tests/test_notify.py:185",
+    "texto": "setup_mock",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock",
+      "setup_mock"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "setup_mock"
+    }
+   },
+   {
+    "simbolo": "NotifySignalTestCase.test_it_shows_oncalendar_schedule_and_tz",
+    "at": "hc/integrations/signal/tests/test_notify.py:198",
+    "texto": "setup_mock",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock",
+      "setup_mock"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "setup_mock"
+    }
+   },
+   {
+    "simbolo": "NotifySignalTestCase.test_it_handles_special_characters",
+    "at": "hc/integrations/signal/tests/test_notify.py:212",
+    "texto": "setup_mock",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock",
+      "setup_mock"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "setup_mock"
+    }
+   },
+   {
+    "simbolo": "NotifySignalTestCase.test_it_handles_host_port",
+    "at": "hc/integrations/signal/tests/test_notify.py:235",
+    "texto": "setup_mock",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock",
+      "setup_mock"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "setup_mock"
+    }
+   },
+   {
+    "simbolo": "NotifySignalTestCase.test_it_does_not_escape_special_characters",
+    "at": "hc/integrations/signal/tests/test_notify.py:263",
+    "texto": "setup_mock",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock",
+      "setup_mock"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "setup_mock"
+    }
+   },
+   {
+    "simbolo": "NotifySignalTestCase.test_it_shows_all_other_checks_up_note",
+    "at": "hc/integrations/signal/tests/test_notify.py:286",
+    "texto": "setup_mock",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock",
+      "setup_mock"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "setup_mock"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "setup_mock"
+    }
+   },
+   {
+    "simbolo": "PrunePingsSlowTestCase.test_it_works",
+    "at": "hc/api/tests/test_prunepingsslow.py:15",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "PruneUsersTestCase.test_it_removes_old_never_logged_in_users",
+    "at": "hc/accounts/tests/test_pruneusers.py:26",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "PruneUsersTestCase.test_it_leaves_team_members_alone",
+    "at": "hc/accounts/tests/test_pruneusers.py:36",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "SendReportsTestCase.test_it_sends_monthly_report",
+    "at": "hc/api/tests/test_sendreports.py:54",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "SendReportsTestCase.test_it_sends_weekly_report",
+    "at": "hc/api/tests/test_sendreports.py:74",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "SendReportsTestCase.test_it_obeys_next_report_date",
+    "at": "hc/api/tests/test_sendreports.py:85",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "SendReportsTestCase.test_it_fills_blank_next_monthly_report_date",
+    "at": "hc/api/tests/test_sendreports.py:92",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "SendReportsTestCase.test_it_fills_blank_next_weekly_report_date",
+    "at": "hc/api/tests/test_sendreports.py:105",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "SendReportsTestCase.test_it_obeys_reports_off",
+    "at": "hc/api/tests/test_sendreports.py:117",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "SendReportsTestCase.test_it_requires_pinged_checks",
+    "at": "hc/api/tests/test_sendreports.py:123",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "SendReportsTestCase.test_it_sends_nag",
+    "at": "hc/api/tests/test_sendreports.py:130",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "SendReportsTestCase.test_it_obeys_next_nag_date",
+    "at": "hc/api/tests/test_sendreports.py:147",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "SendReportsTestCase.test_it_obeys_nag_period",
+    "at": "hc/api/tests/test_sendreports.py:155",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "SendReportsTestCase.test_nags_require_down_checks",
+    "at": "hc/api/tests/test_sendreports.py:162",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "CreateSuperuserTestCase.test_it_accepts_arguments",
+    "at": "hc/accounts/tests/test_createsuperuser.py:39",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "CreateSuperuserTestCase.test_it_works",
+    "at": "hc/accounts/tests/test_createsuperuser.py:16",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "CreateSuperuserTestCase.test_it_rejects_duplicate_email",
+    "at": "hc/accounts/tests/test_createsuperuser.py:30",
+    "texto": "Command",
+    "antes": {
+     "res": "above_candidate_limit",
+     "via": null,
+     "cands": 17,
+     "to": []
+    },
+    "depois": {
+     "res": "import",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 17,
+     "rule": null,
+     "to": [
+      "Command"
+     ]
+    },
+    "previsto": {
+     "res": "import",
+     "to": "Command"
+    }
+   },
+   {
+    "simbolo": "mariadb_uuid_check",
+    "at": "hc/api/apps.py:121",
+    "texto": "Error",
+    "antes": {
+     "res": "unique",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 1,
+     "rule": null,
+     "to": [
+      "Signal.Error"
+     ]
+    },
+    "depois": {
+     "res": "no_candidate_in_project",
+     "via": null,
+     "cands": 0,
+     "to": []
+    },
+    "previsto": {
+     "res": "no_candidate_in_project",
+     "to": null
+    }
+   },
+   {
+    "simbolo": "settings_check",
+    "at": "hc/api/apps.py:38",
+    "texto": "Error",
+    "antes": {
+     "res": "unique",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 1,
+     "rule": null,
+     "to": [
+      "Signal.Error"
+     ]
+    },
+    "depois": {
+     "res": "no_candidate_in_project",
+     "via": null,
+     "cands": 0,
+     "to": []
+    },
+    "previsto": {
+     "res": "no_candidate_in_project",
+     "to": null
+    }
+   },
+   {
+    "simbolo": "settings_check",
+    "at": "hc/api/apps.py:66",
+    "texto": "Error",
+    "antes": {
+     "res": "unique",
+     "rel": "instantiates",
+     "via": null,
+     "runs": null,
+     "cands": 1,
+     "rule": null,
+     "to": [
+      "Signal.Error"
+     ]
+    },
+    "depois": {
+     "res": "no_candidate_in_project",
+     "via": null,
+     "cands": 0,
+     "to": []
+    },
+    "previsto": {
+     "res": "no_candidate_in_project",
+     "to": null
+    }
+   }
+  ],
+  "fora_da_previsao": [],
+  "previsao_nao_cumprida": [],
+  "por_resolucao_depois": {
+   "unique": 1902,
+   "no_candidate_in_project": 10904,
+   "homonym": 2327,
+   "type": 98,
+   "above_candidate_limit": 555,
+   "receiver": 331,
+   "import": 64,
+   "scope": 58
+  }
+ },
+ "renderer-9b78f3a9": {
+  "simbolos": 819,
+  "simbolos_depois": 819,
+  "used_by_iguais": 819,
+  "used_by_diferentes": [],
+  "previstas_cumpridas": [
+   {
+    "simbolo": "tests_world::the_is_no_shadow_when_an_object_is_behind_the_light",
+    "at": "src/world.rs:305",
+    "texto": "create_default_world",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_camera::create_default_world",
+      "tests_world::create_default_world"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_world::create_default_world"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "tests_world::create_default_world"
+    }
+   },
+   {
+    "simbolo": "tests_world::the_is_no_shadow_when_an_object_is_behind_the_point",
+    "at": "src/world.rs:313",
+    "texto": "create_default_world",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_camera::create_default_world",
+      "tests_world::create_default_world"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_world::create_default_world"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "tests_world::create_default_world"
+    }
+   },
+   {
+    "simbolo": "tests_world::shadow_hit_is_given_an_intersection_in_shadow",
+    "at": "src/world.rs:321",
+    "texto": "create_default_world",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_camera::create_default_world",
+      "tests_world::create_default_world"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_world::create_default_world"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "tests_world::create_default_world"
+    }
+   },
+   {
+    "simbolo": "tests_world::the_reflected_color_for_a_nonreflective_material",
+    "at": "src/world.rs:343",
+    "texto": "create_default_world",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_camera::create_default_world",
+      "tests_world::create_default_world"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_world::create_default_world"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "tests_world::create_default_world"
+    }
+   },
+   {
+    "simbolo": "tests_world::the_reflected_color_for_a_reflective_material",
+    "at": "src/world.rs:360",
+    "texto": "create_default_world",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_camera::create_default_world",
+      "tests_world::create_default_world"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_world::create_default_world"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "tests_world::create_default_world"
+    }
+   },
+   {
+    "simbolo": "tests_world::shade_hit_with_a_reflective_material",
+    "at": "src/world.rs:379",
+    "texto": "create_default_world",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_camera::create_default_world",
+      "tests_world::create_default_world"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_world::create_default_world"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "tests_world::create_default_world"
+    }
+   },
+   {
+    "simbolo": "tests_world::the_reflected_color_at_the_maximum_recursive_depth",
+    "at": "src/world.rs:419",
+    "texto": "create_default_world",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_camera::create_default_world",
+      "tests_world::create_default_world"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_world::create_default_world"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "tests_world::create_default_world"
+    }
+   },
+   {
+    "simbolo": "tests_world::the_refracted_color_with_an_opaque_surface",
+    "at": "src/world.rs:438",
+    "texto": "create_default_world",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_camera::create_default_world",
+      "tests_world::create_default_world"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_world::create_default_world"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "tests_world::create_default_world"
+    }
+   },
+   {
+    "simbolo": "tests_world::the_refracted_color_at_the_maximum_recursive_depth",
+    "at": "src/world.rs:454",
+    "texto": "create_default_world",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_camera::create_default_world",
+      "tests_world::create_default_world"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_world::create_default_world"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "tests_world::create_default_world"
+    }
+   },
+   {
+    "simbolo": "tests_world::the_refracted_color_under_total_internal_reflection",
+    "at": "src/world.rs:474",
+    "texto": "create_default_world",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_camera::create_default_world",
+      "tests_world::create_default_world"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_world::create_default_world"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "tests_world::create_default_world"
+    }
+   },
+   {
+    "simbolo": "tests_world::the_refracted_color_with_a_refracted_ray",
+    "at": "src/world.rs:495",
+    "texto": "create_default_world",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_camera::create_default_world",
+      "tests_world::create_default_world"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_world::create_default_world"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "tests_world::create_default_world"
+    }
+   },
+   {
+    "simbolo": "tests_world::shade_hit_with_a_transparent_material",
+    "at": "src/world.rs:524",
+    "texto": "create_default_world",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_camera::create_default_world",
+      "tests_world::create_default_world"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_world::create_default_world"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "tests_world::create_default_world"
+    }
+   },
+   {
+    "simbolo": "tests_world::shade_hit_with_a_reflective_or_transparent_material",
+    "at": "src/world.rs:551",
+    "texto": "create_default_world",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_camera::create_default_world",
+      "tests_world::create_default_world"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_world::create_default_world"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "tests_world::create_default_world"
+    }
+   },
+   {
+    "simbolo": "tests_world::the_default_world",
+    "at": "src/world.rs:192",
+    "texto": "create_default_world",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_camera::create_default_world",
+      "tests_world::create_default_world"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_world::create_default_world"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "tests_world::create_default_world"
+    }
+   },
+   {
+    "simbolo": "tests_world::intersect_a_world_with_a_ray",
+    "at": "src/world.rs:205",
+    "texto": "create_default_world",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_camera::create_default_world",
+      "tests_world::create_default_world"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_world::create_default_world"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "tests_world::create_default_world"
+    }
+   },
+   {
+    "simbolo": "tests_world::shading_an_intersection",
+    "at": "src/world.rs:219",
+    "texto": "create_default_world",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_camera::create_default_world",
+      "tests_world::create_default_world"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_world::create_default_world"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "tests_world::create_default_world"
+    }
+   },
+   {
+    "simbolo": "tests_world::shading_an_intersection_from_the_inside",
+    "at": "src/world.rs:232",
+    "texto": "create_default_world",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_camera::create_default_world",
+      "tests_world::create_default_world"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_world::create_default_world"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "tests_world::create_default_world"
+    }
+   },
+   {
+    "simbolo": "tests_world::the_color_when_a_ray_missing",
+    "at": "src/world.rs:247",
+    "texto": "create_default_world",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_camera::create_default_world",
+      "tests_world::create_default_world"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_world::create_default_world"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "tests_world::create_default_world"
+    }
+   },
+   {
+    "simbolo": "tests_world::the_color_when_a_ray_hits",
+    "at": "src/world.rs:256",
+    "texto": "create_default_world",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_camera::create_default_world",
+      "tests_world::create_default_world"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_world::create_default_world"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "tests_world::create_default_world"
+    }
+   },
+   {
+    "simbolo": "tests_world::the_color_with_an_intersection_behind_the_ray",
+    "at": "src/world.rs:265",
+    "texto": "create_default_world",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_camera::create_default_world",
+      "tests_world::create_default_world"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_world::create_default_world"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "tests_world::create_default_world"
+    }
+   },
+   {
+    "simbolo": "tests_world::there_is_no_shadow_when_nothing_is_collinear_with_point_and_light",
+    "at": "src/world.rs:289",
+    "texto": "create_default_world",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_camera::create_default_world",
+      "tests_world::create_default_world"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_world::create_default_world"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "tests_world::create_default_world"
+    }
+   },
+   {
+    "simbolo": "tests_world::the_shadow_when_an_object_is_between_the_point_and_the_light",
+    "at": "src/world.rs:297",
+    "texto": "create_default_world",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_camera::create_default_world",
+      "tests_world::create_default_world"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_world::create_default_world"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "tests_world::create_default_world"
+    }
+   },
+   {
+    "simbolo": "tests_camera::rendering_a_world_with_a_camera",
+    "at": "src/camera.rs:313",
+    "texto": "create_default_world",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_camera::create_default_world",
+      "tests_world::create_default_world"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_camera::create_default_world"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "tests_camera::create_default_world"
+    }
+   },
+   {
+    "simbolo": "tests_camera::render_preserves_complete_reflective_scene",
+    "at": "src/camera.rs:330",
+    "texto": "create_default_world",
+    "antes": {
+     "res": "homonym",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_camera::create_default_world",
+      "tests_world::create_default_world"
+     ]
+    },
+    "depois": {
+     "res": "scope",
+     "rel": "calls",
+     "via": null,
+     "runs": null,
+     "cands": 2,
+     "rule": null,
+     "to": [
+      "tests_camera::create_default_world"
+     ]
+    },
+    "previsto": {
+     "res": "scope",
+     "to": "tests_camera::create_default_world"
+    }
+   }
+  ],
+  "fora_da_previsao": [],
+  "previsao_nao_cumprida": [],
+  "por_resolucao_depois": {
+   "unique": 1028,
+   "no_candidate_in_project": 556,
+   "type": 623,
+   "above_candidate_limit": 173,
+   "homonym": 80,
+   "trait_default": 40,
+   "receiver": 21,
+   "scope": 24
+  }
+ }
+}

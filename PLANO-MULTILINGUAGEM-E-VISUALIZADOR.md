@@ -103,6 +103,17 @@ corretas, lacunas explícitas e fatos aguardando aprovação humana.
   `misto()` declarado em dois módulos com retornos diferentes fica sem
   tipo, embora o Rust chame o do próprio módulo (N3c-rs-discordam;
   nenhum caso nos dados).
+  Parada 1 aprovada em 20/11/2026 ([2.4-parada-1.md](docs/reports/fase-2/2.4-parada-1.md)):
+  antes do 2.4a, um commit de ferramenta com a trava do portão pelo hash
+  das fontes compiladas (Q1) e `scope` como resolução de alvo único (Q3);
+  depois, 2.4a (escopo e alias; DEC-42, proposta) e 2.4b (herança, com
+  `cls.m()` e o método chamado por uma `@property` de retorno anotado,
+  Q7). 2.4a: Parada 2 em [2.4a-parada-2.md](docs/reports/fase-2/2.4a-parada-2.md),
+  código em `fd388cd`; folha, DEC-42 e linha de base pendentes.
+  **Ordem do resto da Fase 2 (proposta do usuário, 20/11/2026, a decidir
+  depois do 2.4):** 2.4 → 2.5 → Fase 2B → 2.6. Os workflows A, B e C do
+  Healthchecks só dependem da 2B e do 2.5 (as rotas passam a view como
+  referência); o 2.6 só serve ao workflow D (`ch.notify`, F22).
 - 2.5 PIL-G5/N7: relação "passa referência", nunca "chama".
 - 2.6 Genéricos (N6), por último (ch.notify: 33 → 1).
 - Portão de cada passo: `node tools/precisao/portao.js --studio .studio

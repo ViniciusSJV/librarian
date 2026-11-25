@@ -1,0 +1,246 @@
+compilando librarian_studio e librarian_ingest (cargo build --release --locked)...
+    Finished `release` profile [optimized] target(s) in 0.14s
+binário: C:\Users\beatl\Documents\Projetos\librarian\target\release (compilado agora); fontes ebda8311245f92bc2711cf48e672e122b2fe31f94de40fd812d0f00eddb84d1c (236 arquivos de crates/, Cargo.toml e Cargo.lock, sem os .md); identidade recorded:61969766333140865282ff28dfc1654c5b28a6b2:true; sha256 librarian_studio ded632be139501a960c87e935fb5447782b636c12f6e555b27089c19587fd0ea, librarian_ingest 0bdcabba21e32573795265ceebfe71f2586b5d326a61e2e7e15052420c91aea4 (só registro: muda a cada link)
+run novo renderer-9b78f3a9: 20261120-205128
+run novo healthchecks-25597e41: 20261120-205128
+PASSA  PT Response (escopo: classe do próprio arquivo, instancia e roda o __init__): o detalhe diz "seguida"/"followed"  -> request → Response
+Fechar
+instancia: Response
+hc/lib/curl.py:206
+seguida pelo escopo: o nome chamado é definido no próprio arquivo de quem chama (no módulo, ou no corpo da função em volta), e é esta definição
+instancia: a chamada cria um objeto deste tipo, não chama a classe; o percurso segue no Response.__init__
+PASSA  PT Response (escopo: classe do próprio arquivo, instancia e roda o __init__): linha cheia (seguida), não tracejada
+PASSA  PT Response (escopo: classe do próprio arquivo, instancia e roda o __init__): /api/calls dá scope → /^Response$/  -> {"resolution":"scope","to":"Response","basis":"scope","candidate_edge":"edge:fef6047952d59c0a785692854bf63804f01fdd388a935e3c434b00ebd9aa7a9e","candidates":2}
+PASSA  PT Response (escopo: classe do próprio arquivo, instancia e roda o __init__): basis scope, candidate_edge presente  -> scope edge:fef6047952d59c0a785692854bf63804f01fdd388a935e3c434b00ebd9aa7a9e
+PASSA  PT Response (escopo: classe do próprio arquivo, instancia e roda o __init__): o detalhe da linha diz o texto da resolução  -> seguida pelo escopo: o nome chamado é definido no próprio arquivo de quem chama (no módulo, ou no corpo da função em volta), e é esta definição || request → Response
+Fechar
+instancia: Response
+hc/lib/curl.py:206
+seguida pelo escopo: o nome chamado é definido no próprio arquivo de quem chama (no módulo, ou no corpo da função em volta), e é esta definição
+instancia: a chamada cria um objeto deste tipo, não chama a classe; o percurso segue no Response.__init__
+PASSA  PT Response (escopo: classe do próprio arquivo, instancia e roda o __init__): relation instantiates  -> instantiates
+PASSA  PT Response (escopo: classe do próprio arquivo, instancia e roda o __init__): runs /^Response\.__init__$/  -> src:1217e3f3db7013976777ededd998c09f43a4ff32ac139353913ce53a0dc4f125:ed6b8de98871534ece094c2a53a489ef089d6bde4656087bddb4bd03ab22a945:method:745:878
+PASSA  PT Response (escopo: classe do próprio arquivo, instancia e roda o __init__): nenhuma chave crua nem código sem texto  -> request → Response
+Fechar
+instancia: Response
+hc/lib/curl.py:206
+seguida pelo escopo: o nome chamado é definido no próprio arquivo de quem chama (no módulo, ou no corpo da função em volta), e é esta definição
+instancia: a chamada cria um objeto deste tipo, não chama a classe; o percurso segue no Response.__init__
+      [pt-scope-hc_lib_curl_py_206.png] request → Response ⏎ Fechar ⏎ instancia: Response ⏎ hc/lib/curl.py:206 ⏎ seguida pelo escopo: o nome chamado é definido no próprio arquivo de quem chama (no módulo, ou no corpo da função em volta), e é esta definição ⏎ instancia: a chamada cria um objeto deste tipo, não chama a classe; o percurso segue no Response.__init__
+PASSA  PT setup_mock (escopo: def do próprio arquivo, em teste): o detalhe diz "seguida"/"followed"  -> SignalCaptchaTestCase.test_it_works → setup_mock
+Fechar
+chama: setup_mock
+hc/integrations/signal/tests/test_signal_captcha.py:66
+seguida pelo escopo: o nome chamado é definido no próprio arquivo de quem chama (no módulo, ou no corpo da função em volta), e é esta definição
+PASSA  PT setup_mock (escopo: def do próprio arquivo, em teste): linha cheia (seguida), não tracejada
+PASSA  PT setup_mock (escopo: def do próprio arquivo, em teste): /api/calls dá scope → /^setup_mock$/  -> {"resolution":"scope","to":"setup_mock","basis":"scope","candidate_edge":"edge:e5445cfcc458924ae6cd759dceb22cc6836f1fe95c9a1ac6fe5c4e08e57724fa","candidates":2}
+PASSA  PT setup_mock (escopo: def do próprio arquivo, em teste): basis scope, candidate_edge presente  -> scope edge:e5445cfcc458924ae6cd759dceb22cc6836f1fe95c9a1ac6fe5c4e08e57724fa
+PASSA  PT setup_mock (escopo: def do próprio arquivo, em teste): o detalhe da linha diz o texto da resolução  -> seguida pelo escopo: o nome chamado é definido no próprio arquivo de quem chama (no módulo, ou no corpo da função em volta), e é esta definição || SignalCaptchaTestCase.test_it_works → setup_mock
+Fechar
+chama: setup_mock
+hc/integrations/signal/tests/test_signal_captcha.py:66
+seguida pelo escopo: o nome chamado é definido no próprio arquivo de quem chama (no módulo, ou no corpo da função em volta), e é esta definição
+PASSA  PT setup_mock (escopo: def do próprio arquivo, em teste): relation calls  -> calls
+PASSA  PT setup_mock (escopo: def do próprio arquivo, em teste): nenhuma chave crua nem código sem texto  -> SignalCaptchaTestCase.test_it_works → setup_mock
+Fechar
+chama: setup_mock
+hc/integrations/signal/tests/test_signal_captcha.py:66
+seguida pelo escopo: o nome chamado é definido no próprio arquivo de quem chama (no módulo, ou no corpo da função em volta), e é esta definição
+      [pt-scope-hc_integrations_signal_tests_test_signal_captcha_py_66.png] SignalCaptchaTestCase.test_it_works → setup_mock ⏎ Fechar ⏎ chama: setup_mock ⏎ hc/integrations/signal/tests/test_signal_captcha.py:66 ⏎ seguida pelo escopo: o nome chamado é definido no próprio arquivo de quem chama (no módulo, ou no corpo da função em volta), e é esta definição
+PASSA  PT notify (import do arquivo, acima do teto, em teste): o detalhe diz "seguida"/"followed"  -> SendAlertsTestCase.test_it_sets_next_nag_date → notify
+Fechar
+chama: notify
+hc/api/tests/test_sendalerts.py:116
+seguida pelo import do arquivo: o receptor é um módulo do projeto e só esta função dele tem o nome, ou o nome chamado vem de um import (from p import f, use a::f, use a::*) e é esta declaração
+PASSA  PT notify (import do arquivo, acima do teto, em teste): linha cheia (seguida), não tracejada
+PASSA  PT notify (import do arquivo, acima do teto, em teste): /api/calls dá import → /^notify$/  -> {"resolution":"import","to":"notify","basis":"import","candidate_edge":null,"candidates":33}
+PASSA  PT notify (import do arquivo, acima do teto, em teste): basis import, candidate_edge null  -> import null
+PASSA  PT notify (import do arquivo, acima do teto, em teste): o detalhe da linha diz o texto da resolução  -> seguida pelo import do arquivo: o receptor é um módulo do projeto e só esta função dele tem o nome, ou o nome chamado vem de um import (from p import f, use a::f, use a::*) e é esta declaração || SendAlertsTestCase.test_it_sets_next_nag_date → notify
+Fechar
+chama: notify
+hc/api/tests/test_sendalerts.py:116
+seguida pelo import do arquivo: o receptor é um módulo do projeto e só esta função dele tem o nome, ou o nome chamado vem de um import (from p import f, use a::f, use a::*) e é esta declaração
+PASSA  PT notify (import do arquivo, acima do teto, em teste): relation calls  -> calls
+PASSA  PT notify (import do arquivo, acima do teto, em teste): nenhuma chave crua nem código sem texto  -> SendAlertsTestCase.test_it_sets_next_nag_date → notify
+Fechar
+chama: notify
+hc/api/tests/test_sendalerts.py:116
+seguida pelo import do arquivo: o receptor é um módulo do projeto e só esta função dele tem o nome, ou o nome chamado vem de um import (from p import f, use a::f, use a::*) e é esta declaração
+      [pt-import-hc_api_tests_test_sendalerts_py_116.png] SendAlertsTestCase.test_it_sets_next_nag_date → notify ⏎ Fechar ⏎ chama: notify ⏎ hc/api/tests/test_sendalerts.py:116 ⏎ seguida pelo import do arquivo: o receptor é um módulo do projeto e só esta função dele tem o nome, ou o nome chamado vem de um import (from p import f, use a::f, use a::*) e é esta declaração
+PASSA  PT create_check → _lookup (unique confirmado pelo escopo; sem mudança): o detalhe diz "seguida"/"followed"  -> create_check → _lookup
+Fechar
+chama: _lookup
+hc/api/views.py:463
+seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+PASSA  PT create_check → _lookup (unique confirmado pelo escopo; sem mudança): linha cheia (seguida), não tracejada
+PASSA  PT create_check → _lookup (unique confirmado pelo escopo; sem mudança): /api/calls dá unique → /^_lookup$/  -> {"resolution":"unique","to":"_lookup","basis":"graph_edge","candidate_edge":"edge:345734be35a5ffe01d8f2973e5721e4d56e4ff3233a233b1770735b02691219c","candidates":1}
+PASSA  PT create_check → _lookup (unique confirmado pelo escopo; sem mudança): basis graph_edge, candidate_edge presente  -> graph_edge edge:345734be35a5ffe01d8f2973e5721e4d56e4ff3233a233b1770735b02691219c
+PASSA  PT create_check → _lookup (unique confirmado pelo escopo; sem mudança): o detalhe da linha diz o texto da resolução  -> seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta || create_check → _lookup
+Fechar
+chama: _lookup
+hc/api/views.py:463
+seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+PASSA  PT create_check → _lookup (unique confirmado pelo escopo; sem mudança): relation calls  -> calls
+PASSA  PT create_check → _lookup (unique confirmado pelo escopo; sem mudança): nenhuma chave crua nem código sem texto  -> create_check → _lookup
+Fechar
+chama: _lookup
+hc/api/views.py:463
+seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+      [pt-unique-hc_api_views_py_463.png] create_check → _lookup ⏎ Fechar ⏎ chama: _lookup ⏎ hc/api/views.py:463 ⏎ seguida: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+PASSA  PT create_default_world (Rust: escopo, função do próprio mod tests): o detalhe diz "seguida"/"followed"  -> tests_world::the_default_world → tests_world::create_default_world
+Fechar
+chama: create_default_world
+src/world.rs:192
+seguida pelo escopo: o nome chamado é definido no próprio arquivo de quem chama (no módulo, ou no corpo da função em volta), e é esta definição
+PASSA  PT create_default_world (Rust: escopo, função do próprio mod tests): linha cheia (seguida), não tracejada
+PASSA  PT create_default_world (Rust: escopo, função do próprio mod tests): /api/calls dá scope → /^tests_world::create_default_world$/  -> {"resolution":"scope","to":"tests_world::create_default_world","basis":"scope","candidate_edge":"edge:7b80e2a62d03e47c976447eddb92addf3579198944127209b4824bd7083b6901","candidates":2}
+PASSA  PT create_default_world (Rust: escopo, função do próprio mod tests): basis scope, candidate_edge presente  -> scope edge:7b80e2a62d03e47c976447eddb92addf3579198944127209b4824bd7083b6901
+PASSA  PT create_default_world (Rust: escopo, função do próprio mod tests): o detalhe da linha diz o texto da resolução  -> seguida pelo escopo: o nome chamado é definido no próprio arquivo de quem chama (no módulo, ou no corpo da função em volta), e é esta definição || tests_world::the_default_world → tests_world::create_default_world
+Fechar
+chama: create_default_world
+src/world.rs:192
+seguida pelo escopo: o nome chamado é definido no próprio arquivo de quem chama (no módulo, ou no corpo da função em volta), e é esta definição
+PASSA  PT create_default_world (Rust: escopo, função do próprio mod tests): relation calls  -> calls
+PASSA  PT create_default_world (Rust: escopo, função do próprio mod tests): nenhuma chave crua nem código sem texto  -> tests_world::the_default_world → tests_world::create_default_world
+Fechar
+chama: create_default_world
+src/world.rs:192
+seguida pelo escopo: o nome chamado é definido no próprio arquivo de quem chama (no módulo, ou no corpo da função em volta), e é esta definição
+      [pt-scope-src_world_rs_192.png] tests_world::the_default_world → tests_world::create_default_world ⏎ Fechar ⏎ chama: create_default_world ⏎ src/world.rs:192 ⏎ seguida pelo escopo: o nome chamado é definido no próprio arquivo de quem chama (no módulo, ou no corpo da função em volta), e é esta definição
+PASSA  PT: textos novos em português  -> pelo escopo | Seguida pelo escopo: o nome chamado é definido no próprio arquivo de quem chama (no módulo, ou no corpo da função em volta).
+PASSA  PT: nenhum erro de página
+PASSA  PT: nada além de abrir o projeto (POST /api/project = store.open) e /api/calls
+PASSA  EN Response (escopo: classe do próprio arquivo, instancia e roda o __init__): o detalhe diz "seguida"/"followed"  -> request → Response
+Close
+instantiates: Response
+hc/lib/curl.py:206
+followed by the scope: the called name is defined in the caller's own file (in the module, or in the body of the function around it), and it is this definition
+instantiates: the call builds an object of this type, it does not call the class; the walk goes on in Response.__init__
+PASSA  EN Response (escopo: classe do próprio arquivo, instancia e roda o __init__): linha cheia (seguida), não tracejada
+PASSA  EN Response (escopo: classe do próprio arquivo, instancia e roda o __init__): /api/calls dá scope → /^Response$/  -> {"resolution":"scope","to":"Response","basis":"scope","candidate_edge":"edge:fef6047952d59c0a785692854bf63804f01fdd388a935e3c434b00ebd9aa7a9e","candidates":2}
+PASSA  EN Response (escopo: classe do próprio arquivo, instancia e roda o __init__): basis scope, candidate_edge presente  -> scope edge:fef6047952d59c0a785692854bf63804f01fdd388a935e3c434b00ebd9aa7a9e
+PASSA  EN Response (escopo: classe do próprio arquivo, instancia e roda o __init__): o detalhe da linha diz o texto da resolução  -> followed by the scope: the called name is defined in the caller's own file (in the module, or in the body of the function around it), and it is this definition || request → Response
+Close
+instantiates: Response
+hc/lib/curl.py:206
+followed by the scope: the called name is defined in the caller's own file (in the module, or in the body of the function around it), and it is this definition
+instantiates: the call builds an object of this type, it does not call the class; the walk goes on in Response.__init__
+PASSA  EN Response (escopo: classe do próprio arquivo, instancia e roda o __init__): relation instantiates  -> instantiates
+PASSA  EN Response (escopo: classe do próprio arquivo, instancia e roda o __init__): runs /^Response\.__init__$/  -> src:1217e3f3db7013976777ededd998c09f43a4ff32ac139353913ce53a0dc4f125:ed6b8de98871534ece094c2a53a489ef089d6bde4656087bddb4bd03ab22a945:method:745:878
+PASSA  EN Response (escopo: classe do próprio arquivo, instancia e roda o __init__): nenhuma chave crua nem código sem texto  -> request → Response
+Close
+instantiates: Response
+hc/lib/curl.py:206
+followed by the scope: the called name is defined in the caller's own file (in the module, or in the body of the function around it), and it is this definition
+instantiates: the call builds an object of this type, it does not call the class; the walk goes on in Response.__init__
+      [en-scope-hc_lib_curl_py_206.png] request → Response ⏎ Close ⏎ instantiates: Response ⏎ hc/lib/curl.py:206 ⏎ followed by the scope: the called name is defined in the caller's own file (in the module, or in the body of the function around it), and it is this definition ⏎ instantiates: the call builds an object of this type, it does not call the class; the walk goes on in Response.__init__
+PASSA  EN setup_mock (escopo: def do próprio arquivo, em teste): o detalhe diz "seguida"/"followed"  -> SignalCaptchaTestCase.test_it_works → setup_mock
+Close
+calls: setup_mock
+hc/integrations/signal/tests/test_signal_captcha.py:66
+followed by the scope: the called name is defined in the caller's own file (in the module, or in the body of the function around it), and it is this definition
+PASSA  EN setup_mock (escopo: def do próprio arquivo, em teste): linha cheia (seguida), não tracejada
+PASSA  EN setup_mock (escopo: def do próprio arquivo, em teste): /api/calls dá scope → /^setup_mock$/  -> {"resolution":"scope","to":"setup_mock","basis":"scope","candidate_edge":"edge:e5445cfcc458924ae6cd759dceb22cc6836f1fe95c9a1ac6fe5c4e08e57724fa","candidates":2}
+PASSA  EN setup_mock (escopo: def do próprio arquivo, em teste): basis scope, candidate_edge presente  -> scope edge:e5445cfcc458924ae6cd759dceb22cc6836f1fe95c9a1ac6fe5c4e08e57724fa
+PASSA  EN setup_mock (escopo: def do próprio arquivo, em teste): o detalhe da linha diz o texto da resolução  -> followed by the scope: the called name is defined in the caller's own file (in the module, or in the body of the function around it), and it is this definition || SignalCaptchaTestCase.test_it_works → setup_mock
+Close
+calls: setup_mock
+hc/integrations/signal/tests/test_signal_captcha.py:66
+followed by the scope: the called name is defined in the caller's own file (in the module, or in the body of the function around it), and it is this definition
+PASSA  EN setup_mock (escopo: def do próprio arquivo, em teste): relation calls  -> calls
+PASSA  EN setup_mock (escopo: def do próprio arquivo, em teste): nenhuma chave crua nem código sem texto  -> SignalCaptchaTestCase.test_it_works → setup_mock
+Close
+calls: setup_mock
+hc/integrations/signal/tests/test_signal_captcha.py:66
+followed by the scope: the called name is defined in the caller's own file (in the module, or in the body of the function around it), and it is this definition
+      [en-scope-hc_integrations_signal_tests_test_signal_captcha_py_66.png] SignalCaptchaTestCase.test_it_works → setup_mock ⏎ Close ⏎ calls: setup_mock ⏎ hc/integrations/signal/tests/test_signal_captcha.py:66 ⏎ followed by the scope: the called name is defined in the caller's own file (in the module, or in the body of the function around it), and it is this definition
+PASSA  EN notify (import do arquivo, acima do teto, em teste): o detalhe diz "seguida"/"followed"  -> SendAlertsTestCase.test_it_sets_next_nag_date → notify
+Close
+calls: notify
+hc/api/tests/test_sendalerts.py:116
+followed by the file's import: the receiver is a module of the project and only this function of it has the name, or the called name comes from an import (from p import f, use a::f, use a::*) and is this declaration
+PASSA  EN notify (import do arquivo, acima do teto, em teste): linha cheia (seguida), não tracejada
+PASSA  EN notify (import do arquivo, acima do teto, em teste): /api/calls dá import → /^notify$/  -> {"resolution":"import","to":"notify","basis":"import","candidate_edge":null,"candidates":33}
+PASSA  EN notify (import do arquivo, acima do teto, em teste): basis import, candidate_edge null  -> import null
+PASSA  EN notify (import do arquivo, acima do teto, em teste): o detalhe da linha diz o texto da resolução  -> followed by the file's import: the receiver is a module of the project and only this function of it has the name, or the called name comes from an import (from p import f, use a::f, use a::*) and is this declaration || SendAlertsTestCase.test_it_sets_next_nag_date → notify
+Close
+calls: notify
+hc/api/tests/test_sendalerts.py:116
+followed by the file's import: the receiver is a module of the project and only this function of it has the name, or the called name comes from an import (from p import f, use a::f, use a::*) and is this declaration
+PASSA  EN notify (import do arquivo, acima do teto, em teste): relation calls  -> calls
+PASSA  EN notify (import do arquivo, acima do teto, em teste): nenhuma chave crua nem código sem texto  -> SendAlertsTestCase.test_it_sets_next_nag_date → notify
+Close
+calls: notify
+hc/api/tests/test_sendalerts.py:116
+followed by the file's import: the receiver is a module of the project and only this function of it has the name, or the called name comes from an import (from p import f, use a::f, use a::*) and is this declaration
+      [en-import-hc_api_tests_test_sendalerts_py_116.png] SendAlertsTestCase.test_it_sets_next_nag_date → notify ⏎ Close ⏎ calls: notify ⏎ hc/api/tests/test_sendalerts.py:116 ⏎ followed by the file's import: the receiver is a module of the project and only this function of it has the name, or the called name comes from an import (from p import f, use a::f, use a::*) and is this declaration
+PASSA  EN create_check → _lookup (unique confirmado pelo escopo; sem mudança): o detalhe diz "seguida"/"followed"  -> create_check → _lookup
+Close
+calls: _lookup
+hc/api/views.py:463
+followed: among the declarations the call's form reaches, the name matches only this one
+PASSA  EN create_check → _lookup (unique confirmado pelo escopo; sem mudança): linha cheia (seguida), não tracejada
+PASSA  EN create_check → _lookup (unique confirmado pelo escopo; sem mudança): /api/calls dá unique → /^_lookup$/  -> {"resolution":"unique","to":"_lookup","basis":"graph_edge","candidate_edge":"edge:345734be35a5ffe01d8f2973e5721e4d56e4ff3233a233b1770735b02691219c","candidates":1}
+PASSA  EN create_check → _lookup (unique confirmado pelo escopo; sem mudança): basis graph_edge, candidate_edge presente  -> graph_edge edge:345734be35a5ffe01d8f2973e5721e4d56e4ff3233a233b1770735b02691219c
+PASSA  EN create_check → _lookup (unique confirmado pelo escopo; sem mudança): o detalhe da linha diz o texto da resolução  -> followed: among the declarations the call's form reaches, the name matches only this one || create_check → _lookup
+Close
+calls: _lookup
+hc/api/views.py:463
+followed: among the declarations the call's form reaches, the name matches only this one
+PASSA  EN create_check → _lookup (unique confirmado pelo escopo; sem mudança): relation calls  -> calls
+PASSA  EN create_check → _lookup (unique confirmado pelo escopo; sem mudança): nenhuma chave crua nem código sem texto  -> create_check → _lookup
+Close
+calls: _lookup
+hc/api/views.py:463
+followed: among the declarations the call's form reaches, the name matches only this one
+      [en-unique-hc_api_views_py_463.png] create_check → _lookup ⏎ Close ⏎ calls: _lookup ⏎ hc/api/views.py:463 ⏎ followed: among the declarations the call's form reaches, the name matches only this one
+PASSA  EN create_default_world (Rust: escopo, função do próprio mod tests): o detalhe diz "seguida"/"followed"  -> tests_world::the_default_world → tests_world::create_default_world
+Close
+calls: create_default_world
+src/world.rs:192
+followed by the scope: the called name is defined in the caller's own file (in the module, or in the body of the function around it), and it is this definition
+PASSA  EN create_default_world (Rust: escopo, função do próprio mod tests): linha cheia (seguida), não tracejada
+PASSA  EN create_default_world (Rust: escopo, função do próprio mod tests): /api/calls dá scope → /^tests_world::create_default_world$/  -> {"resolution":"scope","to":"tests_world::create_default_world","basis":"scope","candidate_edge":"edge:7b80e2a62d03e47c976447eddb92addf3579198944127209b4824bd7083b6901","candidates":2}
+PASSA  EN create_default_world (Rust: escopo, função do próprio mod tests): basis scope, candidate_edge presente  -> scope edge:7b80e2a62d03e47c976447eddb92addf3579198944127209b4824bd7083b6901
+PASSA  EN create_default_world (Rust: escopo, função do próprio mod tests): o detalhe da linha diz o texto da resolução  -> followed by the scope: the called name is defined in the caller's own file (in the module, or in the body of the function around it), and it is this definition || tests_world::the_default_world → tests_world::create_default_world
+Close
+calls: create_default_world
+src/world.rs:192
+followed by the scope: the called name is defined in the caller's own file (in the module, or in the body of the function around it), and it is this definition
+PASSA  EN create_default_world (Rust: escopo, função do próprio mod tests): relation calls  -> calls
+PASSA  EN create_default_world (Rust: escopo, função do próprio mod tests): nenhuma chave crua nem código sem texto  -> tests_world::the_default_world → tests_world::create_default_world
+Close
+calls: create_default_world
+src/world.rs:192
+followed by the scope: the called name is defined in the caller's own file (in the module, or in the body of the function around it), and it is this definition
+      [en-scope-src_world_rs_192.png] tests_world::the_default_world → tests_world::create_default_world ⏎ Close ⏎ calls: create_default_world ⏎ src/world.rs:192 ⏎ followed by the scope: the called name is defined in the caller's own file (in the module, or in the body of the function around it), and it is this definition
+PASSA  EN: textos novos em inglês  -> by scope | Followed by the scope: the called name is defined in the caller's own file (in the module, or in the body of the function around it).
+PASSA  EN: nenhum erro de página
+PASSA  EN: nada além de abrir o projeto (POST /api/project = store.open) e /api/calls
+PASSA  tema escuro: o detalhe aparece com o texto do escopo  -> request → Response
+Fechar
+instancia: Response
+hc/lib/curl.py:206
+seguida pelo escopo: o nome chamado é definido no próprio arquivo de quem chama (no módulo, ou no corpo da função em volta), e é esta definição
+instancia: a chamada cria um objeto deste tipo, não chama a classe; o percurso segue no Response.__init__
+PASSA  tema escuro: tema aplicado (dark), texto rgb(143, 142, 134) sobre rgb(35, 35, 33)  -> {"color":"rgb(143, 142, 134)","bg":"rgb(35, 35, 33)","theme":"dark","overflow":false,"detailRight":1006,"width":1440}
+PASSA  tema escuro: nenhum erro de página
+PASSA  tema claro: o detalhe aparece com o texto do escopo  -> request → Response
+Fechar
+instancia: Response
+hc/lib/curl.py:206
+seguida pelo escopo: o nome chamado é definido no próprio arquivo de quem chama (no módulo, ou no corpo da função em volta), e é esta definição
+instancia: a chamada cria um objeto deste tipo, não chama a classe; o percurso segue no Response.__init__
+PASSA  tema claro: tema aplicado (light), texto rgb(122, 121, 116) sobre rgb(255, 255, 255)  -> {"color":"rgb(122, 121, 116)","bg":"rgb(255, 255, 255)","theme":"light","overflow":false,"detailRight":1006,"width":1440}
+PASSA  tema claro: nenhum erro de página
+PASSA  tela estreita (390 px): o detalhe aparece com o texto do escopo  -> request → Response
+Fechar
+instancia: Response
+hc/lib/curl.py:206
+seguida pelo escopo: o nome chamado é definido no próprio arquivo de quem chama (no módulo, ou no corpo da função em volta), e é esta definição
+instancia: a chamada cria um objeto deste tipo, não chama a classe; o percurso segue no Response.__init__
+PASSA  tela estreita (390 px): sem rolagem horizontal da página  -> {"color":"rgb(122, 121, 116)","bg":"rgb(255, 255, 255)","theme":"(sistema)","overflow":false,"detailRight":376,"width":390}
+PASSA  tela estreita (390 px): nenhum erro de página
+PASSA  .studio original igual antes e depois
+
+88 passam, 0 falham. Capturas em C:/Users/beatl/AppData/Local/Temp/claude/09139e964f85837f/49015604-0232-4f1c-abb7-c93a6f1adfdd/scratchpad/tela-24a

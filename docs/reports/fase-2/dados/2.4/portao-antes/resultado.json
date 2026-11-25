@@ -1,0 +1,3348 @@
+{
+ "binario": {
+  "pasta": "c:\\Users\\beatl\\Documents\\Projetos\\librarian\\target\\release",
+  "compilado": true,
+  "librarian_studio": "20d37730a45ba6b9324e17e284f0a1275e9c1020d6660bce288a6a55c8698818",
+  "librarian_ingest": "9e5028d69f7260211e47c3c4e6dabe5d5254de5801e847b1caab259e867f46cc"
+ },
+ "quando": "2026-11-20T18:59:29.376Z",
+ "projetos": {
+  "hc": {
+   "run_novo": "20261120-185930",
+   "grafo_novo_igual_ao_de_referencia": false,
+   "populacao": {
+    "total": 1956,
+    "por_resolution": {
+     "no_candidate_in_project": 1313,
+     "unique": 325,
+     "above_candidate_limit": 27,
+     "homonym": 206,
+     "type": 69,
+     "import": 16
+    },
+    "por_estrato": {
+     "no_candidate_in_project": 1313,
+     "unique->outro": 309,
+     "above_candidate_limit": 27,
+     "homonym": 206,
+     "type": 69,
+     "import": 16,
+     "unique->function": 16
+    },
+    "metodo_para_funcao": 30
+   },
+   "amostra_contagem": {
+    "sem_candidato": 39,
+    "correta": 53,
+    "link_falso": 1,
+    "candidatos_falsos": 14,
+    "ambigua": 5
+   },
+   "parte_c_contagem": {
+    "sem_candidato": 16,
+    "correta": 4
+   },
+   "estimativa_populacao": {
+    "correta": 364,
+    "link_falso": 31,
+    "candidatos_falsos": 132,
+    "ambigua": 0,
+    "sem_candidato": 1344
+   },
+   "amostra": [
+    {
+     "id": "HC-01",
+     "estrato": "no_candidate_in_project",
+     "parte_c": true,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-02",
+     "estrato": "unique->outro",
+     "parte_c": true,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → Profile.choose_next_report_date (hc/accounts/models.py:365)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-03",
+     "estrato": "unique->function",
+     "parte_c": true,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (revisada, 18/11)"
+    },
+    {
+     "id": "HC-04",
+     "estrato": "no_candidate_in_project",
+     "parte_c": true,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-05",
+     "estrato": "no_candidate_in_project",
+     "parte_c": true,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-06",
+     "estrato": "no_candidate_in_project",
+     "parte_c": true,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (revisada, 18/11)"
+    },
+    {
+     "id": "HC-07",
+     "estrato": "no_candidate_in_project",
+     "parte_c": true,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-08",
+     "estrato": "no_candidate_in_project",
+     "parte_c": true,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-09",
+     "estrato": "no_candidate_in_project",
+     "parte_c": true,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-10",
+     "estrato": "unique->function",
+     "parte_c": true,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-11",
+     "estrato": "no_candidate_in_project",
+     "parte_c": true,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-12",
+     "estrato": "no_candidate_in_project",
+     "parte_c": true,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-13",
+     "estrato": "no_candidate_in_project",
+     "parte_c": true,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-14",
+     "estrato": "unique->function",
+     "parte_c": true,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-15",
+     "estrato": "unique->outro",
+     "parte_c": true,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → Check.cloaked_url (hc/api/models.py:275)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-16",
+     "estrato": "no_candidate_in_project",
+     "parte_c": true,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-17",
+     "estrato": "unique->outro",
+     "parte_c": true,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → ProfileManager.for_user (hc/accounts/models.py:62)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-18",
+     "estrato": "unique->function",
+     "parte_c": true,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-19",
+     "estrato": "no_candidate_in_project",
+     "parte_c": true,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (revisada, 18/11)"
+    },
+    {
+     "id": "HC-20",
+     "estrato": "unique->outro",
+     "parte_c": true,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → TokenBucket.authorize_pushover (hc/api/models.py:1530)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-21",
+     "estrato": "no_candidate_in_project",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-22",
+     "estrato": "no_candidate_in_project",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-23",
+     "estrato": "unique->outro",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → ProjectManager.for_api_key (hc/accounts/models.py:404)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-24",
+     "estrato": "unique->outro",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → TokenBucket.authorize_login_email (hc/api/models.py:1481)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-25",
+     "estrato": "unique->outro",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → Notification.status_url (hc/api/models.py:1352)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-26",
+     "estrato": "unique->outro",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → Check.tags_list (hc/api/models.py:413)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-27",
+     "estrato": "unique->outro",
+     "parte_c": false,
+     "categoria": "link_falso",
+     "categoria_regra_anterior": "link_falso",
+     "resposta": "unique (1) → FakeCurl.getinfo (hc/lib/tests/test_curl.py:39)",
+     "validada": "usuário (revisada, 18/11)"
+    },
+    {
+     "id": "HC-28",
+     "estrato": "unique->outro",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → AddGitHubForm.get_labels (hc/integrations/github/forms.py:10)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-29",
+     "estrato": "unique->function",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-30",
+     "estrato": "unique->function",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (revisada, 18/11)"
+    },
+    {
+     "id": "HC-31",
+     "estrato": "unique->function",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-32",
+     "estrato": "unique->function",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (revisada, 18/11)"
+    },
+    {
+     "id": "HC-33",
+     "estrato": "unique->function",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-34",
+     "estrato": "unique->function",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-35",
+     "estrato": "unique->function",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-36",
+     "estrato": "unique->function",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-37",
+     "estrato": "homonym",
+     "parte_c": false,
+     "categoria": "candidatos_falsos",
+     "categoria_regra_anterior": "candidatos_falsos",
+     "resposta": "homonym (2)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-38",
+     "estrato": "homonym",
+     "parte_c": false,
+     "categoria": "candidatos_falsos",
+     "categoria_regra_anterior": "candidatos_falsos",
+     "resposta": "homonym (2)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-39",
+     "estrato": "homonym",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "import (1) → post (hc/lib/curl.py:224)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-40",
+     "estrato": "homonym",
+     "parte_c": false,
+     "categoria": "candidatos_falsos",
+     "categoria_regra_anterior": "candidatos_falsos",
+     "resposta": "homonym (7)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-41",
+     "estrato": "homonym",
+     "parte_c": false,
+     "categoria": "candidatos_falsos",
+     "categoria_regra_anterior": "candidatos_falsos",
+     "resposta": "homonym (7)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-42",
+     "estrato": "homonym",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "import (1) → get (hc/lib/curl.py:210)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-43",
+     "estrato": "homonym",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-44",
+     "estrato": "homonym",
+     "parte_c": false,
+     "categoria": "candidatos_falsos",
+     "categoria_regra_anterior": "candidatos_falsos",
+     "resposta": "homonym (7)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-45",
+     "estrato": "homonym",
+     "parte_c": false,
+     "categoria": "candidatos_falsos",
+     "categoria_regra_anterior": "candidatos_falsos",
+     "resposta": "homonym (7)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-46",
+     "estrato": "homonym",
+     "parte_c": false,
+     "categoria": "candidatos_falsos",
+     "categoria_regra_anterior": "candidatos_falsos",
+     "resposta": "homonym (7)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-47",
+     "estrato": "homonym",
+     "parte_c": false,
+     "categoria": "candidatos_falsos",
+     "categoria_regra_anterior": "candidatos_falsos",
+     "resposta": "homonym (7)",
+     "validada": "usuário (revisada, 18/11)"
+    },
+    {
+     "id": "HC-48",
+     "estrato": "homonym",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "import (1) → get (hc/lib/curl.py:210)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-49",
+     "estrato": "homonym",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "import (1) → login (hc/lib/emails.py:88)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-50",
+     "estrato": "homonym",
+     "parte_c": false,
+     "categoria": "candidatos_falsos",
+     "categoria_regra_anterior": "candidatos_falsos",
+     "resposta": "homonym (7)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-51",
+     "estrato": "above_candidate_limit",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (29) → SlackFields.add (hc/integrations/slack/transport.py:21)",
+     "validada": "usuário (revisada, 18/11)"
+    },
+    {
+     "id": "HC-52",
+     "estrato": "above_candidate_limit",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (29) → GoogleChatFields.add (hc/integrations/googlechat/transport.py:14)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-53",
+     "estrato": "above_candidate_limit",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (29) → GoogleChatFields.add (hc/integrations/googlechat/transport.py:14)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-54",
+     "estrato": "above_candidate_limit",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (9) → WebhookForm.get_value (hc/integrations/webhook/forms.py:79)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-55",
+     "estrato": "above_candidate_limit",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (29) → GoogleChatFields.add (hc/integrations/googlechat/transport.py:14)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-56",
+     "estrato": "above_candidate_limit",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (29) → SlackFields.add (hc/integrations/slack/transport.py:21)",
+     "validada": "usuário (revisada, 18/11)"
+    },
+    {
+     "id": "HC-57",
+     "estrato": "receiver",
+     "parte_c": false,
+     "categoria": "candidatos_falsos",
+     "categoria_regra_anterior": "candidatos_falsos",
+     "resposta": "homonym (3)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-58",
+     "estrato": "receiver",
+     "parte_c": false,
+     "categoria": "ambigua",
+     "categoria_regra_anterior": "ambigua",
+     "resposta": "homonym (2)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-59",
+     "estrato": "receiver",
+     "parte_c": false,
+     "categoria": "ambigua",
+     "categoria_regra_anterior": "ambigua",
+     "resposta": "homonym (2)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-60",
+     "estrato": "receiver",
+     "parte_c": false,
+     "categoria": "candidatos_falsos",
+     "categoria_regra_anterior": "candidatos_falsos",
+     "resposta": "homonym (3)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "HC-61",
+     "estrato": "metodo_funcao",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "HC-62",
+     "estrato": "metodo_funcao",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "HC-63",
+     "estrato": "metodo_funcao",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "HC-64",
+     "estrato": "metodo_funcao",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "HC-65",
+     "estrato": "metodo_funcao",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "HC-66",
+     "estrato": "metodo_funcao",
+     "parte_c": false,
+     "categoria": "candidatos_falsos",
+     "categoria_regra_anterior": "candidatos_falsos",
+     "resposta": "homonym (1)",
+     "validada": "usuário (revisada, conferida no editor, 19/11)"
+    },
+    {
+     "id": "HC-67",
+     "estrato": "modulo_f",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → report (hc/lib/emails.py:112)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "HC-68",
+     "estrato": "modulo_f",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → join (hc/integrations/matrix/client.py:26)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "HC-69",
+     "estrato": "modulo_f",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "import (1) → request (hc/lib/curl.py:55)",
+     "validada": "usuário (revisada, conferida no editor, 19/11)"
+    },
+    {
+     "id": "HC-70",
+     "estrato": "modulo_f",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "import (1) → transfer_request (hc/lib/emails.py:92)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "HC-71",
+     "estrato": "modulo_f",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "import (1) → get (hc/lib/curl.py:210)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "HC-72",
+     "estrato": "espelho",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → send (hc/lib/emails.py:71)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "HC-73",
+     "estrato": "espelho",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "HC-74",
+     "estrato": "espelho",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → request (hc/lib/curl.py:55)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "HC-75",
+     "estrato": "espelho",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → send (hc/lib/emails.py:71)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "HC-76",
+     "estrato": "tipo_py",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (1) → Check.ping (hc/api/models.py:493)",
+     "validada": "usuário (20/11/2026, conferido no editor)"
+    },
+    {
+     "id": "HC-77",
+     "estrato": "tipo_py",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (29) → DowntimeRecorder.add (hc/api/models.py:184)",
+     "validada": "usuário (20/11/2026)"
+    },
+    {
+     "id": "HC-78",
+     "estrato": "tipo_py",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (2) → CreateHelper.verify (hc/lib/webauthn.py:46)",
+     "validada": "usuário (20/11/2026)"
+    },
+    {
+     "id": "HC-79",
+     "estrato": "tipo_py",
+     "parte_c": false,
+     "categoria": "ambigua",
+     "categoria_regra_anterior": "ambigua",
+     "resposta": "homonym (2)",
+     "validada": "usuário (Q6 da Parada 1 do 2.3, 19/11)"
+    },
+    {
+     "id": "HC-80",
+     "estrato": "tipo_py",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (4) → Check.to_dict (hc/api/models.py:439)",
+     "validada": "usuário (20/11/2026)"
+    },
+    {
+     "id": "HC-81",
+     "estrato": "tipo_py",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (17) → Command.handle (hc/logs/management/commands/sendlogs.py:17)",
+     "validada": "usuário (20/11/2026, conferido no editor)"
+    },
+    {
+     "id": "HC-82",
+     "estrato": "instancia",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → Flip (hc/api/models.py:1361) [instancia]",
+     "validada": "usuário (20/11/2026)"
+    },
+    {
+     "id": "HC-83",
+     "estrato": "instancia",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → WebhookForm (hc/integrations/webhook/forms.py:55) [instancia]",
+     "validada": "usuário (20/11/2026)"
+    },
+    {
+     "id": "HC-84",
+     "estrato": "instancia",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → TransportError (hc/api/transports.py:56) [instancia]",
+     "validada": "usuário (20/11/2026)"
+    },
+    {
+     "id": "HC-85",
+     "estrato": "instancia",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → Check (hc/api/models.py:192) [instancia]",
+     "validada": "usuário (20/11/2026)"
+    },
+    {
+     "id": "HC-86",
+     "estrato": "instancia",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → FakeCurl (hc/lib/tests/test_curl.py:13) [instancia]",
+     "validada": "usuário (20/11/2026)"
+    },
+    {
+     "id": "HC-87",
+     "estrato": "receiver_py_teto",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "receiver (9) → NotifySlackTestCase._setup_data (hc/integrations/slack/tests/test_notify.py:16)",
+     "validada": "usuário (20/11/2026)"
+    },
+    {
+     "id": "HC-88",
+     "estrato": "decorador",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → require_setting (hc/front/decorators.py:13) [decora]",
+     "validada": "usuário (20/11/2026)"
+    },
+    {
+     "id": "HC-89",
+     "estrato": "decorador",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → cors (hc/api/decorators.py:96) [decora]",
+     "validada": "usuário (20/11/2026; conferido no editor)"
+    },
+    {
+     "id": "HC-90",
+     "estrato": "decorador",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → require_setting (hc/front/decorators.py:13) [decora]",
+     "validada": "usuário (20/11/2026)"
+    },
+    {
+     "id": "HC-91",
+     "estrato": "decorador",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (20/11/2026)"
+    },
+    {
+     "id": "HC-92",
+     "estrato": "decorador",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (20/11/2026)"
+    },
+    {
+     "id": "HC-93",
+     "estrato": "decorador",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (20/11/2026)"
+    },
+    {
+     "id": "HC-94",
+     "estrato": "campo_init",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → NullSink (hc/api/tests/test_smtpd.py:42) [instancia]",
+     "validada": "usuário (20/11/2026)"
+    },
+    {
+     "id": "HC-95",
+     "estrato": "campo_init",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (20/11/2026)"
+    },
+    {
+     "id": "HC-96",
+     "estrato": "campo_init",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (20/11/2026)"
+    },
+    {
+     "id": "HC-97",
+     "estrato": "campo_init",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (20/11/2026; conferido no editor)"
+    },
+    {
+     "id": "HC-98",
+     "estrato": "retorno_py",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (2) → Response.json (hc/lib/curl.py:37)",
+     "validada": "usuário (20/11/2026, na Parada 2)"
+    },
+    {
+     "id": "HC-99",
+     "estrato": "retorno_py",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (2) → Response.json (hc/lib/curl.py:37)",
+     "validada": "usuário (20/11/2026, na Parada 2)"
+    },
+    {
+     "id": "HC-100",
+     "estrato": "retorno_py",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (2) → Project.num_checks_available (hc/accounts/models.py:471)",
+     "validada": "usuário (20/11/2026, na Parada 2; conferido no editor)"
+    },
+    {
+     "id": "HC-101",
+     "estrato": "retorno_py",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (2) → Project.num_checks_available (hc/accounts/models.py:471)",
+     "validada": "usuário (20/11/2026, na Parada 2)"
+    },
+    {
+     "id": "HC-102",
+     "estrato": "campo_outro_arquivo",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (2) → Profile.projects (hc/accounts/models.py:203)",
+     "validada": "usuário (20/11/2026, na Parada 2)"
+    },
+    {
+     "id": "HC-103",
+     "estrato": "campo_outro_arquivo",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (2) → Profile.projects (hc/accounts/models.py:203)",
+     "validada": "usuário (20/11/2026, na Parada 2)"
+    },
+    {
+     "id": "HC-104",
+     "estrato": "campo_outro_arquivo",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (2) → Project.num_checks_available (hc/accounts/models.py:471)",
+     "validada": "usuário (20/11/2026, na Parada 2)"
+    },
+    {
+     "id": "HC-105",
+     "estrato": "retorno_confirma",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → Check.going_down_after (hc/api/models.py:339)",
+     "validada": "usuário (20/11/2026, na Parada 2)"
+    },
+    {
+     "id": "HC-106",
+     "estrato": "retorno_confirma",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → Ping.formatted_kind_created (hc/api/models.py:828)",
+     "validada": "usuário (20/11/2026, na Parada 2)"
+    },
+    {
+     "id": "HC-107",
+     "estrato": "retorno_confirma",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → Profile.send_instant_login_link (hc/accounts/models.py:144)",
+     "validada": "usuário (20/11/2026, na Parada 2)"
+    },
+    {
+     "id": "HC-108",
+     "estrato": "liga_nao_fecha",
+     "parte_c": false,
+     "categoria": "ambigua",
+     "categoria_regra_anterior": "ambigua",
+     "resposta": "homonym (1)",
+     "validada": "usuário (20/11/2026, na Parada 2)"
+    },
+    {
+     "id": "HC-109",
+     "estrato": "liga_nao_fecha",
+     "parte_c": false,
+     "categoria": "ambigua",
+     "categoria_regra_anterior": "ambigua",
+     "resposta": "homonym (1)",
+     "validada": "usuário (20/11/2026, na Parada 2)"
+    },
+    {
+     "id": "HC-110",
+     "estrato": "liga_nao_fecha",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (2) → Member.can_accept (hc/accounts/models.py:625)",
+     "validada": "usuário (20/11/2026, na Parada 2; conferido no editor)"
+    },
+    {
+     "id": "HC-111",
+     "estrato": "cadeia",
+     "parte_c": false,
+     "categoria": "candidatos_falsos",
+     "categoria_regra_anterior": "candidatos_falsos",
+     "resposta": "homonym (7)",
+     "validada": "usuário (20/11/2026, na Parada 2)"
+    },
+    {
+     "id": "HC-112",
+     "estrato": "cadeia",
+     "parte_c": false,
+     "categoria": "candidatos_falsos",
+     "categoria_regra_anterior": "candidatos_falsos",
+     "resposta": "homonym (7)",
+     "validada": "usuário (20/11/2026, na Parada 2)"
+    }
+   ],
+   "executores": [
+    {
+     "id": "HC-94",
+     "executor": "TestServer.__init__ (hc/api/tests/test_smtpd.py:48)",
+     "dono_no_grafo": "TestServer.stdout",
+     "mostra": true
+    },
+    {
+     "id": "HC-95",
+     "executor": "Command.__init__ (hc/api/management/commands/sendalerts.py:61)",
+     "dono_no_grafo": "Command.executor",
+     "mostra": true
+    },
+    {
+     "id": "HC-96",
+     "executor": "CreateHelper.__init__ (hc/lib/webauthn.py:18)",
+     "dono_no_grafo": "CreateHelper.server",
+     "mostra": true
+    },
+    {
+     "id": "HC-97",
+     "executor": "GetHelper.__init__ (hc/lib/webauthn.py:53)",
+     "dono_no_grafo": "GetHelper.credentials",
+     "mostra": true
+    }
+   ]
+  },
+  "rt": {
+   "run_novo": "20261120-190254",
+   "grafo_novo_igual_ao_de_referencia": false,
+   "populacao": {
+    "total": 515,
+    "por_resolution": {
+     "no_candidate_in_project": 323,
+     "type": 53,
+     "trait_default": 7,
+     "unique": 94,
+     "homonym": 35,
+     "above_candidate_limit": 3
+    },
+    "por_estrato": {
+     "no_candidate_in_project": 323,
+     "type": 53,
+     "trait_default": 7,
+     "unique->outro": 94,
+     "homonym": 35,
+     "above_candidate_limit": 3
+    },
+    "metodo_para_funcao": 0
+   },
+   "amostra_contagem": {
+    "correta": 41,
+    "sem_candidato": 15,
+    "ambigua": 10,
+    "candidatos_falsos": 1
+   },
+   "parte_c_contagem": {
+    "correta": 3,
+    "sem_candidato": 6,
+    "ambigua": 1
+   },
+   "estimativa_populacao": {
+    "correta": 161,
+    "link_falso": 0,
+    "candidatos_falsos": 0,
+    "ambigua": 31,
+    "sem_candidato": 323
+   },
+   "amostra": [
+    {
+     "id": "RT-01",
+     "estrato": "unique->outro",
+     "parte_c": true,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → impl Tuple::dot (src/tuple.rs:127)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "RT-02",
+     "estrato": "homonym",
+     "parte_c": true,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (7) → impl Incuse for Checkers::color_at (src/patterns.rs:255)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "RT-03",
+     "estrato": "no_candidate_in_project",
+     "parte_c": true,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "RT-04",
+     "estrato": "no_candidate_in_project",
+     "parte_c": true,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "RT-05",
+     "estrato": "unique->outro",
+     "parte_c": true,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → impl Tuple::is_vector (src/tuple.rs:25)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "RT-06",
+     "estrato": "no_candidate_in_project",
+     "parte_c": true,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "RT-07",
+     "estrato": "no_candidate_in_project",
+     "parte_c": true,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (revisada, 18/11)"
+    },
+    {
+     "id": "RT-08",
+     "estrato": "no_candidate_in_project",
+     "parte_c": true,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "RT-09",
+     "estrato": "no_candidate_in_project",
+     "parte_c": true,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "RT-10",
+     "estrato": "homonym",
+     "parte_c": true,
+     "categoria": "ambigua",
+     "categoria_regra_anterior": "ambigua",
+     "resposta": "homonym (8)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "RT-11",
+     "estrato": "no_candidate_in_project",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "RT-12",
+     "estrato": "unique->outro",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → impl Matrix<4>::inverse (src/matrix.rs:193)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "RT-13",
+     "estrato": "unique->outro",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → impl Bounds::add_point (src/bounds.rs:23)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "RT-14",
+     "estrato": "unique->outro",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → impl Bounds::transformed (src/bounds.rs:47)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "RT-15",
+     "estrato": "unique->function",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "RT-16",
+     "estrato": "unique->function",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "RT-17",
+     "estrato": "homonym",
+     "parte_c": false,
+     "categoria": "ambigua",
+     "categoria_regra_anterior": "ambigua",
+     "resposta": "homonym (8)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "RT-18",
+     "estrato": "homonym",
+     "parte_c": false,
+     "categoria": "ambigua",
+     "categoria_regra_anterior": "ambigua",
+     "resposta": "homonym (8)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "RT-19",
+     "estrato": "homonym",
+     "parte_c": false,
+     "categoria": "ambigua",
+     "categoria_regra_anterior": "ambigua",
+     "resposta": "homonym (8)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "RT-20",
+     "estrato": "homonym",
+     "parte_c": false,
+     "categoria": "ambigua",
+     "categoria_regra_anterior": "ambigua",
+     "resposta": "homonym (8)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "RT-21",
+     "estrato": "homonym",
+     "parte_c": false,
+     "categoria": "ambigua",
+     "categoria_regra_anterior": "ambigua",
+     "resposta": "homonym (2)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "RT-22",
+     "estrato": "above_candidate_limit",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (9) → impl Intersectable for Plane::set_transform (src/plane.rs:54)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "RT-23",
+     "estrato": "above_candidate_limit",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (9) → impl Intersectable for Sphere::set_transform (src/sphere.rs:68)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "RT-24",
+     "estrato": "above_candidate_limit",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (9) → impl Ray::set_transform (src/ray.rs:22)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "RT-25",
+     "estrato": "above_candidate_limit",
+     "parte_c": false,
+     "categoria": "ambigua",
+     "categoria_regra_anterior": "ambigua",
+     "resposta": "above_candidate_limit (9)",
+     "validada": "usuário (revisada, 18/11)"
+    },
+    {
+     "id": "RT-26",
+     "estrato": "receiver",
+     "parte_c": false,
+     "categoria": "ambigua",
+     "categoria_regra_anterior": "ambigua",
+     "resposta": "homonym (8)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "RT-27",
+     "estrato": "receiver",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (5) → impl CameraSpec::validate (src/scene.rs:12)",
+     "validada": "usuário (revisada, 18/11)"
+    },
+    {
+     "id": "RT-28",
+     "estrato": "receiver",
+     "parte_c": false,
+     "categoria": "candidatos_falsos",
+     "categoria_regra_anterior": "candidatos_falsos",
+     "resposta": "homonym (2)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "RT-29",
+     "estrato": "receiver",
+     "parte_c": false,
+     "categoria": "ambigua",
+     "categoria_regra_anterior": "ambigua",
+     "resposta": "homonym (8)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "RT-30",
+     "estrato": "receiver",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (5) → impl MaterialSpec::validate (src/scene.rs:66)",
+     "validada": "usuário (aceita por amostragem, 18/11)"
+    },
+    {
+     "id": "RT-31",
+     "estrato": "type",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (8) → impl Intersectable for Plane::set_material (src/plane.rs:50)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-32",
+     "estrato": "type",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (8) → impl Intersectable for Plane::set_material (src/plane.rs:50)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-33",
+     "estrato": "type",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (7) → impl Incuse for Checkers::set_pattern_transform (src/patterns.rs:251)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-34",
+     "estrato": "type",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (2) → impl Site::hit (src/count.rs:31)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-35",
+     "estrato": "type",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (2) → impl Groups::intersect (src/groups.rs:86)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-36",
+     "estrato": "type_caminho",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (22) → impl Ray::new (src/ray.rs:11)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-37",
+     "estrato": "type_caminho",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (22) → impl Ray::new (src/ray.rs:11)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-38",
+     "estrato": "type_caminho",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (14) → impl From<[[f64; D]; D]> for Matrix<D>::from (src/matrix.rs:12)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-39",
+     "estrato": "type_caminho",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (22) → impl Tuple::new (src/tuple.rs:13)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-40",
+     "estrato": "type_caminho",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (22) → impl Triangle::new (src/triangle.rs:24)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-41",
+     "estrato": "type_caminho",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (12) → impl Default for Sphere::default (src/sphere.rs:26)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-42",
+     "estrato": "type_fora",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (8) → impl Intersectable for Object::material (src/object.rs:113)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-43",
+     "estrato": "type_fora",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (9) → impl Intersectable for Sphere::set_transform (src/sphere.rs:68)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-44",
+     "estrato": "type_fora",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (7) → impl Incuse for Patterns::color_at (src/patterns.rs:333)",
+     "validada": "usuário (revisada, conferida no editor, 19/11)"
+    },
+    {
+     "id": "RT-45",
+     "estrato": "type_fora",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (2) → impl Transform for Tuple::view_transform (src/transformations.rs:9)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-46",
+     "estrato": "trait_default",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "trait_default (2) → Intersectable::intersect (src/object.rs:29)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-47",
+     "estrato": "trait_default",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "trait_default (2) → Intersectable::intersect (src/object.rs:29)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-48",
+     "estrato": "trait_default",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "trait_default (2) → Intersectable::intersect (src/object.rs:29)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-49",
+     "estrato": "trait_default",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "trait_default (2) → Incuse::color_at_object (src/patterns.rs:13)",
+     "validada": "usuário (revisada, conferida no editor, 19/11)"
+    },
+    {
+     "id": "RT-50",
+     "estrato": "trait_default",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "trait_default (2) → Intersectable::intersect (src/object.rs:29)",
+     "validada": "usuário (revisada, conferida no editor, 19/11)"
+    },
+    {
+     "id": "RT-51",
+     "estrato": "type_variavel",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (15) → impl Intersectable for Object::transform (src/object.rs:124)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-52",
+     "estrato": "type_variavel",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (9) → impl Ray::set_transform (src/ray.rs:22)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-53",
+     "estrato": "type_variavel",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (15) → impl Intersectable for Object::transform (src/object.rs:124)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-54",
+     "estrato": "type_variavel",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (9) → impl Intersectable for Plane::set_transform (src/plane.rs:54)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-55",
+     "estrato": "type_variavel",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "receiver (15) → impl Intersectable for Object::transform (src/object.rs:124)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-56",
+     "estrato": "tipo_derruba",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-57",
+     "estrato": "tipo_derruba",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-58",
+     "estrato": "tipo_derruba",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-59",
+     "estrato": "tipo_derruba",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-60",
+     "estrato": "tipo_derruba",
+     "parte_c": false,
+     "categoria": "ambigua",
+     "categoria_regra_anterior": "ambigua",
+     "resposta": "homonym (8)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-61",
+     "estrato": "espelho",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (revisada, 19/11)"
+    },
+    {
+     "id": "RT-62",
+     "estrato": "espelho",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "usuário (revisada, conferida no editor, 19/11)"
+    },
+    {
+     "id": "RT-63",
+     "estrato": "instancia",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → Sorteio (src/bin/cena_video.rs:25) [instancia]",
+     "validada": "usuário (20/11/2026, conferido no editor)"
+    },
+    {
+     "id": "RT-64",
+     "estrato": "instancia",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (2) → Object::Cone (src/object.rs:50) [instancia]",
+     "validada": "usuário (20/11/2026)"
+    },
+    {
+     "id": "RT-65",
+     "estrato": "instancia",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (2) → Patterns::Stripe (src/patterns.rs:26) [instancia]",
+     "validada": "usuário (20/11/2026)"
+    },
+    {
+     "id": "RT-66",
+     "estrato": "retorno_rs",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → impl Bounds::add_point (src/bounds.rs:23)",
+     "validada": "usuário (20/11/2026, na Parada 2)"
+    },
+    {
+     "id": "RT-67",
+     "estrato": "retorno_rs",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (7) → impl World::color_at (src/world.rs:109)",
+     "validada": "usuário (20/11/2026, na Parada 2; conferido no editor)"
+    }
+   ],
+   "executores": []
+  }
+ },
+ "editions": [
+  {
+   "projeto": "healthchecks-25597e41",
+   "run": "20261118-061046",
+   "ok": true,
+   "detalhe": "",
+   "grafo_novo_igual": false
+  },
+  {
+   "projeto": "renderer-9b78f3a9",
+   "run": "20261118-020654",
+   "ok": true,
+   "detalhe": "",
+   "grafo_novo_igual": false
+  }
+ ],
+ "fatos": [
+  {
+   "id": "F1",
+   "classificacao": "errado",
+   "chamadas": [
+    {
+     "linha": 277,
+     "texto": "Check.objects.get(",
+     "classificacao": "errado",
+     "resposta": "homonym (7)"
+    }
+   ]
+  },
+  {
+   "id": "F2",
+   "classificacao": "nao_depende",
+   "chamadas": [
+    {
+     "linha": 212,
+     "texto": "HttpResponseBadRequest",
+     "classificacao": "nao_depende",
+     "resposta": "no_candidate_in_project (0)"
+    }
+   ]
+  },
+  {
+   "id": "F3",
+   "classificacao": "nao_depende",
+   "chamadas": [
+    {
+     "linha": 272,
+     "texto": "slug.lower(",
+     "classificacao": "nao_depende",
+     "resposta": "no_candidate_in_project (0)"
+    },
+    {
+     "linha": 273,
+     "texto": "HttpResponseBadRequest",
+     "classificacao": "nao_depende",
+     "resposta": "no_candidate_in_project (0)"
+    }
+   ]
+  },
+  {
+   "id": "F4",
+   "classificacao": "nao_depende",
+   "chamadas": []
+  },
+  {
+   "id": "F5",
+   "classificacao": "nao_depende",
+   "chamadas": []
+  },
+  {
+   "id": "F6",
+   "classificacao": "correto",
+   "chamadas": [
+    {
+     "linha": 255,
+     "texto": "check.ping(",
+     "classificacao": "correto",
+     "resposta": "type (1)"
+    }
+   ]
+  },
+  {
+   "id": "F7",
+   "classificacao": "correto",
+   "chamadas": [
+    {
+     "linha": 300,
+     "texto": "ping",
+     "classificacao": "correto",
+     "resposta": "unique (1)"
+    }
+   ]
+  },
+  {
+   "id": "F8",
+   "classificacao": "correto",
+   "chamadas": [
+    {
+     "linha": 345,
+     "texto": "self.get_grace_start(",
+     "classificacao": "correto",
+     "resposta": "unique (1)"
+    }
+   ]
+  },
+  {
+   "id": "F9",
+   "classificacao": "correto",
+   "chamadas": [
+    {
+     "linha": 59,
+     "texto": "Project.objects.for_api_key(",
+     "classificacao": "correto",
+     "resposta": "unique (1)"
+    },
+    {
+     "linha": 61,
+     "texto": "error",
+     "classificacao": "correto",
+     "resposta": "unique (1)"
+    }
+   ]
+  },
+  {
+   "id": "F10",
+   "classificacao": "correto",
+   "chamadas": [
+    {
+     "linha": 65,
+     "texto": "_get_api_version",
+     "classificacao": "correto",
+     "resposta": "unique (1)"
+    }
+   ]
+  },
+  {
+   "id": "F11",
+   "classificacao": "nao_depende",
+   "chamadas": []
+  },
+  {
+   "id": "F12",
+   "classificacao": "nao_depende",
+   "chamadas": []
+  },
+  {
+   "id": "F13",
+   "classificacao": "correto",
+   "chamadas": [
+    {
+     "linha": 415,
+     "texto": "check.going_down_after(",
+     "classificacao": "correto",
+     "resposta": "unique (1)"
+    }
+   ]
+  },
+  {
+   "id": "F14",
+   "classificacao": "nao_depende",
+   "chamadas": [
+    {
+     "linha": 418,
+     "texto": "check.save(",
+     "classificacao": "nao_depende",
+     "resposta": "no_candidate_in_project (0)"
+    },
+    {
+     "linha": 422,
+     "texto": "check.save(",
+     "classificacao": "nao_depende",
+     "resposta": "no_candidate_in_project (0)"
+    }
+   ]
+  },
+  {
+   "id": "F15",
+   "classificacao": "nao_depende",
+   "chamadas": [
+    {
+     "linha": 135,
+     "texto": "Check.objects.filter(",
+     "classificacao": "nao_depende",
+     "resposta": "no_candidate_in_project (0), no_candidate_in_project (0)"
+    },
+    {
+     "linha": 137,
+     "texto": "q.order_by(",
+     "classificacao": "nao_depende",
+     "resposta": "no_candidate_in_project (0), no_candidate_in_project (0)"
+    }
+   ]
+  },
+  {
+   "id": "F16",
+   "classificacao": "correto",
+   "chamadas": [
+    {
+     "linha": 145,
+     "texto": "check.get_status(",
+     "classificacao": "correto",
+     "resposta": "unique (1)"
+    },
+    {
+     "linha": 155,
+     "texto": "check.going_down_after(",
+     "classificacao": "correto",
+     "resposta": "unique (1)"
+    }
+   ]
+  },
+  {
+   "id": "F17",
+   "classificacao": "correto",
+   "chamadas": [
+    {
+     "linha": 170,
+     "texto": "Flip",
+     "classificacao": "correto",
+     "resposta": "unique (1)"
+    },
+    {
+     "linha": 175,
+     "texto": "flip.save(",
+     "classificacao": "nao_depende",
+     "resposta": "no_candidate_in_project (0)"
+    }
+   ]
+  },
+  {
+   "id": "F18",
+   "classificacao": "nao_depende",
+   "chamadas": [
+    {
+     "linha": 105,
+     "texto": "Flip.objects.filter(",
+     "classificacao": "nao_depende",
+     "resposta": "no_candidate_in_project (0), no_candidate_in_project (0)"
+    }
+   ]
+  },
+  {
+   "id": "F19",
+   "classificacao": "nao_depende",
+   "chamadas": [
+    {
+     "linha": 112,
+     "texto": "q.update(",
+     "classificacao": "nao_depende",
+     "resposta": "no_candidate_in_project (0)"
+    }
+   ]
+  },
+  {
+   "id": "F20",
+   "classificacao": "nao_depende",
+   "chamadas": [
+    {
+     "linha": 119,
+     "texto": "self.executor.submit(",
+     "classificacao": "nao_depende",
+     "resposta": "no_candidate_in_project (0)"
+    }
+   ]
+  },
+  {
+   "id": "F21",
+   "classificacao": "correto",
+   "chamadas": [
+    {
+     "linha": 35,
+     "texto": "flip.select_channels(",
+     "classificacao": "correto",
+     "resposta": "unique (1)"
+    }
+   ]
+  },
+  {
+   "id": "F22",
+   "classificacao": "nao_depende",
+   "chamadas": [
+    {
+     "linha": 43,
+     "texto": "ch.notify(",
+     "classificacao": "nao_depende",
+     "resposta": "above_candidate_limit (33)"
+    }
+   ]
+  },
+  {
+   "id": "F23",
+   "classificacao": "nao_depende",
+   "chamadas": [
+    {
+     "linha": 1173,
+     "texto": "self.transport.notify(",
+     "classificacao": "nao_depende",
+     "resposta": "above_candidate_limit (33)"
+    }
+   ]
+  },
+  {
+   "id": "F24",
+   "classificacao": "nao_depende",
+   "chamadas": []
+  },
+  {
+   "id": "F25",
+   "classificacao": "nao_depende",
+   "chamadas": [
+    {
+     "linha": 1179,
+     "texto": "Notification.objects.filter(",
+     "classificacao": "nao_depende",
+     "resposta": "no_candidate_in_project (0), no_candidate_in_project (0)"
+    },
+    {
+     "linha": 1180,
+     "texto": "Channel.objects.filter(",
+     "classificacao": "nao_depende",
+     "resposta": "no_candidate_in_project (0), no_candidate_in_project (0)"
+    }
+   ]
+  },
+  {
+   "id": "F26",
+   "classificacao": "nao_depende",
+   "chamadas": [
+    {
+     "linha": 35,
+     "texto": "path",
+     "classificacao": "nao_depende",
+     "resposta": "no_candidate_in_project (0)"
+    }
+   ]
+  }
+ ],
+ "niveis": [
+  {
+   "id": "N0-py-livre",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "livre (pkg/models.py:63)",
+     "livre (pkg/outro.py:1)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "livre (pkg/models.py:63)",
+     "livre (pkg/outro.py:1)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "livre (pkg/models.py:63)",
+    "resolution": "import",
+    "passo": "2.4",
+    "por_que": "from pkg.models import livre; chamada simples, fora do escopo do 2.2 (receptor)"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "N0-py-unica",
+   "atual_registrado": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "unica (pkg/models.py:67)"
+    ]
+   },
+   "agora": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "unica (pkg/models.py:67)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "unica (pkg/models.py:67)",
+    "resolution": "unique",
+    "passo": "já correto"
+   },
+   "estado": "no alvo (já era)"
+  },
+  {
+   "id": "N1-py-construtor",
+   "atual_registrado": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Cliente (pkg/models.py:1)"
+    ]
+   },
+   "agora": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Cliente (pkg/models.py:1)"
+    ],
+    "relacao": "instantiates"
+   },
+   "alvo": {
+    "alvo": "Cliente (pkg/models.py:1)",
+    "relacao": "instancia",
+    "passo": "2.3",
+    "por_que": "construtor: relação \"instancia\", separada de \"chama\""
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N1-py",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 4,
+    "alvos": [
+     "Arquivo.salvar (pkg/models.py:20)",
+     "Cliente.salvar (pkg/models.py:5)",
+     "Fornecedor.salvar (pkg/models.py:10)",
+     "Repo.salvar (pkg/models.py:15)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 4,
+    "alvos": [
+     "Cliente.salvar (pkg/models.py:5)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Cliente.salvar (pkg/models.py:5)",
+    "resolution": "type",
+    "passo": "2.3",
+    "por_que": "A = Cliente(\"a\")"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N2-py",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 4,
+    "alvos": [
+     "Arquivo.salvar (pkg/models.py:20)",
+     "Cliente.salvar (pkg/models.py:5)",
+     "Fornecedor.salvar (pkg/models.py:10)",
+     "Repo.salvar (pkg/models.py:15)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 4,
+    "alvos": [
+     "Cliente.salvar (pkg/models.py:5)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Cliente.salvar (pkg/models.py:5)",
+    "resolution": "type",
+    "passo": "2.3",
+    "por_que": "a: Cliente"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N3-py",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 4,
+    "alvos": [
+     "Arquivo.salvar (pkg/models.py:20)",
+     "Cliente.salvar (pkg/models.py:5)",
+     "Fornecedor.salvar (pkg/models.py:10)",
+     "Repo.salvar (pkg/models.py:15)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 4,
+    "alvos": [
+     "Cliente.salvar (pkg/models.py:5)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Cliente.salvar (pkg/models.py:5)",
+    "resolution": "type",
+    "passo": "2.3",
+    "por_que": "fabrica() -> Cliente, em outro arquivo"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N4-py",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 4,
+    "alvos": [
+     "Arquivo.salvar (pkg/models.py:20)",
+     "Cliente.salvar (pkg/models.py:5)",
+     "Fornecedor.salvar (pkg/models.py:10)",
+     "Repo.salvar (pkg/models.py:15)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 4,
+    "alvos": [
+     "Repo.salvar (pkg/models.py:15)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Repo.salvar (pkg/models.py:15)",
+    "resolution": "type",
+    "passo": "2.3",
+    "por_que": "self.repo = Repo() no __init__"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N4-py-dono",
+   "atual_registrado": {
+    "resolution": "ocorrência não encontrada",
+    "candidates": 0,
+    "alvos": []
+   },
+   "agora": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Repo (pkg/models.py:14)"
+    ],
+    "relacao": "instantiates"
+   },
+   "alvo": {
+    "alvo": "Repo (pkg/models.py:14)",
+    "relacao": "instancia",
+    "passo": "2.3b",
+    "por_que": "self.repo = Repo() no __init__: escrita no campo Servico.repo, roda no __init__ (DEC-40); acrescentado no 2.3b, com o binário do 2.3a como atual"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N5-py",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Base.herdado (pkg/models.py:25)",
+     "Outro.herdado (pkg/models.py:35)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Base.herdado (pkg/models.py:25)",
+     "Outro.herdado (pkg/models.py:35)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Base.herdado (pkg/models.py:25)",
+    "resolution": "type",
+    "passo": "2.4",
+    "por_que": "f: Filho, e Filho(Base) herda herdado"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "N5-py-self",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Base.herdado (pkg/models.py:25)",
+     "Outro.herdado (pkg/models.py:35)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Base.herdado (pkg/models.py:25)",
+     "Outro.herdado (pkg/models.py:35)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Base.herdado (pkg/models.py:25)",
+    "resolution": "type",
+    "passo": "2.4",
+    "por_que": "self é Filho, que herda de Base"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "N6-py",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 5,
+    "alvos": [
+     "Canal.notify (pkg/models.py:40)",
+     "Email.notify (pkg/models.py:45)",
+     "Fila.notify (pkg/models.py:55)",
+     "Sms.notify (pkg/models.py:50)",
+     "notify (pkg/casos.py:42)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 4,
+    "alvos": [
+     "Canal.notify (pkg/models.py:40)",
+     "Email.notify (pkg/models.py:45)",
+     "Fila.notify (pkg/models.py:55)",
+     "Sms.notify (pkg/models.py:50)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Canal.notify (pkg/models.py:40)",
+    "resolution": "type",
+    "passo": "2.6",
+    "por_que": "canais: list[Canal]"
+   },
+   "estado": "mudou"
+  },
+  {
+   "id": "N7-py",
+   "atual_registrado": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": []
+   },
+   "agora": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": [],
+    "relacao": null
+   },
+   "alvo": {
+    "alvo": "notify (pkg/casos.py:42)",
+    "relacao": "passa_referencia",
+    "passo": "2.5",
+    "por_que": "notify é argumento de submit: passa a referência, nunca \"chama\""
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "N8-py-construtor",
+   "atual_registrado": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": []
+   },
+   "agora": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": [],
+    "relacao": null
+   },
+   "alvo": {
+    "alvo": "Cliente (pkg/models.py:1)",
+    "relacao": "instancia",
+    "passo": "2.4",
+    "por_que": "from pkg.models import Cliente as C"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "N8-py",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 4,
+    "alvos": [
+     "Arquivo.salvar (pkg/models.py:20)",
+     "Cliente.salvar (pkg/models.py:5)",
+     "Fornecedor.salvar (pkg/models.py:10)",
+     "Repo.salvar (pkg/models.py:15)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 4,
+    "alvos": [
+     "Arquivo.salvar (pkg/models.py:20)",
+     "Cliente.salvar (pkg/models.py:5)",
+     "Fornecedor.salvar (pkg/models.py:10)",
+     "Repo.salvar (pkg/models.py:15)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Cliente.salvar (pkg/models.py:5)",
+    "resolution": "type",
+    "passo": "2.4",
+    "por_que": "c = C(\"x\"), C é alias de Cliente"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "N0-rs-livre",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "livre (src/models.rs:78)",
+     "livre (src/outro.rs:1)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "livre (src/models.rs:78)",
+     "livre (src/outro.rs:1)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "livre (src/models.rs:78)",
+    "resolution": "import",
+    "passo": "2.4",
+    "por_que": "use crate::models::{livre, ...}; chamada simples, fora do escopo do 2.2 (receptor)"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "N0-rs-unica",
+   "atual_registrado": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "unica (src/models.rs:82)"
+    ]
+   },
+   "agora": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "unica (src/models.rs:82)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "unica (src/models.rs:82)",
+    "resolution": "unique",
+    "passo": "já correto"
+   },
+   "estado": "no alvo (já era)"
+  },
+  {
+   "id": "N1-rs-construtor",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 3,
+    "alvos": [
+     "impl Cliente::new (src/models.rs:6)",
+     "impl Fornecedor::new (src/models.rs:18)",
+     "impl Repo::new (src/models.rs:30)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 3,
+    "alvos": [
+     "impl Cliente::new (src/models.rs:6)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "impl Cliente::new (src/models.rs:6)",
+    "resolution": "type",
+    "passo": "2.1",
+    "por_que": "caminho Cliente::new; o inventário já resolve"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N1-rs",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 3,
+    "alvos": [
+     "impl Cliente::salvar (src/models.rs:10)",
+     "impl Fornecedor::salvar (src/models.rs:22)",
+     "impl Repo::salvar (src/models.rs:34)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 3,
+    "alvos": [
+     "impl Cliente::salvar (src/models.rs:10)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "impl Cliente::salvar (src/models.rs:10)",
+    "resolution": "type",
+    "passo": "2.1",
+    "por_que": "receiver_type a -> Cliente; o inventário já resolve"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N2-rs",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 3,
+    "alvos": [
+     "impl Cliente::salvar (src/models.rs:10)",
+     "impl Fornecedor::salvar (src/models.rs:22)",
+     "impl Repo::salvar (src/models.rs:34)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 3,
+    "alvos": [
+     "impl Cliente::salvar (src/models.rs:10)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "impl Cliente::salvar (src/models.rs:10)",
+    "resolution": "type",
+    "passo": "2.1",
+    "por_que": "a: &Cliente; o inventário já resolve"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N3-rs",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 3,
+    "alvos": [
+     "impl Cliente::salvar (src/models.rs:10)",
+     "impl Fornecedor::salvar (src/models.rs:22)",
+     "impl Repo::salvar (src/models.rs:34)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 3,
+    "alvos": [
+     "impl Cliente::salvar (src/models.rs:10)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "impl Cliente::salvar (src/models.rs:10)",
+    "resolution": "type",
+    "passo": "2.3",
+    "por_que": "fabrica() -> Cliente em outro arquivo (N3 entre arquivos)"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N3b-rs",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 3,
+    "alvos": [
+     "impl Cliente::salvar (src/models.rs:10)",
+     "impl Fornecedor::salvar (src/models.rs:22)",
+     "impl Repo::salvar (src/models.rs:34)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 3,
+    "alvos": [
+     "impl Cliente::salvar (src/models.rs:10)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "impl Cliente::salvar (src/models.rs:10)",
+    "resolution": "type",
+    "passo": "2.1",
+    "por_que": "fabrica_local() -> Cliente no mesmo arquivo; o inventário já resolve"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N4-rs",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 3,
+    "alvos": [
+     "impl Cliente::salvar (src/models.rs:10)",
+     "impl Fornecedor::salvar (src/models.rs:22)",
+     "impl Repo::salvar (src/models.rs:34)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 3,
+    "alvos": [
+     "impl Repo::salvar (src/models.rs:34)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "impl Repo::salvar (src/models.rs:34)",
+    "resolution": "type",
+    "passo": "2.1",
+    "por_que": "campo repo: Repo; o inventário já resolve"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N5-rs",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 4,
+    "alvos": [
+     "Notifica::notify (src/models.rs:40)",
+     "impl Fila::notify (src/models.rs:65)",
+     "impl Notifica for Email::notify (src/models.rs:51)",
+     "impl Notifica for Sms::notify (src/models.rs:57)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 4,
+    "alvos": [
+     "impl Notifica for Email::notify (src/models.rs:51)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "impl Notifica for Email::notify (src/models.rs:51)",
+    "resolution": "type",
+    "passo": "2.1",
+    "por_que": "e: &Email; o inventário já resolve"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N5-rs-padrao",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Notifica::padrao (src/models.rs:42)",
+     "impl Fila::padrao (src/models.rs:69)"
+    ]
+   },
+   "agora": {
+    "resolution": "trait_default",
+    "candidates": 2,
+    "alvos": [
+     "Notifica::padrao (src/models.rs:42)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Notifica::padrao (src/models.rs:42)",
+    "resolution": "trait_default",
+    "passo": "2.1",
+    "por_que": "Email não define padrao; vale o padrão do trait; o inventário já resolve"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N6-rs",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 4,
+    "alvos": [
+     "Notifica::notify (src/models.rs:40)",
+     "impl Fila::notify (src/models.rs:65)",
+     "impl Notifica for Email::notify (src/models.rs:51)",
+     "impl Notifica for Sms::notify (src/models.rs:57)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 4,
+    "alvos": [
+     "Notifica::notify (src/models.rs:40)",
+     "impl Fila::notify (src/models.rs:65)",
+     "impl Notifica for Email::notify (src/models.rs:51)",
+     "impl Notifica for Sms::notify (src/models.rs:57)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "impl Notifica for Email::notify (src/models.rs:51)",
+    "resolution": "type",
+    "passo": "2.6",
+    "por_que": "canais: &[Email]"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "N6b-rs",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 4,
+    "alvos": [
+     "Notifica::notify (src/models.rs:40)",
+     "impl Fila::notify (src/models.rs:65)",
+     "impl Notifica for Email::notify (src/models.rs:51)",
+     "impl Notifica for Sms::notify (src/models.rs:57)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 4,
+    "alvos": [
+     "Notifica::notify (src/models.rs:40)",
+     "impl Fila::notify (src/models.rs:65)",
+     "impl Notifica for Email::notify (src/models.rs:51)",
+     "impl Notifica for Sms::notify (src/models.rs:57)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Notifica::notify (src/models.rs:40)",
+    "resolution": "type",
+    "passo": "2.6",
+    "por_que": "canais: &[Box<dyn Notifica>]: despacho dinâmico pelo trait; Fila não implementa Notifica e deve sair"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "N7-rs",
+   "atual_registrado": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": []
+   },
+   "agora": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": [],
+    "relacao": null
+   },
+   "alvo": {
+    "alvo": "notify_one (src/casos.rs:62)",
+    "relacao": "passa_referencia",
+    "passo": "2.5",
+    "por_que": "notify_one é argumento de map: passa a referência, nunca \"chama\""
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "N8-rs-construtor",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 3,
+    "alvos": [
+     "impl Cliente::new (src/models.rs:6)",
+     "impl Fornecedor::new (src/models.rs:18)",
+     "impl Repo::new (src/models.rs:30)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 3,
+    "alvos": [
+     "impl Cliente::new (src/models.rs:6)",
+     "impl Fornecedor::new (src/models.rs:18)",
+     "impl Repo::new (src/models.rs:30)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "impl Cliente::new (src/models.rs:6)",
+    "resolution": "type",
+    "passo": "2.4",
+    "por_que": "use crate::models::Cliente as C"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "N8-rs",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 3,
+    "alvos": [
+     "impl Cliente::salvar (src/models.rs:10)",
+     "impl Fornecedor::salvar (src/models.rs:22)",
+     "impl Repo::salvar (src/models.rs:34)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 3,
+    "alvos": [
+     "impl Cliente::salvar (src/models.rs:10)",
+     "impl Fornecedor::salvar (src/models.rs:22)",
+     "impl Repo::salvar (src/models.rs:34)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "impl Cliente::salvar (src/models.rs:10)",
+    "resolution": "type",
+    "passo": "2.4",
+    "por_que": "c = C::new(\"x\"), C é alias de Cliente"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "N3c-py-mesmo",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Nota.fechar (pkg/retorno.py:18)",
+     "Pedido.fechar (pkg/retorno.py:7)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 2,
+    "alvos": [
+     "Pedido.fechar (pkg/retorno.py:7)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Pedido.fechar (pkg/retorno.py:7)",
+    "resolution": "type",
+    "passo": "2.3c",
+    "por_que": "novo_pedido() -> Pedido, no mesmo arquivo; acrescentado no 2.3c, com o binário do 2.3b como atual"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N3c-py-metodo",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Nota.fechar (pkg/retorno.py:18)",
+     "Pedido.fechar (pkg/retorno.py:7)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 2,
+    "alvos": [
+     "Pedido.fechar (pkg/retorno.py:7)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Pedido.fechar (pkg/retorno.py:7)",
+    "resolution": "type",
+    "passo": "2.3c",
+    "por_que": "p = fab.pedido(), Fabrica.pedido -> Pedido; acrescentado no 2.3c, com o binário do 2.3b como atual"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N3c-py-opcional",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Nota.fechar (pkg/retorno.py:18)",
+     "Pedido.fechar (pkg/retorno.py:7)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 2,
+    "alvos": [
+     "Pedido.fechar (pkg/retorno.py:7)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Pedido.fechar (pkg/retorno.py:7)",
+    "resolution": "type",
+    "passo": "2.3c",
+    "por_que": "opcional() -> Pedido | None; acrescentado no 2.3c, com o binário do 2.3b como atual"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N3c-py-campo",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Nota.fechar (pkg/retorno.py:18)",
+     "Pedido.fechar (pkg/retorno.py:7)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 2,
+    "alvos": [
+     "Pedido.fechar (pkg/retorno.py:7)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Pedido.fechar (pkg/retorno.py:7)",
+    "resolution": "type",
+    "passo": "2.3c",
+    "por_que": "r: Requisicao, campo pedido: Pedido em pkg/requisicao.py; acrescentado no 2.3c, com o binário do 2.3b como atual"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N3c-py-fora",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Nota.fechar (pkg/retorno.py:18)",
+     "Pedido.fechar (pkg/retorno.py:7)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Nota.fechar (pkg/retorno.py:18)",
+     "Pedido.fechar (pkg/retorno.py:7)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.3c",
+    "por_que": "agora() -> datetime, de fora do projeto: não decide; acrescentado no 2.3c, com o binário do 2.3b como atual"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "N3c-py-generico",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Nota.fechar (pkg/retorno.py:18)",
+     "Pedido.fechar (pkg/retorno.py:7)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Nota.fechar (pkg/retorno.py:18)",
+     "Pedido.fechar (pkg/retorno.py:7)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.3c",
+    "por_que": "pedidos() -> list[Pedido]: genérico, 2.6; acrescentado no 2.3c, com o binário do 2.3b como atual"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "N3c-py-sem-anotacao",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Nota.fechar (pkg/retorno.py:18)",
+     "Pedido.fechar (pkg/retorno.py:7)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Nota.fechar (pkg/retorno.py:18)",
+     "Pedido.fechar (pkg/retorno.py:7)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.3c",
+    "por_que": "sem_anotacao() sem retorno anotado: o corpo não é lido; acrescentado no 2.3c, com o binário do 2.3b como atual"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "N3c-py-dois-alvos",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Nota.fechar (pkg/retorno.py:18)",
+     "Pedido.fechar (pkg/retorno.py:7)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Nota.fechar (pkg/retorno.py:18)",
+     "Pedido.fechar (pkg/retorno.py:7)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.3c",
+    "por_que": "duplo() em dois arquivos, -> Pedido e -> Nota: os candidatos discordam (caso d); acrescentado no 2.3c, com o binário do 2.3b como atual"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "N3c-py-cadeia",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Nota.fechar (pkg/retorno.py:18)",
+     "Pedido.fechar (pkg/retorno.py:7)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Nota.fechar (pkg/retorno.py:18)",
+     "Pedido.fechar (pkg/retorno.py:7)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.3c",
+    "por_que": "n = p.nota(), e p só tem tipo pelo retorno: um segundo nível não é seguido; acrescentado no 2.3c, com o binário do 2.3b como atual"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "N3c-py-laco",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Nota.fechar (pkg/retorno.py:18)",
+     "Pedido.fechar (pkg/retorno.py:7)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Nota.fechar (pkg/retorno.py:18)",
+     "Pedido.fechar (pkg/retorno.py:7)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.3c",
+    "por_que": "x = x.proximo(): a chamada que liga é resolvida sem o retorno, e a consulta termina; acrescentado no 2.3c, com o binário do 2.3b como atual"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "N3c-rs-outro",
+   "atual_registrado": {
+    "resolution": "type",
+    "candidates": 2,
+    "alvos": [
+     "impl Pedido::fechar (src/retorno.rs:25)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 2,
+    "alvos": [
+     "impl Nota::fechar (src/retorno.rs:37)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "impl Nota::fechar (src/retorno.rs:37)",
+    "resolution": "type",
+    "passo": "2.3c",
+    "por_que": "Pedido::nota_nova() -> Nota: o retorno, e não o T do caminho; acrescentado no 2.3c, com o binário do 2.3b como atual"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N3c-rs-option",
+   "atual_registrado": {
+    "resolution": "type",
+    "candidates": 2,
+    "alvos": [
+     "impl Pedido::take (src/retorno.rs:28)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "impl Nota::take (src/retorno.rs:40)",
+     "impl Pedido::take (src/retorno.rs:28)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.3c",
+    "por_que": "Pedido::talvez() -> Option<Self>: invólucro, não decide (roda Option::take); acrescentado no 2.3c, com o binário do 2.3b como atual"
+   },
+   "estado": "mudou"
+  },
+  {
+   "id": "N3c-rs-box",
+   "atual_registrado": {
+    "resolution": "type",
+    "candidates": 2,
+    "alvos": [
+     "impl Pedido::fechar (src/retorno.rs:25)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "impl Nota::fechar (src/retorno.rs:37)",
+     "impl Pedido::fechar (src/retorno.rs:25)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.3c",
+    "por_que": "Pedido::caixa() -> Box<Self>: invólucro, não decide (Q2; perda declarada); acrescentado no 2.3c, com o binário do 2.3b como atual"
+   },
+   "estado": "mudou"
+  },
+  {
+   "id": "N3c-rs-ref",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "impl Nota::fechar (src/retorno.rs:37)",
+     "impl Pedido::fechar (src/retorno.rs:25)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 2,
+    "alvos": [
+     "impl Pedido::fechar (src/retorno.rs:25)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "impl Pedido::fechar (src/retorno.rs:25)",
+    "resolution": "type",
+    "passo": "2.3c",
+    "por_que": "referencia(&p) -> &Pedido, em outro arquivo; acrescentado no 2.3c, com o binário do 2.3b como atual"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N3c-rs-fora",
+   "atual_registrado": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "impl Pedido::tamanho (src/retorno.rs:31)"
+    ]
+   },
+   "agora": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": [],
+    "relacao": null
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "no_candidate_in_project",
+    "passo": "2.3c",
+    "por_que": "Pedido::texto() -> String: tipo de fora, derruba o método inerente de Pedido; acrescentado no 2.3c, com o binário do 2.3b como atual"
+   },
+   "estado": "mudou"
+  },
+  {
+   "id": "N3c-rs-concordam",
+   "atual_registrado": {
+    "resolution": "type",
+    "candidates": 2,
+    "alvos": [
+     "impl Pedido::fechar (src/retorno.rs:25)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 2,
+    "alvos": [
+     "impl Pedido::fechar (src/retorno.rs:25)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "impl Pedido::fechar (src/retorno.rs:25)",
+    "resolution": "type",
+    "passo": "2.3c",
+    "por_que": "feito() em dois arquivos, ambos -> Pedido (caso b); acrescentado no 2.3c, com o binário do 2.3b como atual"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N3c-rs-discordam",
+   "atual_registrado": {
+    "resolution": "type",
+    "candidates": 2,
+    "alvos": [
+     "impl Pedido::fechar (src/retorno.rs:25)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "impl Nota::fechar (src/retorno.rs:37)",
+     "impl Pedido::fechar (src/retorno.rs:25)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "impl Pedido::fechar (src/retorno.rs:25)",
+    "resolution": "type",
+    "passo": "2.4",
+    "por_que": "misto() em dois arquivos, -> Pedido e -> Nota (caso d da DEC-41: sem tipo no 2.3c); o Rust chama o misto do próprio módulo, a chamada simples resolvida pelo escopo, como o N0-livre; acrescentado no 2.3c, com o binário do 2.3b como atual"
+   },
+   "estado": "mudou"
+  },
+  {
+   "id": "N3c-rs-q",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "impl Nota::fechar (src/retorno.rs:37)",
+     "impl Pedido::fechar (src/retorno.rs:25)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "impl Nota::fechar (src/retorno.rs:37)",
+     "impl Pedido::fechar (src/retorno.rs:25)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.3c",
+    "por_que": "let p = Pedido::tentar()?: nenhuma ligação é lida (limite declarado, Q2); acrescentado no 2.3c, com o binário do 2.3b como atual"
+   },
+   "estado": "igual ao atual"
+  }
+ ],
+ "studio_original": {
+  "antes": {
+   "healthchecks-25597e41": {
+    "files": 932,
+    "sha256": "61cd25c106887c553db891d24cee2e76f862891756cb35eed73f62ec0c5ca3d5"
+   },
+   "renderer-9b78f3a9": {
+    "files": 42,
+    "sha256": "612cdbf65e152ea2d3d8c82b86afd206b822c69ad81f9e852a5a9c33308f3ecc"
+   }
+  },
+  "depois": {
+   "healthchecks-25597e41": {
+    "files": 932,
+    "sha256": "61cd25c106887c553db891d24cee2e76f862891756cb35eed73f62ec0c5ca3d5"
+   },
+   "renderer-9b78f3a9": {
+    "files": 42,
+    "sha256": "612cdbf65e152ea2d3d8c82b86afd206b822c69ad81f9e852a5a9c33308f3ecc"
+   }
+  },
+  "inalterado": true
+ }
+}

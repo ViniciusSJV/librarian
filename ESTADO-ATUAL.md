@@ -16,11 +16,15 @@
 - **Passo 2.3c** (tipo pelo retorno anotado, no mesmo arquivo e entre arquivos; campo de classe de outro arquivo; retorno de `T::f` no Rust; sem perfil novo; DEC-41, vigente desde 20/11/2026, com o risco do caso b): Parada 1 aprovada em 20/11/2026 ([2.3c-parada-1.md](docs/reports/fase-2/2.3c-parada-1.md)), com a regra da Q1 em quatro casos: (a) a chamada que liga fecha com um alvo; (b) não fecha, mas todos os candidatos declaram o mesmo retorno; (c) não tem candidato no projeto: vale o que valia; (d) os candidatos discordam: sem tipo. Parada 2 validada em 20/11/2026 ([2.3c-parada-2.md](docs/reports/fase-2/2.3c-parada-2.md)). Commitado em 20/11/2026: `efb346a` (código, testes e interface), `4924ae9` (documentação) e, depois, linha de base, fixtures e folha. A verdade de HC-98 a HC-112, RT-66 e RT-67 foi validada pelo usuário na Parada 2 (HC-100, HC-110 e RT-67 conferidos no editor), e a linha de base foi trocada.
   - **Resultado:** portão APROVADO; 8 chamadas do Python passam de `homonym` a `type` (HC-110 pelo caso b), nenhuma no Rust; o grafo não muda. Linha de base: Python (112) 53/1/14/5/39, Rust (67) 41/0/1/10/15, fatos 16/9/0/1. CTX seção 28.
   - **O 2.3 está fechado** (fechamento no PLANO).
-- **Próximo passo: 2.4** (herança, N5; alias local, N8; a chamada simples resolvida pelo escopo, N0-livre, com a perda do caso d da DEC-41). Cada passo depende de autorização.
-- **Portão de cada passo da Fase 2:** `node tools/precisao/portao.js --studio .studio --base tools/precisao/linha-de-base.json` (cerca de 4 minutos). Reprova se `link_falso` subir ou as corretas caírem, em Python ou em Rust, se uma edition antiga mudar ou se o `.studio` original mudar. Exceção só com justificativa caso a caso e aprovação do usuário (DEC-34).
+- **Passo 2.4: em andamento.** Parada 1 aprovada em 20/11/2026 ([2.4-parada-1.md](docs/reports/fase-2/2.4-parada-1.md)), com a divisão em 2.4a (escopo da chamada simples e alias) e 2.4b (herança, com `cls.m()` e a `@property` de retorno anotado). CTX seção 29.
+  - **Antes do 2.4a, só ferramenta:** a trava do portão pelo hash das fontes compiladas (`crates/` sem os `.md`, `Cargo.toml`, `Cargo.lock`), porque o hash do `librarian_studio` muda a cada link no Windows e a cada commit (identidade embutida); e `scope` como resolução de alvo único no portão. As duas com prova: veredito igual sobre a linha de base.
+  - **2.4a** (DEC-42, proposta): Parada 2 em [2.4a-parada-2.md](docs/reports/fase-2/2.4a-parada-2.md), código e ferramenta commitados (`926416f` trava, `4ad8102` `scope` no portão, `fd388cd` código; depois, a documentação). Linha de base não trocada. Folha, ainda sem commit: [2.4-revisao-amostra.md](docs/reports/fase-2/2.4-revisao-amostra.md) (HC-113 a HC-123 e RT-68 a RT-70, verdade proposta pelo agente).
+  - **Ordem do resto da Fase 2 (proposta do usuário, a decidir depois do 2.4):** 2.4 → 2.5 → Fase 2B → 2.6.
+- **Próximo passo:** as pendências do 2.4a (em "Pendências abertas", Fase 2); depois, a Parada 1 do 2.4b. Cada passo depende de autorização.
+- **Portão de cada passo da Fase 2:** `node tools/precisao/portao.js --studio .studio --base tools/precisao/linha-de-base.json` (cerca de 4 minutos). Reprova se `link_falso` subir ou as corretas caírem, em Python ou em Rust, se uma edition antiga mudar ou se o `.studio` original mudar. Exceção só com justificativa caso a caso e aprovação do usuário (DEC-34). Desde o 2.4, o relatório registra o hash das fontes compiladas (a trava), e a medição da linha de base final usa `--fontes <hash da Parada 2>`.
 - **Feito no 1b:** P1 (`987d7a8`), G3 (`aae51d7`), Partes A–E do diagnóstico, a Q6 (run `20261118-205150`, avaliada em 18/11), a consolidação documental (`a8e4074`) e o relatório final. Relatórios em [docs/reports/piloto-1b/](docs/reports/piloto-1b/) (`0c4bcab`).
-- **Git:** `main`; a referência é `origin/main` (ver `git log`). Último marco: passo 2.3c (`efb346a` código, `4924ae9` documentação e o commit da linha de base, em 20/11/2026); antes, o passo 2.3b (`6b424a0`, `5a26630`, `944fd0a`, `f50b8f8`), o passo 2.3a (`5589912`, `04943c5`, `a11a582`), o passo 2.3a-0 (`8c689d4`, `1152875`), o passo 2.2 (`a34059c`, `950c4f4`), o passo 2.1 (`c316bf7` a `078fd0e`) e o passo 2.0 (`2b05b8c`, `aee6915`).
-- **Suíte:** `cargo test --workspace --locked`: 509 aprovados, 0 falhas, 2 ignorados (20/11, passo 2.3c; 12 testes novos em `tests/retorno_2_3c.rs`; conferido também numa worktree do commit `efb346a`).
+- **Git:** `main`; a referência é `origin/main` (ver `git log`). Último marco: código do passo 2.4a (`fd388cd`); antes, o passo 2.3c (`efb346a` código, `4924ae9` documentação e o commit da linha de base, em 20/11/2026); antes, o passo 2.3b (`6b424a0`, `5a26630`, `944fd0a`, `f50b8f8`), o passo 2.3a (`5589912`, `04943c5`, `a11a582`), o passo 2.3a-0 (`8c689d4`, `1152875`), o passo 2.2 (`a34059c`, `950c4f4`), o passo 2.1 (`c316bf7` a `078fd0e`) e o passo 2.0 (`2b05b8c`, `aee6915`).
+- **Suíte:** `cargo test --workspace --locked`: 521 aprovados, 0 falhas, 2 ignorados (24/11, worktree limpa do `fd388cd`). Antes: 509 aprovados, 0 falhas, 2 ignorados (20/11, passo 2.3c; 12 testes novos em `tests/retorno_2_3c.rs`; conferido também numa worktree do commit `efb346a`).
 - **Roadmap:** [PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md#roadmap). Nenhum agente nem orquestrador existe.
 
 ## Para onde vamos
@@ -63,6 +67,11 @@ Cite sempre com o prefixo. As tabelas de abreviações e de prefixos estão em [
 - Push feito em 18/11 e CI verde em `955537e`, inclusive no `d949f91`, o que fecha a pendência do CTX:883.
 
 **Fase 2**
+- **Pendente do 2.4a** (a `linha-de-base.json` continua a do 2.3c: Python 112, Rust 67):
+  - a validação, pelo usuário, da verdade de HC-113 a HC-123 e RT-68 a RT-70 (folha `docs/reports/fase-2/2.4-revisao-amostra.md`);
+  - a DEC-42, ainda proposta, com a pergunta sobre o alcance de `scope` (def aninhada e `fn` de bloco; Q3);
+  - a troca da linha de base, com a medição final usando `--fontes 2d3331157cf9e59069b3a3a616c9dbf93f064f01d1ac4bae2b4af76a06d1d90c`. Com ela vão as fixtures, os sintéticos, a folha, o IDS.md e o trecho do README sobre as fixtures, que seguem sem commit;
+  - a trava depende do fim de linha: num checkout limpo (`autocrlf=true`) o mesmo código dá `256f3f24…`. Até decidir a normalização, a medição final precisa ser feita nesta pasta.
 - **Linha de base do portão (binário do passo 2.3b; amostra validada, trocada em 20/11/2026):**
   - Python, 97 chamadas: 42 corretas, 1 `link_falso`, 12 `candidatos_falsos`, 3 ambíguas e 39 sem candidato.
   - Rust, 65 chamadas: 39 corretas, 0 `link_falso`, 1 `candidatos_falsos`, 10 ambíguas e 15 sem candidato.
@@ -99,7 +108,7 @@ Cite sempre com o prefixo. As tabelas de abreviações e de prefixos estão em [
 
 ## Links
 
-- [PLANO](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md): roadmap · [DECISOES](DECISOES.md) · [CTX](CONTEXTO-CONTINUIDADE.md): diário, última seção 28 · [Histórico](docs/historico/README.md)
+- [PLANO](PLANO-MULTILINGUAGEM-E-VISUALIZADOR.md): roadmap · [DECISOES](DECISOES.md) · [CTX](CONTEXTO-CONTINUIDADE.md): diário, última seção 29 · [Histórico](docs/historico/README.md)
 - Piloto 1: [PIL](docs/reports/PILOTO-1-HEALTHCHECKS.md) · Piloto 1b: [00 resumo](docs/reports/piloto-1b/00-resumo.md), [01 G3](docs/reports/piloto-1b/01-g3.md), [02 Partes A–C](docs/reports/piloto-1b/02-fechamento-g3-e-diagnostico.md), [03 inventário e Parte E](docs/reports/piloto-1b/03-inventario-e-auditoria.md), [04 Q6](docs/reports/piloto-1b/04-q6.md)
 - Direção: [ARQ](docs/ARQUITETURA-EVIDENCIAS-MULTIAGENTE.md) · Frontend: [ESP](docs/ESPECIFICACAO-FUNCIONAL-STUDIO.md), [EST](docs/ESTADO-IMPLEMENTACAO-STUDIO.md) · Manual: [STUDIO.md](STUDIO.md)
 - Componentes: [Ingest](crates/librarian-ingest/README.md) · [Evidence Builder](crates/librarian-evidence/README.md) · [LLM Engine](crates/librarian-llm-engine/CLAIMS.md) · [Graph Engine](crates/librarian-graph-engine/WORKFLOW-V0.1.md)
