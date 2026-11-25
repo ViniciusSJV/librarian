@@ -1,7 +1,7 @@
 {
  "projetos": {
   "hc": {
-   "run_novo": "20261125-093653",
+   "run_novo": "20261125-210527",
    "grafo_novo_igual_ao_de_referencia": false,
    "populacao": {
     "total": 1956,
@@ -1608,10 +1608,447 @@
      "dono_no_grafo": "GetHelper.credentials",
      "mostra": true
     }
-   ]
+   ],
+   "usos": {
+    "invariante": {
+     "simbolos": 4718,
+     "simbolos_com_calls": 565,
+     "links": 2156,
+     "usos_conferidos": 2156,
+     "excecoes": 0,
+     "exemplos": []
+    },
+    "amostra": [
+     {
+      "id": "UB-1",
+      "estrato": "escolhido",
+      "encontrado": true,
+      "simbolo": "Webhook.is_noop (hc/integrations/webhook/transport.py:63)",
+      "ligado_certo": 0,
+      "ligado_falso": [],
+      "possivel_certo": 1,
+      "possivel_falso": 0,
+      "so_possivel": [],
+      "so_lacuna": [
+       "hc/api/models.py:1409"
+      ],
+      "so_nome": 0,
+      "nao_aparece": [],
+      "contagens": {
+       "above_limit": 1,
+       "abstract_calls": 0,
+       "linked": 0,
+       "name": 0,
+       "possible_homonym": 0,
+       "possible_type": 1,
+       "ruled_out": 0
+      }
+     },
+     {
+      "id": "UB-2",
+      "estrato": "escolhido",
+      "encontrado": true,
+      "simbolo": "Discord.fix_asterisks (hc/integrations/discord/transport.py:25)",
+      "ligado_certo": 0,
+      "ligado_falso": [],
+      "possivel_certo": 1,
+      "possivel_falso": 0,
+      "so_possivel": [],
+      "so_lacuna": [],
+      "so_nome": 0,
+      "nao_aparece": [],
+      "contagens": {
+       "above_limit": 0,
+       "abstract_calls": 0,
+       "linked": 0,
+       "name": 0,
+       "possible_homonym": 0,
+       "possible_type": 1,
+       "ruled_out": 2
+      }
+     },
+     {
+      "id": "UB-3",
+      "estrato": "escolhido",
+      "encontrado": true,
+      "simbolo": "RocketChat.fix_asterisks (hc/integrations/rocketchat/transport.py:14)",
+      "ligado_certo": 1,
+      "ligado_falso": [],
+      "possivel_certo": 0,
+      "possivel_falso": 0,
+      "so_possivel": [],
+      "so_lacuna": [],
+      "so_nome": 0,
+      "nao_aparece": [],
+      "contagens": {
+       "above_limit": 0,
+       "abstract_calls": 0,
+       "linked": 1,
+       "name": 0,
+       "possible_homonym": 0,
+       "possible_type": 0,
+       "ruled_out": 2
+      }
+     },
+     {
+      "id": "UB-4",
+      "estrato": "escolhido",
+      "encontrado": true,
+      "simbolo": "TokenBucket.authorize (hc/api/models.py:1442)",
+      "ligado_certo": 13,
+      "ligado_falso": [],
+      "possivel_certo": 0,
+      "possivel_falso": 0,
+      "so_possivel": [],
+      "so_lacuna": [],
+      "so_nome": 0,
+      "nao_aparece": [],
+      "contagens": {
+       "above_limit": 0,
+       "abstract_calls": 0,
+       "linked": 13,
+       "name": 0,
+       "possible_homonym": 0,
+       "possible_type": 0,
+       "ruled_out": 0
+      }
+     },
+     {
+      "id": "UB-5",
+      "estrato": "escolhido",
+      "encontrado": true,
+      "simbolo": "authorize (hc/api/decorators.py:33)",
+      "ligado_certo": 0,
+      "ligado_falso": [],
+      "possivel_certo": 0,
+      "possivel_falso": 0,
+      "so_possivel": [],
+      "so_lacuna": [],
+      "so_nome": 8,
+      "nao_aparece": [],
+      "contagens": {
+       "above_limit": 0,
+       "abstract_calls": 0,
+       "linked": 0,
+       "name": 8,
+       "possible_homonym": 0,
+       "possible_type": 0,
+       "ruled_out": 13
+      }
+     },
+     {
+      "id": "UB-6",
+      "estrato": "escolhido",
+      "encontrado": true,
+      "simbolo": "Telegram.send (hc/integrations/telegram/transport.py:55)",
+      "ligado_certo": 3,
+      "ligado_falso": [],
+      "possivel_certo": 0,
+      "possivel_falso": 1,
+      "so_possivel": [],
+      "so_lacuna": [],
+      "so_nome": 0,
+      "nao_aparece": [],
+      "contagens": {
+       "above_limit": 0,
+       "abstract_calls": 0,
+       "linked": 3,
+       "name": 0,
+       "possible_homonym": 1,
+       "possible_type": 0,
+       "ruled_out": 16
+      }
+     },
+     {
+      "id": "UB-7",
+      "estrato": "escolhido",
+      "encontrado": true,
+      "simbolo": "Signal.send (hc/integrations/signal/transport.py:60)",
+      "ligado_certo": 2,
+      "ligado_falso": [],
+      "possivel_certo": 0,
+      "possivel_falso": 1,
+      "so_possivel": [],
+      "so_lacuna": [],
+      "so_nome": 0,
+      "nao_aparece": [],
+      "contagens": {
+       "above_limit": 0,
+       "abstract_calls": 0,
+       "linked": 2,
+       "name": 0,
+       "possible_homonym": 1,
+       "possible_type": 0,
+       "ruled_out": 17
+      }
+     },
+     {
+      "id": "UB-8",
+      "estrato": "escolhido",
+      "encontrado": true,
+      "simbolo": "Check.ping (hc/api/models.py:493)",
+      "ligado_certo": 1,
+      "ligado_falso": [],
+      "possivel_certo": 3,
+      "possivel_falso": 0,
+      "so_possivel": [
+       "hc/front/tests/test_ping_details.py:130",
+       "hc/front/tests/test_ping_details.py:133",
+       "hc/api/management/commands/smtpd.py:91"
+      ],
+      "so_lacuna": [],
+      "so_nome": 0,
+      "nao_aparece": [],
+      "contagens": {
+       "above_limit": 0,
+       "abstract_calls": 0,
+       "linked": 1,
+       "name": 0,
+       "possible_homonym": 3,
+       "possible_type": 0,
+       "ruled_out": 1
+      }
+     },
+     {
+      "id": "UB-9",
+      "estrato": "escolhido",
+      "encontrado": true,
+      "simbolo": "EmailThread.__init__ (hc/lib/emails.py:18)",
+      "ligado_certo": 4,
+      "ligado_falso": [],
+      "possivel_certo": 0,
+      "possivel_falso": 0,
+      "so_possivel": [],
+      "so_lacuna": [],
+      "so_nome": 0,
+      "nao_aparece": [],
+      "contagens": {
+       "above_limit": 0,
+       "abstract_calls": 0,
+       "linked": 4,
+       "name": 0,
+       "possible_homonym": 0,
+       "possible_type": 0,
+       "ruled_out": 0
+      }
+     },
+     {
+      "id": "UB-10",
+      "estrato": "escolhido",
+      "encontrado": true,
+      "simbolo": "Ping.get_body (hc/api/models.py:772)",
+      "ligado_certo": 0,
+      "ligado_falso": [
+       "hc/api/management/commands/smtpd.py:37",
+       "hc/api/management/commands/smtpd.py:41",
+       "hc/front/views.py:800",
+       "hc/front/views.py:805"
+      ],
+      "possivel_certo": 0,
+      "possivel_falso": 0,
+      "so_possivel": [],
+      "so_lacuna": [],
+      "so_nome": 0,
+      "nao_aparece": [],
+      "contagens": {
+       "above_limit": 0,
+       "abstract_calls": 0,
+       "linked": 4,
+       "name": 0,
+       "possible_homonym": 0,
+       "possible_type": 0,
+       "ruled_out": 0
+      }
+     },
+     {
+      "id": "UB-11",
+      "estrato": "escolhido",
+      "encontrado": true,
+      "simbolo": "cors (hc/api/decorators.py:96)",
+      "ligado_certo": 13,
+      "ligado_falso": [],
+      "possivel_certo": 0,
+      "possivel_falso": 0,
+      "so_possivel": [],
+      "so_lacuna": [],
+      "so_nome": 0,
+      "nao_aparece": [],
+      "contagens": {
+       "above_limit": 0,
+       "abstract_calls": 0,
+       "linked": 13,
+       "name": 0,
+       "possible_homonym": 0,
+       "possible_type": 0,
+       "ruled_out": 0
+      }
+     },
+     {
+      "id": "UB-12",
+      "estrato": "escolhido",
+      "encontrado": true,
+      "simbolo": "Slackalike.payload (hc/integrations/slack/transport.py:31)",
+      "ligado_certo": 4,
+      "ligado_falso": [],
+      "possivel_certo": 0,
+      "possivel_falso": 0,
+      "so_possivel": [],
+      "so_lacuna": [],
+      "so_nome": 0,
+      "nao_aparece": [],
+      "contagens": {
+       "above_limit": 0,
+       "abstract_calls": 0,
+       "linked": 4,
+       "name": 0,
+       "possible_homonym": 0,
+       "possible_type": 0,
+       "ruled_out": 2
+      }
+     },
+     {
+      "id": "UB-17",
+      "estrato": "sorteado",
+      "encontrado": true,
+      "simbolo": "Ping.get_body_size (hc/api/models.py:783)",
+      "ligado_certo": 1,
+      "ligado_falso": [],
+      "possivel_certo": 0,
+      "possivel_falso": 0,
+      "so_possivel": [],
+      "so_lacuna": [],
+      "so_nome": 0,
+      "nao_aparece": [],
+      "contagens": {
+       "above_limit": 0,
+       "abstract_calls": 0,
+       "linked": 1,
+       "name": 0,
+       "possible_homonym": 0,
+       "possible_type": 0,
+       "ruled_out": 0
+      }
+     },
+     {
+      "id": "UB-18",
+      "estrato": "sorteado",
+      "encontrado": true,
+      "simbolo": "Command.pause (hc/accounts/management/commands/sendinactivitynotices.py:40)",
+      "ligado_certo": 1,
+      "ligado_falso": [],
+      "possivel_certo": 0,
+      "possivel_falso": 0,
+      "so_possivel": [],
+      "so_lacuna": [],
+      "so_nome": 0,
+      "nao_aparece": [],
+      "contagens": {
+       "above_limit": 0,
+       "abstract_calls": 0,
+       "linked": 1,
+       "name": 0,
+       "possible_homonym": 0,
+       "possible_type": 0,
+       "ruled_out": 4
+      }
+     },
+     {
+      "id": "UB-19",
+      "estrato": "sorteado",
+      "encontrado": true,
+      "simbolo": "UnsubscribeTestCase (hc/integrations/email/tests/test_unsubscribe.py:12)",
+      "ligado_certo": 0,
+      "ligado_falso": [],
+      "possivel_certo": 0,
+      "possivel_falso": 0,
+      "so_possivel": [],
+      "so_lacuna": [],
+      "so_nome": 0,
+      "nao_aparece": [],
+      "contagens": {
+       "above_limit": 0,
+       "abstract_calls": 0,
+       "linked": 0,
+       "name": 11,
+       "possible_homonym": 0,
+       "possible_type": 0,
+       "ruled_out": 0
+      }
+     },
+     {
+      "id": "UB-20",
+      "estrato": "sorteado",
+      "encontrado": true,
+      "simbolo": "AddMattermostTestCase (hc/integrations/mattermost/tests/test_add.py:9)",
+      "ligado_certo": 0,
+      "ligado_falso": [],
+      "possivel_certo": 0,
+      "possivel_falso": 0,
+      "so_possivel": [],
+      "so_lacuna": [],
+      "so_nome": 0,
+      "nao_aparece": [],
+      "contagens": {
+       "above_limit": 0,
+       "abstract_calls": 0,
+       "linked": 0,
+       "name": 8,
+       "possible_homonym": 0,
+       "possible_type": 0,
+       "ruled_out": 0
+      }
+     },
+     {
+      "id": "UB-21",
+      "estrato": "sorteado",
+      "encontrado": true,
+      "simbolo": "Flip.new_status (hc/api/models.py:1366)",
+      "ligado_certo": 0,
+      "ligado_falso": [],
+      "possivel_certo": 0,
+      "possivel_falso": 0,
+      "so_possivel": [],
+      "so_lacuna": [],
+      "so_nome": 144,
+      "nao_aparece": [],
+      "contagens": {
+       "above_limit": 0,
+       "abstract_calls": 0,
+       "linked": 0,
+       "name": 144,
+       "possible_homonym": 0,
+       "possible_type": 0,
+       "ruled_out": 0
+      }
+     },
+     {
+      "id": "UB-22",
+      "estrato": "sorteado",
+      "encontrado": true,
+      "simbolo": "normalize_sms_values (hc/api/migrations/0078_sms_values.py:12)",
+      "ligado_certo": 0,
+      "ligado_falso": [],
+      "possivel_certo": 0,
+      "possivel_falso": 0,
+      "so_possivel": [],
+      "so_lacuna": [],
+      "so_nome": 1,
+      "nao_aparece": [],
+      "contagens": {
+       "above_limit": 0,
+       "abstract_calls": 0,
+       "linked": 0,
+       "name": 1,
+       "possible_homonym": 0,
+       "possible_type": 0,
+       "ruled_out": 0
+      }
+     }
+    ]
+   }
   },
   "rt": {
-   "run_novo": "20261125-094020",
+   "run_novo": "20261125-210849",
    "grafo_novo_igual_ao_de_referencia": false,
    "populacao": {
     "total": 515,
@@ -2283,7 +2720,268 @@
      "validada": "usuário (24/11/2026, folha da Parada 2 do 2.4a)"
     }
    ],
-   "executores": []
+   "executores": [],
+   "usos": {
+    "invariante": {
+     "simbolos": 819,
+     "simbolos_com_calls": 117,
+     "links": 868,
+     "usos_conferidos": 868,
+     "excecoes": 0,
+     "exemplos": []
+    },
+    "amostra": [
+     {
+      "id": "UB-13",
+      "estrato": "escolhido",
+      "encontrado": true,
+      "simbolo": "impl World::color_at (src/world.rs:109)",
+      "ligado_certo": 7,
+      "ligado_falso": [],
+      "possivel_certo": 0,
+      "possivel_falso": 1,
+      "so_possivel": [],
+      "so_lacuna": [],
+      "so_nome": 0,
+      "nao_aparece": [],
+      "contagens": {
+       "above_limit": 0,
+       "abstract_calls": 0,
+       "linked": 7,
+       "name": 0,
+       "possible_homonym": 1,
+       "possible_type": 0,
+       "ruled_out": 22
+      }
+     },
+     {
+      "id": "UB-14",
+      "estrato": "escolhido",
+      "encontrado": true,
+      "simbolo": "impl Groups::intersect (src/groups.rs:86)",
+      "ligado_certo": 2,
+      "ligado_falso": [],
+      "possivel_certo": 0,
+      "possivel_falso": 0,
+      "so_possivel": [],
+      "so_lacuna": [],
+      "so_nome": 0,
+      "nao_aparece": [],
+      "contagens": {
+       "above_limit": 0,
+       "abstract_calls": 0,
+       "linked": 2,
+       "name": 0,
+       "possible_homonym": 0,
+       "possible_type": 0,
+       "ruled_out": 34
+      }
+     },
+     {
+      "id": "UB-15",
+      "estrato": "escolhido",
+      "encontrado": true,
+      "simbolo": "impl Groups::len (src/groups.rs:60)",
+      "ligado_certo": 0,
+      "ligado_falso": [
+       "src/obj.rs:90",
+       "src/count.rs:133",
+       "src/count.rs:151",
+       "src/camera.rs:129"
+      ],
+      "possivel_certo": 0,
+      "possivel_falso": 0,
+      "so_possivel": [],
+      "so_lacuna": [],
+      "so_nome": 0,
+      "nao_aparece": [
+       "src/groups.rs:115",
+       "src/obj.rs:203"
+      ],
+      "contagens": {
+       "above_limit": 0,
+       "abstract_calls": 0,
+       "linked": 4,
+       "name": 0,
+       "possible_homonym": 0,
+       "possible_type": 0,
+       "ruled_out": 8
+      }
+     },
+     {
+      "id": "UB-16",
+      "estrato": "escolhido",
+      "encontrado": true,
+      "simbolo": "impl Camera::ray_from_pixel (src/camera.rs:81)",
+      "ligado_certo": 4,
+      "ligado_falso": [],
+      "possivel_certo": 0,
+      "possivel_falso": 0,
+      "so_possivel": [],
+      "so_lacuna": [],
+      "so_nome": 0,
+      "nao_aparece": [],
+      "contagens": {
+       "above_limit": 0,
+       "abstract_calls": 0,
+       "linked": 4,
+       "name": 0,
+       "possible_homonym": 0,
+       "possible_type": 0,
+       "ruled_out": 0
+      }
+     },
+     {
+      "id": "UB-23",
+      "estrato": "sorteado",
+      "encontrado": true,
+      "simbolo": "impl Sorteio::next (src/bin/cena_video.rs:29)",
+      "ligado_certo": 1,
+      "ligado_falso": [
+       "src/obj.rs:63",
+       "src/obj.rs:66",
+       "src/obj.rs:81",
+       "src/obj.rs:28",
+       "src/obj.rs:19",
+       "src/obj.rs:21",
+       "src/obj.rs:22",
+       "src/obj.rs:23",
+       "src/count.rs:133",
+       "src/count.rs:151"
+      ],
+      "possivel_certo": 0,
+      "possivel_falso": 0,
+      "so_possivel": [],
+      "so_lacuna": [],
+      "so_nome": 0,
+      "nao_aparece": [],
+      "contagens": {
+       "above_limit": 0,
+       "abstract_calls": 0,
+       "linked": 11,
+       "name": 0,
+       "possible_homonym": 0,
+       "possible_type": 0,
+       "ruled_out": 3
+      }
+     },
+     {
+      "id": "UB-24",
+      "estrato": "sorteado",
+      "encontrado": true,
+      "simbolo": "impl Tuple::new (src/tuple.rs:13)",
+      "ligado_certo": 19,
+      "ligado_falso": [],
+      "possivel_certo": 0,
+      "possivel_falso": 0,
+      "so_possivel": [],
+      "so_lacuna": [],
+      "so_nome": 0,
+      "nao_aparece": [],
+      "contagens": {
+       "above_limit": 0,
+       "abstract_calls": 0,
+       "linked": 19,
+       "name": 0,
+       "possible_homonym": 0,
+       "possible_type": 0,
+       "ruled_out": 0
+      }
+     },
+     {
+      "id": "UB-25",
+      "estrato": "sorteado",
+      "encontrado": true,
+      "simbolo": "impl Intersectable for Cube::material (src/cube.rs:85)",
+      "ligado_certo": 0,
+      "ligado_falso": [],
+      "possivel_certo": 0,
+      "possivel_falso": 8,
+      "so_possivel": [],
+      "so_lacuna": [],
+      "so_nome": 0,
+      "nao_aparece": [],
+      "contagens": {
+       "above_limit": 0,
+       "abstract_calls": 0,
+       "linked": 0,
+       "name": 0,
+       "possible_homonym": 8,
+       "possible_type": 0,
+       "ruled_out": 4
+      }
+     },
+     {
+      "id": "UB-26",
+      "estrato": "sorteado",
+      "encontrado": true,
+      "simbolo": "Site::calls (src/count.rs:19)",
+      "ligado_certo": 0,
+      "ligado_falso": [],
+      "possivel_certo": 0,
+      "possivel_falso": 0,
+      "so_possivel": [],
+      "so_lacuna": [],
+      "so_nome": 4,
+      "nao_aparece": [],
+      "contagens": {
+       "above_limit": 0,
+       "abstract_calls": 0,
+       "linked": 0,
+       "name": 4,
+       "possible_homonym": 0,
+       "possible_type": 0,
+       "ruled_out": 0
+      }
+     },
+     {
+      "id": "UB-27",
+      "estrato": "sorteado",
+      "encontrado": true,
+      "simbolo": "LinearGradient::color_a (src/patterns.rs:60)",
+      "ligado_certo": 0,
+      "ligado_falso": [],
+      "possivel_certo": 0,
+      "possivel_falso": 0,
+      "so_possivel": [],
+      "so_lacuna": [],
+      "so_nome": 5,
+      "nao_aparece": [],
+      "contagens": {
+       "above_limit": 0,
+       "abstract_calls": 0,
+       "linked": 0,
+       "name": 20,
+       "possible_homonym": 0,
+       "possible_type": 0,
+       "ruled_out": 0
+      }
+     },
+     {
+      "id": "UB-28",
+      "estrato": "sorteado",
+      "encontrado": true,
+      "simbolo": "impl Intersectable for Triangle::local_intersect (src/triangle.rs:38)",
+      "ligado_certo": 6,
+      "ligado_falso": [],
+      "possivel_certo": 1,
+      "possivel_falso": 0,
+      "so_possivel": [],
+      "so_lacuna": [],
+      "so_nome": 0,
+      "nao_aparece": [],
+      "contagens": {
+       "above_limit": 0,
+       "abstract_calls": 0,
+       "linked": 6,
+       "name": 0,
+       "possible_homonym": 1,
+       "possible_type": 0,
+       "ruled_out": 6
+      }
+     }
+    ]
+   }
   }
  },
  "editions": [

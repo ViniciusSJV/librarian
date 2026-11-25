@@ -1,0 +1,1081 @@
+{
+ "nota": "Amostra \"quem usa B\" (passo 2.4d). usos: rodam B; possiveis: podem rodar B; so_nome: o nome escrito que é de B. pares (PH): uma chamada e um dos seus candidatos por homônimo; pode_rodar diz se ela pode rodar B; o portão não os lê. Verdade validada pelo usuário em 25/11/2026 (DEC-22).",
+ "simbolos": [
+  {
+   "id": "UB-1",
+   "estrato": "escolhido",
+   "projeto": "hc",
+   "simbolo": "Webhook.is_noop (hc/integrations/webhook/transport.py:63)",
+   "verdade": {
+    "usos": [],
+    "possiveis": [
+     "hc/api/models.py:1153",
+     "hc/api/models.py:1409"
+    ]
+   },
+   "justificativa": "self.transport e ch.transport são um Transport de classe escolhida por TRANSPORTS; Webhook é uma delas",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d; conferido no editor)"
+  },
+  {
+   "id": "UB-2",
+   "estrato": "escolhido",
+   "projeto": "hc",
+   "simbolo": "Discord.fix_asterisks (hc/integrations/discord/transport.py:25)",
+   "verdade": {
+    "usos": [],
+    "possiveis": [
+     "hc/integrations/slack/transport.py:72"
+    ]
+   },
+   "justificativa": "Discord herda payload de Slackalike, que chama self.fix_asterisks",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "UB-3",
+   "estrato": "escolhido",
+   "projeto": "hc",
+   "simbolo": "RocketChat.fix_asterisks (hc/integrations/rocketchat/transport.py:14)",
+   "verdade": {
+    "usos": [
+     "hc/integrations/rocketchat/transport.py:43"
+    ]
+   },
+   "justificativa": "self.fix_asterisks no payload da própria classe; sem subclasse",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "UB-4",
+   "estrato": "escolhido",
+   "projeto": "hc",
+   "simbolo": "TokenBucket.authorize (hc/api/models.py:1442)",
+   "verdade": {
+    "usos": [
+     "hc/api/models.py:1479",
+     "hc/api/models.py:1493",
+     "hc/api/models.py:1500",
+     "hc/api/models.py:1508",
+     "hc/api/models.py:1513",
+     "hc/api/models.py:1521",
+     "hc/api/models.py:1528",
+     "hc/api/models.py:1536",
+     "hc/api/models.py:1544",
+     "hc/api/models.py:1551",
+     "hc/api/models.py:1559",
+     "hc/api/models.py:1568",
+     "hc/api/models.py:1587"
+    ]
+   },
+   "justificativa": "staticmethod chamado pelo nome da classe",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "UB-5",
+   "estrato": "escolhido",
+   "projeto": "hc",
+   "simbolo": "authorize (hc/api/decorators.py:33)",
+   "verdade": {
+    "usos": [],
+    "so_nome": [
+     "hc/api/views.py:455",
+     "hc/api/views.py:490",
+     "hc/api/views.py:516",
+     "hc/api/views.py:537",
+     "hc/api/views.py:563",
+     "hc/api/views.py:590",
+     "hc/api/views.py:612",
+     "hc/api/views.py:642"
+    ]
+   },
+   "justificativa": "@authorize sem parênteses não é chamada escrita (2.5)",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "UB-6",
+   "estrato": "escolhido",
+   "projeto": "hc",
+   "simbolo": "Telegram.send (hc/integrations/telegram/transport.py:55)",
+   "verdade": {
+    "usos": [
+     "hc/integrations/telegram/transport.py:87",
+     "hc/integrations/telegram/transport.py:91",
+     "hc/integrations/telegram/views.py:82"
+    ]
+   },
+   "justificativa": "emails.py:25 é EmailMultiAlternatives.send (Django)",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "UB-7",
+   "estrato": "escolhido",
+   "projeto": "hc",
+   "simbolo": "Signal.send (hc/integrations/signal/transport.py:60)",
+   "verdade": {
+    "usos": [
+     "hc/integrations/signal/transport.py:179",
+     "hc/integrations/signal/views.py:119"
+    ]
+   },
+   "justificativa": "idem",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "UB-8",
+   "estrato": "escolhido",
+   "projeto": "hc",
+   "simbolo": "Check.ping (hc/api/models.py:493)",
+   "verdade": {
+    "usos": [
+     "hc/api/views.py:255",
+     "hc/api/management/commands/smtpd.py:91",
+     "hc/front/tests/test_ping_details.py:130",
+     "hc/front/tests/test_ping_details.py:133"
+    ]
+   },
+   "justificativa": "check e self.check são Check",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d; conferido no editor)"
+  },
+  {
+   "id": "UB-9",
+   "estrato": "escolhido",
+   "projeto": "hc",
+   "simbolo": "EmailThread.__init__ (hc/lib/emails.py:18)",
+   "verdade": {
+    "usos": [
+     "hc/lib/emails.py:77",
+     "hc/lib/tests/test_emails.py:18",
+     "hc/lib/tests/test_emails.py:28",
+     "hc/lib/tests/test_emails.py:37"
+    ]
+   },
+   "justificativa": "EmailThread(..) roda o __init__",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "UB-10",
+   "estrato": "escolhido",
+   "projeto": "hc",
+   "simbolo": "Ping.get_body (hc/api/models.py:772)",
+   "verdade": {
+    "usos": []
+   },
+   "justificativa": "smtpd.py e front/views.py chamam get_body de email.message.EmailMessage",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "UB-11",
+   "estrato": "escolhido",
+   "projeto": "hc",
+   "simbolo": "cors (hc/api/decorators.py:96)",
+   "verdade": {
+    "usos": [
+     "hc/api/views.py:480",
+     "hc/api/views.py:488",
+     "hc/api/views.py:506",
+     "hc/api/views.py:550",
+     "hc/api/views.py:561",
+     "hc/api/views.py:588",
+     "hc/api/views.py:610",
+     "hc/api/views.py:640",
+     "hc/api/views.py:689",
+     "hc/api/views.py:697",
+     "hc/api/views.py:707",
+     "hc/api/views.py:745",
+     "hc/api/views.py:799"
+    ]
+   },
+   "justificativa": "@cors(..): decora",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "UB-12",
+   "estrato": "escolhido",
+   "projeto": "hc",
+   "simbolo": "Slackalike.payload (hc/integrations/slack/transport.py:31)",
+   "verdade": {
+    "usos": [
+     "hc/integrations/slack/transport.py:97",
+     "hc/integrations/slack/transport.py:126",
+     "hc/integrations/discord/transport.py:22",
+     "hc/integrations/mattermost/transport.py:15"
+    ]
+   },
+   "justificativa": "nenhuma subclasse sobrescreve payload",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "UB-13",
+   "estrato": "escolhido",
+   "projeto": "rt",
+   "simbolo": "impl World::color_at (src/world.rs:109)",
+   "verdade": {
+    "usos": [
+     "src/camera.rs:102",
+     "src/world.rs:70",
+     "src/world.rs:89",
+     "src/world.rs:249",
+     "src/world.rs:258",
+     "src/world.rs:282",
+     "src/world.rs:413"
+    ]
+   },
+   "justificativa": "patterns.rs:16 é de um Incuse, e World não implementa Incuse",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "UB-14",
+   "estrato": "escolhido",
+   "projeto": "rt",
+   "simbolo": "impl Groups::intersect (src/groups.rs:86)",
+   "verdade": {
+    "usos": [
+     "src/groups.rs:98",
+     "src/world.rs:40"
+    ]
+   },
+   "justificativa": "os dois são itens de Vec<Groups>",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "UB-15",
+   "estrato": "escolhido",
+   "projeto": "rt",
+   "simbolo": "impl Groups::len (src/groups.rs:60)",
+   "verdade": {
+    "usos": [
+     "src/groups.rs:115",
+     "src/obj.rs:203"
+    ]
+   },
+   "justificativa": "os dois estão em macro (assert_eq!, vec!), que o grafo não lê; os 4 ligados são de Vec e str",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "UB-16",
+   "estrato": "escolhido",
+   "projeto": "rt",
+   "simbolo": "impl Camera::ray_from_pixel (src/camera.rs:81)",
+   "verdade": {
+    "usos": [
+     "src/camera.rs:101",
+     "src/camera.rs:263",
+     "src/camera.rs:273",
+     "src/camera.rs:285"
+    ]
+   },
+   "justificativa": "self e c são Camera",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "UB-17",
+   "estrato": "sorteado",
+   "projeto": "hc",
+   "simbolo": "Ping.get_body_size (hc/api/models.py:783)",
+   "verdade": {
+    "usos": [
+     "hc/integrations/rocketchat/transport.py:49"
+    ]
+   },
+   "justificativa": "ping é Ping",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "UB-18",
+   "estrato": "sorteado",
+   "projeto": "hc",
+   "simbolo": "Command.pause (hc/accounts/management/commands/sendinactivitynotices.py:40)",
+   "verdade": {
+    "usos": [
+     "hc/accounts/management/commands/sendinactivitynotices.py:83"
+    ]
+   },
+   "justificativa": "self.pause do próprio comando; cada comando tem o seu",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "UB-19",
+   "estrato": "sorteado",
+   "projeto": "hc",
+   "simbolo": "UnsubscribeTestCase (hc/integrations/email/tests/test_unsubscribe.py:12)",
+   "verdade": {
+    "usos": []
+   },
+   "justificativa": "o executor de testes a instancia, fora do código; os 11 só por nome são o tipo do receptor self, não o nome",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "UB-20",
+   "estrato": "sorteado",
+   "projeto": "hc",
+   "simbolo": "AddMattermostTestCase (hc/integrations/mattermost/tests/test_add.py:9)",
+   "verdade": {
+    "usos": []
+   },
+   "justificativa": "idem (8)",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "UB-21",
+   "estrato": "sorteado",
+   "projeto": "hc",
+   "simbolo": "Flip.new_status (hc/api/models.py:1366)",
+   "verdade": {
+    "usos": [],
+    "so_nome": [
+     "hc/api/tests/test_check_model.py:281",
+     "hc/api/tests/test_check_model.py:314",
+     "hc/api/tests/test_check_model.py:364",
+     "hc/api/tests/test_check_model.py:391",
+     "hc/api/tests/test_check_model.py:408",
+     "hc/api/tests/test_check_model.py:259",
+     "hc/api/management/commands/sendalerts.py:40",
+     "hc/api/management/commands/sendalerts.py:173",
+     "hc/integrations/msteamsw/tests/test_notify.py:41",
+     "hc/integrations/spike/transport.py:19",
+     "hc/integrations/spike/transport.py:26",
+     "hc/integrations/slack/tests/test_notify.py:42",
+     "hc/integrations/slack/tests/test_notify.py:98",
+     "hc/integrations/pd/transport.py:39",
+     "hc/integrations/pd/transport.py:44",
+     "hc/integrations/mattermost/tests/test_notify.py:39",
+     "hc/integrations/telegram/transport.py:77",
+     "hc/integrations/whatsapp/tests/test_notify.py:49",
+     "hc/integrations/spike/tests/test_notify.py:39",
+     "hc/integrations/spike/tests/test_notify.py:81",
+     "hc/integrations/gotify/tests/test_notify.py:39",
+     "hc/integrations/gotify/tests/test_notify.py:77",
+     "hc/integrations/gotify/tests/test_notify.py:201",
+     "hc/integrations/gotify/tests/test_notify.py:237",
+     "hc/accounts/tests/test_profile_model.py:60",
+     "hc/api/tests/test_metrics.py:19",
+     "hc/api/tests/test_flip_model.py:38",
+     "hc/api/tests/test_flip_model.py:44",
+     "hc/api/tests/test_flip_model.py:75",
+     "hc/api/tests/test_flip_model.py:85",
+     "hc/api/tests/test_flip_model.py:91",
+     "hc/api/tests/test_flip_model.py:100",
+     "hc/api/tests/test_flip_model.py:22",
+     "hc/front/tests/test_details.py:147",
+     "hc/front/tests/test_details.py:154",
+     "hc/front/tests/test_details.py:176",
+     "hc/front/tests/test_details.py:183",
+     "hc/api/tests/test_notify.py:29",
+     "hc/integrations/pagertree/transport.py:19",
+     "hc/integrations/pagertree/transport.py:24",
+     "hc/integrations/webhook/tests/test_notify.py:43",
+     "hc/integrations/discord/tests/test_notify.py:37",
+     "hc/integrations/pagertree/tests/test_notify.py:39",
+     "hc/accounts/tests/test_sendflappingnotices.py:24",
+     "hc/front/views.py:1326",
+     "hc/front/views.py:1338",
+     "hc/integrations/telegram/tests/test_notify.py:41",
+     "hc/integrations/telegram/tests/test_notify.py:88",
+     "hc/integrations/pushbullet/transport.py:20",
+     "hc/integrations/pd/tests/test_notify.py:42",
+     "hc/integrations/trello/transport.py:21",
+     "hc/api/tests/test_resume.py:38",
+     "hc/integrations/po/tests/test_notify.py:43",
+     "hc/integrations/po/tests/test_notify.py:90",
+     "hc/integrations/matrix/transport.py:26",
+     "hc/integrations/github/transport.py:35",
+     "hc/integrations/pushbullet/tests/test_notify.py:38",
+     "hc/integrations/pushbullet/tests/test_notify.py:73",
+     "hc/integrations/pushbullet/tests/test_notify.py:83",
+     "hc/integrations/zulip/transport.py:35",
+     "hc/integrations/zulip/transport.py:44",
+     "hc/integrations/opsgenie/tests/test_notify.py:41",
+     "hc/front/tests/test_pause.py:30",
+     "hc/front/tests/test_resume.py:35",
+     "hc/integrations/group/tests/test_notify.py:40",
+     "hc/api/tests/test_sendalerts.py:43",
+     "hc/api/tests/test_sendalerts.py:61",
+     "hc/api/tests/test_sendalerts.py:113",
+     "hc/api/tests/test_sendalerts.py:141",
+     "hc/api/tests/test_sendalerts.py:166",
+     "hc/api/tests/test_sendalerts.py:182",
+     "hc/api/tests/test_sendalerts.py:209",
+     "hc/api/tests/test_sendalerts.py:231",
+     "hc/integrations/rocketchat/tests/test_notify.py:38",
+     "hc/integrations/rocketchat/tests/test_notify.py:80",
+     "hc/integrations/sms/tests/test_notify.py:45",
+     "hc/integrations/sms/tests/test_notify.py:94",
+     "hc/integrations/sms/tests/test_notify.py:204",
+     "hc/integrations/sms/transport.py:50",
+     "hc/api/models.py:670",
+     "hc/api/models.py:1153",
+     "hc/api/models.py:1164",
+     "hc/api/models.py:1388",
+     "hc/api/models.py:1401",
+     "hc/api/models.py:1404",
+     "hc/api/models.py:1405",
+     "hc/api/models.py:1409",
+     "hc/api/models.py:1431",
+     "hc/integrations/shell/tests/test_notify.py:35",
+     "hc/integrations/googlechat/tests/test_notify.py:41",
+     "hc/integrations/googlechat/tests/test_notify.py:101",
+     "hc/integrations/opsgenie/transport.py:45",
+     "hc/integrations/opsgenie/transport.py:72",
+     "hc/integrations/shell/transport.py:27",
+     "hc/integrations/shell/transport.py:29",
+     "hc/integrations/shell/transport.py:35",
+     "hc/integrations/signal/tests/test_notify.py:105",
+     "hc/integrations/signal/tests/test_notify.py:160",
+     "hc/integrations/trello/tests/test_notify.py:48",
+     "hc/integrations/matrix/tests/test_notify.py:43",
+     "hc/integrations/matrix/tests/test_notify.py:77",
+     "hc/integrations/webhook/transport.py:73",
+     "hc/integrations/webhook/transport.py:30",
+     "hc/integrations/github/tests/test_notify.py:49",
+     "hc/front/tests/test_update_timeout.py:82",
+     "hc/integrations/googlechat/transport.py:25",
+     "hc/api/tests/test_pause.py:32",
+     "hc/api/tests/test_sendreports.py:49",
+     "hc/integrations/victorops/tests/test_notify.py:39",
+     "hc/integrations/victorops/tests/test_notify.py:78",
+     "hc/integrations/po/transport.py:68",
+     "hc/integrations/po/transport.py:76",
+     "hc/integrations/po/transport.py:82",
+     "hc/integrations/slack/transport.py:39",
+     "hc/integrations/slack/transport.py:48",
+     "hc/integrations/slack/transport.py:49",
+     "hc/integrations/slack/transport.py:51",
+     "hc/integrations/ntfy/tests/test_notify.py:50",
+     "hc/integrations/ntfy/tests/test_notify.py:94",
+     "hc/integrations/whatsapp/transport.py:67",
+     "hc/integrations/whatsapp/transport.py:77",
+     "hc/integrations/signal/transport.py:171",
+     "hc/integrations/email/tests/test_notify.py:57",
+     "hc/integrations/email/tests/test_notify.py:124",
+     "hc/api/tests/test_ping.py:196",
+     "hc/accounts/management/commands/senddeletionscheduled.py:57",
+     "hc/integrations/apprise/transport.py:22",
+     "hc/front/tests/test_log_events.py:27",
+     "hc/integrations/call/tests/test_notify.py:37",
+     "hc/integrations/ntfy/transport.py:34",
+     "hc/integrations/ntfy/transport.py:38",
+     "hc/integrations/ntfy/transport.py:28",
+     "hc/integrations/zulip/tests/test_notify.py:40",
+     "hc/integrations/zulip/tests/test_notify.py:91",
+     "hc/integrations/rocketchat/transport.py:21",
+     "hc/integrations/victorops/transport.py:27",
+     "hc/integrations/victorops/transport.py:29",
+     "hc/api/tests/test_get_flips.py:27",
+     "hc/integrations/msteamsw/transport.py:53",
+     "hc/integrations/msteamsw/transport.py:25",
+     "hc/integrations/apprise/tests/test_notify.py:48",
+     "hc/integrations/apprise/tests/test_notify.py:89",
+     "hc/integrations/gotify/transport.py:40",
+     "hc/integrations/gotify/transport.py:29"
+    ]
+   },
+   "justificativa": "todo receptor é um Flip (flip, self.flip, up_flip, f, f1, f2, dummy_flip, prev_flip, self em Flip), e os 2 argumentos são de Flip.objects.create",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d; 3 usos sorteados conferidos no editor)"
+  },
+  {
+   "id": "UB-22",
+   "estrato": "sorteado",
+   "projeto": "hc",
+   "simbolo": "normalize_sms_values (hc/api/migrations/0078_sms_values.py:12)",
+   "verdade": {
+    "usos": [],
+    "so_nome": [
+     "hc/api/migrations/0078_sms_values.py:30"
+    ]
+   },
+   "justificativa": "passada a RunPython: referência, não chamada (2.5)",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "UB-23",
+   "estrato": "sorteado",
+   "projeto": "rt",
+   "simbolo": "impl Sorteio::next (src/bin/cena_video.rs:29)",
+   "verdade": {
+    "usos": [
+     "src/bin/cena_video.rs:34"
+    ]
+   },
+   "justificativa": "os outros 10 são Iterator::next de SplitWhitespace e Split",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d; conferido no editor)"
+  },
+  {
+   "id": "UB-24",
+   "estrato": "sorteado",
+   "projeto": "rt",
+   "simbolo": "impl Tuple::new (src/tuple.rs:13)",
+   "verdade": {
+    "usos": [
+     "src/matrix.rs:409",
+     "src/matrix.rs:411",
+     "src/matrix.rs:432",
+     "src/tuple.rs:179",
+     "src/tuple.rs:180",
+     "src/tuple.rs:182",
+     "src/tuple.rs:232",
+     "src/tuple.rs:233",
+     "src/tuple.rs:240",
+     "src/tuple.rs:242",
+     "src/tuple.rs:249",
+     "src/tuple.rs:251",
+     "src/tuple.rs:258",
+     "src/tuple.rs:260",
+     "src/tuple.rs:57",
+     "src/tuple.rs:70",
+     "src/tuple.rs:83",
+     "src/tuple.rs:96",
+     "src/tuple.rs:109"
+    ]
+   },
+   "justificativa": "Tuple::new pelo caminho; 5 em tuple.rs de produção, 14 em testes",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "UB-25",
+   "estrato": "sorteado",
+   "projeto": "rt",
+   "simbolo": "impl Intersectable for Cube::material (src/cube.rs:85)",
+   "verdade": {
+    "usos": []
+   },
+   "justificativa": "comps.object e containers.last() são Object: roda Object::material, que lê o campo cube.material, não o método",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d; conferido no editor)"
+  },
+  {
+   "id": "UB-26",
+   "estrato": "sorteado",
+   "projeto": "rt",
+   "simbolo": "Site::calls (src/count.rs:19)",
+   "verdade": {
+    "usos": [],
+    "so_nome": [
+     "src/count.rs:32",
+     "src/count.rs:87",
+     "src/count.rs:105",
+     "src/count.rs:28"
+    ]
+   },
+   "justificativa": "self, s e site são Site; calls em Site::new",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "UB-27",
+   "estrato": "sorteado",
+   "projeto": "rt",
+   "simbolo": "LinearGradient::color_a (src/patterns.rs:60)",
+   "verdade": {
+    "usos": [],
+    "so_nome": [
+     "src/patterns.rs:79",
+     "src/patterns.rs:187",
+     "src/patterns.rs:203",
+     "src/patterns.rs:203",
+     "src/patterns.rs:286"
+    ]
+   },
+   "justificativa": "os outros 15 são color_a de Stripe, Ring, Checkers e DefaultPattern",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "UB-28",
+   "estrato": "sorteado",
+   "projeto": "rt",
+   "simbolo": "impl Intersectable for Triangle::local_intersect (src/triangle.rs:38)",
+   "verdade": {
+    "usos": [
+     "src/object.rs:98",
+     "src/triangle.rs:153",
+     "src/triangle.rs:168",
+     "src/triangle.rs:183",
+     "src/triangle.rs:198",
+     "src/triangle.rs:213"
+    ],
+    "possiveis": [
+     "src/object.rs:32"
+    ]
+   },
+   "justificativa": "object.rs:32 é o padrão do trait: self pode ser um Triangle",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  }
+ ],
+ "pares": [
+  {
+   "id": "PH-1",
+   "projeto": "hc",
+   "chamada": "hc/integrations/signal/tests/test_notify.py:500",
+   "texto": "Notification.objects.get()",
+   "de": "NotifySignalTestCase.test_it_handles_rate_limit_failure",
+   "simbolo": "ListChecksTestCase.get (hc/api/tests/test_list_checks.py:39)",
+   "candidatos": 7,
+   "pode_rodar": false,
+   "justificativa": "Manager.get do Django",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "PH-2",
+   "projeto": "hc",
+   "chamada": "hc/api/views.py:585",
+   "texto": "check.to_dict(v=request.v)",
+   "de": "pause",
+   "simbolo": "Flip.to_dict (hc/api/models.py:1385)",
+   "candidatos": 4,
+   "pode_rodar": false,
+   "justificativa": "check é Check: roda Check.to_dict (hc/api/models.py:439)",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "PH-3",
+   "projeto": "hc",
+   "chamada": "hc/front/views.py:573",
+   "texto": "request.headers.get(\"Referer\", \"\")",
+   "de": "update_name",
+   "simbolo": "AuthTestCase.get (hc/api/tests/test_auth.py:9)",
+   "candidatos": 7,
+   "pode_rodar": false,
+   "justificativa": "request.headers é um dicionário (Django)",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "PH-4",
+   "projeto": "hc",
+   "chamada": "hc/integrations/signal/tests/test_add.py:61",
+   "texto": "self.client.login(username=\"alice@example.org\", password=\"password\")",
+   "de": "AddSignalTestCase.test_it_handles_disabled_integration",
+   "simbolo": "ProfileAdmin.login (hc/accounts/admin.py:210)",
+   "candidatos": 1,
+   "pode_rodar": false,
+   "justificativa": "Client.login do Django",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "PH-5",
+   "projeto": "hc",
+   "chamada": "hc/api/tests/test_ping.py:121",
+   "texto": "Ping.objects.get()",
+   "de": "PingTestCase.test_it_reads_forwarded_ip",
+   "simbolo": "GetPingsTestCase.get (hc/api/tests/test_get_pings.py:38)",
+   "candidatos": 7,
+   "pode_rodar": false,
+   "justificativa": "Manager.get do Django",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "PH-6",
+   "projeto": "hc",
+   "chamada": "hc/integrations/shell/tests/test_add.py:18",
+   "texto": "self.client.get(self.url)",
+   "de": "AddShellTestCase.test_it_is_disabled_by_default",
+   "simbolo": "GetFlipsTestCase.get (hc/api/tests/test_get_flips.py:32)",
+   "candidatos": 7,
+   "pode_rodar": false,
+   "justificativa": "self.client e self.csrf_client são o Client de teste do Django",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "PH-7",
+   "projeto": "hc",
+   "chamada": "hc/api/tests/test_ping.py:236",
+   "texto": "self.client.get(self.url + f\"/start?rid={rid}\")",
+   "de": "PingTestCase.test_it_accepts_uppercase_rid",
+   "simbolo": "GetFlipsTestCase.get (hc/api/tests/test_get_flips.py:32)",
+   "candidatos": 7,
+   "pode_rodar": false,
+   "justificativa": "self.client e self.csrf_client são o Client de teste do Django",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "PH-8",
+   "projeto": "hc",
+   "chamada": "hc/accounts/models.py:432",
+   "texto": "Project.objects.get(write_key_match | read_key_match)",
+   "de": "ProjectManager.for_api_key",
+   "simbolo": "AuthTestCase.get (hc/api/tests/test_auth.py:9)",
+   "candidatos": 7,
+   "pode_rodar": false,
+   "justificativa": "Manager.get do Django",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "PH-9",
+   "projeto": "hc",
+   "chamada": "hc/front/tests/test_update_channel.py:32",
+   "texto": "self.client.post(self.channels_url, data=payload, follow=True)",
+   "de": "UpdateChannelTestCase.test_team_access_works",
+   "simbolo": "HttpTransport.post (hc/api/transports.py:199)",
+   "candidatos": 5,
+   "pode_rodar": false,
+   "justificativa": "self.client e self.csrf_client são o Client de teste do Django",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "PH-10",
+   "projeto": "hc",
+   "chamada": "hc/accounts/tests/test_remove_credential.py:64",
+   "texto": "self.client.post(self.url, {\"remove_credential\": \"\"})",
+   "de": "RemoveCredentialTestCase.test_it_checks_owner",
+   "simbolo": "UpdateCheckTestCase.post (hc/api/tests/test_update_check.py:20)",
+   "candidatos": 5,
+   "pode_rodar": false,
+   "justificativa": "self.client e self.csrf_client são o Client de teste do Django",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "PH-11",
+   "projeto": "hc",
+   "chamada": "hc/accounts/middleware.py:49",
+   "texto": "request.META.get(settings.REMOTE_USER_HEADER)",
+   "de": "CustomHeaderMiddleware.__call__",
+   "simbolo": "GetCheckTestCase.get (hc/api/tests/test_get_check.py:37)",
+   "candidatos": 7,
+   "pode_rodar": false,
+   "justificativa": "request.META é um dicionário (Django)",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d; conferido no editor)"
+  },
+  {
+   "id": "PH-12",
+   "projeto": "hc",
+   "chamada": "hc/integrations/prometheus/tests/test_metrics.py:49",
+   "texto": "self.client.get(f\"/projects/{self.project.code}/metrics/{key}\")",
+   "de": "MetricsTestCase.test_it_rejects_hashed_rw_key",
+   "simbolo": "GetPingsTestCase.get (hc/api/tests/test_get_pings.py:38)",
+   "candidatos": 7,
+   "pode_rodar": false,
+   "justificativa": "self.client e self.csrf_client são o Client de teste do Django",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d; conferido no editor)"
+  },
+  {
+   "id": "PH-13",
+   "projeto": "hc",
+   "chamada": "hc/integrations/signal/tests/test_edit.py:62",
+   "texto": "self.client.post(self.url, form)",
+   "de": "EditSignalTestCase.test_it_handles_username",
+   "simbolo": "AuthTestCase.post (hc/api/tests/test_auth.py:12)",
+   "candidatos": 5,
+   "pode_rodar": false,
+   "justificativa": "self.client e self.csrf_client são o Client de teste do Django",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "PH-14",
+   "projeto": "hc",
+   "chamada": "hc/integrations/victorops/tests/test_add.py:49",
+   "texto": "self.client.get(self.url)",
+   "de": "AddVictorOpsTestCase.test_it_handles_disabled_integration",
+   "simbolo": "GetFlipsTestCase.get (hc/api/tests/test_get_flips.py:32)",
+   "candidatos": 7,
+   "pode_rodar": false,
+   "justificativa": "self.client e self.csrf_client são o Client de teste do Django",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "PH-15",
+   "projeto": "hc",
+   "chamada": "hc/api/tests/test_ping.py:427",
+   "texto": "Ping.objects.get()",
+   "de": "PingTestCase.test_it_saves_run_id",
+   "simbolo": "AuthTestCase.get (hc/api/tests/test_auth.py:9)",
+   "candidatos": 7,
+   "pode_rodar": false,
+   "justificativa": "Manager.get do Django",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "PH-16",
+   "projeto": "hc",
+   "chamada": "hc/front/tests/test_resume.py:44",
+   "texto": "self.client.post(self.url)",
+   "de": "ResumeTestCase.test_it_handles_not_paused_tests",
+   "simbolo": "HttpTransport.post (hc/api/transports.py:199)",
+   "candidatos": 5,
+   "pode_rodar": false,
+   "justificativa": "self.client e self.csrf_client são o Client de teste do Django",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "PH-17",
+   "projeto": "hc",
+   "chamada": "hc/api/tests/test_get_pings.py:66",
+   "texto": "self.csrf_client.post(self.url, HTTP_X_API_KEY=\"X\" * 32)",
+   "de": "GetPingsTestCase.test_it_rejects_post",
+   "simbolo": "CreateCheckTestCase.post (hc/api/tests/test_create_check.py:15)",
+   "candidatos": 5,
+   "pode_rodar": false,
+   "justificativa": "self.client e self.csrf_client são o Client de teste do Django",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "PH-18",
+   "projeto": "hc",
+   "chamada": "hc/integrations/slack/views.py:101",
+   "texto": "request.GET.get(\"code\")",
+   "de": "add_complete",
+   "simbolo": "GetBadgesTestCase.get (hc/api/tests/test_get_badges.py:23)",
+   "candidatos": 7,
+   "pode_rodar": false,
+   "justificativa": "request.GET é um QueryDict (Django)",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "PH-19",
+   "projeto": "hc",
+   "chamada": "hc/accounts/tests/test_check_token.py:60",
+   "texto": "self.client.post(url, follow=True)",
+   "de": "CheckTokenTestCase.test_it_redirects_bad_login",
+   "simbolo": "BounceTestCase.post (hc/api/tests/test_bounces.py:32)",
+   "candidatos": 5,
+   "pode_rodar": false,
+   "justificativa": "self.client e self.csrf_client são o Client de teste do Django",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "PH-20",
+   "projeto": "hc",
+   "chamada": "hc/integrations/prometheus/tests/test_add.py:22",
+   "texto": "self.client.get(self.url)",
+   "de": "AddPrometheusTestCase.test_it_handles_disabled_integration",
+   "simbolo": "AuthTestCase.get (hc/api/tests/test_auth.py:9)",
+   "candidatos": 7,
+   "pode_rodar": false,
+   "justificativa": "self.client e self.csrf_client são o Client de teste do Django",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "PH-21",
+   "projeto": "rt",
+   "chamada": "src/world.rs:50",
+   "texto": "comps.object.material()",
+   "de": "impl World::shade_hit",
+   "simbolo": "impl Intersectable for Sphere::material (src/sphere.rs:56)",
+   "candidatos": 8,
+   "pode_rodar": false,
+   "justificativa": "comps.object é Object: roda Object::material",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "PH-22",
+   "projeto": "rt",
+   "chamada": "src/object.rs:37",
+   "texto": "self.local_normal_at(local_point)",
+   "de": "Intersectable::normal_at",
+   "simbolo": "impl Intersectable for Cylinder::local_normal_at (src/cylinder.rs:101)",
+   "candidatos": 8,
+   "pode_rodar": true,
+   "justificativa": "padrão do trait; self pode ser um Cylinder",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "PH-23",
+   "projeto": "rt",
+   "chamada": "src/matrix.rs:252",
+   "texto": "self.data[3][0].equivalent(other.data[3][0])",
+   "de": "impl Equivalence<Matrix<4>> for Matrix<4>::equivalent",
+   "simbolo": "impl Equivalence<Matrix<4>> for Matrix<4>::equivalent (src/matrix.rs:236)",
+   "candidatos": 8,
+   "pode_rodar": false,
+   "justificativa": "o receptor é f64, e o par é o equivalent de outro tipo",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "PH-24",
+   "projeto": "rt",
+   "chamada": "src/object.rs:32",
+   "texto": "self.local_intersect(local_ray)",
+   "de": "Intersectable::intersect",
+   "simbolo": "impl Intersectable for Object::local_intersect (src/object.rs:91)",
+   "candidatos": 8,
+   "pode_rodar": true,
+   "justificativa": "padrão do trait; self pode ser um Object",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "PH-25",
+   "projeto": "rt",
+   "chamada": "src/matrix.rs:249",
+   "texto": "self.data[2][2].equivalent(other.data[2][2])",
+   "de": "impl Equivalence<Matrix<4>> for Matrix<4>::equivalent",
+   "simbolo": "impl Equivalence<Tuple> for Tuple::equivalent (src/tuple.rs:42)",
+   "candidatos": 8,
+   "pode_rodar": false,
+   "justificativa": "o receptor é f64, e o par é o equivalent de outro tipo",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "PH-26",
+   "projeto": "rt",
+   "chamada": "src/matrix.rs:504",
+   "texto": "mat4.submatrix(2, 1)",
+   "de": "tests_matrix::submatrix_of_mat4_is_a_mat3",
+   "simbolo": "impl Matrix<3>::submatrix (src/matrix.rs:26)",
+   "candidatos": 2,
+   "pode_rodar": false,
+   "justificativa": "mat4 é Matrix<4>: roda Matrix<4>::submatrix",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "PH-27",
+   "projeto": "rt",
+   "chamada": "src/matrix.rs:226",
+   "texto": "self.data[1][1].equivalent(other.data[1][1])",
+   "de": "impl Equivalence<Matrix<3>> for Matrix<3>::equivalent",
+   "simbolo": "impl Equivalence<f64> for f64::equivalent (src/equivalent.rs:12)",
+   "candidatos": 8,
+   "pode_rodar": true,
+   "justificativa": "self.data[1][1] é f64: é o que roda sempre",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d; conferido no editor)"
+  },
+  {
+   "id": "PH-28",
+   "projeto": "rt",
+   "chamada": "src/patterns.rs:230",
+   "texto": "((point.x.powi(2) + point.z.powi(2)).sqrt().floor() % 2.).equivalent(0",
+   "de": "impl Incuse for Ring::color_at",
+   "simbolo": "impl Equivalence<Tuple> for Tuple::equivalent (src/tuple.rs:42)",
+   "candidatos": 8,
+   "pode_rodar": false,
+   "justificativa": "o receptor é f64, e o par é o equivalent de outro tipo",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "PH-29",
+   "projeto": "rt",
+   "chamada": "src/matrix.rs:231",
+   "texto": "self.data[2][2].equivalent(other.data[2][2])",
+   "de": "impl Equivalence<Matrix<3>> for Matrix<3>::equivalent",
+   "simbolo": "impl Equivalence<Matrix<3>> for Matrix<3>::equivalent (src/matrix.rs:220)",
+   "candidatos": 8,
+   "pode_rodar": false,
+   "justificativa": "o receptor é f64, e o par é o equivalent de outro tipo",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "PH-30",
+   "projeto": "rt",
+   "chamada": "src/camera.rs:215",
+   "texto": "self.field_of_view.equivalent(other.field_of_view)",
+   "de": "impl Equivalence<Camera> for Camera::equivalent",
+   "simbolo": "impl Equivalence<Matrix<4>> for Matrix<4>::equivalent (src/matrix.rs:236)",
+   "candidatos": 8,
+   "pode_rodar": false,
+   "justificativa": "o receptor é f64, e o par é o equivalent de outro tipo",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "PH-31",
+   "projeto": "rt",
+   "chamada": "src/matrix.rs:215",
+   "texto": "self.data[1][1].equivalent(other.data[1][1])",
+   "de": "impl Equivalence<Matrix<2>> for Matrix<2>::equivalent",
+   "simbolo": "impl Equivalence<Matrix<4>> for Matrix<4>::equivalent (src/matrix.rs:236)",
+   "candidatos": 8,
+   "pode_rodar": false,
+   "justificativa": "o receptor é f64, e o par é o equivalent de outro tipo",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "PH-32",
+   "projeto": "rt",
+   "chamada": "src/color.rs:35",
+   "texto": "self.red.equivalent(other.red)",
+   "de": "impl Equivalence<Color> for Color::equivalent",
+   "simbolo": "impl Equivalence<Matrix<3>> for Matrix<3>::equivalent (src/matrix.rs:220)",
+   "candidatos": 8,
+   "pode_rodar": false,
+   "justificativa": "o receptor é f64, e o par é o equivalent de outro tipo",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "PH-33",
+   "projeto": "rt",
+   "chamada": "src/patterns.rs:256",
+   "texto": "((point.x.floor() + point.y.floor() + point.z.floor()) % 2.).equivalen",
+   "de": "impl Incuse for Checkers::color_at",
+   "simbolo": "impl Equivalence<Matrix<4>> for Matrix<4>::equivalent (src/matrix.rs:236)",
+   "candidatos": 8,
+   "pode_rodar": false,
+   "justificativa": "o receptor é f64, e o par é o equivalent de outro tipo",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "PH-34",
+   "projeto": "rt",
+   "chamada": "src/patterns.rs:16",
+   "texto": "self.color_at(pattern_point)",
+   "de": "Incuse::color_at_object",
+   "simbolo": "Incuse::color_at (src/patterns.rs:19)",
+   "candidatos": 7,
+   "pode_rodar": true,
+   "justificativa": "padrão do trait; DefaultPattern não define color_at",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d; conferido no editor)"
+  },
+  {
+   "id": "PH-35",
+   "projeto": "rt",
+   "chamada": "src/matrix.rs:253",
+   "texto": "self.data[3][1].equivalent(other.data[3][1])",
+   "de": "impl Equivalence<Matrix<4>> for Matrix<4>::equivalent",
+   "simbolo": "impl Equivalence<Tuple> for Tuple::equivalent (src/tuple.rs:42)",
+   "candidatos": 8,
+   "pode_rodar": false,
+   "justificativa": "o receptor é f64, e o par é o equivalent de outro tipo",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "PH-36",
+   "projeto": "rt",
+   "chamada": "src/world.rs:75",
+   "texto": "(comps.object.material().transparency).equivalent(0.)",
+   "de": "impl World::refracted_color",
+   "simbolo": "Equivalence::equivalent (src/equivalent.rs:4)",
+   "candidatos": 8,
+   "pode_rodar": false,
+   "justificativa": "a assinatura do trait não tem corpo",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "PH-37",
+   "projeto": "rt",
+   "chamada": "src/tuple.rs:26",
+   "texto": "self.w.equivalent(0.0)",
+   "de": "impl Tuple::is_vector",
+   "simbolo": "impl Equivalence<Matrix<2>> for Matrix<2>::equivalent (src/matrix.rs:210)",
+   "candidatos": 8,
+   "pode_rodar": false,
+   "justificativa": "o receptor é f64, e o par é o equivalent de outro tipo",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "PH-38",
+   "projeto": "rt",
+   "chamada": "src/matrix.rs:239",
+   "texto": "self.data[0][2].equivalent(other.data[0][2])",
+   "de": "impl Equivalence<Matrix<4>> for Matrix<4>::equivalent",
+   "simbolo": "Equivalence::equivalent (src/equivalent.rs:4)",
+   "candidatos": 8,
+   "pode_rodar": false,
+   "justificativa": "a assinatura do trait não tem corpo",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "PH-39",
+   "projeto": "rt",
+   "chamada": "src/cone.rs:34",
+   "texto": "ray.direction.y.equivalent(0.)",
+   "de": "impl Cone::intersect_caps",
+   "simbolo": "impl Equivalence<Tuple> for Tuple::equivalent (src/tuple.rs:42)",
+   "candidatos": 8,
+   "pode_rodar": false,
+   "justificativa": "o receptor é f64, e o par é o equivalent de outro tipo",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  },
+  {
+   "id": "PH-40",
+   "projeto": "rt",
+   "chamada": "src/intersection.rs:84",
+   "texto": "containers.last().unwrap().material()",
+   "de": "impl Intersection::prepare_computations",
+   "simbolo": "impl Intersectable for Triangle::material (src/triangle.rs:84)",
+   "candidatos": 8,
+   "pode_rodar": false,
+   "justificativa": "containers é Vec<Object>: roda Object::material",
+   "verdade_validada_por": "usuário (25/11/2026, validação da Parada 2 do 2.4d)"
+  }
+ ]
+}
