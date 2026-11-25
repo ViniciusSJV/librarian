@@ -79,10 +79,12 @@ function classifyBefore40(a, truth) {
   throw new Error(`resolução desconhecida: ${a.resolution}`);
 }
 
-/** Part E: one asserted call. */
+/** Part E: one asserted call. A truth `ambigua` (DEC-43, V3 of 2.4b) lists the bodies that may run: a
+ *  homonym with one of them is suspect, as it is ambiguous in the sample; a single link is wrong. */
 function classifyFactCall(a, truth) {
   if (!a || ['no_candidate_in_project', 'above_candidate_limit'].includes(a.resolution)) return 'nao_depende';
-  const shown = a.targets.map(show), right = truth.alvo && shown.includes(truth.alvo);
+  const shown = a.targets.map(show), right = truth.ambigua ? truth.ambigua.some(t => shown.includes(t)) : truth.alvo && shown.includes(truth.alvo);
+  if (truth.ambigua && a.resolution !== 'homonym') return 'errado';
   if (a.resolution === 'homonym') return right ? 'suspeito' : 'errado';
   return shown.length === 1 && right ? 'correto' : 'errado';
 }
