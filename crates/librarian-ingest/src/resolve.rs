@@ -64,6 +64,9 @@ pub struct CallFacts {
     pub field_receivers: BTreeMap<(usize, usize), (String, usize, String)>,
     /// Step 2.4a (Rust): the file's modules; the first is the file itself.
     pub modules: Vec<RustModule>,
+    /// Step 2.4a (Rust): the blocks that declare items, with what their own `use` and `type` bind:
+    /// seen only from inside the block.
+    pub blocks: Vec<RustModule>,
     /// Step 2.4a (Rust): the names each function binds as a variable (parameters, `let`, closure
     /// parameters, patterns), by the function's declaration span. A call `f()` with `f` one of them
     /// calls a value, not an item.
@@ -112,6 +115,18 @@ pub struct NameScope {
     /// Step 2.4a: the scope has a `from x import *` (outside `TYPE_CHECKING`): a name it does not
     /// bind otherwise may come from there.
     pub star: bool,
+    /// Step 2.4a: the parts of the span that run outside the scope (a `def`'s or `class`'s header, a
+    /// lambda's defaults, a comprehension's first iterable): its names are not seen from them.
+    pub outside: Vec<(usize, usize)>,
+    /// Step 2.4a: the names the scope declares `global`: the module's, not an enclosing function's.
+    pub globals: BTreeSet<String>,
+}
+
+impl NameScope {
+    /// Step 2.4a: the names of the scope are seen from `at`, but for the class rule.
+    fn around(&self, at: usize) -> bool {
+        self.start <= at && at < self.end && !self.outside.iter().any(|&(start, end)| start <= at && at < end)
+    }
 }
 
 /// Step 2.4a (DEC-42, Python): one binding of a name in a scope.
@@ -122,7 +137,8 @@ pub struct Binding {
     /// For a `def` or a `class`: where its declaration ends (the graph's `end_byte`).
     pub end: usize,
     pub kind: Bound,
-    /// Inside an `if`, `for`, `while`, `try` or `match` of its own scope: it may not run.
+    /// Inside an `if`, `for`, `while`, `try` or `match` of its own scope, or made by another function
+    /// (`global`, `nonlocal`): it may not run.
     pub conditional: bool,
     /// Inside `if TYPE_CHECKING:`: it exists for the type checker, not when the code runs.
     pub type_checking: bool,
@@ -153,6 +169,8 @@ pub struct RustModule {
     pub globs: Vec<Vec<String>>,
     /// `type X = a::Y<..>;`: `X` to `Y` (the last segment).
     pub aliases: BTreeMap<String, String>,
+    /// In a block: the spans of the items it declares (a module's are in the graph).
+    pub items: Vec<(usize, usize)>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -280,6 +298,8 @@ pub struct Resolver<'g> {
     by_return_cache: RefCell<BTreeMap<String, Option<ByReturn<'g>>>>,
     /// Step 2.4a: each declaration's span in its file.
     declared_span: BTreeMap<&'g str, (usize, usize)>,
+    /// Step 2.4a (Rust): the declaration with a span of a file.
+    declared_by_span: BTreeMap<(&'g str, (usize, usize)), &'g str>,
     /// Step 2.4a (Python): a function, method or class by its file and where its declaration ends.
     declared_end: BTreeMap<(&'g str, usize), Vec<&'g str>>,
     /// Step 2.4a (Rust): the items a plain name may name, by file, container (a `mod {}`, a
@@ -350,6 +370,7 @@ impl<'g> Resolver<'g> {
             inner: Cell::new(false),
             by_return_cache: RefCell::new(BTreeMap::new()),
             declared_span: BTreeMap::new(),
+            declared_by_span: BTreeMap::new(),
             declared_end: BTreeMap::new(),
             rust_items: BTreeMap::new(),
         };
@@ -362,7 +383,9 @@ impl<'g> Resolver<'g> {
                 "declares" => {
                     r.declared_in.insert(&e.to, &e.evidence.path);
                     r.declared_at.insert(&e.to, e.evidence.start_byte);
-                    r.declared_span.insert(&e.to, (e.evidence.start_byte, e.evidence.end_byte));
+                    let span = (e.evidence.start_byte, e.evidence.end_byte);
+                    r.declared_span.insert(&e.to, span);
+                    r.declared_by_span.insert((e.evidence.path.as_str(), span), &e.to);
                     if matches!(graph.nodes.get(&e.to).map(|n| n.kind.as_str()), Some("function" | "method" | "class")) {
                         r.declared_end.entry((e.evidence.path.as_str(), e.evidence.end_byte)).or_default().push(&e.to);
                     }
@@ -1007,11 +1030,17 @@ impl<'g> Resolver<'g> {
             return Scoped::Undecided;
         }
         let Some(facts) = self.file_facts(path) else { return Scoped::Undecided };
-        let mut scopes: Vec<&NameScope> = facts.scopes.iter().filter(|s| s.start <= at && at < s.end).collect();
+        let mut scopes: Vec<&NameScope> = facts.scopes.iter().filter(|s| s.around(at)).collect();
         scopes.sort_by_key(|s| s.end - s.start);
         let outermost = scopes.len().saturating_sub(1);
+        let mut global = false;
         for (i, s) in scopes.iter().enumerate() {
-            if i > 0 && s.class {
+            if (i > 0 && s.class) || (global && i < outermost) {
+                continue;
+            }
+            // `global name`: the module's, whatever an enclosing function binds.
+            if i < outermost && s.globals.contains(name) {
+                global = true;
                 continue;
             }
             if let Some(all) = s.bindings.get(name) {
@@ -1125,9 +1154,10 @@ impl<'g> Resolver<'g> {
     }
 
     /// Step 2.4a (Rust): a plain call or a module path, by the caller's scope: a variable of an
-    /// enclosing function (a closure, a function value: not decided), an item of an enclosing
-    /// function's block, an item of the caller's module, a `use` of it, a `use ..::*` of it.
-    fn rust_scoped(&self, caller: &str, path: &'g str, _at: usize, text: &str) -> Scoped<'g> {
+    /// enclosing function (a closure, a function value: not decided); then, for each block around the
+    /// call from the innermost, and for the caller's module last, its items, its `use` and its
+    /// `use ..::*`. Only what is around the call is seen.
+    fn rust_scoped(&self, caller: &str, path: &'g str, at: usize, text: &str) -> Scoped<'g> {
         let segments: Vec<String> = text.split("::").map(|s| s.trim().to_owned()).collect();
         let Some(facts) = self.file_facts(path) else { return Scoped::Undecided };
         let module_node = self.rust_module_of(caller);
@@ -1139,40 +1169,25 @@ impl<'g> Resolver<'g> {
                 return Scoped::Undecided;
             }
             let mut c = Some(caller);
-            while let Some(f) = c.filter(|f| matches!(self.kind(f), "function" | "method")) {
+            while let Some(f) = c.filter(|f| self.kind(f) != "module") {
                 if self.declared_span.get(f).is_some_and(|span| facts.variables.get(span).is_some_and(|v| v.contains(name))) {
                     return Scoped::Undecided;
                 }
-                if let Some(ids) = self.rust_items.get(&(path, Some(f), name.to_owned())) {
-                    return Scoped::Target(ids[0], How::Scope);
-                }
                 c = self.container(f);
+            }
+            for block in rust_blocks(&facts, module, at) {
+                let item = block.items.iter().filter_map(|span| self.declared_by_span.get(&(path, *span)).copied()).find(|id| last_segment(self.label(id)) == name);
+                if let Some(id) = item {
+                    return Scoped::Target(id, How::Scope);
+                }
+                if let Some(found) = self.rust_bound(path, &here, block, name) {
+                    return found;
+                }
             }
             if let Some(ids) = self.rust_items.get(&(path, module_node, name.to_owned())) {
                 return Scoped::Target(ids[0], How::Scope);
             }
-            if let Some(target) = module.uses.get(name) {
-                return self.rust_use(path, &here, target, 0);
-            }
-            let (mut found, mut outside) = (vec![], false);
-            for glob in &module.globs {
-                match self.rust_module(path, &here, glob) {
-                    RustPlace::Project(file, node, segs) => {
-                        if let Scoped::Target(t, _) = self.rust_in_module(file, node, &segs, name, 0) {
-                            if !found.contains(&t) {
-                                found.push(t);
-                            }
-                        }
-                    }
-                    RustPlace::Outside => outside = true,
-                    RustPlace::Unknown => return Scoped::Undecided,
-                }
-            }
-            return match found.len() {
-                1 => Scoped::Target(found[0], How::Import),
-                0 if !outside => Scoped::Nothing,
-                _ => Scoped::Undecided,
-            };
+            return self.rust_bound(path, &here, module, name).unwrap_or(Scoped::Nothing);
         }
         // A module path: `super::f`, `m::f` (`m` a module of the project, or bound by a `use`).
         // `T::f` is the type's rule.
@@ -1180,7 +1195,8 @@ impl<'g> Resolver<'g> {
             return Scoped::Undecided;
         }
         let (name, mut module_path) = (segments[segments.len() - 1].clone(), segments[..segments.len() - 1].to_vec());
-        if let Some(bound) = module.uses.get(&module_path[0]) {
+        let bound = rust_blocks(&facts, module, at).into_iter().chain([module]).find_map(|m| m.uses.get(&module_path[0]));
+        if let Some(bound) = bound {
             module_path = bound.iter().cloned().chain(module_path[1..].iter().cloned()).collect();
         }
         match self.rust_module(path, &here, &module_path) {
@@ -1189,6 +1205,33 @@ impl<'g> Resolver<'g> {
                 _ => Scoped::Undecided,
             },
             _ => Scoped::Undecided,
+        }
+    }
+
+    /// Step 2.4a (Rust): what the `use` items of a module or a block bind a name to: the explicit one,
+    /// then the globs. None when they bind nothing.
+    fn rust_bound(&self, path: &str, here: &[String], module: &RustModule, name: &str) -> Option<Scoped<'g>> {
+        if let Some(target) = module.uses.get(name) {
+            return Some(self.rust_use(path, here, target, 0));
+        }
+        let (mut found, mut outside) = (vec![], false);
+        for glob in &module.globs {
+            match self.rust_module(path, here, glob) {
+                RustPlace::Project(file, node, segs) => {
+                    if let Scoped::Target(t, _) = self.rust_in_module(file, node, &segs, name, 0) {
+                        if !found.contains(&t) {
+                            found.push(t);
+                        }
+                    }
+                }
+                RustPlace::Outside => outside = true,
+                RustPlace::Unknown => return Some(Scoped::Undecided),
+            }
+        }
+        match found.len() {
+            1 => Some(Scoped::Target(found[0], How::Import)),
+            0 if !outside => None,
+            _ => Some(Scoped::Undecided),
         }
     }
 
@@ -1356,7 +1399,10 @@ impl<'g> Resolver<'g> {
     fn rust_alias(&self, path: &str, at: usize, name: &str) -> Option<String> {
         let facts = self.file_facts(path)?;
         let module = facts.modules.iter().filter(|m| m.start <= at && at < m.end).min_by_key(|m| m.end - m.start)?;
-        let named = module.uses.get(name).and_then(|p| p.last().cloned()).or_else(|| module.aliases.get(name).cloned())?;
+        let named = rust_blocks(&facts, module, at)
+            .into_iter()
+            .chain([module])
+            .find_map(|m| m.uses.get(name).and_then(|p| p.last().cloned()).or_else(|| m.aliases.get(name).cloned()))?;
         (named != name && self.type_names.contains(&named)).then_some(named)
     }
 
@@ -1465,6 +1511,13 @@ impl<'g> Resolver<'g> {
         }
         Resolution::Homonym(edges.iter().map(|e| e.to.as_str()).collect())
     }
+}
+
+/// Step 2.4a (Rust): the blocks around `at` that declare items, inside the module, innermost first.
+fn rust_blocks<'f>(facts: &'f CallFacts, module: &RustModule, at: usize) -> Vec<&'f RustModule> {
+    let mut blocks: Vec<&RustModule> = facts.blocks.iter().filter(|b| b.start <= at && at < b.end && module.start <= b.start && b.end <= module.end).collect();
+    blocks.sort_by_key(|b| b.end - b.start);
+    blocks
 }
 
 /// A dotted module as a path without extension, from the importing file for a relative one:

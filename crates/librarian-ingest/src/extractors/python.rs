@@ -148,11 +148,13 @@ impl Extractor for Python {
             decorators: vec![],
             conditional: vec![0],
             type_checking: 0,
+            nonlocal: vec![],
         };
         for stmt in suite {
             scopes.visit_stmt(stmt);
         }
         scopes.leave();
+        scopes.nonlocals();
         let mut facts = CallFacts { scopes: scopes.scopes, decorators: scopes.decorators, ..Default::default() };
         if self.v9 {
             let read = super::python_types::read(&suite_for_types, offset);
@@ -183,9 +185,25 @@ struct Scopes {
     conditional: Vec<usize>,
     /// Step 2.4a: how many `if TYPE_CHECKING:` bodies are around.
     type_checking: usize,
+    /// Step 2.4a: bindings a function makes of a `nonlocal` name, with the scopes around it.
+    nonlocal: Vec<(Vec<usize>, String, Vec<Binding>)>,
 }
 
 impl Scopes {
+    /// Step 2.4a: a `nonlocal` binding belongs to the nearest enclosing function that binds the name.
+    fn nonlocals(&mut self) {
+        let found: Vec<_> = std::mem::take(&mut self.nonlocal)
+            .into_iter()
+            .filter_map(|(around, name, bindings)| {
+                let owner = around.into_iter().rev().find(|&i| i != 0 && !self.scopes[i].class && self.scopes[i].bindings.contains_key(&name))?;
+                Some((owner, name, bindings))
+            })
+            .collect();
+        for (owner, name, bindings) in found {
+            self.scopes[owner].bindings.entry(name).or_default().extend(bindings);
+        }
+    }
+
     /// Step 2.4a (DEC-42): one more binding of `name` in the open scope, in the order of the text.
     fn bind(&mut self, name: &str, kind: Binds, at: usize, end: usize) {
         let binding = Binding {
@@ -251,7 +269,40 @@ impl Scopes {
         let (Some(i), Some(globals)) = (self.open.pop(), self.globals.pop()) else { return };
         self.conditional.pop();
         self.scopes[i].locals.retain(|n| !globals.contains(n));
-        self.scopes[i].bindings.retain(|n, _| !globals.contains(n));
+        // Step 2.4a: what it binds of a `global` name is the module's, of a `nonlocal` one an enclosing
+        // function's; it may not have run. At the module itself, `global` changes nothing.
+        if i == 0 {
+            return;
+        }
+        for name in globals {
+            let Some(mut bindings) = self.scopes[i].bindings.remove(&name) else { continue };
+            for b in &mut bindings {
+                b.conditional = true;
+            }
+            if self.scopes[i].globals.contains(&name) {
+                self.scopes[0].bindings.entry(name).or_default().extend(bindings);
+            } else {
+                self.nonlocal.push((self.open.clone(), name, bindings));
+            }
+        }
+    }
+
+    /// Step 2.4a: a part of the open scope's span that runs outside it.
+    fn outside(&mut self, start: usize, end: usize) {
+        self.top().outside.push((start, end));
+    }
+
+    /// Step 2.4a: where a body starts (the decorators of its first declaration included).
+    fn body_start(&self, body: &[ast::Stmt]) -> Option<usize> {
+        let first = body.first()?;
+        let decorators = match first {
+            ast::Stmt::FunctionDef(f) => &f.decorator_list[..],
+            ast::Stmt::AsyncFunctionDef(f) => &f.decorator_list[..],
+            ast::Stmt::ClassDef(c) => &c.decorator_list[..],
+            _ => &[],
+        };
+        let (start, _) = self.at(first.range());
+        Some(decorators.iter().map(|d| self.at(d.range()).0).fold(start, usize::min))
     }
 
     fn top(&mut self) -> &mut NameScope {
@@ -290,6 +341,9 @@ impl Scopes {
         }
         self.defaults(&arguments);
         self.enter(range, false);
+        if let Some(start) = self.body_start(&body) {
+            self.outside(at, start);
+        }
         self.parameters(&arguments);
         for stmt in body {
             self.visit_stmt(stmt);
@@ -300,6 +354,10 @@ impl Scopes {
     /// A comprehension is a scope of its own: its targets do not leak.
     fn comprehension(&mut self, range: TextRange, generators: Vec<ast::Comprehension>, elements: Vec<ast::Expr>) {
         self.enter(range, false);
+        if let Some(first) = generators.first() {
+            let (start, end) = self.at(first.iter.range());
+            self.outside(start, end);
+        }
         for generator in generators {
             self.visit_comprehension(generator);
         }
@@ -333,6 +391,9 @@ impl Visitor for Scopes {
             self.visit_keyword(keyword);
         }
         self.enter(node.range, true);
+        if let Some(start) = self.body_start(&node.body) {
+            self.outside(at, start);
+        }
         for stmt in node.body {
             self.visit_stmt(stmt);
         }
@@ -342,6 +403,8 @@ impl Visitor for Scopes {
     fn visit_expr_lambda(&mut self, node: ast::ExprLambda) {
         self.defaults(&node.args);
         self.enter(node.range, false);
+        let ((start, _), (body, _)) = (self.at(node.range), self.at(node.body.range()));
+        self.outside(start, body);
         self.parameters(&node.args);
         self.visit_expr(*node.body);
         self.leave();
@@ -567,6 +630,7 @@ impl Visitor for Scopes {
         if let Some(globals) = self.globals.last_mut() {
             globals.extend(node.names.iter().map(|n| n.to_string()));
         }
+        self.top().globals.extend(node.names.iter().map(|n| n.to_string()));
     }
 
     fn visit_stmt_nonlocal(&mut self, node: ast::StmtNonlocal) {

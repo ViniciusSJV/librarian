@@ -138,13 +138,14 @@ impl Extractor for Rust {
         returns.visit_file(&tree);
         // Step 2.4a (DEC-42): the file's modules, their `use` items and type aliases, and the
         // variables of each function.
-        let mut modules = Modules { offset, modules: vec![crate::resolve::RustModule { start: 0, end: usize::MAX, ..Default::default() }], open: vec![0], variables: BTreeMap::new() };
+        let mut modules = Modules { offset, modules: vec![crate::resolve::RustModule { start: 0, end: usize::MAX, ..Default::default() }], blocks: vec![], open: vec![(false, 0)], variables: BTreeMap::new() };
         modules.visit_file(&tree);
         crate::resolve::CallFacts {
             receiver_types: observer.written.unwrap_or_default(),
             bound_calls: observer.bound_calls.unwrap_or_default(),
             returns: returns.out,
             modules: modules.modules,
+            blocks: modules.blocks,
             variables: modules.variables,
             ..Default::default()
         }
@@ -521,18 +522,23 @@ fn is_iterator(expr: &syn::Expr) -> bool {
 
 /// Step 2.4a (DEC-42): a file's modules (the file, and each `mod x { .. }` by the span of its
 /// declaration, as `Declarations` records it), what their `use` items and `type` aliases bind, and
-/// the names each function binds as variables. A `use` inside a function counts for its module.
+/// the names each function binds as variables. A block that declares items (a `use` too) is a place
+/// of its own: what it binds is seen only inside it.
 struct Modules {
     offset: usize,
     modules: Vec<crate::resolve::RustModule>,
-    open: Vec<usize>,
+    blocks: Vec<crate::resolve::RustModule>,
+    /// The open places: whether a block, and its index.
+    open: Vec<(bool, usize)>,
     variables: BTreeMap<(usize, usize), std::collections::BTreeSet<String>>,
 }
 
 impl Modules {
     fn top(&mut self) -> &mut crate::resolve::RustModule {
-        let i = self.open.last().copied().unwrap_or(0);
-        &mut self.modules[i]
+        match self.open.last().copied().unwrap_or((false, 0)) {
+            (true, i) => &mut self.blocks[i],
+            (false, i) => &mut self.modules[i],
+        }
     }
 
     fn span(&self, span: Span) -> (usize, usize) {
@@ -595,8 +601,21 @@ impl<'ast> Visit<'ast> for Modules {
         }
         let (start, end) = self.span(value.span());
         self.modules.push(crate::resolve::RustModule { start, end, ..Default::default() });
-        self.open.push(self.modules.len() - 1);
+        self.open.push((false, self.modules.len() - 1));
         visit::visit_item_mod(self, value);
+        self.open.pop();
+    }
+
+    fn visit_block(&mut self, value: &'ast syn::Block) {
+        let declared: Vec<&syn::Item> = value.stmts.iter().filter_map(|s| if let syn::Stmt::Item(i) = s { Some(i) } else { None }).collect();
+        if declared.is_empty() {
+            return visit::visit_block(self, value);
+        }
+        let (start, end) = self.span(value.span());
+        let items = declared.iter().map(|i| self.span(i.span())).collect();
+        self.blocks.push(crate::resolve::RustModule { start, end, items, ..Default::default() });
+        self.open.push((true, self.blocks.len() - 1));
+        visit::visit_block(self, value);
         self.open.pop();
     }
 
