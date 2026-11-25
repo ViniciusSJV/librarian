@@ -1,0 +1,542 @@
+{
+ "healthchecks-25597e41": {
+  "simbolos": 4718,
+  "chamadas": 16239,
+  "grafo": [
+   "239c8e55d9b4",
+   "239c8e55d9b4"
+  ],
+  "used_by_diferentes": 0,
+  "mudancas": [
+   {
+    "occ": "hc/integrations/signal/views.py@4171-4236",
+    "local": "hc/integrations/signal/views.py:119",
+    "test": false,
+    "texto": "Signal.send(recipient, f\"Test message from {settings.SITE_NAME}\")",
+    "direta": true,
+    "x": {
+     "res": "homonym",
+     "cands": 2,
+     "rule": null,
+     "rel": "calls",
+     "runs": null,
+     "alvos": [
+      "Signal.send (hc/integrations/signal/transport.py:60)",
+      "Telegram.send (hc/integrations/telegram/transport.py:55)"
+     ]
+    },
+    "y": {
+     "res": "type",
+     "cands": 2,
+     "rule": "classe",
+     "rel": "calls",
+     "runs": null,
+     "alvos": [
+      "Signal.send (hc/integrations/signal/transport.py:60)"
+     ]
+    }
+   },
+   {
+    "occ": "hc/api/models.py@47841-47864",
+    "local": "hc/api/models.py:1293",
+    "test": false,
+    "texto": "PdConf.load(self.value)",
+    "direta": true,
+    "x": {
+     "res": "homonym",
+     "cands": 3,
+     "rule": null,
+     "rel": "calls",
+     "runs": null,
+     "alvos": [
+      "EmailConf.load (hc/api/models.py:929)",
+      "PdConf.load (hc/api/models.py:909)",
+      "TelegramCallback.load (hc/integrations/telegram/views.py:42)"
+     ]
+    },
+    "y": {
+     "res": "type",
+     "cands": 3,
+     "rule": "classe",
+     "rel": "calls",
+     "runs": null,
+     "alvos": [
+      "PdConf.load (hc/api/models.py:909)"
+     ]
+    }
+   },
+   {
+    "occ": "hc/api/models.py@48274-48300",
+    "local": "hc/api/models.py:1307",
+    "test": false,
+    "texto": "EmailConf.load(self.value)",
+    "direta": true,
+    "x": {
+     "res": "homonym",
+     "cands": 3,
+     "rule": null,
+     "rel": "calls",
+     "runs": null,
+     "alvos": [
+      "EmailConf.load (hc/api/models.py:929)",
+      "PdConf.load (hc/api/models.py:909)",
+      "TelegramCallback.load (hc/integrations/telegram/views.py:42)"
+     ]
+    },
+    "y": {
+     "res": "type",
+     "cands": 3,
+     "rule": "classe",
+     "rel": "calls",
+     "runs": null,
+     "alvos": [
+      "EmailConf.load (hc/api/models.py:929)"
+     ]
+    }
+   },
+   {
+    "occ": "hc/api/models.py@54483-54521",
+    "local": "hc/api/models.py:1479",
+    "test": false,
+    "texto": "TokenBucket.authorize(value, 20, 3600)",
+    "direta": true,
+    "x": {
+     "res": "homonym",
+     "cands": 1,
+     "rule": null,
+     "rel": "calls",
+     "runs": null,
+     "alvos": [
+      "TokenBucket.authorize (hc/api/models.py:1442)"
+     ]
+    },
+    "y": {
+     "res": "type",
+     "cands": 1,
+     "rule": "classe",
+     "rel": "calls",
+     "runs": null,
+     "alvos": [
+      "TokenBucket.authorize (hc/api/models.py:1442)"
+     ]
+    }
+   },
+   {
+    "occ": "hc/api/models.py@55000-55047",
+    "local": "hc/api/models.py:1493",
+    "test": false,
+    "texto": "TokenBucket.authorize(f\"em-{hashed}\", 10, 3600)",
+    "direta": true,
+    "x": {
+     "res": "homonym",
+     "cands": 1,
+     "rule": null,
+     "rel": "calls",
+     "runs": null,
+     "alvos": [
+      "TokenBucket.authorize (hc/api/models.py:1442)"
+     ]
+    },
+    "y": {
+     "res": "type",
+     "cands": 1,
+     "rule": "classe",
+     "rel": "calls",
+     "runs": null,
+     "alvos": [
+      "TokenBucket.authorize (hc/api/models.py:1442)"
+     ]
+    }
+   },
+   {
+    "occ": "hc/api/models.py@55201-55244",
+    "local": "hc/api/models.py:1500",
+    "test": false,
+    "texto": "TokenBucket.authorize(value, 20, 3600 * 24)",
+    "direta": true,
+    "x": {
+     "res": "homonym",
+     "cands": 1,
+     "rule": null,
+     "rel": "calls",
+     "runs": null,
+     "alvos": [
+      "TokenBucket.authorize (hc/api/models.py:1442)"
+     ]
+    },
+    "y": {
+     "res": "type",
+     "cands": 1,
+     "rule": "classe",
+     "rel": "calls",
+     "runs": null,
+     "alvos": [
+      "TokenBucket.authorize (hc/api/models.py:1442)"
+     ]
+    }
+   },
+   {
+    "occ": "hc/api/models.py@55503-55555",
+    "local": "hc/api/models.py:1508",
+    "test": false,
+    "texto": "TokenBucket.authorize(f\"pw-{hashed}\", 20, 3600 * 24)",
+    "direta": true,
+    "x": {
+     "res": "homonym",
+     "cands": 1,
+     "rule": null,
+     "rel": "calls",
+     "runs": null,
+     "alvos": [
+      "TokenBucket.authorize (hc/api/models.py:1442)"
+     ]
+    },
+    "y": {
+     "res": "type",
+     "cands": 1,
+     "rule": "classe",
+     "rel": "calls",
+     "runs": null,
+     "alvos": [
+      "TokenBucket.authorize (hc/api/models.py:1442)"
+     ]
+    }
+   },
+   {
+    "occ": "hc/api/models.py@55700-55749",
+    "local": "hc/api/models.py:1513",
+    "test": false,
+    "texto": "TokenBucket.authorize(f\"tg-{telegram_id}\", 6, 60)",
+    "direta": true,
+    "x": {
+     "res": "homonym",
+     "cands": 1,
+     "rule": null,
+     "rel": "calls",
+     "runs": null,
+     "alvos": [
+      "TokenBucket.authorize (hc/api/models.py:1442)"
+     ]
+    },
+    "y": {
+     "res": "type",
+     "cands": 1,
+     "rule": "classe",
+     "rel": "calls",
+     "runs": null,
+     "alvos": [
+      "TokenBucket.authorize (hc/api/models.py:1442)"
+     ]
+    }
+   },
+   {
+    "occ": "hc/api/models.py@56017-56065",
+    "local": "hc/api/models.py:1521",
+    "test": false,
+    "texto": "TokenBucket.authorize(f\"signal-{hashed}\", 6, 60)",
+    "direta": true,
+    "x": {
+     "res": "homonym",
+     "cands": 1,
+     "rule": null,
+     "rel": "calls",
+     "runs": null,
+     "alvos": [
+      "TokenBucket.authorize (hc/api/models.py:1442)"
+     ]
+    },
+    "y": {
+     "res": "type",
+     "cands": 1,
+     "rule": "classe",
+     "rel": "calls",
+     "runs": null,
+     "alvos": [
+      "TokenBucket.authorize (hc/api/models.py:1442)"
+     ]
+    }
+   },
+   {
+    "occ": "hc/api/models.py@56262-56305",
+    "local": "hc/api/models.py:1528",
+    "test": false,
+    "texto": "TokenBucket.authorize(value, 50, 3600 * 24)",
+    "direta": true,
+    "x": {
+     "res": "homonym",
+     "cands": 1,
+     "rule": null,
+     "rel": "calls",
+     "runs": null,
+     "alvos": [
+      "TokenBucket.authorize (hc/api/models.py:1442)"
+     ]
+    },
+    "y": {
+     "res": "type",
+     "cands": 1,
+     "rule": "classe",
+     "rel": "calls",
+     "runs": null,
+     "alvos": [
+      "TokenBucket.authorize (hc/api/models.py:1442)"
+     ]
+    }
+   },
+   {
+    "occ": "hc/api/models.py@56580-56624",
+    "local": "hc/api/models.py:1536",
+    "test": false,
+    "texto": "TokenBucket.authorize(f\"po-{hashed}\", 6, 60)",
+    "direta": true,
+    "x": {
+     "res": "homonym",
+     "cands": 1,
+     "rule": null,
+     "rel": "calls",
+     "runs": null,
+     "alvos": [
+      "TokenBucket.authorize (hc/api/models.py:1442)"
+     ]
+    },
+    "y": {
+     "res": "type",
+     "cands": 1,
+     "rule": "classe",
+     "rel": "calls",
+     "runs": null,
+     "alvos": [
+      "TokenBucket.authorize (hc/api/models.py:1442)"
+     ]
+    }
+   },
+   {
+    "occ": "hc/api/models.py@56911-56957",
+    "local": "hc/api/models.py:1544",
+    "test": false,
+    "texto": "TokenBucket.authorize(f\"ntfy-{hashed}\", 6, 60)",
+    "direta": true,
+    "x": {
+     "res": "homonym",
+     "cands": 1,
+     "rule": null,
+     "rel": "calls",
+     "runs": null,
+     "alvos": [
+      "TokenBucket.authorize (hc/api/models.py:1442)"
+     ]
+    },
+    "y": {
+     "res": "type",
+     "cands": 1,
+     "rule": "classe",
+     "rel": "calls",
+     "runs": null,
+     "alvos": [
+      "TokenBucket.authorize (hc/api/models.py:1442)"
+     ]
+    }
+   },
+   {
+    "occ": "hc/api/models.py@57118-57161",
+    "local": "hc/api/models.py:1551",
+    "test": false,
+    "texto": "TokenBucket.authorize(value, 10, 3600 * 24)",
+    "direta": true,
+    "x": {
+     "res": "homonym",
+     "cands": 1,
+     "rule": null,
+     "rel": "calls",
+     "runs": null,
+     "alvos": [
+      "TokenBucket.authorize (hc/api/models.py:1442)"
+     ]
+    },
+    "y": {
+     "res": "type",
+     "cands": 1,
+     "rule": "classe",
+     "rel": "calls",
+     "runs": null,
+     "alvos": [
+      "TokenBucket.authorize (hc/api/models.py:1442)"
+     ]
+    }
+   },
+   {
+    "occ": "hc/api/models.py@57390-57433",
+    "local": "hc/api/models.py:1559",
+    "test": false,
+    "texto": "TokenBucket.authorize(value, 96, 3600 * 24)",
+    "direta": true,
+    "x": {
+     "res": "homonym",
+     "cands": 1,
+     "rule": null,
+     "rel": "calls",
+     "runs": null,
+     "alvos": [
+      "TokenBucket.authorize (hc/api/models.py:1442)"
+     ]
+    },
+    "y": {
+     "res": "type",
+     "cands": 1,
+     "rule": "classe",
+     "rel": "calls",
+     "runs": null,
+     "alvos": [
+      "TokenBucket.authorize (hc/api/models.py:1442)"
+     ]
+    }
+   },
+   {
+    "occ": "hc/api/models.py@57770-57805",
+    "local": "hc/api/models.py:1568",
+    "test": false,
+    "texto": "TokenBucket.authorize(value, 1, 90)",
+    "direta": true,
+    "x": {
+     "res": "homonym",
+     "cands": 1,
+     "rule": null,
+     "rel": "calls",
+     "runs": null,
+     "alvos": [
+      "TokenBucket.authorize (hc/api/models.py:1442)"
+     ]
+    },
+    "y": {
+     "res": "type",
+     "cands": 1,
+     "rule": "classe",
+     "rel": "calls",
+     "runs": null,
+     "alvos": [
+      "TokenBucket.authorize (hc/api/models.py:1442)"
+     ]
+    }
+   },
+   {
+    "occ": "hc/api/models.py@58553-58616",
+    "local": "hc/api/models.py:1587",
+    "test": false,
+    "texto": "TokenBucket.authorize(\"s3_get_object_error\", 3, 60, force=True)",
+    "direta": true,
+    "x": {
+     "res": "homonym",
+     "cands": 1,
+     "rule": null,
+     "rel": "calls",
+     "runs": null,
+     "alvos": [
+      "TokenBucket.authorize (hc/api/models.py:1442)"
+     ]
+    },
+    "y": {
+     "res": "type",
+     "cands": 1,
+     "rule": "classe",
+     "rel": "calls",
+     "runs": null,
+     "alvos": [
+      "TokenBucket.authorize (hc/api/models.py:1442)"
+     ]
+    }
+   },
+   {
+    "occ": "hc/integrations/telegram/views.py@1907-1942",
+    "local": "hc/integrations/telegram/views.py:57",
+    "test": false,
+    "texto": "TelegramCallback.load(request.body)",
+    "direta": true,
+    "x": {
+     "res": "homonym",
+     "cands": 3,
+     "rule": null,
+     "rel": "calls",
+     "runs": null,
+     "alvos": [
+      "EmailConf.load (hc/api/models.py:929)",
+      "PdConf.load (hc/api/models.py:909)",
+      "TelegramCallback.load (hc/integrations/telegram/views.py:42)"
+     ]
+    },
+    "y": {
+     "res": "type",
+     "cands": 3,
+     "rule": "classe",
+     "rel": "calls",
+     "runs": null,
+     "alvos": [
+      "TelegramCallback.load (hc/integrations/telegram/views.py:42)"
+     ]
+    }
+   },
+   {
+    "occ": "hc/integrations/telegram/views.py@2632-2693",
+    "local": "hc/integrations/telegram/views.py:82",
+    "test": false,
+    "texto": "Telegram.send(chat.id, doc.message.message_thread_id, invite)",
+    "direta": true,
+    "x": {
+     "res": "homonym",
+     "cands": 2,
+     "rule": null,
+     "rel": "calls",
+     "runs": null,
+     "alvos": [
+      "Signal.send (hc/integrations/signal/transport.py:60)",
+      "Telegram.send (hc/integrations/telegram/transport.py:55)"
+     ]
+    },
+    "y": {
+     "res": "type",
+     "cands": 2,
+     "rule": "classe",
+     "rel": "calls",
+     "runs": null,
+     "alvos": [
+      "Telegram.send (hc/integrations/telegram/transport.py:55)"
+     ]
+    }
+   }
+  ],
+  "resolucoes": {
+   "python unique -> unique": 1898,
+   "python no_candidate_in_project -> no_candidate_in_project": 10927,
+   "python homonym -> homonym": 2271,
+   "python type -> type": 270,
+   "python above_candidate_limit -> above_candidate_limit": 403,
+   "python receiver -> receiver": 330,
+   "python import -> import": 64,
+   "python scope -> scope": 58,
+   "python homonym -> type": 18
+  },
+  "so_rotulo": 0,
+  "por_dono": 17
+ },
+ "renderer-9b78f3a9": {
+  "simbolos": 819,
+  "chamadas": 2545,
+  "grafo": [
+   "e449a4750e23",
+   "e449a4750e23"
+  ],
+  "used_by_diferentes": 0,
+  "mudancas": [],
+  "resolucoes": {
+   "rust unique -> unique": 1028,
+   "rust no_candidate_in_project -> no_candidate_in_project": 556,
+   "rust type -> type": 623,
+   "rust above_candidate_limit -> above_candidate_limit": 173,
+   "rust homonym -> homonym": 80,
+   "rust trait_default -> trait_default": 40,
+   "rust receiver -> receiver": 21,
+   "rust scope -> scope": 24
+  },
+  "so_rotulo": 0,
+  "por_dono": 0
+ }
+}

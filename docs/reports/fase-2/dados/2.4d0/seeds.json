@@ -1,0 +1,62 @@
+{
+ "hc/api/models.py:1173": {
+  "seed": "src:8ce3e55438349ca1cfd362c1daa62b1f586496f894fd70587817115292f75e4d:d03082adb2aacfd44f96bb0df8339a145b4979fee4277225c3a4b8612d1493e6:method:43568:44760",
+  "text": "self.transport.notify(flip, notification=n)",
+  "dono": "Channel.notify"
+ },
+ "hc/api/models.py:1153": {
+  "seed": "src:8ce3e55438349ca1cfd362c1daa62b1f586496f894fd70587817115292f75e4d:d03082adb2aacfd44f96bb0df8339a145b4979fee4277225c3a4b8612d1493e6:method:43568:44760",
+  "text": "self.transport.is_noop(flip.new_status)",
+  "dono": "Channel.notify"
+ },
+ "hc/api/transports.py:162": {
+  "seed": "src:09216d7e52d9ea25534c3d3d9f6516ed7e4bb873736169a7c99b005901d8049c:267d3600b536a8b0eca384cb40f9088dd98b297d5b44210a73c0838d4cf86b7a:method:4410:5133",
+  "text": "cls.raise_for_response(r)",
+  "dono": "HttpTransport._request"
+ },
+ "hc/integrations/slack/transport.py:72": {
+  "seed": "src:d09376b87ef655675cbaca6c00333d95047f304f300f36a40d73d3583e8f1ac7:00a1cc1718d907e0158a2cbc7ea133cbebeea0e0ec0100ad575e33633f3afec5:method:967:3197",
+  "text": "self.fix_asterisks(check.schedule)",
+  "dono": "Slackalike.payload"
+ },
+ "hc/integrations/call/views.py:26": {
+  "seed": "src:7e332a756445340a2713527518881ed4ccaacab319ea282e0f308a3cc7943cf6:c9fa04708408ad5e4d511315b1d161a7eac1f952d2b819f3e692bda84b3b4e27:function:467:1341",
+  "text": "form.get_json()",
+  "dono": "add"
+ },
+ "hc/integrations/telegram/transport.py:65": {
+  "seed": "src:0c6c6024b0ea0f93e6057b1adc45753917a8eda6564d2284aad2fe1651099720:4770d1d96fc4a9b3aa80327dbcffd20dadc524dcad9bc8e1c018555b3d639fe1:method:1963:2397",
+  "text": "cls.post(cls.SM, json=payload)",
+  "dono": "Telegram.send"
+ },
+ "hc/integrations/mattermost/transport.py:15": {
+  "seed": "src:1a465123652dfec3cb338085fcc1b3502f3adf38651a051bf833699b1cb7118b:677844e8ff102a8def7ea77fa42a28aa9ca54ea384490323ae888564841bdb1f:method:261:573",
+  "text": "self.payload(flip)",
+  "dono": "Mattermost.notify"
+ },
+ "hc/api/models.py:1479": {
+  "seed": "src:8ce3e55438349ca1cfd362c1daa62b1f586496f894fd70587817115292f75e4d:d03082adb2aacfd44f96bb0df8339a145b4979fee4277225c3a4b8612d1493e6:method:53894:54521",
+  "text": "TokenBucket.authorize(value, 20, 3600)",
+  "dono": "TokenBucket.authorize_auth_ip"
+ },
+ "hc/api/models.py:1293": {
+  "seed": "src:8ce3e55438349ca1cfd362c1daa62b1f586496f894fd70587817115292f75e4d:d03082adb2aacfd44f96bb0df8339a145b4979fee4277225c3a4b8612d1493e6:method:47752:47864",
+  "text": "PdConf.load(self.value)",
+  "dono": "Channel.pd"
+ },
+ "hc/integrations/telegram/views.py:57": {
+  "seed": "src:c4fde6b6f5599aa0d282a377e0904bf17927cdf1a9314a683bbb4eb99d9f1448:6438decb9fda933fb8973a1a70cde5802145d8d3646999cd1cc34de0a55d8a2a:function:1797:2885",
+  "text": "TelegramCallback.load(request.body)",
+  "dono": "telegram_bot"
+ },
+ "hc/integrations/signal/views.py:119": {
+  "seed": "src:6cbfcf910f167db79550031b6ac41a9cc69aa17bf70f0459f3589170cf99eb7e:1634858310ed91547c82b647d359dae68846e8916ac1b30604a11a6113b482b9:function:3296:4514",
+  "text": "Signal.send(recipient, f\"Test message from {settings.SITE_NAME}\")",
+  "dono": "verify_signal_number"
+ },
+ "hc/integrations/telegram/views.py:82": {
+  "seed": "src:c4fde6b6f5599aa0d282a377e0904bf17927cdf1a9314a683bbb4eb99d9f1448:6438decb9fda933fb8973a1a70cde5802145d8d3646999cd1cc34de0a55d8a2a:function:1797:2885",
+  "text": "Telegram.send(chat.id, doc.message.message_thread_id, invite)",
+  "dono": "telegram_bot"
+ }
+}

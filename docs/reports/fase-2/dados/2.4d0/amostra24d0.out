@@ -1,0 +1,14 @@
+HC-158 classe_pelo_nome hc/api/models.py:1479 TokenBucket.authorize(value, 20, 3600) | hoje homonym 1 TokenBucket.authorize (hc/api/models.py:1442) 
+HC-159 classe_pelo_nome hc/api/models.py:1587 TokenBucket.authorize("s3_get_object_error", 3, 60, force=Tr | hoje homonym 1 TokenBucket.authorize (hc/api/models.py:1442) 
+HC-160 classe_pelo_nome hc/api/models.py:1293 PdConf.load(self.value) | hoje homonym 3 PdConf.load (hc/api/models.py:909); EmailConf.load (hc/api/models.py:929); TelegramCallback.load (hc/integrations/telegram/views.py:42) 
+HC-161 classe_pelo_nome hc/api/models.py:1307 EmailConf.load(self.value) | hoje homonym 3 PdConf.load (hc/api/models.py:909); EmailConf.load (hc/api/models.py:929); TelegramCallback.load (hc/integrations/telegram/views.py:42) 
+HC-162 classe_pelo_nome hc/integrations/telegram/views.py:57 TelegramCallback.load(request.body) | hoje homonym 3 PdConf.load (hc/api/models.py:909); EmailConf.load (hc/api/models.py:929); TelegramCallback.load (hc/integrations/telegram/views.py:42) 
+HC-163 classe_pelo_nome hc/integrations/signal/views.py:119 Signal.send(recipient, f"Test message from {settings.SITE_NA | hoje homonym 2 Telegram.send (hc/integrations/telegram/transport.py:55); Signal.send (hc/integrations/signal/transport.py:60) 
+HC-164 classe_pelo_nome_unica hc/integrations/telegram/transport.py:70 TokenBucket.authorize_telegram(self.channel.telegram.id) | hoje unique 1 TokenBucket.authorize_telegram (hc/api/models.py:1510) 
+HC-165 classe_pelo_nome_unica hc/integrations/signal/views.py:84 Signal._read_replies(payload_bytes) | hoje unique 1 Signal._read_replies (hc/integrations/signal/transport.py:105) 
+HC-166 classe_pelo_nome_unica hc/api/tests/test_tokenbucket.py:71 TokenBucket.record_s3_get_object_error() | hoje unique 1 TokenBucket.record_s3_get_object_error (hc/api/models.py:1583) 
+HC-167 classe_pelo_nome_fora hc/integrations/telegram/transport.py:41 Telegram.ErrorModel.model_validate_json(response.content) | hoje no_candidate_in_project 0  
+HC-168 classe_pelo_nome_fora hc/integrations/telegram/views.py:50 TelegramCallback.model_validate(doc, strict=True) | hoje no_candidate_in_project 0  
+HC-169 classe_pelo_nome_fora hc/lib/emails.py:19 Thread.__init__(self) | hoje above_candidate_limit 30  
+HC-170 classe_pelo_nome_atributo hc/api/models.py:1447 TokenBucket.objects.get_or_create(value=value) | hoje no_candidate_in_project 0  
+HC-171 classe_pelo_nome_atributo hc/integrations/email/tests/test_notify.py:187 Ping.GetBodyError() | hoje unique 1 Ping.GetBodyError (hc/api/models.py:703) 

@@ -126,10 +126,12 @@ corretas, lacunas explícitas e fatos aguardando aprovação humana.
   passo, o despacho por `TRANSPORTS` (Fase 2B); limites em SEARCH.md
   (`:=` em compreensão, `pub`, base de fora que delega, `cls(..)`, campo
   herdado).
-  **Ordem do resto da Fase 2 (proposta do usuário, 20/11/2026, a decidir
-  depois do 2.4):** 2.4 → 2.5 → Fase 2B → 2.6. Os workflows A, B e C do
-  Healthchecks só dependem da 2B e do 2.5 (as rotas passam a view como
-  referência); o 2.6 só serve ao workflow D (`ch.notify`, F22).
+  **Ordem do resto da Fase 2 (decidida pelo usuário em 25/11/2026):** 2.4d-0
+  → 2.4d → 2.5 → Fase 2B → 2.6. Os workflows A, B e C do Healthchecks só
+  dependem da 2B e do 2.5 (as rotas passam a view como referência); o 2.6 só
+  serve ao workflow D (`ch.notify`, F22). **Condição para a Parada 1 da 2B:**
+  decidir, com contagem, se o tipo do elemento das coleções do Django
+  (QuerySet, gerenciador) entra na 2B ou espera o 2.6.
 - 2.4c Despacho polimórfico (registrado em 25/11/2026, antes do 2.5). O
   correto é o corpo que roda (2.1, Q6 do 2.3, V1 do 2.4b):
   - sem sobrescrita numa subclasse do projeto, link único;
@@ -180,7 +182,10 @@ corretas, lacunas explícitas e fatos aguardando aprovação humana.
   [Fronteiras entre sistemas](#fronteiras-entre-sistemas-proposta-a-decidir),
   depois da Fase 7.
 - 2.4d-0 `Classe.metodo(..)` usa a classe (proposta aceita pelo usuário em
-  25/11/2026; antes do 2.4d; a Parada 1 não foi aberta). Python.
+  25/11/2026; antes do 2.4d). Python. Parada 1 aprovada em 25/11/2026
+  ([2.4d0-parada-1.md](docs/reports/fase-2/2.4d0-parada-1.md)); Parada 2 em
+  [2.4d0-parada-2.md](docs/reports/fase-2/2.4d0-parada-2.md), validada em
+  25/11/2026 (DEC-45 vigente, linha de base trocada).
   - `Classe.m(..)` com `Classe` do projeto (importada, do mesmo módulo ou
     aninhada) resolve pela cadeia da própria classe, para cima, na ordem de
     herança. Nunca desce para subclasses: não há despacho, ao contrário do
@@ -189,6 +194,12 @@ corretas, lacunas explícitas e fatos aguardando aprovação humana.
     `EmailConf.load`, `TelegramCallback.load`, `Telegram.send`/HC-156 e
     `Signal.send`); medir também o efeito indireto pelo retorno (DEC-41).
   - Motivo da ordem: o `used_by` pelo inverso da regra (2.4d) herdaria as 18.
+  - Resultado: as 18 fecham, e nenhuma outra chamada muda; o efeito indireto
+    pelo retorno é 0.
+  - **Link falso conhecido das regras antigas (2.4b), sem passo:** o método
+    religado (`def m` e depois `m = outra` no mesmo corpo), chamado por um
+    objeto. 0 casos no Healthchecks. **Gatilho:** se aparecer um caso, corrigir
+    antes do passo seguinte.
 - 2.4d `used_by` pelo inverso da regra (registrado em 25/11/2026, pedido do
   usuário; depois do 2.4d-0 e antes do 2.5). O `used_by` calculado pelo inverso
   da regra de resolução, incluindo o despacho polimórfico, à parte dos usos
@@ -204,6 +215,23 @@ corretas, lacunas explícitas e fatos aguardando aprovação humana.
   se uma edition antiga mudar ou se o `.studio` original mudar.
 
 ### Fase 2B — Relações de workflow
+**Ordem do resto da Fase 2 (decidida pelo usuário em 25/11/2026):** 2.4d-0 →
+2.4d → 2.5 → Fase 2B → 2.6. Os workflows A, B e C do Healthchecks só dependem
+da 2B e do 2.5; o 2.6 só serve ao workflow D (`ch.notify`, F22).
+
+**Condição para a Parada 1 da 2B (usuário, 25/11/2026):** decidir, com
+contagem, se o tipo do elemento das coleções do Django (QuerySet,
+gerenciador) entra na 2B ou espera o 2.6.
+
+**Condição para a Parada 1 da 2B (usuário, 25/11/2026):** o conhecimento de
+framework fica isolado como um perfil plugável (o Django é o primeiro),
+separado das regras da linguagem. O perfil diz onde os fluxos começam (rotas,
+comandos, jobs), como o banco é lido e gravado (ORM), quais bibliotecas do
+framework são externas conhecidas e como ele escolhe implementações
+(registro, injeção). Flask, FastAPI e, depois do Java, Spring devem entrar
+como perfis novos, sem mudar o núcleo nem as regras do Python. A Parada 1 da
+2B propõe a forma desse perfil e diz o que do Django não cabe nela.
+
 - Pontos de entrada: rotas (PIL-G4), management commands, jobs.
 - Chamadas soltas no topo dos arquivos Python (Q2 da Parada 1 do 2.3b,
   20/11): 48 no Healthchecks ficam fora do grafo, porque nenhum símbolo

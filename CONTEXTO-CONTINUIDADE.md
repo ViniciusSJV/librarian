@@ -1228,3 +1228,14 @@ Escrever o teste de regressão do P1 **antes** da correção: uma função Pytho
 - **Resultado:** portão APROVADO, com os números esperados: Python (157) 85/1/14/9/48, Rust (70) 44/0/1/10/15.
 - **Achado na implementação:** o texto da DEC-44 da Parada 1 tirava da lista uma sobrescrita de corpo vazio (`pass`) sobre um método concreto, que é um corpo que roda; passou a contar (0 casos). A regra ficou escrita com precisão a pedido do usuário (corpo vazio só é abstrato sem concreto acima dele), e o link ganhou `abstract_method`, para o detalhe dizer "abstrato" só quando é.
 - **Antes dos commits (25/11):** o Healthchecks não tem `@abstractmethod` (limite na DEC-44); a HC-156 mostrou que `Classe.metodo(..)` não usa a classe (18 `homonym` de 71; passo 2.4d-0, proposta aceita pelo usuário); verdade de HC-144 a HC-157 e DEC-44 validadas; as propostas de arquitetura do usuário foram para o PLANO, a decidir.
+
+## 32. Passo 2.4d-0: a chamada pelo nome da classe (25/11/2026)
+
+**Estado nesta data.** O estado vigente fica no [ESTADO-ATUAL.md](ESTADO-ATUAL.md). Relatórios: [Parada 1](docs/reports/fase-2/2.4d0-parada-1.md) e [Parada 2](docs/reports/fase-2/2.4d0-parada-2.md); folha: [2.4d0-revisao-amostra.md](docs/reports/fase-2/2.4d0-revisao-amostra.md).
+
+- **Decisões do usuário (25/11):** a ordem do resto da Fase 2 (2.4d-0 → 2.4d → 2.5 → Fase 2B → 2.6) e duas condições para a Parada 1 da 2B, no PLANO (o tipo do elemento das coleções do Django; o conhecimento de framework como perfil plugável).
+- **Parada 1:** a regra simulada num protótipo em Rust, numa cópia descartável; as 18 `homonym` fecham e o efeito indireto pelo retorno é 0. Q1 a Q7 aprovadas como recomendado, com cinco condições.
+- **Achados:** o método religado (`def m` e depois `m = outra`) é um link falso das regras antigas, com 0 casos (gatilho registrado); a estimativa ponderada do portão não é comparável entre passos, e a causa da queda de ~361 para ~356 não é a amostra nova, como a Parada 1 dizia; a tela (DEC-30) pegou um apóstrofo sem escape que quebrava a página, antes da medição final.
+- **Regra (sem perfil novo, grafo igual):** o nome da classe pelo escopo (DEC-42), a cadeia para cima (DEC-43), sem despacho.
+- **Resultado:** portão APROVADO, Python (171) 96/1/15/8/51 e Rust (70) 44/0/1/10/15; 18 de 18 mudanças previstas; suíte 550 aprovados; perguntas 01–14 com H1–H3; tela 240 de 240.
+- **Validação do usuário (25/11):** a verdade de HC-158 a HC-171 (seis no editor), a DEC-45 e a nota na DEC-44; a linha de base trocada. Pendência registrada: a estimativa ponderada não tem o estrato `type`.

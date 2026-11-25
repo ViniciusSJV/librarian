@@ -376,7 +376,7 @@ objeto. Sem perfil novo e sem gravar nada no grafo.
   entra.
 - **Exceções, porque o corpo é conhecido:** construtor exato (`x = T(..)`, `T(..).m()`), salvo se a classe ou uma
   base do projeto tem `__new__`, decorador ou palavra-chave (`metaclass`); `super()`; `T.m()` pelo nome da
-  classe (a regra não lhe dá tipo); e `self.__m()`, nome privado que a subclasse não alcança.
+  classe (2.4d-0, abaixo); e `self.__m()`, nome privado que a subclasse não alcança.
 - **Nome ligado a outra coisa.** Uma subclasse com `m = outra` no corpo, ou que escreve `self.m`, também tira o
   link único; saem os métodos conhecidos, que podem ser só o do tipo.
 - **Custo.** As subclasses são lidas uma vez por consulta, e só quando o nome é declarado em mais de um método
@@ -386,8 +386,25 @@ objeto. Sem perfil novo e sem gravar nada no grafo.
   também para uma chamada de produção (nota na DEC-44). Um nome ligado no corpo da subclasse só por `import`
   ou `for`, sem campo nem atributo com ele, não é visto. A anotação (`x: T = U()`) e o campo (`self.x = T()`)
   não são construtor exato. `typing.final` não é lido. Um `@abstractmethod` sem `ABCMeta` na cadeia não impede o
-  corpo de rodar, e a regra o tira da lista mesmo assim (0 casos). `Classe.metodo(..)` não usa a classe: a regra
-  só fecha quando o nome tem um candidato só (18 chamadas `homonym` no Healthchecks; passo 2.4d-0).
+  corpo de rodar, e a regra o tira da lista mesmo assim (0 casos).
+**Chamada pelo nome da classe (passo 2.4d-0; DEC-45).** Python, `C.m(..)`. Sem perfil novo e sem gravar nada no
+grafo: o nome é lido pelo escopo (2.4a) e a cadeia pelas bases (2.4b).
+- **O receptor.** Um nome, ou nomes com pontos, sem tipo escrito, que o escopo de quem chama liga a uma classe do
+  projeto: `from p import C` (no módulo ou na função, com a reexportação de até três passos do 2.4a), a classe do
+  próprio módulo, um alias (`as`, `D = C`), `modulo.C` e uma aninhada no corpo da classe (`C.D`). Uma variável com
+  o nome da classe não é a classe.
+- **A busca.** A cadeia da própria classe, para cima (C3), até a primeira que declara `m`: `type`, com `type_rule:
+  classe` (um `unique` confirmado continua `unique`). Nunca desce para subclasses, e por isso não há despacho.
+  `Base.m(self, ..)` e `Base.__init__(self)` são chamadas comuns, não instanciação.
+- **Base de fora antes, ou ninguém declara.** Não há link pela classe, e saem os métodos de classes fora da cadeia,
+  só para cima; sem nenhum, `no_candidate_in_project`.
+- **Não decide** (vale o que valia): o nome ligado a algo que não é método, também por cima de um `def`; `Protocol`;
+  metaclasse; uma aninhada herdada ou religada no corpo; `C.__m()` fora da própria classe; dois valores possíveis;
+  `type(x).m()` e `self.__class__.m()`.
+- **Risco.** Uma base de fora que delega, ou `C.m = outro`, perde o candidato certo, como na DEC-43 (0 casos).
+- **Link falso conhecido, das regras antigas (2.4b):** com `def m` e depois `m = outra` no mesmo corpo, um objeto
+  (`x: C`, `self`) ainda liga em `C.m`, e o Python roda `outra` (nível `CN-py-religada-objeto`). 0 casos no Healthchecks.
+  **Gatilho: se aparecer um caso, corrigir antes do passo seguinte.** A chamada pelo nome da classe já tem a guarda.
 
 `basis: "import"` quer dizer que o alvo veio da tabela de imports do arquivo, lida do texto
 com o parser do extrator, sem executar nada. `basis: "scope"` (2.4a) quer dizer que o alvo é uma
@@ -417,7 +434,8 @@ não está entre os corpos de um despacho) e `evidence`.
   com o nome. Desde o 2.2, num link `receiver` (`self.m()`), a função solta homônima não é
   admitida e sai da contagem: o link e o alvo são os mesmos, mas `candidates` pode ser menor
   que antes (163 links no Healthchecks).
-- Desde o 2.4b, `type_rule` também é `super`, `cls` ou `propriedade`, e as sobrescritas de um método
+- Desde o 2.4d-0, `type_rule` também é `classe` (o receptor nomeia a própria classe). Desde o 2.4b, também é
+  `super`, `cls` ou `propriedade`, e as sobrescritas de um método
   abstrato (`homonym`) têm `basis: "type"` e `type_rule`. Desde o 2.4c, também os corpos de um despacho, e
   `abstract_method` (só quando há) é o método abstrato do tipo escrito, que não roda e não está na lista.
 - `candidate_edge` é o ID da aresta `name_candidate`. É `null` só num link `type`,

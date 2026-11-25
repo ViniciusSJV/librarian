@@ -1,0 +1,11 @@
+donos das 18 17 símbolos | soma das medianas 4795 ms -> 4742 ms | mediana 268 -> 265 | máximo 522 -> 504
+1 em cada 24 símbolos 196 símbolos | soma das medianas 55719 ms -> 55312 ms | mediana 262 -> 260 | máximo 488 -> 481
+percurso 6 telegram_bot 6 nós, truncado false -> 31 nós, truncado false
+percurso 6 verify_signal_number 13 nós, truncado false -> 29 nós, truncado false
+percurso 6 TokenBucket.authorize_telegram 2 nós, truncado false -> 2 nós, truncado false
+percurso 6 Telegram.notify 56 nós, truncado false -> 56 nós, truncado false
+percurso 6 Channel.notify 46 nós, truncado false -> 46 nós, truncado false
+percurso 6 Ping.get_body_bytes 18 nós, truncado false -> 18 nós, truncado false
+percurso 6 Channel.pd 4 nós, truncado false -> 2 nós, truncado false
+percurso 6 PagerDuty.notify 41 nós, truncado false -> 41 nós, truncado false
+percurso 6 Email.notify 45 nós, truncado false -> 45 nós, truncado false

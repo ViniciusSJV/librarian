@@ -1,0 +1,28 @@
+healthchecks-25597e41 símbolos 4718 chamadas 16239 grafo 239c8e55d9b4 239c8e55d9b4 | used_by diferentes 0 | símbolos com resposta diferente 17 | mudanças 18 diretas 18 indiretas 0
+   python homonym -> type 18
+   direta   P hc/integrations/signal/views.py:119 Signal.send(recipient, f"Test message from {settings.SITE_NAME}") | homonym 2 -> type classe 2 Signal.send (hc/integrations/signal/transport.py:60)
+   direta   P hc/api/models.py:1293 PdConf.load(self.value) | homonym 3 -> type classe 3 PdConf.load (hc/api/models.py:909)
+   direta   P hc/api/models.py:1307 EmailConf.load(self.value) | homonym 3 -> type classe 3 EmailConf.load (hc/api/models.py:929)
+   direta   P hc/api/models.py:1479 TokenBucket.authorize(value, 20, 3600) | homonym 1 -> type classe 1 TokenBucket.authorize (hc/api/models.py:1442)
+   direta   P hc/api/models.py:1493 TokenBucket.authorize(f"em-{hashed}", 10, 3600) | homonym 1 -> type classe 1 TokenBucket.authorize (hc/api/models.py:1442)
+   direta   P hc/api/models.py:1500 TokenBucket.authorize(value, 20, 3600 * 24) | homonym 1 -> type classe 1 TokenBucket.authorize (hc/api/models.py:1442)
+   direta   P hc/api/models.py:1508 TokenBucket.authorize(f"pw-{hashed}", 20, 3600 * 24) | homonym 1 -> type classe 1 TokenBucket.authorize (hc/api/models.py:1442)
+   direta   P hc/api/models.py:1513 TokenBucket.authorize(f"tg-{telegram_id}", 6, 60) | homonym 1 -> type classe 1 TokenBucket.authorize (hc/api/models.py:1442)
+   direta   P hc/api/models.py:1521 TokenBucket.authorize(f"signal-{hashed}", 6, 60) | homonym 1 -> type classe 1 TokenBucket.authorize (hc/api/models.py:1442)
+   direta   P hc/api/models.py:1528 TokenBucket.authorize(value, 50, 3600 * 24) | homonym 1 -> type classe 1 TokenBucket.authorize (hc/api/models.py:1442)
+   direta   P hc/api/models.py:1536 TokenBucket.authorize(f"po-{hashed}", 6, 60) | homonym 1 -> type classe 1 TokenBucket.authorize (hc/api/models.py:1442)
+   direta   P hc/api/models.py:1544 TokenBucket.authorize(f"ntfy-{hashed}", 6, 60) | homonym 1 -> type classe 1 TokenBucket.authorize (hc/api/models.py:1442)
+   direta   P hc/api/models.py:1551 TokenBucket.authorize(value, 10, 3600 * 24) | homonym 1 -> type classe 1 TokenBucket.authorize (hc/api/models.py:1442)
+   direta   P hc/api/models.py:1559 TokenBucket.authorize(value, 96, 3600 * 24) | homonym 1 -> type classe 1 TokenBucket.authorize (hc/api/models.py:1442)
+   direta   P hc/api/models.py:1568 TokenBucket.authorize(value, 1, 90) | homonym 1 -> type classe 1 TokenBucket.authorize (hc/api/models.py:1442)
+   direta   P hc/api/models.py:1587 TokenBucket.authorize("s3_get_object_error", 3, 60, force=True) | homonym 1 -> type classe 1 TokenBucket.authorize (hc/api/models.py:1442)
+   direta   P hc/integrations/telegram/views.py:57 TelegramCallback.load(request.body) | homonym 3 -> type classe 3 TelegramCallback.load (hc/integrations/telegram/views.py:42)
+   direta   P hc/integrations/telegram/views.py:82 Telegram.send(chat.id, doc.message.message_thread_id, invite) | homonym 2 -> type classe 2 Telegram.send (hc/integrations/telegram/transport.py:55)
+   as 71: {
+  'unique -> unique (idêntica)': 27,
+  'no_candidate_in_project -> no_candidate_in_project (idêntica)': 26,
+  'homonym -> type': 18
+}
+   type_rule classe: 18
+   links únicos (Python) e os que o used_by do alvo não mostra: {"total":2620,"fora":705} -> {"total":2638,"fora":705}
+renderer-9b78f3a9 símbolos 819 chamadas 2545 grafo e449a4750e23 e449a4750e23 | used_by diferentes 0 | símbolos com resposta diferente 0 | mudanças 0 diretas 0 indiretas 0

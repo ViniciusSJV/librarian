@@ -1,0 +1,22 @@
+healthchecks-25597e41: /api/inventory 1899475 bytes; operações 1017, símbolos 1011, laços 65; diferenças: 0
+healthchecks-25597e41: a regra do inventário sobre 16239 chamadas (16239 linhas): seguidas 2551 -> 2569; mudam 18; só depois 0
+    hc/integrations/signal/views.py:119 4171-4236 | Signal.send(recipient, f"Test message from {settings.SITE_NAME}") | nao segue, 2 -> segue type Signal.send
+    hc/api/models.py:1293 47841-47864 | PdConf.load(self.value) | nao segue, 3 -> segue type PdConf.load
+    hc/api/models.py:1307 48274-48300 | EmailConf.load(self.value) | nao segue, 3 -> segue type EmailConf.load
+    hc/api/models.py:1479 54483-54521 | TokenBucket.authorize(value, 20, 3600) | nao segue, 1 -> segue type TokenBucket.authorize
+    hc/api/models.py:1493 55000-55047 | TokenBucket.authorize(f"em-{hashed}", 10, 3600) | nao segue, 1 -> segue type TokenBucket.authorize
+    hc/api/models.py:1500 55201-55244 | TokenBucket.authorize(value, 20, 3600 * 24) | nao segue, 1 -> segue type TokenBucket.authorize
+    hc/api/models.py:1508 55503-55555 | TokenBucket.authorize(f"pw-{hashed}", 20, 3600 * 24) | nao segue, 1 -> segue type TokenBucket.authorize
+    hc/api/models.py:1513 55700-55749 | TokenBucket.authorize(f"tg-{telegram_id}", 6, 60) | nao segue, 1 -> segue type TokenBucket.authorize
+    hc/api/models.py:1521 56017-56065 | TokenBucket.authorize(f"signal-{hashed}", 6, 60) | nao segue, 1 -> segue type TokenBucket.authorize
+    hc/api/models.py:1528 56262-56305 | TokenBucket.authorize(value, 50, 3600 * 24) | nao segue, 1 -> segue type TokenBucket.authorize
+    hc/api/models.py:1536 56580-56624 | TokenBucket.authorize(f"po-{hashed}", 6, 60) | nao segue, 1 -> segue type TokenBucket.authorize
+    hc/api/models.py:1544 56911-56957 | TokenBucket.authorize(f"ntfy-{hashed}", 6, 60) | nao segue, 1 -> segue type TokenBucket.authorize
+    hc/api/models.py:1551 57118-57161 | TokenBucket.authorize(value, 10, 3600 * 24) | nao segue, 1 -> segue type TokenBucket.authorize
+    hc/api/models.py:1559 57390-57433 | TokenBucket.authorize(value, 96, 3600 * 24) | nao segue, 1 -> segue type TokenBucket.authorize
+    hc/api/models.py:1568 57770-57805 | TokenBucket.authorize(value, 1, 90) | nao segue, 1 -> segue type TokenBucket.authorize
+    hc/api/models.py:1587 58553-58616 | TokenBucket.authorize("s3_get_object_error", 3, 60, force=True) | nao segue, 1 -> segue type TokenBucket.authorize
+    hc/integrations/telegram/views.py:57 1907-1942 | TelegramCallback.load(request.body) | nao segue, 3 -> segue type TelegramCallback.load
+    hc/integrations/telegram/views.py:82 2632-2693 | Telegram.send(chat.id, doc.message.message_thread_id, invite) | nao segue, 2 -> segue type Telegram.send
+renderer-9b78f3a9: /api/inventory 3054055 bytes; operações 129, símbolos 47, laços 50; diferenças: 0
+renderer-9b78f3a9: a regra do inventário sobre 2545 chamadas (2545 linhas): seguidas 1905 -> 1905; mudam 0; só depois 0
