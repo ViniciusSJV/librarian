@@ -1,0 +1,70 @@
+conferência com o binário: 31 iguais 0 diferentes 2 sem tipo
+chamadas com tipo estático do projeto: 55 ; com método achado: 38
+produção {
+  'campo | subclasses não | sobrescrita não | aberta não': 2,
+  'cls | subclasses sim | sobrescrita não | aberta não': 1,
+  'construtor | subclasses não | sobrescrita não | aberta não': 5,
+  'construtor | subclasses sim | sobrescrita sim | aberta não': 1,
+  'parametro | subclasses não | sobrescrita não | aberta não': 9,
+  'parametro | subclasses sim | sobrescrita não | aberta não': 1,
+  'parametro | subclasses sim | sobrescrita sim | aberta não': 3,
+  'parametro | subclasses sim | sobrescrita sim | aberta sim': 1,
+  'propriedade | subclasses sim | sobrescrita sim | aberta não': 2,
+  'retorno | subclasses não | sobrescrita não | aberta não': 6,
+  'self | subclasses não | sobrescrita não | aberta não': 1,
+  'self | subclasses sim | sobrescrita não | aberta não': 1,
+  'self | subclasses sim | sobrescrita sim | aberta não': 1,
+  'super | subclasses não | sobrescrita não | aberta não': 1,
+  'super | subclasses sim | sobrescrita sim | aberta não': 2,
+  'super(C, self) | subclasses sim | sobrescrita sim | aberta não': 1
+}
+teste {}
+== com sobrescrita (qualquer origem, inclusive as exceções)
+P pkg/heranca.py:187 x.passo() | parametro Raiz | hoje type 1 | exato false super false | extra 1 | cand 2 | sobrescrevem quem chama null | baseAbs false 
+      HFilho.passo (pkg/heranca.py:12)
+P pkg/heranca.py:231 x.transporte.enviar() | propriedade Transporte | hoje type 1 | exato false super false | extra 1 | cand 2 | sobrescrevem quem chama null | baseAbs false 
+      Rapido.enviar (pkg/heranca_apoio.py:48)
+P pkg/heranca.py:235 x.transporte.enviar() | propriedade Transporte | hoje type 1 | exato false super false | extra 1 | cand 2 | sobrescrevem quem chama null | baseAbs false 
+      Rapido.enviar (pkg/heranca_apoio.py:48)
+P pkg/heranca.py:93 super().mm() | super CoopA | hoje above_candidate_limit 0 | exato false super true | extra 1 | cand undefined | sobrescrevem quem chama null | baseAbs false 
+      CoopA.mm (pkg/heranca.py:92)
+P pkg/heranca.py:13 super().passo() | super HFilho | hoje type 1 | exato false super true | extra 1 | cand undefined | sobrescrevem quem chama null | baseAbs false 
+      HFilho.passo (pkg/heranca.py:12)
+P pkg/heranca.py:16 super(HFilho, self).passo() | super(C, self) HFilho | hoje type 1 | exato false super true | extra 1 | cand undefined | sobrescrevem quem chama null | baseAbs false 
+      HFilho.passo (pkg/heranca.py:12)
+P pkg/heranca_regras.py:113 x.mandar() | parametro Envio | hoje homonym 2 | exato false super false | extra 2 | cand 2 | sobrescrevem quem chama null | baseAbs true 
+      EnvioA.mandar (pkg/heranca_regras.py:21); EnvioC.mandar (pkg/heranca_regras.py:33)
+P pkg/heranca_regras.py:121 x.vazio() | parametro Envio | hoje homonym 2 | exato false super false | extra 2 | cand 2 | sobrescrevem quem chama null | baseAbs true 
+      EnvioA.vazio (pkg/heranca_regras.py:24); EnvioSuper.vazio (pkg/heranca_regras.py:38)
+P pkg/heranca_regras.py:129 x.mandar() | parametro ComAbc | hoje homonym 1 | exato false super false | extra 1 | cand 1 | sobrescrevem quem chama null | baseAbs true 
+      ComAbcFilha.mandar (pkg/heranca_regras.py:54)
+P pkg/heranca_regras.py:134 e.mandar() | construtor Envio | hoje type 1 | exato true super false | extra 2 | cand undefined | sobrescrevem quem chama null | baseAbs true 
+      EnvioA.mandar (pkg/heranca_regras.py:21); EnvioC.mandar (pkg/heranca_regras.py:33)
+P pkg/heranca_regras.py:17 self.mandar() | self Envio | hoje homonym 2 | exato false super false | extra 2 | cand 2 | sobrescrevem quem chama [] | baseAbs true 
+      EnvioA.mandar (pkg/heranca_regras.py:21); EnvioC.mandar (pkg/heranca_regras.py:33)
+== método achado e subclasse aberta (base de fora antes, nome ligado a atributo...)
+P pkg/heranca.py:187 x.passo() parametro type [
+  'ComGetattr {"undecided":"getattr"}',
+  'ForaAntes {"external":"threading.Thread"}'
+] 2
+== vários corpos na própria classe 0
+== T.m() pelo nome da classe 0 {}
+== métodos sobrescritos no projeto 8
+   CoopBase.mm (pkg/heranca.py:87) 2 CoopA,CoopB
+   DA.mm (pkg/heranca.py:55) 1 DC
+   Raiz.passo (pkg/heranca_apoio.py:8) 1 HFilho
+   Transporte.enviar (pkg/heranca_apoio.py:43) 1 Rapido
+   Canal.notify (pkg/models.py:40) 2 Email,Sms
+   Envio.mandar (pkg/heranca_regras.py:9) 2 EnvioA,EnvioC
+   Envio.vazio (pkg/heranca_regras.py:13) 2 EnvioA,EnvioSuper
+   ComAbc.mandar (pkg/heranca_regras.py:48) 1 ComAbcFilha
+== x.m() com m sobrescrito em algum lugar e sem tipo estático { 'prod enviar homonym': 1, 'prod notify homonym': 1 }
+== links únicos para um método sobrescrito
+   P pkg/heranca.py:187 x.passo() type parametro Raiz.passo (pkg/heranca_apoio.py:8)
+   P pkg/heranca.py:231 x.transporte.enviar() type propriedade Transporte.enviar (pkg/heranca_apoio.py:43)
+   P pkg/heranca.py:235 x.transporte.enviar() type propriedade Transporte.enviar (pkg/heranca_apoio.py:43)
+   P pkg/heranca.py:13 super().passo() type super Raiz.passo (pkg/heranca_apoio.py:8)
+   P pkg/heranca.py:16 super(HFilho, self).passo() type super Raiz.passo (pkg/heranca_apoio.py:8)
+   P pkg/heranca_regras.py:134 e.mandar() type construtor Envio.mandar (pkg/heranca_regras.py:9)
+   P pkg/heranca_regras.py:39 super().vazio() type super Envio.vazio (pkg/heranca_regras.py:13)
+== custo: não exatas com método achado 28 chamadas em 27 símbolos; com o nome em mais de um método 26 em 26 símbolos; (super, abstrato ou não achado: já precisam hoje, no máximo) 27 em 27

@@ -420,7 +420,7 @@ nome escrito, não um grafo de chamadas resolvido.
 **Quando não aparece nada, ou aparece menos do que existe:**
 
 - o grafo é anterior à G6: gere de novo (os usos do v5 exigem um grafo no v5 ou posterior, e um grafo novo sai no perfil atual);
-- a chamada vai para um método abstrato com mais de 8 sobrescritas (passo 2.4b): uma caixa só, com a contagem e linha tracejada; clique nela ou na linha para ver a lista completa e escolher;
+- a chamada tem mais de 8 corpos que podem rodar, porque subclasses sobrescrevem o método (passos 2.4b e 2.4c): uma caixa só, com a contagem e linha tracejada; clique nela ou na linha para ver a lista completa e escolher;
 - o nome tem mais de 8 homônimos (`new`, `get`, `__init__`): nenhuma ligação é desenhada,
   e a inspeção da ocorrência mostra a contagem;
 - os filtros esconderam os usos (a vista avisa quantos);

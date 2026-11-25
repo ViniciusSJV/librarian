@@ -1,0 +1,67 @@
+classes 0 traits 4
+{
+  'unique function': 30,
+  'no_candidate_in_project -': 556,
+  'type method': 612,
+  'unique method': 984,
+  'above_candidate_limit -': 173,
+  'type variant': 11,
+  'homonym method': 80,
+  'trait_default trait_method': 40,
+  'unique trait_method': 12,
+  'unique struct': 2,
+  'receiver method': 21,
+  'scope function': 24
+}
+src/patterns.rs:325 | stripe.color_at_object(object, world_point) | trait_default | Incuse::color_at_object (src/patterns.rs:13) | impls de mesmo nome | 1
+src/patterns.rs:326 | linear_gradient.color_at_object(object, world_poin | trait_default | Incuse::color_at_object (src/patterns.rs:13) | impls de mesmo nome | 1
+src/patterns.rs:327 | ring.color_at_object(object, world_point) | trait_default | Incuse::color_at_object (src/patterns.rs:13) | impls de mesmo nome | 1
+src/patterns.rs:328 | checkers.color_at_object(object, world_point) | trait_default | Incuse::color_at_object (src/patterns.rs:13) | impls de mesmo nome | 1
+src/patterns.rs:329 | default_pattern.color_at_object(object, world_poin | trait_default | Incuse::color_at_object (src/patterns.rs:13) | impls de mesmo nome | 1
+src/patterns.rs:339 | default_pattern.color_at(point) | trait_default | Incuse::color_at (src/patterns.rs:19) | impls de mesmo nome | 5
+src/sphere.rs:90 | sphere.intersect(ray) | trait_default | Intersectable::intersect (src/object.rs:29) | impls de mesmo nome | 0
+src/sphere.rs:105 | sphere.intersect(ray) | trait_default | Intersectable::intersect (src/object.rs:29) | impls de mesmo nome | 0
+src/sphere.rs:120 | sphere.intersect(ray) | trait_default | Intersectable::intersect (src/object.rs:29) | impls de mesmo nome | 0
+src/sphere.rs:133 | sphere.intersect(ray) | trait_default | Intersectable::intersect (src/object.rs:29) | impls de mesmo nome | 0
+src/sphere.rs:148 | sphere.intersect(ray) | trait_default | Intersectable::intersect (src/object.rs:29) | impls de mesmo nome | 0
+src/sphere.rs:181 | sphere.intersect(ray) | trait_default | Intersectable::intersect (src/object.rs:29) | impls de mesmo nome | 0
+src/sphere.rs:198 | sphere.intersect(ray) | trait_default | Intersectable::intersect (src/object.rs:29) | impls de mesmo nome | 0
+src/sphere.rs:206 | sphere.normal_at(Tuple::point(1., 0., 0.)) | unique | Intersectable::normal_at (src/object.rs:35) | impls de mesmo nome | 0
+src/sphere.rs:214 | sphere.normal_at(Tuple::point(0., 1., 0.)) | unique | Intersectable::normal_at (src/object.rs:35) | impls de mesmo nome | 0
+src/sphere.rs:222 | sphere.normal_at(Tuple::point(0., 0., 1.)) | unique | Intersectable::normal_at (src/object.rs:35) | impls de mesmo nome | 0
+src/sphere.rs:230 | sphere.normal_at(Tuple::point((3. as f64).sqrt() / | unique | Intersectable::normal_at (src/object.rs:35) | impls de mesmo nome | 0
+src/sphere.rs:238 | sphere.normal_at(Tuple::point((3. as f64).sqrt() / | unique | Intersectable::normal_at (src/object.rs:35) | impls de mesmo nome | 0
+src/sphere.rs:248 | sphere.normal_at(Tuple::point(0., 1.70711, -FRAC_1 | unique | Intersectable::normal_at (src/object.rs:35) | impls de mesmo nome | 0
+src/sphere.rs:261 | sphere.normal_at(Tuple::point(0., (2. as f64).sqrt | unique | Intersectable::normal_at (src/object.rs:35) | impls de mesmo nome | 0
+src/cylinder.rs:152 | cyl.intersect(*ray) | trait_default | Intersectable::intersect (src/object.rs:29) | impls de mesmo nome | 0
+src/cylinder.rs:170 | cyl.intersect(ray1) | trait_default | Intersectable::intersect (src/object.rs:29) | impls de mesmo nome | 0
+src/cylinder.rs:171 | cyl.intersect(ray2) | trait_default | Intersectable::intersect (src/object.rs:29) | impls de mesmo nome | 0
+src/cylinder.rs:172 | cyl.intersect(ray3) | trait_default | Intersectable::intersect (src/object.rs:29) | impls de mesmo nome | 0
+src/cylinder.rs:226 | cyl.intersect(ray1) | trait_default | Intersectable::intersect (src/object.rs:29) | impls de mesmo nome | 0
+src/cylinder.rs:227 | cyl.intersect(ray2) | trait_default | Intersectable::intersect (src/object.rs:29) | impls de mesmo nome | 0
+src/cylinder.rs:228 | cyl.intersect(ray3) | trait_default | Intersectable::intersect (src/object.rs:29) | impls de mesmo nome | 0
+src/cylinder.rs:229 | cyl.intersect(ray4) | trait_default | Intersectable::intersect (src/object.rs:29) | impls de mesmo nome | 0
+src/cylinder.rs:230 | cyl.intersect(ray5) | trait_default | Intersectable::intersect (src/object.rs:29) | impls de mesmo nome | 0
+src/cylinder.rs:231 | cyl.intersect(ray6) | trait_default | Intersectable::intersect (src/object.rs:29) | impls de mesmo nome | 0
+src/cylinder.rs:267 | cyl.intersect(*ray) | trait_default | Intersectable::intersect (src/object.rs:29) | impls de mesmo nome | 0
+src/matrix.rs:190 | self.determinant().not_equivalent(0.0) | unique | Equivalence::not_equivalent (src/equivalent.rs:6) | impls de mesmo nome | 0
+src/plane.rs:84 | plane.intersect(ray) | trait_default | Intersectable::intersect (src/object.rs:29) | impls de mesmo nome | 0
+src/plane.rs:93 | plane.intersect(ray) | trait_default | Intersectable::intersect (src/object.rs:29) | impls de mesmo nome | 0
+src/plane.rs:102 | plane.intersect(ray) | trait_default | Intersectable::intersect (src/object.rs:29) | impls de mesmo nome | 0
+src/plane.rs:113 | plane.intersect(ray) | trait_default | Intersectable::intersect (src/object.rs:29) | impls de mesmo nome | 0
+src/triangle.rs:134 | t.normal_at(Tuple::point(0., 0.5, 0.)) | unique | Intersectable::normal_at (src/object.rs:35) | impls de mesmo nome | 0
+src/triangle.rs:135 | t.normal_at(Tuple::point(-0.5, 0.75, 0.)) | unique | Intersectable::normal_at (src/object.rs:35) | impls de mesmo nome | 0
+src/triangle.rs:136 | t.normal_at(Tuple::point(0.5, 0.25, 0.)) | unique | Intersectable::normal_at (src/object.rs:35) | impls de mesmo nome | 0
+src/intersection.rs:169 | sphere.intersect(ray) | trait_default | Intersectable::intersect (src/object.rs:29) | impls de mesmo nome | 0
+src/intersection.rs:27 | intersection.object.normal_at(point) | unique | Intersectable::normal_at (src/object.rs:35) | impls de mesmo nome | 0
+src/cone.rs:160 | cone.intersect(ray1) | trait_default | Intersectable::intersect (src/object.rs:29) | impls de mesmo nome | 0
+src/cone.rs:161 | cone.intersect(ray2) | trait_default | Intersectable::intersect (src/object.rs:29) | impls de mesmo nome | 0
+src/cone.rs:162 | cone.intersect(ray3) | trait_default | Intersectable::intersect (src/object.rs:29) | impls de mesmo nome | 0
+src/cone.rs:182 | cone.intersect(ray) | trait_default | Intersectable::intersect (src/object.rs:29) | impls de mesmo nome | 0
+src/cone.rs:203 | cone.intersect(ray1) | trait_default | Intersectable::intersect (src/object.rs:29) | impls de mesmo nome | 0
+src/cone.rs:204 | cone.intersect(ray2) | trait_default | Intersectable::intersect (src/object.rs:29) | impls de mesmo nome | 0
+src/cone.rs:205 | cone.intersect(ray3) | trait_default | Intersectable::intersect (src/object.rs:29) | impls de mesmo nome | 0
+src/cube.rs:123 | c.intersect(ray_inside) | trait_default | Intersectable::intersect (src/object.rs:29) | impls de mesmo nome | 0
+src/cube.rs:126 | c.intersect(*ray) | trait_default | Intersectable::intersect (src/object.rs:29) | impls de mesmo nome | 0
+src/cube.rs:150 | c.intersect(*ray) | trait_default | Intersectable::intersect (src/object.rs:29) | impls de mesmo nome | 0
+src/groups.rs:95 | child.intersect(local_ray) | trait_default | Intersectable::intersect (src/object.rs:29) | impls de mesmo nome | 0

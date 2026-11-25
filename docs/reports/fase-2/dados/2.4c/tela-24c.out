@@ -1,0 +1,430 @@
+compilando librarian_studio e librarian_ingest (cargo build --release --locked)...
+   Compiling librarian-evidence v0.1.0 (C:\Users\beatl\Documents\Projetos\librarian\crates\librarian-evidence)
+   Compiling librarian-ingest v0.1.0 (C:\Users\beatl\Documents\Projetos\librarian\crates\librarian-ingest)
+   Compiling librarian-studio v0.1.0 (C:\Users\beatl\Documents\Projetos\librarian\crates\librarian-studio)
+    Finished `release` profile [optimized] target(s) in 23.99s
+binário: C:\Users\beatl\Documents\Projetos\librarian\target\release (compilado agora); fontes 39917b1e2c1c2ef812892fdd7fd226d8d75662a43bd256f04f8a4ba07d2b55a5 (244 arquivos: crates/ sem os .md, Cargo.toml, Cargo.lock e o que um .rs embute de fora de crates/); identidade recorded:74faa879e42a1fd8eb579f1448e4ba65ad8d6598:true; sha256 librarian_studio 2d9178f2fba352f0253fa6005876cb1816928a5739f921f632773baff55b9115, librarian_ingest 25c8c20529083f469eab293fcbc27ceda85f70457ac8e5183be0bc2d0aea2c41 (só registro: muda a cada link)
+run novo renderer-9b78f3a9: 20261125-051323
+run novo healthchecks-25597e41: 20261125-051323
+PASSA  PT form.get_json (construtor): o detalhe diz "seguida"/"followed"  -> add → PhoneNumberForm.get_json
+Fechar
+chama: form.get_json()
+hc/integrations/call/views.py:26
+seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante); no Python, declarado nele ou herdado das bases dele, e também cls, super() e @property
+PASSA  PT form.get_json (construtor): linha cheia (seguida), não tracejada
+PASSA  PT form.get_json (construtor): /api/calls dá type → /^PhoneNumberForm\.get_json$/  -> {"resolution":"type","to":"PhoneNumberForm.get_json","basis":"type","candidate_edge":"edge:0199cb187fe439e45250b3d99b7a040fa17644e2f4514f73807702c6ad7986d6","candidates":3}
+PASSA  PT form.get_json (construtor): basis type, candidate_edge presente  -> type edge:0199cb187fe439e45250b3d99b7a040fa17644e2f4514f73807702c6ad7986d6
+PASSA  PT form.get_json (construtor): o detalhe da linha diz o texto da resolução  -> seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante); no Python, declarado nele ou herdado das bases dele, e também cls, super() e @property || add → PhoneNumberForm.get_json
+Fechar
+chama: form.get_json()
+hc/integrations/call/views.py:26
+seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante); no Python, declarado nele ou herdado das bases dele, e também cls, super() e @property
+PASSA  PT form.get_json (construtor): type_rule construtor  -> construtor
+PASSA  PT form.get_json (construtor): relation calls  -> calls
+PASSA  PT form.get_json (construtor): nenhuma chave crua nem código sem texto  -> add → PhoneNumberForm.get_json
+Fechar
+chama: form.get_json()
+hc/integrations/call/views.py:26
+seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante); no Python, declarado nele ou herdado das bases dele, e também cls, super() e @property
+      [pt-type-hc_integrations_call_views_py_26.png] add → PhoneNumberForm.get_json ⏎ Fechar ⏎ chama: form.get_json() ⏎ hc/integrations/call/views.py:26 ⏎ seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante); no Python, declarado nele ou herdado das bases dele, e também cls, super() e @property
+PASSA  PT cls.post (herdado): o detalhe diz "seguida"/"followed"  -> Telegram.send → HttpTransport.post
+Fechar
+chama: cls.post(cls.SM, json=payload)
+hc/integrations/telegram/transport.py:65
+seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante); no Python, declarado nele ou herdado das bases dele, e também cls, super() e @property
+PASSA  PT cls.post (herdado): linha cheia (seguida), não tracejada
+PASSA  PT cls.post (herdado): /api/calls dá type → /^HttpTransport\.post$/  -> {"resolution":"type","to":"HttpTransport.post","basis":"type","candidate_edge":"edge:51ad32a15f952a61db716f7b41e538836eadfd156446667bb798d365aad9b1ca","candidates":5}
+PASSA  PT cls.post (herdado): basis type, candidate_edge presente  -> type edge:51ad32a15f952a61db716f7b41e538836eadfd156446667bb798d365aad9b1ca
+PASSA  PT cls.post (herdado): o detalhe da linha diz o texto da resolução  -> seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante); no Python, declarado nele ou herdado das bases dele, e também cls, super() e @property || Telegram.send → HttpTransport.post
+Fechar
+chama: cls.post(cls.SM, json=payload)
+hc/integrations/telegram/transport.py:65
+seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante); no Python, declarado nele ou herdado das bases dele, e também cls, super() e @property
+PASSA  PT cls.post (herdado): type_rule cls  -> cls
+PASSA  PT cls.post (herdado): relation calls  -> calls
+PASSA  PT cls.post (herdado): nenhuma chave crua nem código sem texto  -> Telegram.send → HttpTransport.post
+Fechar
+chama: cls.post(cls.SM, json=payload)
+hc/integrations/telegram/transport.py:65
+seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante); no Python, declarado nele ou herdado das bases dele, e também cls, super() e @property
+      [pt-type-hc_integrations_telegram_transport_py_65.png] Telegram.send → HttpTransport.post ⏎ Fechar ⏎ chama: cls.post(cls.SM, json=payload) ⏎ hc/integrations/telegram/transport.py:65 ⏎ seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante); no Python, declarado nele ou herdado das bases dele, e também cls, super() e @property
+PASSA  PT self.payload (herdado): o detalhe diz "seguida"/"followed"  -> Mattermost.notify → Slackalike.payload
+Fechar
+chama: self.payload(flip)
+hc/integrations/mattermost/transport.py:15
+seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante); no Python, declarado nele ou herdado das bases dele, e também cls, super() e @property
+PASSA  PT self.payload (herdado): linha cheia (seguida), não tracejada
+PASSA  PT self.payload (herdado): /api/calls dá type → /^Slackalike\.payload$/  -> {"resolution":"type","to":"Slackalike.payload","basis":"type","candidate_edge":"edge:1e67dcbb1130dde2da6295ab911de29dc421a68021ed0621327644a20ba3f95b","candidates":3}
+PASSA  PT self.payload (herdado): basis type, candidate_edge presente  -> type edge:1e67dcbb1130dde2da6295ab911de29dc421a68021ed0621327644a20ba3f95b
+PASSA  PT self.payload (herdado): o detalhe da linha diz o texto da resolução  -> seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante); no Python, declarado nele ou herdado das bases dele, e também cls, super() e @property || Mattermost.notify → Slackalike.payload
+Fechar
+chama: self.payload(flip)
+hc/integrations/mattermost/transport.py:15
+seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante); no Python, declarado nele ou herdado das bases dele, e também cls, super() e @property
+PASSA  PT self.payload (herdado): type_rule self  -> self
+PASSA  PT self.payload (herdado): relation calls  -> calls
+PASSA  PT self.payload (herdado): nenhuma chave crua nem código sem texto  -> Mattermost.notify → Slackalike.payload
+Fechar
+chama: self.payload(flip)
+hc/integrations/mattermost/transport.py:15
+seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante); no Python, declarado nele ou herdado das bases dele, e também cls, super() e @property
+      [pt-type-hc_integrations_mattermost_transport_py_15.png] Mattermost.notify → Slackalike.payload ⏎ Fechar ⏎ chama: self.payload(flip) ⏎ hc/integrations/mattermost/transport.py:15 ⏎ seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante); no Python, declarado nele ou herdado das bases dele, e também cls, super() e @property
+PASSA  PT notify (abstrato): uma caixa com a contagem  -> is_noop14 candidatasself.transport.is_noop(flip.new_status): 14 candidatas, numa caixa só (mais de 8 não viram linhas)
+clique: ver a lista e escolher | notify30 candidatasself.transport.notify(flip, notification=n): 30 candidatas, numa caixa só (mais de 8 não viram linhas)
+clique: ver a lista e escolher
+PASSA  PT notify (abstrato): linha tracejada  -> true
+PASSA  PT notify (abstrato): o detalhe lista todas, com arquivo  -> Apprise.notify hc/integrations/apprise/transport.py:17Seguir por este || Call.notify hc/integrations/call/transport.py:39Seguir por este || Discord.notify hc/integrations/discord/transport.py:19Seguir por este
+PASSA  PT notify (abstrato): traz Webhook.notify  -> Apprise.notify,Call.notify,Discord.notify,Email.notify,GitHub.notify,GoogleChat.notify,Gotify.notify,Group.notify,Matrix.notify,Mattermost.notify,MsTeamsWorkflow.notify,Ntfy.notify,Opsgenie.notify,PagerDuty.notify,PagerTree.notify,Pushbullet.notify,Pushover.notify,RocketChat.notify,Shell.notify,Signal.notify,Slack.notify,Slackalike.notify,Sms.notify,Spike.notify,Telegram.notify,Trello.notify,VictorOps.notify,Webhook.notify,WhatsApp.notify,Zulip.notify
+PASSA  PT notify (abstrato): não traz Transport.notify
+PASSA  PT notify (abstrato): homonym, basis type, type_rule propriedade, candidates 30  -> {"abstract_method":"src:09216d7e52d9ea25534c3d3d9f6516ed7e4bb873736169a7c99b005901d8049c:267d3600b536a8b0eca384cb40f9088dd98b297d5b44210a73c0838d4cf86b7a:method:1902:2179","basis":"type","candidate_edge":null,"candidates":30,"evidence":{"end_byte":44322,"end_line":1173,"excerpt_sha256":"d01ef750d66a
+PASSA  PT notify (abstrato): o texto diz que Transport.notify é abstrato, não roda e saiu da lista  -> Channel.notify → notify
+Fechar
+chama: self.transport.notify(flip, notification=n)
+hc/api/models.py:1173
+não seguida: Transport.notify, do tipo escrito, é abstrato: não roda, e por isso saiu da lista; roda o corpo da classe do objeto, e 30 corpo(s) de subclasses do projeto podem rodar
+A lista completa; escolha uma para o percurso seguir por ela:
+Apprise.notify hc/integrations/apprise/transport.py:1
+PASSA  PT notify (abstrato): abstract_method Transport.notify  -> src:09216d7e52d9ea25534c3d3d9f6516ed7e4bb873736169a7c99b005901d8049c:267d3600b536a8b0eca384cb40f9088dd98b297d5b44210a73c0838d4cf86b7a:method:1902:2179
+PASSA  PT notify (abstrato): nenhuma chave crua  -> Channel.notify → notify
+Fechar
+chama: self.transport.notify(flip, notification=n)
+hc/api/models.py:1173
+não seguida: Transport.notify, do tipo escrito, é abstrato: não roda, e por isso saiu da lista; 
+PASSA  PT notify (abstrato): clicar na caixa abre a lista
+PASSA  PT notify (abstrato): a escolha vira um link chosen para Slackalike.notify  -> ["src:d09376b87ef655675cbaca6c00333d95047f304f300f36a40d73d3583e8f1ac7:00a1cc1718d907e0158a2cbc7ea133cbebeea0e0ec0100ad575e33633f3afec5:method:3575:3716"]
+PASSA  PT notify (abstrato): limpar as escolhas volta à caixa
+PASSA  PT raise_for_response: uma caixa com a contagem  -> raise_for_response12 candidatascls.raise_for_response(r): 12 candidatas, numa caixa só (mais de 8 não viram linhas)
+clique: ver a lista e escolher
+PASSA  PT raise_for_response: linha tracejada  -> true
+PASSA  PT raise_for_response: o detalhe lista todas, com arquivo  -> HttpTransport.raise_for_response hc/api/transports.py:133Seguir por este || Call.raise_for_response hc/integrations/call/transport.py:23Seguir por este || Discord.raise_for_response hc/integrations/discord/transport.py:12Seguir por este
+PASSA  PT raise_for_response: traz HttpTransport.raise_for_response  -> HttpTransport.raise_for_response,Call.raise_for_response,Discord.raise_for_response,GitHub.raise_for_response,Opsgenie.raise_for_response,Pushover.raise_for_response,Slack.raise_for_response,Sms.raise_for_response,Telegram.raise_for_response,VictorOps.raise_for_response,WhatsApp.raise_for_response,Zulip.raise_for_response
+PASSA  PT raise_for_response: homonym, basis type, type_rule cls, candidates 12  -> {"basis":"type","candidate_edge":null,"candidates":12,"evidence":{"end_byte":5051,"end_line":162,"excerpt_sha256":"89a9a884dadc20d6c23eff51609a1a4fc86698861886704751e03cdf425f1556","path":"hc/api/transports.py","source_id":"src:09216d7e52d9ea25534c3d3d9f6516ed7e4bb873736169a7c99b005901d8049c:267d360
+PASSA  PT raise_for_response: o texto da resolução, sem dizer abstrato  -> HttpTransport._request → raise_for_response
+Fechar
+chama: cls.raise_for_response(r)
+hc/api/transports.py:162
+não seguida: roda o corpo da classe do objeto; 12 corpo(s) do projeto podem rodar, do tipo escrito ou de uma subclasse que o sobrescreve
+A lista completa; escolha uma para o percurso seguir por ela:
+HttpTransport.raise_for_response hc/api/transports.py:133Seguir por este
+Call.raise_for_resp
+PASSA  PT raise_for_response: abstract_method ausente
+PASSA  PT raise_for_response: nenhuma chave crua  -> HttpTransport._request → raise_for_response
+Fechar
+chama: cls.raise_for_response(r)
+hc/api/transports.py:162
+não seguida: roda o corpo da classe do objeto; 12 corpo(s) do projeto podem rodar, do tipo 
+PASSA  PT raise_for_response: clicar na caixa abre a lista
+PASSA  PT raise_for_response: a escolha vira um link chosen para Discord.raise_for_response  -> ["src:248e0d5440e216f6c4af6e6aac808a4b9aff680117775936e9df6e64ae790738:aec2a8c4dfee5c4856ec011b55b1cef408393cba510ecdb9b80b9f321173772e:method:278:580"]
+PASSA  PT raise_for_response: limpar as escolhas volta à caixa
+PASSA  PT is_noop: uma caixa com a contagem  -> is_noop14 candidatasself.transport.is_noop(flip.new_status): 14 candidatas, numa caixa só (mais de 8 não viram linhas)
+clique: ver a lista e escolher | notify30 candidatasself.transport.notify(flip, notification=n): 30 candidatas, numa caixa só (mais de 8 não viram linhas)
+clique: ver a lista e escolher
+PASSA  PT is_noop: linha tracejada  -> true
+PASSA  PT is_noop: o detalhe lista todas, com arquivo  -> Transport.is_noop hc/api/transports.py:76Seguir por este || Call.is_noop hc/integrations/call/transport.py:36Seguir por este || Email.is_noop hc/integrations/email/transport.py:115Seguir por este
+PASSA  PT is_noop: traz Transport.is_noop  -> Transport.is_noop,Call.is_noop,Email.is_noop,GitHub.is_noop,Gotify.is_noop,Ntfy.is_noop,Pushover.is_noop,RemovedTransport.is_noop,Shell.is_noop,Signal.is_noop,Sms.is_noop,Trello.is_noop,Webhook.is_noop,WhatsApp.is_noop
+PASSA  PT is_noop: homonym, basis type, type_rule propriedade, candidates 14  -> {"basis":"type","candidate_edge":null,"candidates":14,"evidence":{"end_byte":43679,"end_line":1153,"excerpt_sha256":"9b884a04d6b469849ac79b69e9a08a624a4612a9a59dad50934c7e2a441468e9","path":"hc/api/models.py","source_id":"src:8ce3e55438349ca1cfd362c1daa62b1f586496f894fd70587817115292f75e4d:d03082adb
+PASSA  PT is_noop: o texto da resolução, sem dizer abstrato  -> Channel.notify → is_noop
+Fechar
+chama: self.transport.is_noop(flip.new_status)
+hc/api/models.py:1153
+não seguida: roda o corpo da classe do objeto; 14 corpo(s) do projeto podem rodar, do tipo escrito ou de uma subclasse que o sobrescreve
+A lista completa; escolha uma para o percurso seguir por ela:
+Transport.is_noop hc/api/transports.py:76Seguir por este
+Call.is_noop hc/integrations/call/transport
+PASSA  PT is_noop: abstract_method ausente
+PASSA  PT is_noop: nenhuma chave crua  -> Channel.notify → is_noop
+Fechar
+chama: self.transport.is_noop(flip.new_status)
+hc/api/models.py:1153
+não seguida: roda o corpo da classe do objeto; 14 corpo(s) do projeto podem rodar, do tipo escrito 
+PASSA  PT is_noop: clicar na caixa abre a lista
+PASSA  PT is_noop: a escolha vira um link chosen para Webhook.is_noop  -> ["src:bb02fdf843d2e4f958a9a2261d1dad942dfa674198edc0aab04c0f4e2cc8d40a:f44f3ecb85be279dc2d4ee3b18b8d5a68c8ca05173d0107c4533b71c9f8ee59c:method:2114:2323"]
+PASSA  PT is_noop: limpar as escolhas volta à caixa
+PASSA  PT fix_asterisks: duas linhas tracejadas  -> [true,true]
+PASSA  PT fix_asterisks: homonym, basis type, self, 2, com aresta  -> {"basis":"type","candidate_edge":"edge:b70a3b8f4494bee294a2cee4f9ebbefc485f77f75ebe177be000f994d7dc826f","candidates":2,"evidence":{"end_byte":2688,"end_line":72,"excerpt_sha256":"13085217cd21b2fc682a2912f0a4bc498669e4c3c37a3079c22d26c77f10a433","path":"hc/integrations/slack/transport.py","source_id
+PASSA  PT fix_asterisks: o texto da resolução, sem dizer abstrato  -> Slackalike.payload → Slackalike.fix_asterisks
+Fechar
+chama: self.fix_asterisks(check.schedule)
+hc/integrations/slack/transport.py:72
+não seguida: roda o corpo da classe do objeto; 2 corpo(s) do projeto podem rodar, do tipo escrito ou de uma subclasse que o sobrescreveSeguir por este
+PASSA  PT fix_asterisks: a escolha vira um link chosen  -> ["src:d09376b87ef655675cbaca6c00333d95047f304f300f36a40d73d3583e8f1ac7:00a1cc1718d907e0158a2cbc7ea133cbebeea0e0ec0100ad575e33633f3afec5:method:3205:3567"]
+PASSA  PT: só o texto do abstrato diz "abstrato"
+PASSA  PT: nenhum erro de página
+PASSA  PT: nada além de abrir o projeto (POST /api/project = store.open) e /api/calls
+PASSA  EN form.get_json (construtor): o detalhe diz "seguida"/"followed"  -> add → PhoneNumberForm.get_json
+Close
+calls: form.get_json()
+hc/integrations/call/views.py:26
+followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant); in Python, declared by it or inherited from its bases, and also cls, super() and @property
+PASSA  EN form.get_json (construtor): linha cheia (seguida), não tracejada
+PASSA  EN form.get_json (construtor): /api/calls dá type → /^PhoneNumberForm\.get_json$/  -> {"resolution":"type","to":"PhoneNumberForm.get_json","basis":"type","candidate_edge":"edge:0199cb187fe439e45250b3d99b7a040fa17644e2f4514f73807702c6ad7986d6","candidates":3}
+PASSA  EN form.get_json (construtor): basis type, candidate_edge presente  -> type edge:0199cb187fe439e45250b3d99b7a040fa17644e2f4514f73807702c6ad7986d6
+PASSA  EN form.get_json (construtor): o detalhe da linha diz o texto da resolução  -> followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant); in Python, declared by it or inherited from its bases, and also cls, super() and @property || add → PhoneNumberForm.get_json
+Close
+calls: form.get_json()
+hc/integrations/call/views.py:26
+followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant); in Python, declared by it or inherited from its bases, and also cls, super() and @property
+PASSA  EN form.get_json (construtor): type_rule construtor  -> construtor
+PASSA  EN form.get_json (construtor): relation calls  -> calls
+PASSA  EN form.get_json (construtor): nenhuma chave crua nem código sem texto  -> add → PhoneNumberForm.get_json
+Close
+calls: form.get_json()
+hc/integrations/call/views.py:26
+followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant); in Python, declared by it or inherited from its bases, and also cls, super() and @property
+      [en-type-hc_integrations_call_views_py_26.png] add → PhoneNumberForm.get_json ⏎ Close ⏎ calls: form.get_json() ⏎ hc/integrations/call/views.py:26 ⏎ followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant); in Python, declared by it or inherited from its bases, and also cls, super() and @property
+PASSA  EN cls.post (herdado): o detalhe diz "seguida"/"followed"  -> Telegram.send → HttpTransport.post
+Close
+calls: cls.post(cls.SM, json=payload)
+hc/integrations/telegram/transport.py:65
+followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant); in Python, declared by it or inherited from its bases, and also cls, super() and @property
+PASSA  EN cls.post (herdado): linha cheia (seguida), não tracejada
+PASSA  EN cls.post (herdado): /api/calls dá type → /^HttpTransport\.post$/  -> {"resolution":"type","to":"HttpTransport.post","basis":"type","candidate_edge":"edge:51ad32a15f952a61db716f7b41e538836eadfd156446667bb798d365aad9b1ca","candidates":5}
+PASSA  EN cls.post (herdado): basis type, candidate_edge presente  -> type edge:51ad32a15f952a61db716f7b41e538836eadfd156446667bb798d365aad9b1ca
+PASSA  EN cls.post (herdado): o detalhe da linha diz o texto da resolução  -> followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant); in Python, declared by it or inherited from its bases, and also cls, super() and @property || Telegram.send → HttpTransport.post
+Close
+calls: cls.post(cls.SM, json=payload)
+hc/integrations/telegram/transport.py:65
+followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant); in Python, declared by it or inherited from its bases, and also cls, super() and @property
+PASSA  EN cls.post (herdado): type_rule cls  -> cls
+PASSA  EN cls.post (herdado): relation calls  -> calls
+PASSA  EN cls.post (herdado): nenhuma chave crua nem código sem texto  -> Telegram.send → HttpTransport.post
+Close
+calls: cls.post(cls.SM, json=payload)
+hc/integrations/telegram/transport.py:65
+followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant); in Python, declared by it or inherited from its bases, and also cls, super() and @property
+      [en-type-hc_integrations_telegram_transport_py_65.png] Telegram.send → HttpTransport.post ⏎ Close ⏎ calls: cls.post(cls.SM, json=payload) ⏎ hc/integrations/telegram/transport.py:65 ⏎ followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant); in Python, declared by it or inherited from its bases, and also cls, super() and @property
+PASSA  EN self.payload (herdado): o detalhe diz "seguida"/"followed"  -> Mattermost.notify → Slackalike.payload
+Close
+calls: self.payload(flip)
+hc/integrations/mattermost/transport.py:15
+followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant); in Python, declared by it or inherited from its bases, and also cls, super() and @property
+PASSA  EN self.payload (herdado): linha cheia (seguida), não tracejada
+PASSA  EN self.payload (herdado): /api/calls dá type → /^Slackalike\.payload$/  -> {"resolution":"type","to":"Slackalike.payload","basis":"type","candidate_edge":"edge:1e67dcbb1130dde2da6295ab911de29dc421a68021ed0621327644a20ba3f95b","candidates":3}
+PASSA  EN self.payload (herdado): basis type, candidate_edge presente  -> type edge:1e67dcbb1130dde2da6295ab911de29dc421a68021ed0621327644a20ba3f95b
+PASSA  EN self.payload (herdado): o detalhe da linha diz o texto da resolução  -> followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant); in Python, declared by it or inherited from its bases, and also cls, super() and @property || Mattermost.notify → Slackalike.payload
+Close
+calls: self.payload(flip)
+hc/integrations/mattermost/transport.py:15
+followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant); in Python, declared by it or inherited from its bases, and also cls, super() and @property
+PASSA  EN self.payload (herdado): type_rule self  -> self
+PASSA  EN self.payload (herdado): relation calls  -> calls
+PASSA  EN self.payload (herdado): nenhuma chave crua nem código sem texto  -> Mattermost.notify → Slackalike.payload
+Close
+calls: self.payload(flip)
+hc/integrations/mattermost/transport.py:15
+followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant); in Python, declared by it or inherited from its bases, and also cls, super() and @property
+      [en-type-hc_integrations_mattermost_transport_py_15.png] Mattermost.notify → Slackalike.payload ⏎ Close ⏎ calls: self.payload(flip) ⏎ hc/integrations/mattermost/transport.py:15 ⏎ followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant); in Python, declared by it or inherited from its bases, and also cls, super() and @property
+PASSA  EN notify (abstrato): uma caixa com a contagem  -> is_noop14 candidatesself.transport.is_noop(flip.new_status): 14 candidates, in one box (more than 8 are not drawn as lines)
+click: see the list and choose | notify30 candidatesself.transport.notify(flip, notification=n): 30 candidates, in one box (more than 8 are not drawn as lines)
+click: see the list and choose
+PASSA  EN notify (abstrato): linha tracejada  -> true
+PASSA  EN notify (abstrato): o detalhe lista todas, com arquivo  -> Apprise.notify hc/integrations/apprise/transport.py:17Follow this one || Call.notify hc/integrations/call/transport.py:39Follow this one || Discord.notify hc/integrations/discord/transport.py:19Follow this one
+PASSA  EN notify (abstrato): traz Webhook.notify  -> Apprise.notify,Call.notify,Discord.notify,Email.notify,GitHub.notify,GoogleChat.notify,Gotify.notify,Group.notify,Matrix.notify,Mattermost.notify,MsTeamsWorkflow.notify,Ntfy.notify,Opsgenie.notify,PagerDuty.notify,PagerTree.notify,Pushbullet.notify,Pushover.notify,RocketChat.notify,Shell.notify,Signal.notify,Slack.notify,Slackalike.notify,Sms.notify,Spike.notify,Telegram.notify,Trello.notify,VictorOps.notify,Webhook.notify,WhatsApp.notify,Zulip.notify
+PASSA  EN notify (abstrato): não traz Transport.notify
+PASSA  EN notify (abstrato): homonym, basis type, type_rule propriedade, candidates 30  -> {"abstract_method":"src:09216d7e52d9ea25534c3d3d9f6516ed7e4bb873736169a7c99b005901d8049c:267d3600b536a8b0eca384cb40f9088dd98b297d5b44210a73c0838d4cf86b7a:method:1902:2179","basis":"type","candidate_edge":null,"candidates":30,"evidence":{"end_byte":44322,"end_line":1173,"excerpt_sha256":"d01ef750d66a
+PASSA  EN notify (abstrato): o texto diz que Transport.notify é abstrato, não roda e saiu da lista  -> Channel.notify → notify
+Close
+calls: self.transport.notify(flip, notification=n)
+hc/api/models.py:1173
+not followed: Transport.notify, the written type's, is abstract: it does not run, so it is not in the list; the body of the object's class runs, and 30 bodies of the project's subclasses may run
+The full list; choose one for the walk to go on through it:
+Apprise.notify hc/integrations/apprise/tra
+PASSA  EN notify (abstrato): abstract_method Transport.notify  -> src:09216d7e52d9ea25534c3d3d9f6516ed7e4bb873736169a7c99b005901d8049c:267d3600b536a8b0eca384cb40f9088dd98b297d5b44210a73c0838d4cf86b7a:method:1902:2179
+PASSA  EN notify (abstrato): nenhuma chave crua  -> Channel.notify → notify
+Close
+calls: self.transport.notify(flip, notification=n)
+hc/api/models.py:1173
+not followed: Transport.notify, the written type's, is abstract: it does not run, so it is not in
+PASSA  EN notify (abstrato): clicar na caixa abre a lista
+PASSA  EN notify (abstrato): a escolha vira um link chosen para Slackalike.notify  -> ["src:d09376b87ef655675cbaca6c00333d95047f304f300f36a40d73d3583e8f1ac7:00a1cc1718d907e0158a2cbc7ea133cbebeea0e0ec0100ad575e33633f3afec5:method:3575:3716"]
+PASSA  EN notify (abstrato): limpar as escolhas volta à caixa
+PASSA  EN raise_for_response: uma caixa com a contagem  -> raise_for_response12 candidatescls.raise_for_response(r): 12 candidates, in one box (more than 8 are not drawn as lines)
+click: see the list and choose
+PASSA  EN raise_for_response: linha tracejada  -> true
+PASSA  EN raise_for_response: o detalhe lista todas, com arquivo  -> HttpTransport.raise_for_response hc/api/transports.py:133Follow this one || Call.raise_for_response hc/integrations/call/transport.py:23Follow this one || Discord.raise_for_response hc/integrations/discord/transport.py:12Follow this one
+PASSA  EN raise_for_response: traz HttpTransport.raise_for_response  -> HttpTransport.raise_for_response,Call.raise_for_response,Discord.raise_for_response,GitHub.raise_for_response,Opsgenie.raise_for_response,Pushover.raise_for_response,Slack.raise_for_response,Sms.raise_for_response,Telegram.raise_for_response,VictorOps.raise_for_response,WhatsApp.raise_for_response,Zulip.raise_for_response
+PASSA  EN raise_for_response: homonym, basis type, type_rule cls, candidates 12  -> {"basis":"type","candidate_edge":null,"candidates":12,"evidence":{"end_byte":5051,"end_line":162,"excerpt_sha256":"89a9a884dadc20d6c23eff51609a1a4fc86698861886704751e03cdf425f1556","path":"hc/api/transports.py","source_id":"src:09216d7e52d9ea25534c3d3d9f6516ed7e4bb873736169a7c99b005901d8049c:267d360
+PASSA  EN raise_for_response: o texto da resolução, sem dizer abstrato  -> HttpTransport._request → raise_for_response
+Close
+calls: cls.raise_for_response(r)
+hc/api/transports.py:162
+not followed: the body of the object's class runs; 12 bodies of the project may run, the written type's or that of a subclass that overrides it
+The full list; choose one for the walk to go on through it:
+HttpTransport.raise_for_response hc/api/transports.py:133Follow this one
+Call.raise_for_
+PASSA  EN raise_for_response: abstract_method ausente
+PASSA  EN raise_for_response: nenhuma chave crua  -> HttpTransport._request → raise_for_response
+Close
+calls: cls.raise_for_response(r)
+hc/api/transports.py:162
+not followed: the body of the object's class runs; 12 bodies of the project may run, the wri
+PASSA  EN raise_for_response: clicar na caixa abre a lista
+PASSA  EN raise_for_response: a escolha vira um link chosen para Discord.raise_for_response  -> ["src:248e0d5440e216f6c4af6e6aac808a4b9aff680117775936e9df6e64ae790738:aec2a8c4dfee5c4856ec011b55b1cef408393cba510ecdb9b80b9f321173772e:method:278:580"]
+PASSA  EN raise_for_response: limpar as escolhas volta à caixa
+PASSA  EN is_noop: uma caixa com a contagem  -> is_noop14 candidatesself.transport.is_noop(flip.new_status): 14 candidates, in one box (more than 8 are not drawn as lines)
+click: see the list and choose | notify30 candidatesself.transport.notify(flip, notification=n): 30 candidates, in one box (more than 8 are not drawn as lines)
+click: see the list and choose
+PASSA  EN is_noop: linha tracejada  -> true
+PASSA  EN is_noop: o detalhe lista todas, com arquivo  -> Transport.is_noop hc/api/transports.py:76Follow this one || Call.is_noop hc/integrations/call/transport.py:36Follow this one || Email.is_noop hc/integrations/email/transport.py:115Follow this one
+PASSA  EN is_noop: traz Transport.is_noop  -> Transport.is_noop,Call.is_noop,Email.is_noop,GitHub.is_noop,Gotify.is_noop,Ntfy.is_noop,Pushover.is_noop,RemovedTransport.is_noop,Shell.is_noop,Signal.is_noop,Sms.is_noop,Trello.is_noop,Webhook.is_noop,WhatsApp.is_noop
+PASSA  EN is_noop: homonym, basis type, type_rule propriedade, candidates 14  -> {"basis":"type","candidate_edge":null,"candidates":14,"evidence":{"end_byte":43679,"end_line":1153,"excerpt_sha256":"9b884a04d6b469849ac79b69e9a08a624a4612a9a59dad50934c7e2a441468e9","path":"hc/api/models.py","source_id":"src:8ce3e55438349ca1cfd362c1daa62b1f586496f894fd70587817115292f75e4d:d03082adb
+PASSA  EN is_noop: o texto da resolução, sem dizer abstrato  -> Channel.notify → is_noop
+Close
+calls: self.transport.is_noop(flip.new_status)
+hc/api/models.py:1153
+not followed: the body of the object's class runs; 14 bodies of the project may run, the written type's or that of a subclass that overrides it
+The full list; choose one for the walk to go on through it:
+Transport.is_noop hc/api/transports.py:76Follow this one
+Call.is_noop hc/integrations/call/trans
+PASSA  EN is_noop: abstract_method ausente
+PASSA  EN is_noop: nenhuma chave crua  -> Channel.notify → is_noop
+Close
+calls: self.transport.is_noop(flip.new_status)
+hc/api/models.py:1153
+not followed: the body of the object's class runs; 14 bodies of the project may run, the written typ
+PASSA  EN is_noop: clicar na caixa abre a lista
+PASSA  EN is_noop: a escolha vira um link chosen para Webhook.is_noop  -> ["src:bb02fdf843d2e4f958a9a2261d1dad942dfa674198edc0aab04c0f4e2cc8d40a:f44f3ecb85be279dc2d4ee3b18b8d5a68c8ca05173d0107c4533b71c9f8ee59c:method:2114:2323"]
+PASSA  EN is_noop: limpar as escolhas volta à caixa
+PASSA  EN fix_asterisks: duas linhas tracejadas  -> [true,true]
+PASSA  EN fix_asterisks: homonym, basis type, self, 2, com aresta  -> {"basis":"type","candidate_edge":"edge:b70a3b8f4494bee294a2cee4f9ebbefc485f77f75ebe177be000f994d7dc826f","candidates":2,"evidence":{"end_byte":2688,"end_line":72,"excerpt_sha256":"13085217cd21b2fc682a2912f0a4bc498669e4c3c37a3079c22d26c77f10a433","path":"hc/integrations/slack/transport.py","source_id
+PASSA  EN fix_asterisks: o texto da resolução, sem dizer abstrato  -> Slackalike.payload → Slackalike.fix_asterisks
+Close
+calls: self.fix_asterisks(check.schedule)
+hc/integrations/slack/transport.py:72
+not followed: the body of the object's class runs; 2 bodies of the project may run, the written type's or that of a subclass that overrides itFollow this one
+PASSA  EN fix_asterisks: a escolha vira um link chosen  -> ["src:d09376b87ef655675cbaca6c00333d95047f304f300f36a40d73d3583e8f1ac7:00a1cc1718d907e0158a2cbc7ea133cbebeea0e0ec0100ad575e33633f3afec5:method:3205:3567"]
+PASSA  EN: só o texto do abstrato diz "abstrato"
+PASSA  EN: nenhum erro de página
+PASSA  EN: nada além de abrir o projeto (POST /api/project = store.open) e /api/calls
+PASSA  tema escuro: o detalhe aparece com o texto certo  -> Channel.notify → is_noop
+Fechar
+chama: self.transport.is_noop(flip.new_status)
+hc/api/models.py:1153
+não seguida: roda o corpo da classe do objeto; 14 corpo(s) do projeto podem rodar, do tipo escrito ou de uma subclasse que o sobrescreve
+A lista completa; escolha uma para o percurso seguir por ela:
+Transport.is_noop hc/api/transports.py:76Seguir por este
+Call.is_noop hc/integrations/call/transport.py:36Seguir por este
+Email.is_noop hc/integrations/email/transport.py:115Seguir por este
+GitHub.is_noop hc/integrations/github/transport.py:14Seguir por este
+Gotify.is_noop hc/integrations/gotify/transport.py:15Seguir por este
+Ntfy.is_noop hc/integrations/ntfy/transport.py:15Seguir por este
+Pushover.is_noop hc/integrations/po/transport.py:38Seguir por este
+RemovedTransport.is_noop hc/api/transports.py:128Seguir por este
+Shell.is_noop hc/integrations/shell/transport.py:14Seguir por este
+Signal.is_noop hc/integrations/signal/transport.py:54Seguir por este
+Sms.is_noop hc/integrations/sms/transport.py:36Seguir por este
+Trello.is_noop hc/integrations/trello/transport.py:12Seguir por este
+Webhook.is_noop hc/integrations/webhook/transport.py:63Seguir por este
+WhatsApp.is_noop hc/integrations/wha
+PASSA  tema escuro: tema aplicado (dark), texto rgb(143, 142, 134) sobre rgb(35, 35, 33)  -> {"color":"rgb(143, 142, 134)","bg":"rgb(35, 35, 33)","theme":"dark","overflow":false,"detailRight":1006,"width":1440}
+PASSA  tema escuro: nenhum erro de página
+PASSA  tema escuro, abstrato: o detalhe aparece com o texto certo  -> Channel.notify → notify
+Fechar
+chama: self.transport.notify(flip, notification=n)
+hc/api/models.py:1173
+não seguida: Transport.notify, do tipo escrito, é abstrato: não roda, e por isso saiu da lista; roda o corpo da classe do objeto, e 30 corpo(s) de subclasses do projeto podem rodar
+A lista completa; escolha uma para o percurso seguir por ela:
+Apprise.notify hc/integrations/apprise/transport.py:17Seguir por este
+Call.notify hc/integrations/call/transport.py:39Seguir por este
+Discord.notify hc/integrations/discord/transport.py:19Seguir por este
+Email.notify hc/integrations/email/transport.py:64Seguir por este
+GitHub.notify hc/integrations/github/transport.py:27Seguir por este
+GoogleChat.notify hc/integrations/googlechat/transport.py:19Seguir por este
+Gotify.notify hc/integrations/gotify/transport.py:18Seguir por este
+Group.notify hc/integrations/group/transport.py:8Seguir por este
+Matrix.notify hc/integrations/matrix/transport.py:21Seguir por este
+Mattermost.notify hc/integrations/mattermost/transport.py:11Seguir por este
+MsTeamsWorkflow.notify hc/integrations/msteamsw/transport.py:110Seguir por este
+Ntfy.notify hc/integrations/ntfy/transport.py:18Seguir por este
+Opsgenie.notify hc
+PASSA  tema escuro, abstrato: tema aplicado (dark), texto rgb(143, 142, 134) sobre rgb(35, 35, 33)  -> {"color":"rgb(143, 142, 134)","bg":"rgb(35, 35, 33)","theme":"dark","overflow":false,"detailRight":1006,"width":1440}
+PASSA  tema escuro, abstrato: nenhum erro de página
+PASSA  tema claro: o detalhe aparece com o texto certo  -> Channel.notify → is_noop
+Fechar
+chama: self.transport.is_noop(flip.new_status)
+hc/api/models.py:1153
+não seguida: roda o corpo da classe do objeto; 14 corpo(s) do projeto podem rodar, do tipo escrito ou de uma subclasse que o sobrescreve
+A lista completa; escolha uma para o percurso seguir por ela:
+Transport.is_noop hc/api/transports.py:76Seguir por este
+Call.is_noop hc/integrations/call/transport.py:36Seguir por este
+Email.is_noop hc/integrations/email/transport.py:115Seguir por este
+GitHub.is_noop hc/integrations/github/transport.py:14Seguir por este
+Gotify.is_noop hc/integrations/gotify/transport.py:15Seguir por este
+Ntfy.is_noop hc/integrations/ntfy/transport.py:15Seguir por este
+Pushover.is_noop hc/integrations/po/transport.py:38Seguir por este
+RemovedTransport.is_noop hc/api/transports.py:128Seguir por este
+Shell.is_noop hc/integrations/shell/transport.py:14Seguir por este
+Signal.is_noop hc/integrations/signal/transport.py:54Seguir por este
+Sms.is_noop hc/integrations/sms/transport.py:36Seguir por este
+Trello.is_noop hc/integrations/trello/transport.py:12Seguir por este
+Webhook.is_noop hc/integrations/webhook/transport.py:63Seguir por este
+WhatsApp.is_noop hc/integrations/wha
+PASSA  tema claro: tema aplicado (light), texto rgb(122, 121, 116) sobre rgb(255, 255, 255)  -> {"color":"rgb(122, 121, 116)","bg":"rgb(255, 255, 255)","theme":"light","overflow":false,"detailRight":1006,"width":1440}
+PASSA  tema claro: nenhum erro de página
+PASSA  tema claro, abstrato: o detalhe aparece com o texto certo  -> Channel.notify → notify
+Fechar
+chama: self.transport.notify(flip, notification=n)
+hc/api/models.py:1173
+não seguida: Transport.notify, do tipo escrito, é abstrato: não roda, e por isso saiu da lista; roda o corpo da classe do objeto, e 30 corpo(s) de subclasses do projeto podem rodar
+A lista completa; escolha uma para o percurso seguir por ela:
+Apprise.notify hc/integrations/apprise/transport.py:17Seguir por este
+Call.notify hc/integrations/call/transport.py:39Seguir por este
+Discord.notify hc/integrations/discord/transport.py:19Seguir por este
+Email.notify hc/integrations/email/transport.py:64Seguir por este
+GitHub.notify hc/integrations/github/transport.py:27Seguir por este
+GoogleChat.notify hc/integrations/googlechat/transport.py:19Seguir por este
+Gotify.notify hc/integrations/gotify/transport.py:18Seguir por este
+Group.notify hc/integrations/group/transport.py:8Seguir por este
+Matrix.notify hc/integrations/matrix/transport.py:21Seguir por este
+Mattermost.notify hc/integrations/mattermost/transport.py:11Seguir por este
+MsTeamsWorkflow.notify hc/integrations/msteamsw/transport.py:110Seguir por este
+Ntfy.notify hc/integrations/ntfy/transport.py:18Seguir por este
+Opsgenie.notify hc
+PASSA  tema claro, abstrato: tema aplicado (light), texto rgb(122, 121, 116) sobre rgb(255, 255, 255)  -> {"color":"rgb(122, 121, 116)","bg":"rgb(255, 255, 255)","theme":"light","overflow":false,"detailRight":1006,"width":1440}
+PASSA  tema claro, abstrato: nenhum erro de página
+PASSA  tela estreita (390 px): o detalhe aparece com o texto certo  -> Channel.notify → is_noop
+Fechar
+chama: self.transport.is_noop(flip.new_status)
+hc/api/models.py:1153
+não seguida: roda o corpo da classe do objeto; 14 corpo(s) do projeto podem rodar, do tipo escrito ou de uma subclasse que o sobrescreve
+A lista completa; escolha uma para o percurso seguir por ela:
+Transport.is_noop hc/api/transports.py:76Seguir por este
+Call.is_noop hc/integrations/call/transport.py:36Seguir por este
+Email.is_noop hc/integrations/email/transport.py:115Seguir por este
+GitHub.is_noop hc/integrations/github/transport.py:14Seguir por este
+Gotify.is_noop hc/integrations/gotify/transport.py:15Seguir por este
+Ntfy.is_noop hc/integrations/ntfy/transport.py:15Seguir por este
+Pushover.is_noop hc/integrations/po/transport.py:38Seguir por este
+RemovedTransport.is_noop hc/api/transports.py:128Seguir por este
+Shell.is_noop hc/integrations/shell/transport.py:14Seguir por este
+Signal.is_noop hc/integrations/signal/transport.py:54Seguir por este
+Sms.is_noop hc/integrations/sms/transport.py:36Seguir por este
+Trello.is_noop hc/integrations/trello/transport.py:12Seguir por este
+Webhook.is_noop hc/integrations/webhook/transport.py:63Seguir por este
+WhatsApp.is_noop hc/integrations/wha
+PASSA  tela estreita (390 px): sem rolagem horizontal da página  -> {"color":"rgb(122, 121, 116)","bg":"rgb(255, 255, 255)","theme":"(sistema)","overflow":false,"detailRight":376,"width":390}
+PASSA  tela estreita (390 px): nenhum erro de página
+PASSA  tela estreita (390 px), abstrato: o detalhe aparece com o texto certo  -> Channel.notify → notify
+Fechar
+chama: self.transport.notify(flip, notification=n)
+hc/api/models.py:1173
+não seguida: Transport.notify, do tipo escrito, é abstrato: não roda, e por isso saiu da lista; roda o corpo da classe do objeto, e 30 corpo(s) de subclasses do projeto podem rodar
+A lista completa; escolha uma para o percurso seguir por ela:
+Apprise.notify hc/integrations/apprise/transport.py:17Seguir por este
+Call.notify hc/integrations/call/transport.py:39Seguir por este
+Discord.notify hc/integrations/discord/transport.py:19Seguir por este
+Email.notify hc/integrations/email/transport.py:64Seguir por este
+GitHub.notify hc/integrations/github/transport.py:27Seguir por este
+GoogleChat.notify hc/integrations/googlechat/transport.py:19Seguir por este
+Gotify.notify hc/integrations/gotify/transport.py:18Seguir por este
+Group.notify hc/integrations/group/transport.py:8Seguir por este
+Matrix.notify hc/integrations/matrix/transport.py:21Seguir por este
+Mattermost.notify hc/integrations/mattermost/transport.py:11Seguir por este
+MsTeamsWorkflow.notify hc/integrations/msteamsw/transport.py:110Seguir por este
+Ntfy.notify hc/integrations/ntfy/transport.py:18Seguir por este
+Opsgenie.notify hc
+PASSA  tela estreita (390 px), abstrato: sem rolagem horizontal da página  -> {"color":"rgb(122, 121, 116)","bg":"rgb(255, 255, 255)","theme":"(sistema)","overflow":false,"detailRight":376,"width":390}
+PASSA  tela estreita (390 px), abstrato: nenhum erro de página
+PASSA  .studio original igual antes e depois
+
+149 passam, 0 falham. Capturas em C:/Users/beatl/AppData/Local/Temp/claude/09139e964f85837f/5227a941-8a15-4b72-a6e9-f507aa962650/scratchpad/tela

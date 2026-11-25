@@ -1,0 +1,342 @@
+[
+ {
+  "at": "pkg/despacho.py:162",
+  "occ": "pkg/despacho.py@2493-2502",
+  "text": "x.andar()",
+  "rule": "parametro",
+  "hoje": "type",
+  "alvos": [
+   "Veiculo.andar (pkg/despacho.py:10)"
+  ],
+  "cand": [
+   "Carro.andar (pkg/despacho.py:41)",
+   "Irma.andar (pkg/despacho.py:68)",
+   "Moto.andar (pkg/despacho.py:60)",
+   "Veiculo.andar (pkg/despacho.py:10)"
+  ],
+  "extra": [
+   "Carro.andar (pkg/despacho.py:41)",
+   "Irma.andar (pkg/despacho.py:68)",
+   "Moto.andar (pkg/despacho.py:60)"
+  ],
+  "exact": false,
+  "super_": false,
+  "sobrescrevem_quem_chama": null
+ },
+ {
+  "at": "pkg/despacho.py:179",
+  "occ": "pkg/despacho.py@2701-2710",
+  "text": "x.andar()",
+  "rule": "construtor",
+  "hoje": "type",
+  "alvos": [
+   "Veiculo.andar (pkg/despacho.py:10)"
+  ],
+  "cand": null,
+  "extra": [
+   "Carro.andar (pkg/despacho.py:41)",
+   "Irma.andar (pkg/despacho.py:68)",
+   "Moto.andar (pkg/despacho.py:60)"
+  ],
+  "exact": true,
+  "super_": false,
+  "sobrescrevem_quem_chama": null
+ },
+ {
+  "at": "pkg/despacho.py:183",
+  "occ": "pkg/despacho.py@2751-2768",
+  "text": "Veiculo().andar()",
+  "rule": "construtor",
+  "hoje": "type",
+  "alvos": [
+   "Veiculo.andar (pkg/despacho.py:10)"
+  ],
+  "cand": null,
+  "extra": [
+   "Carro.andar (pkg/despacho.py:41)",
+   "Irma.andar (pkg/despacho.py:68)",
+   "Moto.andar (pkg/despacho.py:60)"
+  ],
+  "exact": true,
+  "super_": false,
+  "sobrescrevem_quem_chama": null
+ },
+ {
+  "at": "pkg/despacho.py:188",
+  "occ": "pkg/despacho.py@2835-2844",
+  "text": "x.andar()",
+  "rule": "anotacao",
+  "hoje": "type",
+  "alvos": [
+   "Veiculo.andar (pkg/despacho.py:10)"
+  ],
+  "cand": [
+   "Carro.andar (pkg/despacho.py:41)",
+   "Irma.andar (pkg/despacho.py:68)",
+   "Moto.andar (pkg/despacho.py:60)",
+   "Veiculo.andar (pkg/despacho.py:10)"
+  ],
+  "extra": [
+   "Carro.andar (pkg/despacho.py:41)",
+   "Irma.andar (pkg/despacho.py:68)",
+   "Moto.andar (pkg/despacho.py:60)"
+  ],
+  "exact": false,
+  "super_": false,
+  "sobrescrevem_quem_chama": null
+ },
+ {
+  "at": "pkg/despacho.py:193",
+  "occ": "pkg/despacho.py@2898-2907",
+  "text": "x.andar()",
+  "rule": "retorno",
+  "hoje": "type",
+  "alvos": [
+   "Veiculo.andar (pkg/despacho.py:10)"
+  ],
+  "cand": [
+   "Carro.andar (pkg/despacho.py:41)",
+   "Irma.andar (pkg/despacho.py:68)",
+   "Moto.andar (pkg/despacho.py:60)",
+   "Veiculo.andar (pkg/despacho.py:10)"
+  ],
+  "extra": [
+   "Carro.andar (pkg/despacho.py:41)",
+   "Irma.andar (pkg/despacho.py:68)",
+   "Moto.andar (pkg/despacho.py:60)"
+  ],
+  "exact": false,
+  "super_": false,
+  "sobrescrevem_quem_chama": null
+ },
+ {
+  "at": "pkg/despacho.py:197",
+  "occ": "pkg/despacho.py@2947-2955",
+  "text": "x.area()",
+  "rule": "parametro",
+  "hoje": "homonym",
+  "alvos": [
+   "Quadrado.area (pkg/despacho.py:119)",
+   "Solida.area (pkg/despacho.py:124)"
+  ],
+  "cand": [
+   "Quadrado.area (pkg/despacho.py:119)",
+   "Solida.area (pkg/despacho.py:124)"
+  ],
+  "extra": [
+   "Quadrado.area (pkg/despacho.py:119)",
+   "Solida.area (pkg/despacho.py:124)"
+  ],
+  "exact": false,
+  "super_": false,
+  "sobrescrevem_quem_chama": null
+ },
+ {
+  "at": "pkg/despacho.py:201",
+  "occ": "pkg/despacho.py@3003-3011",
+  "text": "x.area()",
+  "rule": "parametro",
+  "hoje": "type",
+  "alvos": [
+   "Quadrado.area (pkg/despacho.py:119)"
+  ],
+  "cand": [
+   "Quadrado.area (pkg/despacho.py:119)",
+   "Solida.area (pkg/despacho.py:124)"
+  ],
+  "extra": [
+   "Solida.area (pkg/despacho.py:124)"
+  ],
+  "exact": false,
+  "super_": false,
+  "sobrescrevem_quem_chama": null
+ },
+ {
+  "at": "pkg/despacho.py:205",
+  "occ": "pkg/despacho.py@3050-3059",
+  "text": "x.abrir()",
+  "rule": "parametro",
+  "hoje": "type",
+  "alvos": [
+   "Ficha.abrir (pkg/despacho.py:73)"
+  ],
+  "cand": [
+   "Ficha.abrir (pkg/despacho.py:73)",
+   "MisturaFicha.abrir (pkg/despacho.py:81)"
+  ],
+  "extra": [
+   "MisturaFicha.abrir (pkg/despacho.py:81)"
+  ],
+  "exact": false,
+  "super_": false,
+  "sobrescrevem_quem_chama": null
+ },
+ {
+  "at": "pkg/despacho.py:218",
+  "occ": "pkg/despacho.py@3206-3214",
+  "text": "x.agir()",
+  "rule": "construtor",
+  "hoje": "type",
+  "alvos": [
+   "ComNovo.agir (pkg/despacho.py:132)"
+  ],
+  "cand": null,
+  "extra": [
+   "ComNovoFilha.agir (pkg/despacho.py:137)"
+  ],
+  "exact": true,
+  "super_": false,
+  "sobrescrevem_quem_chama": null
+ },
+ {
+  "at": "pkg/despacho.py:77",
+  "occ": "pkg/despacho.py@1201-1213",
+  "text": "self.abrir()",
+  "rule": "self",
+  "hoje": "receiver",
+  "alvos": [
+   "Ficha.abrir (pkg/despacho.py:73)"
+  ],
+  "cand": [
+   "Ficha.abrir (pkg/despacho.py:73)",
+   "MisturaFicha.abrir (pkg/despacho.py:81)"
+  ],
+  "extra": [
+   "MisturaFicha.abrir (pkg/despacho.py:81)"
+  ],
+  "exact": false,
+  "super_": false,
+  "sobrescrevem_quem_chama": []
+ },
+ {
+  "at": "pkg/despacho.py:151",
+  "occ": "pkg/despacho.py@2314-2334",
+  "text": "self.veiculo.andar()",
+  "rule": "campo",
+  "hoje": "type",
+  "alvos": [
+   "Veiculo.andar (pkg/despacho.py:10)"
+  ],
+  "cand": [
+   "Carro.andar (pkg/despacho.py:41)",
+   "Irma.andar (pkg/despacho.py:68)",
+   "Moto.andar (pkg/despacho.py:60)",
+   "Veiculo.andar (pkg/despacho.py:10)"
+  ],
+  "extra": [
+   "Carro.andar (pkg/despacho.py:41)",
+   "Irma.andar (pkg/despacho.py:68)",
+   "Moto.andar (pkg/despacho.py:60)"
+  ],
+  "exact": false,
+  "super_": false,
+  "sobrescrevem_quem_chama": null
+ },
+ {
+  "at": "pkg/despacho.py:154",
+  "occ": "pkg/despacho.py@2381-2399",
+  "text": "self.atual.andar()",
+  "rule": "propriedade",
+  "hoje": "type",
+  "alvos": [
+   "Veiculo.andar (pkg/despacho.py:10)"
+  ],
+  "cand": [
+   "Carro.andar (pkg/despacho.py:41)",
+   "Irma.andar (pkg/despacho.py:68)",
+   "Moto.andar (pkg/despacho.py:60)",
+   "Veiculo.andar (pkg/despacho.py:10)"
+  ],
+  "extra": [
+   "Carro.andar (pkg/despacho.py:41)",
+   "Irma.andar (pkg/despacho.py:68)",
+   "Moto.andar (pkg/despacho.py:60)"
+  ],
+  "exact": false,
+  "super_": false,
+  "sobrescrevem_quem_chama": null
+ },
+ {
+  "at": "pkg/despacho.py:20",
+  "occ": "pkg/despacho.py@317-331",
+  "text": "self.__motor()",
+  "rule": "self",
+  "hoje": "receiver",
+  "alvos": [
+   "Veiculo.__motor (pkg/despacho.py:16)"
+  ],
+  "cand": [
+   "Carro.__motor (pkg/despacho.py:48)",
+   "Veiculo.__motor (pkg/despacho.py:16)"
+  ],
+  "extra": [
+   "Carro.__motor (pkg/despacho.py:48)"
+  ],
+  "exact": false,
+  "super_": false,
+  "sobrescrevem_quem_chama": []
+ },
+ {
+  "at": "pkg/despacho.py:23",
+  "occ": "pkg/despacho.py@369-381",
+  "text": "self.andar()",
+  "rule": "self",
+  "hoje": "receiver",
+  "alvos": [
+   "Veiculo.andar (pkg/despacho.py:10)"
+  ],
+  "cand": [
+   "Carro.andar (pkg/despacho.py:41)",
+   "Irma.andar (pkg/despacho.py:68)",
+   "Moto.andar (pkg/despacho.py:60)",
+   "Veiculo.andar (pkg/despacho.py:10)"
+  ],
+  "extra": [
+   "Carro.andar (pkg/despacho.py:41)",
+   "Irma.andar (pkg/despacho.py:68)",
+   "Moto.andar (pkg/despacho.py:60)"
+  ],
+  "exact": false,
+  "super_": false,
+  "sobrescrevem_quem_chama": [
+   "Irma"
+  ]
+ },
+ {
+  "at": "pkg/despacho.py:30",
+  "occ": "pkg/despacho.py@485-495",
+  "text": "cls.nome()",
+  "rule": "cls",
+  "hoje": "type",
+  "alvos": [
+   "Veiculo.nome (pkg/despacho.py:32)"
+  ],
+  "cand": [
+   "Carro.nome (pkg/despacho.py:44)",
+   "Veiculo.nome (pkg/despacho.py:32)"
+  ],
+  "extra": [
+   "Carro.nome (pkg/despacho.py:44)"
+  ],
+  "exact": false,
+  "super_": false,
+  "sobrescrevem_quem_chama": []
+ },
+ {
+  "at": "pkg/despacho.py:52",
+  "occ": "pkg/despacho.py@860-875",
+  "text": "super().andar()",
+  "rule": "super",
+  "hoje": "type",
+  "alvos": [
+   "Veiculo.andar (pkg/despacho.py:10)"
+  ],
+  "cand": null,
+  "extra": [
+   "Carro.andar (pkg/despacho.py:41)"
+  ],
+  "exact": false,
+  "super_": true,
+  "sobrescrevem_quem_chama": null
+ }
+]

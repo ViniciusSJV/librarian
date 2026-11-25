@@ -143,6 +143,59 @@ corretas, lacunas explícitas e fatos aguardando aprovação humana.
   `hc/integrations/slack/transport.py:72` (`Discord` sobrescreve), e
   `form.get_json()` em `hc/integrations/call/views.py:26`, de construtor
   exato, que roda o próprio.
+  Parada 1 aprovada em 25/11/2026 ([2.4c-parada-1.md](docs/reports/fase-2/2.4c-parada-1.md));
+  Parada 2 em [2.4c-parada-2.md](docs/reports/fase-2/2.4c-parada-2.md), validada em
+  25/11/2026 (DEC-44 vigente, linha de base trocada).
+  **Fechamento do 2.4 (validado pelo usuário em 25/11/2026):** o 2.4 entregou o escopo e o
+  alias (2.4a), a herança (2.4b) e o despacho polimórfico (2.4c): com
+  sobrescrita numa subclasse do projeto, a chamada é ambígua, com os corpos
+  que podem rodar. Efeito do 2.4c no Healthchecks: 3 chamadas, todas
+  previstas (HC-140, HC-142 e `self.fix_asterisks`); nenhuma no ray tracer; o
+  grafo e o `used_by` não mudam. Dos `link_falso` da amostra sobra a HC-27
+  (tipo de fora, `pycurl`). Ficam: o `used_by` pela regra (2.4d); o que o
+  fechamento do 2.4b já deixou para o 2.5, o 2.6 e a Fase 2B; limites em
+  SEARCH.md (base de fora antes numa subclasse, subclasse de teste, campo e
+  anotação que não são construtor exato); e a lacuna de `Classe.metodo(..)`
+  (abaixo).
+  **`@abstractmethod`:** o Healthchecks não tem nenhum, nem `ABCMeta` nem
+  `ABC` (0 em classe sem `ABCMeta` na cadeia, 0 sobre um concreto). Nenhum
+  código mudou; fica o limite, na DEC-44 e no SEARCH.md: sem `ABCMeta`, o
+  decorador não impede o corpo de rodar.
+  **Lacuna (25/11/2026; passo 2.4d-0): `Classe.metodo(..)` no Python não usa a
+  classe.** O receptor que nomeia uma classe não tem tipo estático, e a
+  chamada só fecha quando o nome tem um candidato só. No Healthchecks, 71
+  chamadas com classe do projeto: 27 `unique` (26 métodos, todos certos, e
+  uma classe aninhada construída), 26 sem candidato (método do pydantic, na
+  base de fora: certo) e **18 `homonym`, que fechariam todas** se a classe
+  fosse usada: `TokenBucket.authorize` (13), `PdConf.load`, `EmailConf.load`,
+  `TelegramCallback.load`, `Signal.send` e `Telegram.send` (HC-156). Todas de
+  produção, nenhuma com sobrescrita. No Rust não há a lacuna: `T::f(..)` usa o
+  tipo desde o 2.1 (1.366 chamadas, 0 `homonym`); as 100 de tipo do projeto
+  sem fechar são `Object::from` e `Patterns::from`, com vários `impl From<X>`,
+  que só o tipo do argumento decide (limite sem passo, no SEARCH.md). A lacuna
+  do Python é do passo 2.4d-0 (abaixo).
+  **Propostas do usuário (25/11/2026), a decidir**, escritas onde serão lidas:
+  [Propostas de arquitetura](#propostas-de-arquitetura-a-decidir) (papéis das
+  peças e agentes), notas nas Fases 4 e 6 e
+  [Fronteiras entre sistemas](#fronteiras-entre-sistemas-proposta-a-decidir),
+  depois da Fase 7.
+- 2.4d-0 `Classe.metodo(..)` usa a classe (proposta aceita pelo usuário em
+  25/11/2026; antes do 2.4d; a Parada 1 não foi aberta). Python.
+  - `Classe.m(..)` com `Classe` do projeto (importada, do mesmo módulo ou
+    aninhada) resolve pela cadeia da própria classe, para cima, na ordem de
+    herança. Nunca desce para subclasses: não há despacho, ao contrário do
+    2.4c.
+  - Meta: as 18 `homonym` (`TokenBucket.authorize` 13, `PdConf.load`,
+    `EmailConf.load`, `TelegramCallback.load`, `Telegram.send`/HC-156 e
+    `Signal.send`); medir também o efeito indireto pelo retorno (DEC-41).
+  - Motivo da ordem: o `used_by` pelo inverso da regra (2.4d) herdaria as 18.
+- 2.4d `used_by` pelo inverso da regra (registrado em 25/11/2026, pedido do
+  usuário; depois do 2.4d-0 e antes do 2.5). O `used_by` calculado pelo inverso
+  da regra de resolução, incluindo o despacho polimórfico, à parte dos usos
+  por nome. Motivo: 707 dos 2.623 links únicos do Python (27%) não aparecem
+  no `used_by` do alvo (`Webhook.is_noop` responde 0 usos), e é essa
+  pergunta que responde "quem é afetado se eu mudar isto?". Análise na
+  seção 6 da [Parada 1 do 2.4c](docs/reports/fase-2/2.4c-parada-1.md).
 - 2.5 PIL-G5/N7: relação "passa referência", nunca "chama".
 - 2.6 Genéricos (N6), por último (ch.notify: 33 → 1).
 - Portão de cada passo: `node tools/precisao/portao.js --studio .studio
@@ -172,6 +225,25 @@ corretas, lacunas explícitas e fatos aguardando aprovação humana.
 - ORM e framework (PIL-G2) como externo conhecido, não "sem candidato".
 - Testes ligados às views (PIL-G8).
 
+### Propostas de arquitetura (a decidir)
+**Proposta do usuário (25/11/2026), a decidir** (não abre passo nem decisão).
+- *Papéis das peças:* a busca lexical é a porta de entrada (continua
+  lexical, determinística e auditável; vira rota na Fase 6); o grafo é o
+  caminho; o acervo é a memória; o LLM Engine se divide: o formato de claims
+  e as conferências ficam no núcleo, como a conferência automática da Fase
+  3, e a geração do texto passa para os agentes. Dependência: as perguntas
+  01–14 (H1 a H3) e o Studio usam hoje a geração; a divisão não pode quebrar
+  essa conferência. O usuário tem uma ideia de melhoria da busca lexical
+  para depois.
+- *Agentes:* LangGraph como orquestrador do agente aprovador (Fase 3b) e
+  dos agentes da Fase 7 (pausa para decisão humana e estado guardado);
+  LangChain opcional, como camada fina (troca de modelo e ferramentas pelo
+  MCP da Fase 6); Langfuse auto-hospedado no Kubernetes, para
+  observabilidade, custo e avaliação (a concordância entre o aprovador e o
+  usuário; as folhas de revisão como datasets). O registro de auditoria
+  oficial continua no acervo do Librarian; o Langfuse é a visão operacional
+  e, se divergir, vale o acervo. Nada disso entra no núcleo (DEC-29).
+
 ### Fase 3 — Fatos, proveniência e aprovação humana
 (absorve as Etapas 6–7 da frente do Studio: "fatos por fonte" da
 Etapa 6 entra na fila de aprovação; a Etapa 7 vira critério de aceite
@@ -195,6 +267,8 @@ Etapa 6 vai para as trilhas paralelas, DEC-31)
   - Revogação que se propaga.
   - Um único portão humano: a documentação que vai para pessoas.
   - Divisão em 3a (antes da Fase 4) e 3b (depois).
+  - Ver também, a decidir: o orquestrador do aprovador e os papéis das peças,
+    em [Propostas de arquitetura](#propostas-de-arquitetura-a-decidir).
 
 ### Fase 4 — Evidence Request
 - Primeiro consumidor de referência: o agente de workflows.
@@ -206,6 +280,10 @@ Etapa 6 vai para as trilhas paralelas, DEC-31)
   cada uma apoiada em fatos aprovados e com as lacunas declaradas. É o
   que o agente de workflows produz e o agente de documentação consome
   (DEC-36).
+- **Proposta do usuário (25/11/2026), a decidir:** restrição proposta para as
+  Fases 4 e 6: ids únicos entre projetos (fatos, workflows, símbolos) e fatos
+  que podem citar mais de um projeto. Nota: a citação de fatos sem prefixo
+  (F23, F20) deixa de ser segura com mais de um projeto.
 
 ### Fase 6 — HTTP/JSON público
 **Proposta do usuário, a decidir (25/11/2026)**, com divisão de 6.1 a 6.5:
@@ -224,6 +302,11 @@ Etapa 6 vai para as trilhas paralelas, DEC-31)
 - Uso no Kubernetes local: volumes persistentes, credenciais em secrets,
   imagem com o hash das fontes.
 
+- **Proposta do usuário (25/11/2026), a decidir:** restrição proposta para as
+  Fases 4 e 6: ids únicos entre projetos (fatos, workflows, símbolos) e fatos
+  que podem citar mais de um projeto. Nota: a citação de fatos sem prefixo
+  (F23, F20) deixa de ser segura com mais de um projeto.
+
 **Front, proposta do usuário (25/11/2026):** refazer no final, depois do
 6.5, como ferramenta de investigação sem agentes nem MCP. A decisão é do
 usuário, quando chegar lá.
@@ -231,6 +314,17 @@ usuário, quando chegar lá.
 ### Fase 7 — Primeiros agentes
 Agente de workflows e agente de documentação (fluxogramas para
 humanos). A validação final é humana.
+
+Ver também, a decidir: o orquestrador, a observabilidade e os papéis das
+peças, em [Propostas de arquitetura](#propostas-de-arquitetura-a-decidir).
+
+### Fronteiras entre sistemas (proposta, a decidir)
+**Proposta do usuário (25/11/2026), a decidir** (não abre passo nem decisão).
+- *Trilha "Fronteiras entre sistemas", depois da Fase 7:* contratos que
+  atravessam o sistema (OpenAPI, GraphQL, webhooks, mensageria, IaC); a
+  relação entre projetos no acervo; e a mudança de significado de um campo
+  pega pela revogação de fatos (Fase 3), propagada aos fatos de outros
+  projetos que dependem dele.
 
 ### Fase 5 — Extratores: representação intermediária comum
 Executada depois da Fase 7, mantendo o nome (DEC-35): os primeiros

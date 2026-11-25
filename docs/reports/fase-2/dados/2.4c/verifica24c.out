@@ -1,0 +1,66 @@
+== healthchecks-25597e41 chamadas 16239 16239
+  MUDA hc/api/transports.py:162 cls.raise_for_response(r) | type cls [1] HttpTransport.raise_for_response (hc/api/transports.py:133) candidates 12 -> homonym cls [12]  candidates 12
+  MUDA hc/api/models.py:1153 self.transport.is_noop(flip.new_status) | type propriedade [1] Transport.is_noop (hc/api/transports.py:76) candidates 14 -> homonym propriedade [14]  candidates 14
+  MUDA hc/integrations/slack/transport.py:72 self.fix_asterisks(check.schedule) | receiver  [1] Slackalike.fix_asterisks (hc/integrations/slack/transport.py:88) candidates 4 -> homonym self [2] Slackalike.fix_asterisks (hc/integrations/slack/transport.py:88), Discord.fix_asterisks (hc/integrations/discord/transport.py:25) candidates 2
+  mudanças: 3
+  todas as chamadas: unique 1898->1898 (0); no_candidate_in_project 10927->10927 (0); homonym 2286->2289 (3); type 272->270 (-2); above_candidate_limit 403->403 (0); receiver 331->330 (-1); import 64->64 (0); scope 58->58 (0)
+   form.get_json hc/integrations/call/views.py:26 | type construtor [1] PhoneNumberForm.get_json (hc/front/forms.py:151) candidates 3 -> type construtor [1] PhoneNumberForm.get_json (hc/front/forms.py:151) candidates 3
+   HC-138 hc/api/transports.py:211 | type cls [1] HttpTransport.request (hc/api/transports.py:166) candidates 1 -> type cls [1] HttpTransport.request (hc/api/transports.py:166) candidates 1
+   HC-139 hc/integrations/telegram/transport.py:65 | type cls [1] HttpTransport.post (hc/api/transports.py:199) candidates 5 -> type cls [1] HttpTransport.post (hc/api/transports.py:199) candidates 5
+   HC-140 hc/api/transports.py:162 | type cls [1] HttpTransport.raise_for_response (hc/api/transports.py:133) candidates 12 -> homonym cls [12]  candidates 12
+   HC-142 hc/api/models.py:1153 | type propriedade [1] Transport.is_noop (hc/api/transports.py:76) candidates 14 -> homonym propriedade [14]  candidates 14
+   HC-141 hc/api/models.py:1173 | homonym propriedade [30]  candidates 30 -> homonym propriedade [30]  candidates 30
+  tempo: total 1492 -> 1575 s; só /api/calls 1342 -> 1424 s
+  mediana por símbolo 276 -> 276 ms
+  os 10 mais lentos, antes
+       635 ms StatusTestCase.setUp (hc/front/tests/test_status.py:8) | antes 635 depois 505
+       559 ms WebhookValidatorTestCase.setUp (hc/front/tests/test_webhook_validator.py:8) | antes 559 depois 520
+       533 ms NotifyTelegramTestCase.setUp (hc/integrations/telegram/tests/test_notify.py:14) | antes 533 depois 513
+       532 ms SendInactivityNoticesTestCase.setUp (hc/accounts/tests/test_sendinactivitynotices.py:26) | antes 532 depois 503
+       530 ms PingDetailsTestCase.setUp (hc/front/tests/test_ping_details.py:54) | antes 530 depois 499
+       530 ms FilteringRulesTestCase.setUp (hc/front/tests/test_filtering_rules.py:8) | antes 530 depois 506
+       529 ms EmailForm.clean (hc/integrations/email/forms.py:14) | antes 529 depois 521
+       526 ms GetEventsTestCase.setUp (hc/front/tests/test_get_events.py:15) | antes 526 depois 518
+       526 ms LoginTotpTestCase.setUp (hc/accounts/tests/test_login_totp.py:11) | antes 526 depois 519
+       526 ms ValidateScheduleTestCase.setUp (hc/front/tests/test_validate_schedule.py:9) | antes 526 depois 521
+  os 10 mais lentos, depois
+       550 ms CheckModelTestCase (hc/api/tests/test_check_model.py:17) | antes 496 depois 550
+       542 ms UpdateCheckTestCase.test_v3_saves_slug (hc/api/tests/test_update_check.py:448) | antes 282 depois 542
+       531 ms ChangeEmailVerifyTestCase.setUp (hc/accounts/tests/test_change_email_verify.py:13) | antes 498 depois 531
+       530 ms ChangeEmailVerifyTestCase.test_it_handles_get_with_cookie (hc/accounts/tests/test_change_email_verify.py:58) | antes 271 depois 530
+       530 ms AddPushbulletTestCase.setUp (hc/integrations/pushbullet/tests/test_add.py:10) | antes 506 depois 530
+       530 ms _update (hc/api/views.py:332) | antes 284 depois 530
+       528 ms ChangeEmailVerifyTestCase.test_it_works (hc/accounts/tests/test_change_email_verify.py:36) | antes 284 depois 528
+       526 ms UpdateCheckTestCase.test_it_rejects_null_values (hc/api/tests/test_update_check.py:291) | antes 277 depois 526
+       526 ms GetCheckTestCase.test_v1_reports_status_started (hc/api/tests/test_get_check.py:123) | antes 278 depois 526
+       526 ms MsTeamsWorkflow.payload (hc/integrations/msteamsw/transport.py:18) | antes 279 depois 526
+  símbolos acima de 380 ms (leem as subclasses): 173 -> 533; passam a pagar 362; deixam 2
+  histograma (50 ms) antes {"250":4491,"300":46,"350":9,"400":5,"450":29,"500":136,"550":1,"600":1} 
+                     depois {"250":4166,"300":19,"450":179,"500":353,"550":1}
+== renderer-9b78f3a9 chamadas 2545 2545
+  mudanças: 0
+  todas as chamadas: unique 1028->1028 (0); no_candidate_in_project 556->556 (0); type 623->623 (0); above_candidate_limit 173->173 (0); homonym 80->80 (0); trait_default 40->40 (0); receiver 21->21 (0); scope 24->24 (0)
+  tempo: total 37 -> 38 s; só /api/calls 33 -> 34 s
+  mediana por símbolo 40 -> 41 ms
+  os 10 mais lentos, antes
+       172 ms main (src/bin/bench_render.rs:3) | antes 172 depois 169
+        53 ms tests_matrix::multiply_matrix_by_a_tuple (src/matrix.rs:401) | antes 53 depois 44
+        52 ms external_benchmark_scene (src/camera.rs:162) | antes 52 depois 51
+        51 ms tests_patterns::checkers_should_repeat_in_y (src/patterns.rs:483) | antes 51 depois 44
+        49 ms tests_world::there_is_no_shadow_when_nothing_is_collinear_with_point_and_light (src/world.rs:287) | antes 49 depois 44
+        49 ms tests_world::color_at_with_mutually_reflective_surfaces (src/world.rs:396) | antes 49 depois 44
+        49 ms tests_patterns::checkers_should_repeat_in_z (src/patterns.rs:496) | antes 49 depois 44
+        49 ms tests_world::the_is_no_shadow_when_an_object_is_behind_the_point (src/world.rs:311) | antes 49 depois 44
+        48 ms tests_world::the_reflected_color_at_the_maximum_recursive_depth (src/world.rs:417) | antes 48 depois 46
+        48 ms impl Intersectable for Cube::local_intersect (src/cube.rs:52) | antes 48 depois 39
+  os 10 mais lentos, depois
+       169 ms main (src/bin/bench_render.rs:3) | antes 172 depois 169
+        55 ms tests_sphere::the_normal_on_a_sphere_at_a_nonaxial_point (src/sphere.rs:227) | antes 43 depois 55
+        55 ms impl From<[[f64; D]; D]> for Matrix<D>::from (src/matrix.rs:12) | antes 41 depois 55
+        55 ms tests_matrix (src/matrix.rs:289) | antes 38 depois 55
+        54 ms tests_matrix::calculating_the_determinant_of_mat4 (src/matrix.rs:557) | antes 45 depois 54
+        54 ms impl Default for Ring (src/patterns.rs:90) | antes 39 depois 54
+        53 ms DefaultPattern::color_a (src/patterns.rs:135) | antes 42 depois 53
+        53 ms Transform (src/transformations.rs:4) | antes 38 depois 53
+        52 ms impl Matrix<3>::submatrix (src/matrix.rs:26) | antes 42 depois 52
+        52 ms impl Incuse for Checkers::color_at (src/patterns.rs:255) | antes 47 depois 52

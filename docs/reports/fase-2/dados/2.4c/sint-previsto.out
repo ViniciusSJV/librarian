@@ -1,0 +1,84 @@
+conferência com o binário: 17 iguais 0 diferentes 0 sem tipo
+chamadas com tipo estático do projeto: 22 ; com método achado: 22
+produção {
+  'anotacao | subclasses sim | sobrescrita sim | aberta não': 1,
+  'campo | subclasses sim | sobrescrita sim | aberta não': 1,
+  'cls | subclasses sim | sobrescrita sim | aberta não': 1,
+  'construtor | subclasses sim | sobrescrita sim | aberta não': 3,
+  'parametro | subclasses não | sobrescrita não | aberta não': 1,
+  'parametro | subclasses sim | sobrescrita não | aberta não': 2,
+  'parametro | subclasses sim | sobrescrita não | aberta sim': 2,
+  'parametro | subclasses sim | sobrescrita sim | aberta não': 4,
+  'propriedade | subclasses sim | sobrescrita sim | aberta não': 1,
+  'retorno | subclasses sim | sobrescrita sim | aberta não': 1,
+  'self | subclasses sim | sobrescrita não | aberta não': 1,
+  'self | subclasses sim | sobrescrita sim | aberta não': 3,
+  'super | subclasses sim | sobrescrita sim | aberta não': 1
+}
+teste {}
+== com sobrescrita (qualquer origem, inclusive as exceções)
+P pkg/despacho.py:162 x.andar() | parametro Veiculo | hoje type 1 | exato false super false | extra 3 | cand 4 | sobrescrevem quem chama null | baseAbs false 
+      Carro.andar (pkg/despacho.py:41); Irma.andar (pkg/despacho.py:68); Moto.andar (pkg/despacho.py:60)
+P pkg/despacho.py:179 x.andar() | construtor Veiculo | hoje type 1 | exato true super false | extra 3 | cand undefined | sobrescrevem quem chama null | baseAbs false 
+      Carro.andar (pkg/despacho.py:41); Irma.andar (pkg/despacho.py:68); Moto.andar (pkg/despacho.py:60)
+P pkg/despacho.py:183 Veiculo().andar() | construtor Veiculo | hoje type 1 | exato true super false | extra 3 | cand undefined | sobrescrevem quem chama null | baseAbs false 
+      Carro.andar (pkg/despacho.py:41); Irma.andar (pkg/despacho.py:68); Moto.andar (pkg/despacho.py:60)
+P pkg/despacho.py:188 x.andar() | anotacao Veiculo | hoje type 1 | exato false super false | extra 3 | cand 4 | sobrescrevem quem chama null | baseAbs false 
+      Carro.andar (pkg/despacho.py:41); Irma.andar (pkg/despacho.py:68); Moto.andar (pkg/despacho.py:60)
+P pkg/despacho.py:193 x.andar() | retorno Veiculo | hoje type 1 | exato false super false | extra 3 | cand 4 | sobrescrevem quem chama null | baseAbs false 
+      Carro.andar (pkg/despacho.py:41); Irma.andar (pkg/despacho.py:68); Moto.andar (pkg/despacho.py:60)
+P pkg/despacho.py:197 x.area() | parametro Forma | hoje homonym 2 | exato false super false | extra 2 | cand 2 | sobrescrevem quem chama null | baseAbs true 
+      Quadrado.area (pkg/despacho.py:119); Solida.area (pkg/despacho.py:124)
+P pkg/despacho.py:201 x.area() | parametro Quadrado | hoje type 1 | exato false super false | extra 1 | cand 2 | sobrescrevem quem chama null | baseAbs false 
+      Solida.area (pkg/despacho.py:124)
+P pkg/despacho.py:205 x.abrir() | parametro Ficha | hoje type 1 | exato false super false | extra 1 | cand 2 | sobrescrevem quem chama null | baseAbs false 
+      MisturaFicha.abrir (pkg/despacho.py:81)
+P pkg/despacho.py:218 x.agir() | construtor ComNovo | hoje type 1 | exato true super false | extra 1 | cand undefined | sobrescrevem quem chama null | baseAbs false 
+      ComNovoFilha.agir (pkg/despacho.py:137)
+P pkg/despacho.py:77 self.abrir() | self Ficha | hoje receiver 1 | exato false super false | extra 1 | cand 2 | sobrescrevem quem chama [] | baseAbs false 
+      MisturaFicha.abrir (pkg/despacho.py:81)
+P pkg/despacho.py:151 self.veiculo.andar() | campo Veiculo | hoje type 1 | exato false super false | extra 3 | cand 4 | sobrescrevem quem chama null | baseAbs false 
+      Carro.andar (pkg/despacho.py:41); Irma.andar (pkg/despacho.py:68); Moto.andar (pkg/despacho.py:60)
+P pkg/despacho.py:154 self.atual.andar() | propriedade Veiculo | hoje type 1 | exato false super false | extra 3 | cand 4 | sobrescrevem quem chama null | baseAbs false 
+      Carro.andar (pkg/despacho.py:41); Irma.andar (pkg/despacho.py:68); Moto.andar (pkg/despacho.py:60)
+P pkg/despacho.py:20 self.__motor() | self Veiculo | hoje receiver 1 | exato false super false | extra 1 | cand 2 | sobrescrevem quem chama [] | baseAbs false 
+      Carro.__motor (pkg/despacho.py:48)
+P pkg/despacho.py:23 self.andar() | self Veiculo | hoje receiver 1 | exato false super false | extra 3 | cand 4 | sobrescrevem quem chama ["Irma"] | baseAbs false 
+      Carro.andar (pkg/despacho.py:41); Irma.andar (pkg/despacho.py:68); Moto.andar (pkg/despacho.py:60)
+P pkg/despacho.py:30 cls.nome() | cls Veiculo | hoje type 1 | exato false super false | extra 1 | cand 2 | sobrescrevem quem chama [] | baseAbs false 
+      Carro.nome (pkg/despacho.py:44)
+P pkg/despacho.py:52 super().andar() | super Carro | hoje type 1 | exato false super true | extra 1 | cand undefined | sobrescrevem quem chama null | baseAbs false 
+      Carro.andar (pkg/despacho.py:41)
+== método achado e subclasse aberta (base de fora antes, nome ligado a atributo...)
+P pkg/despacho.py:209 x.fechar() parametro unique [
+  'PortaAtributo {"undecided":"o nome é atributo, não método","at":"src:f7d603f2fd9b186e83861db95e4187fb5046722959b1026142545411e834fb42:eb3d0c4c85a1d810263bc577314854898664950cc2d53d2bb3aa44ecea1c7cab:class:1416:1462"}'
+] 1
+P pkg/despacho.py:213 x.girar() parametro unique [ 'MotorFio {"external":"threading.Thread"}' ] 1
+== vários corpos na própria classe 0
+== T.m() pelo nome da classe 1 { 'prod homonym achado sobrescritas sim': 1 }
+   pkg/despacho.py:37 Veiculo.andar(self) homonym Irma.andar (pkg/despacho.py:68),Veiculo.andar (pkg/despacho.py:10),Carro.andar (pkg/despacho.py:41),Moto.andar (pkg/despacho.py:60) sobrescritas 3
+== métodos sobrescritos no projeto 8
+   Veiculo.andar (pkg/despacho.py:10) 3 Carro,Moto,Irma
+   Veiculo.__motor (pkg/despacho.py:16) 1 Carro
+   Veiculo.rodar (pkg/despacho.py:22) 1 Irma
+   Veiculo.nome (pkg/despacho.py:32) 1 Carro
+   Forma.area (pkg/despacho.py:108) 3 FormaMeio,Quadrado,Solida
+   FormaMeio.area (pkg/despacho.py:114) 2 Quadrado,Solida
+   Quadrado.area (pkg/despacho.py:119) 1 Solida
+   ComNovo.agir (pkg/despacho.py:132) 1 ComNovoFilha
+== x.m() com m sobrescrito em algum lugar e sem tipo estático { 'prod andar homonym': 1 }
+== links únicos para um método sobrescrito
+   P pkg/despacho.py:162 x.andar() type parametro Veiculo.andar (pkg/despacho.py:10)
+   P pkg/despacho.py:179 x.andar() type construtor Veiculo.andar (pkg/despacho.py:10)
+   P pkg/despacho.py:183 Veiculo().andar() type construtor Veiculo.andar (pkg/despacho.py:10)
+   P pkg/despacho.py:188 x.andar() type anotacao Veiculo.andar (pkg/despacho.py:10)
+   P pkg/despacho.py:193 x.andar() type retorno Veiculo.andar (pkg/despacho.py:10)
+   P pkg/despacho.py:201 x.area() type parametro Quadrado.area (pkg/despacho.py:119)
+   P pkg/despacho.py:218 x.agir() type construtor ComNovo.agir (pkg/despacho.py:132)
+   P pkg/despacho.py:151 self.veiculo.andar() type campo Veiculo.andar (pkg/despacho.py:10)
+   P pkg/despacho.py:154 self.atual.andar() type propriedade Veiculo.andar (pkg/despacho.py:10)
+   P pkg/despacho.py:20 self.__motor() receiver null Veiculo.__motor (pkg/despacho.py:16)
+   P pkg/despacho.py:23 self.andar() receiver null Veiculo.andar (pkg/despacho.py:10)
+   P pkg/despacho.py:30 cls.nome() type cls Veiculo.nome (pkg/despacho.py:32)
+   P pkg/despacho.py:52 super().andar() type super Veiculo.andar (pkg/despacho.py:10)
+== custo: não exatas com método achado 18 chamadas em 18 símbolos; com o nome em mais de um método 14 em 14 símbolos; (super, abstrato ou não achado: já precisam hoje, no máximo) 2 em 2

@@ -1,0 +1,7 @@
+healthchecks-25597e41: /api/inventory 1899475 bytes; operações 1017, símbolos 1011, laços 65; diferenças: 0
+healthchecks-25597e41: a regra do inventário sobre 16239 chamadas (16239 linhas): seguidas 2554 -> 2551; mudam 3; só depois 0
+    hc/api/transports.py:162 5026-5051 | cls.raise_for_response(r) | segue type HttpTransport.raise_for_response -> nao segue, 12
+    hc/api/models.py:1153 43640-43679 | self.transport.is_noop(flip.new_status) | segue type Transport.is_noop -> nao segue, 14
+    hc/integrations/slack/transport.py:72 2654-2688 | self.fix_asterisks(check.schedule) | segue receiver Slackalike.fix_asterisks -> nao segue, 2
+renderer-9b78f3a9: /api/inventory 3054055 bytes; operações 129, símbolos 47, laços 50; diferenças: 0
+renderer-9b78f3a9: a regra do inventário sobre 2545 chamadas (2545 linhas): seguidas 1905 -> 1905; mudam 0; só depois 0

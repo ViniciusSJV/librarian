@@ -1,0 +1,310 @@
+conferência com o binário: 602 iguais 0 diferentes 1 sem tipo
+chamadas com tipo estático do projeto: 4814 ; com método achado: 1032
+produção {
+  'campo | subclasses não | sobrescrita não | aberta não': 5,
+  'campo-herdado | subclasses não | sobrescrita não | aberta não': 9,
+  'cls | subclasses não | sobrescrita não | aberta não': 2,
+  'cls | subclasses sim | sobrescrita não | aberta não': 3,
+  'cls | subclasses sim | sobrescrita sim | aberta não': 1,
+  'construtor | subclasses não | sobrescrita não | aberta não': 89,
+  'construtor | subclasses sim | sobrescrita sim | aberta não': 1,
+  'parametro | subclasses não | sobrescrita não | aberta não': 26,
+  'propriedade | subclasses não | sobrescrita não | aberta não': 2,
+  'propriedade | subclasses sim | sobrescrita sim | aberta não': 2,
+  'retorno | subclasses não | sobrescrita não | aberta não': 15,
+  'self | subclasses não | sobrescrita não | aberta não': 150,
+  'self | subclasses sim | sobrescrita não | aberta não': 3,
+  'self | subclasses sim | sobrescrita sim | aberta não': 1,
+  'super | subclasses não | sobrescrita não | aberta não': 2
+}
+teste {
+  'construtor | subclasses não | sobrescrita não | aberta não': 101,
+  'self | subclasses não | sobrescrita não | aberta não': 479,
+  'self | subclasses sim | sobrescrita não | aberta não': 2,
+  'super | subclasses não | sobrescrita não | aberta não': 139
+}
+== com sobrescrita (qualquer origem, inclusive as exceções)
+P hc/api/transports.py:162 cls.raise_for_response(r) | cls HttpTransport | hoje type 1 | exato false super false | extra 11 | cand 12 | sobrescrevem quem chama [] | baseAbs false 
+      Call.raise_for_response (hc/integrations/call/transport.py:23); Discord.raise_for_response (hc/integrations/discord/transport.py:12); GitHub.raise_for_response (hc/integrations/github/transport.py:17); Opsgenie.raise_for_response (hc/integrations/opsgenie/transport.py:19); Pushover.raise_for_response (hc/integrations/po/transport.py:23); Slack.raise_for_response (hc/integrations/slack/transport.py:101); Sms.raise_for_response (hc/integrations/sms/transport.py:22); Telegram.raise_for_response (hc/integrations/telegram/transport.py:37); VictorOps.raise_for_response (hc/integrations/victorops/transport.py:13); WhatsApp.raise_for_response (hc/integrations/whatsapp/transport.py:23); Zulip.raise_for_response (hc/integrations/zulip/transport.py:17)
+P hc/integrations/call/views.py:26 form.get_json() | construtor PhoneNumberForm | hoje type 1 | exato true super false | extra 1 | cand undefined | sobrescrevem quem chama null | baseAbs false 
+      PhoneUpDownForm.get_json (hc/front/forms.py:168)
+P hc/api/models.py:1153 self.transport.is_noop(flip.new_status) | propriedade Transport | hoje type 1 | exato false super false | extra 13 | cand 14 | sobrescrevem quem chama null | baseAbs false 
+      Call.is_noop (hc/integrations/call/transport.py:36); Email.is_noop (hc/integrations/email/transport.py:115); GitHub.is_noop (hc/integrations/github/transport.py:14); Gotify.is_noop (hc/integrations/gotify/transport.py:15); Ntfy.is_noop (hc/integrations/ntfy/transport.py:15); Pushover.is_noop (hc/integrations/po/transport.py:38); RemovedTransport.is_noop (hc/api/transports.py:128); Shell.is_noop (hc/integrations/shell/transport.py:14); Signal.is_noop (hc/integrations/signal/transport.py:54); Sms.is_noop (hc/integrations/sms/transport.py:36); Trello.is_noop (hc/integrations/trello/transport.py:12); Webhook.is_noop (hc/integrations/webhook/transport.py:63); WhatsApp.is_noop (hc/integrations/whatsapp/transport.py:39)
+P hc/api/models.py:1173 self.transport.notify(flip, notification=n) | propriedade Transport | hoje homonym 30 | exato false super false | extra 30 | cand 30 | sobrescrevem quem chama null | baseAbs true 
+      Apprise.notify (hc/integrations/apprise/transport.py:17); Call.notify (hc/integrations/call/transport.py:39); Discord.notify (hc/integrations/discord/transport.py:19); Email.notify (hc/integrations/email/transport.py:64); GitHub.notify (hc/integrations/github/transport.py:27); GoogleChat.notify (hc/integrations/googlechat/transport.py:19); Gotify.notify (hc/integrations/gotify/transport.py:18); Group.notify (hc/integrations/group/transport.py:8); Matrix.notify (hc/integrations/matrix/transport.py:21); Mattermost.notify (hc/integrations/mattermost/transport.py:11); MsTeamsWorkflow.notify (hc/integrations/msteamsw/transport.py:110); Ntfy.notify (hc/integrations/ntfy/transport.py:18); Opsgenie.notify (hc/integrations/opsgenie/transport.py:30); PagerDuty.notify (hc/integrations/pd/transport.py:14); PagerTree.notify (hc/integrations/pagertree/transport.py:10); Pushbullet.notify (hc/integrations/pushbullet/transport.py:10); Pushover.notify (hc/integrations/po/transport.py:48); RocketChat.notify (hc/integrations/rocketchat/transport.py:60); Shell.notify (hc/integrations/shell/transport.py:23); Signal.notify (hc/integrations/signal/transport.py:159); Slack.notify (hc/integrations/slack/transport.py:122); Slackalike.notify (hc/integrations/slack/transport.py:96); Sms.notify (hc/integrations/sms/transport.py:42); Spike.notify (hc/integrations/spike/transport.py:10); Telegram.notify (hc/integrations/telegram/transport.py:67); Trello.notify (hc/integrations/trello/transport.py:15); VictorOps.notify (hc/integrations/victorops/transport.py:20); Webhook.notify (hc/integrations/webhook/transport.py:69); WhatsApp.notify (hc/integrations/whatsapp/transport.py:45); Zulip.notify (hc/integrations/zulip/transport.py:28)
+P hc/integrations/slack/transport.py:72 self.fix_asterisks(check.schedule) | self Slackalike | hoje receiver 1 | exato false super false | extra 1 | cand 2 | sobrescrevem quem chama [] | baseAbs false 
+      Discord.fix_asterisks (hc/integrations/discord/transport.py:25)
+== método achado e subclasse aberta (base de fora antes, nome ligado a atributo...)
+== vários corpos na própria classe 0
+== T.m() pelo nome da classe 71 {
+  'prod homonym achado sobrescritas não': 18,
+  'prod no_candidate_in_project fora sobrescritas não': 26,
+  'prod unique achado sobrescritas não': 19,
+  'teste unique achado sobrescritas não': 7,
+  'teste unique {"undecided":"o nome é atributo, não método","at":"src:8ce3e55438349ca1cfd362c1daa62b1f586496f894fd70587817115292f75e4d:d03082adb2aacfd44f96bb0df8339a145b4979fee4277225c3a4b8612d1493e6:class:27345:32890"} sobrescritas não': 1
+}
+   hc/api/tests/test_tokenbucket.py:47 TokenBucket.authorize_login_email(email) unique TokenBucket.authorize_login_email (hc/api/models.py:1481) sobrescritas 0
+   hc/api/tests/test_tokenbucket.py:56 TokenBucket.s3_is_healthy() unique TokenBucket.s3_is_healthy (hc/api/models.py:1570) sobrescritas 0
+   hc/api/tests/test_tokenbucket.py:63 TokenBucket.s3_is_healthy() unique TokenBucket.s3_is_healthy (hc/api/models.py:1570) sobrescritas 0
+   hc/api/tests/test_tokenbucket.py:71 TokenBucket.record_s3_get_object_error() unique TokenBucket.record_s3_get_object_error (hc/api/models.py:1583) sobrescritas 0
+   hc/api/tests/test_tokenbucket.py:18 TokenBucket.authorize_login_email("alice@example.org") unique TokenBucket.authorize_login_email (hc/api/models.py:1481) sobrescritas 0
+   hc/api/tests/test_tokenbucket.py:28 TokenBucket.authorize_login_email("alice@example.org") unique TokenBucket.authorize_login_email (hc/api/models.py:1481) sobrescritas 0
+   hc/api/tests/test_tokenbucket.py:37 TokenBucket.authorize_login_email("alice@example.org") unique TokenBucket.authorize_login_email (hc/api/models.py:1481) sobrescritas 0
+   hc/integrations/telegram/transport.py:70 TokenBucket.authorize_telegram(self.channel.telegram.id) unique TokenBucket.authorize_telegram (hc/api/models.py:1510) sobrescritas 0
+   hc/integrations/signal/views.py:84 Signal._read_replies(payload_bytes) unique Signal._read_replies (hc/integrations/signal/transport.py:105) sobrescritas 0
+   hc/integrations/signal/views.py:106 TokenBucket.authorize_signal_verification(request.user) unique TokenBucket.authorize_signal_verification (hc/api/models.py:1523) sobrescritas 0
+   hc/integrations/signal/views.py:115 TokenBucket.authorize_signal(recipient) unique TokenBucket.authorize_signal (hc/api/models.py:1515) sobrescritas 0
+   hc/integrations/signal/views.py:119 Signal.send(recipient, f"Test message from {settings.SITE_NA homonym Telegram.send (hc/integrations/telegram/transport.py:55),Signal.send (hc/integrations/signal/transport.py:60) sobrescritas 0
+   hc/accounts/forms.py:37 TokenBucket.authorize_auth_ip(self.request) unique TokenBucket.authorize_auth_ip (hc/api/models.py:1467) sobrescritas 0
+   hc/accounts/forms.py:48 TokenBucket.authorize_login_email(v) unique TokenBucket.authorize_login_email (hc/api/models.py:1481) sobrescritas 0
+   hc/accounts/forms.py:79 TokenBucket.authorize_login_email(v) unique TokenBucket.authorize_login_email (hc/api/models.py:1481) sobrescritas 0
+   hc/accounts/forms.py:83 TokenBucket.authorize_auth_ip(self.request) unique TokenBucket.authorize_auth_ip (hc/api/models.py:1467) sobrescritas 0
+   hc/accounts/forms.py:104 TokenBucket.authorize_login_password(username) unique TokenBucket.authorize_login_password (hc/api/models.py:1502) sobrescritas 0
+   hc/api/models.py:757 TokenBucket.s3_is_healthy() unique TokenBucket.s3_is_healthy (hc/api/models.py:1570) sobrescritas 0
+   hc/api/models.py:764 TokenBucket.record_s3_get_object_error() unique TokenBucket.record_s3_get_object_error (hc/api/models.py:1583) sobrescritas 0
+   hc/api/models.py:1293 PdConf.load(self.value) homonym PdConf.load (hc/api/models.py:909),EmailConf.load (hc/api/models.py:929),TelegramCallback.load (hc/integrations/telegram/views.py:42) sobrescritas 0
+   hc/api/models.py:1307 EmailConf.load(self.value) homonym PdConf.load (hc/api/models.py:909),EmailConf.load (hc/api/models.py:929),TelegramCallback.load (hc/integrations/telegram/views.py:42) sobrescritas 0
+   hc/api/models.py:1479 TokenBucket.authorize(value, 20, 3600) homonym TokenBucket.authorize (hc/api/models.py:1442) sobrescritas 0
+   hc/api/models.py:1493 TokenBucket.authorize(f"em-{hashed}", 10, 3600) homonym TokenBucket.authorize (hc/api/models.py:1442) sobrescritas 0
+   hc/api/models.py:1500 TokenBucket.authorize(value, 20, 3600 * 24) homonym TokenBucket.authorize (hc/api/models.py:1442) sobrescritas 0
+   hc/api/models.py:1508 TokenBucket.authorize(f"pw-{hashed}", 20, 3600 * 24) homonym TokenBucket.authorize (hc/api/models.py:1442) sobrescritas 0
+   hc/api/models.py:1513 TokenBucket.authorize(f"tg-{telegram_id}", 6, 60) homonym TokenBucket.authorize (hc/api/models.py:1442) sobrescritas 0
+   hc/api/models.py:1521 TokenBucket.authorize(f"signal-{hashed}", 6, 60) homonym TokenBucket.authorize (hc/api/models.py:1442) sobrescritas 0
+   hc/api/models.py:1528 TokenBucket.authorize(value, 50, 3600 * 24) homonym TokenBucket.authorize (hc/api/models.py:1442) sobrescritas 0
+   hc/api/models.py:1536 TokenBucket.authorize(f"po-{hashed}", 6, 60) homonym TokenBucket.authorize (hc/api/models.py:1442) sobrescritas 0
+   hc/api/models.py:1544 TokenBucket.authorize(f"ntfy-{hashed}", 6, 60) homonym TokenBucket.authorize (hc/api/models.py:1442) sobrescritas 0
+   hc/api/models.py:1551 TokenBucket.authorize(value, 10, 3600 * 24) homonym TokenBucket.authorize (hc/api/models.py:1442) sobrescritas 0
+   hc/api/models.py:1559 TokenBucket.authorize(value, 96, 3600 * 24) homonym TokenBucket.authorize (hc/api/models.py:1442) sobrescritas 0
+   hc/api/models.py:1568 TokenBucket.authorize(value, 1, 90) homonym TokenBucket.authorize (hc/api/models.py:1442) sobrescritas 0
+   hc/api/models.py:1587 TokenBucket.authorize("s3_get_object_error", 3, 60, force=Tr homonym TokenBucket.authorize (hc/api/models.py:1442) sobrescritas 0
+   hc/integrations/telegram/views.py:57 TelegramCallback.load(request.body) homonym PdConf.load (hc/api/models.py:909),EmailConf.load (hc/api/models.py:929),TelegramCallback.load (hc/integrations/telegram/views.py:42) sobrescritas 0
+   hc/integrations/telegram/views.py:82 Telegram.send(chat.id, doc.message.message_thread_id, invite homonym Telegram.send (hc/integrations/telegram/transport.py:55),Signal.send (hc/integrations/signal/transport.py:60) sobrescritas 0
+   hc/accounts/decorators.py:35 TokenBucket.authorize_sudo_code(request.user) unique TokenBucket.authorize_sudo_code (hc/api/models.py:1546) sobrescritas 0
+   hc/accounts/views.py:424 TokenBucket.authorize_invite(request.user) unique TokenBucket.authorize_invite (hc/api/models.py:1495) sobrescritas 0
+   hc/accounts/views.py:907 TokenBucket.authorize_totp_attempt(user) unique TokenBucket.authorize_totp_attempt (hc/api/models.py:1553) sobrescritas 0
+   hc/accounts/views.py:914 TokenBucket.authorize_totp_code(user, form.cleaned_data["cod unique TokenBucket.authorize_totp_code (hc/api/models.py:1561) sobrescritas 0
+== métodos sobrescritos no projeto 9
+   TransportError.__init__ (hc/api/transports.py:57) 2 MigrationRequiredError,SignalRateLimitFailure
+   Transport.notify (hc/api/transports.py:66) 30 Spike,PagerDuty,Telegram
+   Transport.is_noop (hc/api/transports.py:76) 13 RemovedTransport,Trello,GitHub
+   HttpTransport.raise_for_response (hc/api/transports.py:133) 11 Telegram,Discord,GitHub
+   Server.__init__ (hc/api/management/commands/smtpd.py:105) 1 TestServer
+   BaseTestCase.setUp (hc/test.py:25) 139 AddRocketChatTestCase,AddPdTestCase,ProjectsMenuTestCase
+   PhoneNumberForm.get_json (hc/front/forms.py:151) 1 PhoneUpDownForm
+   Slackalike.fix_asterisks (hc/integrations/slack/transport.py:88) 1 Discord
+   Slackalike.notify (hc/integrations/slack/transport.py:96) 3 Mattermost,Discord,Slack
+== x.m() com m sobrescrito em algum lugar e sem tipo estático {
+  'prod __init__ above_candidate_limit': 1,
+  'prod is_noop above_candidate_limit': 1,
+  'prod notify above_candidate_limit': 7,
+  'teste notify above_candidate_limit': 337
+}
+== links únicos para um método sobrescrito
+   T hc/integrations/rocketchat/tests/test_add.py:11 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/pd/tests/test_add.py:14 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/front/tests/test_projects_menu.py:8 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/front/tests/test_badges.py:12 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/msteamsw/tests/test_notify.py:17 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   P hc/api/transports.py:162 cls.raise_for_response(r) type cls HttpTransport.raise_for_response (hc/api/transports.py:133)
+   T hc/integrations/mattermost/tests/test_notify.py:15 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   P hc/integrations/telegram/transport.py:15 super().__init__(message, permanent=True) type super TransportError.__init__ (hc/api/transports.py:57)
+   T hc/api/tests/test_get_ping_body.py:14 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/whatsapp/tests/test_notify.py:26 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/webhook/tests/test_add.py:11 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/accounts/tests/test_add_webauthn.py:14 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/email/tests/test_verify.py:9 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/accounts/tests/test_add_totp.py:10 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/accounts/tests/test_login_webauthn.py:15 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/front/tests/test_log.py:15 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/front/tests/test_ping_details.py:55 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/whatsapp/tests/test_add.py:19 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/prometheus/tests/test_metrics.py:14 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/api/tests/test_admin.py:9 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/front/tests/test_webhook_validator.py:9 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/github/tests/test_add.py:11 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/spike/tests/test_notify.py:15 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/api/tests/test_badge.py:15 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/gotify/tests/test_notify.py:15 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/webhook/tests/test_edit.py:11 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/slack/tests/test_add_btn.py:11 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/front/tests/test_get_events.py:16 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/accounts/tests/test_profile_model.py:49 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/api/tests/test_check_badge.py:13 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/api/tests/test_flip_model.py:14 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/front/tests/test_add_check.py:9 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/gotify/tests/test_edit.py:11 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/front/tests/test_details.py:15 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/accounts/tests/test_login.py:16 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/front/tests/test_status.py:9 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/github/tests/test_add_select.py:15 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/trello/tests/test_add.py:12 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/prometheus/tests/test_add.py:10 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/github/tests/test_add_save.py:15 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/group/tests/test_edit.py:9 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/accounts/tests/test_project.py:15 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/front/tests/test_filtering_rules.py:9 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/front/tests/test_switch_channel.py:10 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/front/tests/test_ping_body.py:14 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/pagertree/tests/test_notify.py:15 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/front/tests/test_transfer.py:10 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/api/tests/test_ping_by_slug.py:11 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/front/tests/test_channel_checks.py:9 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/api/tests/test_list_channels.py:9 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/front/tests/test_index.py:9 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/api/tests/test_get_badges.py:11 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/signal/tests/test_add.py:12 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/accounts/tests/test_sendflappingnotices.py:19 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/email/tests/test_edit.py:14 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/accounts/tests/test_admin.py:9 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/accounts/tests/test_sudo_mode.py:13 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/telegram/tests/test_notify.py:15 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/call/tests/test_add.py:12 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/front/tests/test_remove_check.py:9 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/accounts/tests/test_remove_totp.py:9 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/api/tests/test_resume.py:11 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/mattermost/tests/test_add.py:11 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/front/tests/test_remove_channel.py:9 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/sms/tests/test_add.py:12 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/pushbullet/tests/test_notify.py:14 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/accounts/tests/test_remove_credential.py:12 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/signal/tests/test_signal_captcha.py:57 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/front/tests/test_pause.py:13 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/accounts/tests/test_senddeletionscheduled.py:28 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/po/tests/test_add.py:16 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/accounts/tests/test_remove_project.py:9 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/ntfy/tests/test_add.py:9 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/front/tests/test_resume.py:11 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   P hc/integrations/call/views.py:26 form.get_json() type construtor PhoneNumberForm.get_json (hc/front/forms.py:151)
+   T hc/integrations/group/tests/test_notify.py:15 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/zulip/tests/test_add.py:25 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/signal/tests/test_edit.py:14 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/front/tests/test_validate_schedule.py:10 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/api/tests/test_list_checks.py:14 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/rocketchat/tests/test_notify.py:15 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/sms/tests/test_notify.py:18 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   P hc/api/models.py:1153 self.transport.is_noop(flip.new_status) type propriedade Transport.is_noop (hc/api/transports.py:76)
+   T hc/integrations/email/tests/test_add.py:14 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/front/tests/test_send_test_notification.py:15 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/shell/tests/test_edit.py:14 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/api/tests/test_smtpd.py:55 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/accounts/tests/test_sendinactivitynotices.py:27 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/victorops/tests/test_add.py:11 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/accounts/tests/test_login_totp.py:12 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/discord/tests/test_add.py:11 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/ntfy/tests/test_edit.py:11 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/gotify/tests/test_add.py:9 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/api/tests/test_bounces.py:17 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/signal/tests/test_notify.py:76 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/api/tests/test_ping_model.py:16 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/group/tests/test_add.py:9 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/spike/tests/test_add.py:11 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/pushbullet/tests/test_add.py:11 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/pagertree/tests/test_add.py:11 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/api/tests/test_notification_status.py:11 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/trello/tests/test_notify.py:17 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/matrix/tests/test_notify.py:19 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/pd/tests/test_add_complete.py:15 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/api/tests/test_get_check.py:15 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/github/tests/test_notify.py:21 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/front/tests/test_update_timeout.py:13 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/front/tests/test_status_single.py:13 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/front/tests/test_clear_events.py:11 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/front/tests/test_copy.py:11 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/signal/tests/test_verify_signal_number.py:15 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/api/tests/test_pause.py:13 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/front/tests/test_update_channel.py:10 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/front/tests/test_my_checks.py:14 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/api/tests/test_sendreports.py:23 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/victorops/tests/test_notify.py:15 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   P hc/integrations/slack/transport.py:72 self.fix_asterisks(check.schedule) receiver null Slackalike.fix_asterisks (hc/integrations/slack/transport.py:88)
+   T hc/integrations/ntfy/tests/test_notify.py:16 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/front/tests/test_update_name.py:9 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/accounts/tests/test_transfer_project.py:15 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/accounts/tests/test_change_email_verify.py:14 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/api/tests/test_delete_check.py:11 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/googlechat/tests/test_add.py:9 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/api/tests/test_update_check.py:17 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/matrix/tests/test_add.py:15 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   P hc/integrations/signal/transport.py:22 super().__init__("CAPTCHA proof required") type super TransportError.__init__ (hc/api/transports.py:57)
+   T hc/integrations/email/tests/test_notify.py:28 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/whatsapp/tests/test_edit.py:21 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/email/tests/test_unsubscribe.py:14 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/api/tests/test_ping.py:18 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/front/tests/test_log_events.py:15 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/call/tests/test_notify.py:18 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/msteamsw/tests/test_add.py:11 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/front/tests/test_uncloak.py:9 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/zulip/tests/test_notify.py:16 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/slack/tests/test_add.py:11 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/apprise/tests/test_add.py:12 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/accounts/tests/test_check_token.py:12 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/opsgenie/tests/test_add.py:13 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/api/tests/test_get_flips.py:12 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/apprise/tests/test_notify.py:24 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/api/tests/test_get_pings.py:17 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/sms/tests/test_edit.py:14 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/integrations/shell/tests/test_add.py:12 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+   T hc/front/tests/test_update_channel_name.py:9 super().setUp() type super BaseTestCase.setUp (hc/test.py:25)
+== custo: não exatas com método achado 700 chamadas em 515 símbolos; com o nome em mais de um método 370 em 358 símbolos; (super, abstrato ou não achado: já precisam hoje, no máximo) 3924 em 1985
+== custo com filtros: novos símbolos que pagariam, sem filtro 140 ; nome em mais de um método 62 ; nome declarado em outra classe com base 95 (classes com mais de uma base: 0)
+== subclasses existem, sem sobrescrita
+   P hc/api/transports.py:182 HttpTransport.request cls._request( method, url, params=params, data=data, json=js cls HttpTransport 26 unique HttpTransport._request (hc/api/transports.py:138) hc/api/transports.py@5549-5806
+   P hc/api/transports.py:211 HttpTransport.post cls.request( "post", url, retry=retry, params=params, data=d cls HttpTransport 26 type HttpTransport.request (hc/api/transports.py:166) hc/api/transports.py@6474-6692
+   P hc/api/transports.py:235 HttpTransport.put cls.request( "put", url, retry=retry, params=params, data=da cls HttpTransport 26 type HttpTransport.request (hc/api/transports.py:166) hc/api/transports.py@7068-7285
+   T hc/test.py:96 BaseTestCase.assertEmailContains self.assertEmailContainsText(fragment) self BaseTestCase 187 unique BaseTestCase.assertEmailContainsText (hc/test.py:79) hc/test.py@3446-3484
+   T hc/test.py:97 BaseTestCase.assertEmailContains self.assertEmailContainsHtml(fragment) self BaseTestCase 187 unique BaseTestCase.assertEmailContainsHtml (hc/test.py:84) hc/test.py@3494-3532
+   P hc/integrations/slack/transport.py:97 Slackalike.notify self.post(self.channel.slack_webhook_url, json=self.payload( self Slackalike 3 type HttpTransport.post (hc/api/transports.py:199) hc/integrations/slack/transport.py@3650-3716
+   P hc/integrations/slack/transport.py:97 Slackalike.notify self.payload(flip) self Slackalike 3 receiver Slackalike.payload (hc/integrations/slack/transport.py:31) hc/integrations/slack/transport.py@3697-3715
+   P hc/integrations/slack/transport.py:75 Slackalike.payload self.last_ping(flip) self Slackalike 3 unique Transport.last_ping (hc/api/transports.py:105) hc/integrations/slack/transport.py@2759-2779
+== nome também declarado em outra classe, sem sobrescrita (irmãs)
+   T hc/accounts/tests/test_notifications.py:54 NotificationsTestCase.test_it_saves_reports_off self._payload(reports="off") self NotificationsTestCase receiver NotificationsTestCase._payload (hc/accounts/tests/test_notifications.py:14) hc/accounts/tests/test_notifications.py@1803-1831
+   T hc/accounts/tests/test_notifications.py:66 NotificationsTestCase.test_it_sets_next_nag_date_when_setting_hourly_nag_period self._payload(nag_period="3600") self NotificationsTestCase receiver NotificationsTestCase._payload (hc/accounts/tests/test_notifications.py:14) hc/accounts/tests/test_notifications.py@2307-2339
+   T hc/accounts/tests/test_notifications.py:79 NotificationsTestCase.test_it_clears_next_nag_date_when_setting_hourly_nag_period self._payload(nag_period="3600") self NotificationsTestCase receiver NotificationsTestCase._payload (hc/accounts/tests/test_notifications.py:14) hc/accounts/tests/test_notifications.py@2858-2890
+   T hc/accounts/tests/test_notifications.py:92 NotificationsTestCase.test_it_does_not_save_nonstandard_nag_period self._payload(nag_period="1234") self NotificationsTestCase receiver NotificationsTestCase._payload (hc/accounts/tests/test_notifications.py:14) hc/accounts/tests/test_notifications.py@3382-3414
+   T hc/accounts/tests/test_notifications.py:25 NotificationsTestCase.test_it_saves_reports_monthly self._payload() self NotificationsTestCase receiver NotificationsTestCase._payload (hc/accounts/tests/test_notifications.py:14) hc/accounts/tests/test_notifications.py@698-713
+   T hc/accounts/tests/test_notifications.py:39 NotificationsTestCase.test_it_saves_reports_weekly self._payload(reports="weekly") self NotificationsTestCase receiver NotificationsTestCase._payload (hc/accounts/tests/test_notifications.py:14) hc/accounts/tests/test_notifications.py@1216-1247
+   P hc/integrations/telegram/transport.py:87 Telegram.notify self.send(self.channel.telegram.id, self.channel.t self Telegram receiver Telegram.send (hc/integrations/telegram/transport.py:55) hc/integrations/telegram/transport.py@3154-3228
+   P hc/integrations/telegram/transport.py:91 Telegram.notify self.send(self.channel.telegram.id, self.channel.t self Telegram receiver Telegram.send (hc/integrations/telegram/transport.py:55) hc/integrations/telegram/transport.py@3408-3482
+   P hc/integrations/mattermost/transport.py:15 Mattermost.notify self.payload(flip) self Mattermost type Slackalike.payload (hc/integrations/slack/transport.py:31) hc/integrations/mattermost/transport.py@481-499
+   P hc/integrations/discord/transport.py:22 Discord.notify self.payload(flip) self Discord type Slackalike.payload (hc/integrations/slack/transport.py:31) hc/integrations/discord/transport.py@743-761
+   T hc/front/tests/test_add_check.py:47 AddCheckTestCase.test_redirect_preserves_querystring self._payload() self AddCheckTestCase receiver AddCheckTestCase._payload (hc/front/tests/test_add_check.py:14) hc/front/tests/test_add_check.py@1684-1699
+   T hc/front/tests/test_add_check.py:52 AddCheckTestCase.test_it_saves_cron_schedule self._payload(kind="cron", schedule="0 0 * * *") self AddCheckTestCase receiver AddCheckTestCase._payload (hc/front/tests/test_add_check.py:14) hc/front/tests/test_add_check.py@1937-1985
+   T hc/front/tests/test_add_check.py:63 AddCheckTestCase.test_it_saves_oncalendar_schedule self._payload(kind="oncalendar", schedule="12:34") self AddCheckTestCase receiver AddCheckTestCase._payload (hc/front/tests/test_add_check.py:14) hc/front/tests/test_add_check.py@2393-2443
+   T hc/front/tests/test_add_check.py:75 AddCheckTestCase.test_it_sanitizes_tags self._payload(tags=" foo bar ") self AddCheckTestCase receiver AddCheckTestCase._payload (hc/front/tests/test_add_check.py:14) hc/front/tests/test_add_check.py@2911-2945
+   T hc/front/tests/test_add_check.py:85 AddCheckTestCase.test_it_validates_kind self._payload(kind="surprise") self AddCheckTestCase receiver AddCheckTestCase._payload (hc/front/tests/test_add_check.py:14) hc/front/tests/test_add_check.py@3311-3341
+   T hc/front/tests/test_add_check.py:91 AddCheckTestCase.test_it_validates_timeout self._payload(timeout=timeout) self AddCheckTestCase receiver AddCheckTestCase._payload (hc/front/tests/test_add_check.py:14) hc/front/tests/test_add_check.py@3611-3641
+   T hc/front/tests/test_add_check.py:97 AddCheckTestCase.test_it_validates_cron_expression self._payload(kind="cron", schedule=expr) self AddCheckTestCase receiver AddCheckTestCase._payload (hc/front/tests/test_add_check.py:14) hc/front/tests/test_add_check.py@3922-3963
+   T hc/front/tests/test_add_check.py:103 AddCheckTestCase.test_it_validates_cron_expression_with_no_matches self._payload(kind="cron", schedule="* * */100 * M self AddCheckTestCase receiver AddCheckTestCase._payload (hc/front/tests/test_add_check.py:14) hc/front/tests/test_add_check.py@4223-4279
+   T hc/front/tests/test_add_check.py:110 AddCheckTestCase.test_it_validates_oncalendar_expression self._payload(kind="oncalendar", schedule="12:345" self AddCheckTestCase receiver AddCheckTestCase._payload (hc/front/tests/test_add_check.py:14) hc/front/tests/test_add_check.py@4535-4586
+   T hc/front/tests/test_add_check.py:116 AddCheckTestCase.test_it_validates_tz self._payload(tz="Etc/Surprise") self AddCheckTestCase receiver AddCheckTestCase._payload (hc/front/tests/test_add_check.py:14) hc/front/tests/test_add_check.py@4809-4841
+   T hc/front/tests/test_add_check.py:121 AddCheckTestCase.test_team_access_works self._payload() self AddCheckTestCase receiver AddCheckTestCase._payload (hc/front/tests/test_add_check.py:14) hc/front/tests/test_add_check.py@5050-5065
+   T hc/front/tests/test_add_check.py:137 AddCheckTestCase.test_it_requires_rw_access self._payload() self AddCheckTestCase receiver AddCheckTestCase._payload (hc/front/tests/test_add_check.py:14) hc/front/tests/test_add_check.py@5693-5708
+   T hc/front/tests/test_add_check.py:145 AddCheckTestCase.test_it_obeys_check_limit self._payload() self AddCheckTestCase receiver AddCheckTestCase._payload (hc/front/tests/test_add_check.py:14) hc/front/tests/test_add_check.py@5995-6010
+   T hc/front/tests/test_add_check.py:150 AddCheckTestCase.test_it_rejects_long_tags self._payload(tags="x" * 501) self AddCheckTestCase receiver AddCheckTestCase._payload (hc/front/tests/test_add_check.py:14) hc/front/tests/test_add_check.py@6228-6257
+   T hc/front/tests/test_add_check.py:29 AddCheckTestCase.test_it_works self._payload() self AddCheckTestCase receiver AddCheckTestCase._payload (hc/front/tests/test_add_check.py:14) hc/front/tests/test_add_check.py@866-881
+   P hc/integrations/slack/transport.py:97 Slackalike.notify self.payload(flip) self Slackalike receiver Slackalike.payload (hc/integrations/slack/transport.py:31) hc/integrations/slack/transport.py@3697-3715
+   P hc/integrations/slack/transport.py:126 Slack.notify self.payload(flip) self Slack type Slackalike.payload (hc/integrations/slack/transport.py:31) hc/integrations/slack/transport.py@5070-5088
+   P hc/integrations/signal/transport.py:179 Signal.notify self.send(self.channel.phone.value, text) self Signal receiver Signal.send (hc/integrations/signal/transport.py:60) hc/integrations/signal/transport.py@6165-6206
+   P hc/integrations/rocketchat/transport.py:64 RocketChat.notify self.payload(flip) self RocketChat receiver RocketChat.payload (hc/integrations/rocketchat/transport.py:18) hc/integrations/rocketchat/transport.py@2470-2488
+   P hc/integrations/rocketchat/transport.py:43 RocketChat.payload self.fix_asterisks(check.schedule) self RocketChat receiver RocketChat.fix_asterisks (hc/integrations/rocketchat/transport.py:14) hc/integrations/rocketchat/transport.py@1568-1602
+   P hc/integrations/msteamsw/transport.py:114 MsTeamsWorkflow.notify self.payload(flip) self MsTeamsWorkflow receiver MsTeamsWorkflow.payload (hc/integrations/msteamsw/transport.py:18) hc/integrations/msteamsw/transport.py@3911-3929
+   P hc/integrations/msteamsw/transport.py:82 MsTeamsWorkflow.payload self.fix_asterisks(check.schedule) self MsTeamsWorkflow receiver MsTeamsWorkflow.fix_asterisks (hc/integrations/msteamsw/transport.py:14) hc/integrations/msteamsw/transport.py@2812-2846
+== construtor exato com homônimos
+   P hc/integrations/whatsapp/views.py:23 whatsapp_form form.get_json() PhoneUpDownForm type PhoneUpDownForm.get_json (hc/front/forms.py:168) hc/integrations/whatsapp/views.py@797-812
+   P hc/integrations/sms/views.py:24 sms_form form.get_json() PhoneUpDownForm type PhoneUpDownForm.get_json (hc/front/forms.py:168) hc/integrations/sms/views.py@818-833
+   P hc/integrations/signal/views.py:29 signal_form form.get_json() SignalForm type SignalForm.get_json (hc/integrations/signal/forms.py:45) hc/integrations/signal/views.py@1076-1091
+   P hc/integrations/call/views.py:26 add form.get_json() PhoneNumberForm type PhoneNumberForm.get_json (hc/front/forms.py:151) hc/integrations/call/views.py@904-919
+   T hc/api/tests/test_smtpd.py:216 SmtpdTestCase.test_it_handles_multiple_recipients TestServer().process_message(
+            ("127.0 TestServer unique Server.process_message (hc/api/management/commands/smtpd.py:117) hc/api/tests/test_smtpd.py@7592-7709
+   T hc/api/tests/test_smtpd.py:228 SmtpdTestCase.test_rcpt_handler_accepts_uuid TestServer().process_rcpt(
+            "763c0772- TestServer unique Server.process_rcpt (hc/api/management/commands/smtpd.py:109) hc/api/tests/test_smtpd.py@8079-8183
+   T hc/api/tests/test_smtpd.py:234 SmtpdTestCase.test_rcpt_handler_accepts_slug TestServer().process_rcpt(
+            f"{self.pr TestServer unique Server.process_rcpt (hc/api/management/commands/smtpd.py:109) hc/api/tests/test_smtpd.py@8294-8390
+   T hc/api/tests/test_smtpd.py:240 SmtpdTestCase.test_rcpt_handler_rejects_non_uuid_mailbox TestServer().process_rcpt("foo@hc.example.com") TestServer unique Server.process_rcpt (hc/api/management/commands/smtpd.py:109) hc/api/tests/test_smtpd.py@8513-8560
+   T hc/api/tests/test_smtpd.py:244 SmtpdTestCase.test_rcpt_handler_rejects_invalid_ping_key TestServer().process_rcpt("tooshort+foo@hc.example TestServer unique Server.process_rcpt (hc/api/management/commands/smtpd.py:109) hc/api/tests/test_smtpd.py@8716-8772
+   T hc/api/tests/test_smtpd.py:248 SmtpdTestCase.test_rcpt_handler_rejects_invalid_slug TestServer().process_rcpt(
+            f"{self.pr TestServer unique Server.process_rcpt (hc/api/management/commands/smtpd.py:109) hc/api/tests/test_smtpd.py@8918-9016
+   T hc/api/tests/test_smtpd.py:254 SmtpdTestCase.test_it_wrong_domain TestServer().process_rcpt(f"{self.check.code}@bad. TestServer unique Server.process_rcpt (hc/api/management/commands/smtpd.py:109) hc/api/tests/test_smtpd.py@9144-9202
+   P hc/integrations/slack/transport.py:72 Slackalike.payload fields.add("Schedule", self.fix_asterisks(check.sc SlackFields type SlackFields.add (hc/integrations/slack/transport.py:21) hc/integrations/slack/transport.py@2631-2689
+   P hc/integrations/rocketchat/transport.py:43 RocketChat.payload fields.add("Schedule", self.fix_asterisks(check.sc SlackFields type SlackFields.add (hc/integrations/slack/transport.py:21) hc/integrations/rocketchat/transport.py@1545-1603
+   P hc/integrations/msteamsw/transport.py:82 MsTeamsWorkflow.payload fields.add("Schedule:", self.fix_asterisks(check.s SlackFields type SlackFields.add (hc/integrations/slack/transport.py:21) hc/integrations/msteamsw/transport.py@2788-2847

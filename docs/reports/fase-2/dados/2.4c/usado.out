@@ -1,0 +1,78 @@
+== (1) used_by de hoje x chamadas que podem despachar, por candidata
+Call.raise_for_response (hc/integrations/call/transport.py:23) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/transports.py:162 | no used_by sem ser alvo possível 0
+Discord.raise_for_response (hc/integrations/discord/transport.py:12) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/transports.py:162 | no used_by sem ser alvo possível 0
+GitHub.raise_for_response (hc/integrations/github/transport.py:17) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/transports.py:162 | no used_by sem ser alvo possível 0
+HttpTransport.raise_for_response (hc/api/transports.py:133) | used_by hoje 0 | links únicos hoje 1 | despacho que falta no used_by: hc/api/transports.py:162 | no used_by sem ser alvo possível 0
+Opsgenie.raise_for_response (hc/integrations/opsgenie/transport.py:19) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/transports.py:162 | no used_by sem ser alvo possível 0
+Pushover.raise_for_response (hc/integrations/po/transport.py:23) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/transports.py:162 | no used_by sem ser alvo possível 0
+Slack.raise_for_response (hc/integrations/slack/transport.py:101) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/transports.py:162 | no used_by sem ser alvo possível 0
+Sms.raise_for_response (hc/integrations/sms/transport.py:22) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/transports.py:162 | no used_by sem ser alvo possível 0
+Telegram.raise_for_response (hc/integrations/telegram/transport.py:37) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/transports.py:162 | no used_by sem ser alvo possível 0
+VictorOps.raise_for_response (hc/integrations/victorops/transport.py:13) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/transports.py:162 | no used_by sem ser alvo possível 0
+WhatsApp.raise_for_response (hc/integrations/whatsapp/transport.py:23) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/transports.py:162 | no used_by sem ser alvo possível 0
+Zulip.raise_for_response (hc/integrations/zulip/transport.py:17) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/transports.py:162 | no used_by sem ser alvo possível 0
+Call.is_noop (hc/integrations/call/transport.py:36) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1153 | no used_by sem ser alvo possível 0
+Email.is_noop (hc/integrations/email/transport.py:115) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1153 | no used_by sem ser alvo possível 0
+GitHub.is_noop (hc/integrations/github/transport.py:14) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1153 | no used_by sem ser alvo possível 0
+Gotify.is_noop (hc/integrations/gotify/transport.py:15) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1153 | no used_by sem ser alvo possível 0
+Ntfy.is_noop (hc/integrations/ntfy/transport.py:15) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1153 | no used_by sem ser alvo possível 0
+Pushover.is_noop (hc/integrations/po/transport.py:38) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1153 | no used_by sem ser alvo possível 0
+RemovedTransport.is_noop (hc/api/transports.py:128) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1153 | no used_by sem ser alvo possível 0
+Shell.is_noop (hc/integrations/shell/transport.py:14) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1153 | no used_by sem ser alvo possível 0
+Signal.is_noop (hc/integrations/signal/transport.py:54) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1153 | no used_by sem ser alvo possível 0
+Sms.is_noop (hc/integrations/sms/transport.py:36) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1153 | no used_by sem ser alvo possível 0
+Transport.is_noop (hc/api/transports.py:76) | used_by hoje 0 | links únicos hoje 1 | despacho que falta no used_by: hc/api/models.py:1153 | no used_by sem ser alvo possível 0
+Trello.is_noop (hc/integrations/trello/transport.py:12) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1153 | no used_by sem ser alvo possível 0
+Webhook.is_noop (hc/integrations/webhook/transport.py:63) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1153 | no used_by sem ser alvo possível 0
+WhatsApp.is_noop (hc/integrations/whatsapp/transport.py:39) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1153 | no used_by sem ser alvo possível 0
+Apprise.notify (hc/integrations/apprise/transport.py:17) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1173 | no used_by sem ser alvo possível 0
+Call.notify (hc/integrations/call/transport.py:39) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1173 | no used_by sem ser alvo possível 0
+Discord.notify (hc/integrations/discord/transport.py:19) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1173 | no used_by sem ser alvo possível 0
+Email.notify (hc/integrations/email/transport.py:64) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1173 | no used_by sem ser alvo possível 0
+GitHub.notify (hc/integrations/github/transport.py:27) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1173 | no used_by sem ser alvo possível 0
+GoogleChat.notify (hc/integrations/googlechat/transport.py:19) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1173 | no used_by sem ser alvo possível 0
+Gotify.notify (hc/integrations/gotify/transport.py:18) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1173 | no used_by sem ser alvo possível 0
+Group.notify (hc/integrations/group/transport.py:8) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1173 | no used_by sem ser alvo possível 0
+Matrix.notify (hc/integrations/matrix/transport.py:21) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1173 | no used_by sem ser alvo possível 0
+Mattermost.notify (hc/integrations/mattermost/transport.py:11) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1173 | no used_by sem ser alvo possível 0
+MsTeamsWorkflow.notify (hc/integrations/msteamsw/transport.py:110) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1173 | no used_by sem ser alvo possível 0
+Ntfy.notify (hc/integrations/ntfy/transport.py:18) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1173 | no used_by sem ser alvo possível 0
+Opsgenie.notify (hc/integrations/opsgenie/transport.py:30) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1173 | no used_by sem ser alvo possível 0
+PagerDuty.notify (hc/integrations/pd/transport.py:14) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1173 | no used_by sem ser alvo possível 0
+PagerTree.notify (hc/integrations/pagertree/transport.py:10) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1173 | no used_by sem ser alvo possível 0
+Pushbullet.notify (hc/integrations/pushbullet/transport.py:10) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1173 | no used_by sem ser alvo possível 0
+Pushover.notify (hc/integrations/po/transport.py:48) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1173 | no used_by sem ser alvo possível 0
+RocketChat.notify (hc/integrations/rocketchat/transport.py:60) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1173 | no used_by sem ser alvo possível 0
+Shell.notify (hc/integrations/shell/transport.py:23) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1173 | no used_by sem ser alvo possível 0
+Signal.notify (hc/integrations/signal/transport.py:159) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1173 | no used_by sem ser alvo possível 0
+Slack.notify (hc/integrations/slack/transport.py:122) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1173 | no used_by sem ser alvo possível 0
+Slackalike.notify (hc/integrations/slack/transport.py:96) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1173 | no used_by sem ser alvo possível 0
+Sms.notify (hc/integrations/sms/transport.py:42) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1173 | no used_by sem ser alvo possível 0
+Spike.notify (hc/integrations/spike/transport.py:10) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1173 | no used_by sem ser alvo possível 0
+Telegram.notify (hc/integrations/telegram/transport.py:67) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1173 | no used_by sem ser alvo possível 0
+Trello.notify (hc/integrations/trello/transport.py:15) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1173 | no used_by sem ser alvo possível 0
+VictorOps.notify (hc/integrations/victorops/transport.py:20) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1173 | no used_by sem ser alvo possível 0
+Webhook.notify (hc/integrations/webhook/transport.py:69) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1173 | no used_by sem ser alvo possível 0
+WhatsApp.notify (hc/integrations/whatsapp/transport.py:45) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1173 | no used_by sem ser alvo possível 0
+Zulip.notify (hc/integrations/zulip/transport.py:28) | used_by hoje 0 | links únicos hoje 0 | despacho que falta no used_by: hc/api/models.py:1173 | no used_by sem ser alvo possível 0
+Discord.fix_asterisks (hc/integrations/discord/transport.py:25) | used_by hoje 3 | links únicos hoje 0 | despacho que falta no used_by: - | no used_by sem ser alvo possível 2
+Slackalike.fix_asterisks (hc/integrations/slack/transport.py:88) | used_by hoje 3 | links únicos hoje 1 | despacho que falta no used_by: - | no used_by sem ser alvo possível 2
+== geral (Python): links únicos do /api/calls 2623 ; aparecem no used_by do alvo 1916 ; não aparecem 707
+   por resolução {
+  'type super': 141,
+  'type construtor': 78,
+  'receiver ': 264,
+  'type cls': 1,
+  'import ': 57,
+  'unique ': 147,
+  'type self': 18,
+  'type propriedade': 1
+}
+== (2) símbolos cujo percurso (profundidade 6) muda: 32 ; com perda 0
+   perdidos {}
+   Channel.notify (hc/api/models.py:1152) nós 33 -> 46 perde - ganha 13
+   Slackalike.notify (hc/integrations/slack/transport.py:96) nós 56 -> 68 perde - ganha 12
+   HttpTransport._request (hc/api/transports.py:138) nós 17 -> 28 perde - ganha 11
+   Slackalike.payload (hc/integrations/slack/transport.py:31) nós 38 -> 39 perde - ganha 1
+   Discord.notify (hc/integrations/discord/transport.py:19) nós 56 -> 68 perde - ganha 12
+   maior 68

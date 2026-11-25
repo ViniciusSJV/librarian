@@ -1,0 +1,157 @@
+Python: Classe.metodo(..) com Classe do projeto: 71
+ produção {
+  'homonym | método achado | importada': 2,
+  'homonym | método achado | mesmo módulo': 16,
+  'no_candidate_in_project | base de fora antes | mesmo módulo': 26,
+  'unique | método achado | importada': 17,
+  'unique | método achado | mesmo módulo': 2
+}
+ teste {
+  'unique | método achado | importada': 7,
+  'unique | o nome é atributo, não método | importada': 1
+}
+ por resolução { homonym: 18, no_candidate_in_project: 26, unique: 27 }
+ homonym que fechariam 18 de 18 {
+  'EmailConf.load [3]': 1,
+  'PdConf.load [3]': 1,
+  'Signal.send [2]': 1,
+  'Telegram.send [2]': 1,
+  'TelegramCallback.load [3]': 1,
+  'TokenBucket.authorize [1]': 13
+}
+ dessas, com sobrescrita em subclasse: 0
+    P hc/integrations/signal/views.py:119 Signal.send importada homonym 2 -> Signal.send (hc/integrations/signal/transport.py:60)
+    P hc/api/models.py:1293 PdConf.load mesmo módulo homonym 3 -> PdConf.load (hc/api/models.py:909)
+    P hc/api/models.py:1307 EmailConf.load mesmo módulo homonym 3 -> EmailConf.load (hc/api/models.py:929)
+    P hc/api/models.py:1479 TokenBucket.authorize mesmo módulo homonym 1 -> TokenBucket.authorize (hc/api/models.py:1442)
+    P hc/api/models.py:1493 TokenBucket.authorize mesmo módulo homonym 1 -> TokenBucket.authorize (hc/api/models.py:1442)
+    P hc/api/models.py:1500 TokenBucket.authorize mesmo módulo homonym 1 -> TokenBucket.authorize (hc/api/models.py:1442)
+    P hc/api/models.py:1508 TokenBucket.authorize mesmo módulo homonym 1 -> TokenBucket.authorize (hc/api/models.py:1442)
+    P hc/api/models.py:1513 TokenBucket.authorize mesmo módulo homonym 1 -> TokenBucket.authorize (hc/api/models.py:1442)
+    P hc/api/models.py:1521 TokenBucket.authorize mesmo módulo homonym 1 -> TokenBucket.authorize (hc/api/models.py:1442)
+    P hc/api/models.py:1528 TokenBucket.authorize mesmo módulo homonym 1 -> TokenBucket.authorize (hc/api/models.py:1442)
+    P hc/api/models.py:1536 TokenBucket.authorize mesmo módulo homonym 1 -> TokenBucket.authorize (hc/api/models.py:1442)
+    P hc/api/models.py:1544 TokenBucket.authorize mesmo módulo homonym 1 -> TokenBucket.authorize (hc/api/models.py:1442)
+    P hc/api/models.py:1551 TokenBucket.authorize mesmo módulo homonym 1 -> TokenBucket.authorize (hc/api/models.py:1442)
+    P hc/api/models.py:1559 TokenBucket.authorize mesmo módulo homonym 1 -> TokenBucket.authorize (hc/api/models.py:1442)
+    P hc/api/models.py:1568 TokenBucket.authorize mesmo módulo homonym 1 -> TokenBucket.authorize (hc/api/models.py:1442)
+    P hc/api/models.py:1587 TokenBucket.authorize mesmo módulo homonym 1 -> TokenBucket.authorize (hc/api/models.py:1442)
+    P hc/integrations/telegram/views.py:57 TelegramCallback.load mesmo módulo homonym 3 -> TelegramCallback.load (hc/integrations/telegram/views.py:42)
+    P hc/integrations/telegram/views.py:82 Telegram.send importada homonym 2 -> Telegram.send (hc/integrations/telegram/transport.py:55)
+ links únicos: certos pela classe 26 ; errados 1
+    DIFERE hc/integrations/email/tests/test_notify.py:187 Ping.GetBodyError unique [ 'Ping.GetBodyError (hc/api/models.py:703)' ] o nome é atributo, não método null
+ links únicos cujo nome tem outra declaração de método no projeto: 0
+ sem candidato { model_validate: 3, model_validate_json: 23 }
+Rust: T::f(..): 1366 {
+  'Self | type caminho': 2,
+  'Self | unique ': 7,
+  'fora | above_candidate_limit ': 33,
+  'fora | no_candidate_in_project ': 8,
+  'tipo do projeto | above_candidate_limit ': 100,
+  'tipo do projeto | type caminho': 484,
+  'tipo do projeto | unique ': 732
+}
+ de tipo do projeto ou Self, sem fechar: 100 {
+  'Object::from above_candidate_limit [0]': 83,
+  'Patterns::from above_candidate_limit [0]': 17
+}
+     src/patterns.rs:363 Patterns::from above_candidate_limit 
+     src/patterns.rs:371 Patterns::from above_candidate_limit 
+     src/patterns.rs:379 Patterns::from above_candidate_limit 
+     src/patterns.rs:394 Patterns::from above_candidate_limit 
+     src/patterns.rs:396 Object::from above_candidate_limit 
+     src/patterns.rs:405 Patterns::from above_candidate_limit 
+     src/patterns.rs:408 Object::from above_candidate_limit 
+     src/patterns.rs:418 Patterns::from above_candidate_limit 
+     src/patterns.rs:421 Object::from above_candidate_limit 
+     src/patterns.rs:442 Patterns::from above_candidate_limit 
+     src/patterns.rs:457 Patterns::from above_candidate_limit 
+     src/patterns.rs:472 Patterns::from above_candidate_limit 
+     src/patterns.rs:485 Patterns::from above_candidate_limit 
+     src/patterns.rs:498 Patterns::from above_candidate_limit 
+     src/patterns.rs:355 Patterns::from above_candidate_limit 
+     src/bin/cena_video.rs:91 Patterns::from above_candidate_limit 
+     src/bin/cena_video.rs:155 Object::from above_candidate_limit 
+     src/cylinder.rs:39 Object::from above_candidate_limit 
+     src/cylinder.rs:44 Object::from above_candidate_limit 
+     src/cylinder.rs:87 Object::from above_candidate_limit 
+     src/cylinder.rs:92 Object::from above_candidate_limit 
+     src/obj.rs:108 Object::from above_candidate_limit 
+     src/obj.rs:38 Object::from above_candidate_limit 
+     src/object.rs:188 Object::from above_candidate_limit 
+     src/intersection.rs:335 Object::from above_candidate_limit 
+     src/intersection.rs:347 Object::from above_candidate_limit 
+     src/intersection.rs:348 Object::from above_candidate_limit 
+     src/intersection.rs:361 Object::from above_candidate_limit 
+     src/intersection.rs:362 Object::from above_candidate_limit 
+     src/intersection.rs:375 Object::from above_candidate_limit 
+     src/intersection.rs:154 Object::from above_candidate_limit 
+     src/intersection.rs:155 Object::from above_candidate_limit 
+     src/intersection.rs:179 Object::from above_candidate_limit 
+     src/intersection.rs:180 Object::from above_candidate_limit 
+     src/intersection.rs:191 Object::from above_candidate_limit 
+     src/intersection.rs:192 Object::from above_candidate_limit 
+     src/intersection.rs:203 Object::from above_candidate_limit 
+     src/intersection.rs:204 Object::from above_candidate_limit 
+     src/intersection.rs:215 Object::from above_candidate_limit 
+     src/intersection.rs:216 Object::from above_candidate_limit 
+     src/intersection.rs:217 Object::from above_candidate_limit 
+     src/intersection.rs:218 Object::from above_candidate_limit 
+     src/intersection.rs:229 Object::from above_candidate_limit 
+     src/intersection.rs:244 Object::from above_candidate_limit 
+     src/intersection.rs:259 Object::from above_candidate_limit 
+     src/intersection.rs:271 Object::from above_candidate_limit 
+     src/intersection.rs:294 Object::from above_candidate_limit 
+     src/intersection.rs:295 Object::from above_candidate_limit 
+     src/intersection.rs:296 Object::from above_candidate_limit 
+     src/intersection.rs:297 Object::from above_candidate_limit 
+     src/intersection.rs:298 Object::from above_candidate_limit 
+     src/intersection.rs:299 Object::from above_candidate_limit 
+     src/bin/librarian_measure.rs:30 Patterns::from above_candidate_limit 
+     src/cone.rs:40 Object::from above_candidate_limit 
+     src/cone.rs:45 Object::from above_candidate_limit 
+     src/cone.rs:74 Object::from above_candidate_limit 
+     src/cone.rs:92 Object::from above_candidate_limit 
+     src/cone.rs:97 Object::from above_candidate_limit 
+     src/materials.rs:117 Object::from above_candidate_limit 
+     src/materials.rs:135 Object::from above_candidate_limit 
+     src/materials.rs:153 Object::from above_candidate_limit 
+     src/materials.rs:171 Object::from above_candidate_limit 
+     src/materials.rs:189 Object::from above_candidate_limit 
+     src/materials.rs:205 Object::from above_candidate_limit 
+     src/materials.rs:213 Patterns::from above_candidate_limit 
+     src/materials.rs:223 Object::from above_candidate_limit 
+     src/materials.rs:224 Object::from above_candidate_limit 
+     src/bin/librarian_measure_mesh.rs:62 Patterns::from above_candidate_limit 
+     src/world.rs:325 Object::from above_candidate_limit 
+     src/world.rs:329 Object::from above_candidate_limit 
+     src/world.rs:333 Object::from above_candidate_limit 
+     src/world.rs:348 Object::from above_candidate_limit 
+     src/world.rs:350 Object::from above_candidate_limit 
+     src/world.rs:365 Object::from above_candidate_limit 
+     src/world.rs:369 Object::from above_candidate_limit 
+     src/world.rs:384 Object::from above_candidate_limit 
+     src/world.rs:388 Object::from above_candidate_limit 
+     src/world.rs:404 Object::from above_candidate_limit 
+     src/world.rs:409 Object::from above_candidate_limit 
+     src/world.rs:424 Object::from above_candidate_limit 
+     src/world.rs:428 Object::from above_candidate_limit 
+     src/world.rs:499 Patterns::from above_candidate_limit 
+     src/world.rs:510 Object::from above_candidate_limit 
+     src/world.rs:511 Object::from above_candidate_limit 
+     src/world.rs:512 Object::from above_candidate_limit 
+     src/world.rs:513 Object::from above_candidate_limit 
+     src/world.rs:530 Object::from above_candidate_limit 
+     src/world.rs:537 Object::from above_candidate_limit 
+     src/world.rs:541 Object::from above_candidate_limit 
+     src/world.rs:558 Object::from above_candidate_limit 
+     src/world.rs:565 Object::from above_candidate_limit 
+     src/world.rs:569 Object::from above_candidate_limit 
+     src/world.rs:160 Object::from above_candidate_limit 
+     src/world.rs:161 Object::from above_candidate_limit 
+     src/world.rs:189 Object::from above_candidate_limit 
+     src/world.rs:190 Object::from above_candidate_limit 
+     src/camera.rs:305 Object::from above_candidate_limit 
+     src/camera.rs:306 Object::from above_candidate_limit 
+     src/camera.rs:336 Object::from above_candidate_limit 
+     src/camera.rs:192 crate::object::Object::from above_candidate_limit 

@@ -341,13 +341,13 @@ na consulta (`ClassFacts`, `CallFacts::methods` e `cls_receivers`).
   (a classe do método que chama); `cls.m()` com `cls` o primeiro parâmetro de um `@classmethod`; `a.p.m()`
   com `p` uma `@property` de uma só `def` e retorno anotado, própria ou herdada (`cached_property` não).
 - **Busca.** Pela ordem C3 das bases escritas, nomeadas como a chamada simples (DEC-42). Uma base de fora é
-  um elemento opaco. A primeira classe do projeto que declara `m` decide (`type`); a sobrescrita numa
-  subclasse não muda o alvo. É um limite conhecido: com sobrescrita e corpo não abstrato, o link pode ser
-  falso (despacho polimórfico, passo 2.4c).
+  um elemento opaco. A primeira classe do projeto que declara `m` decide (`type`), salvo se uma
+  subclasse do projeto o sobrescreve (despacho, 2.4c, abaixo).
 - **Não decide:** base de fora antes, ordem inconsistente, base que o escopo não nomeia (expressão, ramos que
   discordam, `TYPE_CHECKING`), `__getattr__`, `Protocol`, o nome ligado a algo que não é método. Um `super()`
   também não decide se uma subclasse do projeto continua em outra classe.
-- **Método abstrato** (`@abstractmethod`, ou corpo só com `raise NotImplementedError`, `pass` ou `...`)
+- **Método abstrato** (`@abstractmethod`, ou corpo só com `raise NotImplementedError`, `pass` ou `...`; desde o
+  2.4c, o corpo só conta sem um concreto acima dele)
   sobrescrito por subclasses do tipo do receptor: `homonym` com as sobrescritas, com `basis: type`, `type_rule`,
   `candidates` = quantas são e `candidate_edge` nulo acima do teto. Não é seguido; `chosen` aceita uma delas.
   Não vale em `super()`, num construtor exato (`e = T(); e.m()`) nem sem sobrescrita.
@@ -362,9 +362,40 @@ na consulta (`ClassFacts`, `CallFacts::methods` e `cls_receivers`).
   função ou de um `if` não tem as bases lidas. O mesmo parêntese numa string do argumento, que o texto da
   chamada traz, pode desfazer a leitura do receptor (0 casos no Healthchecks).
 
+**Despacho polimórfico (passo 2.4c; DEC-44).** Python. Correto é o corpo que roda, e ele é o da classe do
+objeto. Sem perfil novo e sem gravar nada no grafo.
+- **Quando.** A regra acha `m` pelo tipo estático do receptor (`self`, `cls`, tipo escrito, retorno, campo,
+  `@property`), e uma subclasse do projeto tem outro corpo.
+- **O que sai.** `homonym` com `basis: type`, o `type_rule` da origem e um link por corpo: o achado no tipo e o
+  que a busca (C3) acha em cada subclasse, mesmo numa mistura que vem antes da base. `candidates` = quantos
+  são; `candidate_edge` nulo quando não há aresta. Não é seguido; `chosen` aceita qualquer um deles. Sem outro
+  corpo, o link único de antes.
+- **Abstrato (DEC-43, lida pela DEC-44).** É abstrato um método com `@abstractmethod`, ou de corpo vazio sem um
+  corpo concreto acima dele na ordem da classe que o declara. Ele não roda e sai da lista; quando é o do tipo
+  escrito, cada link diz qual (`abstract_method`). Uma sobrescrita de corpo vazio sobre um concreto roda, e
+  entra.
+- **Exceções, porque o corpo é conhecido:** construtor exato (`x = T(..)`, `T(..).m()`), salvo se a classe ou uma
+  base do projeto tem `__new__`, decorador ou palavra-chave (`metaclass`); `super()`; `T.m()` pelo nome da
+  classe (a regra não lhe dá tipo); e `self.__m()`, nome privado que a subclasse não alcança.
+- **Nome ligado a outra coisa.** Uma subclasse com `m = outra` no corpo, ou que escreve `self.m`, também tira o
+  link único; saem os métodos conhecidos, que podem ser só o do tipo.
+- **Custo.** As subclasses são lidas uma vez por consulta, e só quando o nome é declarado em mais de um método
+  ou aparece como campo ou atributo.
+- **Limites.** Uma base de fora antes do tipo, numa subclasse (`class V(DeFora, T)`), pode trazer um `m` que a
+  regra não vê: o link continua único (0 casos no Healthchecks). Uma subclasse de teste conta como as outras,
+  também para uma chamada de produção (nota na DEC-44). Um nome ligado no corpo da subclasse só por `import`
+  ou `for`, sem campo nem atributo com ele, não é visto. A anotação (`x: T = U()`) e o campo (`self.x = T()`)
+  não são construtor exato. `typing.final` não é lido. Um `@abstractmethod` sem `ABCMeta` na cadeia não impede o
+  corpo de rodar, e a regra o tira da lista mesmo assim (0 casos). `Classe.metodo(..)` não usa a classe: a regra
+  só fecha quando o nome tem um candidato só (18 chamadas `homonym` no Healthchecks; passo 2.4d-0).
+
 `basis: "import"` quer dizer que o alvo veio da tabela de imports do arquivo, lida do texto
 com o parser do extrator, sem executar nada. `basis: "scope"` (2.4a) quer dizer que o alvo é uma
 definição do próprio arquivo que o escopo de quem chama liga ao nome, lida da mesma forma.
+
+**Limite sem passo (Rust): `T::from(..)` com vários `impl From<X> for T`.** O tipo `T` é usado, mas os `impl` só se
+distinguem pelo tipo do argumento, que a regra não lê. No ray tracer, 100 chamadas acima do teto: `Object::from`
+(83) e `Patterns::from` (17).
 
 Um resultado com vários alvos (`trait`, em que todos os candidatos são de um trait, ou um
 tipo que nomeia vários impls, como `Matrix<3>` e `Matrix<4>`, porque os genéricos não são
@@ -375,7 +406,8 @@ Cada link traz `from`, `to`, `occurrence`, `occurrence_kind`, `text`, `candidate
 `resolution`, `candidate_edge`, `basis`, `relation` (2.3a: `calls` ou `instantiates`; 2.3b: `decorates`), `runs`
 (só numa instanciação com `__init__` próprio), `via` (2.3b: o campo, quando o link vem do valor de um
 campo que o método declara; também nas entradas de `unresolved`), `type_rule` (2.3c, só nos links com
-`basis: "type"`) e `evidence`.
+`basis: "type"`), `abstract_method` (2.4c, o id do método do tipo escrito, só quando ele é abstrato e por isso
+não está entre os corpos de um despacho) e `evidence`.
 - `type_rule` é a regra que deu o tipo do receptor: a do `receiver_type` (`parametro`, `anotacao`,
   `self`, `construtor`, `campo`, `item`, `variante`), `caminho` num `T::f(..)` ou `T::V(..)`, e
   `retorno` ou `campo` quando o 2.3c decidiu (o retorno da chamada que liga; o campo de uma classe de
@@ -386,9 +418,10 @@ campo que o método declara; também nas entradas de `unresolved`), `type_rule` 
   admitida e sai da contagem: o link e o alvo são os mesmos, mas `candidates` pode ser menor
   que antes (163 links no Healthchecks).
 - Desde o 2.4b, `type_rule` também é `super`, `cls` ou `propriedade`, e as sobrescritas de um método
-  abstrato (`homonym`) têm `basis: "type"` e `type_rule`.
+  abstrato (`homonym`) têm `basis: "type"` e `type_rule`. Desde o 2.4c, também os corpos de um despacho, e
+  `abstract_method` (só quando há) é o método abstrato do tipo escrito, que não roda e não está na lista.
 - `candidate_edge` é o ID da aresta `name_candidate`. É `null` só num link `type`,
-  `trait_default`, `receiver`, `import`, `scope` ou de sobrescrita (2.4b) de uma chamada acima do teto de homônimos, para a qual o grafo
+  `trait_default`, `receiver`, `import`, `scope` ou de sobrescrita (2.4b e 2.4c) de uma chamada acima do teto de homônimos, para a qual o grafo
   guardou só a contagem. `candidates`, nesse caso, é a contagem registrada
   (`ambiguous_candidates`).
 - Os links que já existiam antes do 2.1 têm os mesmos campos e valores, mais `basis`, salvo o

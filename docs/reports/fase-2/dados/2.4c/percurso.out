@@ -1,0 +1,10 @@
+compilando librarian_studio e librarian_ingest (cargo build --release --locked)...
+   Compiling librarian-evidence v0.1.0 (C:\Users\beatl\Documents\Projetos\librarian\crates\librarian-evidence)
+   Compiling librarian-studio v0.1.0 (C:\Users\beatl\Documents\Projetos\librarian\crates\librarian-studio)
+    Finished `release` profile [optimized] target(s) in 12.41s
+C:\Users\beatl\Documents\Projetos\librarian\target\release (compilado agora); fontes 39917b1e2c1c2ef812892fdd7fd226d8d75662a43bd256f04f8a4ba07d2b55a5 (244 arquivos: crates/ sem os .md, Cargo.toml, Cargo.lock e o que um .rs embute de fora de crates/); identidade recorded:74faa879e42a1fd8eb579f1448e4ba65ad8d6598:true; sha256 librarian_studio 694934d9d575b7335fa82c19845392fbb1b2403a5246d7fb53dcef54db26b41f, librarian_ingest 25c8c20529083f469eab293fcbc27ceda85f70457ac8e5183be0bc2d0aea2c41 (só registro: muda a cada link)
+Channel.notify 46 nos, truncado false
+Slackalike.notify 68 nos, truncado false
+HttpTransport._request 28 nos, truncado false
+Slackalike.payload 39 nos, truncado false
+Discord.notify 68 nos, truncado false

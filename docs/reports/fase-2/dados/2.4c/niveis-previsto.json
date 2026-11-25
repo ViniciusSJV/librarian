@@ -1,0 +1,214 @@
+[
+ {
+  "at": "pkg/heranca.py:187",
+  "occ": "pkg/heranca.py@2424-2433",
+  "text": "x.passo()",
+  "rule": "parametro",
+  "hoje": "type",
+  "alvos": [
+   "Raiz.passo (pkg/heranca_apoio.py:8)"
+  ],
+  "cand": [
+   "HFilho.passo (pkg/heranca.py:12)",
+   "Raiz.passo (pkg/heranca_apoio.py:8)"
+  ],
+  "extra": [
+   "HFilho.passo (pkg/heranca.py:12)"
+  ],
+  "exact": false,
+  "super_": false,
+  "sobrescrevem_quem_chama": null
+ },
+ {
+  "at": "pkg/heranca.py:231",
+  "occ": "pkg/heranca.py@3003-3024",
+  "text": "x.transporte.enviar()",
+  "rule": "propriedade",
+  "hoje": "type",
+  "alvos": [
+   "Transporte.enviar (pkg/heranca_apoio.py:43)"
+  ],
+  "cand": [
+   "Rapido.enviar (pkg/heranca_apoio.py:48)",
+   "Transporte.enviar (pkg/heranca_apoio.py:43)"
+  ],
+  "extra": [
+   "Rapido.enviar (pkg/heranca_apoio.py:48)"
+  ],
+  "exact": false,
+  "super_": false,
+  "sobrescrevem_quem_chama": null
+ },
+ {
+  "at": "pkg/heranca.py:235",
+  "occ": "pkg/heranca.py@3072-3093",
+  "text": "x.transporte.enviar()",
+  "rule": "propriedade",
+  "hoje": "type",
+  "alvos": [
+   "Transporte.enviar (pkg/heranca_apoio.py:43)"
+  ],
+  "cand": [
+   "Rapido.enviar (pkg/heranca_apoio.py:48)",
+   "Transporte.enviar (pkg/heranca_apoio.py:43)"
+  ],
+  "extra": [
+   "Rapido.enviar (pkg/heranca_apoio.py:48)"
+  ],
+  "exact": false,
+  "super_": false,
+  "sobrescrevem_quem_chama": null
+ },
+ {
+  "at": "pkg/heranca.py:93",
+  "occ": "pkg/heranca.py@1252-1264",
+  "text": "super().mm()",
+  "rule": "super",
+  "hoje": "above_candidate_limit",
+  "alvos": [],
+  "cand": null,
+  "extra": [
+   "CoopA.mm (pkg/heranca.py:92)"
+  ],
+  "exact": false,
+  "super_": true,
+  "sobrescrevem_quem_chama": null
+ },
+ {
+  "at": "pkg/heranca.py:13",
+  "occ": "pkg/heranca.py@306-321",
+  "text": "super().passo()",
+  "rule": "super",
+  "hoje": "type",
+  "alvos": [
+   "Raiz.passo (pkg/heranca_apoio.py:8)"
+  ],
+  "cand": null,
+  "extra": [
+   "HFilho.passo (pkg/heranca.py:12)"
+  ],
+  "exact": false,
+  "super_": true,
+  "sobrescrevem_quem_chama": null
+ },
+ {
+  "at": "pkg/heranca.py:16",
+  "occ": "pkg/heranca.py@365-392",
+  "text": "super(HFilho, self).passo()",
+  "rule": "super(C, self)",
+  "hoje": "type",
+  "alvos": [
+   "Raiz.passo (pkg/heranca_apoio.py:8)"
+  ],
+  "cand": null,
+  "extra": [
+   "HFilho.passo (pkg/heranca.py:12)"
+  ],
+  "exact": false,
+  "super_": true,
+  "sobrescrevem_quem_chama": null
+ },
+ {
+  "at": "pkg/heranca_regras.py:113",
+  "occ": "pkg/heranca_regras.py@1685-1695",
+  "text": "x.mandar()",
+  "rule": "parametro",
+  "hoje": "homonym",
+  "alvos": [
+   "EnvioA.mandar (pkg/heranca_regras.py:21)",
+   "EnvioC.mandar (pkg/heranca_regras.py:33)"
+  ],
+  "cand": [
+   "EnvioA.mandar (pkg/heranca_regras.py:21)",
+   "EnvioC.mandar (pkg/heranca_regras.py:33)"
+  ],
+  "extra": [
+   "EnvioA.mandar (pkg/heranca_regras.py:21)",
+   "EnvioC.mandar (pkg/heranca_regras.py:33)"
+  ],
+  "exact": false,
+  "super_": false,
+  "sobrescrevem_quem_chama": null
+ },
+ {
+  "at": "pkg/heranca_regras.py:121",
+  "occ": "pkg/heranca_regras.py@1788-1797",
+  "text": "x.vazio()",
+  "rule": "parametro",
+  "hoje": "homonym",
+  "alvos": [
+   "EnvioA.vazio (pkg/heranca_regras.py:24)",
+   "EnvioSuper.vazio (pkg/heranca_regras.py:38)"
+  ],
+  "cand": [
+   "EnvioA.vazio (pkg/heranca_regras.py:24)",
+   "EnvioSuper.vazio (pkg/heranca_regras.py:38)"
+  ],
+  "extra": [
+   "EnvioA.vazio (pkg/heranca_regras.py:24)",
+   "EnvioSuper.vazio (pkg/heranca_regras.py:38)"
+  ],
+  "exact": false,
+  "super_": false,
+  "sobrescrevem_quem_chama": null
+ },
+ {
+  "at": "pkg/heranca_regras.py:129",
+  "occ": "pkg/heranca_regras.py@1900-1910",
+  "text": "x.mandar()",
+  "rule": "parametro",
+  "hoje": "homonym",
+  "alvos": [
+   "ComAbcFilha.mandar (pkg/heranca_regras.py:54)"
+  ],
+  "cand": [
+   "ComAbcFilha.mandar (pkg/heranca_regras.py:54)"
+  ],
+  "extra": [
+   "ComAbcFilha.mandar (pkg/heranca_regras.py:54)"
+  ],
+  "exact": false,
+  "super_": false,
+  "sobrescrevem_quem_chama": null
+ },
+ {
+  "at": "pkg/heranca_regras.py:134",
+  "occ": "pkg/heranca_regras.py@1960-1970",
+  "text": "e.mandar()",
+  "rule": "construtor",
+  "hoje": "type",
+  "alvos": [
+   "Envio.mandar (pkg/heranca_regras.py:9)"
+  ],
+  "cand": null,
+  "extra": [
+   "EnvioA.mandar (pkg/heranca_regras.py:21)",
+   "EnvioC.mandar (pkg/heranca_regras.py:33)"
+  ],
+  "exact": true,
+  "super_": false,
+  "sobrescrevem_quem_chama": null
+ },
+ {
+  "at": "pkg/heranca_regras.py:17",
+  "occ": "pkg/heranca_regras.py@302-315",
+  "text": "self.mandar()",
+  "rule": "self",
+  "hoje": "homonym",
+  "alvos": [
+   "EnvioA.mandar (pkg/heranca_regras.py:21)",
+   "EnvioC.mandar (pkg/heranca_regras.py:33)"
+  ],
+  "cand": [
+   "EnvioA.mandar (pkg/heranca_regras.py:21)",
+   "EnvioC.mandar (pkg/heranca_regras.py:33)"
+  ],
+  "extra": [
+   "EnvioA.mandar (pkg/heranca_regras.py:21)",
+   "EnvioC.mandar (pkg/heranca_regras.py:33)"
+  ],
+  "exact": false,
+  "super_": false,
+  "sobrescrevem_quem_chama": []
+ }
+]

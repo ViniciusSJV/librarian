@@ -1,0 +1,8 @@
+precisa hoje (abstrato)        Channel.notify                   mediana 490 ms  mín 483 máx 727
+não precisa hoje               HttpTransport._request           mediana 263 ms  mín 259 máx 269
+não precisa hoje               HttpTransport.post               mediana 263 ms  mín 260 máx 269
+não precisa hoje               Slackalike.payload               mediana 271 ms  mín 268 máx 275
+não precisa hoje               Project.num_checks_available     mediana 265 ms  mín 262 máx 267
+sem tipo                       sortchecks                       mediana 263 ms  mín 261 máx 268
+precisa hoje (super)           WebhookForm.clean                mediana 489 ms  mín 486 máx 493
+precisa hoje (super de teste)  AddPdTestCase.setUp              mediana 485 ms  mín 482 máx 496

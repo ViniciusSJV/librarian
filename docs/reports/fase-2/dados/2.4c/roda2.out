@@ -1,0 +1,5 @@
+x.m() com A => A.m | corpo: A.m
+x.m() com Meio => None | corpo: Meio.m
+x.m() com Fim => Fim.m | corpo: Fim.m
+AbsMeio() => TypeError
+AbsFim().m() => AbsFim.m
