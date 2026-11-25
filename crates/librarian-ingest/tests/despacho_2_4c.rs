@@ -120,7 +120,10 @@ fn without_an_override_or_with_a_known_body_the_link_stays() {
     check(&s, "d_construtor", "x.andar()", "type", &["Veiculo.andar"]);
     check(&s, "d_construtor_direto", "Veiculo().andar()", "type", &["Veiculo.andar"]);
     check(&s, "Carro.pelo_super", "super().andar()", "type", &["Veiculo.andar"]);
-    check(&s, "Veiculo.pelo_nome", "Veiculo.andar(self)", "homonym", &ANDAR);
+    // Changed in step 2.4d-0 (DEC-45): until then the class's name gave the receiver no type, and the call was
+    // `homonym` with the four `andar`. Now the class is used: the body is the one `Veiculo` declares, never a
+    // subclass's, because the call names the class and not an object (a real Python runs `Veiculo.andar`).
+    check(&s, "Veiculo.pelo_nome", "Veiculo.andar(self)", "type", &["Veiculo.andar"]);
     // A base from outside before the class, in a subclass, does not count (a limit).
     check(&s, "d_fora_antes", "x.girar()", "unique", &["Motor.girar"]);
 }

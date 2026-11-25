@@ -316,6 +316,8 @@ struct PyReceiver<'g> {
     parent: bool,
     /// A constructor: the object is exactly of the class.
     exact: bool,
+    /// Step 2.4d-0 (DEC-45): the receiver names the class itself (`C.m(..)`), not an object of it.
+    named: bool,
 }
 
 /// Step 2.4b (DEC-43): what the receiver's static class says of the call.
@@ -1020,6 +1022,10 @@ impl<'g> Resolver<'g> {
             if self.cls_class(caller, occurrence).is_some() {
                 return Some("cls".to_owned());
             }
+            // Step 2.4d-0.
+            if self.receiver_class(caller, occurrence).is_some() {
+                return Some("classe".to_owned());
+            }
         }
         self.receiver_type_node(occurrence).and_then(|(n, _)| self.graph.nodes[n].type_rule.clone())
     }
@@ -1207,15 +1213,55 @@ impl<'g> Resolver<'g> {
             return None;
         }
         if let Some(class) = self.super_class(caller, occurrence) {
-            return Some(PyReceiver { class, parent: true, exact: false });
+            return Some(PyReceiver { class, parent: true, exact: false, named: false });
         }
         if let Some(class) = self.cls_class(caller, occurrence) {
-            return Some(PyReceiver { class, parent: false, exact: false });
+            return Some(PyReceiver { class, parent: false, exact: false, named: false });
         }
-        let class = self.python_class(caller, occurrence)?;
+        let Some(class) = self.python_class(caller, occurrence) else {
+            // Step 2.4d-0: without a written type, the name may be a class's. No dispatch: the class is known.
+            return self.receiver_class(caller, occurrence).map(|class| PyReceiver { class, parent: false, exact: true, named: true });
+        };
         let constructed = self.receiver_type_node(occurrence).is_some_and(|(n, _)| self.graph.nodes[n].type_rule.as_deref() == Some("construtor"));
         let exact = constructed && self.written_class(caller, occurrence) == Some(class) && !self.construction_changed(class);
-        Some(PyReceiver { class, parent: false, exact })
+        Some(PyReceiver { class, parent: false, exact, named: false })
+    }
+
+    /// Step 2.4d-0 (DEC-45): the class of the project that a receiver names, as the caller's scope binds
+    /// it (DEC-42): `C` (imported, of the module, an alias), `m.C` of a module of the project, and a class
+    /// nested in it (`C.D`). A variable of that name is not the class.
+    fn receiver_class(&self, caller: &str, occurrence: &str) -> Option<&'g str> {
+        let evidence = self.call_evidence.get(occurrence)?;
+        let text = self.label(occurrence);
+        let receiver = written_receiver(text)?;
+        let segments: Vec<&str> = receiver.split('.').map(str::trim).collect();
+        if !segments.iter().all(|s| !s.is_empty() && s.chars().all(|c| c.is_alphanumeric() || c == '_')) {
+            return None;
+        }
+        let (at, path) = (evidence.start_byte, evidence.path.as_str());
+        let (mut class, used) = (1..=segments.len()).find_map(|i| {
+            let scoped = if i == 1 { self.python_name(path, at, segments[0], 0) } else { self.python_alias(path, at, &segments[..i].join("."), 0) };
+            match scoped {
+                Scoped::Target(t, _) if self.kind(t) == "class" => Some((t, i)),
+                _ => None,
+            }
+        })?;
+        for name in &segments[used..] {
+            let nested: Vec<&'g str> = self.classes_named(name).into_iter().filter(|c| self.container(c) == Some(class)).collect();
+            // The body must bind the name once (`class D` and then `D = Other` is not `D`).
+            let (file, (_, end)) = (self.file_facts(self.declared_in.get(class)?)?, self.declared_span.get(class)?);
+            let body = file.scopes.iter().find(|s| s.class && s.end == *end)?;
+            if nested.len() != 1 || body.bindings.get(*name).map_or(0, Vec::len) != 1 {
+                return None;
+            }
+            class = nested[0];
+        }
+        // `C.__m` is mangled with the class that writes it: only there is it the class's own.
+        let name = call_parts(text)?.1;
+        if name.starts_with("__") && !name.ends_with("__") && self.enclosing_method_class(caller).map(|(_, c)| c) != Some(class) {
+            return None;
+        }
+        Some(class)
     }
 
     /// Step 2.4c (DEC-44): a `__new__`, a class decorator or a keyword (`metaclass`) of the class or of
@@ -1377,7 +1423,9 @@ impl<'g> Resolver<'g> {
     /// methods the rule does not see.
     fn chain_classes(&self, receiver: &PyReceiver<'g>, name: &str) -> Option<BTreeSet<&'g str>> {
         let mut out = BTreeSet::new();
-        for start in std::iter::once(receiver.class).chain(self.subclasses(receiver.class).iter().copied()) {
+        // Step 2.4d-0: the class by its name never goes down.
+        let below = if receiver.named { &[][..] } else { self.subclasses(receiver.class) };
+        for start in std::iter::once(receiver.class).chain(below.iter().copied()) {
             let mro = self.mro(start)?;
             let from = if receiver.parent { mro.iter().position(|b| *b == Base::Class(receiver.class))? + 1 } else { 0 };
             for base in &mro[from..] {
@@ -1406,6 +1454,9 @@ impl<'g> Resolver<'g> {
         let Some((_, name)) = call_parts(self.label(occurrence)) else { return Chain::Unknown };
         let class = receiver.class;
         match self.search(class, &name, receiver.parent) {
+            // Step 2.4d-0: the class binds the name to something else too: what applied before applies.
+            Search::Found(_, at) if receiver.named && self.class_facts(at).names.contains(&name) => Chain::Unknown,
+            Search::Undecided if receiver.named => Chain::Unknown,
             Search::Found(found, at) => {
                 // `super()` decides only if every subclass goes on to the same method.
                 if receiver.parent && self.subclasses(class).iter().any(|s| !self.continues_to(s, class, &name, at)) {
@@ -1534,7 +1585,7 @@ impl<'g> Resolver<'g> {
         }
         let left: BTreeSet<&'g str> = match self.chain_classes(receiver, name) {
             Some(classes) => written.into_iter().filter(|m| self.container(m).is_some_and(|c| classes.contains(c))).collect(),
-            None if !receiver.parent && self.baseless(receiver.class) => written.into_iter().filter(|m| self.subclass_reaches(receiver.class, m)).collect(),
+            None if !receiver.parent && !receiver.named && self.baseless(receiver.class) => written.into_iter().filter(|m| self.subclass_reaches(receiver.class, m)).collect(),
             None => return Chain::Unknown,
         };
         if left.is_empty() {
