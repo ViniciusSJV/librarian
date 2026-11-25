@@ -110,10 +110,39 @@ corretas, lacunas explícitas e fatos aguardando aprovação humana.
   `cls.m()` e o método chamado por uma `@property` de retorno anotado,
   Q7). 2.4a: Parada 2 em [2.4a-parada-2.md](docs/reports/fase-2/2.4a-parada-2.md),
   validado em 24/11/2026 (DEC-42 vigente, linha de base trocada).
+  2.4b: Parada 1 aprovada em 24/11/2026 ([2.4b-parada-1.md](docs/reports/fase-2/2.4b-parada-1.md)),
+  Parada 2 em [2.4b-parada-2.md](docs/reports/fase-2/2.4b-parada-2.md), validada em 25/11/2026 (DEC-43
+  vigente, linha de base trocada).
+  **Fechamento do 2.4a e do 2.4b:** o 2.4a entregou o
+  escopo da chamada simples (Python e Rust), o alias (N8) e a correção do
+  `misto()`; o 2.4b, a herança (N5) por `self`, `cls`, `super()`, tipo e
+  `@property`, o `__init__` herdado, o método abstrato (ambíguo, com as
+  sobrescritas) e a saída do candidato fora da cadeia. Os níveis N0-livre,
+  N5 e N8 estão no alvo. Efeito do 2.4b no Healthchecks: 198 chamadas, todas
+  previstas (174 `type`, 1 ambígua, 23 sem candidato, das quais 4 links
+  falsos); nenhuma no ray tracer; o grafo e o `used_by` não mudam.
+  Ficam: para o 2.5, `executor.submit(notify, flip)` (F20); para o 2.6,
+  `ch.notify` (F22) e `ch.transport.is_noop` em `Flip.select_channels`; sem
+  passo, o despacho por `TRANSPORTS` (Fase 2B); limites em SEARCH.md
+  (`:=` em compreensão, `pub`, base de fora que delega, `cls(..)`, campo
+  herdado).
   **Ordem do resto da Fase 2 (proposta do usuário, 20/11/2026, a decidir
   depois do 2.4):** 2.4 → 2.5 → Fase 2B → 2.6. Os workflows A, B e C do
   Healthchecks só dependem da 2B e do 2.5 (as rotas passam a view como
   referência); o 2.6 só serve ao workflow D (`ch.notify`, F22).
+- 2.4c Despacho polimórfico (registrado em 25/11/2026, antes do 2.5). O
+  correto é o corpo que roda (2.1, Q6 do 2.3, V1 do 2.4b):
+  - sem sobrescrita numa subclasse do projeto, link único;
+  - com sobrescrita, ambíguo, com o método do tipo estático mais as
+    sobrescritas;
+  - com método abstrato, ele sai da lista (como na DEC-43).
+  Corrige HC-140 (`cls.raise_for_response`, 11 sobrescritas) e HC-142
+  (`self.transport.is_noop`, 13), links falsos conhecidos da linha de
+  base. Pela contagem do 2.4b (simulador), no Healthchecks há mais um
+  caso, `self.fix_asterisks` em
+  `hc/integrations/slack/transport.py:72` (`Discord` sobrescreve), e
+  `form.get_json()` em `hc/integrations/call/views.py:26`, de construtor
+  exato, que roda o próprio.
 - 2.5 PIL-G5/N7: relação "passa referência", nunca "chama".
 - 2.6 Genéricos (N6), por último (ch.notify: 33 → 1).
 - Portão de cada passo: `node tools/precisao/portao.js --studio .studio
@@ -134,6 +163,11 @@ corretas, lacunas explícitas e fatos aguardando aprovação humana.
   é descartado (sem mover os decoradores) resolve, com edition própria,
   decidido pelas rotas. As listas de rotas (`urlpatterns = [..]`) já
   estão no grafo, observadas pela variável.
+- Lacuna sem passo (provavelmente aqui; Parada 1 do 2.4b, 24/11):
+  despacho por registro. `Channel.transport` escolhe a classe em
+  `TRANSPORTS` (`hc/api/models.py`) e a cria com `import_module` e
+  `cls(self)`. É o que separa os dois trechos do workflow D: até
+  `Channel.notify`, e do `notify` de cada transporte em diante.
 - Relação mediada pelo banco (PIL:161): "grava modelo X" / "lê modelo X".
 - ORM e framework (PIL-G2) como externo conhecido, não "sem candidato".
 - Testes ligados às views (PIL-G8).
@@ -151,6 +185,16 @@ Etapa 6 vai para as trilhas paralelas, DEC-31)
 - Detecção mecânica de repetição: claim que repete fato entregue é
   marcada, não conta como nova (Q6: F20, F22, F26).
 - Confirmação por teste.
+- **Proposta do usuário, a decidir (25/11/2026): o agente aprovador.**
+  Reabre a DEC-22.
+  - Conferência automática primeiro.
+  - Aprovador com contexto próprio, que registra o motivo e o que leu.
+  - Três níveis: proposto, aprovado por agente e validado por humano.
+  - Fila humana curta, por risco, mais uma amostra para medir o
+    aprovador; a confiança é ajustada pela concordância.
+  - Revogação que se propaga.
+  - Um único portão humano: a documentação que vai para pessoas.
+  - Divisão em 3a (antes da Fase 4) e 3b (depois).
 
 ### Fase 4 — Evidence Request
 - Primeiro consumidor de referência: o agente de workflows.
@@ -164,6 +208,25 @@ Etapa 6 vai para as trilhas paralelas, DEC-31)
   (DEC-36).
 
 ### Fase 6 — HTTP/JSON público
+**Proposta do usuário, a decidir (25/11/2026)**, com divisão de 6.1 a 6.5:
+- Servidor próprio, separado do Studio.
+- Superfície da API: grafo, pedido de evidência, acervo, workflows e
+  auditoria.
+- Identidade de quem chama, com validação humana só por credencial
+  humana.
+- Respostas reproduzíveis (edition, perfil, resolver).
+- Versão do contrato, com regra de evolução.
+- Limites e erros.
+- Escrita concorrente com controle de versão.
+- Local por padrão.
+- Adaptador MCP.
+- Testes do contrato e portão pela API.
+- Uso no Kubernetes local: volumes persistentes, credenciais em secrets,
+  imagem com o hash das fontes.
+
+**Front, proposta do usuário (25/11/2026):** refazer no final, depois do
+6.5, como ferramenta de investigação sem agentes nem MCP. A decisão é do
+usuário, quando chegar lá.
 
 ### Fase 7 — Primeiros agentes
 Agente de workflows e agente de documentação (fluxogramas para

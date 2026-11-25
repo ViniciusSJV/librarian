@@ -222,8 +222,8 @@ reexportação com `as`, `D = C` e `D: TypeAlias = C` no módulo ou na função.
 projeto (de fora, embutido, `Any`) não dá tipo. Acima do teto de homônimos, a classe é procurada
 pelo nome escrito. Com a classe, a regra:
 - `type`: os métodos daquele nome que a própria classe declara;
-- sem nenhum, a classe derruba os candidatos, salvo se tiver base (herança é do 2.4), definir
-  `__getattr__` ou `__getattribute__`, ou for um `Protocol`;
+- sem nenhum, a classe derruba os candidatos, salvo se tiver base (desde o 2.4b, a cadeia decide), se
+  uma subclasse do projeto alcança o candidato (2.4b), ou se definir `__getattr__` ou `__getattribute__`, ou for um `Protocol`;
 - um `Protocol` não dá link único: o método dele é só a assinatura, e o corpo que roda é o do
   objeto passado;
 - um tipo de fora do projeto não derruba nada em Python.
@@ -231,7 +231,7 @@ pelo nome escrito. Com a classe, a regra:
 **Instanciação (passo 2.3a; DEC-39).** Uma chamada que a regra liga a uma classe (Python), a uma
 struct de tupla ou a uma variante (Rust) instancia; não chama. O link sai com `relation:
 instantiates` e a mesma `resolution`. O percurso não entra na declaração construída: segue para
-o `__init__` que a classe declara (`runs`) e, sem ele, para ali. O inventário segue igual.
+o `__init__` que a classe declara (`runs`) ou, desde o 2.4b, herda, e sem ele para ali. O inventário segue igual.
 
 **Decorador e campo (passo 2.3b; DEC-40).** Nada muda no grafo nem no perfil: quem observa uma
 chamada continua sendo onde ela está escrita. Muda o que a regra diz de quem a roda.
@@ -326,6 +326,41 @@ runs antigos. A regra vem antes das outras, logo depois de `chosen`.
   valer ali.
 - **Limites.** `type X = ...` do Python 3.12, `#[path]`, `include!` e macros não são lidos; a regra não executa nada, então um nome criado por
   `globals()`/`exec` não é visto.
+  - Sem tratamento, `:=` dentro de uma compreensão (Python): o nome é da função em volta, mas a regra o
+    põe na compreensão. Com `[(g := x) for x in xs]` e depois `g(1)` na mesma função, a chamada sai
+    `scope` para a `def g` do módulo, e não para a variável.
+  - Sem tratamento, a privacidade no Rust (`pub`): um item privado de outro módulo conta como visível
+    por `use a::*` e por `a::f()`. Num código que compila, isso só pesa quando o glob traz um item
+    privado: ele pode ser escolhido no lugar de um de fora do crate, ou empatar com um público de outro
+    glob (e nada se decide).
+
+**Herança (passo 2.4b; DEC-43).** Python, sem perfil novo e sem gravar nada no grafo: as bases de
+cada classe, os nomes que ela liga, o `cls`, as `@property` e os métodos abstratos são lidos dos arquivos
+na consulta (`ClassFacts`, `CallFacts::methods` e `cls_receivers`).
+- **Tipo estático do receptor.** O das regras de tipo (2.3a, 2.3c), mais: `super().m()` e `super(C, self).m()`
+  (a classe do método que chama); `cls.m()` com `cls` o primeiro parâmetro de um `@classmethod`; `a.p.m()`
+  com `p` uma `@property` de uma só `def` e retorno anotado, própria ou herdada (`cached_property` não).
+- **Busca.** Pela ordem C3 das bases escritas, nomeadas como a chamada simples (DEC-42). Uma base de fora é
+  um elemento opaco. A primeira classe do projeto que declara `m` decide (`type`); a sobrescrita numa
+  subclasse não muda o alvo. É um limite conhecido: com sobrescrita e corpo não abstrato, o link pode ser
+  falso (despacho polimórfico, passo 2.4c).
+- **Não decide:** base de fora antes, ordem inconsistente, base que o escopo não nomeia (expressão, ramos que
+  discordam, `TYPE_CHECKING`), `__getattr__`, `Protocol`, o nome ligado a algo que não é método. Um `super()`
+  também não decide se uma subclasse do projeto continua em outra classe.
+- **Método abstrato** (`@abstractmethod`, ou corpo só com `raise NotImplementedError`, `pass` ou `...`)
+  sobrescrito por subclasses do tipo do receptor: `homonym` com as sobrescritas, com `basis: type`, `type_rule`,
+  `candidates` = quantas são e `candidate_edge` nulo acima do teto. Não é seguido; `chosen` aceita uma delas.
+  Não vale em `super()`, num construtor exato (`e = T(); e.m()`) nem sem sobrescrita.
+- **Fora da cadeia.** Um candidato de uma classe que não está na cadeia do receptor nem na das subclasses do
+  projeto sai (num `super()`, só fica o que vem depois da própria classe), também com base de fora. Sem
+  nenhum, `no_candidate_in_project`, com `candidates: 0`, também acima do teto. O que sobra de vários
+  continua `homonym`, mesmo um só. Não vale com base que não é um import de fora conhecido, decorador de
+  classe, `metaclass`, `Protocol`, `__getattr__` ou nome ligado a atributo.
+- **`__init__` herdado.** `runs` pela mesma busca, salvo classe com decorador, palavra-chave ou `__new__`.
+- **Limites.** Uma base de fora que delega (proxy, `Mock`) ou um método posto de fora perde o alvo certo; o
+  despacho por registro não é lido; `cls(..)` e o campo herdado não dão tipo; uma classe dentro de uma
+  função ou de um `if` não tem as bases lidas. O mesmo parêntese numa string do argumento, que o texto da
+  chamada traz, pode desfazer a leitura do receptor (0 casos no Healthchecks).
 
 `basis: "import"` quer dizer que o alvo veio da tabela de imports do arquivo, lida do texto
 com o parser do extrator, sem executar nada. `basis: "scope"` (2.4a) quer dizer que o alvo é uma
@@ -350,8 +385,10 @@ campo que o método declara; também nas entradas de `unresolved`), `type_rule` 
   com o nome. Desde o 2.2, num link `receiver` (`self.m()`), a função solta homônima não é
   admitida e sai da contagem: o link e o alvo são os mesmos, mas `candidates` pode ser menor
   que antes (163 links no Healthchecks).
+- Desde o 2.4b, `type_rule` também é `super`, `cls` ou `propriedade`, e as sobrescritas de um método
+  abstrato (`homonym`) têm `basis: "type"` e `type_rule`.
 - `candidate_edge` é o ID da aresta `name_candidate`. É `null` só num link `type`,
-  `trait_default` ou `receiver` de uma chamada acima do teto de homônimos, para a qual o grafo
+  `trait_default`, `receiver`, `import`, `scope` ou de sobrescrita (2.4b) de uma chamada acima do teto de homônimos, para a qual o grafo
   guardou só a contagem. `candidates`, nesse caso, é a contagem registrada
   (`ambiguous_candidates`).
 - Os links que já existiam antes do 2.1 têm os mesmos campos e valores, mais `basis`, salvo o

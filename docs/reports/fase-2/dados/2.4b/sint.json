@@ -1,0 +1,1356 @@
+{
+ "abstratos": [
+  {
+   "m": "Proto.mm (pkg/heranca.py:138)",
+   "porque": "...",
+   "sobrescritas": 0,
+   "test": false,
+   "chamadas": []
+  },
+  {
+   "m": "Envio.mandar (pkg/regras.py:9)",
+   "porque": "raise NotImplementedError",
+   "sobrescritas": 2,
+   "test": false,
+   "chamadas": [
+    "pkg/regras.py:113 type",
+    "pkg/regras.py:134 type",
+    "pkg/regras.py:17 receiver"
+   ]
+  },
+  {
+   "m": "Envio.vazio (pkg/regras.py:13)",
+   "porque": "pass",
+   "sobrescritas": 2,
+   "test": false,
+   "chamadas": [
+    "pkg/regras.py:121 type",
+    "pkg/regras.py:39 homonym"
+   ]
+  },
+  {
+   "m": "SemSobrescrita.ninguem (pkg/regras.py:43)",
+   "porque": "raise NotImplementedError",
+   "sobrescritas": 0,
+   "test": false,
+   "chamadas": [
+    "pkg/regras.py:125 unique"
+   ]
+  },
+  {
+   "m": "ComAbc.mandar (pkg/regras.py:48)",
+   "porque": "@abstractmethod",
+   "sobrescritas": 1,
+   "test": false,
+   "chamadas": [
+    "pkg/regras.py:129 type"
+   ]
+  }
+ ],
+ "rows": [
+  {
+   "r2": null,
+   "abs": null,
+   "occ": "pkg/heranca.py@2243-2251",
+   "at": "pkg/heranca.py:175",
+   "text": "x.topo()",
+   "nome": "topo",
+   "test": false,
+   "dono": "c_cadeia",
+   "forma": "parametro",
+   "classe": "Neto",
+   "where": "herdado",
+   "mro": [
+    "Neto",
+    "Filho",
+    "Raiz"
+   ],
+   "hoje": "homonym",
+   "hojeAlvos": [
+    "Alheia.topo (pkg/apoio.py:17)",
+    "Raiz.topo (pkg/apoio.py:5)"
+   ],
+   "nCand": 2,
+   "alvo": "Raiz.topo (pkg/apoio.py:5)",
+   "mud": "homonym -> type",
+   "subclassesQueSobrescrevem": []
+  },
+  {
+   "r2": null,
+   "abs": null,
+   "occ": "pkg/heranca.py@2293-2301",
+   "at": "pkg/heranca.py:179",
+   "text": "x.topo()",
+   "nome": "topo",
+   "test": false,
+   "dono": "c_generica",
+   "forma": "parametro",
+   "classe": "CaixaDe",
+   "where": "herdado",
+   "mro": [
+    "CaixaDe",
+    "Caixa",
+    "Raiz",
+    "EXT:typing.Generic"
+   ],
+   "hoje": "homonym",
+   "hojeAlvos": [
+    "Alheia.topo (pkg/apoio.py:17)",
+    "Raiz.topo (pkg/apoio.py:5)"
+   ],
+   "nCand": 2,
+   "alvo": "Raiz.topo (pkg/apoio.py:5)",
+   "mud": "homonym -> type",
+   "subclassesQueSobrescrevem": []
+  },
+  {
+   "r2": null,
+   "abs": null,
+   "occ": "pkg/heranca.py@2345-2353",
+   "at": "pkg/heranca.py:183",
+   "text": "x.topo()",
+   "nome": "topo",
+   "test": false,
+   "dono": "c_apelido",
+   "forma": "parametro",
+   "classe": "PorApelido",
+   "where": "herdado",
+   "mro": [
+    "PorApelido",
+    "Raiz"
+   ],
+   "hoje": "homonym",
+   "hojeAlvos": [
+    "Alheia.topo (pkg/apoio.py:17)",
+    "Raiz.topo (pkg/apoio.py:5)"
+   ],
+   "nCand": 2,
+   "alvo": "Raiz.topo (pkg/apoio.py:5)",
+   "mud": "homonym -> type",
+   "subclassesQueSobrescrevem": []
+  },
+  {
+   "r2": {
+    "antes": 2,
+    "ficam": [
+     "Raiz.topo (pkg/apoio.py:5)"
+    ],
+    "fora": [
+     "Alheia.topo (pkg/apoio.py:17)"
+    ],
+    "incerta": false
+   },
+   "abs": null,
+   "baseDesconhecida": "threading.Thread",
+   "occ": "pkg/heranca.py@2450-2458",
+   "at": "pkg/heranca.py:191",
+   "text": "x.topo()",
+   "nome": "topo",
+   "test": false,
+   "dono": "c_fora_antes",
+   "forma": "parametro",
+   "classe": "ForaAntes",
+   "where": "-",
+   "mro": [
+    "ForaAntes",
+    "EXT:threading.Thread",
+    "Raiz"
+   ],
+   "hoje": "homonym",
+   "hojeAlvos": [
+    "Alheia.topo (pkg/apoio.py:17)",
+    "Raiz.topo (pkg/apoio.py:5)"
+   ],
+   "nCand": 2,
+   "alvo": null,
+   "fora": "threading.Thread",
+   "mud": "igual (base de fora antes) [homonym]"
+  },
+  {
+   "r2": null,
+   "abs": null,
+   "occ": "pkg/heranca.py@2506-2514",
+   "at": "pkg/heranca.py:195",
+   "text": "x.topo()",
+   "nome": "topo",
+   "test": false,
+   "dono": "c_fora_depois",
+   "forma": "parametro",
+   "classe": "ForaDepois",
+   "where": "herdado",
+   "mro": [
+    "ForaDepois",
+    "Raiz",
+    "EXT:threading.Thread"
+   ],
+   "hoje": "homonym",
+   "hojeAlvos": [
+    "Alheia.topo (pkg/apoio.py:17)",
+    "Raiz.topo (pkg/apoio.py:5)"
+   ],
+   "nCand": 2,
+   "alvo": "Raiz.topo (pkg/apoio.py:5)",
+   "mud": "homonym -> type",
+   "subclassesQueSobrescrevem": []
+  },
+  {
+   "r2": {
+    "antes": 2,
+    "ficam": [],
+    "fora": [
+     "Alheia.topo (pkg/apoio.py:17)",
+     "Raiz.topo (pkg/apoio.py:5)"
+    ],
+    "incerta": false
+   },
+   "abs": null,
+   "baseDesconhecida": "threading.Thread",
+   "occ": "pkg/heranca.py@2554-2562",
+   "at": "pkg/heranca.py:199",
+   "text": "x.topo()",
+   "nome": "topo",
+   "test": false,
+   "dono": "c_so_fora",
+   "forma": "parametro",
+   "classe": "SoFora",
+   "where": "-",
+   "mro": [
+    "SoFora",
+    "EXT:threading.Thread"
+   ],
+   "hoje": "homonym",
+   "hojeAlvos": [
+    "Alheia.topo (pkg/apoio.py:17)",
+    "Raiz.topo (pkg/apoio.py:5)"
+   ],
+   "nCand": 2,
+   "alvo": null,
+   "fora": "threading.Thread",
+   "mud": "igual (base de fora antes) [homonym]"
+  },
+  {
+   "r2": null,
+   "abs": null,
+   "occ": "pkg/heranca.py@2599-2605",
+   "at": "pkg/heranca.py:203",
+   "text": "x.mm()",
+   "nome": "mm",
+   "test": false,
+   "dono": "c_diamante",
+   "forma": "parametro",
+   "classe": "DD",
+   "where": "herdado",
+   "mro": [
+    "DD",
+    "DB",
+    "DC",
+    "DA"
+   ],
+   "hoje": "above_candidate_limit",
+   "hojeAlvos": [],
+   "nCand": 9,
+   "alvo": "DC.mm (pkg/heranca.py:64)",
+   "mud": "above_candidate_limit -> type",
+   "subclassesQueSobrescrevem": []
+  },
+  {
+   "r2": {
+    "antes": 2,
+    "ficam": [
+     "BaseEsc.escondido (pkg/heranca.py:119)"
+    ],
+    "fora": [
+     "Alheia.escondido (pkg/apoio.py:35)"
+    ],
+    "incerta": false
+   },
+   "abs": null,
+   "occ": "pkg/heranca.py@2652-2665",
+   "at": "pkg/heranca.py:207",
+   "text": "x.escondido()",
+   "nome": "escondido",
+   "test": false,
+   "dono": "c_atributo",
+   "forma": "parametro",
+   "classe": "NomeDaClasse",
+   "where": "própria",
+   "mro": [
+    "NomeDaClasse",
+    "BaseEsc"
+   ],
+   "hoje": "homonym",
+   "hojeAlvos": [
+    "Alheia.escondido (pkg/apoio.py:35)",
+    "BaseEsc.escondido (pkg/heranca.py:119)"
+   ],
+   "nCand": 2,
+   "alvo": null,
+   "mud": "igual (o nome é atributo, não método) [homonym]"
+  },
+  {
+   "r2": {
+    "antes": 2,
+    "ficam": [
+     "BaseEsc.escondido (pkg/heranca.py:119)"
+    ],
+    "fora": [
+     "Alheia.escondido (pkg/apoio.py:35)"
+    ],
+    "incerta": false
+   },
+   "abs": null,
+   "occ": "pkg/heranca.py@2716-2729",
+   "at": "pkg/heranca.py:211",
+   "text": "x.escondido()",
+   "nome": "escondido",
+   "test": false,
+   "dono": "c_instancia",
+   "forma": "parametro",
+   "classe": "NomeDaInstancia",
+   "where": "própria",
+   "mro": [
+    "NomeDaInstancia",
+    "BaseEsc"
+   ],
+   "hoje": "homonym",
+   "hojeAlvos": [
+    "Alheia.escondido (pkg/apoio.py:35)",
+    "BaseEsc.escondido (pkg/heranca.py:119)"
+   ],
+   "nCand": 2,
+   "alvo": null,
+   "mud": "igual (o nome é atributo, não método) [homonym]"
+  },
+  {
+   "r2": {
+    "antes": 2,
+    "ficam": [
+     "Raiz.topo (pkg/apoio.py:5)"
+    ],
+    "fora": [
+     "Alheia.topo (pkg/apoio.py:17)"
+    ],
+    "incerta": true
+   },
+   "abs": null,
+   "occ": "pkg/heranca.py@2773-2781",
+   "at": "pkg/heranca.py:215",
+   "text": "x.topo()",
+   "nome": "topo",
+   "test": false,
+   "dono": "c_getattr",
+   "forma": "parametro",
+   "classe": "ComGetattr",
+   "where": "-",
+   "mro": [
+    "ComGetattr",
+    "Raiz"
+   ],
+   "hoje": "homonym",
+   "hojeAlvos": [
+    "Alheia.topo (pkg/apoio.py:17)",
+    "Raiz.topo (pkg/apoio.py:5)"
+   ],
+   "nCand": 2,
+   "alvo": null,
+   "mud": "igual (getattr) [homonym]"
+  },
+  {
+   "r2": {
+    "antes": 9,
+    "ficam": [
+     "Proto.mm (pkg/heranca.py:138)"
+    ],
+    "fora": [
+     "Alheia.mm (pkg/apoio.py:29)",
+     "CoopBase.mm (pkg/heranca.py:87)",
+     "CoopA.mm (pkg/heranca.py:92)",
+     "CoopB.mm (pkg/heranca.py:97)",
+     "MistSuper.mm (pkg/heranca.py:106)",
+     "DA.mm (pkg/heranca.py:55)",
+     "DC.mm (pkg/heranca.py:64)",
+     "SuperDelegado.mm (pkg/regras.py:76)"
+    ],
+    "incerta": true
+   },
+   "abs": null,
+   "occ": "pkg/heranca.py@2824-2830",
+   "at": "pkg/heranca.py:219",
+   "text": "x.mm()",
+   "nome": "mm",
+   "test": false,
+   "dono": "c_protocolo",
+   "forma": "parametro",
+   "classe": "DeProto",
+   "where": "-",
+   "mro": [
+    "DeProto",
+    "Proto",
+    "EXT:typing.Protocol"
+   ],
+   "hoje": "above_candidate_limit",
+   "hojeAlvos": [],
+   "nCand": 9,
+   "alvo": null,
+   "mud": "igual (protocol) [above_candidate_limit]"
+  },
+  {
+   "r2": {
+    "antes": 2,
+    "ficam": [],
+    "fora": [
+     "Alheia.topo (pkg/apoio.py:17)",
+     "Raiz.topo (pkg/apoio.py:5)"
+    ],
+    "incerta": false
+   },
+   "abs": null,
+   "baseDesconhecida": "Cond",
+   "occ": "pkg/heranca.py@2875-2883",
+   "at": "pkg/heranca.py:223",
+   "text": "x.topo()",
+   "nome": "topo",
+   "test": false,
+   "dono": "c_condicional",
+   "forma": "parametro",
+   "classe": "PorCond",
+   "where": "-",
+   "mro": [
+    "PorCond",
+    "EXT:Cond"
+   ],
+   "hoje": "homonym",
+   "hojeAlvos": [
+    "Alheia.topo (pkg/apoio.py:17)",
+    "Raiz.topo (pkg/apoio.py:5)"
+   ],
+   "nCand": 2,
+   "alvo": null,
+   "fora": "Cond",
+   "mud": "igual (base de fora antes) [homonym]"
+  },
+  {
+   "r2": {
+    "antes": 1,
+    "ficam": [],
+    "fora": [
+     "Alheia.inexistente (pkg/apoio.py:38)"
+    ],
+    "incerta": false
+   },
+   "abs": null,
+   "occ": "pkg/heranca.py@2921-2936",
+   "at": "pkg/heranca.py:227",
+   "text": "x.inexistente()",
+   "nome": "inexistente",
+   "test": false,
+   "dono": "c_derruba",
+   "forma": "parametro",
+   "classe": "Neto",
+   "where": "-",
+   "mro": [
+    "Neto",
+    "Filho",
+    "Raiz"
+   ],
+   "hoje": "unique",
+   "hojeAlvos": [
+    "Alheia.inexistente (pkg/apoio.py:38)"
+   ],
+   "nCand": 1,
+   "alvo": null,
+   "mud": "unique -> sem (ninguém declara)",
+   "subclassesQueAlcancam": []
+  },
+  {
+   "r2": null,
+   "abs": null,
+   "occ": "pkg/heranca.py@2972-2993",
+   "at": "pkg/heranca.py:231",
+   "text": "x.transporte.enviar()",
+   "nome": "enviar",
+   "test": false,
+   "dono": "c_prop",
+   "forma": "propriedade",
+   "via": "Canal.transporte (pkg/apoio.py:53)",
+   "classe": "Transporte",
+   "where": "própria",
+   "mro": [
+    "Transporte"
+   ],
+   "hoje": "homonym",
+   "hojeAlvos": [
+    "Alheia.enviar (pkg/apoio.py:26)",
+    "Transporte.enviar (pkg/apoio.py:43)",
+    "Rapido.enviar (pkg/apoio.py:48)"
+   ],
+   "nCand": 3,
+   "alvo": "Transporte.enviar (pkg/apoio.py:43)",
+   "mud": "homonym -> type",
+   "subclassesQueSobrescrevem": [
+    "Rapido"
+   ]
+  },
+  {
+   "r2": null,
+   "abs": null,
+   "occ": "pkg/heranca.py@3040-3061",
+   "at": "pkg/heranca.py:235",
+   "text": "x.transporte.enviar()",
+   "nome": "enviar",
+   "test": false,
+   "dono": "c_prop_herdada",
+   "forma": "propriedade",
+   "via": "Canal.transporte (pkg/apoio.py:53)",
+   "classe": "Transporte",
+   "where": "própria",
+   "mro": [
+    "Transporte"
+   ],
+   "hoje": "homonym",
+   "hojeAlvos": [
+    "Alheia.enviar (pkg/apoio.py:26)",
+    "Transporte.enviar (pkg/apoio.py:43)",
+    "Rapido.enviar (pkg/apoio.py:48)"
+   ],
+   "nCand": 3,
+   "alvo": "Transporte.enviar (pkg/apoio.py:43)",
+   "mud": "homonym -> type",
+   "subclassesQueSobrescrevem": [
+    "Rapido"
+   ]
+  },
+  {
+   "r2": null,
+   "abs": null,
+   "occ": "pkg/heranca.py@3174-3182",
+   "at": "pkg/heranca.py:244",
+   "text": "n.topo()",
+   "nome": "topo",
+   "test": false,
+   "dono": "c_construtor",
+   "forma": "construtor",
+   "classe": "Neto",
+   "where": "herdado",
+   "mro": [
+    "Neto",
+    "Filho",
+    "Raiz"
+   ],
+   "hoje": "homonym",
+   "hojeAlvos": [
+    "Alheia.topo (pkg/apoio.py:17)",
+    "Raiz.topo (pkg/apoio.py:5)"
+   ],
+   "nCand": 2,
+   "alvo": "Raiz.topo (pkg/apoio.py:5)",
+   "mud": "homonym -> type",
+   "subclassesQueSobrescrevem": []
+  },
+  {
+   "r2": null,
+   "abs": null,
+   "occ": "pkg/heranca.py@1044-1058",
+   "at": "pkg/heranca.py:79",
+   "text": "self.vizinho()",
+   "nome": "vizinho",
+   "test": false,
+   "dono": "Mistura.ir",
+   "forma": "self",
+   "classe": "Mistura",
+   "where": "-",
+   "mro": [
+    "Mistura"
+   ],
+   "hoje": "no_candidate_in_project",
+   "hojeAlvos": [],
+   "nCand": 0,
+   "alvo": null,
+   "mud": "igual (uma subclasse alcança o nome) [no_candidate_in_project]",
+   "subclassesQueAlcancam": [
+    "Junta"
+   ]
+  },
+  {
+   "r2": {
+    "antes": 9,
+    "ficam": [
+     "CoopBase.mm (pkg/heranca.py:87)",
+     "CoopB.mm (pkg/heranca.py:97)"
+    ],
+    "fora": [
+     "Alheia.mm (pkg/apoio.py:29)",
+     "CoopA.mm (pkg/heranca.py:92)",
+     "MistSuper.mm (pkg/heranca.py:106)",
+     "Proto.mm (pkg/heranca.py:138)",
+     "DA.mm (pkg/heranca.py:55)",
+     "DC.mm (pkg/heranca.py:64)",
+     "SuperDelegado.mm (pkg/regras.py:76)"
+    ],
+    "incerta": false
+   },
+   "abs": null,
+   "occ": "pkg/heranca.py@1224-1236",
+   "at": "pkg/heranca.py:93",
+   "text": "super().mm()",
+   "nome": "mm",
+   "test": false,
+   "dono": "CoopA.mm",
+   "forma": "super",
+   "classe": "CoopA",
+   "where": "herdado",
+   "mro": [
+    "CoopA",
+    "CoopBase"
+   ],
+   "hoje": "above_candidate_limit",
+   "hojeAlvos": [],
+   "nCand": 9,
+   "alvo": "CoopBase.mm (pkg/heranca.py:87)",
+   "mud": "igual (super: outra subclasse continua em outro lugar) [above_candidate_limit]",
+   "subclassesQueSobrescrevem": []
+  },
+  {
+   "r2": {
+    "antes": 9,
+    "ficam": [
+     "DA.mm (pkg/heranca.py:55)"
+    ],
+    "fora": [
+     "Alheia.mm (pkg/apoio.py:29)",
+     "CoopBase.mm (pkg/heranca.py:87)",
+     "CoopA.mm (pkg/heranca.py:92)",
+     "CoopB.mm (pkg/heranca.py:97)",
+     "MistSuper.mm (pkg/heranca.py:106)",
+     "Proto.mm (pkg/heranca.py:138)",
+     "DC.mm (pkg/heranca.py:64)",
+     "SuperDelegado.mm (pkg/regras.py:76)"
+    ],
+    "incerta": false
+   },
+   "abs": null,
+   "occ": "pkg/heranca.py@1396-1408",
+   "at": "pkg/heranca.py:107",
+   "text": "super().mm()",
+   "nome": "mm",
+   "test": false,
+   "dono": "MistSuper.mm",
+   "forma": "super",
+   "classe": "MistSuper",
+   "where": "-",
+   "mro": [
+    "MistSuper"
+   ],
+   "hoje": "above_candidate_limit",
+   "hojeAlvos": [],
+   "nCand": 9,
+   "alvo": null,
+   "mud": "igual (uma subclasse alcança o nome) [above_candidate_limit]",
+   "subclassesQueAlcancam": [
+    "MistJunta"
+   ]
+  },
+  {
+   "r2": null,
+   "abs": null,
+   "occ": "pkg/heranca.py@287-302",
+   "at": "pkg/heranca.py:13",
+   "text": "super().passo()",
+   "nome": "passo",
+   "test": false,
+   "dono": "Filho.passo",
+   "forma": "super",
+   "classe": "Filho",
+   "where": "herdado",
+   "mro": [
+    "Filho",
+    "Raiz"
+   ],
+   "hoje": "homonym",
+   "hojeAlvos": [
+    "Raiz.passo (pkg/apoio.py:8)",
+    "Alheia.passo (pkg/apoio.py:20)",
+    "Filho.passo (pkg/heranca.py:12)"
+   ],
+   "nCand": 3,
+   "alvo": "Raiz.passo (pkg/apoio.py:8)",
+   "mud": "homonym -> type",
+   "subclassesQueSobrescrevem": []
+  },
+  {
+   "r2": null,
+   "abs": null,
+   "occ": "pkg/heranca.py@346-372",
+   "at": "pkg/heranca.py:16",
+   "text": "super(Filho, self).passo()",
+   "nome": "passo",
+   "test": false,
+   "dono": "Filho.passo_velho",
+   "forma": "super(C, self)",
+   "classe": "Filho",
+   "where": "herdado",
+   "mro": [
+    "Filho",
+    "Raiz"
+   ],
+   "hoje": "homonym",
+   "hojeAlvos": [
+    "Raiz.passo (pkg/apoio.py:8)",
+    "Alheia.passo (pkg/apoio.py:20)",
+    "Filho.passo (pkg/heranca.py:12)"
+   ],
+   "nCand": 3,
+   "alvo": "Raiz.passo (pkg/apoio.py:8)",
+   "mud": "homonym -> type",
+   "subclassesQueSobrescrevem": []
+  },
+  {
+   "r2": null,
+   "abs": null,
+   "occ": "pkg/heranca.py@412-423",
+   "at": "pkg/heranca.py:19",
+   "text": "self.topo()",
+   "nome": "topo",
+   "test": false,
+   "dono": "Filho.proprio",
+   "forma": "self",
+   "classe": "Filho",
+   "where": "herdado",
+   "mro": [
+    "Filho",
+    "Raiz"
+   ],
+   "hoje": "homonym",
+   "hojeAlvos": [
+    "Alheia.topo (pkg/apoio.py:17)",
+    "Raiz.topo (pkg/apoio.py:5)"
+   ],
+   "nCand": 2,
+   "alvo": "Raiz.topo (pkg/apoio.py:5)",
+   "mud": "homonym -> type",
+   "subclassesQueSobrescrevem": []
+  },
+  {
+   "r2": null,
+   "abs": null,
+   "occ": "pkg/heranca.py@479-490",
+   "at": "pkg/heranca.py:23",
+   "text": "cls.criar()",
+   "nome": "criar",
+   "test": false,
+   "dono": "Filho.fabrica",
+   "forma": "cls",
+   "classe": "Filho",
+   "where": "herdado",
+   "mro": [
+    "Filho",
+    "Raiz"
+   ],
+   "hoje": "homonym",
+   "hojeAlvos": [
+    "Raiz.criar (pkg/apoio.py:11)",
+    "Alheia.criar (pkg/apoio.py:23)"
+   ],
+   "nCand": 2,
+   "alvo": "Raiz.criar (pkg/apoio.py:11)",
+   "mud": "homonym -> type",
+   "subclassesQueSobrescrevem": []
+  },
+  {
+   "r2": null,
+   "abs": "raise NotImplementedError",
+   "over": [
+    "EnvioA.mandar (pkg/regras.py:21)",
+    "EnvioC.mandar (pkg/regras.py:33)"
+   ],
+   "occ": "pkg/regras.py@1677-1687",
+   "at": "pkg/regras.py:113",
+   "text": "x.mandar()",
+   "nome": "mandar",
+   "test": false,
+   "dono": "r_abstrato",
+   "forma": "parametro",
+   "classe": "Envio",
+   "where": "própria",
+   "mro": [
+    "Envio"
+   ],
+   "hoje": "type",
+   "hojeAlvos": [
+    "Envio.mandar (pkg/regras.py:9)"
+   ],
+   "nCand": 5,
+   "alvo": "Envio.mandar (pkg/regras.py:9)",
+   "mud": "type -> homonym (abstrato: 2 sobrescritas)",
+   "subclassesQueSobrescrevem": [
+    "EnvioA",
+    "EnvioC"
+   ]
+  },
+  {
+   "r2": null,
+   "abs": "pass",
+   "over": [
+    "EnvioA.vazio (pkg/regras.py:24)",
+    "EnvioSuper.vazio (pkg/regras.py:38)"
+   ],
+   "occ": "pkg/regras.py@1780-1789",
+   "at": "pkg/regras.py:121",
+   "text": "x.vazio()",
+   "nome": "vazio",
+   "test": false,
+   "dono": "r_vazio",
+   "forma": "parametro",
+   "classe": "Envio",
+   "where": "própria",
+   "mro": [
+    "Envio"
+   ],
+   "hoje": "type",
+   "hojeAlvos": [
+    "Envio.vazio (pkg/regras.py:13)"
+   ],
+   "nCand": 3,
+   "alvo": "Envio.vazio (pkg/regras.py:13)",
+   "mud": "type -> homonym (abstrato: 2 sobrescritas)",
+   "subclassesQueSobrescrevem": [
+    "EnvioA",
+    "EnvioSuper"
+   ]
+  },
+  {
+   "r2": null,
+   "abs": "@abstractmethod",
+   "over": [
+    "ComAbcFilha.mandar (pkg/regras.py:54)"
+   ],
+   "occ": "pkg/regras.py@1892-1902",
+   "at": "pkg/regras.py:129",
+   "text": "x.mandar()",
+   "nome": "mandar",
+   "test": false,
+   "dono": "r_abc",
+   "forma": "parametro",
+   "classe": "ComAbc",
+   "where": "própria",
+   "mro": [
+    "ComAbc",
+    "EXT:abc.ABC"
+   ],
+   "hoje": "type",
+   "hojeAlvos": [
+    "ComAbc.mandar (pkg/regras.py:48)"
+   ],
+   "nCand": 5,
+   "alvo": "ComAbc.mandar (pkg/regras.py:48)",
+   "mud": "type -> homonym (abstrato: 1 sobrescritas)",
+   "subclassesQueSobrescrevem": [
+    "ComAbcFilha"
+   ]
+  },
+  {
+   "r2": {
+    "antes": 9,
+    "ficam": [],
+    "fora": [
+     "Alheia.mm (pkg/apoio.py:29)",
+     "CoopBase.mm (pkg/heranca.py:87)",
+     "CoopA.mm (pkg/heranca.py:92)",
+     "CoopB.mm (pkg/heranca.py:97)",
+     "MistSuper.mm (pkg/heranca.py:106)",
+     "Proto.mm (pkg/heranca.py:138)",
+     "DA.mm (pkg/heranca.py:55)",
+     "DC.mm (pkg/heranca.py:64)",
+     "SuperDelegado.mm (pkg/regras.py:76)"
+    ],
+    "incerta": false
+   },
+   "abs": null,
+   "baseDesconhecida": "threading.Thread",
+   "occ": "pkg/regras.py@1999-2005",
+   "at": "pkg/regras.py:138",
+   "text": "x.mm()",
+   "nome": "mm",
+   "test": false,
+   "dono": "r_fora",
+   "forma": "parametro",
+   "classe": "DeFora",
+   "where": "-",
+   "mro": [
+    "DeFora",
+    "EXT:threading.Thread"
+   ],
+   "hoje": "above_candidate_limit",
+   "hojeAlvos": [],
+   "nCand": 9,
+   "alvo": null,
+   "fora": "threading.Thread",
+   "mud": "igual (base de fora antes) [above_candidate_limit]"
+  },
+  {
+   "r2": {
+    "antes": 9,
+    "ficam": [],
+    "fora": [
+     "Alheia.mm (pkg/apoio.py:29)",
+     "CoopBase.mm (pkg/heranca.py:87)",
+     "CoopA.mm (pkg/heranca.py:92)",
+     "CoopB.mm (pkg/heranca.py:97)",
+     "MistSuper.mm (pkg/heranca.py:106)",
+     "Proto.mm (pkg/heranca.py:138)",
+     "DA.mm (pkg/heranca.py:55)",
+     "DC.mm (pkg/heranca.py:64)",
+     "SuperDelegado.mm (pkg/regras.py:76)"
+    ],
+    "incerta": true
+   },
+   "abs": null,
+   "baseDesconhecida": "expr:fabrica_de_base(Alheia)",
+   "occ": "pkg/regras.py@2059-2065",
+   "at": "pkg/regras.py:142",
+   "text": "x.mm()",
+   "nome": "mm",
+   "test": false,
+   "dono": "r_base_dinamica",
+   "forma": "parametro",
+   "classe": "DeBaseDinamica",
+   "where": "-",
+   "mro": [
+    "DeBaseDinamica",
+    "EXT:expr:fabrica_de_base(Alheia)"
+   ],
+   "hoje": "above_candidate_limit",
+   "hojeAlvos": [],
+   "nCand": 9,
+   "alvo": null,
+   "fora": "expr:fabrica_de_base(Alheia)",
+   "mud": "igual (base de fora antes) [above_candidate_limit]"
+  },
+  {
+   "r2": {
+    "antes": 9,
+    "ficam": [],
+    "fora": [
+     "Alheia.mm (pkg/apoio.py:29)",
+     "CoopBase.mm (pkg/heranca.py:87)",
+     "CoopA.mm (pkg/heranca.py:92)",
+     "CoopB.mm (pkg/heranca.py:97)",
+     "MistSuper.mm (pkg/heranca.py:106)",
+     "Proto.mm (pkg/heranca.py:138)",
+     "DA.mm (pkg/heranca.py:55)",
+     "DC.mm (pkg/heranca.py:64)",
+     "SuperDelegado.mm (pkg/regras.py:76)"
+    ],
+    "incerta": true
+   },
+   "abs": null,
+   "baseDesconhecida": "threading.Thread",
+   "occ": "pkg/regras.py@2102-2108",
+   "at": "pkg/regras.py:146",
+   "text": "x.mm()",
+   "nome": "mm",
+   "test": false,
+   "dono": "r_meta",
+   "forma": "parametro",
+   "classe": "DeMeta",
+   "where": "-",
+   "mro": [
+    "DeMeta",
+    "EXT:threading.Thread"
+   ],
+   "hoje": "above_candidate_limit",
+   "hojeAlvos": [],
+   "nCand": 9,
+   "alvo": null,
+   "fora": "threading.Thread",
+   "mud": "igual (base de fora antes) [above_candidate_limit]"
+  },
+  {
+   "r2": {
+    "antes": 9,
+    "ficam": [],
+    "fora": [
+     "Alheia.mm (pkg/apoio.py:29)",
+     "CoopBase.mm (pkg/heranca.py:87)",
+     "CoopA.mm (pkg/heranca.py:92)",
+     "CoopB.mm (pkg/heranca.py:97)",
+     "MistSuper.mm (pkg/heranca.py:106)",
+     "Proto.mm (pkg/heranca.py:138)",
+     "DA.mm (pkg/heranca.py:55)",
+     "DC.mm (pkg/heranca.py:64)",
+     "SuperDelegado.mm (pkg/regras.py:76)"
+    ],
+    "incerta": true
+   },
+   "abs": null,
+   "baseDesconhecida": "threading.Thread",
+   "occ": "pkg/regras.py@2155-2161",
+   "at": "pkg/regras.py:150",
+   "text": "x.mm()",
+   "nome": "mm",
+   "test": false,
+   "dono": "r_decorador",
+   "forma": "parametro",
+   "classe": "DeDecorador",
+   "where": "-",
+   "mro": [
+    "DeDecorador",
+    "EXT:threading.Thread"
+   ],
+   "hoje": "above_candidate_limit",
+   "hojeAlvos": [],
+   "nCand": 9,
+   "alvo": null,
+   "fora": "threading.Thread",
+   "mud": "igual (base de fora antes) [above_candidate_limit]"
+  },
+  {
+   "r2": {
+    "antes": 9,
+    "ficam": [],
+    "fora": [
+     "Alheia.mm (pkg/apoio.py:29)",
+     "CoopBase.mm (pkg/heranca.py:87)",
+     "CoopA.mm (pkg/heranca.py:92)",
+     "CoopB.mm (pkg/heranca.py:97)",
+     "MistSuper.mm (pkg/heranca.py:106)",
+     "Proto.mm (pkg/heranca.py:138)",
+     "DA.mm (pkg/heranca.py:55)",
+     "DC.mm (pkg/heranca.py:64)",
+     "SuperDelegado.mm (pkg/regras.py:76)"
+    ],
+    "incerta": false
+   },
+   "abs": null,
+   "baseDesconhecida": "threading.Thread",
+   "occ": "pkg/regras.py@2230-2236",
+   "at": "pkg/regras.py:155",
+   "text": "x.mm()",
+   "nome": "mm",
+   "test": false,
+   "dono": "r_posto_de_fora",
+   "forma": "parametro",
+   "classe": "DeFora",
+   "where": "-",
+   "mro": [
+    "DeFora",
+    "EXT:threading.Thread"
+   ],
+   "hoje": "above_candidate_limit",
+   "hojeAlvos": [],
+   "nCand": 9,
+   "alvo": null,
+   "fora": "threading.Thread",
+   "mud": "igual (base de fora antes) [above_candidate_limit]"
+  },
+  {
+   "r2": {
+    "antes": 9,
+    "ficam": [],
+    "fora": [
+     "Alheia.mm (pkg/apoio.py:29)",
+     "CoopBase.mm (pkg/heranca.py:87)",
+     "CoopA.mm (pkg/heranca.py:92)",
+     "CoopB.mm (pkg/heranca.py:97)",
+     "MistSuper.mm (pkg/heranca.py:106)",
+     "Proto.mm (pkg/heranca.py:138)",
+     "DA.mm (pkg/heranca.py:55)",
+     "DC.mm (pkg/heranca.py:64)",
+     "SuperDelegado.mm (pkg/regras.py:76)"
+    ],
+    "incerta": false
+   },
+   "abs": null,
+   "occ": "pkg/regras.py@1196-1208",
+   "at": "pkg/regras.py:77",
+   "text": "super().mm()",
+   "nome": "mm",
+   "test": false,
+   "dono": "SuperDelegado.mm",
+   "forma": "super",
+   "classe": "SuperDelegado",
+   "where": "-",
+   "mro": [
+    "SuperDelegado",
+    "Delegado"
+   ],
+   "hoje": "above_candidate_limit",
+   "hojeAlvos": [],
+   "nCand": 9,
+   "alvo": null,
+   "mud": "igual (getattr) [above_candidate_limit]"
+  },
+  {
+   "r2": null,
+   "abs": "raise NotImplementedError",
+   "over": [
+    "EnvioA.mandar (pkg/regras.py:21)",
+    "EnvioC.mandar (pkg/regras.py:33)"
+   ],
+   "occ": "pkg/regras.py@294-307",
+   "at": "pkg/regras.py:17",
+   "text": "self.mandar()",
+   "nome": "mandar",
+   "test": false,
+   "dono": "Envio.usar",
+   "forma": "self",
+   "classe": "Envio",
+   "where": "própria",
+   "mro": [
+    "Envio"
+   ],
+   "hoje": "receiver",
+   "hojeAlvos": [
+    "Envio.mandar (pkg/regras.py:9)"
+   ],
+   "nCand": 5,
+   "alvo": "Envio.mandar (pkg/regras.py:9)",
+   "mud": "receiver -> homonym (abstrato: 2 sobrescritas)",
+   "subclassesQueSobrescrevem": [
+    "EnvioA",
+    "EnvioC"
+   ]
+  },
+  {
+   "r2": null,
+   "abs": "pass",
+   "occ": "pkg/regras.py@608-623",
+   "at": "pkg/regras.py:39",
+   "text": "super().vazio()",
+   "nome": "vazio",
+   "test": false,
+   "dono": "EnvioSuper.vazio",
+   "forma": "super",
+   "classe": "EnvioSuper",
+   "where": "herdado",
+   "mro": [
+    "EnvioSuper",
+    "Envio"
+   ],
+   "hoje": "homonym",
+   "hojeAlvos": [
+    "Envio.vazio (pkg/regras.py:13)",
+    "EnvioA.vazio (pkg/regras.py:24)",
+    "EnvioSuper.vazio (pkg/regras.py:38)"
+   ],
+   "nCand": 3,
+   "alvo": "Envio.vazio (pkg/regras.py:13)",
+   "mud": "homonym -> type",
+   "subclassesQueSobrescrevem": []
+  },
+  {
+   "r2": {
+    "antes": 3,
+    "ficam": [],
+    "fora": [
+     "Alheia.enviar (pkg/apoio.py:26)",
+     "Transporte.enviar (pkg/apoio.py:43)",
+     "Rapido.enviar (pkg/apoio.py:48)"
+    ],
+    "incerta": false
+   },
+   "abs": null,
+   "baseDesconhecida": "threading.Thread",
+   "occ": "pkg/regras.py@938-951",
+   "at": "pkg/regras.py:60",
+   "text": "self.enviar()",
+   "nome": "enviar",
+   "test": false,
+   "dono": "Fio.topo_de_fora",
+   "forma": "self",
+   "classe": "Fio",
+   "where": "-",
+   "mro": [
+    "Fio",
+    "EXT:threading.Thread"
+   ],
+   "hoje": "homonym",
+   "hojeAlvos": [
+    "Alheia.enviar (pkg/apoio.py:26)",
+    "Transporte.enviar (pkg/apoio.py:43)",
+    "Rapido.enviar (pkg/apoio.py:48)"
+   ],
+   "nCand": 3,
+   "alvo": null,
+   "fora": "threading.Thread",
+   "mud": "igual (base de fora antes) [homonym]"
+  }
+ ],
+ "inits": [
+  {
+   "at": "pkg/apoio.py:55",
+   "test": false,
+   "classe": "Rapido (pkg/apoio.py:47)",
+   "mro": [
+    "Rapido",
+    "Transporte"
+   ],
+   "runs": "nenhum",
+   "decos": [],
+   "meta": [],
+   "new": false
+  },
+  {
+   "at": "pkg/apoio.py:59",
+   "test": false,
+   "classe": "Transporte (pkg/apoio.py:42)",
+   "mro": [
+    "Transporte"
+   ],
+   "runs": "nenhum",
+   "decos": [],
+   "meta": [],
+   "new": false
+  },
+  {
+   "at": "pkg/heranca.py:243",
+   "test": false,
+   "classe": "Neto (pkg/heranca.py:26)",
+   "mro": [
+    "Neto",
+    "Filho",
+    "Raiz"
+   ],
+   "runs": "projeto: Raiz.__init__ (pkg/apoio.py:2)",
+   "decos": [],
+   "meta": [],
+   "new": false
+  },
+  {
+   "at": "pkg/heranca.py:248",
+   "test": false,
+   "classe": "Dados (pkg/heranca.py:155)",
+   "mro": [
+    "Dados",
+    "Raiz"
+   ],
+   "runs": "projeto: Raiz.__init__ (pkg/apoio.py:2)",
+   "decos": [
+    "dataclass"
+   ],
+   "meta": [],
+   "new": false
+  },
+  {
+   "at": "pkg/heranca.py:252",
+   "test": false,
+   "classe": "ComMeta (pkg/heranca.py:165)",
+   "mro": [
+    "ComMeta",
+    "Raiz"
+   ],
+   "runs": "projeto: Raiz.__init__ (pkg/apoio.py:2)",
+   "decos": [],
+   "meta": [
+    "metaclass=Meta"
+   ],
+   "new": false
+  },
+  {
+   "at": "pkg/heranca.py:256",
+   "test": false,
+   "classe": "ComNew (pkg/heranca.py:169)",
+   "mro": [
+    "ComNew",
+    "Raiz"
+   ],
+   "runs": "projeto: Raiz.__init__ (pkg/apoio.py:2)",
+   "decos": [],
+   "meta": [],
+   "new": true
+  },
+  {
+   "at": "pkg/regras.py:133",
+   "test": false,
+   "classe": "Envio (pkg/regras.py:8)",
+   "mro": [
+    "Envio"
+   ],
+   "runs": "nenhum",
+   "decos": [],
+   "meta": [],
+   "new": false
+  },
+  {
+   "at": "pkg/regras.py:154",
+   "test": false,
+   "classe": "Alheia (pkg/apoio.py:16)",
+   "mro": [
+    "Alheia"
+   ],
+   "runs": "nenhum",
+   "decos": [],
+   "meta": [],
+   "new": false
+  }
+ ],
+ "multi": [
+  {
+   "c": "Junta (pkg/heranca.py:82)",
+   "bases": [
+    "Mistura",
+    "Vizinha"
+   ]
+  },
+  {
+   "c": "CoopD (pkg/heranca.py:101)",
+   "bases": [
+    "CoopA",
+    "CoopB"
+   ]
+  },
+  {
+   "c": "MistJunta (pkg/heranca.py:110)",
+   "bases": [
+    "MistSuper",
+    "DA"
+   ]
+  },
+  {
+   "c": "Caixa (pkg/heranca.py:30)",
+   "bases": [
+    "Raiz",
+    "Generic[T]"
+   ]
+  },
+  {
+   "c": "ForaAntes (pkg/heranca.py:42)",
+   "bases": [
+    "Thread",
+    "Raiz"
+   ]
+  },
+  {
+   "c": "ForaDepois (pkg/heranca.py:46)",
+   "bases": [
+    "Raiz",
+    "Thread"
+   ]
+  },
+  {
+   "c": "DD (pkg/heranca.py:68)",
+   "bases": [
+    "DB",
+    "DC"
+   ]
+  }
+ ],
+ "riscos": [],
+ "semMro": [],
+ "misread": [],
+ "check": {
+  "igual": 7,
+  "dif": [],
+  "semTipo": []
+ },
+ "props": [
+  {
+   "p": "Canal.transporte (pkg/apoio.py:53)",
+   "ret": "Transporte"
+  },
+  {
+   "p": "Canal.sem_tipo (pkg/apoio.py:57)",
+   "ret": null
+  }
+ ]
+}

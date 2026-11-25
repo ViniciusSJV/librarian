@@ -1,0 +1,37 @@
+{
+ "healthchecks-25597e41": {
+  "simbolos": 4718,
+  "grafo": [
+   "239c8e55d9b4",
+   "239c8e55d9b4"
+  ],
+  "used_by_diferentes": 0,
+  "previstas": 198,
+  "nao_cumpridas": [],
+  "fora": [],
+  "so_contagem": [],
+  "vistas": 198,
+  "regras": {
+   "type super": 141,
+   "no_candidate_in_project ": 23,
+   "type self": 27,
+   "type cls": 4,
+   "type propriedade": 2,
+   "homonym propriedade": 1
+  }
+ },
+ "renderer-9b78f3a9": {
+  "simbolos": 819,
+  "grafo": [
+   "e449a4750e23",
+   "e449a4750e23"
+  ],
+  "used_by_diferentes": 0,
+  "previstas": 0,
+  "nao_cumpridas": [],
+  "fora": [],
+  "so_contagem": [],
+  "vistas": 0,
+  "regras": {}
+ }
+}

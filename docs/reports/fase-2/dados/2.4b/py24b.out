@@ -1,0 +1,55 @@
+classes 649 com base do projeto 228 com mais de uma base 0 bases com risco 0 sem MRO 0
+conferência do tipo contra o binário (type/receiver): 428 iguais; 1 sem tipo no simulador; 0 diferentes
+texto que o resolver lê errado (parêntese em string): 0
+== produção
+{
+  'campo | - | igual (base de fora antes) [no_candidate_in_project]': 4,
+  'campo | - | igual (protocol) [homonym]': 1,
+  'campo | própria | confirma': 5,
+  'campo-herdado | própria | confirma': 9,
+  'cls | - | igual (base de fora antes) [no_candidate_in_project]': 2,
+  'cls | herdado | homonym -> type': 1,
+  'cls | própria | above_candidate_limit -> type': 1,
+  'cls | própria | confirma': 2,
+  'cls | própria | homonym -> type': 2,
+  'construtor | - | igual (base de fora antes) [no_candidate_in_project]': 93,
+  'construtor | própria | confirma': 89,
+  'construtor | própria | homonym -> type': 1,
+  'parametro | - | igual (base de fora antes) [no_candidate_in_project]': 12,
+  'parametro | própria | confirma': 26,
+  'propriedade | própria | above_candidate_limit -> homonym (abstrato: 30 sobrescritas)': 1,
+  'propriedade | própria | above_candidate_limit -> type': 1,
+  'propriedade | própria | confirma': 1,
+  'propriedade | própria | homonym -> type': 1,
+  'retorno | - | igual (base de fora antes) [no_candidate_in_project]': 14,
+  'retorno | própria | confirma': 15,
+  'self | - | igual (base de fora antes) [no_candidate_in_project]': 33,
+  'self | - | igual (base de fora antes) [unique]': 1,
+  'self | herdado | confirma': 59,
+  'self | herdado | homonym -> type': 27,
+  'self | própria | confirma': 68,
+  'self | própria | igual (o nome é atributo, não método) [no_candidate_in_project]': 6,
+  'self | própria | igual (o nome é atributo, não método) [unique]': 2,
+  'super | - | igual (base de fora antes) [above_candidate_limit]': 7,
+  'super | - | igual (base de fora antes) [homonym]': 11,
+  'super | - | igual (base de fora antes) [no_candidate_in_project]': 2,
+  'super | - | igual (base de fora antes) [unique]': 3,
+  'super | herdado | above_candidate_limit -> type': 2
+}
+== teste
+{
+  'construtor | - | igual (base de fora antes) [no_candidate_in_project]': 104,
+  'construtor | herdado | confirma': 7,
+  'construtor | própria | confirma': 94,
+  'self | - | igual (base de fora antes) [no_candidate_in_project]': 3486,
+  'self | herdado | confirma': 140,
+  'self | própria | confirma': 341,
+  'super | - | igual (base de fora antes) [above_candidate_limit]': 1,
+  'super | herdado | above_candidate_limit -> type': 139
+}
+__init__ herdado: {
+  'prod fora': 168,
+  'prod nenhum': 15,
+  'teste fora': 376,
+  'teste nenhum': 1
+}

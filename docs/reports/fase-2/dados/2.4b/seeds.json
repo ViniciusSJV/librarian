@@ -1,0 +1,27 @@
+{
+ "hc/api/models.py:1173": {
+  "seed": "src:8ce3e55438349ca1cfd362c1daa62b1f586496f894fd70587817115292f75e4d:d03082adb2aacfd44f96bb0df8339a145b4979fee4277225c3a4b8612d1493e6:method:43568:44760",
+  "text": "self.transport.notify(flip, notification=n)",
+  "dono": "Channel.notify"
+ },
+ "hc/api/models.py:1153": {
+  "seed": "src:8ce3e55438349ca1cfd362c1daa62b1f586496f894fd70587817115292f75e4d:d03082adb2aacfd44f96bb0df8339a145b4979fee4277225c3a4b8612d1493e6:method:43568:44760",
+  "text": "self.transport.is_noop(flip.new_status)",
+  "dono": "Channel.notify"
+ },
+ "hc/integrations/telegram/transport.py:65": {
+  "seed": "src:0c6c6024b0ea0f93e6057b1adc45753917a8eda6564d2284aad2fe1651099720:4770d1d96fc4a9b3aa80327dbcffd20dadc524dcad9bc8e1c018555b3d639fe1:method:1963:2397",
+  "text": "cls.post(cls.SM, json=payload)",
+  "dono": "Telegram.send"
+ },
+ "hc/integrations/telegram/transport.py:15": {
+  "seed": "src:0c6c6024b0ea0f93e6057b1adc45753917a8eda6564d2284aad2fe1651099720:4770d1d96fc4a9b3aa80327dbcffd20dadc524dcad9bc8e1c018555b3d639fe1:method:356:498",
+  "text": "super().__init__(message, permanent=True)",
+  "dono": "MigrationRequiredError.__init__"
+ },
+ "hc/integrations/mattermost/transport.py:15": {
+  "seed": "src:1a465123652dfec3cb338085fcc1b3502f3adf38651a051bf833699b1cb7118b:677844e8ff102a8def7ea77fa42a28aa9ca54ea384490323ae888564841bdb1f:method:261:573",
+  "text": "self.payload(flip)",
+  "dono": "Mattermost.notify"
+ }
+}

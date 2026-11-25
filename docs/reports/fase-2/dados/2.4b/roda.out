@@ -1,0 +1,35 @@
+c_cadeia => Raiz.topo
+c_generica => Raiz.topo
+c_apelido => Raiz.topo
+Filho.passo (super) => Raiz.passo
+Filho.passo_velho (super(C, self)) => Raiz.passo
+Filho.proprio (self) => Raiz.topo
+Filho.fabrica (cls) => Raiz.criar
+c_sobrescrita com Raiz() => Raiz.passo
+c_fora_antes => Raiz.topo
+c_fora_depois => Raiz.topo
+c_so_fora => AttributeError
+c_diamante => DC.mm
+Mistura.ir (self) em Junta => Vizinha.vizinho
+CoopA.mm (super) em CoopA => CoopBase.mm
+CoopA.mm (super) em CoopD => CoopB.mm
+MistSuper.mm (super) em MistJunta => DA.mm
+c_atributo => solta
+c_instancia => solta
+c_getattr => Raiz.topo
+c_condicional => Raiz.topo
+c_derruba => AttributeError
+c_prop => Rapido.enviar
+c_prop_herdada => Rapido.enviar
+c_prop_sem_tipo => Transporte.enviar
+c_construtor => Raiz.topo
+Neto() rodou Raiz.__init__ => True
+Dados() rodou Raiz.__init__ => False
+ComMeta() rodou Raiz.__init__ => False
+ComNew() rodou Raiz.__init__ => False
+MRO ['DD', 'DB', 'DC', 'DA', 'object']
+MRO ['CoopD', 'CoopA', 'CoopB', 'CoopBase', 'object']
+MRO ['MistJunta', 'MistSuper', 'DA', 'object']
+MRO ['ForaAntes', 'Thread', 'Raiz', 'object']
+MRO ['ForaDepois', 'Raiz', 'Thread', 'object']
+class Ruim(DA, DB) => TypeError

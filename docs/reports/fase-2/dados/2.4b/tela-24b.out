@@ -1,0 +1,288 @@
+compilando librarian_studio e librarian_ingest (cargo build --release --locked)...
+   Compiling librarian-evidence v0.1.0 (C:\Users\beatl\Documents\Projetos\librarian\crates\librarian-evidence)
+   Compiling librarian-studio v0.1.0 (C:\Users\beatl\Documents\Projetos\librarian\crates\librarian-studio)
+    Finished `release` profile [optimized] target(s) in 21.58s
+binário: C:\Users\beatl\Documents\Projetos\librarian\target\release (compilado agora); fontes 160c59f54c3a747472557dccfc374fd5cc40a59600e5a3e78e270e3634328ec4 (242 arquivos: crates/ sem os .md, Cargo.toml, Cargo.lock e o que um .rs embute de fora de crates/); identidade recorded:c3e4b3039fc84dd005888d93eaaf652d3b562026:true; sha256 librarian_studio 2ef10aae279a6ad0483c376b345dbc743dfa5f20d5a9db2213a7802f005999cb, librarian_ingest f6e115240b68614ab955ac835a9a20fb404d0643f70b4f32ed8d2c38ae58f8ea (só registro: muda a cada link)
+run novo renderer-9b78f3a9: 20261125-025154
+run novo healthchecks-25597e41: 20261125-025155
+PASSA  PT is_noop (@property): o detalhe diz "seguida"/"followed"  -> Channel.notify → Transport.is_noop
+Fechar
+chama: self.transport.is_noop(flip.new_status)
+hc/api/models.py:1153
+seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante); no Python, declarado nele ou herdado das bases dele, e também cls, super() e @property
+PASSA  PT is_noop (@property): linha cheia (seguida), não tracejada
+PASSA  PT is_noop (@property): /api/calls dá type → /^Transport\.is_noop$/  -> {"resolution":"type","to":"Transport.is_noop","basis":"type","candidate_edge":null,"candidates":14}
+PASSA  PT is_noop (@property): basis type, candidate_edge null  -> type null
+PASSA  PT is_noop (@property): o detalhe da linha diz o texto da resolução  -> seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante); no Python, declarado nele ou herdado das bases dele, e também cls, super() e @property || Channel.notify → Transport.is_noop
+Fechar
+chama: self.transport.is_noop(flip.new_status)
+hc/api/models.py:1153
+seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante); no Python, declarado nele ou herdado das bases dele, e também cls, super() e @property
+PASSA  PT is_noop (@property): type_rule propriedade  -> propriedade
+PASSA  PT is_noop (@property): relation calls  -> calls
+PASSA  PT is_noop (@property): nenhuma chave crua nem código sem texto  -> Channel.notify → Transport.is_noop
+Fechar
+chama: self.transport.is_noop(flip.new_status)
+hc/api/models.py:1153
+seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante); no Python, declarado nele ou herdado das bases dele, e também cls, super() e @property
+      [pt-type-hc_api_models_py_1153.png] Channel.notify → Transport.is_noop ⏎ Fechar ⏎ chama: self.transport.is_noop(flip.new_status) ⏎ hc/api/models.py:1153 ⏎ seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante); no Python, declarado nele ou herdado das bases dele, e também cls, super() e @property
+PASSA  PT cls.post (herdado): o detalhe diz "seguida"/"followed"  -> Telegram.send → HttpTransport.post
+Fechar
+chama: cls.post(cls.SM, json=payload)
+hc/integrations/telegram/transport.py:65
+seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante); no Python, declarado nele ou herdado das bases dele, e também cls, super() e @property
+PASSA  PT cls.post (herdado): linha cheia (seguida), não tracejada
+PASSA  PT cls.post (herdado): /api/calls dá type → /^HttpTransport\.post$/  -> {"resolution":"type","to":"HttpTransport.post","basis":"type","candidate_edge":"edge:51ad32a15f952a61db716f7b41e538836eadfd156446667bb798d365aad9b1ca","candidates":5}
+PASSA  PT cls.post (herdado): basis type, candidate_edge presente  -> type edge:51ad32a15f952a61db716f7b41e538836eadfd156446667bb798d365aad9b1ca
+PASSA  PT cls.post (herdado): o detalhe da linha diz o texto da resolução  -> seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante); no Python, declarado nele ou herdado das bases dele, e também cls, super() e @property || Telegram.send → HttpTransport.post
+Fechar
+chama: cls.post(cls.SM, json=payload)
+hc/integrations/telegram/transport.py:65
+seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante); no Python, declarado nele ou herdado das bases dele, e também cls, super() e @property
+PASSA  PT cls.post (herdado): type_rule cls  -> cls
+PASSA  PT cls.post (herdado): relation calls  -> calls
+PASSA  PT cls.post (herdado): nenhuma chave crua nem código sem texto  -> Telegram.send → HttpTransport.post
+Fechar
+chama: cls.post(cls.SM, json=payload)
+hc/integrations/telegram/transport.py:65
+seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante); no Python, declarado nele ou herdado das bases dele, e também cls, super() e @property
+      [pt-type-hc_integrations_telegram_transport_py_65.png] Telegram.send → HttpTransport.post ⏎ Fechar ⏎ chama: cls.post(cls.SM, json=payload) ⏎ hc/integrations/telegram/transport.py:65 ⏎ seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante); no Python, declarado nele ou herdado das bases dele, e também cls, super() e @property
+PASSA  PT super().__init__: o detalhe diz "seguida"/"followed"  -> MigrationRequiredError.__init__ → TransportError.__init__
+Fechar
+chama: super().__init__(message, permanent=True)
+hc/integrations/telegram/transport.py:15
+seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante); no Python, declarado nele ou herdado das bases dele, e também cls, super() e @property
+PASSA  PT super().__init__: linha cheia (seguida), não tracejada
+PASSA  PT super().__init__: /api/calls dá type → /^TransportError\.__init__$/  -> {"resolution":"type","to":"TransportError.__init__","basis":"type","candidate_edge":null,"candidates":30}
+PASSA  PT super().__init__: basis type, candidate_edge null  -> type null
+PASSA  PT super().__init__: o detalhe da linha diz o texto da resolução  -> seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante); no Python, declarado nele ou herdado das bases dele, e também cls, super() e @property || MigrationRequiredError.__init__ → TransportError.__init__
+Fechar
+chama: super().__init__(message, permanent=True)
+hc/integrations/telegram/transport.py:15
+seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante); no Python, declarado nele ou herdado das bases dele, e também cls, super() e @property
+PASSA  PT super().__init__: type_rule super  -> super
+PASSA  PT super().__init__: relation calls  -> calls
+PASSA  PT super().__init__: nenhuma chave crua nem código sem texto  -> MigrationRequiredError.__init__ → TransportError.__init__
+Fechar
+chama: super().__init__(message, permanent=True)
+hc/integrations/telegram/transport.py:15
+seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante); no Python, declarado nele ou herdado das bases dele, e também cls, super() e @property
+      [pt-type-hc_integrations_telegram_transport_py_15.png] MigrationRequiredError.__init__ → TransportError.__init__ ⏎ Fechar ⏎ chama: super().__init__(message, permanent=True) ⏎ hc/integrations/telegram/transport.py:15 ⏎ seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante); no Python, declarado nele ou herdado das bases dele, e também cls, super() e @property
+PASSA  PT self.payload (herdado): o detalhe diz "seguida"/"followed"  -> Mattermost.notify → Slackalike.payload
+Fechar
+chama: self.payload(flip)
+hc/integrations/mattermost/transport.py:15
+seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante); no Python, declarado nele ou herdado das bases dele, e também cls, super() e @property
+PASSA  PT self.payload (herdado): linha cheia (seguida), não tracejada
+PASSA  PT self.payload (herdado): /api/calls dá type → /^Slackalike\.payload$/  -> {"resolution":"type","to":"Slackalike.payload","basis":"type","candidate_edge":"edge:1e67dcbb1130dde2da6295ab911de29dc421a68021ed0621327644a20ba3f95b","candidates":3}
+PASSA  PT self.payload (herdado): basis type, candidate_edge presente  -> type edge:1e67dcbb1130dde2da6295ab911de29dc421a68021ed0621327644a20ba3f95b
+PASSA  PT self.payload (herdado): o detalhe da linha diz o texto da resolução  -> seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante); no Python, declarado nele ou herdado das bases dele, e também cls, super() e @property || Mattermost.notify → Slackalike.payload
+Fechar
+chama: self.payload(flip)
+hc/integrations/mattermost/transport.py:15
+seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante); no Python, declarado nele ou herdado das bases dele, e também cls, super() e @property
+PASSA  PT self.payload (herdado): type_rule self  -> self
+PASSA  PT self.payload (herdado): relation calls  -> calls
+PASSA  PT self.payload (herdado): nenhuma chave crua nem código sem texto  -> Mattermost.notify → Slackalike.payload
+Fechar
+chama: self.payload(flip)
+hc/integrations/mattermost/transport.py:15
+seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante); no Python, declarado nele ou herdado das bases dele, e também cls, super() e @property
+      [pt-type-hc_integrations_mattermost_transport_py_15.png] Mattermost.notify → Slackalike.payload ⏎ Fechar ⏎ chama: self.payload(flip) ⏎ hc/integrations/mattermost/transport.py:15 ⏎ seguida: método do tipo escrito do receptor (anotação, construtor, self, campo; no Rust, também caminho, retorno, item e variante); no Python, declarado nele ou herdado das bases dele, e também cls, super() e @property
+PASSA  PT F23: uma caixa só para as 30  -> 4
+PASSA  PT F23: a caixa diz 30  -> notify | Channel | is_noop | Transport | Notification | api/models.py | notify | 30 candidatas
+PASSA  PT F23: uma linha tracejada  -> 1
+PASSA  PT F23: o detalhe lista as 30, com arquivo e botão  -> Apprise.notify hc/integrations/apprise/transport.py:17Seguir por este || Call.notify hc/integrations/call/transport.py:39Seguir por este || Discord.notify hc/integrations/discord/transport.py:19Seguir por este
+PASSA  PT F23: o texto da resolução  -> Channel.notify → notify
+Fechar
+chama: self.transport.notify(flip, notification=n)
+hc/api/models.py:1173
+não seguida: o método do tipo é abstrato, e 30 subclasse(s) do projeto o sobrescrevem; roda o do objeto
+A lista completa; escolha uma para o percurso seguir por ela:
+Apprise.notify hc/integrations
+PASSA  PT F23: nenhuma chave crua  -> Channel.notify → notify
+Fechar
+chama: self.transport.notify(flip, notification=n)
+hc/api/models.py:1173
+não seguida: o método do tipo é abstrato, e 30 subclasse(s) do projeto o sobrescrevem; roda o do
+PASSA  PT F23: clicar na caixa abre a lista
+PASSA  PT F23: a escolha vira um link chosen para Slackalike.notify  -> ["src:d09376b87ef655675cbaca6c00333d95047f304f300f36a40d73d3583e8f1ac7:00a1cc1718d907e0158a2cbc7ea133cbebeea0e0ec0100ad575e33633f3afec5:method:3575:3716"]
+PASSA  PT F23: a caixa some e a linha fica cheia
+PASSA  PT F23: limpar as escolhas volta à caixa
+PASSA  PT: nenhum erro de página
+PASSA  PT: nada além de abrir o projeto (POST /api/project = store.open) e /api/calls
+PASSA  EN is_noop (@property): o detalhe diz "seguida"/"followed"  -> Channel.notify → Transport.is_noop
+Close
+calls: self.transport.is_noop(flip.new_status)
+hc/api/models.py:1153
+followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant); in Python, declared by it or inherited from its bases, and also cls, super() and @property
+PASSA  EN is_noop (@property): linha cheia (seguida), não tracejada
+PASSA  EN is_noop (@property): /api/calls dá type → /^Transport\.is_noop$/  -> {"resolution":"type","to":"Transport.is_noop","basis":"type","candidate_edge":null,"candidates":14}
+PASSA  EN is_noop (@property): basis type, candidate_edge null  -> type null
+PASSA  EN is_noop (@property): o detalhe da linha diz o texto da resolução  -> followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant); in Python, declared by it or inherited from its bases, and also cls, super() and @property || Channel.notify → Transport.is_noop
+Close
+calls: self.transport.is_noop(flip.new_status)
+hc/api/models.py:1153
+followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant); in Python, declared by it or inherited from its bases, and also cls, super() and @property
+PASSA  EN is_noop (@property): type_rule propriedade  -> propriedade
+PASSA  EN is_noop (@property): relation calls  -> calls
+PASSA  EN is_noop (@property): nenhuma chave crua nem código sem texto  -> Channel.notify → Transport.is_noop
+Close
+calls: self.transport.is_noop(flip.new_status)
+hc/api/models.py:1153
+followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant); in Python, declared by it or inherited from its bases, and also cls, super() and @property
+      [en-type-hc_api_models_py_1153.png] Channel.notify → Transport.is_noop ⏎ Close ⏎ calls: self.transport.is_noop(flip.new_status) ⏎ hc/api/models.py:1153 ⏎ followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant); in Python, declared by it or inherited from its bases, and also cls, super() and @property
+PASSA  EN cls.post (herdado): o detalhe diz "seguida"/"followed"  -> Telegram.send → HttpTransport.post
+Close
+calls: cls.post(cls.SM, json=payload)
+hc/integrations/telegram/transport.py:65
+followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant); in Python, declared by it or inherited from its bases, and also cls, super() and @property
+PASSA  EN cls.post (herdado): linha cheia (seguida), não tracejada
+PASSA  EN cls.post (herdado): /api/calls dá type → /^HttpTransport\.post$/  -> {"resolution":"type","to":"HttpTransport.post","basis":"type","candidate_edge":"edge:51ad32a15f952a61db716f7b41e538836eadfd156446667bb798d365aad9b1ca","candidates":5}
+PASSA  EN cls.post (herdado): basis type, candidate_edge presente  -> type edge:51ad32a15f952a61db716f7b41e538836eadfd156446667bb798d365aad9b1ca
+PASSA  EN cls.post (herdado): o detalhe da linha diz o texto da resolução  -> followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant); in Python, declared by it or inherited from its bases, and also cls, super() and @property || Telegram.send → HttpTransport.post
+Close
+calls: cls.post(cls.SM, json=payload)
+hc/integrations/telegram/transport.py:65
+followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant); in Python, declared by it or inherited from its bases, and also cls, super() and @property
+PASSA  EN cls.post (herdado): type_rule cls  -> cls
+PASSA  EN cls.post (herdado): relation calls  -> calls
+PASSA  EN cls.post (herdado): nenhuma chave crua nem código sem texto  -> Telegram.send → HttpTransport.post
+Close
+calls: cls.post(cls.SM, json=payload)
+hc/integrations/telegram/transport.py:65
+followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant); in Python, declared by it or inherited from its bases, and also cls, super() and @property
+      [en-type-hc_integrations_telegram_transport_py_65.png] Telegram.send → HttpTransport.post ⏎ Close ⏎ calls: cls.post(cls.SM, json=payload) ⏎ hc/integrations/telegram/transport.py:65 ⏎ followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant); in Python, declared by it or inherited from its bases, and also cls, super() and @property
+PASSA  EN super().__init__: o detalhe diz "seguida"/"followed"  -> MigrationRequiredError.__init__ → TransportError.__init__
+Close
+calls: super().__init__(message, permanent=True)
+hc/integrations/telegram/transport.py:15
+followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant); in Python, declared by it or inherited from its bases, and also cls, super() and @property
+PASSA  EN super().__init__: linha cheia (seguida), não tracejada
+PASSA  EN super().__init__: /api/calls dá type → /^TransportError\.__init__$/  -> {"resolution":"type","to":"TransportError.__init__","basis":"type","candidate_edge":null,"candidates":30}
+PASSA  EN super().__init__: basis type, candidate_edge null  -> type null
+PASSA  EN super().__init__: o detalhe da linha diz o texto da resolução  -> followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant); in Python, declared by it or inherited from its bases, and also cls, super() and @property || MigrationRequiredError.__init__ → TransportError.__init__
+Close
+calls: super().__init__(message, permanent=True)
+hc/integrations/telegram/transport.py:15
+followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant); in Python, declared by it or inherited from its bases, and also cls, super() and @property
+PASSA  EN super().__init__: type_rule super  -> super
+PASSA  EN super().__init__: relation calls  -> calls
+PASSA  EN super().__init__: nenhuma chave crua nem código sem texto  -> MigrationRequiredError.__init__ → TransportError.__init__
+Close
+calls: super().__init__(message, permanent=True)
+hc/integrations/telegram/transport.py:15
+followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant); in Python, declared by it or inherited from its bases, and also cls, super() and @property
+      [en-type-hc_integrations_telegram_transport_py_15.png] MigrationRequiredError.__init__ → TransportError.__init__ ⏎ Close ⏎ calls: super().__init__(message, permanent=True) ⏎ hc/integrations/telegram/transport.py:15 ⏎ followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant); in Python, declared by it or inherited from its bases, and also cls, super() and @property
+PASSA  EN self.payload (herdado): o detalhe diz "seguida"/"followed"  -> Mattermost.notify → Slackalike.payload
+Close
+calls: self.payload(flip)
+hc/integrations/mattermost/transport.py:15
+followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant); in Python, declared by it or inherited from its bases, and also cls, super() and @property
+PASSA  EN self.payload (herdado): linha cheia (seguida), não tracejada
+PASSA  EN self.payload (herdado): /api/calls dá type → /^Slackalike\.payload$/  -> {"resolution":"type","to":"Slackalike.payload","basis":"type","candidate_edge":"edge:1e67dcbb1130dde2da6295ab911de29dc421a68021ed0621327644a20ba3f95b","candidates":3}
+PASSA  EN self.payload (herdado): basis type, candidate_edge presente  -> type edge:1e67dcbb1130dde2da6295ab911de29dc421a68021ed0621327644a20ba3f95b
+PASSA  EN self.payload (herdado): o detalhe da linha diz o texto da resolução  -> followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant); in Python, declared by it or inherited from its bases, and also cls, super() and @property || Mattermost.notify → Slackalike.payload
+Close
+calls: self.payload(flip)
+hc/integrations/mattermost/transport.py:15
+followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant); in Python, declared by it or inherited from its bases, and also cls, super() and @property
+PASSA  EN self.payload (herdado): type_rule self  -> self
+PASSA  EN self.payload (herdado): relation calls  -> calls
+PASSA  EN self.payload (herdado): nenhuma chave crua nem código sem texto  -> Mattermost.notify → Slackalike.payload
+Close
+calls: self.payload(flip)
+hc/integrations/mattermost/transport.py:15
+followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant); in Python, declared by it or inherited from its bases, and also cls, super() and @property
+      [en-type-hc_integrations_mattermost_transport_py_15.png] Mattermost.notify → Slackalike.payload ⏎ Close ⏎ calls: self.payload(flip) ⏎ hc/integrations/mattermost/transport.py:15 ⏎ followed: a method of the receiver's written type (annotation, constructor, self, field; in Rust, also path, return, item and variant); in Python, declared by it or inherited from its bases, and also cls, super() and @property
+PASSA  EN F23: uma caixa só para as 30  -> 4
+PASSA  EN F23: a caixa diz 30  -> notify | Channel | is_noop | Transport | Notification | api/models.py | notify | 30 candidates
+PASSA  EN F23: uma linha tracejada  -> 1
+PASSA  EN F23: o detalhe lista as 30, com arquivo e botão  -> Apprise.notify hc/integrations/apprise/transport.py:17Follow this one || Call.notify hc/integrations/call/transport.py:39Follow this one || Discord.notify hc/integrations/discord/transport.py:19Follow this one
+PASSA  EN F23: o texto da resolução  -> Channel.notify → notify
+Close
+calls: self.transport.notify(flip, notification=n)
+hc/api/models.py:1173
+not followed: the type's method is abstract, and 30 subclass(es) of the project override it; the object's own runs
+The full list; choose one for the walk to go on through it:
+Apprise.notify hc/inte
+PASSA  EN F23: nenhuma chave crua  -> Channel.notify → notify
+Close
+calls: self.transport.notify(flip, notification=n)
+hc/api/models.py:1173
+not followed: the type's method is abstract, and 30 subclass(es) of the project override it; the 
+PASSA  EN F23: clicar na caixa abre a lista
+PASSA  EN F23: a escolha vira um link chosen para Slackalike.notify  -> ["src:d09376b87ef655675cbaca6c00333d95047f304f300f36a40d73d3583e8f1ac7:00a1cc1718d907e0158a2cbc7ea133cbebeea0e0ec0100ad575e33633f3afec5:method:3575:3716"]
+PASSA  EN F23: a caixa some e a linha fica cheia
+PASSA  EN F23: limpar as escolhas volta à caixa
+PASSA  EN: nenhum erro de página
+PASSA  EN: nada além de abrir o projeto (POST /api/project = store.open) e /api/calls
+PASSA  tema escuro: o detalhe aparece com o texto do abstrato  -> Channel.notify → notify
+Fechar
+chama: self.transport.notify(flip, notification=n)
+hc/api/models.py:1173
+não seguida: o método do tipo é abstrato, e 30 subclasse(s) do projeto o sobrescrevem; roda o do objeto
+A lista completa; escolha uma para o percurso seguir por ela:
+Apprise.notify hc/integrations/apprise/transport.py:17Seguir por este
+Call.notify hc/integrations/call/transport.py:39Seguir por este
+Discord.notify hc/integrations/discord/transport.py:19Seguir por este
+Email.notify hc/integrations/email/transport.py:64Seguir por este
+GitHub.notify hc/integrations/github/transport.py:27Seguir por este
+GoogleChat.notify hc/integrations/googlechat/transport.py:19Seguir por este
+Gotify.notify hc/integrations/gotify/transport.py:18Seguir por este
+Group.notify hc/integrations/group/transport.py:8Seguir por este
+Matrix.notify hc/integrations/matrix/transport.py:21Seguir por este
+Mattermost.notify hc/integrations/mattermost/transport.py:11Seguir por este
+MsTeamsWorkflow.notify hc/integrations/msteamsw/transport.py:110Seguir por este
+Ntfy.notify hc/integrations/ntfy/transport.py:18Seguir por este
+Opsgenie.notify hc/integrations/opsgenie/transport.py:30Seguir por este
+PagerDuty.notify hc/int
+PASSA  tema escuro: tema aplicado (dark), texto rgb(143, 142, 134) sobre rgb(35, 35, 33)  -> {"color":"rgb(143, 142, 134)","bg":"rgb(35, 35, 33)","theme":"dark","overflow":false,"detailRight":1006,"width":1440}
+PASSA  tema escuro: nenhum erro de página
+PASSA  tema claro: o detalhe aparece com o texto do abstrato  -> Channel.notify → notify
+Fechar
+chama: self.transport.notify(flip, notification=n)
+hc/api/models.py:1173
+não seguida: o método do tipo é abstrato, e 30 subclasse(s) do projeto o sobrescrevem; roda o do objeto
+A lista completa; escolha uma para o percurso seguir por ela:
+Apprise.notify hc/integrations/apprise/transport.py:17Seguir por este
+Call.notify hc/integrations/call/transport.py:39Seguir por este
+Discord.notify hc/integrations/discord/transport.py:19Seguir por este
+Email.notify hc/integrations/email/transport.py:64Seguir por este
+GitHub.notify hc/integrations/github/transport.py:27Seguir por este
+GoogleChat.notify hc/integrations/googlechat/transport.py:19Seguir por este
+Gotify.notify hc/integrations/gotify/transport.py:18Seguir por este
+Group.notify hc/integrations/group/transport.py:8Seguir por este
+Matrix.notify hc/integrations/matrix/transport.py:21Seguir por este
+Mattermost.notify hc/integrations/mattermost/transport.py:11Seguir por este
+MsTeamsWorkflow.notify hc/integrations/msteamsw/transport.py:110Seguir por este
+Ntfy.notify hc/integrations/ntfy/transport.py:18Seguir por este
+Opsgenie.notify hc/integrations/opsgenie/transport.py:30Seguir por este
+PagerDuty.notify hc/int
+PASSA  tema claro: tema aplicado (light), texto rgb(122, 121, 116) sobre rgb(255, 255, 255)  -> {"color":"rgb(122, 121, 116)","bg":"rgb(255, 255, 255)","theme":"light","overflow":false,"detailRight":1006,"width":1440}
+PASSA  tema claro: nenhum erro de página
+PASSA  tela estreita (390 px): o detalhe aparece com o texto do abstrato  -> Channel.notify → notify
+Fechar
+chama: self.transport.notify(flip, notification=n)
+hc/api/models.py:1173
+não seguida: o método do tipo é abstrato, e 30 subclasse(s) do projeto o sobrescrevem; roda o do objeto
+A lista completa; escolha uma para o percurso seguir por ela:
+Apprise.notify hc/integrations/apprise/transport.py:17Seguir por este
+Call.notify hc/integrations/call/transport.py:39Seguir por este
+Discord.notify hc/integrations/discord/transport.py:19Seguir por este
+Email.notify hc/integrations/email/transport.py:64Seguir por este
+GitHub.notify hc/integrations/github/transport.py:27Seguir por este
+GoogleChat.notify hc/integrations/googlechat/transport.py:19Seguir por este
+Gotify.notify hc/integrations/gotify/transport.py:18Seguir por este
+Group.notify hc/integrations/group/transport.py:8Seguir por este
+Matrix.notify hc/integrations/matrix/transport.py:21Seguir por este
+Mattermost.notify hc/integrations/mattermost/transport.py:11Seguir por este
+MsTeamsWorkflow.notify hc/integrations/msteamsw/transport.py:110Seguir por este
+Ntfy.notify hc/integrations/ntfy/transport.py:18Seguir por este
+Opsgenie.notify hc/integrations/opsgenie/transport.py:30Seguir por este
+PagerDuty.notify hc/int
+PASSA  tela estreita (390 px): sem rolagem horizontal da página  -> {"color":"rgb(122, 121, 116)","bg":"rgb(255, 255, 255)","theme":"(sistema)","overflow":false,"detailRight":376,"width":390}
+PASSA  tela estreita (390 px): nenhum erro de página
+PASSA  .studio original igual antes e depois
+
+98 passam, 0 falham. Capturas em C:/Users/beatl/AppData/Local/Temp/claude/09139e964f85837f/83a4fee6-8de5-4476-8bd1-d0165a4cd73e/scratchpad/tela

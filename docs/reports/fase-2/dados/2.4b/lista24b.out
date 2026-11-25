@@ -1,0 +1,113 @@
+== produção, mudanças
+P hc/integrations/spike/transport.py:29 Spike.notify | self.post(url, json=payload, headers=headers) | self Spike | homonym 5 | homonym -> type | HttpTransport.post (hc/api/transports.py:199)   
+P hc/integrations/pd/transport.py:51 PagerDuty.notify | self.post(self.URL, json=payload) | self PagerDuty | homonym 5 | homonym -> type | HttpTransport.post (hc/api/transports.py:199)   
+P hc/api/transports.py:162 HttpTransport._request | cls.raise_for_response(r) | cls HttpTransport | above_candidate_limit 12 | above_candidate_limit -> type | HttpTransport.raise_for_response (hc/api/transports.py:133)  subs:11 
+P hc/api/transports.py:211 HttpTransport.post | cls.request( "post", url, retry=retry, params=para | cls HttpTransport | homonym 1 | homonym -> type | HttpTransport.request (hc/api/transports.py:166)   
+P hc/api/transports.py:235 HttpTransport.put | cls.request( "put", url, retry=retry, params=param | cls HttpTransport | homonym 1 | homonym -> type | HttpTransport.request (hc/api/transports.py:166)   
+P hc/integrations/telegram/transport.py:65 Telegram.send | cls.post(cls.SM, json=payload) | cls Telegram | homonym 5 | homonym -> type | HttpTransport.post (hc/api/transports.py:199)   
+P hc/integrations/telegram/transport.py:15 MigrationRequiredError.__init__ | super().__init__(message, permanent=True) | super MigrationRequiredError | above_candidate_limit 30 | above_candidate_limit -> type | TransportError.__init__ (hc/api/transports.py:57)   
+P hc/integrations/mattermost/transport.py:15 Mattermost.notify | self.payload(flip) | self Mattermost | homonym 3 | homonym -> type | Slackalike.payload (hc/integrations/slack/transport.py:31)   
+P hc/integrations/mattermost/transport.py:16 Mattermost.notify | self.post(self.channel.slack_webhook_url, json=pre | self Mattermost | homonym 5 | homonym -> type | HttpTransport.post (hc/api/transports.py:199)   
+P hc/integrations/discord/transport.py:22 Discord.notify | self.payload(flip) | self Discord | homonym 3 | homonym -> type | Slackalike.payload (hc/integrations/slack/transport.py:31)   
+P hc/integrations/discord/transport.py:23 Discord.notify | self.post(url, json=prepared_payload) | self Discord | homonym 5 | homonym -> type | HttpTransport.post (hc/api/transports.py:199)   
+P hc/integrations/pagertree/transport.py:32 PagerTree.notify | self.post(url, json=payload, headers=headers) | self PagerTree | homonym 5 | homonym -> type | HttpTransport.post (hc/api/transports.py:199)   
+P hc/integrations/pushbullet/transport.py:23 Pushbullet.notify | self.post(url, json=payload, headers=headers) | self Pushbullet | homonym 5 | homonym -> type | HttpTransport.post (hc/api/transports.py:199)   
+P hc/integrations/trello/transport.py:32 Trello.notify | self.post(self.URL, params=params) | self Trello | homonym 5 | homonym -> type | HttpTransport.post (hc/api/transports.py:199)   
+P hc/integrations/github/transport.py:56 GitHub.notify | self.post(url, json=payload, headers=headers) | self GitHub | homonym 5 | homonym -> type | HttpTransport.post (hc/api/transports.py:199)   
+P hc/accounts/models.py:472 Project.num_checks_available | self.owner_profile.num_checks_available() | propriedade Profile | homonym 2 | homonym -> type | Profile.num_checks_available (hc/accounts/models.py:350) Project.owner_profile (hc/accounts/models.py:467)  
+P hc/api/views.py:476 create_check | check.to_dict(v=request.v) | construtor Check | homonym 4 | homonym -> type | Check.to_dict (hc/api/models.py:439)   
+P hc/integrations/zulip/transport.py:53 Zulip.notify | self.post(url, data=data, auth=auth) | self Zulip | homonym 5 | homonym -> type | HttpTransport.post (hc/api/transports.py:199)   
+P hc/integrations/sms/transport.py:75 Sms.notify | self.post(url, data=data, auth=auth) | self Sms | homonym 5 | homonym -> type | HttpTransport.post (hc/api/transports.py:199)   
+P hc/api/models.py:1153 Channel.notify | self.transport.is_noop(flip.new_status) | propriedade Transport | above_candidate_limit 14 | above_candidate_limit -> type | Transport.is_noop (hc/api/transports.py:76) Channel.transport (hc/api/models.py:1138) subs:13 
+P hc/api/models.py:1173 Channel.notify | self.transport.notify(flip, notification=n) | propriedade Transport | above_candidate_limit 33 | above_candidate_limit -> homonym (abstrato: 30 sobrescritas) | Transport.notify (hc/api/transports.py:66) Channel.transport (hc/api/models.py:1138) subs:30 
+P hc/integrations/opsgenie/transport.py:75 Opsgenie.notify | self.post(url, json=payload, headers=headers) | self Opsgenie | homonym 5 | homonym -> type | HttpTransport.post (hc/api/transports.py:199)   
+P hc/integrations/call/transport.py:65 Call.notify | self.post(url, data=data, auth=auth) | self Call | homonym 5 | homonym -> type | HttpTransport.post (hc/api/transports.py:199)   
+P hc/integrations/webhook/transport.py:96 Webhook.notify | self.request(method, url, retry=retry, data=body_b | self Webhook | homonym 1 | homonym -> type | HttpTransport.request (hc/api/transports.py:166)   
+P hc/integrations/googlechat/transport.py:77 GoogleChat.notify | self.post(self.channel.value, json=payload) | self GoogleChat | homonym 5 | homonym -> type | HttpTransport.post (hc/api/transports.py:199)   
+P hc/integrations/po/transport.py:71 Pushover.notify | self.post(url, data=cancel_payload) | self Pushover | homonym 5 | homonym -> type | HttpTransport.post (hc/api/transports.py:199)   
+P hc/integrations/po/transport.py:101 Pushover.notify | self.post(self.URL, data=payload) | self Pushover | homonym 5 | homonym -> type | HttpTransport.post (hc/api/transports.py:199)   
+P hc/integrations/slack/transport.py:97 Slackalike.notify | self.post(self.channel.slack_webhook_url, json=sel | self Slackalike | homonym 5 | homonym -> type | HttpTransport.post (hc/api/transports.py:199)   
+P hc/integrations/slack/transport.py:126 Slack.notify | self.post(self.channel.slack_webhook_url, json=sel | self Slack | homonym 5 | homonym -> type | HttpTransport.post (hc/api/transports.py:199)   
+P hc/integrations/slack/transport.py:126 Slack.notify | self.payload(flip) | self Slack | homonym 3 | homonym -> type | Slackalike.payload (hc/integrations/slack/transport.py:31)   
+P hc/integrations/whatsapp/transport.py:91 WhatsApp.notify | self.post(url, data=data, auth=auth) | self WhatsApp | homonym 5 | homonym -> type | HttpTransport.post (hc/api/transports.py:199)   
+P hc/integrations/signal/transport.py:22 SignalRateLimitFailure.__init__ | super().__init__("CAPTCHA proof required") | super SignalRateLimitFailure | above_candidate_limit 30 | above_candidate_limit -> type | TransportError.__init__ (hc/api/transports.py:57)   
+P hc/integrations/ntfy/transport.py:55 Ntfy.notify | self.post(url, headers=headers, json=payload) | self Ntfy | homonym 5 | homonym -> type | HttpTransport.post (hc/api/transports.py:199)   
+P hc/integrations/rocketchat/transport.py:65 RocketChat.notify | self.post(self.channel.value, json=prepared_payloa | self RocketChat | homonym 5 | homonym -> type | HttpTransport.post (hc/api/transports.py:199)   
+P hc/integrations/victorops/transport.py:38 VictorOps.notify | self.post(self.channel.value, json=payload) | self VictorOps | homonym 5 | homonym -> type | HttpTransport.post (hc/api/transports.py:199)   
+P hc/integrations/msteamsw/transport.py:114 MsTeamsWorkflow.notify | self.post(self.channel.value, json=self.payload(fl | self MsTeamsWorkflow | homonym 5 | homonym -> type | HttpTransport.post (hc/api/transports.py:199)   
+P hc/integrations/gotify/transport.py:44 Gotify.notify | self.post(url, json=payload) | self Gotify | homonym 5 | homonym -> type | HttpTransport.post (hc/api/transports.py:199)   
+== produção, outras de interesse
+P hc/lib/signing.py:29 ShortHexTimestampSigner.sign | super().sign(value) | super ShortHexTimestampSigner | unique 1 | igual (base de fora antes) [unique] | django.core.signing.Signer   ShortHexTimestampSigner.sign (hc/lib/signing.py:26)
+P hc/lib/signing.py:32 ShortHexTimestampSigner.unsign | super().unsign(value) | super ShortHexTimestampSigner | unique 1 | igual (base de fora antes) [unique] | django.core.signing.Signer   ShortHexTimestampSigner.unsign (hc/lib/signing.py:31)
+P hc/api/management/commands/sendalerts.py:62 Command.__init__ | super().__init__(*args, **kwargs) | super Command | above_candidate_limit 30 | igual (base de fora antes) [above_candidate_limit] | django.core.management.base.BaseCommand   
+P hc/api/middleware.py:19 HealthMiddleware.__call__ | self.get_response(request) | self HealthMiddleware | no_candidate_in_project 0 | igual (o nome é atributo, não método) [no_candidate_in_project] |    
+P hc/api/transports.py:182 HttpTransport.request | cls._request( method, url, params=params, data=dat | cls HttpTransport | unique 1 | confirma | HttpTransport._request (hc/api/transports.py:138)   
+P hc/integrations/webhook/forms.py:49 HeadersField.validate | super().validate(value) | super HeadersField | unique 1 | igual (base de fora antes) [unique] | django.forms.Field   HeadersField.validate (hc/integrations/webhook/forms.py:48)
+P hc/integrations/webhook/forms.py:70 WebhookForm.clean | super().clean() | super WebhookForm | homonym 6 | igual (base de fora antes) [homonym] | django.forms.Form   
+P hc/api/management/commands/smtpd.py:106 Server.__init__ | super().__init__(server_address) | super Server | above_candidate_limit 30 | igual (base de fora antes) [above_candidate_limit] | minismtpd.SMTPServer   
+P hc/api/management/commands/smtpd.py:122 Server.process_message | self.stdout.write(result) | campo LogSink | homonym 2 | igual (protocol) [homonym] |    
+P hc/integrations/group/forms.py:11 GroupForm.__init__ | super().__init__(*args, **kwargs) | super GroupForm | above_candidate_limit 30 | igual (base de fora antes) [above_candidate_limit] | django.forms.Form   
+P hc/lib/html.py:11 TextOnlyParser.__init__ | super().__init__() | super TextOnlyParser | above_candidate_limit 30 | igual (base de fora antes) [above_candidate_limit] | html.parser.HTMLParser   
+P hc/integrations/email/forms.py:15 EmailForm.clean | super().clean() | super EmailForm | homonym 6 | igual (base de fora antes) [homonym] | django.forms.Form   
+P hc/integrations/zulip/transport.py:48 Zulip.notify | self.channel.zulip.formatted_to() | propriedade ZulipConf | unique 1 | confirma | ZulipConf.formatted_to (hc/api/models.py:958) Channel.zulip (hc/api/models.py:1313)  
+P hc/accounts/forms.py:73 EmailLoginForm.__init__ | super().__init__(request.POST if request else None | super EmailLoginForm | above_candidate_limit 30 | igual (base de fora antes) [above_candidate_limit] | django.forms.Form   
+P hc/accounts/forms.py:20 LowercaseEmailField.clean | super().clean(value) | super LowercaseEmailField | homonym 6 | igual (base de fora antes) [homonym] | django.forms.EmailField   
+P hc/accounts/forms.py:176 TotpForm.__init__ | super().__init__(post) | super TotpForm | above_candidate_limit 30 | igual (base de fora antes) [above_candidate_limit] | django.forms.Form   
+P hc/accounts/forms.py:34 SignupForm.__init__ | super().__init__(request.POST) | super SignupForm | above_candidate_limit 30 | igual (base de fora antes) [above_candidate_limit] | django.forms.Form   
+P hc/front/forms.py:160 PhoneUpDownForm.clean | super().clean() | super PhoneUpDownForm | homonym 6 | igual (base de fora antes) [homonym] | django.forms.Form   
+P hc/api/models.py:758 Ping.get_body_bytes | self.GetBodyError() | self Ping | unique 1 | igual (o nome é atributo, não método) [unique] |    Ping.GetBodyError (hc/api/models.py:703)
+P hc/api/models.py:765 Ping.get_body_bytes | self.GetBodyError() | self Ping | unique 1 | igual (o nome é atributo, não método) [unique] |    Ping.GetBodyError (hc/api/models.py:703)
+P hc/api/models.py:913 PdConf.load | cls.model_validate({"service_key": data}) | cls PdConf | no_candidate_in_project 0 | igual (base de fora antes) [no_candidate_in_project] | pydantic.BaseModel   
+P hc/api/models.py:915 PdConf.load | super().model_validate_json(data) | super PdConf | no_candidate_in_project 0 | igual (base de fora antes) [no_candidate_in_project] | pydantic.BaseModel   
+P hc/api/models.py:933 EmailConf.load | cls.model_validate({"value": data, "up": True, "do | cls EmailConf | no_candidate_in_project 0 | igual (base de fora antes) [no_candidate_in_project] | pydantic.BaseModel   
+P hc/api/models.py:935 EmailConf.load | super().model_validate_json(data) | super EmailConf | no_candidate_in_project 0 | igual (base de fora antes) [no_candidate_in_project] | pydantic.BaseModel   
+P hc/api/models.py:1049 Channel.__str__ | self.get_kind_display() | self Channel | unique 1 | igual (base de fora antes) [unique] | django.db.models.Model   Ping.get_kind_display (hc/api/models.py:790)
+P hc/front/validators.py:34 WebhookValidator.__call__ | super().__call__(self.add_tld(value)) | super WebhookValidator | homonym 7 | igual (base de fora antes) [homonym] | django.core.validators.URLValidator   
+P hc/api/admin.py:52 ChecksAdmin.get_queryset | super().get_queryset(request) | super ChecksAdmin | homonym 5 | igual (base de fora antes) [homonym] | django.contrib.admin.ModelAdmin   
+P hc/api/admin.py:230 ChannelsAdmin.get_queryset | super().get_queryset(request) | super ChannelsAdmin | homonym 5 | igual (base de fora antes) [homonym] | django.contrib.admin.ModelAdmin   
+P hc/accounts/middleware.py:55 CustomHeaderMiddleware.__call__ | self.get_response(request) | self CustomHeaderMiddleware | no_candidate_in_project 0 | igual (o nome é atributo, não método) [no_candidate_in_project] |    
+P hc/accounts/middleware.py:68 CustomHeaderMiddleware.__call__ | self.get_response(request) | self CustomHeaderMiddleware | no_candidate_in_project 0 | igual (o nome é atributo, não método) [no_candidate_in_project] |    
+P hc/accounts/middleware.py:82 CustomHeaderMiddleware.__call__ | self.get_response(request) | self CustomHeaderMiddleware | no_candidate_in_project 0 | igual (o nome é atributo, não método) [no_candidate_in_project] |    
+P hc/accounts/middleware.py:21 TeamAccessMiddleware.__call__ | self.get_response(request) | self TeamAccessMiddleware | no_candidate_in_project 0 | igual (o nome é atributo, não método) [no_candidate_in_project] |    
+P hc/accounts/middleware.py:25 TeamAccessMiddleware.__call__ | self.get_response(request) | self TeamAccessMiddleware | no_candidate_in_project 0 | igual (o nome é atributo, não método) [no_candidate_in_project] |    
+P hc/integrations/signal/forms.py:37 SignalForm.clean | super().clean() | super SignalForm | homonym 6 | igual (base de fora antes) [homonym] | django.forms.Form   
+P hc/integrations/signal/transport.py:78 Signal.send | cls._read_replies(payload_bytes) | cls Signal | unique 1 | confirma | Signal._read_replies (hc/integrations/signal/transport.py:105)   
+P hc/accounts/admin.py:323 HcUserAdmin.get_queryset | super().get_queryset(request) | super HcUserAdmin | homonym 5 | igual (base de fora antes) [homonym] | django.contrib.auth.admin.UserAdmin   
+P hc/accounts/admin.py:150 ProfileAdmin.get_queryset | super().get_queryset(request) | super ProfileAdmin | homonym 5 | igual (base de fora antes) [homonym] | django.contrib.admin.ModelAdmin   
+P hc/accounts/admin.py:269 ProjectAdmin.get_queryset | super().get_queryset(request) | super ProjectAdmin | homonym 5 | igual (base de fora antes) [homonym] | django.contrib.admin.ModelAdmin   
+== teste, sem ser super
+== teste, super {
+  'super().setUp() | BaseTestCase.setUp (hc/test.py:25) | above_candidate_limit -> type': 139,
+  'super().setUp() | django.test.TestCase | igual (base de fora antes) [above_candidate_limit]': 1
+}
+sem tipo no simulador [
+  {
+    at: 'hc/front/templatetags/asciitable.py:56',
+    text: 't.render()',
+    hoje: [ 'Table.render (hc/front/templatetags/asciitable.py:22)' ],
+    regra: 'construtor'
+  }
+]
+init nenhum [
+  'CronValidator (hc/front/validators.py:37) ',
+  'OnCalendarValidator (hc/front/validators.py:54) ',
+  'TimezoneValidator (hc/front/validators.py:72) ',
+  'DowntimeRecord (hc/api/models.py:153) dataclass',
+  'NullSink (hc/api/tests/test_smtpd.py:42) '
+]
+vários defs 0 travas 0
+== amostra
+HC-01 no_candidate_in_project cron_form.is_valid() construtor | igual (base de fora antes) [no_candidate_in_project] | django.forms.Form | verdade {"externo":"Django: Form.is_valid"}
+HC-06 no_candidate_in_project form.is_valid() construtor | igual (base de fora antes) [no_candidate_in_project] | django.forms.Form | verdade {"externo":"Django: Form.is_valid"}
+HC-29 unique->function channel.save() parametro | igual (base de fora antes) [no_candidate_in_project] | django.db.models.Model | verdade {"externo":"Django: Model.save"}
+HC-31 unique->function channel.save() construtor | igual (base de fora antes) [no_candidate_in_project] | django.db.models.Model | verdade {"externo":"Django: Model.save"}
+HC-36 unique->function channel.save() construtor | igual (base de fora antes) [no_candidate_in_project] | django.db.models.Model | verdade {"externo":"Django: Model.save"}
+HC-58 receiver self.owner_profile.num_checks_available( propriedade | homonym -> type | Profile.num_checks_available (hc/accounts/models.py:350) | verdade {"alvo":"Profile.num_checks_available (hc/accounts/models.py:350)"}
+HC-64 metodo_funcao flip.save() construtor | igual (base de fora antes) [no_candidate_in_project] | django.db.models.Model | verdade {"externo":"Django: Model.save"}
+HC-65 metodo_funcao obj.save() construtor | igual (base de fora antes) [no_candidate_in_project] | django.db.models.Model | verdade {"externo":"Django: Model.save"}
+HC-79 tipo_py self.stdout.write(result) campo | igual (protocol) [homonym] |  | verdade {"ambigua":["NullSink.write (hc/api/tests/test_smtpd.py:43)","Django: OutputWrapper.write"]}
+descendentes [
+  'hc/api/transports.py:162 cls.raise_for_response(r) 11',
+  'hc/api/models.py:1153 self.transport.is_noop(flip.ne 13',
+  'hc/api/models.py:1173 self.transport.notify(flip, no 30'
+]

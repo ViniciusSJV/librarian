@@ -1,0 +1,17 @@
+r_abstrato(EnvioA) => EnvioA.mandar
+r_abstrato(EnvioC) => EnvioC.mandar
+r_abstrato(Envio) => NotImplementedError
+Envio.usar (self) em EnvioC => EnvioC.mandar
+r_abstrato_meio(EnvioB) => EnvioA.mandar
+r_vazio(EnvioA) => EnvioA.vazio
+EnvioSuper.vazio (super): roda o corpo abstrato => None
+r_sem_sobrescrita => NotImplementedError
+r_abc(ComAbcFilha) => ComAbcFilha.mandar
+r_construtor: roda o corpo abstrato => NotImplementedError
+r_fora => AttributeError
+r_base_dinamica => Alheia.mm
+r_meta => Alheia.mm
+r_decorador => Alheia.mm
+r_posto_de_fora => Alheia.mm
+base de fora que delega (Mock): Procurador(wraps=Alheia()).mm() => Alheia.mm
+super() nao usa __getattr__: SuperDelegado.mm => AttributeError
