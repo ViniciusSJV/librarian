@@ -1,0 +1,20 @@
+{
+ "healthchecks-25597e41": {
+  "simbolos": [
+   4718,
+   4718
+  ],
+  "diferentes": [],
+  "grafo_igual": true,
+  "grafo": "239c8e55d9b451adc937b096b8e2cfd24e56e87a4bd2d70b0f2c53668d235fa4"
+ },
+ "renderer-9b78f3a9": {
+  "simbolos": [
+   819,
+   819
+  ],
+  "diferentes": [],
+  "grafo_igual": true,
+  "grafo": "e449a4750e238e36186a8501eef3d44fd71a2e32f7f7cdb144721f78d1f25598"
+ }
+}

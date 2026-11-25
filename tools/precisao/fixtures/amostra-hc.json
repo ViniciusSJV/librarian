@@ -1,7 +1,7 @@
 {
  "projeto": "healthchecks-25597e41",
  "fonte": "Projetos/pilotos/healthchecks @ 6c05a7a",
- "selecao": "tools/precisao/amostra.js sobre a linha de base de 18/11/2026 (binário de aae51d7); HC-61 a HC-75: estratos do passo 2.2 (metodo_funcao, modulo_f, espelho), escolhidos à mão na Parada 1 do 2.2, equilibrando código de teste e de produção; HC-76 a HC-87: estratos do passo 2.3a (tipo_py, instancia, receiver_py_teto), escolhidos à mão na Parada 1 do 2.3; HC-88 a HC-97: estratos do passo 2.3b (decorador, campo_init), escolhidos à mão na Parada 1 do 2.3b; HC-98 a HC-112: estratos do passo 2.3c (retorno_py, campo_outro_arquivo, retorno_confirma, liga_nao_fecha, cadeia), escolhidos à mão na Parada 1 do 2.3c",
+ "selecao": "tools/precisao/amostra.js sobre a linha de base de 18/11/2026 (binário de aae51d7); HC-61 a HC-75: estratos do passo 2.2 (metodo_funcao, modulo_f, espelho), escolhidos à mão na Parada 1 do 2.2, equilibrando código de teste e de produção; HC-76 a HC-87: estratos do passo 2.3a (tipo_py, instancia, receiver_py_teto), escolhidos à mão na Parada 1 do 2.3; HC-88 a HC-97: estratos do passo 2.3b (decorador, campo_init), escolhidos à mão na Parada 1 do 2.3b; HC-98 a HC-112: estratos do passo 2.3c (retorno_py, campo_outro_arquivo, retorno_confirma, liga_nao_fecha, cadeia), escolhidos à mão na Parada 1 do 2.3c; HC-113 a HC-123: estratos do passo 2.4a (escopo_modulo, escopo_fora, escopo_local, escopo_import), escolhidos à mão na Parada 1 do 2.4",
  "chamadas": [
   {
    "id": "HC-01",
@@ -2536,6 +2536,253 @@
    "certeza": "alta",
    "justificativa": "Igual a HC-111, na integração do Discord.",
    "verdade_validada_por": "usuário (20/11/2026, na Parada 2)"
+  },
+  {
+   "id": "HC-113",
+   "parte_c": false,
+   "estrato": "escopo_modulo",
+   "ocorrencia": "hc/settings.py@1875-1884",
+   "local": "hc/settings.py:69",
+   "texto": "envsecret",
+   "dono": "SECRET_KEY",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 3,
+    "alvos": [
+     "envsecret (hc/settings.py:41)",
+     "envsecret (hc/settings.py:45)",
+     "envsecret (hc/settings.py:49)"
+    ]
+   },
+   "verdade": {
+    "alvo": "envsecret (hc/settings.py:49)"
+   },
+   "certeza": "alta",
+   "justificativa": "`envsecret` tem duas `@overload` (linhas 41 e 45) e a implementação (49), todas no próprio arquivo; a chamada roda na carga do módulo, depois das três, e vale a última `def`.",
+   "verdade_validada_por": "usuário (24/11/2026, folha da Parada 2 do 2.4a; conferido no editor)"
+  },
+  {
+   "id": "HC-114",
+   "parte_c": false,
+   "estrato": "escopo_modulo",
+   "ocorrencia": "hc/settings.py@11342-11351",
+   "local": "hc/settings.py:344",
+   "texto": "envsecret",
+   "dono": "S3_SECRET_KEY",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 3,
+    "alvos": [
+     "envsecret (hc/settings.py:41)",
+     "envsecret (hc/settings.py:45)",
+     "envsecret (hc/settings.py:49)"
+    ]
+   },
+   "verdade": {
+    "alvo": "envsecret (hc/settings.py:49)"
+   },
+   "certeza": "alta",
+   "justificativa": "Igual a HC-113.",
+   "verdade_validada_por": "usuário (24/11/2026, folha da Parada 2 do 2.4a)"
+  },
+  {
+   "id": "HC-115",
+   "parte_c": false,
+   "estrato": "escopo_modulo",
+   "ocorrencia": "hc/lib/curl.py@6725-6733",
+   "local": "hc/lib/curl.py:206",
+   "texto": "Response",
+   "dono": "request",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Response (hc/lib/curl.py:32)",
+     "Signal.Response (hc/integrations/signal/transport.py:34)"
+    ]
+   },
+   "verdade": {
+    "alvo": "Response (hc/lib/curl.py:32)",
+    "relacao": "instancia"
+   },
+   "certeza": "alta",
+   "justificativa": "`Response` é a classe do próprio arquivo; o outro candidato, `Signal.Response`, é uma classe aninhada em hc/integrations/signal/transport.py, que o nome não alcança daqui.",
+   "verdade_validada_por": "usuário (24/11/2026, folha da Parada 2 do 2.4a)"
+  },
+  {
+   "id": "HC-116",
+   "parte_c": false,
+   "estrato": "escopo_fora",
+   "ocorrencia": "hc/api/apps.py@1143-1148",
+   "local": "hc/api/apps.py:38",
+   "texto": "Error",
+   "dono": "settings_check",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Signal.Error (hc/integrations/signal/transport.py:40)"
+    ]
+   },
+   "verdade": {
+    "externo": "django.core.checks.Error"
+   },
+   "certeza": "alta",
+   "justificativa": "`from django.core.checks import Error` (hc/api/apps.py:9); `Signal.Error` (hc/integrations/signal/transport.py:40) não é alcançável por esse nome.",
+   "verdade_validada_por": "usuário (24/11/2026, folha da Parada 2 do 2.4a)"
+  },
+  {
+   "id": "HC-117",
+   "parte_c": false,
+   "estrato": "escopo_fora",
+   "ocorrencia": "hc/api/apps.py@2137-2142",
+   "local": "hc/api/apps.py:66",
+   "texto": "Error",
+   "dono": "settings_check",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Signal.Error (hc/integrations/signal/transport.py:40)"
+    ]
+   },
+   "verdade": {
+    "externo": "django.core.checks.Error"
+   },
+   "certeza": "alta",
+   "justificativa": "Igual a HC-116.",
+   "verdade_validada_por": "usuário (24/11/2026, folha da Parada 2 do 2.4a)"
+  },
+  {
+   "id": "HC-118",
+   "parte_c": false,
+   "estrato": "escopo_fora",
+   "ocorrencia": "hc/api/apps.py@4082-4087",
+   "local": "hc/api/apps.py:121",
+   "texto": "Error",
+   "dono": "mariadb_uuid_check",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Signal.Error (hc/integrations/signal/transport.py:40)"
+    ]
+   },
+   "verdade": {
+    "externo": "django.core.checks.Error"
+   },
+   "certeza": "alta",
+   "justificativa": "Igual a HC-116.",
+   "verdade_validada_por": "usuário (24/11/2026, folha da Parada 2 do 2.4a)"
+  },
+  {
+   "id": "HC-119",
+   "parte_c": false,
+   "estrato": "escopo_local",
+   "ocorrencia": "hc/accounts/migrations/0018_auto_20190112_1426.py@488-495",
+   "local": "hc/accounts/migrations/0018_auto_20190112_1426.py:16",
+   "texto": "Project",
+   "dono": "create_projects",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Project (hc/accounts/models.py:449)"
+    ]
+   },
+   "verdade": {
+    "externo": "modelo histórico de apps.get_model(\"accounts\", \"Project\")"
+   },
+   "certeza": "alta",
+   "justificativa": "`Project = apps.get_model(\"accounts\", \"Project\")` na própria função (linha 13): uma variável, o modelo histórico da migração, não a classe `Project` de hc/accounts/models.py.",
+   "verdade_validada_por": "usuário (24/11/2026, folha da Parada 2 do 2.4a; conferido no editor)"
+  },
+  {
+   "id": "HC-120",
+   "parte_c": false,
+   "estrato": "escopo_import",
+   "ocorrencia": "hc/api/tests/test_sendalerts.py@4073-4079",
+   "local": "hc/api/tests/test_sendalerts.py:116",
+   "texto": "notify",
+   "dono": "SendAlertsTestCase.test_it_sets_next_nag_date",
+   "linha_de_base": {
+    "resolution": "above_candidate_limit",
+    "candidates": 33,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "notify (hc/api/management/commands/sendalerts.py:24)"
+   },
+   "certeza": "alta",
+   "justificativa": "`from hc.api.management.commands.sendalerts import Command, notify`.",
+   "verdade_validada_por": "usuário (24/11/2026, folha da Parada 2 do 2.4a)"
+  },
+  {
+   "id": "HC-121",
+   "parte_c": false,
+   "estrato": "escopo_import",
+   "ocorrencia": "hc/logs/tests/test_sendlogs.py@670-677",
+   "local": "hc/logs/tests/test_sendlogs.py:25",
+   "texto": "Command",
+   "dono": "SendLogsTestCase.test_it_sends_email",
+   "linha_de_base": {
+    "resolution": "above_candidate_limit",
+    "candidates": 17,
+    "alvos": []
+   },
+   "verdade": {
+    "alvo": "Command (hc/logs/management/commands/sendlogs.py:14)",
+    "relacao": "instancia"
+   },
+   "certeza": "alta",
+   "justificativa": "`from hc.logs.management.commands.sendlogs import Command`.",
+   "verdade_validada_por": "usuário (24/11/2026, folha da Parada 2 do 2.4a)"
+  },
+  {
+   "id": "HC-122",
+   "parte_c": false,
+   "estrato": "escopo_modulo",
+   "ocorrencia": "hc/integrations/signal/tests/test_signal_captcha.py@1830-1840",
+   "local": "hc/integrations/signal/tests/test_signal_captcha.py:66",
+   "texto": "setup_mock",
+   "dono": "SignalCaptchaTestCase.test_it_works",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "setup_mock (hc/integrations/signal/tests/test_notify.py:59)",
+     "setup_mock (hc/integrations/signal/tests/test_signal_captcha.py:43)"
+    ]
+   },
+   "verdade": {
+    "alvo": "setup_mock (hc/integrations/signal/tests/test_signal_captcha.py:43)"
+   },
+   "certeza": "alta",
+   "justificativa": "`setup_mock` é a função do próprio arquivo; o homônimo está em hc/integrations/signal/tests/test_notify.py.",
+   "verdade_validada_por": "usuário (24/11/2026, folha da Parada 2 do 2.4a)"
+  },
+  {
+   "id": "HC-123",
+   "parte_c": false,
+   "estrato": "escopo_modulo",
+   "ocorrencia": "hc/accounts/tests/test_senddeletionscheduled.py@1399-1405",
+   "local": "hc/accounts/tests/test_senddeletionscheduled.py:44",
+   "texto": "counts",
+   "dono": "SendDeletionScheduledTestCase.test_it_sends_notice",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "counts (hc/accounts/tests/test_senddeletionscheduled.py:19)",
+     "counts (hc/accounts/tests/test_sendinactivitynotices.py:19)"
+    ]
+   },
+   "verdade": {
+    "alvo": "counts (hc/accounts/tests/test_senddeletionscheduled.py:19)"
+   },
+   "certeza": "alta",
+   "justificativa": "`counts` é a função do próprio arquivo; o homônimo está em hc/accounts/tests/test_sendinactivitynotices.py.",
+   "verdade_validada_por": "usuário (24/11/2026, folha da Parada 2 do 2.4a)"
   }
  ]
 }

@@ -1,7 +1,7 @@
 {
  "projetos": {
   "hc": {
-   "run_novo": "20261120-083437",
+   "run_novo": "20261125-010702",
    "grafo_novo_igual_ao_de_referencia": false,
    "populacao": {
     "total": 1956,
@@ -25,8 +25,8 @@
     "metodo_para_funcao": 30
    },
    "amostra_contagem": {
-    "sem_candidato": 39,
-    "correta": 53,
+    "sem_candidato": 43,
+    "correta": 60,
     "link_falso": 1,
     "candidatos_falsos": 14,
     "ambigua": 5
@@ -1050,6 +1050,105 @@
      "categoria_regra_anterior": "candidatos_falsos",
      "resposta": "homonym (7)",
      "validada": "usuário (20/11/2026, na Parada 2)"
+    },
+    {
+     "id": "HC-113",
+     "estrato": "escopo_modulo",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "scope (3) → envsecret (hc/settings.py:49)",
+     "validada": "proposta pelo agente (20/11/2026, Parada 2 do 2.4a); aguarda a validação do usuário na folha"
+    },
+    {
+     "id": "HC-114",
+     "estrato": "escopo_modulo",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "scope (3) → envsecret (hc/settings.py:49)",
+     "validada": "proposta pelo agente (20/11/2026, Parada 2 do 2.4a); aguarda a validação do usuário na folha"
+    },
+    {
+     "id": "HC-115",
+     "estrato": "escopo_modulo",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "scope (2) → Response (hc/lib/curl.py:32) [instancia]",
+     "validada": "proposta pelo agente (20/11/2026, Parada 2 do 2.4a); aguarda a validação do usuário na folha"
+    },
+    {
+     "id": "HC-116",
+     "estrato": "escopo_fora",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "proposta pelo agente (20/11/2026, Parada 2 do 2.4a); aguarda a validação do usuário na folha"
+    },
+    {
+     "id": "HC-117",
+     "estrato": "escopo_fora",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "proposta pelo agente (20/11/2026, Parada 2 do 2.4a); aguarda a validação do usuário na folha"
+    },
+    {
+     "id": "HC-118",
+     "estrato": "escopo_fora",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "proposta pelo agente (20/11/2026, Parada 2 do 2.4a); aguarda a validação do usuário na folha"
+    },
+    {
+     "id": "HC-119",
+     "estrato": "escopo_local",
+     "parte_c": false,
+     "categoria": "sem_candidato",
+     "categoria_regra_anterior": "sem_candidato",
+     "resposta": "no_candidate_in_project (0)",
+     "validada": "proposta pelo agente (20/11/2026, Parada 2 do 2.4a); aguarda a validação do usuário na folha"
+    },
+    {
+     "id": "HC-120",
+     "estrato": "escopo_import",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "import (33) → notify (hc/api/management/commands/sendalerts.py:24)",
+     "validada": "proposta pelo agente (20/11/2026, Parada 2 do 2.4a); aguarda a validação do usuário na folha"
+    },
+    {
+     "id": "HC-121",
+     "estrato": "escopo_import",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "import (17) → Command (hc/logs/management/commands/sendlogs.py:14) [instancia]",
+     "validada": "proposta pelo agente (20/11/2026, Parada 2 do 2.4a); aguarda a validação do usuário na folha"
+    },
+    {
+     "id": "HC-122",
+     "estrato": "escopo_modulo",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "scope (2) → setup_mock (hc/integrations/signal/tests/test_signal_captcha.py:43)",
+     "validada": "proposta pelo agente (20/11/2026, Parada 2 do 2.4a); aguarda a validação do usuário na folha"
+    },
+    {
+     "id": "HC-123",
+     "estrato": "escopo_modulo",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "scope (2) → counts (hc/accounts/tests/test_senddeletionscheduled.py:19)",
+     "validada": "proposta pelo agente (20/11/2026, Parada 2 do 2.4a); aguarda a validação do usuário na folha"
     }
    ],
    "executores": [
@@ -1080,7 +1179,7 @@
    ]
   },
   "rt": {
-   "run_novo": "20261120-083729",
+   "run_novo": "20261125-011000",
    "grafo_novo_igual_ao_de_referencia": false,
    "populacao": {
     "total": 515,
@@ -1103,7 +1202,7 @@
     "metodo_para_funcao": 0
    },
    "amostra_contagem": {
-    "correta": 41,
+    "correta": 44,
     "sem_candidato": 15,
     "ambigua": 10,
     "candidatos_falsos": 1
@@ -1723,6 +1822,33 @@
      "categoria_regra_anterior": "correta",
      "resposta": "type (7) → impl World::color_at (src/world.rs:109)",
      "validada": "usuário (20/11/2026, na Parada 2; conferido no editor)"
+    },
+    {
+     "id": "RT-68",
+     "estrato": "escopo_rs",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "scope (2) → tests_world::create_default_world (src/world.rs:146)",
+     "validada": "proposta pelo agente (20/11/2026, Parada 2 do 2.4a); aguarda a validação do usuário na folha"
+    },
+    {
+     "id": "RT-69",
+     "estrato": "escopo_rs",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "scope (2) → tests_camera::create_default_world (src/camera.rs:291)",
+     "validada": "proposta pelo agente (20/11/2026, Parada 2 do 2.4a); aguarda a validação do usuário na folha"
+    },
+    {
+     "id": "RT-70",
+     "estrato": "escopo_rs",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → render_benchmark (src/camera.rs:143)",
+     "validada": "proposta pelo agente (20/11/2026, Parada 2 do 2.4a); aguarda a validação do usuário na folha"
     }
    ],
    "executores": []
@@ -2077,11 +2203,10 @@
     ]
    },
    "agora": {
-    "resolution": "homonym",
+    "resolution": "import",
     "candidates": 2,
     "alvos": [
-     "livre (pkg/models.py:63)",
-     "livre (pkg/outro.py:1)"
+     "livre (pkg/models.py:63)"
     ],
     "relacao": "calls"
    },
@@ -2091,7 +2216,7 @@
     "passo": "2.4",
     "por_que": "from pkg.models import livre; chamada simples, fora do escopo do 2.2 (receptor)"
    },
-   "estado": "igual ao atual"
+   "estado": "no alvo"
   },
   {
    "id": "N0-py-unica",
@@ -2392,10 +2517,12 @@
     "alvos": []
    },
    "agora": {
-    "resolution": "no_candidate_in_project",
+    "resolution": "import",
     "candidates": 0,
-    "alvos": [],
-    "relacao": null
+    "alvos": [
+     "Cliente (pkg/models.py:1)"
+    ],
+    "relacao": "instantiates"
    },
    "alvo": {
     "alvo": "Cliente (pkg/models.py:1)",
@@ -2403,7 +2530,7 @@
     "passo": "2.4",
     "por_que": "from pkg.models import Cliente as C"
    },
-   "estado": "igual ao atual"
+   "estado": "no alvo"
   },
   {
    "id": "N8-py",
@@ -2418,13 +2545,10 @@
     ]
    },
    "agora": {
-    "resolution": "homonym",
+    "resolution": "type",
     "candidates": 4,
     "alvos": [
-     "Arquivo.salvar (pkg/models.py:20)",
-     "Cliente.salvar (pkg/models.py:5)",
-     "Fornecedor.salvar (pkg/models.py:10)",
-     "Repo.salvar (pkg/models.py:15)"
+     "Cliente.salvar (pkg/models.py:5)"
     ],
     "relacao": "calls"
    },
@@ -2434,7 +2558,7 @@
     "passo": "2.4",
     "por_que": "c = C(\"x\"), C é alias de Cliente"
    },
-   "estado": "igual ao atual"
+   "estado": "no alvo"
   },
   {
    "id": "N0-rs-livre",
@@ -2447,11 +2571,10 @@
     ]
    },
    "agora": {
-    "resolution": "homonym",
+    "resolution": "import",
     "candidates": 2,
     "alvos": [
-     "livre (src/models.rs:78)",
-     "livre (src/outro.rs:1)"
+     "livre (src/models.rs:78)"
     ],
     "relacao": "calls"
    },
@@ -2461,7 +2584,7 @@
     "passo": "2.4",
     "por_que": "use crate::models::{livre, ...}; chamada simples, fora do escopo do 2.2 (receptor)"
    },
-   "estado": "igual ao atual"
+   "estado": "no alvo"
   },
   {
    "id": "N0-rs-unica",
@@ -2798,12 +2921,10 @@
     ]
    },
    "agora": {
-    "resolution": "homonym",
+    "resolution": "type",
     "candidates": 3,
     "alvos": [
-     "impl Cliente::new (src/models.rs:6)",
-     "impl Fornecedor::new (src/models.rs:18)",
-     "impl Repo::new (src/models.rs:30)"
+     "impl Cliente::new (src/models.rs:6)"
     ],
     "relacao": "calls"
    },
@@ -2813,7 +2934,7 @@
     "passo": "2.4",
     "por_que": "use crate::models::Cliente as C"
    },
-   "estado": "igual ao atual"
+   "estado": "no alvo"
   },
   {
    "id": "N8-rs",
@@ -2827,12 +2948,10 @@
     ]
    },
    "agora": {
-    "resolution": "homonym",
+    "resolution": "type",
     "candidates": 3,
     "alvos": [
-     "impl Cliente::salvar (src/models.rs:10)",
-     "impl Fornecedor::salvar (src/models.rs:22)",
-     "impl Repo::salvar (src/models.rs:34)"
+     "impl Cliente::salvar (src/models.rs:10)"
     ],
     "relacao": "calls"
    },
@@ -2842,7 +2961,7 @@
     "passo": "2.4",
     "por_que": "c = C::new(\"x\"), C é alias de Cliente"
    },
-   "estado": "igual ao atual"
+   "estado": "no alvo"
   },
   {
    "id": "N3c-py-mesmo",
@@ -3040,21 +3159,20 @@
     ]
    },
    "agora": {
-    "resolution": "homonym",
+    "resolution": "type",
     "candidates": 2,
     "alvos": [
-     "Nota.fechar (pkg/retorno.py:18)",
      "Pedido.fechar (pkg/retorno.py:7)"
     ],
     "relacao": "calls"
    },
    "alvo": {
-    "alvo": "sem tipo",
-    "resolution": "homonym",
-    "passo": "2.3c",
-    "por_que": "duplo() em dois arquivos, -> Pedido e -> Nota: os candidatos discordam (caso d); acrescentado no 2.3c, com o binário do 2.3b como atual"
+    "alvo": "Pedido.fechar (pkg/retorno.py:7)",
+    "resolution": "type",
+    "passo": "2.4",
+    "por_que": "duplo() em dois arquivos, -> Pedido e -> Nota (caso d da DEC-41: sem tipo no 2.3c); dois_alvos está em pkg/retorno.py, que declara o duplo -> Pedido, e o Python chama o do próprio módulo (o N0-livre, como o N3c-rs-discordam); acrescentado no 2.3c, com o binário do 2.3b como atual; alvo mudado no 2.4a"
    },
-   "estado": "igual ao atual"
+   "estado": "no alvo"
   },
   {
    "id": "N3c-py-cadeia",
@@ -3271,10 +3389,9 @@
     ]
    },
    "agora": {
-    "resolution": "homonym",
+    "resolution": "type",
     "candidates": 2,
     "alvos": [
-     "impl Nota::fechar (src/retorno.rs:37)",
      "impl Pedido::fechar (src/retorno.rs:25)"
     ],
     "relacao": "calls"
@@ -3285,7 +3402,7 @@
     "passo": "2.4",
     "por_que": "misto() em dois arquivos, -> Pedido e -> Nota (caso d da DEC-41: sem tipo no 2.3c); o Rust chama o misto do próprio módulo, a chamada simples resolvida pelo escopo, como o N0-livre; acrescentado no 2.3c, com o binário do 2.3b como atual"
    },
-   "estado": "mudou"
+   "estado": "no alvo"
   },
   {
    "id": "N3c-rs-q",
@@ -3313,6 +3430,459 @@
     "por_que": "let p = Pedido::tentar()?: nenhuma ligação é lida (limite declarado, Q2); acrescentado no 2.3c, com o binário do 2.3b como atual"
    },
    "estado": "igual ao atual"
+  },
+  {
+   "id": "N0-py-modulo",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "esc_modulo (pkg/escopo.py:13)",
+     "esc_modulo (pkg/escopo_apoio.py:1)"
+    ]
+   },
+   "agora": {
+    "resolution": "scope",
+    "candidates": 2,
+    "alvos": [
+     "esc_modulo (pkg/escopo.py:13)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "esc_modulo (pkg/escopo.py:13)",
+    "resolution": "scope",
+    "passo": "2.4a",
+    "por_que": "def esc_modulo no próprio arquivo, e outra em pkg/escopo_apoio.py; acrescentado no 2.4a, com o binário do 2.3c como atual"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N0-py-fora",
+   "atual_registrado": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "join (pkg/escopo_apoio.py:5)"
+    ]
+   },
+   "agora": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": [],
+    "relacao": null
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "no_candidate_in_project",
+    "passo": "2.4a",
+    "por_que": "from os.path import join; o join de pkg/escopo_apoio.py não é o chamado; acrescentado no 2.4a, com o binário do 2.3c como atual"
+   },
+   "estado": "mudou"
+  },
+  {
+   "id": "N0-py-local",
+   "atual_registrado": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "g (pkg/escopo_apoio.py:9)"
+    ]
+   },
+   "agora": {
+    "resolution": "no_candidate_in_project",
+    "candidates": 0,
+    "alvos": [],
+    "relacao": null
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "no_candidate_in_project",
+    "passo": "2.4a",
+    "por_que": "g = fabrica(): uma variável, não o g de pkg/escopo_apoio.py; acrescentado no 2.4a, com o binário do 2.3c como atual"
+   },
+   "estado": "mudou"
+  },
+  {
+   "id": "N0-py-overload",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 3,
+    "alvos": [
+     "esc_sobre (pkg/escopo.py:17)",
+     "esc_sobre (pkg/escopo.py:21)",
+     "esc_sobre (pkg/escopo.py:25)"
+    ]
+   },
+   "agora": {
+    "resolution": "scope",
+    "candidates": 3,
+    "alvos": [
+     "esc_sobre (pkg/escopo.py:25)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "esc_sobre (pkg/escopo.py:25)",
+    "resolution": "scope",
+    "passo": "2.4a",
+    "por_que": "duas @overload e a implementação: vale a última def; acrescentado no 2.4a, com o binário do 2.3c como atual"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N0-py-condicional",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 3,
+    "alvos": [
+     "esc_cond (pkg/escopo.py:30)",
+     "esc_cond (pkg/escopo.py:33)",
+     "esc_cond (pkg/escopo_apoio.py:21)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 3,
+    "alvos": [
+     "esc_cond (pkg/escopo.py:30)",
+     "esc_cond (pkg/escopo.py:33)",
+     "esc_cond (pkg/escopo_apoio.py:21)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4a",
+    "por_que": "def esc_cond em if/else, com corpos diferentes: o escopo não decide; acrescentado no 2.4a, com o binário do 2.3c como atual"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "N0-py-typechecking",
+   "atual_registrado": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "so_tipo (pkg/escopo_apoio.py:13)"
+    ]
+   },
+   "agora": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "so_tipo (pkg/escopo_apoio.py:13)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "so_tipo (pkg/escopo_apoio.py:13)",
+    "resolution": "unique",
+    "passo": "2.4a",
+    "por_que": "so_tipo importado só em TYPE_CHECKING: o escopo não decide, e vale o que valia; acrescentado no 2.4a, com o binário do 2.3c como atual"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N0-py-estrela",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "esc_modulo (pkg/escopo.py:13)",
+     "esc_modulo (pkg/escopo_apoio.py:1)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "esc_modulo (pkg/escopo.py:13)",
+     "esc_modulo (pkg/escopo_apoio.py:1)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4a",
+    "por_que": "from pkg.escopo_apoio import *: o escopo não decide; acrescentado no 2.4a, com o binário do 2.3c como atual"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "N0-py-reexport",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "reexp (pkg/escopo_apoio.py:17)",
+     "reexp (pkg/sub/base.py:1)"
+    ]
+   },
+   "agora": {
+    "resolution": "import",
+    "candidates": 2,
+    "alvos": [
+     "reexp (pkg/sub/base.py:1)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "reexp (pkg/sub/base.py:1)",
+    "resolution": "import",
+    "passo": "2.4a",
+    "por_que": "from pkg.sub import reexp, e pkg/sub/__init__.py reexporta o de pkg/sub/base.py; acrescentado no 2.4a, com o binário do 2.3c como atual"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N8-py-tipo",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 4,
+    "alvos": [
+     "Arquivo.salvar (pkg/models.py:20)",
+     "Cliente.salvar (pkg/models.py:5)",
+     "Fornecedor.salvar (pkg/models.py:10)",
+     "Repo.salvar (pkg/models.py:15)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 4,
+    "alvos": [
+     "Cliente.salvar (pkg/models.py:5)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Cliente.salvar (pkg/models.py:5)",
+    "resolution": "type",
+    "passo": "2.4a",
+    "por_que": "Alias = Cliente no módulo; a: Alias; acrescentado no 2.4a, com o binário do 2.3c como atual"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N8-py-local",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 4,
+    "alvos": [
+     "Arquivo.salvar (pkg/models.py:20)",
+     "Cliente.salvar (pkg/models.py:5)",
+     "Fornecedor.salvar (pkg/models.py:10)",
+     "Repo.salvar (pkg/models.py:15)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 4,
+    "alvos": [
+     "Fornecedor.salvar (pkg/models.py:10)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Fornecedor.salvar (pkg/models.py:10)",
+    "resolution": "type",
+    "passo": "2.4a",
+    "por_que": "D = Fornecedor na função; d = D(); acrescentado no 2.4a, com o binário do 2.3c como atual"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N8-py-typealias",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 4,
+    "alvos": [
+     "Arquivo.salvar (pkg/models.py:20)",
+     "Cliente.salvar (pkg/models.py:5)",
+     "Fornecedor.salvar (pkg/models.py:10)",
+     "Repo.salvar (pkg/models.py:15)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 4,
+    "alvos": [
+     "Fornecedor.salvar (pkg/models.py:10)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Fornecedor.salvar (pkg/models.py:10)",
+    "resolution": "type",
+    "passo": "2.4a",
+    "por_que": "TipoF: TypeAlias = Fornecedor; a: TipoF; acrescentado no 2.4a, com o binário do 2.3c como atual"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N8-py-fora",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 4,
+    "alvos": [
+     "Arquivo.salvar (pkg/models.py:20)",
+     "Cliente.salvar (pkg/models.py:5)",
+     "Fornecedor.salvar (pkg/models.py:10)",
+     "Repo.salvar (pkg/models.py:15)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 4,
+    "alvos": [
+     "Arquivo.salvar (pkg/models.py:20)",
+     "Cliente.salvar (pkg/models.py:5)",
+     "Fornecedor.salvar (pkg/models.py:10)",
+     "Repo.salvar (pkg/models.py:15)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4a",
+    "por_que": "R = Dt, e Dt é datetime (de fora): não decide; acrescentado no 2.4a, com o binário do 2.3c como atual"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "N0-rs-modulo",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "esc_livre (src/escopo.rs:4)",
+     "esc_livre (src/escopo_apoio.rs:1)"
+    ]
+   },
+   "agora": {
+    "resolution": "scope",
+    "candidates": 2,
+    "alvos": [
+     "esc_livre (src/escopo.rs:4)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "esc_livre (src/escopo.rs:4)",
+    "resolution": "scope",
+    "passo": "2.4a",
+    "por_que": "fn esc_livre no próprio módulo, e outra em src/escopo_apoio.rs; acrescentado no 2.4a, com o binário do 2.3c como atual"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N0-rs-bloco",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "e_bloco::esc_bloco (src/escopo.rs:13)",
+     "esc_bloco (src/escopo_apoio.rs:5)"
+    ]
+   },
+   "agora": {
+    "resolution": "scope",
+    "candidates": 2,
+    "alvos": [
+     "e_bloco::esc_bloco (src/escopo.rs:13)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "e_bloco::esc_bloco (src/escopo.rs:13)",
+    "resolution": "scope",
+    "passo": "2.4a",
+    "por_que": "fn esc_bloco no corpo da própria função; acrescentado no 2.4a, com o binário do 2.3c como atual"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N0-rs-glob",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "esc_livre (src/escopo.rs:4)",
+     "esc_livre (src/escopo_apoio.rs:1)"
+    ]
+   },
+   "agora": {
+    "resolution": "import",
+    "candidates": 2,
+    "alvos": [
+     "esc_livre (src/escopo.rs:4)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "esc_livre (src/escopo.rs:4)",
+    "resolution": "import",
+    "passo": "2.4a",
+    "por_que": "use super::* num mod tests; acrescentado no 2.4a, com o binário do 2.3c como atual"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "N0-rs-glob-fora",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "esc_livre (src/escopo.rs:4)",
+     "esc_livre (src/escopo_apoio.rs:1)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "esc_livre (src/escopo.rs:4)",
+     "esc_livre (src/escopo_apoio.rs:1)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4a",
+    "por_que": "use std::collections::*: um glob de fora do crate pode trazer o nome; não decide; acrescentado no 2.4a, com o binário do 2.3c como atual"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "N8-rs-tipo",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 3,
+    "alvos": [
+     "impl Cliente::salvar (src/models.rs:10)",
+     "impl Fornecedor::salvar (src/models.rs:22)",
+     "impl Repo::salvar (src/models.rs:34)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 3,
+    "alvos": [
+     "impl Cliente::salvar (src/models.rs:10)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "impl Cliente::salvar (src/models.rs:10)",
+    "resolution": "type",
+    "passo": "2.4a",
+    "por_que": "type Cl = Cliente; let c = Cl::new(..); acrescentado no 2.4a, com o binário do 2.3c como atual"
+   },
+   "estado": "no alvo"
   }
  ],
  "studio_original": {

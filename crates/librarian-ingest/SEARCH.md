@@ -298,6 +298,11 @@ runs antigos. A regra vem antes das outras, logo depois de `chosen`.
   - Várias ligações do mesmo nome: vale a última (a implementação depois das `@overload`); se alguma
     está num `if`, `for`, `while`, `try` ou `match`, todas precisam dar o mesmo, senão não decide.
   - Uma ligação em `if TYPE_CHECKING:` não existe quando o código roda: não decide a chamada.
+  - Só uma definição visível de onde a chamada está escrita: a do próprio escopo ou de um em volta. O
+    cabeçalho de uma `def` ou `class`, o padrão de um parâmetro e o primeiro iterável de uma compreensão
+    não veem o corpo.
+  - `global f` liga no módulo, e `nonlocal f`, na função em volta; a ligação pode não ter rodado, então
+    precisa concordar com as outras. Um nome declarado `global` é procurado direto no módulo.
   - `def`/`class` do arquivo: `scope`. `from p import f`: o que o módulo `p` liga a `f` (a `def` dele ou
     a reexportação, até três passos), com `import`. Um import de fora do projeto, uma variável da
     própria função (parâmetro, atribuição, alvo de `for`/`with`/`except`) ou um nome que nenhum escopo
@@ -305,8 +310,8 @@ runs antigos. A regra vem antes das outras, logo depois de `chosen`.
   - Não decide (vale o que valia): `import *` no escopo, ramos que discordam, `TYPE_CHECKING`, um
     módulo chamado, uma variável alcançada por um import.
 - **Rust, `f()`.** Uma variável de uma função em volta (closure, valor de função) não decide; depois,
-  o item do bloco de uma função em volta e o item do módulo (`scope`); o `use` explícito do módulo;
-  o `use ..::*` (um só achado: `import`; dois: não decide; nenhum, com um glob de fora do crate: não
+  de cada bloco em volta da chamada, do mais interno para fora, e por fim do módulo: o item (`scope`), o
+  `use` explícito e o `use ..::*` (um só achado: `import`; dois: não decide; nenhum, com um glob de fora do crate: não
   decide). Nada disso: sem candidato. O `use` segue `crate::`, `self::`, `super::`, o módulo filho e,
   num binário, a biblioteca do pacote; um `use` de fora do crate dá sem candidato.
 - **Rust, `m::f()`, `super::f()`, `crate::a::f()`.** O item do módulo nomeado (com `m` também por um
@@ -319,8 +324,7 @@ runs antigos. A regra vem antes das outras, logo depois de `chosen`.
 - **Efeito no 2.3c.** A chamada que liga um receptor é resolvida pela mesma regra; com o escopo, um
   `misto()` declarado em dois módulos vai para o do próprio módulo (caso a), e o caso (d) deixa de
   valer ali.
-- **Limites.** `type X = ...` do Python 3.12, `#[path]`, `include!` e macros não são lidos; um `use`
-  dentro de uma função conta para o módulo dela; a regra não executa nada, então um nome criado por
+- **Limites.** `type X = ...` do Python 3.12, `#[path]`, `include!` e macros não são lidos; a regra não executa nada, então um nome criado por
   `globals()`/`exec` não é visto.
 
 `basis: "import"` quer dizer que o alvo veio da tabela de imports do arquivo, lida do texto

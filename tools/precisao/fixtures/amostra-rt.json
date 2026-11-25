@@ -1,7 +1,7 @@
 {
  "projeto": "renderer-9b78f3a9",
  "fonte": "Projetos/renderer @ e38254b",
- "selecao": "tools/precisao/amostra.js sobre a linha de base de 18/11/2026 (binário de aae51d7); RT-31 a RT-50: estratos do passo 2.1 (type, type_caminho, type_fora, trait_default), sorteados pela ordem do sha256 do id da ocorrência, arquivos distintos primeiro; RT-51 a RT-55: chamadas por variável acima do teto, escolhidas à mão na Parada 3 do passo 2.1, uma por origem do tipo (item de coleção, parâmetro anotado, parâmetro no corpo de trait, construtor por caminho completo, self acima do teto); RT-56 a RT-62: estratos do passo 2.2 (tipo_derruba, com um caso de controle, e espelho), escolhidos à mão na Parada 1 do 2.2; RT-63 a RT-65: estrato instancia do passo 2.3a; RT-66 e RT-67: estrato retorno_rs do passo 2.3c, de conferência (nenhuma chamada do ray tracer muda pelo retorno)",
+ "selecao": "tools/precisao/amostra.js sobre a linha de base de 18/11/2026 (binário de aae51d7); RT-31 a RT-50: estratos do passo 2.1 (type, type_caminho, type_fora, trait_default), sorteados pela ordem do sha256 do id da ocorrência, arquivos distintos primeiro; RT-51 a RT-55: chamadas por variável acima do teto, escolhidas à mão na Parada 3 do passo 2.1, uma por origem do tipo (item de coleção, parâmetro anotado, parâmetro no corpo de trait, construtor por caminho completo, self acima do teto); RT-56 a RT-62: estratos do passo 2.2 (tipo_derruba, com um caso de controle, e espelho), escolhidos à mão na Parada 1 do 2.2; RT-63 a RT-65: estrato instancia do passo 2.3a; RT-66 e RT-67: estrato retorno_rs do passo 2.3c, de conferência (nenhuma chamada do ray tracer muda pelo retorno); RT-68 a RT-70: estrato escopo_rs do passo 2.4a (as chamadas de produção do ray tracer não mudam pelo escopo)",
  "chamadas": [
   {
    "id": "RT-01",
@@ -1455,6 +1455,74 @@
    "certeza": "alta",
    "justificativa": "`let w = create_default_world()`: dois candidatos (src/world.rs e o módulo de testes de src/camera.rs), ambos retornam `World` (caso (b) da Q1).",
    "verdade_validada_por": "usuário (20/11/2026, na Parada 2; conferido no editor)"
+  },
+  {
+   "id": "RT-68",
+   "parte_c": false,
+   "estrato": "escopo_rs",
+   "ocorrencia": "src/world.rs@6421-6441",
+   "local": "src/world.rs:192",
+   "texto": "create_default_world",
+   "dono": "tests_world::the_default_world",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "tests_camera::create_default_world (src/camera.rs:291)",
+     "tests_world::create_default_world (src/world.rs:146)"
+    ]
+   },
+   "verdade": {
+    "alvo": "tests_world::create_default_world (src/world.rs:146)"
+   },
+   "certeza": "alta",
+   "justificativa": "`create_default_world` é a função do próprio módulo `tests_world`; a outra está no módulo de testes de src/camera.rs.",
+   "verdade_validada_por": "usuário (24/11/2026, folha da Parada 2 do 2.4a)"
+  },
+  {
+   "id": "RT-69",
+   "parte_c": false,
+   "estrato": "escopo_rs",
+   "ocorrencia": "src/camera.rs@10922-10942",
+   "local": "src/camera.rs:313",
+   "texto": "create_default_world",
+   "dono": "tests_camera::rendering_a_world_with_a_camera",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "tests_camera::create_default_world (src/camera.rs:291)",
+     "tests_world::create_default_world (src/world.rs:146)"
+    ]
+   },
+   "verdade": {
+    "alvo": "tests_camera::create_default_world (src/camera.rs:291)"
+   },
+   "certeza": "alta",
+   "justificativa": "`create_default_world` é a função do próprio módulo `tests_camera`.",
+   "verdade_validada_por": "usuário (24/11/2026, folha da Parada 2 do 2.4a; conferido no editor)"
+  },
+  {
+   "id": "RT-70",
+   "parte_c": false,
+   "estrato": "escopo_rs",
+   "ocorrencia": "src/camera.rs@12790-12806",
+   "local": "src/camera.rs:359",
+   "texto": "render_benchmark",
+   "dono": "tests_camera::render_benchmark_records_stats_for_fixed_scene",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "render_benchmark (src/camera.rs:143)"
+    ]
+   },
+   "verdade": {
+    "alvo": "render_benchmark (src/camera.rs:143)"
+   },
+   "certeza": "alta",
+   "justificativa": "`use super::*` no módulo `tests_camera` traz `render_benchmark` do módulo pai; o `unique` de hoje é confirmado.",
+   "verdade_validada_por": "usuário (24/11/2026, folha da Parada 2 do 2.4a)"
   }
  ]
 }
