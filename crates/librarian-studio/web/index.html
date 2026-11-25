@@ -182,7 +182,8 @@
   :is(#pathUnresolvedBody, #pathUsesBody) p { margin: 0 0 4px; }
   :is(#pathUnresolvedBody, #pathUsesBody) ul { margin: 0 0 6px; padding-left: 18px; }
   :is(#pathUnresolvedBody, #pathUsesBody) li { margin: 1px 0; }
-  #pathCanvas { flex: 1; overflow: auto; padding: 8px 14px 14px; }
+  #pathStage { flex: 1; min-height: 0; position: relative; display: flex; }
+  #pathCanvas { flex: 1; min-width: 0; overflow: auto; padding: 8px 14px 14px; }
   #pathCanvas svg { display: block; }
   #pathCanvas text { fill: var(--text-primary); font: 12px system-ui, -apple-system, "Segoe UI", sans-serif; }
   #pathCanvas .node rect { fill: var(--surface-2); stroke: var(--edge); cursor: pointer; }
@@ -720,10 +721,10 @@
       <!-- G3: call occurrences the graph knows and the flowchart does not draw, by reason. -->
       <details id="pathUnresolved" hidden><summary></summary><div id="pathUnresolvedBody"></div></details>
       <details id="pathUses" hidden><summary></summary><div id="pathUsesBody"></div></details>
-      <!-- The point selected in the flowchart can join the draft without leaving the view (spec 2.3, Q5). -->
+      <div id="pathStage"><div id="pathCanvas"></div><div id="pathDetail" hidden></div></div>
+      <!-- The point selected in the flowchart can join the draft without leaving the view (spec 2.3, Q5). Below
+           the drawing: above it, the first click of a double click moved the point away. The detail covers the drawing only. -->
       <div id="pathPoint" class="row" hidden><span id="pathPointName" class="mono"></span><button type="button" id="pathPointJoin"></button></div>
-      <div id="pathCanvas"></div>
-      <div id="pathDetail" hidden></div>
     </div>
   </main>
   <aside id="chat">
@@ -7618,7 +7619,7 @@ async function drawPath() {
     }
     if (!data.links.length) {
       // Uses are recorded from the v3 profile on (base graph -v2); v4 derives from -v3, v5 from -v4, v6 from -v5.
-      const old = !/-v[2345]$/.test(String(state.graph?.derived_from ?? ''));
+      const old = /-v1$/.test(String(state.graph?.derived_from ?? ''));
       note.textContent = old ? t('path.oldGraph') : t(calls ? 'path.callsNone' : 'path.none');
       setPathState('empty');
       return;
