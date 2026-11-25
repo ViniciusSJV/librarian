@@ -167,8 +167,9 @@ function prepareBinaries(bin) {
  *  and Cargo.lock that Git tracks or does not ignore, except the Markdown documents (SEARCH.md, the
  *  READMEs: not compiled), plus every file a `.rs` of crates/ embeds (`include_str!`,
  *  `include_bytes!`) that is a Markdown document or lies outside crates/ (a test's fixture under
- *  experiments/), as lines "sha256  path" sorted by path. It is the same before and after a commit,
- *  and changes only when what is compiled changes. */
+ *  experiments/), each with its line ends normalized (CRLF to LF, so that it does not depend on the
+ *  checkout), as lines "sha256  path" sorted by path. It is the same before and after a commit,
+ *  and in any checkout, and changes only when what is compiled changes. */
 function sourceHash(root = REPO) {
   const list = execFileSync('git', ['-C', root, 'ls-files', '-co', '--exclude-standard', '-z', '--', 'crates', 'Cargo.toml', 'Cargo.lock'], { encoding: 'utf8' });
   const all = list.split('\0').filter(Boolean);
@@ -185,7 +186,8 @@ function sourceHash(root = REPO) {
   for (const rel of [...files].sort()) {
     const full = path.join(root, rel);
     if (!fs.existsSync(full)) continue; // tracked but deleted in the folder: not compiled
-    lines.push(`${crypto.createHash('sha256').update(fs.readFileSync(full)).digest('hex')}  ${rel}`);
+    const text = fs.readFileSync(full, 'latin1').replace(/\r\n/g, '\n');
+    lines.push(`${crypto.createHash('sha256').update(text, 'latin1').digest('hex')}  ${rel}`);
   }
   return { arquivos: lines.length, sha256: crypto.createHash('sha256').update(lines.map(l => l + '\n').join('')).digest('hex') };
 }
