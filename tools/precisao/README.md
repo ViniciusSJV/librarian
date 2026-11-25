@@ -22,6 +22,8 @@ node tools/precisao/portao.js --studio .studio --base tools/precisao/linha-de-ba
 
 Código de saída: 0 aprovado (ou só medição), 1 reprovado, 2 não conseguiu medir.
 
+**Baterias de tela (DEC-47):** toda Parada 2 roda também todas as baterias de tela vivas, com `node tools/precisao/telas.js` (antes, uma vez, `npm ci --prefix tools/precisao`), e uma falha conta como falha. Lista, requisitos e código de saída no [README das telas](../../crates/librarian-studio/tests/tela/README.md); as aposentadas em [APOSENTADAS.md](../../crates/librarian-studio/tests/tela/APOSENTADAS.md).
+
 Requisitos: Node 18 ou mais novo. Os projetos-fonte precisam estar no commit dos runs de referência: Healthchecks em `6c05a7a` e o ray tracer em `e38254b`. Se não estiverem, o comando recusa.
 
 O Healthchecks leva cerca de 2 minutos, porque `/api/calls` é chamado uma vez por função.
@@ -30,6 +32,7 @@ O Healthchecks leva cerca de 2 minutos, porque `/api/calls` é chamado uma vez p
 
 0. Com o `--bin` padrão (`target/release` deste repositório), compila antes os dois binários (`cargo build --release --locked -p librarian-studio -p librarian-ingest`): o `cargo test` recompila só o `librarian_ingest`, e um `librarian_studio` velho daria uma medida errada sem aviso. Com outra pasta em `--bin` (um binário antigo guardado para uma prova), usa os binários como estão. Nos dois casos, o relatório e o `resultado.json` registram a pasta, se compilou e o SHA-256 de cada binário (`lib.js`, `prepareBinaries`).
    - **Trava (desde o passo 2.4, Q1).** O hash do binário não identifica o código: o `librarian_studio` carrega o commit e o `dirty` em que foi compilado (`LIBRARIAN_BUILDER`, do `build.rs` do `librarian-evidence`), e o linker do Windows grava data e GUID do `.pdb` a cada link, então dois builds do mesmo código dão hashes diferentes. A trava é o **hash das fontes compiladas** (`fontes`): o SHA-256 da lista `sha256  caminho`, ordenada, de todo arquivo de `crates/`, `Cargo.toml` e `Cargo.lock` que o Git rastreia ou não ignora, menos os `.md` (não são compilados), mais todo arquivo que um `.rs` de `crates/` embute (`include_str!`, `include_bytes!`) e que seja `.md` ou esteja fora de `crates/` (hoje, um só: a resposta de `experiments/claims-camera-20260928-04/`, embutida num teste do `librarian-llm-engine`), lido da pasta (`lib.js`, `sourceHash`). O fim de linha é normalizado (CRLF para LF) antes do hash, que é o mesmo antes e depois do commit e em qualquer checkout (até 24/11/2026, sem a normalização, dependia do `core.autocrlf`). O relatório registra também a identidade embutida no studio (`recorded:<commit>:<dirty>`) e, só como registro, o hash dos binários. A Parada 2 e a linha de base final precisam ter as mesmas fontes (`--fontes`). Com outra pasta em `--bin`, as fontes são desconhecidas.
+   - **Limite da trava (registrado em 25/11/2026):** ela conta todo arquivo de `crates/` que não seja `.md`, compilado ou não. As baterias de tela de `crates/librarian-studio/tests/tela/` (`.js`, inclusive o `rodar.js`, aposentado) entram no hash sem serem compiladas: mudar uma delas muda a trava sem mudar o binário. Por isso a arrumação das baterias (25/11/2026) não as alterou, e as fontes continuaram `3aeb2fa7…`. Mudar uma delas pede `--fontes` novo no passo seguinte.
 1. Copia os dois projetos do `.studio` para uma pasta temporária e sobe o `librarian_studio` sobre a cópia, numa porta livre.
 2. Gera um run novo de cada projeto com o binário em teste. É nele que tudo é medido.
 3. Mede a população de chamadas `obj.metodo()` fora de testes, sem `self.m()`. Dá a contagem por `resolution` e por estrato, e os links de método para função solta.
@@ -92,7 +95,9 @@ A regra compara só as chamadas que a linha de base também tem. Um estrato acre
 | Arquivo | Conteúdo |
 |---|---|
 | `portao.js` | O comando |
-| `lib.js` | Cópia do `.studio`, Studio numa porta livre, hashes, o conjunto de chamadas e as respostas |
+| `lib.js` | Cópia do `.studio`, Studio numa porta livre, hashes, o conjunto de chamadas e as respostas; e onde está o `playwright-core` das baterias (`playwright()`, sem efeito no portão) |
+| `telas.js` | Roda todas as baterias de tela vivas (DEC-47); não mede nada do portão |
+| `package.json`, `package-lock.json` | Só para o `telas.js` e as baterias: `playwright-core` 1.48.2, fixo. `node_modules` fica fora do Git. O portão não usa nenhum pacote |
 | `amostra.js` | Como a amostra foi sorteada: rodado uma vez, sobre a linha de base de 18/11/2026. Não roda no portão |
 | `fixtures/amostra-hc.json`, `fixtures/amostra-rt.json` | 171 chamadas do Healthchecks e 70 do ray tracer (RT-31 a RT-55 vêm do passo 2.1; HC-61 a HC-75 e RT-56 a RT-62, do passo 2.2; HC-76 a HC-87 e RT-63 a RT-65, do passo 2.3a; HC-88 a HC-97, do passo 2.3b; HC-98 a HC-112 e RT-66 e RT-67, do passo 2.3c; HC-113 a HC-123 e RT-68 a RT-70, do passo 2.4a; HC-124 a HC-143, do 2.4b; HC-144 a HC-157, do 2.4c; HC-158 a HC-171, do 2.4d-0), com verdade, certeza, justificativa e `verdade_validada_por` |
 | `fixtures/amostra-usos.json` | UB-1 a UB-28: 16 símbolos escolhidos e 12 sorteados (6 Python, 6 Rust), com a lista dos usos; e `pares`, PH-1 a PH-40, que o portão não lê. Verdade validada pelo usuário em 25/11/2026 |

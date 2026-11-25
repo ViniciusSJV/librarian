@@ -5,8 +5,8 @@
 // narrow screen. Nothing is written.
 const path = require('path');
 const fs = require('fs');
-const { chromium } = require('C:/Users/beatl/AppData/Local/Temp/claude/09139e964f85837f/c2d74a42-2372-4db9-9c84-8fc3b436eb57/scratchpad/pw/node_modules/playwright-core');
 const L = require('C:/Users/beatl/Documents/Projetos/librarian/tools/precisao/lib.js');
+const { chromium } = require(L.playwright());
 const REPO = 'C:/Users/beatl/Documents/Projetos/librarian';
 const OUT = process.env.TELA_OUT || path.join(require('os').tmpdir(), 'tela-23b');
 fs.mkdirSync(OUT, { recursive: true });

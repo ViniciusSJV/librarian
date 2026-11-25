@@ -33,5 +33,15 @@
   "seed": "src:1a465123652dfec3cb338085fcc1b3502f3adf38651a051bf833699b1cb7118b:677844e8ff102a8def7ea77fa42a28aa9ca54ea384490323ae888564841bdb1f:method:261:573",
   "text": "self.payload(flip)",
   "dono": "Mattermost.notify"
+ },
+ "hc/integrations/telegram/transport.py:15": {
+  "seed": "src:0c6c6024b0ea0f93e6057b1adc45753917a8eda6564d2284aad2fe1651099720:4770d1d96fc4a9b3aa80327dbcffd20dadc524dcad9bc8e1c018555b3d639fe1:method:356:498",
+  "text": "super().__init__(message, permanent=True)",
+  "dono": "MigrationRequiredError.__init__"
+ },
+ "hc/accounts/models.py:472": {
+  "seed": "src:624f5aa630a6c0e91cef15bb6244ba10478f8c5b7c5e5c2cbacbe8f279f1b4d7:7981056c85e18d72fb6c7bf514efd6e753f75c679cb230d3290dce8a462b63db:method:18164:18260",
+  "text": "self.owner_profile.num_checks_available()",
+  "dono": "Project.num_checks_available"
  }
 }

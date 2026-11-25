@@ -206,4 +206,14 @@ function gitHead(dir) {
   try { return execFileSync('git', ['-C', dir, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(); } catch { return null; }
 }
 
-module.exports = { REPO, DEFAULTS, parseArgs, hashProject, startStudio, copyStudio, loadGraph, occKey, pool, answers, withStudio, gitHead, prepareBinaries, sourceHash, binaryLine };
+/** Where playwright-core is, for the screen batteries only (the gate never calls this): LIBRARIAN_TESTE_PLAYWRIGHT if
+ *  set, otherwise the copy installed in this folder (`npm ci --prefix tools/precisao`, package-lock.json). Lazy:
+ *  nothing here requires it, so the gate does not depend on it. */
+function playwright() {
+  if (process.env.LIBRARIAN_TESTE_PLAYWRIGHT) return process.env.LIBRARIAN_TESTE_PLAYWRIGHT;
+  try { return require.resolve('playwright-core', { paths: [__dirname] }); } catch {
+    throw new Error('playwright-core não encontrado: rode `npm ci --prefix tools/precisao` ou aponte LIBRARIAN_TESTE_PLAYWRIGHT');
+  }
+}
+
+module.exports = { REPO, DEFAULTS, parseArgs, hashProject, startStudio, copyStudio, loadGraph, occKey, pool, answers, withStudio, gitHead, prepareBinaries, sourceHash, binaryLine, playwright };

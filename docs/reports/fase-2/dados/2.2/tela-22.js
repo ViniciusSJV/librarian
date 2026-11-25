@@ -4,8 +4,8 @@
 // received. PT and EN, light and dark theme, narrow screen. Nothing is written.
 const path = require('path');
 const fs = require('fs');
-const { chromium } = require('C:/Users/beatl/AppData/Local/Temp/claude/09139e964f85837f/c2d74a42-2372-4db9-9c84-8fc3b436eb57/scratchpad/pw/node_modules/playwright-core');
 const L = require('C:/Users/beatl/Documents/Projetos/librarian/tools/precisao/lib.js');
+const { chromium } = require(L.playwright());
 const REPO = 'C:/Users/beatl/Documents/Projetos/librarian';
 const OUT = process.env.TELA_OUT || path.join(require('os').tmpdir(), 'tela-22');
 fs.mkdirSync(OUT, { recursive: true });
@@ -128,9 +128,12 @@ async function unresolvedOf(p, seed) {
       ok(`${tag}: a lista de não resolvidas mostra a chamada e o motivo novo`, u.text.includes('check.save(') && u.text.includes(why.slice(0, 60)), u.text.slice(0, 600));
       await p.screenshot({ path: path.join(OUT, `${lang}-sem-candidato.png`) });
       if (lang === 'pt') {
-        ok('PT: textos novos em português', (await said(p, 'path.resolution.import')).startsWith('seguida: o receptor é um módulo do projeto') && (await said(p, 'inventory.step.import')) === 'pelo import');
+        // Since step 2.4a (DEC-42) the import text also covers the plain call bound by an import, and starts with "pelo
+        // import do arquivo"; the receiver that is a module of the project, this step's, is still in it.
+        ok('PT: textos novos em português', /^seguida pelo import do arquivo: o receptor é um módulo do projeto/.test(await said(p, 'path.resolution.import')) && (await said(p, 'inventory.step.import')) === 'pelo import');
       } else {
-        ok('EN: textos novos em inglês', (await said(p, 'path.resolution.import')).startsWith('followed: the receiver is a module') && (await said(p, 'inventory.step.import')) === 'by import' && (await said(p, 'path.resolution.unique')).includes("call's form"));
+        // The same in English since step 2.4a (DEC-42): "followed by the file's import: the receiver is a module of the project".
+        ok('EN: textos novos em inglês', /^followed by the file's import: the receiver is a module of the project/.test(await said(p, 'path.resolution.import')) && (await said(p, 'inventory.step.import')) === 'by import' && (await said(p, 'path.resolution.unique')).includes("call's form"));
       }
       ok(`${lang.toUpperCase()}: nenhum erro de página`, !errors.length, errors.join(' | '));
       ok(`${lang.toUpperCase()}: nada além de abrir o projeto (POST /api/project = store.open) e /api/calls`, !writes.length, writes.join(', '));

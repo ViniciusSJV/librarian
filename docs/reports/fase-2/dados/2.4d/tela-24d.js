@@ -1,8 +1,8 @@
 // DEC-30, passo 2.4d: "Onde é usado?" pela regra, na página real, com cliques de mouse.   node tela-24d.js [bin]
 'use strict';
 const path = require('path'), fs = require('fs');
-const { chromium } = require('C:/Users/beatl/AppData/Local/Temp/claude/09139e964f85837f/c2d74a42-2372-4db9-9c84-8fc3b436eb57/scratchpad/pw/node_modules/playwright-core');
 const L = require('C:/Users/beatl/Documents/Projetos/librarian/tools/precisao/lib.js');
+const { chromium } = require(L.playwright());
 const REPO = L.REPO, OUT = process.env.TELA_OUT || path.join(require('os').tmpdir(), 'tela-24d');
 fs.mkdirSync(OUT, { recursive: true });
 const RT = 'C:/Users/beatl/Documents/Projetos/renderer', HC = 'C:/Users/beatl/Documents/Projetos/pilotos/healthchecks';

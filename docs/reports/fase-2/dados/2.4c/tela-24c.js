@@ -2,8 +2,8 @@
 // text that never says "abstract", and links that stay.   node tela-24c.js
 const path = require('path');
 const fs = require('fs');
-const { chromium } = require('C:/Users/beatl/AppData/Local/Temp/claude/09139e964f85837f/c2d74a42-2372-4db9-9c84-8fc3b436eb57/scratchpad/pw/node_modules/playwright-core');
 const L = require('C:/Users/beatl/Documents/Projetos/librarian/tools/precisao/lib.js');
+const { chromium } = require(L.playwright());
 const REPO = 'C:/Users/beatl/Documents/Projetos/librarian';
 const OUT = process.env.TELA_OUT || path.join(require('os').tmpdir(), 'tela-24c');
 fs.mkdirSync(OUT, { recursive: true });
@@ -42,6 +42,7 @@ async function edge(p, seed, text, where) {
   const body = await (await answer).json();
   await p.waitForFunction(() => { const n = document.querySelector('#pathNote').textContent; return n && !/Seguindo|Following/.test(n); }, null, { timeout: 60000 });
   await p.waitForTimeout(600);
+  const many = body.links.filter(l => `${l.evidence.path}:${l.evidence.start_line}` === where && l.text === text && l.resolution === 'homonym').map(l => l.to);
   const link = body.links.find(l => l.from === seed && l.text === text && `${l.evidence.path}:${l.evidence.start_line}` === where);
   const at = await p.evaluate(([text, where]) => {
     const line = [...document.querySelectorAll('#pathCanvas polyline.edge')].find(pl => pl.querySelector('title')?.textContent.split('\n').some(s => s.startsWith(text.slice(0, 80)) && s.endsWith(where)));
@@ -57,7 +58,7 @@ async function edge(p, seed, text, where) {
   for (const dx of [0, 2, 4, 6]) { await p.mouse.click(at.x + dx, at.y); if (await p.evaluate(() => !document.querySelector('#pathDetail').hidden)) break; }
   await p.waitForTimeout(300);
   const detail = await p.evaluate(() => { const b = document.querySelector('#pathDetail'); return b.hidden ? null : b.innerText; });
-  return { link, detail, dashed: at.dashed };
+  return { link, many, detail, dashed: at.dashed };
 }
 const said = (p, key, n) => p.evaluate(([k, n]) => __t.t(k, { n }), [key, n]);
 const styleOf = p => p.evaluate(() => { const li = document.querySelector('#pathDetail li .muted:last-child'), b = document.querySelector('#pathDetail');
@@ -70,6 +71,12 @@ const CASES = [
   { name: 'cls.post (herdado)', root: HC, where: 'hc/integrations/telegram/transport.py:65', res: 'type', to: /^HttpTransport\.post$/, basis: 'type', relation: 'calls', rule: 'cls' },
   { name: 'self.payload (herdado)', root: HC, where: 'hc/integrations/mattermost/transport.py:15', res: 'type', to: /^Slackalike\.payload$/, basis: 'type', relation: 'calls', rule: 'self' },
 ];
+// From the 2.4b battery, retired on 25/11/2026 (APOSENTADAS.md): what had no equivalent here. `super()` as it was; the
+// @property by a link that is still the only one, since DEC-44 made is_noop ambiguous.
+CASES.push(
+  { name: 'super().__init__', root: HC, where: 'hc/integrations/telegram/transport.py:15', res: 'type', to: /^TransportError\.__init__$/, basis: 'type', relation: 'calls', edgeNull: true, rule: 'super' },
+  { name: 'num_checks_available (@property)', root: HC, where: 'hc/accounts/models.py:472', res: 'type', to: /^Profile\.num_checks_available$/, basis: 'type', relation: 'calls', rule: 'propriedade' },
+);
 // One box each: the count, the body to choose, and whether the static type's own is in the list.
 const MANY = [
   { name: 'notify (abstrato)', where: 'hc/api/models.py:1173', n: 30, rule: 'propriedade', pick: 'Slackalike.notify', has: 'Webhook.notify', hasNot: 'Transport.notify' },
@@ -133,6 +140,9 @@ const NO_ABSTRACT = x => !/abstrat|abstract/i.test(x ?? '');
         const label = x => x.split(' ')[0];
         ok(tag + ': uma caixa com a contagem', d.boxes.filter(b => b.includes(m.n + ' ' + (lang === 'pt' ? 'candidatas' : 'candidates'))).length === 1, d.boxes.join(' | '));
         ok(tag + ': linha tracejada', r.dashed, r.dashed);
+        // From the 2.4b: the candidates are in the box only, none drawn as a point of its own.
+        const own = await p.evaluate(ids => [...document.querySelectorAll('#pathCanvas g.node')].filter(n => ids.includes(n.dataset.id)).length, r.many ?? []);
+        ok(tag + ': nenhuma candidata vira caixa própria', (r.many ?? []).length === m.n && own === 0, `${(r.many ?? []).length} ${own}`);
         ok(tag + ': o detalhe lista todas, com arquivo', d.items.length === m.n && d.items.every(x => /transports?\.py:\d+/.test(x)), d.items.slice(0, 3).join(' || '));
         ok(tag + ': traz ' + m.has, d.items.some(x => label(x) === m.has), d.items.map(label).join());
         if (m.hasNot) ok(tag + ': não traz ' + m.hasNot, !d.items.some(x => label(x) === m.hasNot));
@@ -151,6 +161,13 @@ const NO_ABSTRACT = x => !/abstrat|abstract/i.test(x ?? '');
         await p.waitForTimeout(900);
         const ch = body.links.filter(l => l.resolution === 'chosen');
         ok(tag + ': a escolha vira um link chosen para ' + m.pick, ch.length === 1 && (await labelOf(p, ch[0].to)) === m.pick, JSON.stringify(ch.map(x => x.to)));
+        // From the 2.4b: the chosen call's box goes away and its line is solid. The line must be there: one line at least,
+        // none dashed (an empty list would pass `every`).
+        const gone = await p.evaluate(([n, text, where]) => {
+          const lines = [...document.querySelectorAll('#pathCanvas polyline.edge')].filter(x => x.querySelector('title')?.textContent.split('\n').some(q => q.startsWith(text.slice(0, 80)) && q.endsWith(where)));
+          return { box: [...document.querySelectorAll('#pathCanvas g.node[data-id^="many:"]')].some(x => x.textContent.includes(n + ' ')), lines: lines.length, dashed: lines.filter(x => x.classList.contains('ambiguous')).length };
+        }, [m.n, sd.text, m.where]);
+        ok(tag + ': a caixa some e a linha fica cheia', !gone.box && gone.lines > 0 && gone.dashed === 0, JSON.stringify(gone));
         await p.click('#pathResetChoices');
         await p.waitForTimeout(900);
         ok(tag + ': limpar as escolhas volta à caixa', await p.evaluate(n => [...document.querySelectorAll('#pathCanvas g.node[data-id^="many:"]')].some(x => x.textContent.includes(n + ' ')), m.n));

@@ -1,0 +1,8 @@
+{
+  "name": "librarian-precisao",
+  "private": true,
+  "description": "Só para as baterias de tela (tools/precisao/telas.js). O portão não usa nenhum pacote.",
+  "dependencies": {
+    "playwright-core": "1.48.2"
+  }
+}

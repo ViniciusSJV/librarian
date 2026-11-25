@@ -4,8 +4,8 @@
 // /api/calls answer the page itself received. PT and EN, light and dark theme, narrow screen. Nothing is written.
 const path = require('path');
 const fs = require('fs');
-const { chromium } = require('C:/Users/beatl/AppData/Local/Temp/claude/09139e964f85837f/c2d74a42-2372-4db9-9c84-8fc3b436eb57/scratchpad/pw/node_modules/playwright-core');
 const L = require('C:/Users/beatl/Documents/Projetos/librarian/tools/precisao/lib.js');
+const { chromium } = require(L.playwright());
 const REPO = 'C:/Users/beatl/Documents/Projetos/librarian';
 const OUT = process.env.TELA_OUT || path.join(require('os').tmpdir(), 'tela-23');
 fs.mkdirSync(OUT, { recursive: true });
@@ -112,7 +112,10 @@ async function unresolvedOf(p, seed) {
         const r = await edge(p, SEEDS[c.where].seed, SEEDS[c.where].text, c.where, null);
         const tag = `${lang.toUpperCase()} ${c.name}`;
         if (r.error) { ok(`${tag}: desenhado e clicável`, false, `${r.error}`); continue; }
-        const expected = await said(p, `path.resolution.${c.key ?? c.res}`, r.link?.candidates);
+        // Since step 2.3b (DEC-40) a link the walk does not go on from, like an instantiation without its own __init__,
+        // says "decidida, sem seguir", not "seguida".
+        const followed = await said(p, `path.resolution.${c.key ?? c.res}`, r.link?.candidates);
+        const expected = c.runs === null ? followed.replace(/^(seguida|followed): /, `${await said(p, 'path.resolution.notWalked')}: `) : followed;
         const toLabel = await labelOf(p, r.link?.to);
         ok(`${tag}: /api/calls dá ${c.res} (${c.n}) → ${c.to}`, r.link?.resolution === c.res && r.link?.candidates === c.n && c.to.test(toLabel), JSON.stringify(r.link && { resolution: r.link.resolution, to: toLabel, basis: r.link.basis, candidate_edge: r.link.candidate_edge, candidates: r.link.candidates }));
         if (c.toFile) ok(`${tag}: o alvo é a declaração de ${c.toFile}`, r.link.to === SEEDS[c.where].to, r.link.to);
