@@ -67,6 +67,10 @@ Desde o passo 2.4b (DEC-43): na auditoria dos fatos, uma verdade `ambigua` lista
 
 Desde o passo 2.4d-0 (DEC-45): o alvo do nível `DP-py-classe` passou de `homonym` a `type` → `Veiculo.andar`, aprovado pelo usuário na Q5 da Parada 1. A resposta mudou porque a chamada pelo nome da classe passou a usar a classe; até o 2.4c, o nome não dava tipo.
 
+Desde o passo 2.4d (DEC-46):
+- o portão pede o `/api/used-by` de todos os símbolos dos runs novos e o compara, nas duas direções, com as respostas de `/api/calls` que já pede;
+- a amostra "quem usa B" (`fixtures/amostra-usos.json`) tem, por símbolo, a lista dos usos: `usos` (rodam B), `possiveis` (podem rodar B) e `so_nome`, como `arquivo:linha`. Cada uso da resposta é ligado certo ou falso, possível certo ou falso, e cada uso da verdade pode aparecer só como possível, só na lacuna, só por nome ou não aparecer.
+
 ## Regra do portão
 
 Um passo da Fase 2 reprova se, em Python ou em Rust:
@@ -74,6 +78,8 @@ Um passo da Fase 2 reprova se, em Python ou em Rust:
 - `link_falso` aumentar;
 - `correta` diminuir;
 - uma chamada da amostra não for encontrada no run novo;
+- houver qualquer exceção na invariante do `used_by` (passo 2.4d, DEC-46);
+- na amostra "quem usa B" que a linha de base tem, um uso ligado falso aumentar ou um uso da verdade sumir;
 - uma edition antiga falhar no `verify-graph` ou mudar;
 - o `.studio` original mudar.
 
@@ -89,9 +95,10 @@ A regra compara só as chamadas que a linha de base também tem. Um estrato acre
 | `lib.js` | Cópia do `.studio`, Studio numa porta livre, hashes, o conjunto de chamadas e as respostas |
 | `amostra.js` | Como a amostra foi sorteada: rodado uma vez, sobre a linha de base de 18/11/2026. Não roda no portão |
 | `fixtures/amostra-hc.json`, `fixtures/amostra-rt.json` | 171 chamadas do Healthchecks e 70 do ray tracer (RT-31 a RT-55 vêm do passo 2.1; HC-61 a HC-75 e RT-56 a RT-62, do passo 2.2; HC-76 a HC-87 e RT-63 a RT-65, do passo 2.3a; HC-88 a HC-97, do passo 2.3b; HC-98 a HC-112 e RT-66 e RT-67, do passo 2.3c; HC-113 a HC-123 e RT-68 a RT-70, do passo 2.4a; HC-124 a HC-143, do 2.4b; HC-144 a HC-157, do 2.4c; HC-158 a HC-171, do 2.4d-0), com verdade, certeza, justificativa e `verdade_validada_por` |
+| `fixtures/amostra-usos.json` | UB-1 a UB-28: 16 símbolos escolhidos e 12 sorteados (6 Python, 6 Rust), com a lista dos usos; e `pares`, PH-1 a PH-40, que o portão não lê. Verdade validada pelo usuário em 25/11/2026 |
 | `fixtures/fatos.json` | As chamadas que cada fato F1–F26 afirma, com a verdade |
 | `fixtures/niveis.json` | N0–N8: resultado atual e alvo da Fase 2, com o passo (N4-py-dono, do 2.3b: o `Repo()` do campo, perguntado ao `__init__`; N3c-py-* e N3c-rs-*, do 2.3c: o tipo pelo retorno, o campo de outro arquivo e o que não decide; N0-py-*, N0-rs-*, N8-py-* e N8-rs-tipo, do 2.4a: o escopo da chamada simples e o alias. No 2.4a, o alvo do N3c-py-dois-alvos passou ao do N3c-rs-discordam: o `duplo` do próprio módulo. DP-py-*, do 2.4c: o despacho polimórfico; no 2.4c, o alvo de N5-py-sobrescrita, N5-py-prop e N5-py-prop-herdada passou a ambíguo, aprovado pelo usuário. CN-py-*, do 2.4d-0: a chamada pelo nome da classe) |
 | `sinteticos/py`, `sinteticos/rs` | Projetos dos níveis, copiados de `docs/reports/piloto-1b/dados/tipos/`. O 2.3c acrescentou arquivos novos (`py/pkg/retorno.py`, `py/pkg/requisicao.py`, `rs/src/retorno.rs`, `rs/src/apoio.rs` e duas linhas no fim de `rs/src/lib.rs`), sem mudar nenhuma linha dos níveis anteriores. O 2.4a acrescentou `py/pkg/escopo.py`, `py/pkg/escopo_apoio.py`, `py/pkg/escopo_estrela.py`, `py/pkg/sub/`, `rs/src/escopo.rs`, `rs/src/escopo_apoio.rs` e mais duas linhas no fim de `rs/src/lib.rs`, também sem mudar nenhuma linha anterior. O 2.4b acrescentou `py/pkg/heranca.py`, `heranca_apoio.py` e `heranca_regras.py` (níveis N5-py-*, conferidos num Python de verdade), que o teste `heranca_2_4b.rs` embute. O 2.4c acrescentou `py/pkg/despacho.py` (níveis DP-py-*, conferidos num Python de verdade), que o teste `despacho_2_4c.rs` embute. O 2.4d-0 acrescentou `py/pkg/classe_nome.py`, `classe_nome_fora.py` e `classe_nome_usos.py` (níveis CN-py-*, idem), que o teste `classe_nome_2_4d0.rs` embute |
-| `linha-de-base.json` | Resultado com o binário do passo 2.4d-0, sobre as 171 chamadas do Healthchecks e as 70 do ray tracer (o mesmo conteúdo que `--gravar-base` grava). Aprovada pelo usuário em 25/11/2026 (as anteriores, do passo 2.4c, sobre 157 + 70 chamadas, do passo 2.4b, sobre 143 + 70 chamadas, do passo 2.4a, sobre 123 + 70 chamadas, do 2.3c, sobre 112 + 67 chamadas, do 2.3b, sobre 97 + 65 chamadas, do 2.3a, do 2.2 e do 2.1, estão no histórico do git) |
+| `linha-de-base.json` | Resultado com o binário do passo 2.4d, sobre as 171 chamadas do Healthchecks, as 70 do ray tracer e a amostra de usos UB-1 a UB-28 (o mesmo conteúdo que `--gravar-base` grava). Aprovada pelo usuário em 25/11/2026 (as anteriores, do passo 2.4d-0, sobre 171 + 70 chamadas, do passo 2.4c, sobre 157 + 70 chamadas, do passo 2.4b, sobre 143 + 70 chamadas, do passo 2.4a, sobre 123 + 70 chamadas, do 2.3c, sobre 112 + 67 chamadas, do 2.3b, sobre 97 + 65 chamadas, do 2.3a, do 2.2 e do 2.1, estão no histórico do git) |
 
 A amostra é identificada pelo caminho e pelo intervalo de bytes da ocorrência (`arquivo@início-fim`), que são os mesmos em qualquer run do mesmo código-fonte. A verdade é do usuário (DEC-22). Uma verdade nova ou corrigida entra na fixture com `verdade_validada_por` indicando quem validou.

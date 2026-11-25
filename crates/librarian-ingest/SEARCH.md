@@ -121,7 +121,55 @@ derivado de qualquer edition verificada, inclusive v1; o padrão continua `v1`.
 É uma projeção: mesmos nós e uma aresta v2 para cada aresta v1, sem relações novas.
 Campos desconhecidos são recusados. Candidatos por nome só ligam a mesma linguagem.
 
-### Onde é usado (`used_by`)
+### Onde é usado (pela regra, passo 2.4d; DEC-46)
+
+`graph::uses::UseIndex::build(graph, syntax)` responde uma vez cada chamada do grafo, com a mesma função que
+o `calls_from` usa (`v2::answer`, sem `chosen`), e guarda as respostas por alvo. `used_by(graph, seed, depth,
+max_nodes)` lê os usos do símbolo. Nada é gravado: o Studio guarda o índice de um run em memória.
+
+**Três tipos, nunca somados** (`use` de cada link):
+- `linked` ("ligado pela regra"): a regra fecha a chamada neste símbolo. Não é uma verificação: um link falso da
+  regra é um uso ligado falso. Inclui a instanciação (`relation: instantiates`), que é uso da classe e do
+  `__init__` que roda (`instance_of` = a classe), e o decorador (`relation: decorates`).
+- `possible`: o símbolo é um dos corpos que podem rodar (`basis: type`, DEC-43 e DEC-44) ou um dos candidatos
+  admitidos que nada decide (`basis: graph_edge`). São dois grupos, também nunca somados.
+- `name`: o nome está escrito e não é chamada (campo, tipo, base, referência, argumento), ou é o tipo que o extrator deu a um
+  receptor (`receiver_type`), onde o nome quase nunca está escrito (16 de 4.915 no Healthchecks, 36 de 1.244 no ray tracer). A regra
+  não o resolve.
+
+**À parte, sem serem usos:**
+- `above_limit`: chamadas com o nome do símbolo, acima do teto de homônimos, que a regra não decide. **Podem usar,
+  nunca "usam".** Filtradas pela forma da chamada e pelo teste de tipo do 2.2, sem guarda nova.
+- `abstract_calls`: chamadas escritas contra o símbolo, quando ele é um método abstrato (DEC-44).
+- `ruled_out`: chamadas cujo nome combina e que a regra liga a outro símbolo ou nega.
+
+**Invariante:** todo link A → B de `/api/calls` (com `runs` e `via`) está no `used_by` de B, no tipo
+correspondente, e todo uso ligado ou possível de B é um link do `/api/calls`. Para um link com `via`, `from` é o
+método, e o campo está no `via`. Prova em `tests/usos_2_4d.rs` e no portão. A invariante diz que os dois sentidos
+concordam, não que a regra está certa.
+
+**Percurso e teto.** Sobe só pelos ligados, nunca por um decorador; o possível pelo tipo e o `name` aparecem e param. O
+possível por homônimo não é desenhado: só está nos usos diretos (`links` com `to` = o símbolo) e na contagem. `max_nodes` corta o
+desenho, com os ligados primeiro; os usos diretos do símbolo vêm todos em `links`.
+
+**Limites.**
+- O teste de tipo não exclui um tipo primitivo (`f64`) nem um tipo do projeto que implementa o mesmo trait, e a
+  lacuna acima do teto erra por excesso: `Patterns::from` traz 132 chamadas, as 17 de caminho `Patterns`, as 32 de
+  `f64::from` e as 83 de `Object::from` (`Object` também implementa `From`). No Rust, a lacuna de `T::from` é quase toda
+  impossível (115 de 132, medido); o 2.4e mede.
+- **Duas lacunas do Rust (para o 2.4e):** o tipo do elemento de um array não é lido (`self.data[1][1].equivalent(..)`, de um
+  `[[f64; D]; D]`, sai possível com 8 candidatos, e sempre roda o de `f64`); e o despacho pelo método padrão de uma trait
+  não existe (`self.color_at(..)` no padrão de `Incuse` sai por homônimo, com candidatos que não são da trait; o 2.4c é só
+  do Python).
+- As ocorrências que não são chamada, acima do teto, não aparecem nem como nome nem como lacuna, como antes.
+- As chamadas soltas no topo de um arquivo Python não têm dono no grafo (Fase 2B); macros do Rust não são lidas;
+  registro e referência passada não são chamada; "sobrescreve" não é uso; a escolha da pessoa (`chosen`) não entra.
+- **Links falsos conhecidos, da regra do `unique` (18):** `message.get_body(..)` e `parsed.get_body(..)` (4) saem ligados a
+  `Ping.get_body`; 4 `.len()` de `Vec` e `str`, a `Groups::len`; e 10 `.next()` de iteradores, a `Sorteio::next`. O 2.4e mede a família.
+
+### Onde é usado, por nome (`used_by`)
+
+Desde o 2.4d, só o envelope e o "Medir tudo" o usam.
 
 `v2::Graph::used_by(seed, depth, max_nodes)` parte de um símbolo e volta pelos nomes
 escritos: cada `name_candidate` que chega nele leva à ocorrência e, pelo `observes`, ao

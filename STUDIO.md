@@ -384,18 +384,25 @@ que acerta a linha 86 sem citar a declaração). A comparação é recalculada d
 
 Clique num símbolo do mapa (ou num resultado de **Encontrar**) e, na **Inspeção**, em
 **Onde é usado?**. A vista **Caminho** cobre o mapa e mostra, da esquerda para a direita:
-o ponto escolhido, quem lê, escreve ou chama o nome dele, quem usa esses, e assim por
-diante, até a **profundidade** escolhida (padrão 2).
+o ponto escolhido, quem o usa, quem usa os ligados, e assim por diante, até a
+**profundidade** escolhida (padrão 2). Os usos vêm em três tipos, que nunca se somam
+(passo 2.4d): **ligado** (a regra de "O que ele chama?" liga a chamada a este ponto; não é uma
+verificação), **possível** (um dos corpos que podem rodar, ou um dos homônimos que nada decide, em
+dois grupos; os homônimos ficam fora do desenho, na lista dos usos diretos) e **só por nome** (o nome está escrito e não é chamada, ou um objeto deste tipo é usado ali).
 
 - **Caixas** são as funções, com a classe (ou impl) ou o arquivo como subtítulo; com "Medir
   tudo", também as chamadas e o tempo. As setas seguem a ordem das linhas de quem chama.
-- **Linha cheia:** o nome escrito só combina com aquele ponto. **Tracejada:** combina
-  também com homônimos, então pode ser outro.
-- **Clique numa linha** para ver o texto escrito e o arquivo e linha. **Clique num ponto**
-  para inspecioná-lo; **duplo clique** recomeça a vista a partir dele.
+- **Linha cheia:** ligado. **Tracejada:** possível pelo tipo. **Pontilhada:** só por nome. Mais de 8 possíveis
+  de um ponto, do mesmo grupo, são uma caixa só, com a lista completa no detalhe.
+- O desenho sobe só pelos ligados, nunca por um decorador. **Duplo clique** num ponto continua a partir
+  dele, também num possível.
+- **Todos os usos diretos**, acima do desenho, traz a lista completa de cada tipo e, à parte, as chamadas acima do
+  limite de homônimos (podem usar), as escritas contra um método abstrato e os nomes que a regra nega.
+- **Clique numa linha** para ver o motivo, o texto escrito e o arquivo e linha. **Clique num ponto**
+  para inspecioná-lo.
 - **Esconder testes** (ligado) tira funções e arquivos de teste pela convenção de nomes;
-  **só usos sem homônimos** tira as linhas tracejadas.
-- Há um teto de 120 pontos; acima dele, a vista avisa.
+  **só usos ligados** tira as linhas tracejadas e as pontilhadas. O filtro de testes vale também para as contagens.
+- Há um teto de 120 pontos no desenho; acima dele, a vista avisa, e a lista dos usos diretos continua completa.
 
 Exige um grafo gerado com o perfil v3 ou posterior (desde a G6). No v4, também aparecem quem
 constrói o tipo (`Camera { .. }`), quem preenche ou escreve um campo (`self.transform = …`)
@@ -414,8 +421,8 @@ e o `impl` que implementa o tipo. A partir do v5 (o atual é o v8), também apar
 
 Um nome simples só conta quando não é local da função (parâmetro, atribuição, padrão) e
 casa com uma declaração. Em Python, ele liga à declaração do próprio arquivo quando ela
-existe, como no escopo de módulo; senão, a todos os homônimos. É um mapa de candidatos pelo
-nome escrito, não um grafo de chamadas resolvido.
+existe, como no escopo de módulo; senão, a todos os homônimos. Esses usos são só por nome; as
+chamadas seguem a regra.
 
 **Quando não aparece nada, ou aparece menos do que existe:**
 

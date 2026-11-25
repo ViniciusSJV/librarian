@@ -1,0 +1,418 @@
+
+######## healthchecks-25597e41
+chamadas por quem observa {
+  'symbol method': 12503,
+  'symbol variable': 392,
+  'symbol field': 842,
+  'symbol function': 2418,
+  'symbol class': 84
+}
+0. simulador x dump: só no simulador 0 ; só no dump 0 ; links do dump 12474 dos quais via 1
+   ocorrências com mais de um observador 0
+3. invariante hoje (faltaOcorrencia e faltaA: sem teto de nós; faltaNaAPI: com o teto de 120)
+   certo instantiates {"links":692,"faltaOcorrencia":42,"faltaNaAPI":189,"faltaA":42}
+   certo calls {"links":1877,"faltaOcorrencia":334,"faltaNaAPI":516,"faltaA":334}
+   possível {"links":9835,"faltaOcorrencia":56,"faltaNaAPI":7866,"faltaA":56}
+   certo decorates {"links":69,"faltaOcorrencia":0,"faltaNaAPI":0,"faltaA":0}
+   runs (__init__) {"links":132,"faltaOcorrencia":132,"faltaNaAPI":132,"faltaA":132}
+   certo instantiates via {"links":1,"faltaOcorrencia":0,"faltaNaAPI":0,"faltaA":1}
+   links únicos sem via 2638 ; faltam no grafo 376 { type: 219, receiver: 109, import: 48 } ; faltam só pelo teto de 120 329 { receiver: 155, unique: 147, import: 9, type: 18 } ; pela API 705
+5. símbolos {
+  simbolos: 4718,
+  usoHoje: 1354,
+  usoDepois: 1438,
+  mudamOcorrencias: 248,
+  ganhamCerto: 65,
+  ganhamPossivel: 56,
+  temDescartado: 127,
+  deZeroAAlgum: 120,
+  deAlgumAZero: 36
+}
+5. ocorrências somadas por símbolo {
+  hoje: 57595,
+  certo: 2638,
+  certoNovo: 508,
+  runs: 132,
+  possivelTipo: 58,
+  possivelHomonimo: 9777,
+  possivelNovo: 56,
+  soPorNome: 39814,
+  descartado: 5740,
+  cheiaHoje: 15135,
+  cheiaDescartada: 1106,
+  cheiaPossivel: 0,
+  tracejadaCerta: 398
+}
+   links certos por relação e alvo {
+  'instantiates class': 692,
+  'calls method': 1273,
+  'calls function': 604,
+  'decorates function': 65,
+  'decorates class': 4
+}
+   chamadas ambíguas {
+  'graph_edge vários': 1550,
+  'graph_edge 1 candidato': 717,
+  'type vários': 4
+}
+   só por nome, por ocorrência {
+  receiver_type: 4915,
+  name_reference: 1621,
+  attribute_access: 23668,
+  base_class: 229,
+  type_reference: 500,
+  keyword_argument: 8879,
+  name_write: 2
+}
+   descartados, pela resposta da chamada {
+  no_candidate_in_project: 1595,
+  'fecha em outro (receiver)': 968,
+  'fecha em outro (import)': 64,
+  'fecha em outro (unique)': 48,
+  'fecha em outro (type)': 188,
+  'fecha em outro (scope)': 71,
+  'ambígua, B não admitido': 2806
+}
+   acima do teto, sem decisão: chamadas 403 [
+  [ 'notify', 344 ],
+  [ 'add', 57 ],
+  [ 'is_noop', 1 ],
+  [ '__init__', 1 ]
+] ; outras ocorrências {
+  attribute_access: 1597,
+  base_class: 187,
+  keyword_argument: 480,
+  receiver_type: 57,
+  name_reference: 6
+}
+   maiores ganhos certos
+     BaseTestCase.setUp (hc/test.py:25): hoje 0 -> certo 139, possível 0+0, nome 0, descartado 0 (certos novos 139)
+     TransportError.__init__ (hc/api/transports.py:57): hoje 0 -> certo 2 + instanciação 61, possível 0+0, nome 0, descartado 0 (certos novos 63)
+     SlackFields.add (hc/integrations/slack/transport.py:21): hoje 0 -> certo 32, possível 0+0, nome 0, descartado 0 (certos novos 32)
+     NotifyWebhookTestCase._setup_data (hc/integrations/webhook/tests/test_notify.py:16): hoje 0 -> certo 30, possível 0+0, nome 0, descartado 0 (certos novos 30)
+     NotifySlackTestCase._setup_data (hc/integrations/slack/tests/test_notify.py:16): hoje 0 -> certo 20, possível 0+0, nome 0, descartado 0 (certos novos 20)
+     NotifyPushoverTestCase._setup_data (hc/integrations/po/tests/test_notify.py:17): hoje 0 -> certo 19, possível 0+0, nome 0, descartado 0 (certos novos 19)
+     FakeCurl.__init__ (hc/lib/tests/test_curl.py:14): hoje 0 -> certo 0 + instanciação 16, possível 0+0, nome 0, descartado 0 (certos novos 16)
+     Command (hc/accounts/management/commands/sendinactivitynotices.py:28): hoje 0 -> certo 11, possível 0+0, nome 0, descartado 0 (certos novos 11)
+   maiores descartes
+     get (hc/lib/curl.py:210): hoje 963 -> certo 3, possível 0+0, nome 0, descartado 960 (certos novos 0)
+     save (hc/integrations/github/views.py:92): hoje 935 -> certo 0, possível 0+0, nome 0, descartado 935 (certos novos 0)
+     login (hc/accounts/views.py:161): hoje 714 -> certo 0, possível 0+0, nome 0, descartado 714 (certos novos 0)
+     login (hc/lib/emails.py:88): hoje 714 -> certo 2, possível 0+0, nome 0, descartado 712 (certos novos 0)
+     post (hc/lib/curl.py:224): hoje 607 -> certo 7, possível 0+0, nome 0, descartado 600 (certos novos 0)
+     AuthTestCase.post (hc/api/tests/test_auth.py:12): hoje 607 -> certo 3, possível 0+461, nome 0, descartado 143 (certos novos 0)
+     BounceTestCase.post (hc/api/tests/test_bounces.py:32): hoje 607 -> certo 15, possível 0+461, nome 0, descartado 131 (certos novos 0)
+     HttpTransport.post (hc/api/transports.py:199): hoje 607 -> certo 24, possível 0+461, nome 0, descartado 122 (certos novos 0)
+   maiores possíveis
+     ListChannelsTestCase.get (hc/api/tests/test_list_channels.py:18): hoje 963 -> certo 2, possível 0+908, nome 0, descartado 53 (certos novos 0)
+     GetBadgesTestCase.get (hc/api/tests/test_get_badges.py:23): hoje 963 -> certo 2, possível 0+908, nome 0, descartado 53 (certos novos 0)
+     ListChecksTestCase.get (hc/api/tests/test_list_checks.py:39): hoje 963 -> certo 4, possível 0+908, nome 0, descartado 51 (certos novos 0)
+     AuthTestCase.get (hc/api/tests/test_auth.py:9): hoje 963 -> certo 5, possível 0+908, nome 0, descartado 50 (certos novos 0)
+     GetCheckTestCase.get (hc/api/tests/test_get_check.py:37): hoje 963 -> certo 9, possível 0+908, nome 0, descartado 46 (certos novos 0)
+     GetFlipsTestCase.get (hc/api/tests/test_get_flips.py:32): hoje 963 -> certo 9, possível 0+908, nome 0, descartado 46 (certos novos 0)
+     GetPingsTestCase.get (hc/api/tests/test_get_pings.py:38): hoje 963 -> certo 9, possível 0+908, nome 0, descartado 46 (certos novos 0)
+     ProfileAdmin.login (hc/accounts/admin.py:210): hoje 714 -> certo 0, possível 0+711, nome 0, descartado 3 (certos novos 0)
+   maior lista: certo 139 ; possível 908 ; nome 1328
+   símbolos com mais de 119 usuários diretos: hoje 68 ; depois 64
+   percurso para trás, profundidade 2, hoje: média 28.0, p99 841, máx 1869, acima de 120 nós: 157
+   percurso para trás, profundidade 2, os três, segue o certo: média 10.2, p99 260, máx 890, acima de 120 nós: 72
+   percurso para trás, profundidade 2, os três, segue o certo e o nome: média 17.2, p99 514, máx 1869, acima de 120 nós: 126
+   percurso para trás, profundidade 2, só certo: média 1.9, p99 21, máx 222, acima de 120 nós: 7
+   percurso para trás, profundidade 3, hoje: média 51.6, p99 1398, máx 1956, acima de 120 nós: 230
+   percurso para trás, profundidade 3, os três, segue o certo: média 10.7, p99 260, máx 890, acima de 120 nós: 75
+   percurso para trás, profundidade 3, os três, segue o certo e o nome: média 19.5, p99 524, máx 1887, acima de 120 nós: 143
+   percurso para trás, profundidade 3, só certo: média 2.0, p99 26, máx 233, acima de 120 nós: 7
+   percurso para trás, profundidade 6, hoje: média 86.0, p99 2025, máx 2179, acima de 120 nós: 300
+   percurso para trás, profundidade 6, os três, segue o certo: média 11.8, p99 389, máx 890, acima de 120 nós: 85
+   percurso para trás, profundidade 6, os três, segue o certo e o nome: média 23.5, p99 621, máx 1887, acima de 120 nós: 177
+   percurso para trás, profundidade 6, só certo: média 2.2, p99 30, máx 233, acima de 120 nós: 7
+   EX Webhook.is_noop (hc/integrations/webhook/transport.py:63): hoje 0 -> certo 0, possível 1+0, nome 0, descartado 0 (certos novos 0)
+        possível (tipo): hc/api/models.py:1153 self.transport.is_noop(flip.new_status) [homonym propriedade entre 14] de Channel.notify
+        lacuna: 1 chamadas com este nome acima do teto, sem decisão
+   EX Transport.is_noop (hc/api/transports.py:76): hoje 0 -> certo 0, possível 1+0, nome 0, descartado 0 (certos novos 0)
+        possível (tipo): hc/api/models.py:1153 self.transport.is_noop(flip.new_status) [homonym propriedade entre 14] de Channel.notify
+        lacuna: 1 chamadas com este nome acima do teto, sem decisão
+   EX RemovedTransport.is_noop (hc/api/transports.py:128): hoje 0 -> certo 0, possível 1+0, nome 0, descartado 0 (certos novos 0)
+        possível (tipo): hc/api/models.py:1153 self.transport.is_noop(flip.new_status) [homonym propriedade entre 14] de Channel.notify
+        lacuna: 1 chamadas com este nome acima do teto, sem decisão
+   EX HttpTransport.raise_for_response (hc/api/transports.py:133): hoje 0 -> certo 0, possível 1+0, nome 0, descartado 0 (certos novos 0)
+        possível (tipo): hc/api/transports.py:162 cls.raise_for_response(r) [homonym cls entre 12] de HttpTransport._request
+   EX Discord.fix_asterisks (hc/integrations/discord/transport.py:25): hoje 3 -> certo 0, possível 1+0, nome 0, descartado 2 (certos novos 0)
+        possível (tipo): hc/integrations/slack/transport.py:72 self.fix_asterisks(check.schedule) [homonym self entre 2] de Slackalike.payload
+        descartado: hc/integrations/rocketchat/transport.py:43 self.fix_asterisks(check.schedule) [receiver] de RocketChat.payload
+        descartado: hc/integrations/msteamsw/transport.py:82 self.fix_asterisks(check.schedule) [receiver] de MsTeamsWorkflow.payload
+   EX Slackalike.fix_asterisks (hc/integrations/slack/transport.py:88): hoje 3 -> certo 0, possível 1+0, nome 0, descartado 2 (certos novos 0)
+        possível (tipo): hc/integrations/slack/transport.py:72 self.fix_asterisks(check.schedule) [homonym self entre 2] de Slackalike.payload
+        descartado: hc/integrations/rocketchat/transport.py:43 self.fix_asterisks(check.schedule) [receiver] de RocketChat.payload
+        descartado: hc/integrations/msteamsw/transport.py:82 self.fix_asterisks(check.schedule) [receiver] de MsTeamsWorkflow.payload
+   EX RocketChat.fix_asterisks (hc/integrations/rocketchat/transport.py:14): hoje 3 -> certo 1, possível 0+0, nome 0, descartado 2 (certos novos 0)
+        certo: hc/integrations/rocketchat/transport.py:43 self.fix_asterisks(check.schedule) [receiver] de RocketChat.payload
+        descartado: hc/integrations/slack/transport.py:72 self.fix_asterisks(check.schedule) [homonym self entre 2] de Slackalike.payload
+        descartado: hc/integrations/msteamsw/transport.py:82 self.fix_asterisks(check.schedule) [receiver] de MsTeamsWorkflow.payload
+   EX TokenBucket.authorize (hc/api/models.py:1442): hoje 13 -> certo 13, possível 0+0, nome 0, descartado 0 (certos novos 0)
+        certo: hc/api/models.py:1479 TokenBucket.authorize(value, 20, 3600) [type classe] de TokenBucket.authorize_auth_ip
+        certo: hc/api/models.py:1493 TokenBucket.authorize(f"em-{hashed}", 10, 3600) [type classe] de TokenBucket.authorize_login_email
+        certo: hc/api/models.py:1500 TokenBucket.authorize(value, 20, 3600 * 24) [type classe] de TokenBucket.authorize_invite
+        certo: hc/api/models.py:1508 TokenBucket.authorize(f"pw-{hashed}", 20, 3600 * 24) [type classe] de TokenBucket.authorize_login_password
+   EX authorize (hc/api/decorators.py:33): hoje 21 -> certo 0, possível 0+0, nome 8, descartado 13 (certos novos 0)
+        nome: hc/api/views.py:455 authorize [name_reference] de create_check
+        nome: hc/api/views.py:490 authorize [name_reference] de channels
+        nome: hc/api/views.py:516 authorize [name_reference] de update_check
+        nome: hc/api/views.py:537 authorize [name_reference] de delete_check
+        descartado: hc/api/models.py:1479 TokenBucket.authorize(value, 20, 3600) [type classe] de TokenBucket.authorize_auth_ip
+        descartado: hc/api/models.py:1493 TokenBucket.authorize(f"em-{hashed}", 10, 3600) [type classe] de TokenBucket.authorize_login_email
+        descartado: hc/api/models.py:1500 TokenBucket.authorize(value, 20, 3600 * 24) [type classe] de TokenBucket.authorize_invite
+        descartado: hc/api/models.py:1508 TokenBucket.authorize(f"pw-{hashed}", 20, 3600 * 24) [type classe] de TokenBucket.authorize_login_password
+   EX Telegram.send (hc/integrations/telegram/transport.py:55): hoje 20 -> certo 3, possível 0+1, nome 0, descartado 16 (certos novos 0)
+        certo: hc/integrations/telegram/transport.py:87 self.send(self.channel.telegram.id, self.channel.telegram.th [receiver] de Telegram.notify
+        certo: hc/integrations/telegram/transport.py:91 self.send(self.channel.telegram.id, self.channel.telegram.th [receiver] de Telegram.notify
+        certo: hc/integrations/telegram/views.py:82 Telegram.send(chat.id, doc.message.message_thread_id, invite [type classe] de telegram_bot
+        possível (homônimo): hc/lib/emails.py:25 self.message.send() [homonym entre 2] de EmailThread.run
+        descartado: hc/integrations/signal/views.py:119 Signal.send(recipient, f"Test message from {settings.SITE_NA [type classe] de verify_signal_number
+        descartado: hc/lib/emails.py:89 send [unique] de login
+        descartado: hc/lib/emails.py:93 send [unique] de transfer_request
+        descartado: hc/lib/emails.py:105 send [unique] de alert
+   EX Check.ping (hc/api/models.py:493): hoje 5 -> certo 1, possível 0+3, nome 0, descartado 1 (certos novos 0)
+        certo: hc/api/views.py:255 check.ping(remote_addr, scheme, method, ua, body, action, ri [type parametro] de ping
+        possível (homônimo): hc/front/tests/test_ping_details.py:130 self.check.ping( "1.2.3.4", "http", "post", "tester", b"foo- [homonym] de PingDetailsTestCase.test_it_accepts_n
+        possível (homônimo): hc/front/tests/test_ping_details.py:133 self.check.ping( "1.2.3.4", "http", "post", "tester", b"bar- [homonym] de PingDetailsTestCase.test_it_accepts_n
+        possível (homônimo): hc/api/management/commands/smtpd.py:91 check.ping( remote_addr=remote_addr, scheme="email", method= [homonym] de _process_message
+        descartado: hc/api/views.py:300 ping [unique] de ping_by_slug
+   EX Channel.notify (hc/api/models.py:1152): hoje 0 -> certo 0, possível 0+0, nome 0, descartado 0 (certos novos 0)
+        lacuna: 344 chamadas com este nome acima do teto, sem decisão
+   EX Webhook.notify (hc/integrations/webhook/transport.py:69): hoje 0 -> certo 0, possível 1+0, nome 0, descartado 0 (certos novos 0)
+        possível (tipo): hc/api/models.py:1173 self.transport.notify(flip, notification=n) [homonym propriedade entre 30] de Channel.notify
+        lacuna: 344 chamadas com este nome acima do teto, sem decisão
+   EX cors (hc/api/decorators.py:96): hoje 13 -> certo 13, possível 0+0, nome 0, descartado 0 (certos novos 0)
+        certo: hc/api/views.py:480 cors [unique decorates] de checks
+        certo: hc/api/views.py:488 cors [unique decorates] de channels
+        certo: hc/api/views.py:506 cors [unique decorates] de get_check_by_unique_key
+        certo: hc/api/views.py:550 cors [unique decorates] de single
+   EX EmailThread.__init__ (hc/lib/emails.py:18): hoje 0 -> certo 0 + instanciação 4, possível 0+0, nome 0, descartado 0 (certos novos 4)
+        instanciação: hc/lib/emails.py:77 EmailThread [unique instantiates] de send
+        instanciação: hc/lib/tests/test_emails.py:18 EmailThread [unique instantiates] de EmailsTestCase.test_it_retries
+        instanciação: hc/lib/tests/test_emails.py:28 EmailThread [unique instantiates] de EmailsTestCase.test_it_limits_retries
+        instanciação: hc/lib/tests/test_emails.py:37 EmailThread [unique instantiates] de EmailsTestCase.test_it_retries_smtp_data_error
+        lacuna: 1 chamadas com este nome acima do teto, sem decisão
+   EX BaseTestCase.setUp (hc/test.py:25): hoje 0 -> certo 139, possível 0+0, nome 0, descartado 0 (certos novos 139)
+        certo: hc/integrations/rocketchat/tests/test_add.py:11 super().setUp() [type super] de AddRocketChatTestCase.setUp
+        certo: hc/integrations/pd/tests/test_add.py:14 super().setUp() [type super] de AddPdTestCase.setUp
+        certo: hc/front/tests/test_projects_menu.py:8 super().setUp() [type super] de ProjectsMenuTestCase.setUp
+        certo: hc/front/tests/test_badges.py:12 super().setUp() [type super] de BadgesTestCase.setUp
+   EX Check.get_status (hc/api/models.py:355): hoje 40 -> certo 40, possível 0+0, nome 0, descartado 0 (certos novos 0)
+        certo: hc/api/tests/test_check_model.py:42 check.get_status() [unique] de CheckModelTestCase.test_get_status_handles_paused_check
+        certo: hc/api/tests/test_check_model.py:53 check.get_status() [unique] de CheckModelTestCase.test_status_works_with_cron_syntax
+        certo: hc/api/tests/test_check_model.py:56 check.get_status() [unique] de CheckModelTestCase.test_status_works_with_cron_syntax
+        certo: hc/api/tests/test_check_model.py:59 check.get_status() [unique] de CheckModelTestCase.test_status_works_with_cron_syntax
+   EX FakeCurl (hc/lib/tests/test_curl.py:13): hoje 16 -> certo 16, possível 0+0, nome 0, descartado 0 (certos novos 0)
+        certo: hc/lib/tests/test_curl.py:49 FakeCurl [unique instantiates] de CurlTestCase.test_get_works
+        certo: hc/lib/tests/test_curl.py:66 FakeCurl [unique instantiates] de CurlTestCase.test_it_handles_params
+        certo: hc/lib/tests/test_curl.py:72 FakeCurl [unique instantiates] de CurlTestCase.test_it_handles_auth
+        certo: hc/lib/tests/test_curl.py:78 FakeCurl [unique instantiates] de CurlTestCase.test_it_allows_custom_ua
+   EX FakeCurl.opts (hc/lib/tests/test_curl.py:15): hoje 36 -> certo 0, possível 0+0, nome 36, descartado 0 (certos novos 0)
+        nome: hc/lib/tests/test_curl.py:36 self.opts [attribute_access] de FakeCurl.perform
+        nome: hc/lib/tests/test_curl.py:37 self.opts [attribute_access] de FakeCurl.perform
+        nome: hc/lib/tests/test_curl.py:53 obj.opts [attribute_access] de CurlTestCase.test_get_works
+        nome: hc/lib/tests/test_curl.py:56 obj.opts [attribute_access] de CurlTestCase.test_get_works
+   EX FakeCurl.ip (hc/lib/tests/test_curl.py:16): hoje 3 -> certo 0, possível 0+0, nome 3, descartado 0 (certos novos 0)
+        nome: hc/lib/tests/test_curl.py:30 self.ip [attribute_access] de FakeCurl.perform
+        nome: hc/lib/tests/test_curl.py:160 ip="127.0.0.1" [keyword_argument] de CurlTestCase.test_it_rejects_private_ip
+        nome: hc/lib/tests/test_curl.py:171 ip="127.0.0.1" [keyword_argument] de CurlTestCase.test_it_accepts_private_ip
+   EX FakeCurl.getinfo (hc/lib/tests/test_curl.py:39): hoje 1 -> certo 1, possível 0+0, nome 0, descartado 0 (certos novos 0)
+        certo: hc/lib/curl.py:203 c.getinfo(pycurl.RESPONSE_CODE) [unique] de request
+   EX FakeCurl.close (hc/lib/tests/test_curl.py:42): hoje 5 -> certo 0, possível 0+5, nome 0, descartado 0 (certos novos 0)
+        possível (homônimo): hc/lib/curl.py:204 c.close() [homonym entre 2] de request
+        possível (homônimo): hc/lib/s3.py:99 response.close() [homonym entre 2] de get_object
+        possível (homônimo): hc/lib/tests/test_statsd.py:17 client.close() [homonym entre 2] de StatsdTestCase.test_it_initializes_udp_client
+        possível (homônimo): hc/lib/tests/test_statsd.py:24 client.close() [homonym entre 2] de StatsdTestCase.test_it_parses_port
+   EX FakeCurl.__init__ (hc/lib/tests/test_curl.py:14): hoje 0 -> certo 0 + instanciação 16, possível 0+0, nome 0, descartado 0 (certos novos 16)
+        instanciação: hc/lib/tests/test_curl.py:49 FakeCurl [unique instantiates] de CurlTestCase.test_get_works
+        instanciação: hc/lib/tests/test_curl.py:66 FakeCurl [unique instantiates] de CurlTestCase.test_it_handles_params
+        instanciação: hc/lib/tests/test_curl.py:72 FakeCurl [unique instantiates] de CurlTestCase.test_it_handles_auth
+        instanciação: hc/lib/tests/test_curl.py:78 FakeCurl [unique instantiates] de CurlTestCase.test_it_allows_custom_ua
+        lacuna: 1 chamadas com este nome acima do teto, sem decisão
+   EX FakeCurl.setopt (hc/lib/tests/test_curl.py:18): hoje 15 -> certo 15, possível 0+0, nome 0, descartado 0 (certos novos 0)
+        certo: hc/lib/curl.py:139 c.setopt(pycurl.NOSIGNAL, 1) [unique] de request
+        certo: hc/lib/curl.py:140 c.setopt(pycurl.PROTOCOLS, pycurl.PROTO_HTTP | pycurl.PROTO_ [unique] de request
+        certo: hc/lib/curl.py:141 c.setopt(pycurl.OPENSOCKETFUNCTION, opensocket) [unique] de request
+        certo: hc/lib/curl.py:142 c.setopt(pycurl.FOLLOWLOCATION, True) [unique] de request
+   EX FakeCurl.perform (hc/lib/tests/test_curl.py:21): hoje 1 -> certo 1, possível 0+0, nome 0, descartado 0 (certos novos 0)
+        certo: hc/lib/curl.py:185 c.perform() [unique] de request
+   EX HttpTransport.post (hc/api/transports.py:199): hoje 607 -> certo 24, possível 0+461, nome 0, descartado 122 (certos novos 0)
+        certo: hc/integrations/spike/transport.py:29 self.post(url, json=payload, headers=headers) [type self] de Spike.notify
+        certo: hc/integrations/pd/transport.py:51 self.post(self.URL, json=payload) [type self] de PagerDuty.notify
+        certo: hc/integrations/telegram/transport.py:65 cls.post(cls.SM, json=payload) [type cls] de Telegram.send
+        certo: hc/integrations/mattermost/transport.py:16 self.post(self.channel.slack_webhook_url, json=prepared_payl [type self] de Mattermost.notify
+        possível (homônimo): hc/integrations/rocketchat/tests/test_add.py:26 self.client.post(self.url, form) [homonym entre 5] de AddRocketChatTestCase.test_it_works
+        possível (homônimo): hc/integrations/pd/tests/test_add.py:38 self.client.post(self.url, form) [homonym entre 5] de AddPdTestCase.test_it_trims_whitespace
+        possível (homônimo): hc/integrations/pd/tests/test_add.py:27 self.client.post(self.url, form) [homonym entre 5] de AddPdTestCase.test_it_works
+        possível (homônimo): hc/accounts/tests/test_close_account.py:55 self.client.post("/accounts/close/", payload) [homonym entre 5] de CloseAccountTestCase.test_it_requires_confirmation
+        descartado: hc/integrations/slack/views.py:103 curl.post("https://slack.com/api/oauth.v2.access", data) [import] de add_complete
+        descartado: hc/api/management/commands/settelegramwebhook.py:27 curl.post(url, json=form) [import] de Command.handle
+        descartado: hc/integrations/discord/views.py:69 curl.post("https://discordapp.com/api/oauth2/token", data) [import] de add_complete
+        descartado: hc/api/tests/test_create_check.py:277 self.post({"api_key": "Y" * 32}) [receiver] de CreateCheckTestCase.test_it_rejects_wrong_api_key
+   EX Ping.get_body (hc/api/models.py:772): hoje 4 -> certo 4, possível 0+0, nome 0, descartado 0 (certos novos 0)
+        certo: hc/api/management/commands/smtpd.py:37 message.get_body(("plain",)) [unique] de _to_text
+        certo: hc/api/management/commands/smtpd.py:41 message.get_body(("html",)) [unique] de _to_text
+        certo: hc/front/views.py:800 parsed.get_body(("plain",)) [unique] de ping_details
+        certo: hc/front/views.py:805 parsed.get_body(("html",)) [unique] de ping_details
+   teste usado por produção: FakeCurl.getinfo (hc/lib/tests/test_curl.py:39) <- hc/lib/curl.py:203 c.getinfo(pycurl.RESPONSE_CODE) [unique] de request
+   teste usado por produção: FakeCurl.setopt (hc/lib/tests/test_curl.py:18) <- hc/lib/curl.py:139 c.setopt(pycurl.NOSIGNAL, 1) [unique] de request
+   teste usado por produção: FakeCurl.setopt (hc/lib/tests/test_curl.py:18) <- hc/lib/curl.py:140 c.setopt(pycurl.PROTOCOLS, pycurl.PROTO_HTTP | pycurl.PROTO_ [unique] de request
+   teste usado por produção: FakeCurl.setopt (hc/lib/tests/test_curl.py:18) <- hc/lib/curl.py:141 c.setopt(pycurl.OPENSOCKETFUNCTION, opensocket) [unique] de request
+   teste usado por produção: FakeCurl.setopt (hc/lib/tests/test_curl.py:18) <- hc/lib/curl.py:142 c.setopt(pycurl.FOLLOWLOCATION, True) [unique] de request
+   uso certo de B (teste) por A (produção): 17
+
+######## renderer-9b78f3a9
+chamadas por quem observa {
+  'symbol function': 1855,
+  'symbol method': 665,
+  'symbol trait_method': 23,
+  'symbol static': 2
+}
+0. simulador x dump: só no simulador 0 ; só no dump 0 ; links do dump 2274 dos quais via 0
+   ocorrências com mais de um observador 0
+3. invariante hoje (faltaOcorrencia e faltaA: sem teto de nós; faltaNaAPI: com o teto de 120)
+   certo calls {"links":1723,"faltaOcorrencia":513,"faltaNaAPI":547,"faltaA":513}
+   certo instantiates {"links":13,"faltaOcorrencia":0,"faltaNaAPI":0,"faltaA":0}
+   possível {"links":538,"faltaOcorrencia":0,"faltaNaAPI":0,"faltaA":0}
+   links únicos sem via 1736 ; faltam no grafo 513 { type: 512, receiver: 1 } ; faltam só pelo teto de 120 34 { unique: 34 } ; pela API 547
+5. símbolos {
+  simbolos: 819,
+  usoHoje: 336,
+  usoDepois: 366,
+  mudamOcorrencias: 123,
+  ganhamCerto: 38,
+  ganhamPossivel: 0,
+  temDescartado: 85,
+  deZeroAAlgum: 38,
+  deAlgumAZero: 8
+}
+5. ocorrências somadas por símbolo {
+  hoje: 6841,
+  certo: 1736,
+  certoNovo: 513,
+  runs: 0,
+  possivelTipo: 0,
+  possivelHomonimo: 538,
+  possivelNovo: 0,
+  soPorNome: 4413,
+  descartado: 667,
+  cheiaHoje: 3421,
+  cheiaDescartada: 15,
+  cheiaPossivel: 0,
+  tracejadaCerta: 195
+}
+   links certos por relação e alvo {
+  'calls function': 54,
+  'calls method': 1617,
+  'instantiates variant': 11,
+  'calls trait_method': 52,
+  'instantiates struct': 2
+}
+   chamadas ambíguas { 'graph_edge vários': 80 }
+   só por nome, por ocorrência {
+  impl_self_type: 96,
+  receiver_type: 1244,
+  type_reference: 437,
+  attribute_access: 1834,
+  field_init: 307,
+  struct_literal: 43,
+  struct_pattern: 138,
+  field_assign: 297,
+  name_reference: 17
+}
+   descartados, pela resposta da chamada {
+  'fecha em outro (type)': 551,
+  'fecha em outro (trait_default)': 45,
+  'fecha em outro (receiver)': 32,
+  no_candidate_in_project: 15,
+  'fecha em outro (scope)': 24
+}
+   acima do teto, sem decisão: chamadas 173 [
+  [ 'Object::from', 82 ],
+  [ 'f64::from', 32 ],
+  [ 'Patterns::from', 17 ],
+  [ 'Vec::new', 14 ],
+  [ 'transform', 7 ],
+  [ 'String::from', 7 ],
+  [ 'Option::from', 3 ],
+  [ 'AtomicU64::new', 2 ],
+  [ 'Mutex::new', 2 ],
+  [ 'Sha256::new', 2 ],
+  [ 'String::new', 1 ],
+  [ 'png::Encoder::new', 1 ]
+] ; outras ocorrências { attribute_access: 30, field_assign: 26, field_init: 15 }
+   maiores ganhos certos
+     impl Ray::new (src/ray.rs:11): hoje 0 -> certo 89, possível 0+0, nome 0, descartado 0 (certos novos 89)
+     impl Intersection::new (src/intersection.rs:72): hoje 0 -> certo 57, possível 0+0, nome 0, descartado 0 (certos novos 57)
+     impl Color::new (src/color.rs:12): hoje 0 -> certo 54, possível 0+0, nome 0, descartado 0 (certos novos 54)
+     impl Intersections::new (src/intersection.rs:114): hoje 0 -> certo 46, possível 0+0, nome 0, descartado 0 (certos novos 46)
+     impl From<[[f64; D]; D]> for Matrix<D>::from (src/matrix.rs:12): hoje 0 -> certo 41, possível 0+0, nome 0, descartado 0 (certos novos 41)
+     impl Default for Sphere::default (src/sphere.rs:26): hoje 0 -> certo 31, possível 0+0, nome 0, descartado 0 (certos novos 31)
+     impl Sphere::new (src/sphere.rs:12): hoje 0 -> certo 26, possível 0+0, nome 0, descartado 0 (certos novos 26)
+     impl Default for Plane::default (src/plane.rs:21): hoje 0 -> certo 21, possível 0+0, nome 0, descartado 0 (certos novos 21)
+   maiores descartes
+     impl Groups::intersect (src/groups.rs:86): hoje 36 -> certo 2, possível 0+0, nome 0, descartado 34 (certos novos 0)
+     impl Incuse for Stripe::color_at (src/patterns.rs:175): hoje 30 -> certo 1, possível 0+1, nome 0, descartado 28 (certos novos 0)
+     impl Incuse for LinearGradient::color_at (src/patterns.rs:202): hoje 30 -> certo 1, possível 0+1, nome 0, descartado 28 (certos novos 0)
+     impl Incuse for Ring::color_at (src/patterns.rs:229): hoje 30 -> certo 1, possível 0+1, nome 0, descartado 28 (certos novos 0)
+     impl Incuse for Checkers::color_at (src/patterns.rs:255): hoje 30 -> certo 1, possível 0+1, nome 0, descartado 28 (certos novos 0)
+     Incuse::color_at (src/patterns.rs:19): hoje 30 -> certo 1, possível 0+1, nome 0, descartado 28 (certos novos 0)
+     impl World::color_at (src/world.rs:109): hoje 30 -> certo 7, possível 0+1, nome 0, descartado 22 (certos novos 0)
+     tests_camera::create_default_world (src/camera.rs:291): hoje 24 -> certo 2, possível 0+0, nome 0, descartado 22 (certos novos 0)
+   maiores possíveis
+     impl Equivalence<Color> for Color::equivalent (src/color.rs:34): hoje 51 -> certo 0, possível 0+51, nome 0, descartado 0 (certos novos 0)
+     impl Equivalence<Matrix<2>> for Matrix<2>::equivalent (src/matrix.rs:210): hoje 51 -> certo 0, possível 0+51, nome 0, descartado 0 (certos novos 0)
+     impl Equivalence<Matrix<3>> for Matrix<3>::equivalent (src/matrix.rs:220): hoje 51 -> certo 0, possível 0+51, nome 0, descartado 0 (certos novos 0)
+     impl Equivalence<Matrix<4>> for Matrix<4>::equivalent (src/matrix.rs:236): hoje 51 -> certo 0, possível 0+51, nome 0, descartado 0 (certos novos 0)
+     impl Equivalence<f64> for f64::equivalent (src/equivalent.rs:12): hoje 51 -> certo 0, possível 0+51, nome 0, descartado 0 (certos novos 0)
+     Equivalence::equivalent (src/equivalent.rs:4): hoje 51 -> certo 0, possível 0+51, nome 0, descartado 0 (certos novos 0)
+     impl Equivalence<Tuple> for Tuple::equivalent (src/tuple.rs:42): hoje 51 -> certo 0, possível 0+51, nome 0, descartado 0 (certos novos 0)
+     impl Equivalence<Camera> for Camera::equivalent (src/camera.rs:211): hoje 51 -> certo 0, possível 0+51, nome 0, descartado 0 (certos novos 0)
+   maior lista: certo 287 ; possível 51 ; nome 315
+   símbolos com mais de 119 usuários diretos: hoje 1 ; depois 1
+   percurso para trás, profundidade 2, hoje: média 12.9, p99 127, máx 231, acima de 120 nós: 11
+   percurso para trás, profundidade 2, os três, segue o certo: média 7.2, p99 76, máx 169, acima de 120 nós: 3
+   percurso para trás, profundidade 2, os três, segue o certo e o nome: média 13.5, p99 152, máx 253, acima de 120 nós: 12
+   percurso para trás, profundidade 2, só certo: média 4.1, p99 67, máx 169, acima de 120 nós: 3
+   percurso para trás, profundidade 3, hoje: média 19.6, p99 169, máx 280, acima de 120 nós: 14
+   percurso para trás, profundidade 3, os três, segue o certo: média 8.4, p99 109, máx 201, acima de 120 nós: 5
+   percurso para trás, profundidade 3, os três, segue o certo e o nome: média 18.4, p99 201, máx 307, acima de 120 nós: 30
+   percurso para trás, profundidade 3, só certo: média 5.2, p99 82, máx 200, acima de 120 nós: 5
+   percurso para trás, profundidade 6, hoje: média 27.4, p99 211, máx 292, acima de 120 nós: 49
+   percurso para trás, profundidade 6, os três, segue o certo: média 10.2, p99 117, máx 250, acima de 120 nós: 7
+   percurso para trás, profundidade 6, os três, segue o certo e o nome: média 23.3, p99 252, máx 332, acima de 120 nós: 51
+   percurso para trás, profundidade 6, só certo: média 7.0, p99 114, máx 249, acima de 120 nós: 7
+   EX impl Matrix<4>::identity (src/matrix.rs:71): hoje 24 -> certo 24, possível 0+0, nome 0, descartado 0 (certos novos 0)
+        certo: src/patterns.rs:54 Matrix::identity [unique] de impl Stripe::new
+        certo: src/patterns.rs:79 Matrix::identity [unique] de impl LinearGradient::new
+        certo: src/patterns.rs:104 Matrix::identity [unique] de impl Ring::new
+        certo: src/patterns.rs:129 Matrix::identity [unique] de impl Checkers::new
+   EX impl Groups::len (src/groups.rs:60): hoje 12 -> certo 4, possível 0+0, nome 0, descartado 8 (certos novos 0)
+        certo: src/obj.rs:90 face.len() [unique] de parse_obj_smooth
+        certo: src/count.rs:133 "librarian-measure cpu_ms=".len() [unique] de tests_count::each_counted_line_reports_how_many_times_it_ran_and_for_how_long
+        certo: src/count.rs:151 "librarian-measure cpu_ms=".len() [unique] de tests_count::a_recursion_counts_every_call_but_the_time_once
+        certo: src/camera.rs:129 ordered.len() [unique] de impl Camera::benchmark_render
+        descartado: src/bin/cena_video.rs:107 balls.len() [no_candidate_in_project] de main
+        descartado: src/bin/cena_video.rs:127 balls.len() [no_candidate_in_project] de main
+        descartado: src/bin/cena_video.rs:133 balls.len() [no_candidate_in_project] de main
+        descartado: src/obj.rs:124 objects.len() [no_candidate_in_project] de build_bvh
+   EX impl Tuple::dot (src/tuple.rs:127): hoje 18 -> certo 18, possível 0+0, nome 0, descartado 0 (certos novos 0)
+        certo: src/sphere.rs:34 local_ray.direction.dot(local_ray.direction) [unique] de impl Intersectable for Sphere::local_intersect
+        certo: src/sphere.rs:35 local_ray.direction.dot(sphere_to_ray) [unique] de impl Intersectable for Sphere::local_intersect
+        certo: src/sphere.rs:36 sphere_to_ray.dot(sphere_to_ray) [unique] de impl Intersectable for Sphere::local_intersect
+        certo: src/triangle.rs:41 self.e1.dot(dir_cross_e2) [unique] de impl Intersectable for Triangle::local_intersect
+   EX impl From<Stripe> for Patterns::from (src/patterns.rs:47): hoje 0 -> certo 0, possível 0+0, nome 0, descartado 0 (certos novos 0)
+   EX impl From<LinearGradient> for Patterns::from (src/patterns.rs:72): hoje 0 -> certo 0, possível 0+0, nome 0, descartado 0 (certos novos 0)
+   EX impl From<Ring> for Patterns::from (src/patterns.rs:97): hoje 0 -> certo 0, possível 0+0, nome 0, descartado 0 (certos novos 0)
+   EX impl From<Checkers> for Patterns::from (src/patterns.rs:122): hoje 0 -> certo 0, possível 0+0, nome 0, descartado 0 (certos novos 0)
+   EX impl From<DefaultPattern> for Patterns::from (src/patterns.rs:147): hoje 0 -> certo 0, possível 0+0, nome 0, descartado 0 (certos novos 0)
+   EX impl Equivalence<Camera> for Camera (src/camera.rs:210): hoje 0 -> certo 0, possível 0+0, nome 0, descartado 0 (certos novos 0)
+   EX impl Camera (src/camera.rs:37): hoje 0 -> certo 0, possível 0+0, nome 0, descartado 0 (certos novos 0)
+   EX Camera (src/camera.rs:24): hoje 42 -> certo 0, possível 0+0, nome 42, descartado 0 (certos novos 0)
+        nome: src/bin/cena_video.rs:170 Camera::new(width, height, PI / 3.) [receiver_type] de main
+        nome: src/bin/librarian_measure.rs:67 Camera::new(width, height, PI / 3.) [receiver_type] de main
+        nome: src/bin/librarian_measure_mesh.rs:80 Camera::new(width, height, PI / 3.) [receiver_type] de main
+        nome: src/camera.rs:210 Camera [impl_self_type] de impl Equivalence<Camera> for Camera
+   uso certo de B (teste) por A (produção): 0

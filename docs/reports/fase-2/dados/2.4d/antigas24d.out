@@ -1,0 +1,13 @@
+2.1/tela-21: antes 51 passam, 0 falham (saída 0); agora 51 passam, 0 falham (saída 0); falhas novas: 0
+2.2/tela-22: antes 54 passam, 2 falham (saída 1); agora 54 passam, 2 falham (saída 1); falhas novas: 0
+2.3/tela-23: antes 80 passam, 4 falham (saída 1); agora 80 passam, 4 falham (saída 1); falhas novas: 0
+2.3b/tela-23b: antes 102 passam, 0 falham (saída 0); agora 102 passam, 0 falham (saída 0); falhas novas: 0
+2.4a/tela-24a: antes 88 passam, 0 falham (saída 0); agora 88 passam, 0 falham (saída 0); falhas novas: 0
+2.4b/tela-24b: antes 32 passam, 6 falham (saída 1); agora 32 passam, 6 falham (saída 1); falhas novas: 0
+2.4c/tela-24c: antes 149 passam, 0 falham (saída 0); agora 147 passam, 2 falham (saída 1); falhas novas: 2
+   FALHA  PT: só o texto do abstrato diz "abstrato"
+   FALHA  EN: só o texto do abstrato diz "abstrato"
+2.4d0/tela-24d0: antes 240 passam, 0 falham (saída 0); agora 238 passam, 2 falham (saída 1); falhas novas: 2
+   FALHA  PT: só o texto do abstrato diz "abstrato"
+   FALHA  EN: só o texto do abstrato diz "abstrato"
+FIM

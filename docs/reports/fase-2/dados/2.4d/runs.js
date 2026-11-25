@@ -1,0 +1,3 @@
+const fs=require('fs'),path=require('path');const L=require('C:/Users/beatl/Documents/Projetos/librarian/tools/precisao/lib.js');
+const [out,bin]=process.argv.slice(2);const keys=['healthchecks-25597e41','renderer-9b78f3a9'];
+L.withStudio({studio:path.join(L.REPO,'.studio'),bin,keys},async({api,root})=>{for(const key of keys){const old=fs.readdirSync(path.join(root,'.studio/projects',key,'runs'))[0];const {id}=await api('POST','/api/generate',{key});for(const [n,r] of [['novo',id],['velho',old]])fs.cpSync(path.join(root,'.studio/projects',key,'runs',r),path.join(out,key,n),{recursive:true});console.log(key,id,old)}}).catch(e=>{console.error(e);process.exit(2)});

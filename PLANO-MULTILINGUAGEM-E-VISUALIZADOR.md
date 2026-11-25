@@ -127,7 +127,8 @@ corretas, lacunas explícitas e fatos aguardando aprovação humana.
   (`:=` em compreensão, `pub`, base de fora que delega, `cls(..)`, campo
   herdado).
   **Ordem do resto da Fase 2 (decidida pelo usuário em 25/11/2026):** 2.4d-0
-  → 2.4d → 2.5 → Fase 2B → 2.6. Os workflows A, B e C do Healthchecks só
+  → 2.4d → 2.4e → 2.4f → 2.5 → Fase 2B → 2.6 (2.4e e 2.4f incluídos na
+  validação do 2.4d). Os workflows A, B e C do Healthchecks só
   dependem da 2B e do 2.5 (as rotas passam a view como referência); o 2.6 só
   serve ao workflow D (`ch.notify`, F22). **Condição para a Parada 1 da 2B:**
   decidir, com contagem, se o tipo do elemento das coleções do Django
@@ -203,10 +204,62 @@ corretas, lacunas explícitas e fatos aguardando aprovação humana.
 - 2.4d `used_by` pelo inverso da regra (registrado em 25/11/2026, pedido do
   usuário; depois do 2.4d-0 e antes do 2.5). O `used_by` calculado pelo inverso
   da regra de resolução, incluindo o despacho polimórfico, à parte dos usos
-  por nome. Motivo: 707 dos 2.623 links únicos do Python (27%) não aparecem
-  no `used_by` do alvo (`Webhook.is_noop` responde 0 usos), e é essa
+  por nome. Motivo: 705 dos 2.638 links únicos do Python não apareciam no
+  `used_by` do alvo pela API, dos quais 376 (14%) pela regra e 329 pelo teto
+  de 120 pontos da vista (`Webhook.is_noop` responde 0 usos), e é essa
   pergunta que responde "quem é afetado se eu mudar isto?". Análise na
   seção 6 da [Parada 1 do 2.4c](docs/reports/fase-2/2.4c-parada-1.md).
+  Parada 1 aprovada em 25/11/2026 ([2.4d-parada-1.md](docs/reports/fase-2/2.4d-parada-1.md));
+  Parada 2 em [2.4d-parada-2.md](docs/reports/fase-2/2.4d-parada-2.md), validada em
+  25/11/2026 (DEC-46 vigente, linha de base trocada).
+  - **Links falsos conhecidos, sem mudar regra (Q11):** os usos ligados de
+    `Ping.get_body` (`hc/api/management/commands/smtpd.py:37` e `:41`,
+    `hc/front/views.py:800` e `:805`, que são de `email.message`) e de
+    `Groups::len` (`src/obj.rs:90`, `src/camera.rs:129`, `src/count.rs:133`
+    e `:151`, que são de `Vec` e `str`), e 10 dos 11 de `Sorteio::next`
+    (`src/obj.rs:19`, `:21`, `:22`, `:23`, `:28`, `:63`, `:66`, `:81` e
+    `src/count.rs:133`, `:151`, que são de `Iterator`). São 18, `unique` com
+    receptor sem tipo.
+- 2.4e Caça às lacunas (proposta aceita pelo usuário em 25/11/2026; entre o
+  2.4d e o 2.4f; Parada 1 ainda não aberta). Só medição, sem mudar regra.
+  - Dois gabaritos, comparados com a resposta do Librarian em todas as
+    chamadas: um de execução (a suíte do Healthchecks rodada gravando as
+    chamadas reais, quem chamou quem) e um de tipos (pyright ou mypy;
+    rust-analyzer no ray tracer).
+  - Entrega: a lista de lacunas, ordenada pelo número de chamadas afetadas; o
+    usuário escolhe quais viram passo.
+  - O gabarito é ferramenta de teste: não entra no grafo como evidência
+    ("código não prova execução" vale nos dois sentidos).
+  - Serve também para conferir o 2.4d e a Fase 2B.
+  - **Prioridade (usuário, 25/11/2026):** separar os links `unique` com
+    receptor (cerca de 900: 655 no Python e 245 no Rust) em confirmados ou não
+    pelo tipo. É a família de `Ping.get_body`, `Groups::len`, `FakeCurl` e
+    HC-27. As 18 chamadas de `Ping.get_body`, `Groups::len` e `Sorteio::next`
+    são links falsos conhecidos, a medir aqui.
+  - **Propor como o gabarito entra no portão de cada passo (usuário,
+    25/11/2026):** as discordâncias com pyright e rust-analyzer, em todas as
+    chamadas, não podem subir; sem entrar no grafo.
+  - **Antes dele (usuário, 25/11/2026):** um estrato sorteado de 30 links
+    `unique` com receptor (15 Python, 15 Rust), com a verdade proposta para o
+    usuário validar, para uma primeira estimativa da taxa de link falso
+    (pendência no ESTADO-ATUAL).
+  - Duas lacunas do Rust, achadas na amostra do 2.4d: o tipo do elemento de um
+    array (PH-27: `self.data[1][1].equivalent(..)` sai possível, mas sempre
+    roda o de `f64`) e o despacho pelo método padrão de uma trait (PH-34: o
+    2.4c só existe no Python).
+  - Medir também a lacuna de `T::from` no Rust, quase toda impossível (115 das
+    132 de `Patterns::from`, medido).
+- 2.4f Correção dos links `unique` sem tipo confirmado (registrado pelo usuário
+  em 25/11/2026; entre o 2.4e e o 2.5; sem passo aberto). É a família de
+  `Ping.get_body`, `Groups::len`, `Sorteio::next`, `FakeCurl` e HC-27, com os
+  18 links falsos conhecidos. A Parada 1 escolhe, com os números do 2.4e:
+  - (a) separar "ligado pelo tipo" de "ligado só pelo nome": não tira nenhum
+    link, e entra de qualquer forma;
+  - (b) rebaixar para possível quando o nome existe numa biblioteca conhecida
+    (`next`, `len`, `get_body`), o que antecipa parte do perfil de externos
+    conhecidos;
+  - (c) rebaixar sempre que o tipo é desconhecido, o que derruba corretas e
+    exigiria exceção da DEC-34.
 - 2.5 PIL-G5/N7: relação "passa referência", nunca "chama".
 - 2.6 Genéricos (N6), por último (ch.notify: 33 → 1).
 - Portão de cada passo: `node tools/precisao/portao.js --studio .studio
@@ -216,7 +269,8 @@ corretas, lacunas explícitas e fatos aguardando aprovação humana.
 
 ### Fase 2B — Relações de workflow
 **Ordem do resto da Fase 2 (decidida pelo usuário em 25/11/2026):** 2.4d-0 →
-2.4d → 2.5 → Fase 2B → 2.6. Os workflows A, B e C do Healthchecks só dependem
+2.4d → 2.4e → 2.4f → 2.5 → Fase 2B → 2.6 (2.4e e 2.4f incluídos na validação
+do 2.4d). Os workflows A, B e C do Healthchecks só dependem
 da 2B e do 2.5; o 2.6 só serve ao workflow D (`ch.notify`, F22).
 
 **Condição para a Parada 1 da 2B (usuário, 25/11/2026):** decidir, com
@@ -231,6 +285,11 @@ framework são externas conhecidas e como ele escolhe implementações
 (registro, injeção). Flask, FastAPI e, depois do Java, Spring devem entrar
 como perfis novos, sem mudar o núcleo nem as regras do Python. A Parada 1 da
 2B propõe a forma desse perfil e diz o que do Django não cabe nela.
+
+**Condição para a Parada 1 da 2B (usuário, 25/11/2026):** a taxa de link falso
+entre os ligados, medida pelo gabarito do 2.4e em todas as chamadas (não na
+amostra), abaixo de um limite que o usuário fixa depois do 2.4e; e nenhum fluxo
+da 2B segue um link "só pelo nome" sem marcá-lo como incerto.
 
 - Pontos de entrada: rotas (PIL-G4), management commands, jobs.
 - Chamadas soltas no topo dos arquivos Python (Q2 da Parada 1 do 2.3b,
@@ -271,6 +330,18 @@ como perfis novos, sem mudar o núcleo nem as regras do Python. A Parada 1 da
   usuário; as folhas de revisão como datasets). O registro de auditoria
   oficial continua no acervo do Librarian; o Langfuse é a visão operacional
   e, se divergir, vale o acervo. Nada disso entra no núcleo (DEC-29).
+
+### Antes da Fase 3: o envelope e o "Medir tudo" pela regra
+Registrado em 25/11/2026 (Q9 do 2.4d). Parada 1 não aberta.
+- **Ponto principal: a nota ao modelo.** Ela diz "caminho: chama um alvo", sem
+  "pelo nome", e é lida pelos agentes. O `envelope-1` declara que os chamadores
+  são por nome no campo `limits` da resposta e na ajuda da tela; a nota, não. O
+  texto da tela ("chama X pelo nome escrito") foi corrigido no 2.4d.
+- Os chamadores do envelope e do "Medir tudo" usam o `used_by` por nome, com um
+  candidato só. A regra nega 1.101 dos 2.316 no Python e 15 dos 1.041 no Rust, e
+  liga 727 e 697 que não aparecem lá.
+- Mudar isso muda o `envelope-1`: pede `envelope-2` e diz o que acontece com as
+  sugestões gravadas.
 
 ### Fase 3 — Fatos, proveniência e aprovação humana
 (absorve as Etapas 6–7 da frente do Studio: "fatos por fonte" da

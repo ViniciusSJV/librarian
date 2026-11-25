@@ -1,0 +1,20 @@
+## healthchecks-25597e41
+1. /api/calls: 4718 respostas na profundidade 1 e 189 na 3; diferentes: 0; só num lado: 0; sha256 de todas: 062d05b0924b6c73 = 062d05b0924b6c73
+2. invariante: 12606 links na ida, 12606 usos na volta; exceções 0 + 0 [] []
+   ocorrências em dois tipos, ou também à parte: 0
+3. totais por tipo (pares) {"above_limit":11193,"abstract_calls":1,"linked":2770,"name":39814,"possible_homonym":9777,"possible_type":58,"ruled_out":5740} ; roda ao instanciar 132 ; símbolos com algum uso 1438 ; com ligado ou possível 572 ; cortados no desenho 64
+   chamadas acima do teto em alguma lacuna 402
+   pares de possível por homônimo 9777 ; chamadas 2267
+## renderer-9b78f3a9
+1. /api/calls: 819 respostas na profundidade 1 e 33 na 3; diferentes: 0; só num lado: 0; sha256 de todas: fd304757c3f21878 = fd304757c3f21878
+2. invariante: 2274 links na ida, 2274 usos na volta; exceções 0 + 0 [] []
+   ocorrências em dois tipos, ou também à parte: 0
+3. totais por tipo (pares) {"above_limit":1862,"abstract_calls":0,"linked":1736,"name":4413,"possible_homonym":538,"possible_type":0,"ruled_out":667} ; roda ao instanciar 0 ; símbolos com algum uso 366 ; com ligado ou possível 209 ; cortados no desenho 1
+   chamadas acima do teto em alguma lacuna 140
+   Patterns::from, lacuna 132 {
+  'Patterns::from': 17,
+  'Object::from': 82,
+  'f64::from': 32,
+  'crate::object::Object::from': 1
+}
+   pares de possível por homônimo 538 ; chamadas 80

@@ -1239,3 +1239,15 @@ Escrever o teste de regressão do P1 **antes** da correção: uma função Pytho
 - **Regra (sem perfil novo, grafo igual):** o nome da classe pelo escopo (DEC-42), a cadeia para cima (DEC-43), sem despacho.
 - **Resultado:** portão APROVADO, Python (171) 96/1/15/8/51 e Rust (70) 44/0/1/10/15; 18 de 18 mudanças previstas; suíte 550 aprovados; perguntas 01–14 com H1–H3; tela 240 de 240.
 - **Validação do usuário (25/11):** a verdade de HC-158 a HC-171 (seis no editor), a DEC-45 e a nota na DEC-44; a linha de base trocada. Pendência registrada: a estimativa ponderada não tem o estrato `type`.
+
+## 33. Passo 2.4d: o `used_by` pelo inverso da regra (25/11/2026)
+
+**Estado nesta data.** O estado vigente fica no [ESTADO-ATUAL.md](ESTADO-ATUAL.md). Relatórios: [Parada 1](docs/reports/fase-2/2.4d-parada-1.md) e [Parada 2](docs/reports/fase-2/2.4d-parada-2.md); folha: [2.4d-revisao-amostra.md](docs/reports/fase-2/2.4d-revisao-amostra.md).
+
+- **Parada 1:** os "707 de 2.623" misturavam duas causas. São 705 de 2.638 pela API: 376 pela regra e 329 pelo teto de 120 pontos da vista. Inverter o run inteiro custa 2,7 s no Healthchecks (medido no simulador). Q1 a Q13 aprovadas, com condições; o item 2.4e (caça às lacunas) entrou no PLANO.
+- **Decisões do usuário (25/11):** "certo" passa a "ligado" (a regra liga; não é verificação); a lacuna acima do teto com a forma e o teste de tipo que já existia, sem guarda nova; o envelope continua por nome, e um item antes da Fase 3 trata dele, com a nota ao modelo como ponto principal; o possível por homônimo recolhido, pela precisão medida; todo número vem marcado como medido ou estimado.
+- **Código:** a decisão por chamada saiu do `calls_from` para uma função só (`v2::answer`), usada nos dois sentidos; o índice (`graph/uses.rs`) fica em memória, um run por vez.
+- **Resultado:** `/api/calls` idêntico, byte a byte, nos 4.718 + 819 símbolos; invariante com 0 exceções; portão APROVADO, sem mudança; suíte 557; tela 71 de 71. Um pedido de `used_by` caiu de 31 ms para 0,7 ms.
+- **Erros meus, corrigidos:** a lacuna de `Patterns::from` foi dita 17 e depois 49, sem medir; é 132. A correção da linha do ponto cobria o botão "Juntar"; uma verificação nova pegou.
+- **Achados:** 18 usos ligados falsos da família do `unique` (`Ping.get_body`, `Groups::len`, `Sorteio::next`); a regra nega 1.101 dos 2.316 chamadores por nome do envelope; duas lacunas do Rust (elemento de array e método padrão de trait); 12 falhas em baterias de tela de passos fechados, e 18 do Studio sem dados.
+- **Validação do usuário (25/11):** a verdade de UB-1 a UB-28 e PH-1 a PH-40 (nove itens no editor), a DEC-46 e as correções da página (D5, em commit à parte). A linha de base passou a incluir a amostra de usos. A arrumação das baterias antigas fica para outra sessão.

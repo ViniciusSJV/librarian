@@ -1,0 +1,146 @@
+run novo renderer-9b78f3a9 20261125-194720
+run novo healthchecks-25597e41 20261125-194720
+PASSA  PT is_noop: resposta 0/1/0, lacuna 1  -> {"above_limit":1,"abstract_calls":0,"linked":0,"name":0,"possible_homonym":0,"possible_type":1,"ruled_out":0}
+PASSA  PT is_noop: linha tracejada  -> [{"cls":"edge ambiguous","title":"self.transport.is_noop(flip.new_status) · hc/api/models.py:1153"}]
+PASSA  PT is_noop: a lacuna diz que podem usar  -> Todos os usos diretos: 0 ligados · 1 possíveis pelo tipo · 0 possíveis por homônimo · 0 só por nome · 1 chamadas com este nome ficaram acima do limite de homônimos e podem usar este ponto
+PASSA  PT is_noop: nunca um total  -> 0 ligados pela regra · 1 pelo tipo e 0 por homônimo possíveis · 0 só por nome (usos diretos). Clique numa linha para ver o motivo e onde está escrito.
+PASSA  PT is_noop: o detalhe diz 1 de 14  -> Channel.notify → Webhook.is_noop
+Fechar
+chama: self.transport.is_noop(flip.new_status)
+hc/api/models.py:1153
+pode chamar este ponto: roda o corpo da classe do objeto, e este é um de 14
+PASSA  PT is_noop: sem "certo" nem chave crua  -> 0 ligados pela regra · 1 pelo tipo e 0 por homônimo possíveis · 0 só por nome (usos diretos). Clique numa linha para ver o motivo e onde está escrito.
+PASSA  PT duplo clique no possível continua a partir dele
+PASSA  PT Channel.notify: 0 usos e a lacuna aparece  -> Todos os usos diretos: 0 ligados · 0 possíveis pelo tipo · 0 possíveis por homônimo · 0 só por nome · 344 chamadas com este nome ficaram acima do limite de homônimos e podem usar este ponto
+PASSA  PT Transport.notify: 0 usos, abstrato à parte  -> Todos os usos diretos: 0 ligados · 0 possíveis pelo tipo · 0 possíveis por homônimo · 0 só por nome · 344 chamadas com este nome ficaram acima do limite de homônimos e podem usar este ponto · 1 chamadas são escritas contra este método, que é abstrato: roda o de uma subclasse
+PASSA  PT sem uso: o texto não afirma que ninguém usa  -> Nenhum uso encontrado pela regra. Isso não prova que ninguém usa.
+PASSA  PT cors: 13 ligados, decora  -> checks → cors
+Fechar
+decora: cors
+hc/api/views.py:480
+ligado pela regra: entre as declarações que a forma da chamada alcança, o nome só combina com esta · decora: roda quando a declaração roda, não a cada chamada dela
+PASSA  PT cors: o filtro diz só usos ligados  -> só usos ligados
+PASSA  PT __init__: roda ao instanciar  -> send → EmailThread.__init__
+Fechar
+instancia: EmailThread
+hc/lib/emails.py:77
+ligado pela regra: entre as declarações que a forma da chamada alcança, o nome só combina com esta · roda ao instanciar EmailThread
+PASSA  PT classe: instancia  -> send → EmailThread
+Fechar
+instancia: EmailThread
+hc/lib/emails.py:77
+ligado pela regra: entre as declarações que a forma da chamada alcança, o nome só combina com esta · instancia: cria um objeto deste tipo
+usa um objeto deste tipo: t
+hc/lib/emails.py:81
+usa um objeto deste tipo aqui; o nome não está escrito
+usa um objeto deste tipo: t
+hc/lib/emails.py:85
+usa um objeto deste tipo aqui; o nome não está escrito
+PASSA  PT authorize: só por nome, pontilhada, e os descartados contados  -> Todos os usos diretos: 0 ligados · 0 possíveis pelo tipo · 0 possíveis por homônimo · 8 só por nome (testes escondidos) · 13 nomes iguais não são usos: a regra os liga a outro ponto ou os nega
+PASSA  PT linha do ponto: visível e clicável com o detalhe aberto  -> {"hidden":false,"detail":true,"hit":true,"text":"Juntar ao rascunho","x":555.71875,"y":881.3046875,"h":900}
+PASSA  PT linha do ponto: Juntar funciona
+PASSA  PT get_body: o motivo, sem prometer  -> _to_text → Ping.get_body
+Fechar
+chama: message.get_body(("plain",))
+hc/api/management/commands/smtpd.py:37
+ligado pela regra: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+chama: message.get_body(("html",))
+hc/api/management/commands/smtpd.py:41
+ligado pela regra: entre as declarações que a forma da chamada alcança, o nome só combina com esta
+PASSA  PT post: 461 homônimos contados, fora do desenho  -> 24 ligados pela regra · 0 pelo tipo e 461 por homônimo possíveis · 0 só por nome (usos diretos). Clique numa linha para ver o motivo e onde está escrito.
+PASSA  PT post: recolhidos por padrão, e a lista traz os 461 sob pedido  -> {"was":false,"closed":true,"n":461}
+PASSA  PT tipo do receptor: texto próprio, sem dizer que o nome está escrito  -> UnsubscribeTestCase.test_it_serves_confirmation_form → UnsubscribeTestCase
+Fechar
+usa um objeto deste tipo: self
+hc/integrations/email/tests/test_unsubscribe.py:25
+usa um objeto deste tipo aqui; o nome não está escrito
+usa um objeto deste tipo: self
+hc/integrations/email/tests/test_unsubscribe.py:26
+usa um objeto deste tipo aqui; o nome não está escrito
+PASSA  PT tipo do receptor: o rótulo da linha
+PASSA  PT só homônimos: diz que estão na lista  -> Nada a desenhar: os possíveis por homônimo estão na lista dos usos diretos, acima.
+PASSA  PT post: o filtro de testes vale nas contagens  -> Todos os usos diretos: 24 ligados · 0 possíveis pelo tipo · 0 possíveis por homônimo · 0 só por nome (testes escondidos) · 7 nomes iguais não são usos: a regra os liga a outro ponto ou os nega
+PASSA  PT post: só ligados  -> 23
+PASSA  PT setUp: o desenho corta, a lista dos 139 não  -> 139 ligados pela regra · 0 pelo tipo e 0 por homônimo possíveis · 0 só por nome (usos diretos). O desenho parou em 120 pontos; a lista dos usos diretos está completa. Clique numa linha para ver o motivo e onde está escrito.
+PASSA  PT setUp: 139 na lista aberta
+PASSA  PT envelope: pelo nome escrito  -> chama X pelo nome escrito (L1)
+PASSA  PT nenhum texto novo diz "certo"
+PASSA  PT color_at: 7 ligados desenhados e 1 homônimo só contado  -> {"above_limit":0,"abstract_calls":0,"linked":7,"name":0,"possible_homonym":1,"possible_type":0,"ruled_out":22}
+PASSA  PT Patterns::from: lacuna 132  -> {"above_limit":132,"abstract_calls":0,"linked":0,"name":0,"possible_homonym":0,"possible_type":0,"ruled_out":0}
+PASSA  PT "O que ele chama?" desenha e esconde a lista de usos
+PASSA  PT nenhum erro de página
+PASSA  PT nenhuma escrita
+PASSA  EN is_noop: resposta 0/1/0, lacuna 1  -> {"above_limit":1,"abstract_calls":0,"linked":0,"name":0,"possible_homonym":0,"possible_type":1,"ruled_out":0}
+PASSA  EN is_noop: linha tracejada  -> [{"cls":"edge ambiguous","title":"self.transport.is_noop(flip.new_status) · hc/api/models.py:1153"}]
+PASSA  EN is_noop: a lacuna diz que podem usar  -> All the direct uses: 0 linked · 1 possible by the type · 0 possible by homonym · 0 name only · 1 calls with this name were above the homonym limit and may use this point
+PASSA  EN is_noop: nunca um total  -> 0 linked by the rule · 1 by the type and 0 by homonym possible · 0 name only (direct uses). Click a line to see the reason and where it is written.
+PASSA  EN is_noop: o detalhe diz 1 de 14  -> Channel.notify → Webhook.is_noop
+Close
+calls: self.transport.is_noop(flip.new_status)
+hc/api/models.py:1153
+may call this point: the body of the object's class runs, and this is one of 14
+PASSA  EN is_noop: sem "certo" nem chave crua  -> 0 linked by the rule · 1 by the type and 0 by homonym possible · 0 name only (direct uses). Click a line to see the reason and where it is written.
+PASSA  EN duplo clique no possível continua a partir dele
+PASSA  EN Channel.notify: 0 usos e a lacuna aparece  -> All the direct uses: 0 linked · 0 possible by the type · 0 possible by homonym · 0 name only · 344 calls with this name were above the homonym limit and may use this point
+PASSA  EN Transport.notify: 0 usos, abstrato à parte  -> All the direct uses: 0 linked · 0 possible by the type · 0 possible by homonym · 0 name only · 344 calls with this name were above the homonym limit and may use this point · 1 calls are written against this method, which is abstract: a subclass's runs
+PASSA  EN sem uso: o texto não afirma que ninguém usa  -> No use found by the rule. This does not prove nobody uses it.
+PASSA  EN cors: 13 ligados, decora  -> checks → cors
+Close
+decorates: cors
+hc/api/views.py:480
+linked by the rule: among the declarations the call's form reaches, the name matches only this one · decorates: runs when the declaration runs, not on each of its calls
+PASSA  EN cors: o filtro diz só usos ligados  -> only linked uses
+PASSA  EN __init__: roda ao instanciar  -> send → EmailThread.__init__
+Close
+instantiates: EmailThread
+hc/lib/emails.py:77
+linked by the rule: among the declarations the call's form reaches, the name matches only this one · runs when EmailThread is instantiated
+PASSA  EN classe: instancia  -> send → EmailThread
+Close
+instantiates: EmailThread
+hc/lib/emails.py:77
+linked by the rule: among the declarations the call's form reaches, the name matches only this one · instantiates: builds an object of this type
+uses an object of this type: t
+hc/lib/emails.py:81
+uses an object of this type here; the name is not written
+uses an object of this type: t
+hc/lib/emails.py:85
+uses an object of this type here; the name is not written
+PASSA  EN authorize: só por nome, pontilhada, e os descartados contados  -> All the direct uses: 0 linked · 0 possible by the type · 0 possible by homonym · 8 name only (tests hidden) · 13 equal names are not uses: the rule links them to another point or rules them out
+PASSA  EN linha do ponto: visível e clicável com o detalhe aberto  -> {"hidden":false,"detail":true,"hit":true,"text":"Add to the draft","x":548.1640625,"y":881.3046875,"h":900}
+PASSA  EN linha do ponto: Juntar funciona
+PASSA  EN get_body: o motivo, sem prometer  -> _to_text → Ping.get_body
+Close
+calls: message.get_body(("plain",))
+hc/api/management/commands/smtpd.py:37
+linked by the rule: among the declarations the call's form reaches, the name matches only this one
+calls: message.get_body(("html",))
+hc/api/management/commands/smtpd.py:41
+linked by the rule: among the declarations the call's form reaches, the name matches only this one
+PASSA  EN post: 461 homônimos contados, fora do desenho  -> 24 linked by the rule · 0 by the type and 461 by homonym possible · 0 name only (direct uses). Click a line to see the reason and where it is written.
+PASSA  EN post: recolhidos por padrão, e a lista traz os 461 sob pedido  -> {"was":false,"closed":true,"n":461}
+PASSA  EN tipo do receptor: texto próprio, sem dizer que o nome está escrito  -> UnsubscribeTestCase.test_it_serves_confirmation_form → UnsubscribeTestCase
+Close
+uses an object of this type: self
+hc/integrations/email/tests/test_unsubscribe.py:25
+uses an object of this type here; the name is not written
+uses an object of this type: self
+hc/integrations/email/tests/test_unsubscribe.py:26
+uses an object of this type here; the name is not written
+PASSA  EN tipo do receptor: o rótulo da linha
+PASSA  EN só homônimos: diz que estão na lista  -> Nothing to draw: the possible ones by homonym are in the list of direct uses, above.
+PASSA  EN post: o filtro de testes vale nas contagens  -> All the direct uses: 24 linked · 0 possible by the type · 0 possible by homonym · 0 name only (tests hidden) · 7 equal names are not uses: the rule links them to another point or rules them out
+PASSA  EN post: só ligados  -> 23
+PASSA  EN setUp: o desenho corta, a lista dos 139 não  -> 139 linked by the rule · 0 by the type and 0 by homonym possible · 0 name only (direct uses). The drawing stopped at 120 points; the list of direct uses is complete. Click a line to see the reason and where it is written.
+PASSA  EN setUp: 139 na lista aberta
+PASSA  EN envelope: pelo nome escrito  -> calls X by the written name (L1)
+PASSA  EN nenhum texto novo diz "certo"
+PASSA  EN color_at: 7 ligados desenhados e 1 homônimo só contado  -> {"above_limit":0,"abstract_calls":0,"linked":7,"name":0,"possible_homonym":1,"possible_type":0,"ruled_out":22}
+PASSA  EN Patterns::from: lacuna 132  -> {"above_limit":132,"abstract_calls":0,"linked":0,"name":0,"possible_homonym":0,"possible_type":0,"ruled_out":0}
+PASSA  EN "O que ele chama?" desenha e esconde a lista de usos
+PASSA  EN nenhum erro de página
+PASSA  EN nenhuma escrita
+PASSA  estreita: desenha, sem rolagem horizontal da página
+PASSA  escura: desenha, sem rolagem horizontal da página
+PASSA  .studio original inalterado
+71 passam, 0 falham; imagens em C:/Users/beatl/AppData/Local/Temp/claude/09139e964f85837f/bee8b3f2-48a7-41c2-adfe-e2e284193bf8/scratchpad/tela

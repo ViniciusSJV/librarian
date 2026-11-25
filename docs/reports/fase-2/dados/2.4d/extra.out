@@ -1,0 +1,44 @@
+## healthchecks-25597e41
+envelope "caller" (1 candidato por nome): ocorrências 2316 ; a regra confirma 1215 ; a regra nega 1101 ; chamadas que a regra liga e o envelope não vê como chamador 727
+acima do teto: 403 produção 26
+   notify 344 produção: hc/api/management/commands/sendalerts.py:43, hc/front/views.py:1333, hc/front/views.py:1339, hc/integrations/group/transport.py:15, hc/accounts/management/commands/senddeletionscheduled.py:60, hc/accounts/management/commands/senddeletionscheduled.py:64, hc/integrations/apprise/transport.py:34
+   add 57 produção: hc/front/views.py:355, hc/front/views.py:1124, hc/front/views.py:258, hc/front/views.py:266, hc/front/views.py:273, hc/front/views.py:280, hc/front/views.py:282, hc/lib/html.py:36, hc/api/views.py:359, hc/api/views.py:365, hc/api/views.py:369, hc/api/views.py:413
+   is_noop 1 produção: hc/api/models.py:1409
+novo (V9) {
+  chamadas: 16239,
+  certas: 2638,
+  ambiguas: 2271,
+  acima: 403,
+  sem: 10927,
+  runs: 132
+} 
+antigo (V8) {
+  chamadas: 16239,
+  certas: 2292,
+  ambiguas: 2329,
+  acima: 633,
+  sem: 10985,
+  runs: 125
+}
+amostra com alvo no projeto: onde B aparece { certo: 96, 'possível': 3 } []
+## renderer-9b78f3a9
+envelope "caller" (1 candidato por nome): ocorrências 1041 ; a regra confirma 1026 ; a regra nega 15 ; chamadas que a regra liga e o envelope não vê como chamador 697
+acima do teto: 173 produção 173
+   transform 8 produção: src/patterns.rs:15, src/object.rs:36, src/object.rs:38, src/object.rs:26, src/object.rs:31, src/groups.rs:68, src/groups.rs:68, src/world.rs:21
+novo (V9) {
+  chamadas: 2545,
+  certas: 1736,
+  ambiguas: 80,
+  acima: 173,
+  sem: 556,
+  runs: 0
+} 
+antigo (V8) {
+  chamadas: 2545,
+  certas: 1736,
+  ambiguas: 80,
+  acima: 173,
+  sem: 556,
+  runs: 0
+}
+amostra com alvo no projeto: onde B aparece { certo: 44, 'possível': 9, lacuna: 1 } []

@@ -1,0 +1,341 @@
+healthchecks-25597e41 certos por resolução {
+  'unique class sem receptor': 570,
+  'unique method com receptor': 655,
+  'type method com receptor': 288,
+  'unique function sem receptor': 578,
+  'unique class com receptor': 79,
+  'receiver method com receptor': 330,
+  'import function com receptor': 14,
+  'scope function sem receptor': 55,
+  'scope class sem receptor': 3,
+  'import class sem receptor': 42,
+  'import class com receptor': 2,
+  'unique function com receptor': 16,
+  'import function sem receptor': 6
+}
+ unique com receptor, método: 655 produção: 348
+ A == B (recursão): 1
+## Webhook.is_noop (hc/integrations/webhook/transport.py:63)
+   POSSIVEL-tipo hc/api/models.py:1153 homonym propriedade entre 14 self.transport.is_noop(flip.new_status) | de Channel.notify
+## Discord.fix_asterisks (hc/integrations/discord/transport.py:25)
+   POSSIVEL-tipo hc/integrations/slack/transport.py:72 homonym self entre 2 self.fix_asterisks(check.schedule) | de Slackalike.payload
+   descartado hc/integrations/rocketchat/transport.py:43 self.fix_asterisks(check.schedule)
+   descartado hc/integrations/msteamsw/transport.py:82 self.fix_asterisks(check.schedule)
+## RocketChat.fix_asterisks (hc/integrations/rocketchat/transport.py:14)
+   CERTO hc/integrations/rocketchat/transport.py:43 receiver   self.fix_asterisks(check.schedule) | de RocketChat.payload
+   descartado hc/integrations/slack/transport.py:72 self.fix_asterisks(check.schedule)
+   descartado hc/integrations/msteamsw/transport.py:82 self.fix_asterisks(check.schedule)
+## TokenBucket.authorize (hc/api/models.py:1442)
+   CERTO hc/api/models.py:1479 type classe  TokenBucket.authorize(value, 20, 3600) | de TokenBucket.authorize_auth_ip
+   CERTO hc/api/models.py:1493 type classe  TokenBucket.authorize(f"em-{hashed}", 10, 3600) | de TokenBucket.authorize_login_email
+   CERTO hc/api/models.py:1500 type classe  TokenBucket.authorize(value, 20, 3600 * 24) | de TokenBucket.authorize_invite
+   CERTO hc/api/models.py:1508 type classe  TokenBucket.authorize(f"pw-{hashed}", 20, 3600 * 24) | de TokenBucket.authorize_login_password
+   CERTO hc/api/models.py:1513 type classe  TokenBucket.authorize(f"tg-{telegram_id}", 6, 60) | de TokenBucket.authorize_telegram
+   CERTO hc/api/models.py:1521 type classe  TokenBucket.authorize(f"signal-{hashed}", 6, 60) | de TokenBucket.authorize_signal
+   CERTO hc/api/models.py:1528 type classe  TokenBucket.authorize(value, 50, 3600 * 24) | de TokenBucket.authorize_signal_verification
+   CERTO hc/api/models.py:1536 type classe  TokenBucket.authorize(f"po-{hashed}", 6, 60) | de TokenBucket.authorize_pushover
+   CERTO hc/api/models.py:1544 type classe  TokenBucket.authorize(f"ntfy-{hashed}", 6, 60) | de TokenBucket.authorize_ntfy
+   CERTO hc/api/models.py:1551 type classe  TokenBucket.authorize(value, 10, 3600 * 24) | de TokenBucket.authorize_sudo_code
+   CERTO hc/api/models.py:1559 type classe  TokenBucket.authorize(value, 96, 3600 * 24) | de TokenBucket.authorize_totp_attempt
+   CERTO hc/api/models.py:1568 type classe  TokenBucket.authorize(value, 1, 90) | de TokenBucket.authorize_totp_code
+   CERTO hc/api/models.py:1587 type classe  TokenBucket.authorize("s3_get_object_error", 3, 60, force=Tr | de TokenBucket.record_s3_get_object_error
+## authorize (hc/api/decorators.py:33)
+   NOME name_reference hc/api/views.py:455 authorize
+   NOME name_reference hc/api/views.py:490 authorize
+   NOME name_reference hc/api/views.py:516 authorize
+   NOME name_reference hc/api/views.py:537 authorize
+   NOME name_reference hc/api/views.py:563 authorize
+   NOME name_reference hc/api/views.py:590 authorize
+   NOME name_reference hc/api/views.py:612 authorize
+   NOME name_reference hc/api/views.py:642 authorize
+   descartado hc/api/models.py:1479 TokenBucket.authorize(value, 20, 3600)
+   descartado hc/api/models.py:1493 TokenBucket.authorize(f"em-{hashed}", 10, 3600)
+   descartado hc/api/models.py:1500 TokenBucket.authorize(value, 20, 3600 * 24)
+   descartado hc/api/models.py:1508 TokenBucket.authorize(f"pw-{hashed}", 20, 3600 * 2
+   descartado hc/api/models.py:1513 TokenBucket.authorize(f"tg-{telegram_id}", 6, 60)
+   descartado hc/api/models.py:1521 TokenBucket.authorize(f"signal-{hashed}", 6, 60)
+   descartado hc/api/models.py:1528 TokenBucket.authorize(value, 50, 3600 * 24)
+   descartado hc/api/models.py:1536 TokenBucket.authorize(f"po-{hashed}", 6, 60)
+   descartado hc/api/models.py:1544 TokenBucket.authorize(f"ntfy-{hashed}", 6, 60)
+   descartado hc/api/models.py:1551 TokenBucket.authorize(value, 10, 3600 * 24)
+   descartado hc/api/models.py:1559 TokenBucket.authorize(value, 96, 3600 * 24)
+   descartado hc/api/models.py:1568 TokenBucket.authorize(value, 1, 90)
+   descartado hc/api/models.py:1587 TokenBucket.authorize("s3_get_object_error", 3, 60
+## Telegram.send (hc/integrations/telegram/transport.py:55)
+   CERTO hc/integrations/telegram/transport.py:87 receiver   self.send(self.channel.telegram.id, self.channel.telegram.th | de Telegram.notify
+   CERTO hc/integrations/telegram/transport.py:91 receiver   self.send(self.channel.telegram.id, self.channel.telegram.th | de Telegram.notify
+   POSSIVEL-hom hc/lib/emails.py:25 homonym  entre 2 self.message.send() | de EmailThread.run
+   CERTO hc/integrations/telegram/views.py:82 type classe  Telegram.send(chat.id, doc.message.message_thread_id, invite | de telegram_bot
+   descartado hc/integrations/signal/views.py:119 Signal.send(recipient, f"Test message from {settin
+   descartado hc/lib/emails.py:89 send
+   descartado hc/lib/emails.py:93 send
+   descartado hc/lib/emails.py:105 send
+   descartado hc/lib/emails.py:109 send
+   descartado hc/lib/emails.py:114 send
+   descartado hc/lib/emails.py:119 send
+   descartado hc/lib/emails.py:124 send
+   descartado hc/lib/emails.py:129 send
+   descartado hc/lib/emails.py:134 send
+   descartado hc/lib/emails.py:138 send
+   descartado hc/lib/emails.py:142 send
+   descartado hc/lib/emails.py:146 send
+   descartado hc/lib/emails.py:150 send
+   descartado hc/integrations/signal/transport.py:179 self.send(self.channel.phone.value, text)
+   descartado hc/lib/tests/test_emails.py:45 send
+## Check.ping (hc/api/models.py:493)
+   POSSIVEL-hom hc/front/tests/test_ping_details.py:130 homonym   self.check.ping( "1.2.3.4", "http", "post", "tester", b"foo- | de PingDetailsTestCase.test_it_accepts_n
+   POSSIVEL-hom hc/front/tests/test_ping_details.py:133 homonym   self.check.ping( "1.2.3.4", "http", "post", "tester", b"bar- | de PingDetailsTestCase.test_it_accepts_n
+   POSSIVEL-hom hc/api/management/commands/smtpd.py:91 homonym   check.ping( remote_addr=remote_addr, scheme="email", method= | de _process_message
+   CERTO hc/api/views.py:255 type parametro  check.ping(remote_addr, scheme, method, ua, body, action, ri | de ping
+   descartado hc/api/views.py:300 ping
+## EmailThread.__init__ (hc/lib/emails.py:18)
+   INSTANCIA hc/lib/emails.py:77 unique   EmailThread | de send
+   INSTANCIA hc/lib/tests/test_emails.py:18 unique   EmailThread | de EmailsTestCase.test_it_retries
+   INSTANCIA hc/lib/tests/test_emails.py:28 unique   EmailThread | de EmailsTestCase.test_it_limits_retries
+   INSTANCIA hc/lib/tests/test_emails.py:37 unique   EmailThread | de EmailsTestCase.test_it_retries_smtp_data_error
+## Ping.get_body (hc/api/models.py:772)
+   CERTO hc/api/management/commands/smtpd.py:37 unique   message.get_body(("plain",)) | de _to_text
+   CERTO hc/api/management/commands/smtpd.py:41 unique   message.get_body(("html",)) | de _to_text
+   CERTO hc/front/views.py:800 unique   parsed.get_body(("plain",)) | de ping_details
+   CERTO hc/front/views.py:805 unique   parsed.get_body(("html",)) | de ping_details
+## cors (hc/api/decorators.py:96)
+   DECORA hc/api/views.py:480 unique   cors | de checks
+   DECORA hc/api/views.py:488 unique   cors | de channels
+   DECORA hc/api/views.py:506 unique   cors | de get_check_by_unique_key
+   DECORA hc/api/views.py:550 unique   cors | de single
+   DECORA hc/api/views.py:561 unique   cors | de pause
+   DECORA hc/api/views.py:588 unique   cors | de resume
+   DECORA hc/api/views.py:610 unique   cors | de pings
+   DECORA hc/api/views.py:640 unique   cors | de ping_body
+   DECORA hc/api/views.py:689 unique   cors | de flips_by_uuid
+   DECORA hc/api/views.py:697 unique   cors | de flips_by_unique_key
+   DECORA hc/api/views.py:707 unique   cors | de badges
+   DECORA hc/api/views.py:745 unique   cors | de badge
+   DECORA hc/api/views.py:799 unique   cors | de check_badge
+## Signal.send (hc/integrations/signal/transport.py:60)
+   CERTO hc/integrations/signal/views.py:119 type classe  Signal.send(recipient, f"Test message from {settings.SITE_NA | de verify_signal_number
+   POSSIVEL-hom hc/lib/emails.py:25 homonym  entre 2 self.message.send() | de EmailThread.run
+   CERTO hc/integrations/signal/transport.py:179 receiver   self.send(self.channel.phone.value, text) | de Signal.notify
+   descartado hc/integrations/telegram/transport.py:87 self.send(self.channel.telegram.id, self.channel.t
+   descartado hc/integrations/telegram/transport.py:91 self.send(self.channel.telegram.id, self.channel.t
+   descartado hc/lib/emails.py:89 send
+   descartado hc/lib/emails.py:93 send
+   descartado hc/lib/emails.py:105 send
+   descartado hc/lib/emails.py:109 send
+   descartado hc/lib/emails.py:114 send
+   descartado hc/lib/emails.py:119 send
+   descartado hc/lib/emails.py:124 send
+   descartado hc/lib/emails.py:129 send
+   descartado hc/lib/emails.py:134 send
+   descartado hc/lib/emails.py:138 send
+   descartado hc/lib/emails.py:142 send
+   descartado hc/lib/emails.py:146 send
+   descartado hc/lib/emails.py:150 send
+   descartado hc/integrations/telegram/views.py:82 Telegram.send(chat.id, doc.message.message_thread_
+   descartado hc/lib/tests/test_emails.py:45 send
+## HttpTransport.raise_for_response (hc/api/transports.py:133)
+   POSSIVEL-tipo hc/api/transports.py:162 homonym cls entre 12 cls.raise_for_response(r) | de HttpTransport._request
+## Transport.notify (hc/api/transports.py:66)
+## Slackalike.payload (hc/integrations/slack/transport.py:31)
+   CERTO hc/integrations/mattermost/transport.py:15 type self  self.payload(flip) | de Mattermost.notify
+   CERTO hc/integrations/discord/transport.py:22 type self  self.payload(flip) | de Discord.notify
+   CERTO hc/integrations/slack/transport.py:97 receiver   self.payload(flip) | de Slackalike.notify
+   CERTO hc/integrations/slack/transport.py:126 type self  self.payload(flip) | de Slack.notify
+   descartado hc/integrations/rocketchat/transport.py:64 self.payload(flip)
+   descartado hc/integrations/msteamsw/transport.py:114 self.payload(flip)
+## EmailThread (hc/lib/emails.py:15)
+   CERTO hc/lib/emails.py:77 unique   EmailThread | de send
+   CERTO hc/lib/tests/test_emails.py:18 unique   EmailThread | de EmailsTestCase.test_it_retries
+   CERTO hc/lib/tests/test_emails.py:28 unique   EmailThread | de EmailsTestCase.test_it_limits_retries
+   CERTO hc/lib/tests/test_emails.py:37 unique   EmailThread | de EmailsTestCase.test_it_retries_smtp_data_error
+   NOME receiver_type hc/lib/emails.py:81 t
+   NOME receiver_type hc/lib/emails.py:85 t
+   NOME receiver_type hc/lib/tests/test_emails.py:38 t
+   NOME receiver_type hc/lib/tests/test_emails.py:19 t
+   NOME receiver_type hc/lib/tests/test_emails.py:29 t
+renderer-9b78f3a9 certos por resolução {
+  'unique function sem receptor': 30,
+  'type method sem receptor': 475,
+  'unique method sem receptor': 739,
+  'type method com receptor': 137,
+  'type variant sem receptor': 11,
+  'trait_default trait_method com receptor': 40,
+  'unique method com receptor': 245,
+  'unique trait_method com receptor': 12,
+  'unique struct sem receptor': 2,
+  'receiver method com receptor': 21,
+  'scope function sem receptor': 24
+}
+ unique com receptor, método: 245 produção: 245
+ A == B (recursão): 2
+## impl World::color_at (src/world.rs:109)
+   POSSIVEL-hom src/patterns.rs:16 homonym  entre 7 self.color_at(pattern_point) | de Incuse::color_at_object
+   CERTO src/world.rs:413 type retorno  world.color_at(ray, 4) | de tests_world::color_at_with_mutually_reflective_surfaces
+   CERTO src/world.rs:249 type retorno  w.color_at(ray, 4) | de tests_world::the_color_when_a_ray_missing
+   CERTO src/world.rs:258 type retorno  w.color_at(ray, 4) | de tests_world::the_color_when_a_ray_hits
+   CERTO src/world.rs:282 type retorno  w.color_at(ray, 4) | de tests_world::the_color_with_an_intersection_behind_the_ray
+   CERTO src/world.rs:70 receiver   self.color_at(reflect_ray, remaining - 1) | de impl World::reflected_color
+   CERTO src/world.rs:89 receiver   self.color_at(refract_ray, remaining - 1) | de impl World::refracted_color
+   CERTO src/camera.rs:102 type parametro  world.color_at(ray, self.maximum_recursive_depth) | de impl Camera::render
+   descartado src/patterns.rs:444 pattern.color_at(Tuple::point(0.,0., 0.))
+   descartado src/patterns.rs:445 pattern.color_at(Tuple::point(0.25,0., 0.))
+   descartado src/patterns.rs:446 pattern.color_at(Tuple::point(0.5,0., 0.))
+   descartado src/patterns.rs:447 pattern.color_at(Tuple::point(0.75,0., 0.))
+   descartado src/patterns.rs:459 pattern.color_at(Tuple::point(0.,0., 0.))
+   descartado src/patterns.rs:460 pattern.color_at(Tuple::point(1.,0., 0.))
+   descartado src/patterns.rs:461 pattern.color_at(Tuple::point(0.,0., 1.))
+   descartado src/patterns.rs:462 pattern.color_at(Tuple::point(0.708,0., 0.708))
+   descartado src/patterns.rs:474 pattern.color_at(Tuple::point(0.,0., 0.))
+   descartado src/patterns.rs:475 pattern.color_at(Tuple::point(0.99,0., 0.))
+   descartado src/patterns.rs:476 pattern.color_at(Tuple::point(1.01,0., 0.))
+   descartado src/patterns.rs:487 pattern.color_at(Tuple::point(0.,0., 0.))
+   descartado src/patterns.rs:488 pattern.color_at(Tuple::point(0.,0.99, 0.))
+   descartado src/patterns.rs:489 pattern.color_at(Tuple::point(0.,1.01, 0.))
+   descartado src/patterns.rs:500 pattern.color_at(Tuple::point(0.,0., 0.))
+   descartado src/patterns.rs:501 pattern.color_at(Tuple::point(0.,0., 0.99))
+   descartado src/patterns.rs:502 pattern.color_at(Tuple::point(0.,0., 1.01))
+   descartado src/patterns.rs:335 stripe.color_at(point)
+   descartado src/patterns.rs:336 linear_gradient.color_at(point)
+   descartado src/patterns.rs:337 ring.color_at(point)
+   descartado src/patterns.rs:338 checkers.color_at(point)
+   descartado src/patterns.rs:339 default_pattern.color_at(point)
+## impl Groups::intersect (src/groups.rs:86)
+   CERTO src/groups.rs:98 type item  subgroup.intersect(local_ray) | de impl Groups::intersect
+   CERTO src/world.rs:40 type item  group.intersect(ray) | de impl World::intersect_world
+   descartado src/sphere.rs:90 sphere.intersect(ray)
+   descartado src/sphere.rs:105 sphere.intersect(ray)
+   descartado src/sphere.rs:120 sphere.intersect(ray)
+   descartado src/sphere.rs:133 sphere.intersect(ray)
+   descartado src/sphere.rs:148 sphere.intersect(ray)
+   descartado src/sphere.rs:181 sphere.intersect(ray)
+   descartado src/sphere.rs:198 sphere.intersect(ray)
+   descartado src/cylinder.rs:152 cyl.intersect(*ray)
+   descartado src/cylinder.rs:170 cyl.intersect(ray1)
+   descartado src/cylinder.rs:171 cyl.intersect(ray2)
+   descartado src/cylinder.rs:172 cyl.intersect(ray3)
+   descartado src/cylinder.rs:226 cyl.intersect(ray1)
+   descartado src/cylinder.rs:227 cyl.intersect(ray2)
+   descartado src/cylinder.rs:228 cyl.intersect(ray3)
+   descartado src/cylinder.rs:229 cyl.intersect(ray4)
+   descartado src/cylinder.rs:230 cyl.intersect(ray5)
+   descartado src/cylinder.rs:231 cyl.intersect(ray6)
+   descartado src/cylinder.rs:267 cyl.intersect(*ray)
+   descartado src/plane.rs:84 plane.intersect(ray)
+   descartado src/plane.rs:93 plane.intersect(ray)
+   descartado src/plane.rs:102 plane.intersect(ray)
+   descartado src/plane.rs:113 plane.intersect(ray)
+   descartado src/intersection.rs:169 sphere.intersect(ray)
+   descartado src/cone.rs:160 cone.intersect(ray1)
+   descartado src/cone.rs:161 cone.intersect(ray2)
+   descartado src/cone.rs:162 cone.intersect(ray3)
+   descartado src/cone.rs:182 cone.intersect(ray)
+   descartado src/cone.rs:203 cone.intersect(ray1)
+   descartado src/cone.rs:204 cone.intersect(ray2)
+   descartado src/cone.rs:205 cone.intersect(ray3)
+   descartado src/cube.rs:123 c.intersect(ray_inside)
+   descartado src/cube.rs:126 c.intersect(*ray)
+   descartado src/cube.rs:150 c.intersect(*ray)
+   descartado src/groups.rs:95 child.intersect(local_ray)
+## impl Matrix<4>::inverse (src/matrix.rs:193)
+   CERTO src/patterns.rs:14 unique   object.transform().inverse() | de Incuse::color_at_object
+   CERTO src/patterns.rs:15 unique   self.transform().inverse() | de Incuse::color_at_object
+   CERTO src/obj.rs:56 unique   transform.inverse() | de parse_obj_smooth
+   CERTO src/matrix.rs:608 unique   mat4.inverse() | de tests_matrix::calculating_the_inverse_of_mat4
+   CERTO src/matrix.rs:633 unique   mat4.inverse() | de tests_matrix::calculating_the_inverse_of_another_mat4
+   CERTO src/matrix.rs:653 unique   mat4.inverse() | de tests_matrix::calculating_the_inverse_of_third_mat4
+   CERTO src/matrix.rs:698 unique   mat4_transform.inverse() | de tests_matrix::multiplying_by_the_invert_of_a_matrix_translation
+   CERTO src/matrix.rs:737 unique   mat4_transform.inverse() | de tests_matrix::multiplying_by_the_invert_of_a_scaling_matrix
+   CERTO src/matrix.rs:772 unique   half_quarter.inverse() | de tests_matrix::the_inverse_of_an_x_rotation_rotates_in_the_opposite_direction
+   CERTO src/object.rs:36 unique   self.transform().inverse() | de Intersectable::normal_at
+   CERTO src/object.rs:38 unique   self.transform().inverse() | de Intersectable::normal_at
+   CERTO src/object.rs:31 unique   self.transform().inverse() | de Intersectable::intersect
+   CERTO src/groups.rs:88 unique   self.transform.inverse() | de impl Groups::intersect
+   CERTO src/world.rs:21 unique   o.transform().inverse() | de impl World::new
+   CERTO src/world.rs:35 unique   object.transform().inverse() | de impl World::intersect_world
+   CERTO src/camera.rs:72 unique   transform.inverse() | de impl Camera::with_transform
+   CERTO src/camera.rs:55 unique   transform.inverse() | de impl Camera::new
+## impl Cylinder::new (src/cylinder.rs:17)
+   CERTO src/cylinder.rs:51 type caminho  Cylinder::new | de impl Default for Cylinder::default
+## impl Camera::ray_from_pixel (src/camera.rs:81)
+   CERTO src/camera.rs:263 unique   c.ray_from_pixel(100, 50) | de tests_camera::constructing_a_ray_through_the_center_of_the_canvas
+   CERTO src/camera.rs:273 unique   c.ray_from_pixel(0, 0) | de tests_camera::constructing_a_ray_through_a_corner_of_the_canvas
+   CERTO src/camera.rs:285 unique   c.ray_from_pixel(100, 50) | de tests_camera::constructing_a_ray_when_the_camera_is_transformed
+   CERTO src/camera.rs:101 unique   self.ray_from_pixel(x, y) | de impl Camera::render
+## tests_camera::create_default_world (src/camera.rs:291)
+   CERTO src/camera.rs:313 scope   create_default_world | de tests_camera::rendering_a_world_with_a_camera
+   CERTO src/camera.rs:330 scope   create_default_world | de tests_camera::render_preserves_complete_reflective_scene
+   descartado src/world.rs:305 create_default_world
+   descartado src/world.rs:313 create_default_world
+   descartado src/world.rs:321 create_default_world
+   descartado src/world.rs:343 create_default_world
+   descartado src/world.rs:360 create_default_world
+   descartado src/world.rs:379 create_default_world
+   descartado src/world.rs:419 create_default_world
+   descartado src/world.rs:438 create_default_world
+   descartado src/world.rs:454 create_default_world
+   descartado src/world.rs:474 create_default_world
+   descartado src/world.rs:495 create_default_world
+   descartado src/world.rs:524 create_default_world
+   descartado src/world.rs:551 create_default_world
+   descartado src/world.rs:192 create_default_world
+   descartado src/world.rs:205 create_default_world
+   descartado src/world.rs:219 create_default_world
+   descartado src/world.rs:232 create_default_world
+   descartado src/world.rs:247 create_default_world
+   descartado src/world.rs:256 create_default_world
+   descartado src/world.rs:265 create_default_world
+   descartado src/world.rs:289 create_default_world
+   descartado src/world.rs:297 create_default_world
+## impl Equivalence<f64> for f64 (src/equivalent.rs:11)
+## impl Equivalence<f64> for f64::equivalent (src/equivalent.rs:12)
+   POSSIVEL-hom src/patterns.rs:177 homonym  entre 8 (x.floor() % 2.).equivalent(0.) | de impl Incuse for Stripe::color_at
+   POSSIVEL-hom src/patterns.rs:230 homonym  entre 8 ((point.x.powi(2) + point.z.powi(2)).sqrt().floor() % 2.).eq | de impl Incuse for Ring::color_at
+   POSSIVEL-hom src/patterns.rs:256 homonym  entre 8 ((point.x.floor() + point.y.floor() + point.z.floor()) % 2.) | de impl Incuse for Checkers::color_at
+   POSSIVEL-hom src/color.rs:35 homonym  entre 8 self.red.equivalent(other.red) | de impl Equivalence<Color> for Color::equivalent
+   POSSIVEL-hom src/color.rs:36 homonym  entre 8 self.green.equivalent(other.green) | de impl Equivalence<Color> for Color::equivalent
+   POSSIVEL-hom src/color.rs:37 homonym  entre 8 self.blue.equivalent(other.blue) | de impl Equivalence<Color> for Color::equivalent
+   POSSIVEL-hom src/cylinder.rs:33 homonym  entre 8 ray.direction.y.equivalent(0.) | de impl Cylinder::intersect_caps
+   POSSIVEL-hom src/cylinder.rs:59 homonym  entre 8 a.equivalent(0.) | de impl Intersectable for Cylinder::local_intersect
+   POSSIVEL-hom src/matrix.rs:211 homonym  entre 8 self.data[0][0].equivalent(other.data[0][0]) | de impl Equivalence<Matrix<2>> for Matrix<2>::equivalent
+   POSSIVEL-hom src/matrix.rs:212 homonym  entre 8 self.data[0][1].equivalent(other.data[0][1]) | de impl Equivalence<Matrix<2>> for Matrix<2>::equivalent
+   POSSIVEL-hom src/matrix.rs:214 homonym  entre 8 self.data[1][0].equivalent(other.data[1][0]) | de impl Equivalence<Matrix<2>> for Matrix<2>::equivalent
+   POSSIVEL-hom src/matrix.rs:215 homonym  entre 8 self.data[1][1].equivalent(other.data[1][1]) | de impl Equivalence<Matrix<2>> for Matrix<2>::equivalent
+   POSSIVEL-hom src/matrix.rs:221 homonym  entre 8 self.data[0][0].equivalent(other.data[0][0]) | de impl Equivalence<Matrix<3>> for Matrix<3>::equivalent
+   POSSIVEL-hom src/matrix.rs:222 homonym  entre 8 self.data[0][1].equivalent(other.data[0][1]) | de impl Equivalence<Matrix<3>> for Matrix<3>::equivalent
+   POSSIVEL-hom src/matrix.rs:223 homonym  entre 8 self.data[0][2].equivalent(other.data[0][2]) | de impl Equivalence<Matrix<3>> for Matrix<3>::equivalent
+   POSSIVEL-hom src/matrix.rs:225 homonym  entre 8 self.data[1][0].equivalent(other.data[1][0]) | de impl Equivalence<Matrix<3>> for Matrix<3>::equivalent
+   POSSIVEL-hom src/matrix.rs:226 homonym  entre 8 self.data[1][1].equivalent(other.data[1][1]) | de impl Equivalence<Matrix<3>> for Matrix<3>::equivalent
+   POSSIVEL-hom src/matrix.rs:227 homonym  entre 8 self.data[1][2].equivalent(other.data[1][2]) | de impl Equivalence<Matrix<3>> for Matrix<3>::equivalent
+   POSSIVEL-hom src/matrix.rs:229 homonym  entre 8 self.data[2][0].equivalent(other.data[2][0]) | de impl Equivalence<Matrix<3>> for Matrix<3>::equivalent
+   POSSIVEL-hom src/matrix.rs:230 homonym  entre 8 self.data[2][1].equivalent(other.data[2][1]) | de impl Equivalence<Matrix<3>> for Matrix<3>::equivalent
+   POSSIVEL-hom src/matrix.rs:231 homonym  entre 8 self.data[2][2].equivalent(other.data[2][2]) | de impl Equivalence<Matrix<3>> for Matrix<3>::equivalent
+   POSSIVEL-hom src/matrix.rs:237 homonym  entre 8 self.data[0][0].equivalent(other.data[0][0]) | de impl Equivalence<Matrix<4>> for Matrix<4>::equivalent
+   POSSIVEL-hom src/matrix.rs:238 homonym  entre 8 self.data[0][1].equivalent(other.data[0][1]) | de impl Equivalence<Matrix<4>> for Matrix<4>::equivalent
+   POSSIVEL-hom src/matrix.rs:239 homonym  entre 8 self.data[0][2].equivalent(other.data[0][2]) | de impl Equivalence<Matrix<4>> for Matrix<4>::equivalent
+   POSSIVEL-hom src/matrix.rs:240 homonym  entre 8 self.data[0][3].equivalent(other.data[0][3]) | de impl Equivalence<Matrix<4>> for Matrix<4>::equivalent
+   POSSIVEL-hom src/matrix.rs:242 homonym  entre 8 self.data[1][0].equivalent(other.data[1][0]) | de impl Equivalence<Matrix<4>> for Matrix<4>::equivalent
+   POSSIVEL-hom src/matrix.rs:243 homonym  entre 8 self.data[1][1].equivalent(other.data[1][1]) | de impl Equivalence<Matrix<4>> for Matrix<4>::equivalent
+   POSSIVEL-hom src/matrix.rs:244 homonym  entre 8 self.data[1][2].equivalent(other.data[1][2]) | de impl Equivalence<Matrix<4>> for Matrix<4>::equivalent
+   POSSIVEL-hom src/matrix.rs:245 homonym  entre 8 self.data[1][3].equivalent(other.data[1][3]) | de impl Equivalence<Matrix<4>> for Matrix<4>::equivalent
+   POSSIVEL-hom src/matrix.rs:247 homonym  entre 8 self.data[2][0].equivalent(other.data[2][0]) | de impl Equivalence<Matrix<4>> for Matrix<4>::equivalent
+   POSSIVEL-hom src/matrix.rs:248 homonym  entre 8 self.data[2][1].equivalent(other.data[2][1]) | de impl Equivalence<Matrix<4>> for Matrix<4>::equivalent
+   POSSIVEL-hom src/matrix.rs:249 homonym  entre 8 self.data[2][2].equivalent(other.data[2][2]) | de impl Equivalence<Matrix<4>> for Matrix<4>::equivalent
+   POSSIVEL-hom src/matrix.rs:250 homonym  entre 8 self.data[2][3].equivalent(other.data[2][3]) | de impl Equivalence<Matrix<4>> for Matrix<4>::equivalent
+   POSSIVEL-hom src/matrix.rs:252 homonym  entre 8 self.data[3][0].equivalent(other.data[3][0]) | de impl Equivalence<Matrix<4>> for Matrix<4>::equivalent
+   POSSIVEL-hom src/matrix.rs:253 homonym  entre 8 self.data[3][1].equivalent(other.data[3][1]) | de impl Equivalence<Matrix<4>> for Matrix<4>::equivalent
+   POSSIVEL-hom src/matrix.rs:254 homonym  entre 8 self.data[3][2].equivalent(other.data[3][2]) | de impl Equivalence<Matrix<4>> for Matrix<4>::equivalent
+   POSSIVEL-hom src/matrix.rs:255 homonym  entre 8 self.data[3][3].equivalent(other.data[3][3]) | de impl Equivalence<Matrix<4>> for Matrix<4>::equivalent
+   POSSIVEL-hom src/equivalent.rs:7 homonym  entre 8 self.equivalent(other) | de Equivalence::not_equivalent
+   POSSIVEL-hom src/cone.rs:34 homonym  entre 8 ray.direction.y.equivalent(0.) | de impl Cone::intersect_caps
+   POSSIVEL-hom src/cone.rs:69 homonym  entre 8 a.equivalent(0.) | de impl Intersectable for Cone::local_intersect
+   POSSIVEL-hom src/cone.rs:70 homonym  entre 8 b.equivalent(0.) | de impl Intersectable for Cone::local_intersect
+   POSSIVEL-hom src/tuple.rs:26 homonym  entre 8 self.w.equivalent(0.0) | de impl Tuple::is_vector
+   POSSIVEL-hom src/tuple.rs:30 homonym  entre 8 self.w.equivalent(1.0) | de impl Tuple::is_point
+   POSSIVEL-hom src/tuple.rs:45 homonym  entre 8 self.z.equivalent(other.z) | de impl Equivalence<Tuple> for Tuple::equivalent
+   POSSIVEL-hom src/tuple.rs:46 homonym  entre 8 self.w.equivalent(other.w) | de impl Equivalence<Tuple> for Tuple::equivalent
+   POSSIVEL-hom src/tuple.rs:43 homonym  entre 8 self.x.equivalent(other.x) | de impl Equivalence<Tuple> for Tuple::equivalent
+   POSSIVEL-hom src/tuple.rs:44 homonym  entre 8 self.y.equivalent(other.y) | de impl Equivalence<Tuple> for Tuple::equivalent
+   POSSIVEL-hom src/world.rs:66 homonym  entre 8 (comps.object.material().reflective).equivalent(0.) | de impl World::reflected_color
+   POSSIVEL-hom src/world.rs:75 homonym  entre 8 (comps.object.material().transparency).equivalent(0.) | de impl World::refracted_color
+   POSSIVEL-hom src/camera.rs:212 homonym  entre 8 self.transform.equivalent(other.transform) | de impl Equivalence<Camera> for Camera::equivalent
+   POSSIVEL-hom src/camera.rs:215 homonym  entre 8 self.field_of_view.equivalent(other.field_of_view) | de impl Equivalence<Camera> for Camera::equivalent
