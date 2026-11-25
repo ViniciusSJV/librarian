@@ -287,6 +287,19 @@ pub enum Resolution<'g> {
     OutOfChain,
 }
 
+/// Step 2.2: the form a call is written in, which says what it may reach.
+enum Form<'g> {
+    /// `m.f()`, with `m` a module of the project: its file.
+    Module(String),
+    /// `m.f()`, with `m` an import from outside the project.
+    Outside,
+    /// `x.m()`.
+    Receiver,
+    /// `f()`, with the class whose body (or method) writes it.
+    Plain(Option<&'g str>),
+    Other,
+}
+
 /// Step 2.4b: an element of a Python class's linearization.
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum Base<'g> {
@@ -1113,30 +1126,47 @@ impl<'g> Resolver<'g> {
 
     /// The candidates the call's form admits, and whether the receiver is a module of the project.
     fn admit(&self, caller: &str, occurrence: &str) -> (Vec<&'g Edge>, bool) {
-        let edges = self.candidates(occurrence);
+        let form = self.form(caller, occurrence);
+        let edges = self.candidates(occurrence).iter().copied().filter(|e| self.form_reaches(&form, &e.to)).collect();
+        (edges, matches!(form, Form::Module(_)))
+    }
+
+    /// The form the call is written in (step 2.2, DEC-38).
+    fn form(&self, caller: &str, occurrence: &str) -> Form<'g> {
         let text = self.label(occurrence);
         if let Some(receiver) = written_receiver(text) {
             return match self.module(occurrence, receiver) {
-                Some(Module::File(file)) => {
-                    // Step 2.3a: and the module's classes (`forms.WebhookForm(..)` instantiates).
-                    let own = edges
-                        .iter()
-                        .copied()
-                        .filter(|e| matches!(self.kind(&e.to), "function" | "class") && self.declared_in.get(e.to.as_str()) == Some(&file.as_str()))
-                        .collect();
-                    (own, true)
-                }
-                Some(Module::External) => (vec![], false),
-                None => (edges.iter().copied().filter(|e| self.kind(&e.to) != "function").collect(), false),
+                Some(Module::File(file)) => Form::Module(file),
+                Some(Module::External) => Form::Outside,
+                None => Form::Receiver,
             };
         }
         if call_parts(text).is_some_and(|(receiver, _)| receiver.is_empty()) {
             // In a class body, or in a method's decorators, a plain name may be a function of the class.
-            let class = [Some(caller), self.container(caller)].into_iter().flatten().find(|c| self.kind(c) == "class");
-            let kept = |e: &&Edge| !matches!(self.kind(&e.to), "method" | "trait_method") || (class.is_some() && self.container(&e.to) == class);
-            return (edges.iter().copied().filter(kept).collect(), false);
+            let own = self.graph.nodes.get_key_value(caller).map(|(id, _)| id.as_str());
+            return Form::Plain([own, self.container(caller)].into_iter().flatten().find(|c| self.kind(c) == "class"));
         }
-        (edges.to_vec(), false)
+        Form::Other
+    }
+
+    fn form_reaches(&self, form: &Form, target: &str) -> bool {
+        let kind = self.kind(target);
+        match form {
+            // Step 2.3a: and the module's classes (`forms.WebhookForm(..)` instantiates).
+            Form::Module(file) => matches!(kind, "function" | "class") && self.declared_in.get(target) == Some(&file.as_str()),
+            Form::Outside => false,
+            Form::Receiver => kind != "function",
+            Form::Plain(class) => !matches!(kind, "method" | "trait_method") || (class.is_some() && self.container(target) == *class),
+            Form::Other => true,
+        }
+    }
+
+    /// Step 2.4d: whether a call above the limit, which the rule does not settle, may reach a declaration
+    /// with its name: what its form reaches (2.2) and its receiver's written type does not rule out (2.2).
+    /// It only says "may": the type test rules out neither by a primitive (`f64::from`) nor by a type
+    /// that implements the same trait.
+    pub fn may_reach(&self, caller: &str, occurrence: &str, target: &str) -> bool {
+        self.form_reaches(&self.form(caller, occurrence), target) && !self.type_rules_out(caller, occurrence, target)
     }
 
     /// Step 2.4b: the class of the method, or of a field of it, that writes a call.

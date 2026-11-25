@@ -181,6 +181,8 @@ pub struct UseLink {
 }
 
 impl Graph {
+    /// By the written name alone. "Where is it used?" reads the rule instead (`uses`, step 2.4d); the
+    /// envelope and "Medir tudo" still read this one.
     pub fn used_by(&self, seed: &str, depth: usize, max_nodes: usize) -> Result<UsedBy> {
         if self.nodes.get(seed).is_none_or(|n| n.category != "symbol") || !(1..=6).contains(&depth) || !(1..=300).contains(&max_nodes) {
             return Err("The seed must be a symbol; depth 1..6, nodes 1..300".into());
@@ -371,6 +373,77 @@ pub struct CallLink {
     pub evidence: Evidence,
 }
 
+/// What the rule says of one call, for both directions: `calls_from` reads it forward and
+/// `uses::UseIndex` (step 2.4d) inverts it, so the two cannot differ.
+pub(crate) struct Answer<'g> {
+    /// The one target settled; or every candidate, when `resolution` is `homonym`. With the candidate edge.
+    pub targets: Vec<(&'g str, Option<&'g Edge>)>,
+    pub resolution: &'static str,
+    pub basis: &'static str,
+    /// How many declarations the call counts as its candidates.
+    pub count: usize,
+    pub decorates: bool,
+    pub abstract_method: Option<&'g str>,
+    /// Without targets: the reason and the candidates it counts.
+    pub unresolved: Option<(&'static str, usize)>,
+}
+
+impl<'g> Answer<'g> {
+    /// The relation to a target and, for an instantiation, the declaration it runs.
+    pub fn relation(&self, graph: &Graph, resolver: &Resolver<'g>, to: &str) -> (&'static str, Option<&'g str>) {
+        if self.decorates {
+            return ("decorates", None);
+        }
+        if self.resolution != "homonym" && crate::resolve::INSTANTIATED.contains(&graph.nodes[to].kind.as_str()) {
+            return ("instantiates", resolver.instance_entry(to));
+        }
+        ("calls", None)
+    }
+
+    pub fn type_rule(&self, resolver: &Resolver<'g>, observer: &str, occurrence: &str) -> Option<String> {
+        (self.basis == "type").then(|| resolver.type_rule(observer, occurrence)).flatten()
+    }
+}
+
+/// The answer to a call, for the symbol that observes it.
+pub(crate) fn answer<'g>(graph: &'g Graph, resolver: &Resolver<'g>, observer: &str, occurrence: &str, chosen: Option<&str>) -> Answer<'g> {
+    let written = &graph.nodes[occurrence];
+    // The candidates the call's form reaches (step 2.2).
+    let edges = resolver.admitted(observer, occurrence);
+    let resolved = resolver.resolve(observer, occurrence, chosen);
+    let decorates = resolver.decorates(occurrence);
+    // One target settled by the rule; or every candidate edge, as homonyms.
+    let out_of_chain = matches!(resolved, Resolution::OutOfChain);
+    let overrides = matches!(resolved, Resolution::Overrides(_));
+    let (targets, resolution, basis): (Vec<(&'g str, Option<&'g Edge>)>, &'static str, &'static str) = match resolved {
+        Resolution::Linked(how, targets) if targets.len() == 1 => {
+            (vec![(targets[0], edges.iter().copied().find(|e| e.to == targets[0]))], how.as_str(), how.basis())
+        }
+        // Ruled out by the receiver's written type (step 2.2): no link.
+        Resolution::NoCandidate | Resolution::OutOfChain => (vec![], "homonym", "graph_edge"),
+        // Steps 2.4b and 2.4c (DEC-43, DEC-44): the bodies that may run, as homonyms, by the type.
+        Resolution::Overrides(targets) => {
+            (targets.into_iter().map(|t| (t, resolver.candidates(occurrence).iter().copied().find(|e| e.to == t))).collect(), "homonym", "type")
+        }
+        _ => (edges.iter().map(|e| (e.to.as_str(), Some(*e))).collect(), "homonym", "graph_edge"),
+    };
+    // No candidate edge and nothing settled: what the graph recorded says why.
+    let unresolved = targets.is_empty().then_some(match written.ambiguous_candidates {
+        Some(count) if !out_of_chain => ("above_candidate_limit", count),
+        _ => ("no_candidate_in_project", 0),
+    });
+    // Above the limit, a type link counts the declarations the graph recorded.
+    // A dispatched call counts its bodies (steps 2.4b and 2.4c).
+    let count = if overrides { targets.len() } else if edges.is_empty() { written.ambiguous_candidates.unwrap_or(0) } else { edges.len() };
+    let abstract_method = if overrides {
+        let bodies: Vec<&str> = targets.iter().map(|(t, _)| *t).collect();
+        resolver.abstract_left_out(observer, occurrence, &bodies)
+    } else {
+        None
+    };
+    Answer { targets, resolution, basis, count, decorates, abstract_method, unresolved }
+}
+
 impl Graph {
     /// `chosen` maps a call occurrence to the candidate the person picked among its homonyms.
     pub fn calls_from(&self, seed: &str, depth: usize, max_nodes: usize, syntax: &CallSyntax,
@@ -442,32 +515,10 @@ impl Graph {
                         continue;
                     }
                     let via = (observer != caller.as_str()).then(|| observer.to_owned());
-                    // The candidates the call's form reaches (step 2.2), decided for the symbol
-                    // that observes the call: a field's call gets the same answer in its method.
-                    let edges = resolver.admitted(observer, occurrence);
-                    let resolved = resolver.resolve(observer, occurrence, chosen.get(*occurrence).map(String::as_str));
-                    let decorates = resolver.decorates(occurrence);
-                    // One target settled by the rule; or every candidate edge, as homonyms.
-                    let out_of_chain = matches!(resolved, Resolution::OutOfChain);
-                    let overrides = matches!(resolved, Resolution::Overrides(_));
-                    let (reported, resolution, basis): (Vec<(&str, Option<&Edge>)>, &str, &str) = match resolved {
-                        Resolution::Linked(how, targets) if targets.len() == 1 => {
-                            (vec![(targets[0], edges.iter().copied().find(|e| e.to == targets[0]))], how.as_str(), how.basis())
-                        }
-                        // Ruled out by the receiver's written type (step 2.2): no link.
-                        Resolution::NoCandidate | Resolution::OutOfChain => (vec![], "homonym", "graph_edge"),
-                        // Steps 2.4b and 2.4c (DEC-43, DEC-44): the bodies that may run, as homonyms, by the type.
-                        Resolution::Overrides(ref targets) => {
-                            (targets.iter().map(|t| (*t, resolver.candidates(occurrence).iter().copied().find(|e| e.to == *t))).collect(), "homonym", "type")
-                        }
-                        _ => (edges.iter().map(|e| (e.to.as_str(), Some(*e))).collect(), "homonym", "graph_edge"),
-                    };
-                    // No candidate edge and nothing settled: what the graph recorded says why.
-                    if reported.is_empty() {
-                        let (reason, candidates) = match written.ambiguous_candidates {
-                            Some(count) if !out_of_chain => ("above_candidate_limit", count),
-                            _ => ("no_candidate_in_project", 0),
-                        };
+                    // One answer per call, decided for the symbol that observes it: a field's call gets
+                    // the same answer in its method. "Where is it used?" inverts this same answer (2.4d).
+                    let answer = answer(self, &resolver, observer, occurrence, chosen.get(*occurrence).map(String::as_str));
+                    if let Some((reason, candidates)) = answer.unresolved {
                         unresolved.push(UnresolvedCall {
                             from: caller.clone(),
                             occurrence: (*occurrence).to_owned(),
@@ -483,16 +534,8 @@ impl Graph {
                         });
                         continue;
                     }
-                    // Above the limit, a type link counts the declarations the graph recorded.
-                    // A dispatched call counts its bodies (steps 2.4b and 2.4c).
-                    let count = if overrides { reported.len() } else if edges.is_empty() { written.ambiguous_candidates.unwrap_or(0) } else { edges.len() };
-                    let abstract_method = if overrides {
-                        let bodies: Vec<&str> = reported.iter().map(|(t, _)| *t).collect();
-                        resolver.abstract_left_out(observer, occurrence, &bodies).map(str::to_owned)
-                    } else {
-                        None
-                    };
-                    for (to, edge) in reported {
+                    let Answer { resolution, basis, count, abstract_method, .. } = answer;
+                    for &(to, edge) in &answer.targets {
                         let evidence = edge.map_or(&observation.evidence, |e| &e.evidence);
                         if !layer_of.contains_key(to) {
                             if nodes.len() >= max_nodes {
@@ -516,8 +559,8 @@ impl Graph {
                             layer_of.insert(to.to_owned(), layer);
                             nodes.push(node(to, layer));
                         }
-                        let instantiates = !decorates && resolution != "homonym" && crate::resolve::INSTANTIATED.contains(&self.nodes[to].kind.as_str());
-                        let runs = if instantiates { resolver.instance_entry(to) } else { None };
+                        let (relation, runs) = answer.relation(self, &resolver, to);
+                        let (decorates, instantiates) = (relation == "decorates", relation == "instantiates");
                         // An instantiation is followed into what it runs, never into the body of the
                         // declaration it builds (DEC-39). A decorator's call runs when the `def`
                         // runs, not when the decorated declaration does: never followed (DEC-40).
@@ -545,11 +588,11 @@ impl Graph {
                             resolution: resolution.into(),
                             candidate_edge: edge.map(|e| e.id.clone()),
                             basis: basis.into(),
-                            relation: if decorates { "decorates" } else if instantiates { "instantiates" } else { "calls" }.into(),
+                            relation: relation.into(),
                             runs: runs.map(str::to_owned),
                             via: via.clone(),
-                            type_rule: (basis == "type").then(|| resolver.type_rule(observer, occurrence)).flatten(),
-                            abstract_method: abstract_method.clone(),
+                            type_rule: answer.type_rule(&resolver, observer, occurrence),
+                            abstract_method: abstract_method.map(str::to_owned),
                             evidence: evidence.clone(),
                         });
                     }

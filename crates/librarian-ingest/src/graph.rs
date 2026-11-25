@@ -3,6 +3,7 @@ use crate::{extractors::Occurrence, hash, Catalog, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
+pub mod uses;
 pub mod v2;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]

@@ -1992,7 +1992,7 @@ mod tests {
             write!(client, "GET /api/commands?key={key}&run={run} HTTP/1.1\r\nHost: 127.0.0.1\r\n\r\n").unwrap();
             let (server, _) = listener.accept().unwrap();
             let request = crate::http::read(&server).unwrap();
-            let app = crate::App { port: 0, viewer: PathBuf::new(), store: Store { dir: store.dir.clone(), modelfiles: store.modelfiles.clone() }, graph: std::sync::Mutex::new(None) };
+            let app = crate::App { port: 0, viewer: PathBuf::new(), store: Store { dir: store.dir.clone(), modelfiles: store.modelfiles.clone() }, graph: std::sync::Mutex::new(None), uses: std::sync::Mutex::new(None) };
             let response = crate::route(&app, &request).unwrap();
             crate::http::write(&server, &response).unwrap();
             drop(server);
@@ -3888,7 +3888,7 @@ librarian-measure memory_mb=100
         write!(client, "POST /api/performance-question HTTP/1.1\r\nHost: 127.0.0.1\r\nContent-Length: {}\r\n\r\n{body}", body.len()).unwrap();
         let (server, _) = listener.accept().unwrap();
         let request = crate::http::read(&server).unwrap();
-        let app = crate::App { port: 0, viewer: PathBuf::new(), store: Store { dir: store.dir.clone(), modelfiles: store.modelfiles.clone() }, graph: std::sync::Mutex::new(None) };
+        let app = crate::App { port: 0, viewer: PathBuf::new(), store: Store { dir: store.dir.clone(), modelfiles: store.modelfiles.clone() }, graph: std::sync::Mutex::new(None), uses: std::sync::Mutex::new(None) };
         let response = crate::route(&app, &request).unwrap_or_else(|e| panic!("{question}: {e}"));
         crate::http::write(&server, &response).unwrap();
         drop(server);
@@ -6182,7 +6182,7 @@ librarian-measure memory_mb=100
             scope.spawn(|| {
                 let (server, _) = listener.accept().unwrap();
                 let request = crate::http::read(&server).unwrap();
-                let app = crate::App { port: 0, viewer: PathBuf::new(), store: Store { dir: store.dir.clone(), modelfiles: store.modelfiles.clone() }, graph: std::sync::Mutex::new(None) };
+                let app = crate::App { port: 0, viewer: PathBuf::new(), store: Store { dir: store.dir.clone(), modelfiles: store.modelfiles.clone() }, graph: std::sync::Mutex::new(None), uses: std::sync::Mutex::new(None) };
                 crate::http::write(&server, &crate::handle(&app, &request)).unwrap();
             });
             let mut raw = vec![];

@@ -16,7 +16,7 @@ mod store;
 use http::{Request, Response};
 #[cfg(test)]
 use librarian_ingest::evidence::RetryRule;
-use librarian_ingest::graph::v2;
+use librarian_ingest::graph::{uses::UseIndex, v2};
 use librarian_llm_engine::models;
 use serde_json::{json, Value};
 use std::{
@@ -35,10 +35,13 @@ struct App {
     store: Store,
     /// Last graph parsed for "Onde é usado?", by (project, run): large graphs take seconds to parse.
     graph: Mutex<Option<CachedGraph>>,
+    /// Step 2.4d: the answers of every call of the last run asked, by target. In memory only.
+    uses: Mutex<Option<CachedUses>>,
 }
 
 /// (project key, run id) and that run's parsed graph-v2.
 type CachedGraph = ((String, String), Arc<v2::Graph>);
+type CachedUses = ((String, String), Arc<UseIndex>);
 
 fn main() {
     let mut port = 8765u16;
@@ -62,6 +65,7 @@ fn main() {
         viewer: root.join("crates/librarian-studio/web/index.html"),
         store: Store { dir: root.join(".studio"), modelfiles: root.join("modelfiles") },
         graph: Mutex::new(None),
+        uses: Mutex::new(None),
     });
     let listener = TcpListener::bind(("127.0.0.1", port)).unwrap_or_else(|e| {
         eprintln!("Não foi possível escutar em 127.0.0.1:{port}: {e}");
@@ -125,8 +129,10 @@ fn route(app: &App, req: &Request) -> Result<Response> {
         ("POST", "/api/generate") => ok(store.generate(&field(&req.json()?, "key")?)?),
         ("GET", "/api/used-by") => {
             let depth = param("depth")?.parse()?;
-            let graph = graph(app, param("key")?, param("run")?)?;
-            ok(serde_json::to_value(graph.used_by(param("node")?, depth, USED_BY_NODES)?)?)
+            let (key, run) = (param("key")?, param("run")?);
+            let graph = graph(app, key, run)?;
+            let uses = uses(app, key, run, &graph)?;
+            ok(serde_json::to_value(uses.used_by(&graph, param("node")?, depth, USED_BY_NODES)?)?)
         }
         ("POST", "/api/calls") => {
             // P1b: what a symbol calls; `chosen` maps a call occurrence to the homonym the person picked.
@@ -285,6 +291,21 @@ fn graph(app: &App, key: &str, run: &str) -> Result<Arc<v2::Graph>> {
     let graph: Arc<v2::Graph> = Arc::new(serde_json::from_slice(&app.store.graph(key, run)?)?);
     *cached = Some((id, Arc::clone(&graph)));
     Ok(graph)
+}
+
+/// The inverse of the rule over a run's calls, built on the first "Onde é usado?" of the run.
+fn uses(app: &App, key: &str, run: &str, graph: &v2::Graph) -> Result<Arc<UseIndex>> {
+    let id = (key.to_owned(), run.to_owned());
+    let mut cached = app.uses.lock().map_err(|_| "cache dos usos indisponível")?;
+    if let Some((cached_id, uses)) = cached.as_ref() {
+        if *cached_id == id {
+            return Ok(Arc::clone(uses));
+        }
+    }
+    let syntax = librarian_ingest::Catalog::load(&app.store.edition(key, run)?)?.call_syntax();
+    let uses = Arc::new(UseIndex::build(graph, &syntax));
+    *cached = Some((id, Arc::clone(&uses)));
+    Ok(uses)
 }
 
 /// Re-verifies the question immediately before every send; the send records the link (L3).

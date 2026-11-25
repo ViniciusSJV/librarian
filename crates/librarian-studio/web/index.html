@@ -175,13 +175,13 @@
   #pathBar .check span { white-space: nowrap; }
   #pathDepth { width: auto; min-width: 56px; }
   #pathNote { margin: 6px 14px; }
-  #pathUnresolved { margin: 0 14px 6px; }
-  #pathUnresolved > summary { cursor: pointer; color: var(--text-secondary); }
-  #pathUnresolvedBody { max-height: 34vh; overflow: auto; padding: 4px 0 0 14px; }
-  #pathUnresolvedBody h4 { margin: 8px 0 2px; font-size: 13px; }
-  #pathUnresolvedBody p { margin: 0 0 4px; }
-  #pathUnresolvedBody ul { margin: 0 0 6px; padding-left: 18px; }
-  #pathUnresolvedBody li { margin: 1px 0; }
+  :is(#pathUnresolved, #pathUses) { margin: 0 14px 6px; }
+  :is(#pathUnresolved, #pathUses) > summary { cursor: pointer; color: var(--text-secondary); }
+  :is(#pathUnresolvedBody, #pathUsesBody) { max-height: 34vh; overflow: auto; padding: 4px 0 0 14px; }
+  :is(#pathUnresolvedBody, #pathUsesBody) h4 { margin: 8px 0 2px; font-size: 13px; }
+  :is(#pathUnresolvedBody, #pathUsesBody) p { margin: 0 0 4px; }
+  :is(#pathUnresolvedBody, #pathUsesBody) ul { margin: 0 0 6px; padding-left: 18px; }
+  :is(#pathUnresolvedBody, #pathUsesBody) li { margin: 1px 0; }
   #pathCanvas { flex: 1; overflow: auto; padding: 8px 14px 14px; }
   #pathCanvas svg { display: block; }
   #pathCanvas text { fill: var(--text-primary); font: 12px system-ui, -apple-system, "Segoe UI", sans-serif; }
@@ -190,6 +190,7 @@
   #pathCanvas .node.selected rect { stroke: var(--text-primary); stroke-width: 2; }
   #pathCanvas .edge { fill: none; stroke: var(--text-secondary); stroke-width: 1.4; cursor: pointer; }
   #pathCanvas .edge.ambiguous { stroke-dasharray: 5 4; }
+  #pathCanvas .edge.named { stroke-dasharray: 1.5 4; }
   #pathCanvas .edge:hover { stroke: var(--text-primary); stroke-width: 2.4; }
   #pathCanvas marker path { fill: var(--text-secondary); }
   #pathCanvas .node.idle { opacity: .45; }
@@ -718,6 +719,7 @@
       <p id="pathNote" class="muted"></p>
       <!-- G3: call occurrences the graph knows and the flowchart does not draw, by reason. -->
       <details id="pathUnresolved" hidden><summary></summary><div id="pathUnresolvedBody"></div></details>
+      <details id="pathUses" hidden><summary></summary><div id="pathUsesBody"></div></details>
       <!-- The point selected in the flowchart can join the draft without leaving the view (spec 2.3, Q5). -->
       <div id="pathPoint" class="row" hidden><span id="pathPointName" class="mono"></span><button type="button" id="pathPointJoin"></button></div>
       <div id="pathCanvas"></div>
@@ -1024,7 +1026,7 @@ const STRINGS = {
   'inspector.empty': ['Clique em um prédio.', 'Click a building.'],
   'inspector.noGraph': ['Nenhum grafo aberto.', 'No graph open.'],
   'inspector.usedBy': ['Onde é usado?', 'Where is it used?'],
-  'help.usedBy': ['Abre a vista Caminho a partir deste ponto: quem lê, escreve ou chama este nome, e quem usa esses, em camadas. Como um bibliotecário seguindo as remissões de ficha em ficha.', 'Opens the Path view from this point: who reads, writes or calls this name, and who uses those, in layers. Like a librarian following cross-references from card to card.'],
+  'help.usedBy': ["Abre a vista Caminho a partir deste ponto: as chamadas que a regra liga a ele, as que podem chegar a ele e onde o nome dele só está escrito, cada tipo à parte, e quem usa os ligados, em camadas.", "Opens the Path view from this point: the calls the rule links to it, the ones that may reach it and where its name is only written, each kind apart, and who uses the linked ones, in layers."],
   'inspector.category': ['categoria', 'category'],
   'inspector.language': ['linguagem', 'language'],
   'inspector.out': ['saídas', 'outgoing'],
@@ -1069,29 +1071,53 @@ const STRINGS = {
   'graph.notFound': ['graph-v2.json não encontrado na seleção.', 'graph-v2.json not found in the selection.'],
 
   // path view
-  'help.path': ['Quem usa este ponto, em camadas da esquerda para a direita. O bibliotecário procura em todo o acervo onde o nome dele aparece escrito (uma leitura, uma escrita, uma chamada), anota quem escreveu e repete a busca a partir dessas fichas. As caixas são as classes ou arquivos. Linha cheia: o nome escrito só combina com este ponto. Linha tracejada: combina também com outros pontos de mesmo nome (homônimos), então pode não ser este. É um mapa de candidatos pelo nome, não uma prova de que o código chama isto.',
-    'Who uses this point, in layers from left to right. The librarian searches the whole collection for where its name is written (a read, a write, a call), notes who wrote it and repeats the search from those cards. The boxes are the classes or files. Solid line: the written name matches only this point. Dashed line: it also matches other points with the same name (homonyms), so it may not be this one. It is a map of candidates by name, not proof that the code calls this.'],
+  'help.path': ["Quem usa este ponto, em camadas da esquerda para a direita, em três tipos que nunca se somam. Ligado (linha cheia): a regra de \"O que ele chama?\" liga a chamada a este ponto; não é uma verificação. Possível pelo tipo (tracejada): este é um dos corpos que podem rodar. Só por nome (pontilhada): o nome está escrito e não é uma chamada, ou um objeto deste tipo é usado ali sem o nome escrito. Os possíveis por homônimo, que nada decide e quase nunca são este ponto, ficam fora do desenho, na lista dos usos diretos. O caminho sobe só pelos ligados; duplo clique em qualquer ponto continua a partir dele. À parte, sem serem usos: chamadas acima do limite de homônimos, chamadas escritas contra um método abstrato e nomes iguais que a regra liga a outro ponto ou nega.", "Who uses this point, in layers from left to right, in three kinds that are never added up. Linked (solid line): the rule of \"What does it call?\" links the call to this point; it is not a verification. Possible by the type (dashed): this is one of the bodies that may run. Name only (dotted): the name is written and it is not a call, or an object of this type is used there without the name written. The possible ones by homonym, which nothing settles and which are almost never this point, stay out of the drawing, in the list of direct uses. The path goes up only through the linked ones; a double click on any point goes on from it. Aside, and not uses: calls above the homonym limit, calls written against an abstract method, and equal names the rule links to another point or rules out."],
   'path.noTests': ['esconder testes', 'hide tests'],
   'help.pathNoTests': ['Testes costumam usar quase tudo e enchem o caminho. Ligado, esconde funções de teste (nome começando por test, módulos tests_ do Rust) e arquivos em pastas tests, e o que só era alcançado por elas. É uma convenção de nomes, não uma prova de que aquilo é teste.',
     'Tests tend to use almost everything and fill the path. On, it hides test functions (names starting with test, Rust tests_ modules) and files in tests folders, and whatever was only reached through them. It is a naming convention, not proof that something is a test.'],
-  'path.solid': ['só usos sem homônimos', 'only uses without homonyms'],
-  'help.pathSolid': ['Esconde as linhas tracejadas: usos cujo nome escrito combina também com outras declarações de mesmo nome. Sobra só o que, pelo nome, só pode apontar para este ponto. Ainda é um candidato pelo nome, não uma prova.',
-    'Hides the dashed lines: uses whose written name also matches other declarations with the same name. What remains is only what, by name, can only point to this point. Still a candidate by name, not proof.'],
+  'path.solid': ["só usos ligados", "only linked uses"],
+  'help.pathSolid': ["Esconde os possíveis e os só por nome. Sobra o que a regra liga a este ponto, o que não é uma verificação.", "Hides the possible ones and the name-only ones. What remains is what the rule links to this point, which is not a verification."],
   'path.depth': ['profundidade', 'depth'],
   'path.close': ['Fechar o fluxograma', 'Close the flowchart'],
   'path.title': ['Onde é usado: {name}', 'Where it is used: {name}'],
   'path.searching': ['Procurando quem usa…', 'Looking for users…'],
-  'path.allHidden': ['Os {n} usos encontrados foram escondidos pelos filtros acima.', 'The {n} uses found were hidden by the filters above.'],
+  'path.allHidden': ["Os usos encontrados foram escondidos pelos filtros acima.", "The uses found were hidden by the filters above."],
   'path.oldGraph': ['Este grafo foi gerado antes de os usos serem registrados (G6). Gere o grafo de novo para ver quem usa.', 'This graph was generated before uses were recorded (G6). Generate the graph again to see who uses it.'],
-  'path.none': ['Nenhum uso encontrado: o nome deste ponto não aparece escrito em outro lugar do acervo, ou só aparece com mais de 8 homônimos.', 'No use found: the name of this point is not written anywhere else in the collection, or only appears with more than 8 homonyms.'],
+  'path.none': ["Nenhum uso encontrado pela regra. Isso não prova que ninguém usa.", "No use found by the rule. This does not prove nobody uses it."],
   'path.elkFailed': ['Não foi possível carregar o ELK, que desenha a vista Caminho. Confira a conexão e tente de novo.', 'Could not load ELK, which draws the Path view. Check the connection and try again.'],
   'path.nodeTitle': ['{label}\n{kind} · {location}\nclique: inspecionar · duplo clique: ver quem usa este', '{label}\n{kind} · {location}\nclick: inspect · double click: see who uses this'],
-  'path.summary': ['{nodes} pontos e {links} usos até a profundidade {depth}.', '{nodes} points and {links} uses up to depth {depth}.'],
-  'path.ambiguous': [' {n} usos são tracejados: o nome escrito também combina com homônimos.', ' {n} uses are dashed: the written name also matches homonyms.'],
+  'path.summary': ["{linked} ligados pela regra · {possible} possíveis · {name} só por nome (usos diretos).", "{linked} linked by the rule · {possible} possible · {name} name only (direct uses)."],
   'path.hidden': [' {n} pontos escondidos pelos filtros.', ' {n} points hidden by the filters.'],
   'path.truncated': [' Parou no teto de {n} pontos; reduza a profundidade para ver tudo.', ' Stopped at the cap of {n} points; reduce the depth to see everything.'],
-  'path.clickLine': [' Clique numa linha para ver onde o nome está escrito.', ' Click a line to see where the name is written.'],
-  'path.candidates': ['O nome escrito combina com {n} declarações; esta é uma delas.', 'The written name matches {n} declarations; this is one of them.'],
+  'path.use.truncated': [" O desenho parou em {n} pontos; a lista dos usos diretos está completa.", " The drawing stopped at {n} points; the list of direct uses is complete."],
+  'path.clickLine': [' Clique numa linha para ver o motivo e onde está escrito.', ' Click a line to see the reason and where it is written.'],
+  'path.use.possibleGroups': ["{type} pelo tipo e {homonym} por homônimo", "{type} by the type and {homonym} by homonym"],
+  'path.use.linked': ["ligado pela regra: {reason}", "linked by the rule: {reason}"],
+  'path.use.instantiates': ["instancia: cria um objeto deste tipo", "instantiates: builds an object of this type"],
+  'path.use.instanceOf': ["roda ao instanciar {name}", "runs when {name} is instantiated"],
+  'path.use.decorates': ["decora: roda quando a declaração roda, não a cada chamada dela", "decorates: runs when the declaration runs, not on each of its calls"],
+  'path.use.possibleType': ["pode chamar este ponto: roda o corpo da classe do objeto, e este é um de {n}", "may call this point: the body of the object's class runs, and this is one of {n}"],
+  'path.use.possibleTypeOne': ["pode chamar este ponto: roda o corpo da classe do objeto, e este é o único conhecido", "may call this point: the body of the object's class runs, and this is the only one known"],
+  'path.use.possibleHomonym': ["pode ser outro: o nome combina com {n} declarações, e nada decide", "may be another: the name matches {n} declarations, and nothing settles it"],
+  'path.use.possibleOne': ["só este ponto combina com o nome, mas nada confirma que a chamada chega aqui", "only this point matches the name, but nothing confirms the call reaches here"],
+  'path.use.name': ["o nome está escrito aqui; não é chamada, e a regra não diz a qual declaração se refere", "the name is written here; it is not a call, and the rule does not say which declaration it refers to"],
+  'path.use.receiver': ["usa um objeto deste tipo aqui; o nome não está escrito", "uses an object of this type here; the name is not written"],
+  'path.use.receiverWritten': ["usa um objeto deste tipo aqui, com o nome escrito", "uses an object of this type here, with the name written"],
+  'path.use.title.nameOf': ["Só por nome ({n}), dos quais {m} são um objeto deste tipo, sem o nome escrito", "Name only ({n}), of which {m} are an object of this type, without the name written"],
+  'path.use.onlyList': ["Nada a desenhar: os possíveis por homônimo estão na lista dos usos diretos, acima.", "Nothing to draw: the possible ones by homonym are in the list of direct uses, above."],
+  'path.use.many': ["{n} possíveis", "{n} possible"],
+  'path.use.manyTitle': ["{n} usos possíveis numa caixa só (mais de 8 não viram linhas)\nclique: ver a lista e continuar por um deles", "{n} possible uses in one box (more than 8 are not drawn as lines)\nclick: see the list and go on through one"],
+  'path.use.manyList': ["A lista completa; abra quem usa um deles:", "The full list; open who uses one of them:"],
+  'path.use.open': ["Ver quem usa este", "See who uses this"],
+  'path.use.list': ["Todos os usos diretos: {linked} ligados · {type} possíveis pelo tipo · {homonym} possíveis por homônimo · {name} só por nome", "All the direct uses: {linked} linked · {type} possible by the type · {homonym} possible by homonym · {name} name only"],
+  'path.use.title.linked': ["Ligados pela regra ({n})", "Linked by the rule ({n})"],
+  'path.use.title.type': ["Possíveis, pelo tipo ({n})", "Possible, by the type ({n})"],
+  'path.use.title.homonym': ["Possíveis, por homônimo ({n})", "Possible, by homonym ({n})"],
+  'path.use.title.name': ["Só por nome ({n})", "Name only ({n})"],
+  'path.use.aside.above_limit': ["{n} chamadas com este nome ficaram acima do limite de homônimos e podem usar este ponto", "{n} calls with this name were above the homonym limit and may use this point"],
+  'path.use.aside.abstract_calls': ["{n} chamadas são escritas contra este método, que é abstrato: roda o de uma subclasse", "{n} calls are written against this method, which is abstract: a subclass's runs"],
+  'path.use.aside.ruled_out': ["{n} nomes iguais não são usos: a regra os liga a outro ponto ou os nega", "{n} equal names are not uses: the rule links them to another point or rules them out"],
+  'path.use.hiddenTests': ["testes escondidos", "tests hidden"],
   'inspector.calls': ['O que ele chama?', 'What does it call?'],
   'gather.add': ['Juntar ao rascunho', 'Add to the draft'],
   'gather.remove': ['Tirar do rascunho', 'Remove from the draft'],
@@ -1168,7 +1194,7 @@ const STRINGS = {
   'why.decorator': ['decorador de {t} ({lines}); roda quando a declaração roda, não a cada chamada', 'decorator of {t} ({lines}); runs when the declaration runs, not on each call'],
   'why.return_type': ['tipo que {t} devolve ({lines})', 'type {t} returns ({lines})'],
   'why.called_owner': ['tipo de {t}, que é chamado', 'type of {t}, which is called'],
-  'why.caller': ['chama {t} ({lines})', 'calls {t} ({lines})'],
+  'why.caller': ['chama {t} pelo nome escrito ({lines})', 'calls {t} by the written name ({lines})'],
   'why.type_reference': ['{t} escreve este tipo ({lines})', '{t} writes this type ({lines})'],
   'why.header': ['topo do arquivo de {t}: imports', 'head of the file of {t}: imports'],
   'why.called_measured': ['{t} chama ({lines}); o nome tem homônimos e só este teve contagem', '{t} calls it ({lines}); the name has homonyms and only this one had a count'],
@@ -1249,6 +1275,7 @@ const STRINGS = {
   'use.decorates': ['decora', 'decorates'],
   'use.base_class': ['herda de', 'inherits from'],
   'use.type_reference': ['cita o tipo', 'cites the type'],
+  'use.receiver_type': ['usa um objeto deste tipo', 'uses an object of this type'],
   'use.name_reference': ['usa o nome', 'uses the name'],
   'use.name_write': ['escreve', 'writes'],
   'use.keyword_argument': ['preenche pelo nome', 'fills by name'],
@@ -7495,8 +7522,11 @@ const callsMode = () => pathMode === 'calls';
 // The end of a link closer to the seed, and the farther one: the user of a use, the callee of a call.
 const nearEnd = l => callsMode() ? l.from : l.to;
 const farEnd = l => callsMode() ? l.to : l.from;
-// Dashed: a use whose name matches homonyms, or a call left unresolved among homonyms.
-const dashed = l => callsMode() ? l.resolution === 'homonym' : l.candidates > 1;
+// Dashed: a possible use (step 2.4d), or a call left unresolved among homonyms. Dotted: a use by name only.
+const dashed = l => callsMode() ? l.resolution === 'homonym' : l.use === 'possible';
+const named = l => !callsMode() && l.use === 'name';
+// The kind of a use, which are never added up; the two possible ones are apart (DEC-46).
+const useKind = l => l.use !== 'possible' ? l.use : l.basis === 'type' ? 'type' : 'homonym';
 
 // What the latest "Medir tudo" says of a function: how often it ran and for how long, that it
 // was counted with no pass observed, or nothing (not counted). Built once per measure.
@@ -7541,6 +7571,7 @@ async function drawPath() {
   const drawing = ++pathDrawing, same = sameRun(), current = () => same() && drawing === pathDrawing;
   $('#pathDetail').hidden = true;
   renderUnresolved(null);
+  renderUses(null);
   setPathState('loading');
   const seed = state.nodes[state.index.get(pathSeed)];
   $('#pathTitle').textContent = t(calls ? 'path.callsTitle' : 'path.title', { name: seed?.label ?? pathSeed });
@@ -7573,7 +7604,13 @@ async function drawPath() {
     }
     // Before any early return: a point with no link drawn can still write calls.
     if (calls) renderUnresolved(full);
+    else renderUses(full);
     const data = filterPath(full);
+    if (!calls && full.links.length && full.links.every(l => useKind(l) === 'homonym')) {
+      note.textContent = t('path.use.onlyList');
+      setPathState('empty');
+      return;
+    }
     if (!data.links.length && full.links.length) {
       note.textContent = t(calls ? 'path.callsAllHidden' : 'path.allHidden', { n: full.links.length });
       setPathState('empty');
@@ -7586,7 +7623,7 @@ async function drawPath() {
       setPathState('empty');
       return;
     }
-    const drawn = calls ? foldMany(data, full) : data;
+    const drawn = calls ? foldMany(data, full) : foldUses(data, full);
     const { graph, nodes, edges } = pathGraph(drawn);
     const layout = await elk.layout(graph);
     if (!current()) return;
@@ -7641,7 +7678,8 @@ const isTest = n => /(^|[.:])(test|tests_)/i.test(n.label) || /(^|\/)tests?\//.t
 function filterPath(data) {
   const noTests = $('#pathNoTests').checked, solid = $('#pathSolid').checked, onlyRan = measuredOn();
   const byId = new Map(data.nodes.map(n => [n.id, n]));
-  const links = data.links.filter(l => (!solid || !dashed(l)) && (!onlyRan || !idle(farEnd(l)))
+  // A direct use left out of the drawing is in the list, not in the nodes; a homonym is never drawn (DEC-46).
+  const links = data.links.filter(l => (callsMode() || useKind(l) !== 'homonym') && byId.has(l.from) && byId.has(l.to) && (!solid || !(dashed(l) || named(l))) && (!onlyRan || !idle(farEnd(l)))
     && (!noTests || (!isTest(byId.get(l.from)) && !isTest(byId.get(l.to)))));
   const reached = new Set([data.seed]);
   for (let grew = true; grew;) {
@@ -7649,7 +7687,7 @@ function filterPath(data) {
     for (const l of links) if (reached.has(nearEnd(l)) && !reached.has(farEnd(l))) { reached.add(farEnd(l)); grew = true; }
   }
   return { ...data, nodes: data.nodes.filter(n => reached.has(n.id)), links: links.filter(l => reached.has(l.from) && reached.has(l.to)),
-    hidden: data.nodes.length - reached.size };
+    direct: data.links.filter(l => l.to === data.seed), hidden: data.nodes.length - reached.size };
 }
 
 // DEC-43 and DEC-06: more than 8 candidates of one call are one box, never as many lines; the full list,
@@ -7680,6 +7718,87 @@ function foldMany(data, full) {
     for (const l of links) if (reached.has(l.from) && !reached.has(l.to)) { reached.add(l.to); grew = true; }
   }
   return { ...data, links, nodes: [...data.nodes, ...boxes].filter(n => reached.has(n.id)) };
+}
+
+// DEC-46: more than 8 possible uses of one point, of one kind, are one box; the list, all of it, in its detail.
+function foldUses(data, full) {
+  const key = l => `${useKind(l)}:${l.to}`, users = new Map(), noTests = $('#pathNoTests').checked;
+  const at = new Map(full.nodes.map(n => [n.id, n]));
+  for (const l of full.links) {
+    if (!dashed(l) || (noTests && isTestUse(l))) continue;
+    if (!users.has(key(l))) users.set(key(l), []);
+    users.get(key(l)).push({ ...l, place: `${l.evidence.path}:${l.evidence.start_line}` });
+  }
+  const many = new Map([...users].filter(([, ls]) => ls.length > MANY));
+  if (!many.size) return data;
+  const links = [], boxes = [], seen = new Set();
+  for (const l of data.links) {
+    if (!dashed(l) || !many.has(key(l))) { links.push(l); continue; }
+    if (seen.has(key(l))) continue;
+    seen.add(key(l));
+    const list = many.get(key(l)), id = `many:use:${key(l)}`, to = at.get(l.to);
+    boxes.push({ id, label: t('path.use.many', { n: list.length }), kind: l.occurrence_kind, layer: (to?.layer ?? 0) + 1, container: t(`path.use.title.${useKind(l)}`, { n: list.length }), path: '', line: 0, many: list });
+    links.push({ ...l, from: id, many: list });
+  }
+  const reached = new Set([data.seed]);
+  for (let grew = true; grew;) {
+    grew = false;
+    for (const l of links) if (reached.has(l.to) && !reached.has(l.from)) { reached.add(l.from); grew = true; }
+  }
+  return { ...data, links, nodes: [...data.nodes, ...boxes].filter(n => reached.has(n.id)) };
+}
+const isTestUse = l => isTest({ label: state.nodes[state.index.get(l.from)]?.label ?? '', path: l.evidence.path });
+
+// The direct uses by kind, with the test filter; the two possible ones are never added up.
+function usesCount(data) {
+  const noTests = $('#pathNoTests').checked, n = { linked: 0, type: 0, homonym: 0, name: 0 };
+  for (const l of data.direct) if (!noTests || !isTestUse(l)) n[useKind(l)]++;
+  return { linked: n.linked, name: n.name, possible: t('path.use.possibleGroups', { type: n.type, homonym: n.homonym }) };
+}
+
+// A receiver's type is what the extractor read: the name may not be written there (`self`, a variable).
+const unwritten = l => l.occurrence_kind === 'receiver_type'
+  && !l.text.split(/[^\p{L}\p{N}_]+/u).includes(shortName(state.nodes[state.index.get(l.to)]?.label ?? ''));
+
+// Why a use is one, in words: the rule's reason, never "certain" (DEC-46).
+function useText(l) {
+  const full = id => state.nodes[state.index.get(id)]?.label ?? id;
+  if (l.use === 'name') return t(l.occurrence_kind !== 'receiver_type' ? 'path.use.name' : unwritten(l) ? 'path.use.receiver' : 'path.use.receiverWritten');
+  if (l.use === 'possible') return l.basis === 'type' ? t(l.candidates === 1 ? 'path.use.possibleTypeOne' : 'path.use.possibleType', { n: l.candidates })
+    : t(l.candidates === 1 ? 'path.use.possibleOne' : 'path.use.possibleHomonym', { n: l.candidates });
+  const reason = t(`path.resolution.${l.resolution}`, { n: l.candidates }).replace(/^(seguida|followed)(: | )/, '');
+  return [t('path.use.linked', { reason }),
+    l.instance_of ? t('path.use.instanceOf', { name: full(l.instance_of) }) : l.relation === 'instantiates' ? t('path.use.instantiates') : l.relation === 'decorates' ? t('path.use.decorates') : null,
+    l.via ? t('path.via', { field: full(l.via) }) : null].filter(Boolean).join(' · ');
+}
+
+// The seed's direct uses, all of them, each kind apart, and what is not a use but must not go unsaid.
+function renderUses(data) {
+  const box = $('#pathUses'), body = $('#pathUsesBody');
+  box.hidden = true;
+  body.replaceChildren();
+  if (!data?.counts) return;
+  const noTests = $('#pathNoTests').checked, shown = l => !noTests || !isTestUse(l);
+  const direct = data.links.filter(l => l.to === data.seed);
+  const of = kind => direct.filter(l => useKind(l) === kind && shown(l));
+  const lists = Object.fromEntries(['linked', 'type', 'homonym', 'name'].map(k => [k, of(k)]));
+  const asides = ['above_limit', 'abstract_calls', 'ruled_out'].map(k => [k, (data[k] ?? []).filter(shown)]).filter(([, ls]) => ls.length);
+  if (!direct.some(shown) && !asides.length) return;
+  box.hidden = false;
+  box.querySelector('summary').textContent = t('path.use.list', Object.fromEntries(Object.entries(lists).map(([k, ls]) => [k, ls.length])))
+    + (noTests ? ` (${t('path.use.hiddenTests')})` : '') + asides.map(([k, ls]) => ` · ${t(`path.use.aside.${k}`, { n: ls.length })}`).join('');
+  const label = id => state.nodes[state.index.get(id)]?.label ?? id;
+  const item = (l, why) => el('li', {}, el('code', { textContent: l.text.slice(0, 100) }), ' · ',
+    el('a', { href: '#', textContent: label(l.from), onclick: e => { e.preventDefault(); const i = state.index.get(l.from); if (i != null) selectNode(i); } }),
+    el('span', { className: 'muted mono', textContent: ` ${l.evidence.path}:${l.evidence.start_line}` }),
+    why ? el('span', { className: 'muted', textContent: ` · ${why}` }) : null,
+    el('button', { className: 'link', style: 'margin-left: 6px', textContent: t('path.use.open'), onclick: () => openPath(l.from, 'used', false) }));
+  const titleOf = (k, ls) => { const m = k === 'name' ? ls.filter(unwritten).length : 0; return m ? t('path.use.title.nameOf', { n: ls.length, m }) : t(`path.use.title.${k}`, { n: ls.length }); };
+  // A long list is built when it is opened.
+  const fold = (title, list, open, why, data_) => withData(el('details', { open, ontoggle: e => { const d = e.target; if (d.open && d.children.length === 1) d.append(el('ul', {}, ...list.map(l => item(l, why?.(l))))); } },
+    el('summary', { textContent: title })), { use: data_ });
+  body.append(...Object.entries(lists).filter(([, ls]) => ls.length).map(([k, ls]) => fold(titleOf(k, ls), ls, false, useText, k)),
+    ...asides.map(([k, ls]) => fold(t(`path.use.aside.${k}`, { n: ls.length }), ls, false, null, k)));
 }
 
 // A flat flow chart: each point a box with its file, each edge the links of one pair, in the order
@@ -7747,11 +7866,11 @@ function renderPath(data, layout, nodes, edges) {
       svg('text', { x: n.x + 13, y: n.y + 18 }, info.text),
       svg('text', { class: 'where', x: n.x + 13, y: n.y + 34 }, info.where),
       info.count ? svg('text', { class: 'count', x: n.x + 13, y: n.y + 50 }, info.count) : null,
-      title(info.many ? t('path.manyTitle', { text: info.many[0].text.slice(0, 80), n: info.many.length }) : t(callsMode() ? 'path.callsNodeTitle' : 'path.nodeTitle', { label: info.label, kind: info.kind, location: `${info.path}:${info.line}` })));
+      title(info.many ? (calls ? t('path.manyTitle', { text: info.many[0].text.slice(0, 80), n: info.many.length }) : t('path.use.manyTitle', { n: info.many.length })) : t(callsMode() ? 'path.callsNodeTitle' : 'path.nodeTitle', { label: info.label, kind: info.kind, location: `${info.path}:${info.line}` })));
     node.addEventListener('click', () => {
       root.querySelectorAll('.node.selected').forEach(x => x.classList.remove('selected'));
       node.classList.add('selected');
-      if (info.many) { showUse([...edges.values()].find(e => e.to === n.id), nodes); return; }
+      if (info.many) { showUse([...edges.values()].find(e => e.far === n.id), nodes); return; }
       const i = state.index.get(n.id);
       if (i != null) selectNode(i);
       pathPointId = n.id;
@@ -7764,7 +7883,7 @@ function renderPath(data, layout, nodes, edges) {
     const info = edges.get(e.id);
     const points = (e.sections ?? []).flatMap(s => [s.startPoint, ...(s.bendPoints ?? []), s.endPoint]);
     if (!points.length) continue;
-    const path = svg('polyline', { class: `edge${info.links.some(dashed) ? ' ambiguous' : ''}`, points: points.map(p => `${p.x},${p.y}`).join(' '), 'marker-end': 'url(#arrow)' },
+    const path = svg('polyline', { class: `edge${calls ? (info.links.some(dashed) ? ' ambiguous' : '') : info.links.some(l => l.use === 'linked') ? '' : info.links.some(dashed) ? ' ambiguous' : ' named'}`, points: points.map(p => `${p.x},${p.y}`).join(' '), 'marker-end': 'url(#arrow)' },
       title(info.links.map(l => `${l.text.slice(0, 80)} · ${l.evidence.path}:${l.evidence.start_line}`).join('\n')));
     path.addEventListener('click', () => showUse(info, nodes));
     root.append(path);
@@ -7779,15 +7898,17 @@ function renderPath(data, layout, nodes, edges) {
     || data.links.some(l => l.to === n.id && !dashed(l)))).map(n => n.id) : [];
   $('#pathAsk').hidden = !calls || !pathTargets.length;
   $('#pathAsk').textContent = t('path.ask', { n: pathTargets.length });
-  const ambiguous = new Set(data.links.filter(dashed).map(l => calls ? l.occurrence : l.candidate_edge)).size;
+  const ambiguous = calls ? new Set(data.links.filter(dashed).map(l => l.occurrence)).size : 0;
+
   const chosen = Object.keys(pathChosen).length;
-  $('#pathNote').textContent = t(calls ? 'path.callsSummary' : 'path.summary', { nodes: data.nodes.length, links: data.links.length, depth: data.depth })
-    + (ambiguous ? t(calls ? 'path.callsAmbiguous' : 'path.ambiguous', { n: ambiguous }) : '')
+  $('#pathNote').textContent = (calls ? t('path.callsSummary', { nodes: data.nodes.length, links: data.links.length, depth: data.depth })
+    : t('path.summary', usesCount(data)))
+    + (ambiguous ? t('path.callsAmbiguous', { n: ambiguous }) : '')
     + (calls && chosen ? t('path.chosenCount', { n: chosen }) : '')
     + (calls && measuredOn() && data.links.some(l => l.resolution === 'measured')
       ? t('path.measuredCount', { n: new Set(data.links.filter(l => l.resolution === 'measured').map(l => l.occurrence)).size }) : '')
     + (data.hidden ? t('path.hidden', { n: data.hidden }) : '')
-    + (data.truncated ? t('path.truncated', { n: data.max_nodes }) : '')
+    + (data.truncated ? t(calls ? 'path.truncated' : 'path.use.truncated', { n: data.max_nodes }) : '')
     + t(calls ? 'path.callsClick' : 'path.clickLine');
 }
 
@@ -7832,7 +7953,9 @@ function showUse(info, nodes) {
       `${l.relation === 'instantiates' || l.relation === 'decorates' ? t(`use.${l.relation}`) : kind(l.occurrence_kind)}: `, el('code', { textContent: l.text.slice(0, 160) }),
       el('div', { className: 'muted mono', textContent: `${l.evidence.path}:${l.evidence.start_line}` }),
       callsMode() ? resolution(l)
-        : l.candidates > 1 ? el('div', { className: 'muted', textContent: t('path.candidates', { n: l.candidates }) }) : null))));
+        : withData(el('div', { className: 'muted' }, useText(l), l.many ? el('div', {}, t('path.use.manyList'), el('ul', { className: 'many-list', style: 'max-height: 320px; overflow: auto' }, ...l.many.map(c =>
+          el('li', {}, el('code', { textContent: state.nodes[state.index.get(c.from)]?.label ?? c.from }), el('span', { className: 'muted mono', textContent: ` ${c.place}` }),
+            el('button', { textContent: t('path.use.open'), style: 'margin-left: 8px', onclick: () => openPath(c.from, 'used', false) }))))) : null), { use: useKind(l) })))));
   box.hidden = false;
 }
 
@@ -7847,6 +7970,7 @@ function closePathView({ keep = false } = {}) {
   $('#pathNote').textContent = '';
   $('#pathDetail').hidden = true;
   renderUnresolved(null);
+  renderUses(null);
   showCenter('city', { keep });
 }
 $('#pathResetChoices').onclick = () => { pathChosen = {}; drawPath(); };

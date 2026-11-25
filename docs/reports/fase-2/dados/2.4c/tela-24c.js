@@ -171,7 +171,9 @@ const NO_ABSTRACT = x => !/abstrat|abstract/i.test(x ?? '');
         await p.click('#pathResetChoices');
         await p.waitForTimeout(600);
       }
-      ok(lang.toUpperCase() + ': só o texto do abstrato diz "abstrato"', await p.evaluate(() => JSON.stringify(Object.entries(__t.STRINGS).filter(([k, v]) => k.startsWith('path.') && /abstrat|abstract/i.test(JSON.stringify(v))).map(([k]) => k)) === '["path.resolution.overridesAbstract"]'));
+      // Two since step 2.4d: its Q4 and DEC-46 approved the line "calls written against this method, which is abstract"
+      // in "where is it used?" (25/11/2026). Until then, only the text of the bodies could say it.
+      ok(lang.toUpperCase() + ': só o texto do abstrato diz "abstrato"', await p.evaluate(() => JSON.stringify(Object.entries(__t.STRINGS).filter(([k, v]) => k.startsWith('path.') && /abstrat|abstract/i.test(JSON.stringify(v))).map(([k]) => k).sort()) === '["path.resolution.overridesAbstract","path.use.aside.abstract_calls"]'));
       ok(`${lang.toUpperCase()}: nenhum erro de página`, !errors.length, errors.join(' | '));
       ok(`${lang.toUpperCase()}: nada além de abrir o projeto (POST /api/project = store.open) e /api/calls`, !writes.length, writes.join(', '));
       await context.close();
