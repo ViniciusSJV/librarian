@@ -1,7 +1,7 @@
 {
  "projeto": "healthchecks-25597e41",
  "fonte": "Projetos/pilotos/healthchecks @ 6c05a7a",
- "selecao": "tools/precisao/amostra.js sobre a linha de base de 18/11/2026 (binário de aae51d7); HC-61 a HC-75: estratos do passo 2.2 (metodo_funcao, modulo_f, espelho), escolhidos à mão na Parada 1 do 2.2, equilibrando código de teste e de produção; HC-76 a HC-87: estratos do passo 2.3a (tipo_py, instancia, receiver_py_teto), escolhidos à mão na Parada 1 do 2.3; HC-88 a HC-97: estratos do passo 2.3b (decorador, campo_init), escolhidos à mão na Parada 1 do 2.3b; HC-98 a HC-112: estratos do passo 2.3c (retorno_py, campo_outro_arquivo, retorno_confirma, liga_nao_fecha, cadeia), escolhidos à mão na Parada 1 do 2.3c; HC-113 a HC-123: estratos do passo 2.4a (escopo_modulo, escopo_fora, escopo_local, escopo_import), escolhidos à mão na Parada 1 do 2.4; HC-124 a HC-143: estratos do passo 2.4b (heranca_self, heranca_tipo, heranca_super, fora_da_cadeia, cls, propriedade), escolhidos à mão na Parada 1 do 2.4b",
+ "selecao": "tools/precisao/amostra.js sobre a linha de base de 18/11/2026 (binário de aae51d7); HC-61 a HC-75: estratos do passo 2.2 (metodo_funcao, modulo_f, espelho), escolhidos à mão na Parada 1 do 2.2, equilibrando código de teste e de produção; HC-76 a HC-87: estratos do passo 2.3a (tipo_py, instancia, receiver_py_teto), escolhidos à mão na Parada 1 do 2.3; HC-88 a HC-97: estratos do passo 2.3b (decorador, campo_init), escolhidos à mão na Parada 1 do 2.3b; HC-98 a HC-112: estratos do passo 2.3c (retorno_py, campo_outro_arquivo, retorno_confirma, liga_nao_fecha, cadeia), escolhidos à mão na Parada 1 do 2.3c; HC-113 a HC-123: estratos do passo 2.4a (escopo_modulo, escopo_fora, escopo_local, escopo_import), escolhidos à mão na Parada 1 do 2.4; HC-124 a HC-143: estratos do passo 2.4b (heranca_self, heranca_tipo, heranca_super, fora_da_cadeia, cls, propriedade), escolhidos à mão na Parada 1 do 2.4b; HC-144 a HC-157: estratos do passo 2.4c (despacho, despacho_sem_sobrescrita, despacho_irma, despacho_construtor, despacho_classe), escolhidos à mão na Parada 1 do 2.4c",
  "chamadas": [
   {
    "id": "HC-01",
@@ -3284,6 +3284,319 @@
    "certeza": "alta",
    "justificativa": "`Channel.zulip -> ZulipConf`.",
    "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4b)"
+  },
+  {
+   "id": "HC-144",
+   "parte_c": false,
+   "estrato": "despacho",
+   "ocorrencia": "hc/integrations/slack/transport.py@2654-2688",
+   "local": "hc/integrations/slack/transport.py:72",
+   "texto": "self.fix_asterisks(check.schedule)",
+   "dono": "Slackalike.payload",
+   "linha_de_base": {
+    "resolution": "receiver",
+    "candidates": 4,
+    "alvos": [
+     "Slackalike.fix_asterisks (hc/integrations/slack/transport.py:88)"
+    ]
+   },
+   "verdade": {
+    "ambigua": [
+     "Discord.fix_asterisks (hc/integrations/discord/transport.py:25)",
+     "Slackalike.fix_asterisks (hc/integrations/slack/transport.py:88)"
+    ],
+    "observacao": "despacho polimórfico: Discord sobrescreve fix_asterisks e não sobrescreve payload"
+   },
+   "certeza": "alta",
+   "justificativa": "`self` em `Slackalike.payload`; `Discord(Slackalike)` sobrescreve `fix_asterisks`, e chama `self.payload`. Com `Slack` e `Mattermost`, roda o da base.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4c; conferido no editor)"
+  },
+  {
+   "id": "HC-145",
+   "parte_c": false,
+   "estrato": "despacho_sem_sobrescrita",
+   "ocorrencia": "hc/api/transports.py@5549-5806",
+   "local": "hc/api/transports.py:182",
+   "texto": "cls._request(\r\n                    method,\r\n                    url,\r\n                    params=params,\r\n                    data=data,\r\n                    json=json,\r\n                    headers=headers,\r\n                    auth=auth,\r\n                )",
+   "dono": "HttpTransport.request",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "HttpTransport._request (hc/api/transports.py:138)"
+    ]
+   },
+   "verdade": {
+    "alvo": "HttpTransport._request (hc/api/transports.py:138)"
+   },
+   "certeza": "alta",
+   "justificativa": "26 subclasses de `HttpTransport`, e nenhuma sobrescreve `_request`.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4c)"
+  },
+  {
+   "id": "HC-146",
+   "parte_c": false,
+   "estrato": "despacho_sem_sobrescrita",
+   "ocorrencia": "hc/integrations/slack/transport.py@3697-3715",
+   "local": "hc/integrations/slack/transport.py:97",
+   "texto": "self.payload(flip)",
+   "dono": "Slackalike.notify",
+   "linha_de_base": {
+    "resolution": "receiver",
+    "candidates": 3,
+    "alvos": [
+     "Slackalike.payload (hc/integrations/slack/transport.py:31)"
+    ]
+   },
+   "verdade": {
+    "alvo": "Slackalike.payload (hc/integrations/slack/transport.py:31)"
+   },
+   "certeza": "alta",
+   "justificativa": "3 subclasses de `Slackalike`, e nenhuma sobrescreve `payload`.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4c)"
+  },
+  {
+   "id": "HC-147",
+   "parte_c": false,
+   "estrato": "despacho_sem_sobrescrita",
+   "ocorrencia": "hc/test.py@3446-3484",
+   "local": "hc/test.py:96",
+   "texto": "self.assertEmailContainsText(fragment)",
+   "dono": "BaseTestCase.assertEmailContains",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "BaseTestCase.assertEmailContainsText (hc/test.py:79)"
+    ]
+   },
+   "verdade": {
+    "alvo": "BaseTestCase.assertEmailContainsText (hc/test.py:79)"
+   },
+   "certeza": "alta",
+   "justificativa": "187 subclasses de `BaseTestCase`, e nenhuma o sobrescreve.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4c)"
+  },
+  {
+   "id": "HC-148",
+   "parte_c": false,
+   "estrato": "despacho_sem_sobrescrita",
+   "ocorrencia": "hc/test.py@3494-3532",
+   "local": "hc/test.py:97",
+   "texto": "self.assertEmailContainsHtml(fragment)",
+   "dono": "BaseTestCase.assertEmailContains",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "BaseTestCase.assertEmailContainsHtml (hc/test.py:84)"
+    ]
+   },
+   "verdade": {
+    "alvo": "BaseTestCase.assertEmailContainsHtml (hc/test.py:84)"
+   },
+   "certeza": "alta",
+   "justificativa": "Igual a HC-147.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4c)"
+  },
+  {
+   "id": "HC-149",
+   "parte_c": false,
+   "estrato": "despacho_irma",
+   "ocorrencia": "hc/integrations/rocketchat/transport.py@1568-1602",
+   "local": "hc/integrations/rocketchat/transport.py:43",
+   "texto": "self.fix_asterisks(check.schedule)",
+   "dono": "RocketChat.payload",
+   "linha_de_base": {
+    "resolution": "receiver",
+    "candidates": 4,
+    "alvos": [
+     "RocketChat.fix_asterisks (hc/integrations/rocketchat/transport.py:14)"
+    ]
+   },
+   "verdade": {
+    "alvo": "RocketChat.fix_asterisks (hc/integrations/rocketchat/transport.py:14)"
+   },
+   "certeza": "alta",
+   "justificativa": "`RocketChat(HttpTransport)` não tem subclasses; as outras `fix_asterisks` são de classes que não herdam dela.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4c)"
+  },
+  {
+   "id": "HC-150",
+   "parte_c": false,
+   "estrato": "despacho_irma",
+   "ocorrencia": "hc/integrations/msteamsw/transport.py@2812-2846",
+   "local": "hc/integrations/msteamsw/transport.py:82",
+   "texto": "self.fix_asterisks(check.schedule)",
+   "dono": "MsTeamsWorkflow.payload",
+   "linha_de_base": {
+    "resolution": "receiver",
+    "candidates": 4,
+    "alvos": [
+     "MsTeamsWorkflow.fix_asterisks (hc/integrations/msteamsw/transport.py:14)"
+    ]
+   },
+   "verdade": {
+    "alvo": "MsTeamsWorkflow.fix_asterisks (hc/integrations/msteamsw/transport.py:14)"
+   },
+   "certeza": "alta",
+   "justificativa": "`MsTeamsWorkflow(HttpTransport)` não tem subclasses.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4c)"
+  },
+  {
+   "id": "HC-151",
+   "parte_c": false,
+   "estrato": "despacho_irma",
+   "ocorrencia": "hc/front/tests/test_add_check.py@866-881",
+   "local": "hc/front/tests/test_add_check.py:29",
+   "texto": "self._payload()",
+   "dono": "AddCheckTestCase.test_it_works",
+   "linha_de_base": {
+    "resolution": "receiver",
+    "candidates": 2,
+    "alvos": [
+     "AddCheckTestCase._payload (hc/front/tests/test_add_check.py:14)"
+    ]
+   },
+   "verdade": {
+    "alvo": "AddCheckTestCase._payload (hc/front/tests/test_add_check.py:14)"
+   },
+   "certeza": "alta",
+   "justificativa": "A classe de teste não tem subclasses; outra classe de teste declara `_payload`.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4c)"
+  },
+  {
+   "id": "HC-152",
+   "parte_c": false,
+   "estrato": "despacho_irma",
+   "ocorrencia": "hc/accounts/tests/test_notifications.py@698-713",
+   "local": "hc/accounts/tests/test_notifications.py:25",
+   "texto": "self._payload()",
+   "dono": "NotificationsTestCase.test_it_saves_reports_monthly",
+   "linha_de_base": {
+    "resolution": "receiver",
+    "candidates": 2,
+    "alvos": [
+     "NotificationsTestCase._payload (hc/accounts/tests/test_notifications.py:14)"
+    ]
+   },
+   "verdade": {
+    "alvo": "NotificationsTestCase._payload (hc/accounts/tests/test_notifications.py:14)"
+   },
+   "certeza": "alta",
+   "justificativa": "Igual a HC-151.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4c)"
+  },
+  {
+   "id": "HC-153",
+   "parte_c": false,
+   "estrato": "despacho_construtor",
+   "ocorrencia": "hc/integrations/call/views.py@904-919",
+   "local": "hc/integrations/call/views.py:26",
+   "texto": "form.get_json()",
+   "dono": "add",
+   "linha_de_base": {
+    "resolution": "type",
+    "candidates": 3,
+    "alvos": [
+     "PhoneNumberForm.get_json (hc/front/forms.py:151)"
+    ]
+   },
+   "verdade": {
+    "alvo": "PhoneNumberForm.get_json (hc/front/forms.py:151)"
+   },
+   "certeza": "alta",
+   "justificativa": "`form = forms.PhoneNumberForm(..)` nas duas atribuições: o objeto é exatamente dela, embora `PhoneUpDownForm` sobrescreva `get_json`.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4c)"
+  },
+  {
+   "id": "HC-154",
+   "parte_c": false,
+   "estrato": "despacho_construtor",
+   "ocorrencia": "hc/integrations/sms/views.py@818-833",
+   "local": "hc/integrations/sms/views.py:24",
+   "texto": "form.get_json()",
+   "dono": "sms_form",
+   "linha_de_base": {
+    "resolution": "type",
+    "candidates": 3,
+    "alvos": [
+     "PhoneUpDownForm.get_json (hc/front/forms.py:168)"
+    ]
+   },
+   "verdade": {
+    "alvo": "PhoneUpDownForm.get_json (hc/front/forms.py:168)"
+   },
+   "certeza": "alta",
+   "justificativa": "`form = forms.PhoneUpDownForm(..)`.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4c)"
+  },
+  {
+   "id": "HC-155",
+   "parte_c": false,
+   "estrato": "despacho_construtor",
+   "ocorrencia": "hc/api/tests/test_smtpd.py@8079-8183",
+   "local": "hc/api/tests/test_smtpd.py:228",
+   "texto": "TestServer().process_rcpt(\r\n            \"763c0772-307f-42f6-bdf0-1bb2ff647a09@hc.example.com\"\r\n        )",
+   "dono": "SmtpdTestCase.test_rcpt_handler_accepts_uuid",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Server.process_rcpt (hc/api/management/commands/smtpd.py:109)"
+    ]
+   },
+   "verdade": {
+    "alvo": "Server.process_rcpt (hc/api/management/commands/smtpd.py:109)"
+   },
+   "certeza": "alta",
+   "justificativa": "`TestServer()` é exato, e `TestServer(Server)` não declara `process_rcpt`.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4c)"
+  },
+  {
+   "id": "HC-156",
+   "parte_c": false,
+   "estrato": "despacho_classe",
+   "ocorrencia": "hc/integrations/telegram/views.py@2632-2693",
+   "local": "hc/integrations/telegram/views.py:82",
+   "texto": "Telegram.send(chat.id, doc.message.message_thread_id, invite)",
+   "dono": "telegram_bot",
+   "linha_de_base": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Signal.send (hc/integrations/signal/transport.py:60)",
+     "Telegram.send (hc/integrations/telegram/transport.py:55)"
+    ]
+   },
+   "verdade": {
+    "alvo": "Telegram.send (hc/integrations/telegram/transport.py:55)"
+   },
+   "certeza": "alta",
+   "justificativa": "A chamada pelo nome da classe roda o método dela.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4c; conferido no editor)"
+  },
+  {
+   "id": "HC-157",
+   "parte_c": false,
+   "estrato": "despacho_classe",
+   "ocorrencia": "hc/api/tests/test_tokenbucket.py@1497-1537",
+   "local": "hc/api/tests/test_tokenbucket.py:47",
+   "texto": "TokenBucket.authorize_login_email(email)",
+   "dono": "TokenBucketTestCase.test_it_normalizes_email",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "TokenBucket.authorize_login_email (hc/api/models.py:1481)"
+    ]
+   },
+   "verdade": {
+    "alvo": "TokenBucket.authorize_login_email (hc/api/models.py:1481)"
+   },
+   "certeza": "alta",
+   "justificativa": "A chamada pelo nome da classe roda o método dela.",
+   "verdade_validada_por": "usuário (25/11/2026, folha da Parada 2 do 2.4c)"
   }
  ]
 }

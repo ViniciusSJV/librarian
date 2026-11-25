@@ -1,7 +1,7 @@
 {
  "projetos": {
   "hc": {
-   "run_novo": "20261125-034533",
+   "run_novo": "20261125-065259",
    "grafo_novo_igual_ao_de_referencia": false,
    "populacao": {
     "total": 1956,
@@ -9,16 +9,16 @@
      "no_candidate_in_project": 1313,
      "unique": 325,
      "above_candidate_limit": 24,
-     "homonym": 203,
-     "type": 75,
+     "homonym": 205,
+     "type": 73,
      "import": 16
     },
     "por_estrato": {
      "no_candidate_in_project": 1313,
      "unique->outro": 309,
      "above_candidate_limit": 24,
-     "homonym": 203,
-     "type": 75,
+     "homonym": 205,
+     "type": 73,
      "import": 16,
      "unique->function": 16
     },
@@ -26,19 +26,19 @@
    },
    "amostra_contagem": {
     "sem_candidato": 48,
-    "correta": 73,
-    "link_falso": 3,
+    "correta": 85,
+    "link_falso": 1,
     "candidatos_falsos": 14,
-    "ambigua": 5
+    "ambigua": 9
    },
    "parte_c_contagem": {
     "sem_candidato": 16,
     "correta": 4
    },
    "estimativa_populacao": {
-    "correta": 360,
+    "correta": 361,
     "link_falso": 31,
-    "candidatos_falsos": 131,
+    "candidatos_falsos": 132,
     "ambigua": 0,
     "sem_candidato": 1344
    },
@@ -1298,9 +1298,9 @@
      "id": "HC-140",
      "estrato": "cls",
      "parte_c": false,
-     "categoria": "link_falso",
-     "categoria_regra_anterior": "link_falso",
-     "resposta": "type (12) → HttpTransport.raise_for_response (hc/api/transports.py:133)",
+     "categoria": "ambigua",
+     "categoria_regra_anterior": "ambigua",
+     "resposta": "homonym (12)",
      "validada": "usuário (25/11/2026, verdade corrigida pelo usuário na folha da Parada 2 do 2.4b)"
     },
     {
@@ -1316,9 +1316,9 @@
      "id": "HC-142",
      "estrato": "propriedade",
      "parte_c": false,
-     "categoria": "link_falso",
-     "categoria_regra_anterior": "link_falso",
-     "resposta": "type (14) → Transport.is_noop (hc/api/transports.py:76)",
+     "categoria": "ambigua",
+     "categoria_regra_anterior": "ambigua",
+     "resposta": "homonym (14)",
      "validada": "usuário (25/11/2026, verdade corrigida pelo usuário na folha da Parada 2 do 2.4b)"
     },
     {
@@ -1329,6 +1329,132 @@
      "categoria_regra_anterior": "correta",
      "resposta": "unique (1) → ZulipConf.formatted_to (hc/api/models.py:958)",
      "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4b)"
+    },
+    {
+     "id": "HC-144",
+     "estrato": "despacho",
+     "parte_c": false,
+     "categoria": "ambigua",
+     "categoria_regra_anterior": "ambigua",
+     "resposta": "homonym (2)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4c; conferido no editor)"
+    },
+    {
+     "id": "HC-145",
+     "estrato": "despacho_sem_sobrescrita",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → HttpTransport._request (hc/api/transports.py:138)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4c)"
+    },
+    {
+     "id": "HC-146",
+     "estrato": "despacho_sem_sobrescrita",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "receiver (3) → Slackalike.payload (hc/integrations/slack/transport.py:31)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4c)"
+    },
+    {
+     "id": "HC-147",
+     "estrato": "despacho_sem_sobrescrita",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → BaseTestCase.assertEmailContainsText (hc/test.py:79)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4c)"
+    },
+    {
+     "id": "HC-148",
+     "estrato": "despacho_sem_sobrescrita",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → BaseTestCase.assertEmailContainsHtml (hc/test.py:84)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4c)"
+    },
+    {
+     "id": "HC-149",
+     "estrato": "despacho_irma",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "receiver (4) → RocketChat.fix_asterisks (hc/integrations/rocketchat/transport.py:14)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4c)"
+    },
+    {
+     "id": "HC-150",
+     "estrato": "despacho_irma",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "receiver (4) → MsTeamsWorkflow.fix_asterisks (hc/integrations/msteamsw/transport.py:14)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4c)"
+    },
+    {
+     "id": "HC-151",
+     "estrato": "despacho_irma",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "receiver (2) → AddCheckTestCase._payload (hc/front/tests/test_add_check.py:14)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4c)"
+    },
+    {
+     "id": "HC-152",
+     "estrato": "despacho_irma",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "receiver (2) → NotificationsTestCase._payload (hc/accounts/tests/test_notifications.py:14)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4c)"
+    },
+    {
+     "id": "HC-153",
+     "estrato": "despacho_construtor",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (3) → PhoneNumberForm.get_json (hc/front/forms.py:151)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4c)"
+    },
+    {
+     "id": "HC-154",
+     "estrato": "despacho_construtor",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "type (3) → PhoneUpDownForm.get_json (hc/front/forms.py:168)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4c)"
+    },
+    {
+     "id": "HC-155",
+     "estrato": "despacho_construtor",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → Server.process_rcpt (hc/api/management/commands/smtpd.py:109)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4c)"
+    },
+    {
+     "id": "HC-156",
+     "estrato": "despacho_classe",
+     "parte_c": false,
+     "categoria": "ambigua",
+     "categoria_regra_anterior": "ambigua",
+     "resposta": "homonym (2)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4c; conferido no editor)"
+    },
+    {
+     "id": "HC-157",
+     "estrato": "despacho_classe",
+     "parte_c": false,
+     "categoria": "correta",
+     "categoria_regra_anterior": "correta",
+     "resposta": "unique (1) → TokenBucket.authorize_login_email (hc/api/models.py:1481)",
+     "validada": "usuário (25/11/2026, folha da Parada 2 do 2.4c)"
     }
    ],
    "executores": [
@@ -1359,7 +1485,7 @@
    ]
   },
   "rt": {
-   "run_novo": "20261125-034841",
+   "run_novo": "20261125-065625",
    "grafo_novo_igual_ao_de_referencia": false,
    "populacao": {
     "total": 515,
@@ -4251,20 +4377,21 @@
     ]
    },
    "agora": {
-    "resolution": "type",
-    "candidates": 3,
+    "resolution": "homonym",
+    "candidates": 2,
     "alvos": [
+     "HFilho.passo (pkg/heranca.py:12)",
      "Raiz.passo (pkg/heranca_apoio.py:8)"
     ],
     "relacao": "calls"
    },
    "alvo": {
-    "alvo": "Raiz.passo (pkg/heranca_apoio.py:8)",
-    "resolution": "type",
-    "passo": "2.4b",
-    "por_que": "o tipo estático decide"
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4c",
+    "por_que": "ambígua: Raiz.passo e HFilho.passo (2.4c; até o 2.4b, o alvo era o do tipo estático)"
    },
-   "estado": "no alvo"
+   "estado": "mudou"
   },
   {
    "id": "N5-py-atributo",
@@ -4578,20 +4705,21 @@
     ]
    },
    "agora": {
-    "resolution": "type",
-    "candidates": 3,
+    "resolution": "homonym",
+    "candidates": 2,
     "alvos": [
+     "Rapido.enviar (pkg/heranca_apoio.py:48)",
      "Transporte.enviar (pkg/heranca_apoio.py:43)"
     ],
     "relacao": "calls"
    },
    "alvo": {
-    "alvo": "Transporte.enviar (pkg/heranca_apoio.py:43)",
-    "resolution": "type",
-    "passo": "2.4b",
-    "por_que": "@property com retorno anotado"
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4c",
+    "por_que": "ambígua: Transporte.enviar e Rapido.enviar, e roda o do objeto (2.4c; até o 2.4b, o alvo era o do tipo anotado)"
    },
-   "estado": "no alvo"
+   "estado": "mudou"
   },
   {
    "id": "N5-py-prop-herdada",
@@ -4605,20 +4733,21 @@
     ]
    },
    "agora": {
-    "resolution": "type",
-    "candidates": 3,
+    "resolution": "homonym",
+    "candidates": 2,
     "alvos": [
+     "Rapido.enviar (pkg/heranca_apoio.py:48)",
      "Transporte.enviar (pkg/heranca_apoio.py:43)"
     ],
     "relacao": "calls"
    },
    "alvo": {
-    "alvo": "Transporte.enviar (pkg/heranca_apoio.py:43)",
-    "resolution": "type",
-    "passo": "2.4b",
-    "por_que": "a @property é da base"
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4c",
+    "por_que": "ambígua: Transporte.enviar e Rapido.enviar (2.4c); a @property é da base"
    },
-   "estado": "no alvo"
+   "estado": "mudou"
   },
   {
    "id": "N5-py-prop-sem-tipo",
@@ -4839,6 +4968,587 @@
     "por_que": "decorador de classe: não decide"
    },
    "estado": "igual ao atual"
+  },
+  {
+   "id": "DP-py-parametro",
+   "atual_registrado": {
+    "resolution": "type",
+    "candidates": 4,
+    "alvos": [
+     "Veiculo.andar (pkg/despacho.py:10)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 4,
+    "alvos": [
+     "Carro.andar (pkg/despacho.py:41)",
+     "Irma.andar (pkg/despacho.py:68)",
+     "Moto.andar (pkg/despacho.py:60)",
+     "Veiculo.andar (pkg/despacho.py:10)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4c",
+    "por_que": "ambígua: Veiculo.andar e as três sobrescritas"
+   },
+   "estado": "mudou"
+  },
+  {
+   "id": "DP-py-self",
+   "atual_registrado": {
+    "resolution": "receiver",
+    "candidates": 4,
+    "alvos": [
+     "Veiculo.andar (pkg/despacho.py:10)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 4,
+    "alvos": [
+     "Carro.andar (pkg/despacho.py:41)",
+     "Irma.andar (pkg/despacho.py:68)",
+     "Moto.andar (pkg/despacho.py:60)",
+     "Veiculo.andar (pkg/despacho.py:10)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4c",
+    "por_que": "ambígua: self; Veiculo.andar e as três sobrescritas"
+   },
+   "estado": "mudou"
+  },
+  {
+   "id": "DP-py-cls",
+   "atual_registrado": {
+    "resolution": "type",
+    "candidates": 2,
+    "alvos": [
+     "Veiculo.nome (pkg/despacho.py:32)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Carro.nome (pkg/despacho.py:44)",
+     "Veiculo.nome (pkg/despacho.py:32)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4c",
+    "por_que": "ambígua: cls; Veiculo.nome e Carro.nome"
+   },
+   "estado": "mudou"
+  },
+  {
+   "id": "DP-py-retorno",
+   "atual_registrado": {
+    "resolution": "type",
+    "candidates": 4,
+    "alvos": [
+     "Veiculo.andar (pkg/despacho.py:10)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 4,
+    "alvos": [
+     "Carro.andar (pkg/despacho.py:41)",
+     "Irma.andar (pkg/despacho.py:68)",
+     "Moto.andar (pkg/despacho.py:60)",
+     "Veiculo.andar (pkg/despacho.py:10)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4c",
+    "por_que": "ambígua: o retorno anotado não é exato"
+   },
+   "estado": "mudou"
+  },
+  {
+   "id": "DP-py-campo",
+   "atual_registrado": {
+    "resolution": "type",
+    "candidates": 4,
+    "alvos": [
+     "Veiculo.andar (pkg/despacho.py:10)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 4,
+    "alvos": [
+     "Carro.andar (pkg/despacho.py:41)",
+     "Irma.andar (pkg/despacho.py:68)",
+     "Moto.andar (pkg/despacho.py:60)",
+     "Veiculo.andar (pkg/despacho.py:10)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4c",
+    "por_que": "ambígua: o campo não é construtor exato (conservador)"
+   },
+   "estado": "mudou"
+  },
+  {
+   "id": "DP-py-prop",
+   "atual_registrado": {
+    "resolution": "type",
+    "candidates": 4,
+    "alvos": [
+     "Veiculo.andar (pkg/despacho.py:10)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 4,
+    "alvos": [
+     "Carro.andar (pkg/despacho.py:41)",
+     "Irma.andar (pkg/despacho.py:68)",
+     "Moto.andar (pkg/despacho.py:60)",
+     "Veiculo.andar (pkg/despacho.py:10)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4c",
+    "por_que": "ambígua: @property de retorno anotado"
+   },
+   "estado": "mudou"
+  },
+  {
+   "id": "DP-py-anotado",
+   "atual_registrado": {
+    "resolution": "type",
+    "candidates": 4,
+    "alvos": [
+     "Veiculo.andar (pkg/despacho.py:10)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 4,
+    "alvos": [
+     "Carro.andar (pkg/despacho.py:41)",
+     "Irma.andar (pkg/despacho.py:68)",
+     "Moto.andar (pkg/despacho.py:60)",
+     "Veiculo.andar (pkg/despacho.py:10)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4c",
+    "por_que": "ambígua: a anotação vence o construtor (conservador)"
+   },
+   "estado": "mudou"
+  },
+  {
+   "id": "DP-py-abstrato",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Quadrado.area (pkg/despacho.py:119)",
+     "Solida.area (pkg/despacho.py:124)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Quadrado.area (pkg/despacho.py:119)",
+     "Solida.area (pkg/despacho.py:124)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4c",
+    "por_que": "ambígua: Quadrado.area e Solida.area; os abstratos saem"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "DP-py-abstrato-meio",
+   "atual_registrado": {
+    "resolution": "type",
+    "candidates": 4,
+    "alvos": [
+     "Quadrado.area (pkg/despacho.py:119)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Quadrado.area (pkg/despacho.py:119)",
+     "Solida.area (pkg/despacho.py:124)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4c",
+    "por_que": "ambígua: Quadrado.area e Solida.area"
+   },
+   "estado": "mudou"
+  },
+  {
+   "id": "DP-py-mistura",
+   "atual_registrado": {
+    "resolution": "type",
+    "candidates": 2,
+    "alvos": [
+     "Ficha.abrir (pkg/despacho.py:73)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Ficha.abrir (pkg/despacho.py:73)",
+     "MisturaFicha.abrir (pkg/despacho.py:81)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4c",
+    "por_que": "ambígua: a subclasse roda o da mistura, que vem antes da base"
+   },
+   "estado": "mudou"
+  },
+  {
+   "id": "DP-py-mistura-self",
+   "atual_registrado": {
+    "resolution": "receiver",
+    "candidates": 2,
+    "alvos": [
+     "Ficha.abrir (pkg/despacho.py:73)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "Ficha.abrir (pkg/despacho.py:73)",
+     "MisturaFicha.abrir (pkg/despacho.py:81)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4c",
+    "por_que": "ambígua: Ficha.abrir e MisturaFicha.abrir"
+   },
+   "estado": "mudou"
+  },
+  {
+   "id": "DP-py-new",
+   "atual_registrado": {
+    "resolution": "type",
+    "candidates": 2,
+    "alvos": [
+     "ComNovo.agir (pkg/despacho.py:132)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 2,
+    "alvos": [
+     "ComNovo.agir (pkg/despacho.py:132)",
+     "ComNovoFilha.agir (pkg/despacho.py:137)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4c",
+    "por_que": "ambígua: __new__ devolve a filha: o construtor não é exato"
+   },
+   "estado": "mudou"
+  },
+  {
+   "id": "DP-py-atributo",
+   "atual_registrado": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Porta.trancar (pkg/despacho.py:90)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 1,
+    "alvos": [
+     "Porta.trancar (pkg/despacho.py:90)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4c",
+    "por_que": "ambígua: a subclasse liga o nome a uma função solta"
+   },
+   "estado": "mudou"
+  },
+  {
+   "id": "DP-py-privado",
+   "atual_registrado": {
+    "resolution": "receiver",
+    "candidates": 2,
+    "alvos": [
+     "Veiculo.__motor (pkg/despacho.py:16)"
+    ]
+   },
+   "agora": {
+    "resolution": "receiver",
+    "candidates": 2,
+    "alvos": [
+     "Veiculo.__motor (pkg/despacho.py:16)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Veiculo.__motor (pkg/despacho.py:16)",
+    "resolution": "receiver",
+    "passo": "2.4c",
+    "por_que": "nome privado: a sobrescrita não é alcançada"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "DP-py-meio",
+   "atual_registrado": {
+    "resolution": "type",
+    "candidates": 4,
+    "alvos": [
+     "Carro.andar (pkg/despacho.py:41)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 4,
+    "alvos": [
+     "Carro.andar (pkg/despacho.py:41)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Carro.andar (pkg/despacho.py:41)",
+    "resolution": "type",
+    "passo": "2.4c",
+    "por_que": "Jipe não o sobrescreve; as irmãs não contam"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "DP-py-irma",
+   "atual_registrado": {
+    "resolution": "type",
+    "candidates": 4,
+    "alvos": [
+     "Moto.andar (pkg/despacho.py:60)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 4,
+    "alvos": [
+     "Moto.andar (pkg/despacho.py:60)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Moto.andar (pkg/despacho.py:60)",
+    "resolution": "type",
+    "passo": "2.4c",
+    "por_que": "as irmãs não contam"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "DP-py-sem-sobrescrita",
+   "atual_registrado": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Veiculo.parar (pkg/despacho.py:13)"
+    ]
+   },
+   "agora": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Veiculo.parar (pkg/despacho.py:13)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Veiculo.parar (pkg/despacho.py:13)",
+    "resolution": "unique",
+    "passo": "2.4c",
+    "por_que": "nenhuma subclasse o sobrescreve"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "DP-py-construtor",
+   "atual_registrado": {
+    "resolution": "type",
+    "candidates": 4,
+    "alvos": [
+     "Veiculo.andar (pkg/despacho.py:10)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 4,
+    "alvos": [
+     "Veiculo.andar (pkg/despacho.py:10)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Veiculo.andar (pkg/despacho.py:10)",
+    "resolution": "type",
+    "passo": "2.4c",
+    "por_que": "construtor exato"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "DP-py-construtor-direto",
+   "atual_registrado": {
+    "resolution": "type",
+    "candidates": 4,
+    "alvos": [
+     "Veiculo.andar (pkg/despacho.py:10)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 4,
+    "alvos": [
+     "Veiculo.andar (pkg/despacho.py:10)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Veiculo.andar (pkg/despacho.py:10)",
+    "resolution": "type",
+    "passo": "2.4c",
+    "por_que": "construtor exato"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "DP-py-super",
+   "atual_registrado": {
+    "resolution": "type",
+    "candidates": 4,
+    "alvos": [
+     "Veiculo.andar (pkg/despacho.py:10)"
+    ]
+   },
+   "agora": {
+    "resolution": "type",
+    "candidates": 4,
+    "alvos": [
+     "Veiculo.andar (pkg/despacho.py:10)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Veiculo.andar (pkg/despacho.py:10)",
+    "resolution": "type",
+    "passo": "2.4c",
+    "por_que": "super()"
+   },
+   "estado": "no alvo"
+  },
+  {
+   "id": "DP-py-classe",
+   "atual_registrado": {
+    "resolution": "homonym",
+    "candidates": 4,
+    "alvos": [
+     "Carro.andar (pkg/despacho.py:41)",
+     "Irma.andar (pkg/despacho.py:68)",
+     "Moto.andar (pkg/despacho.py:60)",
+     "Veiculo.andar (pkg/despacho.py:10)"
+    ]
+   },
+   "agora": {
+    "resolution": "homonym",
+    "candidates": 4,
+    "alvos": [
+     "Carro.andar (pkg/despacho.py:41)",
+     "Irma.andar (pkg/despacho.py:68)",
+     "Moto.andar (pkg/despacho.py:60)",
+     "Veiculo.andar (pkg/despacho.py:10)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "sem tipo",
+    "resolution": "homonym",
+    "passo": "2.4c",
+    "por_que": "T.m() pelo nome da classe: a regra não lhe dá tipo, e vale o que valia"
+   },
+   "estado": "igual ao atual"
+  },
+  {
+   "id": "DP-py-fora-antes",
+   "atual_registrado": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Motor.girar (pkg/despacho.py:99)"
+    ]
+   },
+   "agora": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Motor.girar (pkg/despacho.py:99)"
+    ],
+    "relacao": "calls"
+   },
+   "alvo": {
+    "alvo": "Motor.girar (pkg/despacho.py:99)",
+    "resolution": "unique",
+    "passo": "2.4c",
+    "por_que": "base de fora antes, na subclasse: não conta (limite)"
+   },
+   "estado": "no alvo"
   }
  ],
  "studio_original": {
