@@ -8,6 +8,8 @@
 
 **Fontes.** `.rs`, `.py`, `.js`, `Cargo.toml`, `Cargo.lock`, os JSON das fixtures e da linha de base. Dos projetos de teste, só os TXT e INI de configuração (`requirements*.txt`, `mypy.ini` do Healthchecks; `Cargo.toml` do ray tracer). Nenhum `.md` foi aberto além dos relatórios 01 a 03: nem `tools/precisao/gabarito/README.md`, nem `docs/reports/fase-2/dados/2.4e/tabelas.md`, nem os relatórios do 2.4e. Comentários e cabeçalhos dos scripts contam como **"diz ser"**.
 
+**Exceção autorizada pelo usuário (26/11/2026), só para as MAP-Q12 a MAP-Q15:** foi lido `docs/reports/fase-2/2.4e-parada-2.md`, e nenhum outro `.md`. O que vem dele está marcado **"diz ser (relatório do 2.4e)"**. O que deu para conferir só lendo (a pasta de saída, os hashes, o `librarian-resumo.json`, o `pip-freeze.txt`, o `pyvenv.cfg`, os nomes das pastas) está marcado como verificado. Nada foi rodado nem instalado, e nenhum `.md` da pasta de saída foi aberto.
+
 **Regras de evidência:** as mesmas das partes 1 a 3. Cada afirmação traz `ARQUIVO:linha` ou o comando. **Verificado** quer dizer por execução ou pela leitura do código que faz a coisa. **Leitura minha** marca interpretação.
 
 Caminhos abreviados: os arquivos sem pasta são de `tools/precisao/gabarito/`; `rs-sonda/` é `tools/precisao/gabarito/rs-sonda/`.
@@ -165,7 +167,7 @@ Caminhos abreviados: os arquivos sem pasta são de `tools/precisao/gabarito/`; `
 - **O código do gabarito:** não mudou desde o 2.4e. `aead3eb` é o único commit da pasta, e `git diff --stat aead3eb HEAD -- tools/precisao/gabarito tools/precisao/lib.js` está vazio (verificado).
 - **A regra:** não mudou depois. O último commit em `resolve.rs` é o `665ff5b` (25/11, 18:13; parte 3, MAP-O23). `git diff --stat aead3eb HEAD -- crates Cargo.toml Cargo.lock experiments tools/precisao/sinteticos` está vazio. O último commit que toca o hash das fontes (`crates/`, manifestos) é o `4652541` (25/11, 20:23), anterior ao `aead3eb` (26/11, 03:02) (verificado, `git log -- crates Cargo.toml Cargo.lock`).
 - **O hash das fontes de hoje** é `3aeb2fa7…` (250 arquivos; parte 3, seção E, Parada 2-bis). É o mesmo do `fontes` gravado em `estrato-unique.json`, de 25/11 (runs `20261125-234413`/`-234657`).
-- **O hash das fontes da medição do 2.4e:** `librarian.js` o grava em `librarian-resumo.json` (`binarios.fontes`, `:34`, `:114`), na pasta de saída. **Nenhum arquivo do repositório que eu possa abrir o guarda:** `docs/reports/fase-2/dados/2.4e/` só tem `tabelas.md` (não aberto), e `tabelas.js` não imprime o hash. Não dá para conferir pelo código nem pelos JSON (MAP-Q12). *Leitura minha:* com nada compilado mudado entre `4652541` e hoje, uma medição feita de uma árvore sem arquivos não rastreados em `crates/` daria `3aeb2fa7…`. Isso não foi conferido.
+- **O hash das fontes da medição do 2.4e:** `librarian.js` o grava em `librarian-resumo.json` (`binarios.fontes`, `:34`, `:114`), na pasta de saída, fora do repositório. **Respondido (MAP-Q12):** o `librarian-resumo.json` da medição está em `C:\Users\beatl\librarian-gabaritos\saida`, e o `binarios.fontes` lá é `3aeb2fa77adc9ec44716bc113822faa14395b71cb7f7217deb46b4e2b87c4726`, com 250 arquivos. **É igual ao de hoje** (verificado, lendo o JSON). Os binários foram compilados na hora (`compilado: true`), com a identidade `recorded:cc4265c6…:false`. `cc4265c` (25/11, 23:48) é ancestral do `aead3eb`, e `git diff --stat cc4265c6 aead3eb -- crates Cargo.toml Cargo.lock` está vazio. O `librarian_ingest` da medição tem o mesmo SHA-256 do compilado hoje pelo portão (`51bfd55a…`; parte 3, Parada 2-bis). O `librarian_studio` difere, porque carrega a identidade do commit (`lib.js:155`).
 - **As respostas do Librarian:** na amostra (241 chamadas), no UQ e nos usos, são as mesmas da linha de base do 2.4d, por execução (parte 3, Parada 2-bis). Para as outras ocorrências que o `librarian.js` mede (todas as chamadas dos dois projetos), *leitura minha*: com as mesmas fontes, os mesmos projetos e o mesmo grafo, a resposta é a mesma. Não conferido.
 - **O que não se pode dizer que ainda vale:** as saídas das réguas (`execucao-*.jsonl`, `tipos-hc.jsonl`, `renderer.scip`). Elas não estão no repositório (`git ls-files | grep -E 'execucao-|tipos-hc|\.scip'` vazio) e dependem de ferramentas e versões que o código não fixa (J2).
 
@@ -173,20 +175,21 @@ Caminhos abreviados: os arquivos sem pasta são de `tools/precisao/gabarito/`; `
 
 ## O que rodar o gabarito exige
 
-Nesta máquina (verificado, só lendo e pedindo versão): `node v24.19.0`; `cargo 1.98.1`, `rustc 1.98.1`, `rust-analyzer 1.98.1`; `uv 0.13.6`, com um CPython **3.14.10** já instalado pelo uv (`uv python list --only-installed`), cujo `site-packages` só tem `pip`. No PATH do Git Bash, `python` e `python3` são só o atalho da loja do Windows. O Healthchecks não tem virtualenv (`ls -a ../pilotos/healthchecks`; `git status --porcelain --ignored` vazio). No cache do uv há pacotes baixados antes, sem ambiente instalado: `mypy-2.3.1`, `mypy-2.4.1`, `django_stubs-6.1.2` e `django_stubs_ext-6.1.2` (`find …/uv/cache -iname 'mypy-*'`).
+Nesta máquina (verificado, só lendo e pedindo versão): `node v24.19.0`; `cargo 1.98.1`, `rustc 1.98.1`, `rust-analyzer 1.98.1`; `uv 0.13.6`, com um CPython **3.14.10** já instalado pelo uv (`uv python list --only-installed`), cujo `site-packages` só tem `pip`. No PATH do Git Bash, `python` e `python3` são só o atalho da loja do Windows. O Healthchecks não tem virtualenv (`ls -a ../pilotos/healthchecks`; `git status --porcelain --ignored` vazio). *Correção (MAP-Q13):* o virtualenv do 2.4e existe fora do projeto, em `C:\Users\beatl\librarian-gabaritos\venv-hc`, com as saídas em `…\saida` (MAP-Q15). Eu não o tinha achado. No cache do uv há pacotes baixados antes, sem ambiente instalado: `mypy-2.3.1`, `mypy-2.4.1`, `django_stubs-6.1.2` e `django_stubs_ext-6.1.2` (`find …/uv/cache -iname 'mypy-*'`).
 
 | Parte | Interpretador ou ferramenta, versão | O que executa | Onde grava | Compila ou instala algo em `../pilotos` ou `../renderer`? |
 |---|---|---|---|---|
 | `librarian.js` (lado do Librarian) | Node (aqui v24.19.0); cargo para compilar o Librarian | o `librarian_studio` do repositório, sobre uma cópia da `.studio`; o Studio **lê** os projetos para gerar o run | `target/` do repositório (compilação); a cópia em `os.tmpdir()`; a pasta `--saida` | não. Lê os dois projetos |
-| **Python, execução** (`execucao_py.py`) | CPython ≥ 3.12 (`sys.monitoring`), num ambiente com Django 6.1.3 e as dependências do `requirements.txt` do Healthchecks. A versão do 2.4e não está no código. **Não há esse ambiente nesta máquina** | **roda código do Healthchecks:** o programa passado (exemplo, `manage.py test`, `:6`), ou seja, a suíte de testes do projeto, com `os.chdir` na raiz original (`:119`, `:124`) | a saída JSONL (`:129`). *Leitura minha, não conferida:* o que a suíte do Healthchecks grava ao rodar (banco de teste, arquivos estáticos, `.pyc` se faltar `PYTHONDONTWRITEBYTECODE`, `:8`) cai na raiz do projeto ou onde as `settings` dele mandarem | **sim, é preciso instalar:** um ambiente com as dependências do projeto. Onde o 2.4e o pôs não está no código. Os `.pyc` podem ir para `../pilotos/healthchecks` (`:8`) |
-| **Python, tipos** (`tipos_py.py`) | mypy e django-stubs, com o mesmo ambiente do Django (o plugin lê `hc.settings`, pelo `mypy.ini`). O projeto fixa `mypy==2.4.1` e `django-stubs==6.1.2`. A versão do 2.4e não está no código. **Não instalado aqui** (só no cache do uv) | análise estática pelo mypy. *Leitura minha, pela forma de funcionar do plugin do django-stubs e não pelo código daqui:* o plugin carrega as `settings` do Django, o que **importa código do Healthchecks** (`hc.settings` e os apps). Não roda os testes | a saída JSONL (`:148`) e o cache do mypy em `GABARITO_MYPY_CACHE` ou ao lado da saída (`:35`). `.pyc` do projeto, se faltar `PYTHONDONTWRITEBYTECODE` (*leitura minha*) | **sim, é preciso instalar** (o mesmo ambiente). Faz `os.chdir` na raiz original (`:18`) |
+| **Python, execução** (`execucao_py.py`) | CPython ≥ 3.12 (`sys.monitoring`), num ambiente com Django 6.1.3 e as dependências do `requirements.txt` do Healthchecks. A versão do 2.4e não está no código. **Há esse ambiente, `librarian-gabaritos\venv-hc`** (MAP-Q13; a versão anterior desta linha dizia que não havia) | **roda código do Healthchecks:** o programa passado (exemplo, `manage.py test`, `:6`), ou seja, a suíte de testes do projeto, com `os.chdir` na raiz original (`:119`, `:124`) | a saída JSONL (`:129`). *Leitura minha, não conferida:* o que a suíte do Healthchecks grava ao rodar (banco de teste, arquivos estáticos, `.pyc` se faltar `PYTHONDONTWRITEBYTECODE`, `:8`) cai na raiz do projeto ou onde as `settings` dele mandarem | **sim, é preciso instalar:** um ambiente com as dependências do projeto. Onde o 2.4e o pôs não está no código. Os `.pyc` podem ir para `../pilotos/healthchecks` (`:8`) |
+| **Python, tipos** (`tipos_py.py`) | mypy e django-stubs, com o mesmo ambiente do Django (o plugin lê `hc.settings`, pelo `mypy.ini`). O projeto fixa `mypy==2.4.1` e `django-stubs==6.1.2`. A versão do 2.4e não está no código. No `venv-hc`: `mypy==2.4.1`, `django-stubs==6.1.2` (MAP-Q13; a versão anterior desta linha dizia "não instalado aqui") | análise estática pelo mypy. *Leitura minha, pela forma de funcionar do plugin do django-stubs e não pelo código daqui:* o plugin carrega as `settings` do Django, o que **importa código do Healthchecks** (`hc.settings` e os apps). Não roda os testes | a saída JSONL (`:148`) e o cache do mypy em `GABARITO_MYPY_CACHE` ou ao lado da saída (`:35`). `.pyc` do projeto, se faltar `PYTHONDONTWRITEBYTECODE` (*leitura minha*) | **sim, é preciso instalar** (o mesmo ambiente). Faz `os.chdir` na raiz original (`:18`) |
 | **Rust, tipos** (`renderer.scip` + `scip.js`) | rust-analyzer (aqui 1.98.1). O comando que gerou o índice no 2.4e não está no código | `scip.js` só lê o índice. *Leitura minha, não conferida:* gerar o índice com `rust-analyzer scip` carrega o workspace do ray tracer pelo cargo, o que pode compilar os scripts de build e as macros das dependências | o `renderer.scip`, onde o comando mandar. *Leitura minha:* a geração pode gravar no `target/` do projeto indexado | **provável, se rodado no original:** `../renderer/target` (já existe hoje). Numa cópia, não |
 | **Rust, execução** (`rs-sonda` + a cópia) | cargo/rustc (aqui 1.98.1) para compilar o `rs-sonda` e a cópia instrumentada | compila o `rs-sonda`. Ele copia e reescreve a cópia (só lê o original, `main.rs:74-75`). Depois **roda código do ray tracer** na cópia (os testes ou os binários, os "drivers"). O comando não está no código | a cópia (onde `<copia>` mandar; apagada e recriada, `:74`); o arquivo de `G24E_SAIDA` (`sonda.rs:30-34`). **Compilar o `rs-sonda` no lugar grava `tools/precisao/gabarito/rs-sonda/target/`, que não é ignorado** (`git check-ignore` não o pega; `.gitignore` só tem `/target`): o `git status` deixaria de ficar só com a pasta do mapeamento, a menos que se use outro `CARGO_TARGET_DIR` | não, se a cópia ficar fora de `../renderer`. O `rs-sonda` não copia `target/` (`:54`), então a cópia compila do zero e baixa as dependências pelo cargo, se não estiverem no cache |
 | `medir.js`, `tabelas.js` | Node | só leem as saídas, as fontes do ray tracer e as fixtures | a pasta `--saida` (`medir.js:643`, `tabelas.js:84`) | não |
 
 **Resumo para a decisão do J5** (*leitura minha*, a partir da tabela):
 - o lado do Librarian, o `medir.js` e o `tabelas.js` dá para rodar sem instalar nada;
-- as duas réguas do Python exigem instalar um ambiente com Django, as dependências do Healthchecks, mypy e django-stubs. A de execução também roda a suíte do Healthchecks na pasta original;
+- as duas réguas do Python usam um ambiente com Django, as dependências do Healthchecks, mypy e django-stubs. **Esse ambiente já existe** (`venv-hc`, MAP-Q13): não é preciso instalar, mas é preciso rodar o Python dele. A de execução também roda a suíte do Healthchecks na pasta original;
+- as saídas da medição antiga existem (MAP-Q15). Rodar só o `medir.js` sobre elas (Node, sem réguas) confere a comparação antiga sem tocar nos projetos;
 - as duas do Rust exigem compilar: o `rs-sonda` e uma cópia do ray tracer, e talvez o próprio ray tracer para gerar o índice. A de execução roda código do ray tracer.
 
 Pela regra da sessão, cada um desses pontos é um "pare e pergunte".
@@ -228,10 +231,46 @@ E uma coisa importante: as réguas medem, mas não decidem. Uma discordância é
 
 ## Perguntas
 
-- **MAP-Q12.** O hash das fontes da medição do 2.4e (`binarios.fontes` em `librarian-resumo.json`) ficou guardado em algum JSON ou TXT que eu possa abrir? No repositório, a pasta de dados do 2.4e só tem o `tabelas.md`, que a regra da sessão não deixa abrir.
-- **MAP-Q13.** Com que ambiente o 2.4e rodou as réguas do Python: versão do Python, do mypy e do django-stubs, e onde estava o ambiente? O código não diz, e nesta máquina não há ambiente com Django nem mypy (só pacotes no cache do uv).
-- **MAP-Q14.** Que comando gerou o `renderer.scip`, sobre qual pasta (o ray tracer original ou uma cópia), e que comandos rodaram na cópia instrumentada (testes, binários e quais) para dar o `execucao-rt.jsonl`?
-- **MAP-Q15.** Onde estão as saídas da medição do 2.4e (`medicao.json`, os JSONL, o `.scip`)? Sem elas, o J5 só pode ser uma medição nova, e não uma conferência da antiga.
+- **MAP-Q12.** O hash das fontes da medição do 2.4e ficou guardado em algum JSON ou TXT que eu possa abrir?
+  - **Resposta** (fonte: diz ser, relatório do 2.4e, seção 11; **conferido só lendo**):
+    - o relatório dá as fontes `3aeb2fa77adc…4726` e os runs novos `20261126-033656` (HC) e `20261126-035544` (RT);
+    - o `librarian-resumo.json` em `C:\Users\beatl\librarian-gabaritos\saida` grava o mesmo hash, os mesmos runs e a `.studio` original inalterada (`studio_original_inalterado: true`, com os hashes `61cd25c1…` e `612cdbf6…`). **Igual ao de hoje.** Ver J6.
+- **MAP-Q13.** Com que ambiente o 2.4e rodou as réguas do Python?
+  - **Resposta** (fonte: diz ser, relatório do 2.4e, seções 11 e "O que instalei"): um virtualenv em `C:\Users\beatl\librarian-gabaritos\venv-hc`, com CPython 3.14.10 pelo uv 0.13.6. São 55 pacotes por `uv pip freeze` (SHA-256 `bfe0c962…`), entre eles Django 6.1.3, mypy 2.4.1 "compilado" e django-stubs 6.1.2. Tipos com `--strict --platform linux`; execução com `manage.py test` inteiro.
+  - **Conferido só lendo:** `venv-hc/pyvenv.cfg` diz `home = …\uv\python\cpython-3.14.10-windows-x86_64-none`, `version_info = 3.14.10`, `uv = 0.13.6` e `include-system-site-packages = false`. `saida/pip-freeze.txt` tem 55 linhas, SHA-256 `bfe0c9626f58aba0…` (o mesmo prefixo do relatório), com `django==6.1.3`, `django-stubs==6.1.2`, `django-stubs-ext==6.1.2` e `mypy==2.4.1`. São as versões que o Healthchecks fixa (J2).
+  - **Não conferido:** se o `pip-freeze.txt` (01:02) é do ambiente exato das passadas, que são de antes dele: `execucao-hc.jsonl` às 00:47 e `tipos-hc.jsonl` às 00:59. Também não conferi o "compilado" do mypy.
+  - **Correção do que esta parte dizia:** "nesta máquina não há ambiente com Django nem mypy" (J2, "O que rodar exige") estava errado. O ambiente existe, fora das pastas que procurei (`Documents/Projetos`, `AppData/Local/Temp`).
+- **MAP-Q14.** Que comando gerou o `renderer.scip`, sobre qual pasta, e que comandos rodaram na cópia instrumentada?
+  - **Resposta** (fonte: diz ser, relatório do 2.4e, seção 1, tabela das réguas, e "O que instalei"):
+    - o índice: "`rust-analyzer scip` e `scip.js`", 5 s. **O relatório não dá a linha de comando completa nem a pasta indexada.**
+    - os drivers da cópia instrumentada (474 funções com sonda, 1 `const fn` sem sonda, `src/count.rs:27`): `cargo test` (212 testes), `librarian_measure` em 160×85, `librarian_measure_mesh` com `teapot.obj` em 64×64 e `bench_render`. Também sem a linha de comando completa (variáveis de ambiente, `--release` ou não).
+  - **Conferido só lendo, pelos nomes:**
+    - `librarian-gabaritos/rt-copia` é a cópia instrumentada: tem `src/__g24e_sonda.rs` (`rs-sonda/src/main.rs:102`);
+    - `rt-copia-target` tem `debug`, `release` e `tmp`, com `bench_render.exe`, `bench_external_render.exe` e os `cap*.exe` de 26/11 às 00:49;
+    - `rs-sonda-target` tem `release`;
+    - `rt-target` tem só `debug`. *Leitura minha, não conferida:* é um `CARGO_TARGET_DIR` separado, que serviu à geração do índice (ou a outra compilação do original), para não gravar em `../renderer/target`. Por isso a pasta indexada (original ou cópia) continua sem resposta.
+- **MAP-Q15.** Onde estão as saídas da medição do 2.4e?
+  - **Resposta** (fonte: diz ser, relatório do 2.4e, seção 11): em `C:\Users\beatl\librarian-gabaritos\saida`, com os prefixos de SHA-256 de cada uma.
+  - **Conferido só lendo** (`ls -la`, `sha256sum`): a pasta existe, e os 7 prefixos citados batem.
+
+    | Arquivo | Bytes | Data (26/11) | SHA-256 (prefixo) | Bate com o relatório |
+    |---|---:|---|---|---|
+    | `librarian-hc.json` | 16.600.326 | 00:55:44 | `23a855059cfd…` | sim |
+    | `librarian-rt.json` | 2.623.771 | 00:56:00 | `a3d12c6381bd…` | sim |
+    | `librarian-resumo.json` | 1.942 | 00:56:01 | — | (lido, MAP-Q12) |
+    | `execucao-hc.jsonl` | 7.839.593 | 00:47:42 | `dfdf7f0d1ea3…` | sim |
+    | `execucao-hc.log` | 52.158 | 00:47:42 | — | não citado |
+    | `tipos-hc.jsonl` | 6.484.454 | 00:59:41 | `403b8fd19cd1…` | sim |
+    | `execucao-rt.jsonl` | 429.943 | 00:49:28 | `7773160bc522…` | sim |
+    | `renderer.scip` | 1.840.013 | 00:49:41 | `551cbc680d05…` | sim |
+    | `medicao.json` | 58.202 | 02:48:31 | `bbfd436be53c…` | sim |
+    | `medicao-anterior.json` | 58.202 | 02:48:31 | `bbfd436be53c…` (igual ao `medicao.json`) | não citado |
+    | `pip-freeze.txt` | 1.024 | 01:02:40 | `bfe0c9626f58…` | sim (MAP-Q13) |
+    | `tabelas.md`, `tabelas-anterior.md` | 31.047 cada | 02:47:07 | — | não abertos |
+    | pastas `mypy-cache/` (`3.14`, `missing_stubs`) e `rt-imagens/` (`cap11.png`, `teapot.png`) | — | — | — | — |
+
+  - As outras pastas de `librarian-gabaritos` (`sondas`, `diag`, `rt-copia`, `rt-copia-target`, `rt-target`, `rs-sonda-target`, `venv-hc`) existem, todas de 26/11 entre 00:30 e 00:59.
+  - **Consequência para o J5:** as saídas antigas existem. Então dá para escolher entre conferir a medição antiga (rodar só o `medir.js` sobre essa pasta, ou sobre uma cópia dela) e refazer as réguas.
 
 ---
 
