@@ -1,8 +1,8 @@
 # Mapeamento do repositório — parte 4: o gabarito do 2.4e
 
-**Estado:** Pendente de validação do usuário: etapa 3a; J5 não rodado.
+**Estado:** Pendente de validação do usuário: etapa 3a, respostas do 2.4e e J5 (comparação refeita a partir das saídas guardadas; réguas não refeitas).
 
-**Data:** 26/11/2026. **Base:** `main` em `5b79e1c`. Worktree: só os relatórios do mapeamento. **Só leitura**: nenhum código, documento, `.studio`, Healthchecks ou ray tracer foi alterado. Nada foi instalado nem compilado, e nenhum script do gabarito foi rodado. Os únicos comandos executados só leram ou pediram versão: `git`, `ls`, `find`, `grep`, `cat`, os `--version` das ferramentas, `uv python list --only-installed` e `python.exe -I -c "import sys; print(sys.version)"` no Python que o uv já tinha instalado.
+**Data:** 26/11/2026. **Base:** `main` em `5b79e1c`. Worktree: só os relatórios do mapeamento. **Só leitura**: nenhum código, documento, `.studio`, Healthchecks ou ray tracer foi alterado. Nada foi instalado nem compilado. Na etapa 3a, nenhum script do gabarito foi rodado; no J5, só o `medir.js` e o `tabelas.js`, sobre cópias das saídas guardadas, com a saída no scratchpad (J5). Os únicos comandos executados só leram ou pediram versão: `git`, `ls`, `find`, `grep`, `cat`, os `--version` das ferramentas, `uv python list --only-installed` e `python.exe -I -c "import sys; print(sys.version)"` no Python que o uv já tinha instalado.
 
 **Escopo.** A pasta `tools/precisao/gabarito/`, que o 2.4e criou. Pela [parte 3](03-ligacoes.md) (MAP-O23), o commit do 2.4e só toca essa pasta. Ids novos continuam a numeração: `MAP-O35` em diante e `MAP-Q12` em diante.
 
@@ -158,7 +158,97 @@ Caminhos abreviados: os arquivos sem pasta são de `tools/precisao/gabarito/`; `
 
 ## J5. Rodar o gabarito de novo
 
-**Não rodado.** O que rodar exige está na seção abaixo; a decisão é do usuário.
+**Comparação refeita a partir das saídas guardadas; réguas não refeitas.** Decisão do usuário (26/11/2026): nenhum Python do `venv-hc` foi rodado, e nada do ray tracer nem do Healthchecks foi compilado ou rodado.
+
+**O que os dois scripts fazem no disco** (verificado, por leitura; `grep` de `writeFile`, `mkdir`, `rm`, `child_process`, `spawn`, `exec`, `readFileSync` e `require`):
+- `medir.js` lê só:
+  - as 6 entradas de `--saida` (`:26`);
+  - as fontes do ray tracer em `../renderer` (`:249`, `:256-257`, `:308`);
+  - as fixtures (`:462`).
+
+  Grava só `<saida>/medicao.json` (`:643`).
+- `tabelas.js` lê `<saida>/medicao.json` (`:8`) e grava `<saida>/tabelas.md` (`:84`).
+- Nenhum dos dois roda outro programa. Do `lib.js` só usam `parseArgs` e `REPO`, e carregar o `lib.js` só define funções (`lib.js:4-219`).
+
+**Comandos** (`<S>` é a pasta `j5` do scratchpad da sessão):
+
+```
+cp C:\Users\beatl\librarian-gabaritos\saida\{librarian-hc.json,librarian-rt.json,execucao-hc.jsonl,tipos-hc.jsonl,execucao-rt.jsonl,renderer.scip} <S>/
+node tools/precisao/gabarito/medir.js --saida <S>      # --rt padrão: ../renderer, em e38254b, limpo (só lido)
+node tools/precisao/gabarito/tabelas.js --saida <S>
+```
+
+**Hashes** (verificado, `sha256sum`):
+
+| Arquivo | SHA-256 (prefixo) | Resultado |
+|---|---|---|
+| as 6 entradas copiadas | `23a85505…`, `a3d12c63…`, `dfdf7f0d…`, `403b8fd1…`, `7773160b…`, `551cbc68…` | as mesmas do relatório do 2.4e (MAP-Q15) |
+| `medicao.json` novo × o guardado em `librarian-gabaritos\saida` | `bbfd436be53c703887852e8f5fd8e5164ceaa6d914fd0aac1e13b5ad097aec90` nos dois | **idênticos**; a diferença campo a campo não foi preciso fazer |
+| `tabelas.md` novo × `docs/reports/fase-2/dados/2.4e/tabelas.md` | `3b08acf134d13f70df78bb5b1a30c231b4449c795fcceeea0a59a7ab52ba5f91` nos dois | **idênticos** (nenhum dos dois foi aberto) |
+
+**Depois** (verificado):
+- `librarian-gabaritos\saida` não mudou: o agregado `find -type f | xargs sha256sum | LC_ALL=C sort -k2 | sha256sum` dá `1b4c6476…` antes e depois, 34 arquivos;
+- a `.studio` original não mudou (`61cd25c1…`, `612cdbf6…`);
+- o ray tracer não mudou (`git status --porcelain` vazio).
+
+**O que isso confere e o que não confere.** Confere que, sobre as mesmas saídas das réguas, o código de comparação de hoje dá o mesmo resultado do 2.4e, byte a byte. **Não confere as réguas:** se o Python, o mypy, o rust-analyzer e os drivers dariam hoje as mesmas saídas não foi medido.
+
+### As contagens do `medicao.json` (verificadas por esta comparação refeita)
+
+**Ocorrências de chamada** (`ocorrencias`, `producao`): HC 16.239, das quais 5.243 fora de testes; RT 2.545, das quais 1.106 fora de testes.
+
+**Veredito combinado, fora de testes** (`por_classificacao_producao.combinado`):
+
+| Categoria | HC | RT |
+|---|---:|---:|
+| `concorda` | 1.202 | 524 |
+| `concorda_externo` | 3.731 | 456 |
+| `possivel_com_o_certo` | 33 | 73 |
+| **`link_falso_candidato`** | **30** | **12** |
+| `possivel_sem_o_certo` | 132 | 4 |
+| `ligacao_que_falta` | 13 | 24 |
+| `gabaritos_divergem` | 13 | 0 |
+| `nao_viu` | 89 | 13 |
+
+Por régua, fora de testes, `link_falso_candidato`: HC, execução 13 e tipos 37; RT, execução **0** e tipos 12. Isso bate com a MAP-O37: a execução do Rust não dá alvo de fora, então os 12 do Rust vêm todos do índice.
+
+**Links falsos candidatos por estado da tabela C** (pelo `grupos` do `medicao.json`; a correspondência grupo → estado é a regra `grupo`, `medir.js:166-172`, vista no J4):
+
+| Grupo | Estados da tabela C (parte 3) | HC: ligações / vistas / discordâncias / IC 95% | RT: ligações / vistas / discordâncias / IC 95% |
+|---|---|---|---|
+| `provavel_pelo_nome` | `unique` numa chamada de método (**"não cabe"**) | 442 / 441 / **30** / 4,6% a 9,6% | 136 / 136 / **12** / 4,6% a 14,9% |
+| `provavel_pelo_tipo` | `type` e `trait_default` (**"cheia"**), e `receiver` com `type_rule` | 121 / 118 / 0 / 0% a 3,1% | 190 / 190 / 0 / 0% a 1,9% |
+| `outras` | `import`, `scope` (**"cheia"**), `receiver` sem `type_rule`, `unique` numa chamada simples, `chosen` | 686 / 686 / 0 (13 `gabaritos_divergem`) / 0% a 0,5% | 210 / 210 / 0 / 0% a 1,7% |
+
+→ **Todos os 42 links falsos candidatos fora de testes (30 + 12) são `unique` numa chamada de método.** Nenhum é `import`, `scope`, `type`, `trait_default` ou `receiver`. É o que a parte 3 achou nas amostras validadas (MAP-O24), agora sobre todas as ocorrências vistas por alguma régua. O `medicao.json` não separa as `outras` por `resolution`; a divisão acima é a do grupo.
+
+**Famílias** (`familias`; total = produção + teste):
+
+| Projeto | Família | Total (produção / teste) | Discordância | Workflows | Link falso candidato em workflow |
+|---|---|---|---|---|---:|
+| HC | sem família: `homonym`, receptor por nome, alvo de fora | 2.166 (132 / 2.034) | `possivel_sem_o_certo` | A, B, C, D | 0 |
+| HC | sem família: `above_candidate_limit`, alvo do projeto | 344 (7 / 337) | `ligacao_que_falta` | D | 0 |
+| HC | **FM-1** dublê de teste ligado por produção | **17 (17 / 0)** | `link_falso_candidato` (só tipos, 17) | D | 17 |
+| HC | **FM-2** método de biblioteca com nome de método do projeto | **16 (13 / 3)** | `link_falso_candidato` (execução 16, tipos 7) | B, D | 4 |
+| HC | sem família: `no_candidate_in_project`, chamada simples, alvo do projeto | 7 (6 / 1) | `ligacao_que_falta` | A, D | 0 |
+| HC | sem família: `homonym` de `self.m()`, alvo de fora | 7 (0 / 7) | `possivel_sem_o_certo` | — | 0 |
+| HC | sem família: `homonym` de expressão, alvo de fora | 1 (0 / 1) | `possivel_sem_o_certo` | D | 0 |
+| RT | **FM-5** `T::from` com vários `impl From` | 95 (15 / 80) | `ligacao_que_falta` | CR-1, CR-2 | 0 |
+| RT | **FM-2** | **12 (12 / 0)** | `link_falso_candidato` (só tipos, 12) | CR-1, CR-2 | 6 |
+| RT | **FM-4** despacho pelo padrão de trait | 5 (5 / 0) | `ligacao_que_falta` | CR-1 | 0 |
+| RT | sem família: `above_candidate_limit`, receptor por nome, alvo do projeto | 3 (3 / 0) | `ligacao_que_falta` | — | 0 |
+| RT | sem família: `homonym` por nome, alvo de fora | 2 (2 / 0) | `possivel_sem_o_certo` | CR-1 | 0 |
+| RT | sem família: `homonym` de expressão, alvo de fora | 2 (2 / 0) | `possivel_sem_o_certo` | — | 0 |
+| RT | sem família: `above_candidate_limit`, caminho, alvo do projeto | 1 (1 / 0) | `ligacao_que_falta` | — | 0 |
+
+Os 30 do HC fora de testes são FM-1 (17) mais FM-2 (13). Os 12 do RT são FM-2 (12). A FM-3 não aparece. No RT, a FM-5 é **lacuna**, e não link falso: são os `T::from` acima do teto, o caso da MAP-O17 e da MAP-O34 da parte 3.
+
+**Os conhecidos** (`conhecidos`, fora de testes):
+- os 17 `FakeCurl.*` de `hc/lib/curl.py` (inclusive a HC-27) e os 4 `Ping.get_body` (UB-10) são `link_falso_candidato`. Nos 17 do `FakeCurl`, a execução só viu o dublê (`nao_viu_duble`) e o mypy discorda. Nos 4 `Ping.get_body`, as duas réguas discordam;
+- no RT, `Groups::len` (`obj.rs:90`, `camera.rs:129`), `Sorteio::next` (`obj.rs:19`, `:21`, `:22`, `:23`, `:28`, `:63`, `:66`, `:81`) e `Color::clamp` (`cena_video.rs:42`, a UQ-23) são `link_falso_candidato` só pelo índice. A execução os marca `nao_viu`;
+- os de `src/count.rs:133` e `:151` estão em teste e não foram vistos por nenhuma régua (`nao_viu` nas duas).
+
+**Calibração contra a verdade validada** (`calibracao`): HC, execução 184 itens (153 concordam, 0 discordam, 31 não vistos) e tipos 184 (144, **3**, 37); RT, execução 83 (42, 0, 41) e tipos 83 (82, 0, 1).
 
 ---
 
