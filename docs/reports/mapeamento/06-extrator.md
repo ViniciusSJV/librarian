@@ -1,6 +1,6 @@
 # Mapeamento do repositório — parte 6: o extrator
 
-**Estado:** Pendente de validação do usuário: Parada 1 (A a D)
+**Estado:** Pendente de validação do usuário: Parada 2 (E a I, ajustes 2 a 4 e anexo); Parada 1 avaliada (MAP-Q20 respondida).
 
 **Data:** 26/11/2026. **Base:** `main` em `66efcbf` (worktree limpa no início). **Só leitura**: nenhum código, documento, `.studio`, Healthchecks ou ray tracer foi alterado. Nenhum LLM foi chamado. A execução foi feita só sobre uma **cópia** da `.studio`, no scratchpad da sessão. No fim, o original foi conferido e a cópia, apagada (seção "Execução").
 
@@ -282,7 +282,308 @@ Tudo no Git Bash. `S` é o scratchpad da sessão.
 ## Perguntas (Parada 1)
 
 - **MAP-Q20.** Os runs que a `.studio` guarda são do perfil v8 (MAP-O69), e os que o portão mede são gerados na hora, com o v9. Para o mapa, "o estado de hoje" do extrator é o v9, que o código gera, ou o v8, que está nos runs que a pessoa abre na página? A Parada 2 (edition e fronteira) muda conforme a resposta, porque os campos produzidos não são os mesmos.
+  - **Resposta do usuário (26/11/2026):** o estado de hoje para o mapa é o v9, o que o código gera. Os runs v8 da `.studio` entram como observação: a página abre um perfil e o portão mede outro (MAP-O69). Nada é regerado na `.studio` original.
 
 ---
 
-*Parada 2 (a edition, a fronteira, os testes, as dependências, os arquivos não mapeados e o anexo da busca): aguardando liberação.*
+## Parada 2
+
+**Base:** `main` em `52292f4`. As mesmas regras da Parada 1. A execução foi feita sobre uma **nova cópia** da `.studio`, no scratchpad, com dois runs v9 novos de cada projeto (ray tracer `20261126-225045` e `-225054`; Healthchecks `20261126-225046` e `-225055`). Rotas usadas no studio da cópia: `/api/generate`, `/api/calls`, `/api/used-by` e `/api/graph`. Também a CLI (`generate`, `verify`, `verify-graph` e `search`) sobre editions da cópia e sobre sintéticos montados dentro dela. Nenhum LLM foi chamado (seção "Execução (Parada 2)").
+
+Caminhos abreviados novos: `v2.rs` é `crates/librarian-ingest/src/graph/v2.rs`; `uses.rs` é `crates/librarian-ingest/src/graph/uses.rs`; `index.html` é `crates/librarian-studio/web/index.html`.
+
+### E. A edition
+
+**Os arquivos no disco** (verificado, `lib.rs:54-59`, `:408-419`): uma pasta nova, com `snapshots/` e cinco arquivos.
+
+| Arquivo | O que tem | Campos (todos com `deny_unknown_fields`) |
+|---|---|---|
+| `snapshots/<sha256>` | os bytes de cada fonte, como lidos, com o hash do conteúdo como nome (`lib.rs:410-412`) | — |
+| `sources.jsonl` | uma fonte por linha | `id`, `path`, `sha256`, `byte_len`, `language` (`lib.rs:110-118`) |
+| `symbols.jsonl` | um símbolo por linha | `id`, `source_id`, `name`, `qualified_name`, `kind`, `is_test`, `chunk_id` (`lib.rs:120-131`) |
+| `chunks.jsonl` | um trecho por símbolo | `id`, `source_id`, `start_byte`, `end_byte` (exclusivo), `start_line`, `end_line` (inclusivo), `sha256` (`lib.rs:133-144`) |
+| `diagnostics.json` | lista JSON | `source_id`, `code`, `message` (`lib.rs:146-152`) |
+| `manifest.json` | gravado **por último** (`lib.rs:416-419`; comentário em `:305-306`, diz ser) | `schema_version`, `extractor` (o perfil), `config`, `git` (`head`, `dirty`), `files` (o hash de cada um dos 4 registros), `source_count`, `symbol_count`, `diagnostic_count`, `limits` (`lib.rs:69-82`) |
+
+**Versões** (verificado):
+- do formato: `SCHEMA_VERSION = 1` (`lib.rs:24`), conferido no `load` (`lib.rs:433`);
+- do extrator: 9 perfis, de `EXTRACTOR` a `EXTRACTOR_V9` (`lib.rs:25-53`), cada um com a sua lista de limites (`mod.rs:126-465`). O perfil novo é sempre o v9 (`mod.rs:469-471`). Uma edition só é lida pelo perfil que a gerou, com os limites iguais (`lib.rs:431-434`): "editions are never reinterpreted" (`mod.rs:104`, diz ser);
+- do grafo: cada perfil grava um `graph_version` (no v9, `rust-python-syntax-graph-v6`, `mod.rs:452`). O `graph-v2.json` do studio leva `version: "syntax-graph-v2"` (`v2.rs:9`), o `derived_from` (essa versão do perfil), o `profile` e o `catalog_sha256` (`v2.rs:49-57`).
+
+**Os hashes** (verificado):
+- `source.sha256` é o hash do conteúdo do arquivo, e o snapshot tem esse nome (`lib.rs:268-272`);
+- `chunk.sha256` é o hash dos bytes do trecho (`rust.rs:255`, `python.rs:812`);
+- `manifest.files` guarda o hash de cada registro (`lib.rs:382-386`);
+- o `catalog_sha256` do grafo é o hash do `manifest.json` inteiro (`graph.rs:68-71`);
+- o id de cada aresta do grafo v2 é o hash dos outros campos dela (`v2.rs:126-130`).
+
+Nada assina o `manifest.json`: "Hashes establish consistency, not authenticity; manifest is not signed" (`mod.rs:450`; `lib.rs:1`, diz ser).
+
+**Como a imutabilidade é garantida** (verificado):
+- **Na escrita:** a pasta é criada com `fs::create_dir`, que falha se ela já existe (`lib.rs:408`). Cada arquivo é aberto com `create_new` e `sync_all` (`write_new`, `lib.rs:295-303`). Nenhuma função do crate regrava uma edition.
+- **Na leitura:** todo `Catalog::load` confere, nesta ordem: o perfil e os limites (`lib.rs:431-434`); que os registros são exatamente os quatro (`:435-443`); o hash de cada registro (`:445-451`); as contagens (`:456-462`); cada snapshot contra a sua fonte, refazendo o `source()` (`:469-482`); e a **extração inteira de novo**, comparada com os registros (`:486-502`).
+- **O que não é garantido** (por leitura): quem reescrever de modo coerente snapshot, registros e `manifest.json` não é percebido, porque o `manifest.json` não tem assinatura. Uma falha de I/O no meio deixa uma pasta incompleta (comentário em `lib.rs:306`, diz ser); como o `manifest.json` vem por último, o `load` dessa pasta falha.
+
+**Por execução, numa cópia de uma edition do ray tracer:**
+- um nome trocado no `symbols.jsonl` → `verify` recusa: "Record hash mismatch: symbols.jsonl";
+- o mesmo, com o hash do `manifest.json` recalculado → `verify` recusa: "Extraction records do not match the preserved source bytes".
+
+**O grafo não tem a mesma garantia** (verificado). O `graph-v2.json` não faz parte da edition. O studio o grava com `fs::write`, que sobrescreve (`store.rs:351`), e o confere **uma vez**, logo depois (`store.rs:352`). Depois, `Store::graph` e o cache de `main.rs` só leem e desserializam (`store.rs:371-373`, `main.rs:283-294`). Por execução, na cópia: um rótulo trocado no `graph-v2.json` de um run faz a CLI `verify-graph` recusar ("Graph does not match verified snapshots and graph version"). Mas o `/api/graph` do studio devolveu o rótulo trocado. Ver MAP-O70.
+
+**Como os ids são formados** (verificado):
+
+| Id | Forma | Onde |
+|---|---|---|
+| fonte | `src:{sha256 do caminho}:{sha256 do conteúdo}` | `lib.rs:271` |
+| símbolo e trecho (o mesmo texto) | `{id da fonte}:{kind}:{byte inicial}:{byte final}` | `rust.rs:235`, `python.rs:790`; `chunk_id` é o mesmo id |
+| ocorrência (só no grafo) | `{id da fonte}:occurrence:{kind}:{início}:{fim}` | `graph.rs:321` |
+| aresta (grafo v2) | `edge:{hash dos campos}` | `v2.rs:126-130` |
+
+**Se mudam entre duas gerações do mesmo código** (verificado, por execução na cópia):
+- **Mesmo código, mesmo perfil: não mudam.** Duas gerações v9 de cada projeto deram `sources.jsonl`, `symbols.jsonl`, `chunks.jsonl`, `diagnostics.json`, `manifest.json` e snapshots **byte a byte iguais**. O `graph_sha256` também é o mesmo nas duas e no run v9 da Parada 1 (ray tracer `e449a475…`, Healthchecks `239c8e55…`).
+- **Mesmo código, perfil v8 (18/11) × v9 (hoje):** os quatro registros e os snapshots são iguais. Só o `manifest.json` muda: o `extractor` e duas linhas de limite novas do v9. Os ids dos símbolos são os mesmos; o grafo não, porque as ocorrências mudam com o perfil (Parada 1, MAP-O69).
+- **Um byte mudado num arquivo muda o id da fonte, e com ela o id de todo símbolo do arquivo.** Sintético na cópia: com uma linha de comentário acrescentada no topo de `a.rs`, `a` foi de `src:bdfc5619…:83f8dd0f…:function:0:9` para `src:bdfc5619…:58d6c99d…:function:14:23`, e `b` também mudou. O símbolo `c`, de `b.py`, ficou com o mesmo id. Leitura minha, pelo formato: renomear ou mover o arquivo também muda todos os ids dele (o caminho entra no hash).
+
+### F. A fronteira extrator → resto
+
+**O que o extrator produz:** os campos dos quatro registros (seção E); as ocorrências (`kind`, `start`, `end`, `candidate`, `label_end`, `rule`; `mod.rs:17-29`), que só o grafo consome; e os fatos da regra (`CallFacts`, 12 campos, `resolve.rs:42-77`), que só a regra consome.
+
+**Método.** `git grep` pelo acesso a cada campo (`.campo`) e pelas funções do catálogo (`sources()`, `symbols()`, `chunks()`, `diagnostics()`, `manifest()`, `source_by_path`, `symbols_named`, `chunk`, `excerpt`, `source_bytes`, `call_syntax`, `owner_context` e os campos `catalog.*`) em `crates/*/src`, fora dos módulos `#[cfg(test)]` e de `tests/`. Script `campos.js` no scratchpad; a saída inteira em `campos.txt`. **O que o método não pega:**
+- os campos de nome genérico (`id`, `path`, `name`, `kind`, `sha256`, `code`, `source_id`, `rule`), que existem em outros tipos (homônimos). Para eles valem só os acessos pelas funções do catálogo, abaixo;
+- a leitura por comparação de struct inteira (`source(..) != s`, `lib.rs:480`; `symbols != expected_symbols`, `:497`), por desserialização e por desestruturação (`graph.rs:276-283`).
+
+**Quem lê, por leitor** (só a lista, `ARQUIVO:linha` da primeira leitura de cada coisa):
+
+| Leitor | O que lê do extrator |
+|---|---|
+| resolve | não lê o catálogo. Lê o grafo (`Resolver::new`, `resolve.rs:458-571`) e os fatos da regra por `syntax.facts` (`resolve.rs:471`, `file_facts` `:606`): `scopes` `:750`, `decorators` `:616`, `receiver_types` `:635`, `bound_calls` `:918`, `returns` `:969`, `classes` `:1002`, `field_receivers` `:999`, `cls_receivers` `:1215`, `methods` `:1188`, `modules` `:1910`, `blocks` `:2155`, `variables` `:1800`. Todos os 12 campos são lidos |
+| graph (`graph.rs`) | `manifest` inteiro, para o hash `:68-71`; `registry` (versão, teto) `:68`; fontes `:75`; símbolos (`kind`, `qualified_name`) `:78`; trechos `:84`; snapshots e `observe` `:119`; `symbols_named` (`name`, `kind`, linguagem) `:292`; as ocorrências inteiras, por desestruturação `:276-283` |
+| graph v2 (`v2.rs`) | fontes `:63`; símbolos `:76`; `manifest().extractor` `:111` |
+| used_by (`uses.rs`) | não lê o catálogo; só o grafo e o `call_syntax` (pela regra) |
+| search | símbolos (`name`) `:57`; fonte e linguagem `:152`; `excerpt` `:161`; `qualified_name` e caminho `:166-167`; trechos `:187-188`; `is_test` `:191`, `:249`; `diagnostics.len()` `:290`; `registry.search_limits` `:291` |
+| inventory | `call_syntax` `:373`; `symbols()` `:383`; `manifest().extractor` `:677`; snapshots `:790` |
+| envelope | `source_by_path` `:158`; trechos `:163`; símbolos `:173`; `registry` `:190`; `is_test` `:192`; `call_syntax` `:218` |
+| owner | `registry` `:137`; símbolos `:145`; fontes `:146`; trechos `:234`; `symbols_named` `:360`; `call_syntax` `:397` |
+| evidence (ingest, `evidence.rs`) | não lê o catálogo pelas funções acima (`grep` vazio); lê os JSON gravados do pacote |
+| evidence (crate `librarian-evidence`) | `lacuna.rs:42` (símbolos, `is_test`); `selection.rs:62-69` (`source_by_path`, `source_bytes`, símbolos, trechos, fontes); `package.rs:137` (`manifest`), `:176-177`, `:229-231` (`extractor`, `git.head`, `git.dirty`); `check.rs:171` |
+| prepare | `diagnostics` `:119`; `manifest.extractor` `:186`; símbolos `:191`; fontes `:192`; trechos `:201`; `git.head` `:230`; `source_by_path` `:251`; `registry.search_limits` `:447`; snapshots `:585` |
+| studio | `store.rs:345-360` (no `generate`: `git` e as três contagens do manifest), `:485` (símbolos), `:773-775` (trechos e fontes), `:858` (`owner_context`); `main.rs:143` (`call_syntax`), `:468` (símbolos); `instrument.rs:64-201`; `lexicon.rs:177-182`; `questions.rs:77-78`; `claims.rs:109-130`; `execution.rs:279-299`, `:438`, `:498`; `facts.rs:116`, `:275` |
+
+**Campos produzidos que ninguém lê** fora das conferências do próprio `lib.rs` (verificado pelo método acima, com a busca dos homônimos lida linha a linha):
+
+| Campo | Única leitura | Observação |
+|---|---|---|
+| `Source.byte_len` | a comparação da fonte inteira no `load` (`lib.rs:480`) | nenhum leitor pelo nome |
+| `Diagnostic.code` e `Diagnostic.message` | nenhuma | os 4 acertos de `.code` são de outros tipos (`envelope.rs:327`, `evidence.rs:2249`, `models.rs:164`, `store.rs:1182`); `.message`: 0. Os leitores só contam os diagnósticos ou perguntam se há algum (`cli.rs:17`, `prepare.rs:119`, `:399-401`, `search.rs:290`, `store.rs:360`) |
+| `Manifest.schema_version` | `lib.rs:433` | os outros acertos são de outros tipos (`evidence.rs:1716`, `claims.rs:155`) |
+| `Manifest.config` | `lib.rs:430` e `:618` | o studio guarda `inputs` no `run.json` pelos `Settings`, não pelo manifest (`store.rs:356`) |
+| `Manifest.files` | `lib.rs:436-451` | os acertos de `check.rs:196` e `store.rs:1142` são outro `files` |
+| `Manifest.limits` | `lib.rs:433` | nenhum texto de limite do manifest vai à busca, à consulta ou à página (ver o ajuste 3) |
+
+As ocorrências `candidate` e `label_end` dão 0 pelo método, mas são lidas por desestruturação em `graph.rs:280-281`, `:290`, `:322`.
+
+### G. Os testes do extrator e da edition
+
+Os 9 arquivos de `crates/librarian-ingest/tests/` cujo assunto é a extração e a edition (primeira linha de cada um, diz ser, e os nomes dos testes). Os testes da regra, que também geram editions, estão na parte 3, H.
+
+| Arquivo | Testes | O que verifica | Fixtures e sintéticos |
+|---|---:|---|---|
+| `editions.rs` | 11 | tokens e busca lexical; o grafo deixa chamadas sem resolução e tipos como candidatas; trechos em UTF-8 e corte; trechos exatos com Unicode, CRLF, BOM e `#!` (`:171`); registros e snapshots reprodutíveis, entradas repetidas uma vez só (`:198`); conferência histórica e detecção de adulteração (`:232`); intervalos forjados com hash recalculado (`:255`); falha de sintaxe e de codificação guardadas e contadas (`:273`); caminhos perigosos, edition incompleta e destino dentro da entrada (`:286`); `cfg` observado e macro não expandida: `#[cfg(any())] fn disabled` entra, o `fn generated` de dentro de uma macro não (`:308-321`) | projetos escritos pelo teste numa pasta temporária |
+| `python.rs` | 4 | declarações com decoradores e escopos; ocorrências e candidatas só na mesma linguagem; método Python buscado e preparado como em Rust; `vocabulary` | idem |
+| `v1_regression.rs` | 7 | a edition v1 congelada ainda é aceita; regerar o projeto da fixture reproduz cada registro e snapshot; descoberta e classificação do v1 congeladas; grafo e buscas iguais aos congelados; cópias adulteradas recusadas | `tests/fixtures/v1/` (projeto, edition, `graph.json`, buscas, léxico), lido em `:27`. "These fixtures are never regenerated to make a test pass" (`:2`, diz ser) |
+| `graph_v2.rs` | 5 | o grafo v2 igual ao congelado e conferido; projeta o v1 sem criar relação; categorias e linguagens do catálogo; ids de aresta únicos e recalculáveis; relações forjadas e campos desconhecidos recusados | `tests/fixtures/v1/graph-v2.json` (`:10`) |
+| `g6.rs` | 4 | campos são símbolos nas duas linguagens; acessos, chamadas e bases são candidatas, nunca resoluções; homônimos demais guardam só a contagem; o `used_by` pelos nomes, em camadas | temporários |
+| `g6d.rs` | 5 | literais, escritas e tipo do `impl` como ocorrências; o contexto do dono (Rust e Python); recusa onde não dá para dizer; o que o alvo chama sem ambiguidade | temporários |
+| `v5.rs` | 4 | variáveis de módulo Python e seus usos; laços e `with` cobrem o corpo e têm a cabeça como rótulo; variantes, valores e padrões em Rust; o perfil v4 ainda reproduzido | temporários |
+| `v7.rs` | 3 | closures de cadeia de iteradores como laços e `receiver_type` gravado; o inventário pelos homônimos com tipo escrito; o perfil v6 sem nada disso | temporários |
+| `v8.rs` | 1 | campo escrito por um receptor tipado é escritor do seu dono | temporários |
+
+Nenhum deles lê `tools/precisao/sinteticos/` (`grep -n sinteticos` vazio nos 9).
+
+**Execução** (verificado):
+
+```
+cargo test -p librarian-ingest --locked --test editions --test python --test v1_regression \
+  --test graph_v2 --test g6 --test g6d --test v5 --test v7 --test v8
+```
+
+O exit foi 0, com **44 testes aprovados**, 0 falhas e 0 ignorados (log `testes.log` no scratchpad). Por binário: `editions` 11, `g6` 4, `g6d` 5, `graph_v2` 5, `python` 4, `v1_regression` 7, `v5` 4, `v7` 3, `v8` 1. `git status --porcelain -uall` vazio depois.
+
+### H. As dependências externas
+
+**Onde cada uma entra** (verificado, `git grep` pelo nome em `crates/*/src` e `tests`):
+
+| Crate | Versão (`Cargo.toml` do ingest; `Cargo.lock`) | Onde é usado |
+|---|---|---|
+| `syn` | `=3.0.5`, com `full` e `visit` (`Cargo.toml:11`); `Cargo.lock:914-917`. O `Cargo.lock` também tem um `syn 2.0.119` (`:903-906`), que não é dependência do ingest (`librarian-ingest` lista só `syn 3.0.5`) | só `rust.rs`: `parse` (`:213-218`), os tipos da árvore e o `Visit` (`:6-9`, todo o arquivo) |
+| `proc-macro2` | `1`, com `span-locations` (`Cargo.toml:12`); travado em `1.0.107` (`Cargo.lock:661-662`) | só `rust.rs:5` (`Span`), para os deslocamentos em bytes de cada nó (`span.byte_range()`, ex. `:233`) |
+| `rustpython-parser` | `=0.4.0` (`Cargo.toml:13`; `Cargo.lock:758-759`) | `python.rs:7`, `:659-662` (o arquivo inteiro) e `python_types.rs:86` (a anotação escrita como texto, `"T"`) |
+| `rustpython-ast` | `=0.4.0` (`Cargo.toml:14`; `Cargo.lock:746-747`) | `python.rs:6` e `python_types.rs:6` (os tipos e o `Visitor`) |
+
+O nome do perfil traz as versões (`syn/3.0.5;rustpython-parser/0.4.0`, `lib.rs:52-53`), mas é um texto fixo: o código não confere a versão do crate ligado. *Leitura minha:* se a versão mudasse e a árvore saísse diferente, o `load` das editions antigas recusaria, porque refaz a extração e compara (`lib.rs:486-502`).
+
+**Sintaxe que a versão fixada não conhece:** o arquivo inteiro vira um diagnóstico, sem símbolos e sem ocorrências (seção A da Parada 1). Sem caminho intermediário: não há leitura parcial nem recuperação de erro no código (`rust.rs:51-54`, `python.rs:44-47`).
+
+**Por execução** (sintético dentro da cópia, um arquivo por construção, gerado pela CLI):
+
+| Construção | Resultado |
+|---|---|
+| Rust: `if let Some(x) = a && x > 0` (let chains) | lido |
+| Rust: `impl Sized + use<T>` | lido |
+| Rust: `unsafe extern "C" { pub fn h(); }` | lido; `h` não vira símbolo (bloco `extern`, Parada 1, B) |
+| Rust: `&raw const x` | lido |
+| Rust: `async \|\| {}` | lido |
+| Rust: `gen { yield 1; }` | **diagnóstico**, `rust_parse_error`: "expected identifier or integer" |
+| Python 3.11: `except* ValueError:` | lido |
+| Python 3.12: `type Alias = list[int]` e `class C[T]:` | lido; `C` e `C.m` viram símbolos; o `type Alias` não |
+| Python 3.12: aspas iguais dentro de f-string, `f"{d["k"]}"` | **diagnóstico**, `python_parse_error`: "Got unexpected token 'k'" |
+| Python 3.13: default de parâmetro de tipo, `def f[T = int]` | **diagnóstico**: "unexpected token '='" |
+| Python 3.14: `except ValueError, TypeError:` sem parênteses | **diagnóstico**: "unexpected token ','" |
+| Python 3.14: t-string, `t"valor {x}"` | **diagnóstico**: "unexpected token \"valor {x}\"" |
+
+Os dois projetos reais não têm nenhuma dessas construções que falham: 0 diagnósticos nos runs v9 da cópia. Ver MAP-O72.
+
+### I. Arquivos de `crates/librarian-ingest/src` que as partes 3, 5 e 6 não mapearam
+
+Só a lista, sem classificar (`ls` do `src`, contra o escopo de cada parte):
+- `envelope.rs` (558 linhas): só citado nas partes 3, 5 e 6, onde lê ligações ou a marca de teste;
+- `evidence.rs` (3.308): citado na parte 2 (o contrato do pacote) e só citado nas partes 5 e 6;
+- `inventory.rs` (906): só citado;
+- `owner.rs` (427): só citado;
+- em parte: `prepare.rs` (a ponte, na parte 2; o ramo da busca e as configurações, na parte 5) e `cli.rs` (os comandos `search`, na parte 5, e `generate`/`verify`, aqui; `graph`, `verify-graph`, `prepare`, `verify-prepared`, `investigate inventory` e `show` não foram mapeados).
+
+### Ajuste 2. As rotas do Healthchecks no grafo
+
+**Verificado** no run v9 da cópia (`20261126-225046`), por `node` sobre o `graph-v2.json` (script `rotas.js`) e pelas rotas do studio da cópia.
+
+**As chamadas `path(..)` e `include(..)` ficam dentro de um símbolo** quando estão numa lista atribuída no nível do módulo. Essa atribuição vira `variable` (Parada 1, C), e o trecho dela cobre a lista:
+
+| Arquivo | Símbolos | `path`/`include` escritos | No grafo | Fora do grafo |
+|---|---|---:|---:|---|
+| `hc/urls.py` (raiz) | `variable prefix` (`:11`), `variable urlpatterns` (`:15-52`) | 70 (36 `path`, 34 `include`) | 70, todos sob `urlpatterns` | 0 |
+| `hc/api/urls.py` (app) | 2 classes de conversor, com campos e métodos; `variable uuid_urls` (`:33-39`), `slug_urls` (`:41-46`), `api_urls` (`:48-72`), `urlpatterns` (`:74-98`) | 39 (34 `path`, 5 `include`) + 2 `register_converter` | 39 | os 2 `register_converter(..)` de `:30-31`, escritos no nível do módulo, fora de qualquer atribuição: descartados como os do `manage.py` (`graph.rs:308-320`) |
+
+**A ligação da rota até a view não sai** (verificado):
+1. **`path` e `include`:** `/api/calls` de `urlpatterns` (`hc/api/urls.py`) dá **0 ligações** e 15 chamadas sem ligação, todas `no_candidate_in_project`. São imports do Django.
+2. **A view:** ela é escrita como valor, não como chamada: `views.ping`, `views.checks`, `accounts_views.login`. Isso vira `attribute_access`, cujas candidatas só podem ser **campos** (`python.rs:102`). Nos dois arquivos há 30 referências desse tipo a views (`hc/urls.py` 1, `hc/api/urls.py` 29), mais 2 a `admin.site`. **Nenhuma** tem aresta para uma função. As 9 arestas de nome que existem vão para campos homônimos: `views.checks` → `Channel.checks` (`hc/api/models.py:1030`); `views.channels` → `GroupForm.channels`, `Spec.channels` e `CheckDict.channels`; `views.status` → `ProjectStatus.status`, `CheckDict.status` e `Check.status`; e `admin.site` → `ZulipConf.site` e `AddZulipForm.site`.
+3. **A lista de rotas do app:** `include("hc.api.urls")` só tem um texto (`hc/urls.py:19`); nada liga a raiz ao `urls.py` do app. Já `include(api_urls)`, com uma variável do mesmo arquivo, vira `name_reference` com aresta para a variável (5 arestas em `hc/api/urls.py`).
+4. **Pelo outro lado:** `/api/used-by` da função `ping` de `hc/api/views.py` dá `linked 1` (uma chamada direta, `hc/api/views.py:300`) e `ruled_out 4`. Nenhuma das 6 rotas que a nomeiam (`views.ping`, `hc/api/urls.py:34-38` e `:75`) aparece.
+
+### Ajuste 3. O que o extrator não vê: alguém avisa?
+
+Para cada caso, o que o código faz para quem recebe a resposta. Os leitores possíveis são: a consulta que vai ao modelo, pelos limites da busca (`search.rs:291` → `prepare.rs:445-461` → `unknowns`; parte 5, G); as respostas de `/api/calls` e `/api/used-by`; e a página. Verificado por leitura.
+
+| O que não é visto | Aviso | Onde |
+|---|---|---|
+| Conteúdo de macro (Rust) | **Só um texto genérico.** O limite de busca do v9, "No macros, cfg or decorator evaluation, compiler or runtime proof" (`mod.rs:455`), vai a toda consulta de uma pergunta buscada. Não diz qual chamada ficou de fora. O texto do manifest, "Rust: no macro expansion, cfg evaluation…" (`mod.rs:431`), fica só no `manifest.json`, lido só para conferir (`lib.rs:433`). `/api/calls` e `/api/used-by` não têm campo de limite (`Calls`, `Uses`; parte 3, G) | calado no caminho e nos usos |
+| Ocorrência fora de símbolo | **Nenhum.** Nenhum texto de limite fala disso (`grep` nos limites de `mod.rs`), e a ocorrência não chega a nó nenhum (`graph.rs:320`) | calado |
+| Arquivo com erro de sintaxe | **Só a contagem.** O `run.json` guarda `diagnostics` (`store.rs:360`), e a página mostra "{diagnostics} diagnósticos" (`index.html:855`, `:3445`). Na pergunta, o `prepare` recusa (`prepare.rs:119-120`), e a página diz "Query não preparada: a edition tem diagnósticos (arquivos que o parser não leu)" (`index.html:1345`, `:5449`). Com `accept_diagnostics`, a consulta leva "Edition com {n} diagnósticos: extração incompleta em algumas fontes" (`prepare.rs:399-401`). O relatório da busca guarda o número (`search.rs:290`), e a CLI sai com 2. **Nenhum lugar diz qual arquivo nem a mensagem**: `code` e `message` não são lidos (seção F). Em `/api/calls` e `/api/used-by`, nada | contado, sem dizer onde |
+| `getattr` e nomes em texto (Python) | **Só no manifest.** "names in macros, getattr or strings are not seen" (`mod.rs:436`) é um limite do manifest, e não da busca (`mod.rs:453-458`). Não chega à consulta nem à página | calado para quem pergunta |
+| Templates, `.js`, `.css` e outras extensões | **Nenhum.** Não viram fonte (Parada 1, A), nenhum texto de limite os cita, e o `compare_current` usa a mesma regra de descoberta da edition, então também não os aponta como novos (`lib.rs:616-618`) | calado |
+
+Os textos de limite da busca também não aparecem na página, na vista da pergunta: os `limits` que a página mostra são os da conferência das claims, do Medir tudo, da performance, do inventário e dos comandos (`index.html:5860`, `:6302`, `:6403`, `:7312`, `:7393`). Os da busca ficam na consulta enviada ao modelo. Ver MAP-O71.
+
+### Ajuste 4. `construtor` × ligações com `basis: "type"` (Python)
+
+**Método** (verificado, por execução; script `construtor.js` no scratchpad, saída `construtor-hc.json`):
+1. Na cópia, com o run v9 do Healthchecks (`20261126-225046`), pedi `/api/used-by` (profundidade 1) para **cada um dos 4.718 símbolos**. Juntei toda ligação com o próprio símbolo como alvo e `basis: "type"`. A resposta sempre traz as ligações ao próprio símbolo, mesmo quando o desenho é cortado pelo teto de nós (`uses.rs:384`). 51 respostas vieram com `truncated: true`, sem perda dessas ligações.
+2. Para cada ligação, achei o `receiver_type` do receptor inteiro, como `receiver_type_node` faz (`resolve.rs:632-637`), e guardei o `type_rule` do nó.
+3. Nas de regra `construtor`, achei o que foi chamado: o próprio receptor, quando ele é a chamada (`super()`), ou a atribuição do receptor no fonte, procurada para cima. E conferi se o último segmento do chamado é o nome de uma classe do projeto, e se o alvo está nessa classe.
+
+**Resultado:**
+
+| | Ligações |
+|---|---:|
+| Com `basis: "type"`, no run inteiro | 346 |
+| … com o receptor de regra `construtor` | **235**, todas `resolution: "type"` |
+| … das 235, o chamado é uma **classe do projeto**, e o alvo é um método dela | 89 (32 `SlackFields`, 27 `Command`, 9 `GoogleChatFields`, formulários…). Uma delas o script não achou e foi lida à mão: `t = context["__table__"] = Table()` (`hc/front/templatetags/asciitable.py:48`), alvo `Table.render` |
+| … o chamado é `super` | 141, todas com o `type_rule` da ligação `super` (a cadeia de bases, 2.4b; parte 3, B) |
+| … o chamado é uma **função ou um método** | **5**, todas com o `type_rule` da ligação `retorno` (2.3c): `curl.post(..)` → `Response.json` (2, `hc/integrations/slack/views.py:105`, `discord/views.py:71`; `def post(..) -> Response`, `hc/lib/curl.py:224-233`); `_get_rw_project_for_user(..)` → `Project.num_checks_available` (2, `hc/front/views.py:533`, `:1072`; `-> Project`, `:187`); `project.transfer_request(..)` → `Member.can_accept` (1, `hc/accounts/views.py:512`; `-> Member \| None`, `hc/accounts/models.py:525`) |
+
+→ **Zero ligações a uma classe do projeto em que o chamado é uma função ou um método tratado como se fosse a classe.** As 5 em que o chamado é uma função ou um método passam pelo retorno anotado dela, e o alvo é um método da classe que a anotação nomeia. *O que o método não pega:* uma ligação de chamada com `basis` diferente de `type` (por exemplo `unique`, que a regra decide sem o tipo); e uma classe do projeto com o mesmo nome de uma função de fora (a conferência é pelo último segmento do nome).
+
+### Anexo (parte 5). O corte de 60% da busca
+
+**Como a cobertura é calculada** (verificado, `search.rs:208-245`):
+1. Os termos são os tokens da **pergunta inteira**, sem as stop words (`:210-213`).
+2. Cada termo vira o seu grupo de sinônimos, e termos do mesmo grupo contam uma vez (`:214-220`).
+3. Para cada símbolo, `reasons` são os grupos que aparecem em algum dos quatro campos dele: nome, escopo, caminho ou código (`:225-241`).
+4. O símbolo fica fora quando `reasons × 5 < grupos × 3` (`:243`), em que "grupos" são **todos os grupos da pergunta**, inclusive os que não batem em **nenhum** símbolo do projeto.
+
+Não é sobre os termos que bateram em algum lugar: um termo que não existe no código entra no denominador e não pode entrar no numerador.
+
+**Caso real** (cópia; CLI `librarian_ingest search <edition v9 do ray tracer> "<pergunta>" <léxico da cópia> 10 0`):
+
+| Pergunta | Grupos (`terms`) | Mínimo para entrar | Hits (até 10) |
+|---|---|---:|---|
+| "como a câmera gera o raio e como o material reflete a cor" | `camera`, `cor`, `gera`, `material`, `raio`, `reflete` (6) | 4 | **1**: `main` de `src/bin/cena_video.rs:47` (404 pontos), com os 4 termos só no **código** do corpo |
+| "como a câmera gera o raio" | `camera`, `gera`, `raio` (3) | 2 | 6: `impl Camera::ray_from_pixel` (`src/camera.rs:81`, 211), `impl Camera::render` (`:95`, 204), o mesmo `main` (202) e três testes `tests_camera::constructing_a_ray_…` (196, 191, 191) |
+| "como o material reflete a cor" | `cor`, `material`, `reflete` (3) | 2 | 10: `Material::color` (`src/materials.rs:9`), `MaterialSpec::color` (`src/scene.rs:59`), `impl World::reflected_color` (`src/world.rs:65`), `impl World::refracted_color` (`:74`), `impl Material::phong`, `impl MaterialSpec::validate`, `impl Material::lighting`, dois `create_default_world` de teste e `impl World::shade_hit` |
+
+Contas que explicam (verificado pela CLI, cada termo sozinho):
+- `gera` e `reflete` dão `no_lexical_evidence`: não estão em nenhum símbolo, e o léxico do projeto não tem grupo para eles;
+- `camera`, `raio`, `material` e `cor` dão hits sozinhos (o léxico os junta a `cameras`, `ray`, `materials` e `color`).
+
+Na pergunta com os dois assuntos, há 6 grupos, e dois deles (`gera`, `reflete`) não batem em nada. Por isso um símbolo precisa dos outros 4. O `ray_from_pixel` (2 de 6) e os de material e cor (2 de 6) saem; fica só o `main`, que tem as quatro palavras no corpo. Cada assunto sozinho dá 2 de 3, que passa. Ver MAP-O73.
+
+---
+
+## Execução (Parada 2)
+
+1. **Original antes:** os dois hashes e contagens da Parada 0 do 03 (healthchecks `61cd25c1…5ca3d5`, 932; renderer `612cdbf6…f3ecc`, 42).
+2. **Cópia nova:** `cp -r .studio/projects/* $S/p2/root/.studio/projects/`; o 06 copiado para `S/orig/06-extrator.md` antes de editar.
+3. **Studio sobre a cópia:** `LIBRARIAN_ROOT=$S/p2/root target/release/librarian_studio.exe --port 8794` (o binário da Parada 1). Pedidos: `/api/generate` duas vezes por projeto; `/api/calls` de `urlpatterns`; `/api/used-by` de `ping` e de todos os 4.718 símbolos do Healthchecks; `/api/graph` de um run do ray tracer com o `graph-v2.json` adulterado na cópia.
+4. **CLI na cópia:** `verify` de uma cópia adulterada de uma edition; `verify-graph` do grafo adulterado; `generate` dos sintéticos de ids e de sintaxe; `search` das perguntas do anexo, com o léxico do `project.json` da cópia.
+5. **Testes:** seção G.
+6. **Scripts** (só leem, no scratchpad): `campos.js`, `rotas.js`, `construtor.js`, mais os da Parada 1; as saídas guardadas `campos.txt`, `construtor-hc.json` e `testes.log`.
+7. **Fim:** o studio da cópia foi encerrado. O hash do original foi refeito: os mesmos dois valores e contagens do passo 1; `ls .studio/projects/*/runs/` só mostra os runs de 18/11. A cópia, com os runs novos e os sintéticos, foi apagada (`rm -rf $S/p2`). Os dois projetos continuam sem mudança (`git status --porcelain` vazio), nos commits `6c05a7a` e `e38254b`.
+
+---
+
+## Em palavras simples
+
+*À parte das seções acima, sem números nem nomes de arquivo. Escrita com a ideia da skill "elementary school teacher" (nível newcomer).*
+
+Pense de novo na biblioteca. O extrator é o funcionário que recebe os livros novos, tira uma cópia de cada um e escreve as fichas do catálogo.
+
+**O que ele recebe.** Uma lista de pastas e arquivos. Ele percorre as pastas e só pega o que tem a terminação de Rust ou de Python. O resto da pasta ele nem olha: páginas da web, estilos, scripts de navegador e textos ficam de fora, sem aviso. Ele pula algumas pastas pelo nome (cópias de bibliotecas, caches), mas não lê a lista de "ignorados" do projeto e entra em pastas escondidas. Não há tamanho máximo, e um arquivo muito grande demora muito mais do que o dobro quando dobra de tamanho.
+
+**O que ele escreve.** Para cada declaração (uma função, um tipo, um método, um campo), uma ficha com o nome, o lugar exato no arquivo e se parece ser um teste. Junto, guarda a cópia fiel de cada arquivo e uma "impressão digital" de tudo. Ele não muda o que já escreveu: cada catálogo novo vai para uma gaveta nova. E toda vez que alguém abre o catálogo, ele lê os livros de novo e confere se as fichas batem. Se alguém mexer numa ficha, ele percebe. Mas o catálogo não tem assinatura: quem refizesse tudo de forma coerente não seria percebido. O desenho do mapa, guardado ao lado, é conferido só no dia em que é feito; depois, a página o mostra como estiver.
+
+**As fichas não mudam sozinhas.** O mesmo livro dá sempre as mesmas fichas, com os mesmos números. Mas basta mudar uma letra de um arquivo para mudar o número de todas as fichas daquele arquivo.
+
+**O que ele não vê, e quase nunca avisa:**
+- **O que está dentro de uma "macro"** do Rust, um atalho que escreve código por você. Para o extrator, é uma caixa fechada. O pedido enviado ao modelo leva uma frase geral sobre isso, mas ninguém diz qual chamada ficou de fora.
+- **O que está escrito solto no arquivo**, fora de qualquer declaração. Nem entra no mapa, e ninguém avisa.
+- **Um arquivo com um erro de escrita.** O arquivo inteiro fica sem fichas. A página diz quantos arquivos não foram lidos, mas não diz quais.
+- **O que o Python decide na hora de rodar**, por nomes escritos dentro de textos ou trocados durante os testes. Por isso o dublê de teste da biblioteca de rede não é ligado à biblioteca de verdade. Isso só aparece numa nota que ninguém lê.
+- **Construções novas das linguagens**, que as versões fixas dos leitores não conhecem. Os dois projetos de teste não usam nenhuma delas hoje.
+
+**A marca de teste.** Em Rust, é uma etiqueta escrita no código. Em Python, é só o nome começar com "test". O lugar do arquivo não conta. Por isso muitos ajudantes de teste, e o próprio dublê, ficam como se fossem código de verdade.
+
+**O tipo de quem recebe a chamada.** O extrator só anota o tipo quando ele está escrito por perto. Basta um passo a mais, como copiar a variável, para o tipo se perder. Então a regra de ligação fica só com o nome, e às vezes liga a chamada à única coisa do projeto que tem o mesmo nome, quando a de verdade é da linguagem.
+
+**As rotas da web.** As listas de rotas entram no mapa, mas a ligação da rota à página que ela abre não sai: a página é citada pelo nome, sem ser chamada, e o extrator só sabe ligar esse tipo de citação a campos.
+
+**A busca com dois assuntos.** Quando a pergunta junta dois assuntos e algumas palavras dela não existem no código, essas palavras contam contra. Cada parte do código precisa combinar com a maior parte da pergunta inteira, e quase nenhuma combina com os dois assuntos ao mesmo tempo. A busca acha cada assunto sozinho, mas não os dois juntos.
+
+---
+
+## Observações novas (Parada 2)
+
+- **MAP-O70.** A edition é conferida inteira a cada `load`; o grafo do studio não. O `graph-v2.json` é gravado com `fs::write` e conferido uma vez, na geração (`store.rs:351-352`); depois, o studio só o lê (`store.rs:371-373`, `main.rs:283-294`). Na cópia, um rótulo adulterado foi recusado pela CLI `verify-graph` e devolvido pelo `/api/graph`. Também não há assinatura do `manifest.json`: a conferência é de coerência, como os próprios limites dizem (`mod.rs:450`).
+- **MAP-O71.** O que o extrator não vê quase nunca chega a quem recebe a resposta (ajuste 3):
+  - macro: só um texto genérico, na consulta ao modelo;
+  - erro de sintaxe: só a contagem, sem o arquivo nem a mensagem, porque `Diagnostic.code` e `Diagnostic.message` não são lidos por ninguém (seção F);
+  - ocorrência fora de símbolo, `getattr`/texto e arquivos de outras extensões: nada.
+
+  Os limites do manifest, onde está o aviso do `getattr`, só servem para conferir a edition (`lib.rs:433`). Os da busca vão à consulta, mas não à vista da pergunta na página.
+- **MAP-O72.** O parser Python fixado (`rustpython-parser 0.4.0`) recusa construções do Python 3.12 a 3.14: aspas iguais dentro de f-string, default de parâmetro de tipo, `except A, B:` sem parênteses e t-string. Cada uma faz o arquivo inteiro virar diagnóstico. O `syn 3.0.5` lê as construções de Rust testadas, menos `gen { }`. O `type X = ..` do Python 3.12 é lido, mas não vira símbolo. Os dois projetos reais não têm nenhuma dessas construções que falham hoje. O Healthchecks foi medido no 2.4e com um ambiente CPython 3.14 (parte 4, MAP-Q13).
+- **MAP-O73.** O corte de 60% divide os termos que o símbolo pega pelos grupos da **pergunta inteira**, inclusive os que não existem no código (`search.rs:243`). Caso real: a pergunta com dois assuntos deu 1 hit, um `main` que só tem as palavras no corpo, enquanto cada assunto sozinho deu 6 e 10. Os dois verbos da pergunta (`gera`, `reflete`) não estão em nenhum símbolo e entram no denominador.
+- **MAP-O74.** As rotas Django ficam no grafo quando estão numa lista atribuída (`variable urlpatterns`), mas a rota não liga à view. A view é escrita como valor (`views.ping`), e um `attribute_access` só tem campos como candidatas (`python.rs:102`). Nos dois `urls.py` medidos, 0 de 30 referências a views chegam a uma função; 9 arestas de nome vão para campos homônimos (`Check.status`, `Channel.checks`…). O `include("…")` com texto não liga a raiz ao app. As chamadas de nível de módulo fora de atribuição (`register_converter`) são descartadas.
+- **MAP-O75.** No Python, nenhuma ligação com `basis: "type"` trata uma função ou um método como se fosse a classe (ajuste 4): das 235 de receptor `construtor`, 89 vêm de classe do projeto, 141 de `super()` e 5 de um retorno anotado. O `construtor` grava o chamado de qualquer chamada (MAP-O66), mas a regra só tira dele uma classe quando o nome é de uma classe do projeto, ou pelo retorno escrito.
+- **MAP-O76.** Os ids são estáveis entre gerações do mesmo código, também entre perfis: os registros v8 de 18/11 e os v9 de hoje são byte a byte iguais nos dois projetos. Mas o id de um símbolo contém o hash do conteúdo do arquivo inteiro (`lib.rs:271`): qualquer mudança no arquivo muda o id de todos os símbolos dele (verificado num sintético).
+
+## Perguntas (Parada 2)
+
+Nenhuma nova: o que a Parada 2 pediu, o código respondeu.
