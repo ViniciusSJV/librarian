@@ -1,0 +1,592 @@
+{
+ "semente": "estrato-unique-2026-11-25",
+ "por_linguagem": 15,
+ "binarios": {
+  "pasta": "c:\\Users\\beatl\\Documents\\Projetos\\librarian\\target\\release",
+  "compilado": true,
+  "fontes": {
+   "arquivos": 250,
+   "sha256": "3aeb2fa77adc9ec44716bc113822faa14395b71cb7f7217deb46b4e2b87c4726"
+  },
+  "identidade": "recorded:4652541d3cdf1f37d910261e0b4b336a31ad927d:false",
+  "librarian_studio": "10b1b7ff7da1ca62d8c731b44e41aa118a7563d77aabedf4e555d881946f400d",
+  "librarian_ingest": "51bfd55a83fc01db66c653d632f20e4ec9084bd9f13cc70fcc30d84444314f4b"
+ },
+ "projetos": {
+  "hc": {
+   "run_novo": "20261125-234413",
+   "grafo_novo_igual_ao_de_referencia": false,
+   "pool": 1956,
+   "unique_no_pool_por_tipo_de_alvo": {
+    "method": 233,
+    "class": 76,
+    "function": 16
+   },
+   "populacao": 233,
+   "populacao_por_tipo_do_receptor": {
+    "tipo do projeto, o dono do alvo": 53,
+    "sem tipo escrito no grafo": 121,
+    "tipo escrito que não nomeia declaração do projeto": 59
+   },
+   "conhecidos_na_populacao": [
+    "hc/api/management/commands/smtpd.py:37 Ping.get_body",
+    "hc/api/management/commands/smtpd.py:41 Ping.get_body",
+    "hc/front/views.py:800 Ping.get_body",
+    "hc/front/views.py:805 Ping.get_body"
+   ],
+   "sorteadas": [
+    {
+     "id": "UQ-1",
+     "ordem": "047e0b69227d741bb27521347b2ba17307c065ab16ca7d8c6c3b21f6147db22a",
+     "ocorrencia": "hc/integrations/pagertree/transport.py@1094-1116",
+     "local": "hc/integrations/pagertree/transport.py:29",
+     "texto": "flip.owner.tags_list()",
+     "dono": "PagerTree.notify",
+     "alvo": "Check.tags_list (hc/api/models.py:413)",
+     "resolution": "unique",
+     "candidates": 1,
+     "receptor": "flip.owner",
+     "receiver_type": null,
+     "tipo": "sem tipo escrito no grafo",
+     "conhecido": false
+    },
+    {
+     "id": "UQ-2",
+     "ordem": "059fff3cd9a5652f3d0adb0d550733dd2ef852aa5174c822da8839b86ce1ba41",
+     "ocorrencia": "hc/integrations/spike/views.py@891-918",
+     "local": "hc/integrations/spike/views.py:28",
+     "texto": "channel.assign_all_checks()",
+     "dono": "add_spike",
+     "alvo": "Channel.assign_all_checks (hc/api/models.py:1067)",
+     "resolution": "unique",
+     "candidates": 1,
+     "receptor": "channel",
+     "receiver_type": {
+      "regra": "construtor",
+      "nomes": [
+       "Channel (hc/api/models.py:1018)"
+      ]
+     },
+     "tipo": "tipo do projeto (construtor), o dono do alvo",
+     "conhecido": false
+    },
+    {
+     "id": "UQ-3",
+     "ordem": "0672b39118157c284be61ac322221ac4ef30511329fe61d40091b58b39ef6fd1",
+     "ocorrencia": "hc/integrations/signal/transport.py@2647-2666",
+     "local": "hc/integrations/signal/transport.py:91",
+     "texto": "reply.get_results()",
+     "dono": "Signal.send",
+     "alvo": "Signal.Reply.get_results (hc/integrations/signal/transport.py:48)",
+     "resolution": "unique",
+     "candidates": 1,
+     "receptor": "reply",
+     "receiver_type": {
+      "regra": "construtor",
+      "nomes": []
+     },
+     "tipo": "tipo escrito que não nomeia declaração do projeto (construtor)",
+     "conhecido": false
+    },
+    {
+     "id": "UQ-4",
+     "ordem": "06d5b748d7df4f2d0e8d4083b07dc407ed17867569e86923ce13952563e52dd5",
+     "ocorrencia": "hc/lib/curl.py@4405-4433",
+     "local": "hc/lib/curl.py:139",
+     "texto": "c.setopt(pycurl.NOSIGNAL, 1)",
+     "dono": "request",
+     "alvo": "FakeCurl.setopt (hc/lib/tests/test_curl.py:18)",
+     "resolution": "unique",
+     "candidates": 1,
+     "receptor": "c",
+     "receiver_type": {
+      "regra": "construtor",
+      "nomes": []
+     },
+     "tipo": "tipo escrito que não nomeia declaração do projeto (construtor)",
+     "conhecido": false
+    },
+    {
+     "id": "UQ-5",
+     "ordem": "084ab6988b52210b6f8c15346053a8332ff3b352b9fa9f62b696af7b597220c0",
+     "ocorrencia": "hc/front/views.py@2850-2867",
+     "local": "hc/front/views.py:88",
+     "texto": "check.tags_list()",
+     "dono": "_tags_counts",
+     "alvo": "Check.tags_list (hc/api/models.py:413)",
+     "resolution": "unique",
+     "candidates": 1,
+     "receptor": "check",
+     "receiver_type": null,
+     "tipo": "sem tipo escrito no grafo",
+     "conhecido": false
+    },
+    {
+     "id": "UQ-6",
+     "ordem": "08c75fd9e98888a555089fa468a00435796cbe520c1e9100a4fa70f04b996ead",
+     "ocorrencia": "hc/integrations/whatsapp/transport.py@1896-1919",
+     "local": "hc/integrations/whatsapp/transport.py:59",
+     "texto": "profile.authorize_sms()",
+     "dono": "WhatsApp.notify",
+     "alvo": "Profile.authorize_sms (hc/accounts/models.py:310)",
+     "resolution": "unique",
+     "candidates": 1,
+     "receptor": "profile",
+     "receiver_type": null,
+     "tipo": "sem tipo escrito no grafo",
+     "conhecido": false
+    },
+    {
+     "id": "UQ-7",
+     "ordem": "091bad1df3240fafbdad39d3041ab769c57e2a2a5b113595ca208d9202d26d03",
+     "ocorrencia": "hc/integrations/matrix/views.py@1202-1229",
+     "local": "hc/integrations/matrix/views.py:35",
+     "texto": "channel.assign_all_checks()",
+     "dono": "add",
+     "alvo": "Channel.assign_all_checks (hc/api/models.py:1067)",
+     "resolution": "unique",
+     "candidates": 1,
+     "receptor": "channel",
+     "receiver_type": {
+      "regra": "construtor",
+      "nomes": [
+       "Channel (hc/api/models.py:1018)"
+      ]
+     },
+     "tipo": "tipo do projeto (construtor), o dono do alvo",
+     "conhecido": false
+    },
+    {
+     "id": "UQ-8",
+     "ordem": "0b9947131cb62615a51c50bffa33f08b7eb1e38308c88c5ed69a21e1e4ab333d",
+     "ocorrencia": "hc/integrations/webhook/transport.py@2534-2576",
+     "local": "hc/integrations/webhook/transport.py:73",
+     "texto": "self.channel.webhook_spec(flip.new_status)",
+     "dono": "Webhook.notify",
+     "alvo": "Channel.webhook_spec (hc/api/models.py:1203)",
+     "resolution": "unique",
+     "candidates": 1,
+     "receptor": "self.channel",
+     "receiver_type": null,
+     "tipo": "sem tipo escrito no grafo",
+     "conhecido": false
+    },
+    {
+     "id": "UQ-9",
+     "ordem": "0c561c8f32d593736ec00023be687894a08b7faa80f5a929da607a63a90d825f",
+     "ocorrencia": "hc/accounts/views.py@5785-5826",
+     "local": "hc/accounts/views.py:180",
+     "texto": "Profile.objects.for_user(magic_form.user)",
+     "dono": "login",
+     "alvo": "ProfileManager.for_user (hc/accounts/models.py:62)",
+     "resolution": "unique",
+     "candidates": 1,
+     "receptor": "Profile.objects",
+     "receiver_type": null,
+     "tipo": "sem tipo escrito no grafo",
+     "conhecido": false
+    },
+    {
+     "id": "UQ-10",
+     "ordem": "0c8f1fe1e44e990bcaa8e4d34d9f14901b1b21a89f881d2c37be5c810a1b6c79",
+     "ocorrencia": "hc/integrations/pd/transport.py@1072-1089",
+     "local": "hc/integrations/pd/transport.py:32",
+     "texto": "check.tags_list()",
+     "dono": "PagerDuty.notify",
+     "alvo": "Check.tags_list (hc/api/models.py:413)",
+     "resolution": "unique",
+     "candidates": 1,
+     "receptor": "check",
+     "receiver_type": null,
+     "tipo": "sem tipo escrito no grafo",
+     "conhecido": false
+    },
+    {
+     "id": "UQ-11",
+     "ordem": "0cd134af9df5fc7ed219ecc464fa529a53f5c52c2f0e46f84aeeca66ea44f2d0",
+     "ocorrencia": "hc/front/views.py@29679-29727",
+     "local": "hc/front/views.py:867",
+     "texto": "check.create_flip(\"new\", mark_as_processed=True)",
+     "dono": "resume",
+     "alvo": "Check.create_flip (hc/api/models.py:652)",
+     "resolution": "unique",
+     "candidates": 1,
+     "receptor": "check",
+     "receiver_type": {
+      "regra": "construtor",
+      "nomes": []
+     },
+     "tipo": "tipo escrito que não nomeia declaração do projeto (construtor)",
+     "conhecido": false
+    },
+    {
+     "id": "UQ-12",
+     "ordem": "107f12092428a7978fabdf78bc57fc25ed853ae032622f78d14be1238a36c073",
+     "ocorrencia": "hc/front/views.py@12002-12036",
+     "local": "hc/front/views.py:371",
+     "texto": "profile.checks_from_all_projects()",
+     "dono": "_get_project_summary",
+     "alvo": "Profile.checks_from_all_projects (hc/accounts/models.py:207)",
+     "resolution": "unique",
+     "candidates": 1,
+     "receptor": "profile",
+     "receiver_type": {
+      "regra": "parametro",
+      "nomes": [
+       "Profile (hc/accounts/models.py:83)"
+      ]
+     },
+     "tipo": "tipo do projeto (parametro), o dono do alvo",
+     "conhecido": false
+    },
+    {
+     "id": "UQ-13",
+     "ordem": "1142280fadd9651dd75bb9570682ce946e7eef9a9f12da4da0d410119c93f75b",
+     "ocorrencia": "hc/integrations/zulip/transport.py@1527-1560",
+     "local": "hc/integrations/zulip/transport.py:48",
+     "texto": "self.channel.zulip.formatted_to()",
+     "dono": "Zulip.notify",
+     "alvo": "ZulipConf.formatted_to (hc/api/models.py:958)",
+     "resolution": "unique",
+     "candidates": 1,
+     "receptor": "self.channel.zulip",
+     "receiver_type": null,
+     "tipo": "sem tipo escrito no grafo",
+     "conhecido": false
+    },
+    {
+     "id": "UQ-14",
+     "ordem": "1295712a858de6c511277d2e13fe5336cc320fe404aac0d0d243e0928770976c",
+     "ocorrencia": "hc/integrations/email/views.py@3829-3849",
+     "local": "hc/integrations/email/views.py:108",
+     "texto": "channel.make_token()",
+     "dono": "unsubscribe",
+     "alvo": "Channel.make_token (hc/api/models.py:1071)",
+     "resolution": "unique",
+     "candidates": 1,
+     "receptor": "channel",
+     "receiver_type": {
+      "regra": "construtor",
+      "nomes": []
+     },
+     "tipo": "tipo escrito que não nomeia declaração do projeto (construtor)",
+     "conhecido": false
+    },
+    {
+     "id": "UQ-15",
+     "ordem": "138ff01ee9a35e51a8bde367835b9d99c8ed5edbc0f285e4f30f9b8d3dced7de",
+     "ocorrencia": "hc/api/views.py@13150-13161",
+     "local": "hc/api/views.py:371",
+     "texto": "spec.kind()",
+     "dono": "_update",
+     "alvo": "Spec.kind (hc/api/views.py:134)",
+     "resolution": "unique",
+     "candidates": 1,
+     "receptor": "spec",
+     "receiver_type": {
+      "regra": "parametro",
+      "nomes": [
+       "Spec (hc/api/views.py:61)"
+      ]
+     },
+     "tipo": "tipo do projeto (parametro), o dono do alvo",
+     "conhecido": false
+    }
+   ]
+  },
+  "rt": {
+   "run_novo": "20261125-234657",
+   "grafo_novo_igual_ao_de_referencia": false,
+   "pool": 515,
+   "unique_no_pool_por_tipo_de_alvo": {
+    "method": 93,
+    "trait_method": 1
+   },
+   "populacao": 94,
+   "populacao_por_tipo_do_receptor": {
+    "sem tipo escrito no grafo": 58,
+    "tipo do projeto, o dono do alvo": 36
+   },
+   "conhecidos_na_populacao": [
+    "src/obj.rs:63 impl Sorteio::next",
+    "src/obj.rs:66 impl Sorteio::next",
+    "src/obj.rs:81 impl Sorteio::next",
+    "src/obj.rs:90 impl Groups::len",
+    "src/obj.rs:28 impl Sorteio::next",
+    "src/obj.rs:19 impl Sorteio::next",
+    "src/obj.rs:21 impl Sorteio::next",
+    "src/obj.rs:22 impl Sorteio::next",
+    "src/obj.rs:23 impl Sorteio::next",
+    "src/camera.rs:129 impl Groups::len"
+   ],
+   "sorteadas": [
+    {
+     "id": "UQ-16",
+     "ordem": "018de3ef62db1fd7b535f92d644a333ed59c87a2c3706758cd92cf3edb3ef778",
+     "ocorrencia": "src/triangle.rs@1797-1824",
+     "local": "src/triangle.rs:56",
+     "texto": "p1_to_origin.cross(self.e1)",
+     "dono": "impl Intersectable for Triangle::local_intersect",
+     "alvo": "impl Tuple::cross (src/tuple.rs:131)",
+     "resolution": "unique",
+     "candidates": 1,
+     "receptor": "p1_to_origin",
+     "receiver_type": null,
+     "tipo": "sem tipo escrito no grafo",
+     "conhecido": false
+    },
+    {
+     "id": "UQ-17",
+     "ordem": "036378743fa41949af1596f3edb49154732566b9db4ff1c2cafea753d64b8a68",
+     "ocorrencia": "src/object.rs@5613-5642",
+     "local": "src/object.rs:161",
+     "texto": "bounds.add_point(triangle.p1)",
+     "dono": "impl Intersectable for Object::bounds",
+     "alvo": "impl Bounds::add_point (src/bounds.rs:23)",
+     "resolution": "unique",
+     "candidates": 1,
+     "receptor": "bounds",
+     "receiver_type": {
+      "regra": "caminho",
+      "nomes": [
+       "Bounds (src/bounds.rs:5)"
+      ]
+     },
+     "tipo": "tipo do projeto (caminho), o dono do alvo",
+     "conhecido": false
+    },
+    {
+     "id": "UQ-18",
+     "ordem": "043615a83e1f7d13b904f27ec12ae2aa3385eed84d75d3ceb11bcf8ac2a60343",
+     "ocorrencia": "src/bin/cena_video.rs@4615-4642",
+     "local": "src/bin/cena_video.rs:109",
+     "texto": "sorteio.between(0.15, 0.32)",
+     "dono": "main",
+     "alvo": "impl Sorteio::between (src/bin/cena_video.rs:33)",
+     "resolution": "unique",
+     "candidates": 1,
+     "receptor": "sorteio",
+     "receiver_type": null,
+     "tipo": "sem tipo escrito no grafo",
+     "conhecido": false
+    },
+    {
+     "id": "UQ-19",
+     "ordem": "09ad637c35e5585b33befbc2b5c3ddf03f2bab28107a3d459bdd6076d3ba81b0",
+     "ocorrencia": "src/camera.rs@4218-4231",
+     "local": "src/camera.rs:129",
+     "texto": "ordered.len()",
+     "dono": "impl Camera::benchmark_render",
+     "alvo": "impl Groups::len (src/groups.rs:60)",
+     "resolution": "unique",
+     "candidates": 1,
+     "receptor": "ordered",
+     "receiver_type": null,
+     "tipo": "sem tipo escrito no grafo",
+     "conhecido": true
+    },
+    {
+     "id": "UQ-20",
+     "ordem": "0b522b945b25204dffbc9dcbec862e820060ea52ebb36bea9bcc62588cf44116",
+     "ocorrencia": "src/obj.rs@5781-5804",
+     "local": "src/obj.rs:143",
+     "texto": "right.bounds().center()",
+     "dono": "build_bvh",
+     "alvo": "impl Bounds::center (src/bounds.rs:39)",
+     "resolution": "unique",
+     "candidates": 1,
+     "receptor": "right.bounds()",
+     "receiver_type": null,
+     "tipo": "sem tipo escrito no grafo",
+     "conhecido": false
+    },
+    {
+     "id": "UQ-21",
+     "ordem": "0bda6eaac556ec5d7652219a9aac075cb5aea0470a6016fd373aa3c670b16085",
+     "ocorrencia": "src/camera.rs@1583-1602",
+     "local": "src/camera.rs:55",
+     "texto": "transform.inverse()",
+     "dono": "impl Camera::new",
+     "alvo": "impl Matrix<4>::inverse (src/matrix.rs:193)",
+     "resolution": "unique",
+     "candidates": 1,
+     "receptor": "transform",
+     "receiver_type": {
+      "regra": "caminho",
+      "nomes": [
+       "Matrix (src/matrix.rs:6)"
+      ]
+     },
+     "tipo": "tipo do projeto (caminho), o dono do alvo",
+     "conhecido": false
+    },
+    {
+     "id": "UQ-22",
+     "ordem": "0cb869774fe5f8d8d84a96c90d0d888aeb2be8b5c0deb747f17f83e8db664f78",
+     "ocorrencia": "src/bin/cena_video.rs@4661-4687",
+     "local": "src/bin/cena_video.rs:110",
+     "texto": "sorteio.between(-1.8, 2.5)",
+     "dono": "main",
+     "alvo": "impl Sorteio::between (src/bin/cena_video.rs:33)",
+     "resolution": "unique",
+     "candidates": 1,
+     "receptor": "sorteio",
+     "receiver_type": null,
+     "tipo": "sem tipo escrito no grafo",
+     "conhecido": false
+    },
+    {
+     "id": "UQ-23",
+     "ordem": "0d1ede2cfe9773b14656c3d608d7bfd660a621db5a7edc767b675febb64b8eb0",
+     "ocorrencia": "src/bin/cena_video.rs@1517-1544",
+     "local": "src/bin/cena_video.rs:42",
+     "texto": "k.min(4. - k).clamp(0., 1.)",
+     "dono": "hue",
+     "alvo": "impl Color::clamp (src/color.rs:24)",
+     "resolution": "unique",
+     "candidates": 1,
+     "receptor": "k.min(4. - k)",
+     "receiver_type": null,
+     "tipo": "sem tipo escrito no grafo",
+     "conhecido": false
+    },
+    {
+     "id": "UQ-24",
+     "ordem": "0e9e429893c91c03f36645bcc349e24a9465c351ce4c9f6a66be74dae9200e4d",
+     "ocorrencia": "src/intersection.rs@1158-1189",
+     "local": "src/intersection.rs:41",
+     "texto": "ray.direction.reflect(normal_v)",
+     "dono": "impl Computations::from",
+     "alvo": "impl Tuple::reflect (src/tuple.rs:33)",
+     "resolution": "unique",
+     "candidates": 1,
+     "receptor": "ray.direction",
+     "receiver_type": null,
+     "tipo": "sem tipo escrito no grafo",
+     "conhecido": false
+    },
+    {
+     "id": "UQ-25",
+     "ordem": "1142627eabf3f4e4c52a7399bdbe81b974c0aea60d04e037a83e4e3f86c51226",
+     "ocorrencia": "src/camera.rs@7484-7532",
+     "local": "src/camera.rs:207",
+     "texto": "camera.benchmark_render(world, warmups, samples)",
+     "dono": "render_external_benchmark",
+     "alvo": "impl Camera::benchmark_render (src/camera.rs:110)",
+     "resolution": "unique",
+     "candidates": 1,
+     "receptor": "camera",
+     "receiver_type": null,
+     "tipo": "sem tipo escrito no grafo",
+     "conhecido": false
+    },
+    {
+     "id": "UQ-26",
+     "ordem": "1417afd88fe0797802db328e7d246016fb646c263c7366d53d7acdba4ee5990e",
+     "ocorrencia": "src/transformations.rs@345-363",
+     "local": "src/transformations.rs:12",
+     "texto": "forward.cross(upn)",
+     "dono": "impl Transform for Tuple::view_transform",
+     "alvo": "impl Tuple::cross (src/tuple.rs:131)",
+     "resolution": "unique",
+     "candidates": 1,
+     "receptor": "forward",
+     "receiver_type": null,
+     "tipo": "sem tipo escrito no grafo",
+     "conhecido": false
+    },
+    {
+     "id": "UQ-27",
+     "ordem": "142d16e7fa44d2091c6b5d418e57e664da0bc572368918d77fccb80a6839473d",
+     "ocorrencia": "src/tuple.rs@1244-1260",
+     "local": "src/tuple.rs:54",
+     "texto": "other.is_point()",
+     "dono": "impl ops::Add for Tuple::add",
+     "alvo": "impl Tuple::is_point (src/tuple.rs:29)",
+     "resolution": "unique",
+     "candidates": 1,
+     "receptor": "other",
+     "receiver_type": {
+      "regra": "parametro",
+      "nomes": [
+       "Tuple (src/tuple.rs:4)"
+      ]
+     },
+     "tipo": "tipo do projeto (parametro), o dono do alvo",
+     "conhecido": false
+    },
+    {
+     "id": "UQ-28",
+     "ordem": "14e3a92c1d8ddb551ab78d9725dc432f98d5babf6467df0ee50e0addcb830afb",
+     "ocorrencia": "src/intersection.rs@719-755",
+     "local": "src/intersection.rs:27",
+     "texto": "intersection.object.normal_at(point)",
+     "dono": "impl Computations::from",
+     "alvo": "Intersectable::normal_at (src/object.rs:35)",
+     "resolution": "unique",
+     "candidates": 1,
+     "receptor": "intersection.object",
+     "receiver_type": null,
+     "tipo": "sem tipo escrito no grafo",
+     "conhecido": false
+    },
+    {
+     "id": "UQ-29",
+     "ordem": "16c0d75f2614877e3f006bf1294daf08dc7093da14c28549e2576bff3b9f951c",
+     "ocorrencia": "src/intersection.rs@624-652",
+     "local": "src/intersection.rs:25",
+     "texto": "ray.position(intersection.t)",
+     "dono": "impl Computations::from",
+     "alvo": "impl Ray::position (src/ray.rs:18)",
+     "resolution": "unique",
+     "candidates": 1,
+     "receptor": "ray",
+     "receiver_type": {
+      "regra": "parametro",
+      "nomes": [
+       "Ray (src/ray.rs:4)"
+      ]
+     },
+     "tipo": "tipo do projeto (parametro), o dono do alvo",
+     "conhecido": false
+    },
+    {
+     "id": "UQ-30",
+     "ordem": "1ae8f7d01c67605dbda1f768d579044eb5b143ebc967dae5026f1ac8d0b928fb",
+     "ocorrencia": "src/object.rs@1394-1418",
+     "local": "src/object.rs:40",
+     "texto": "world_normal.normalize()",
+     "dono": "Intersectable::normal_at",
+     "alvo": "impl Tuple::normalize (src/tuple.rs:123)",
+     "resolution": "unique",
+     "candidates": 1,
+     "receptor": "world_normal",
+     "receiver_type": null,
+     "tipo": "sem tipo escrito no grafo",
+     "conhecido": false
+    }
+   ]
+  }
+ },
+ "studio_original_antes": {
+  "healthchecks-25597e41": {
+   "files": 932,
+   "sha256": "61cd25c106887c553db891d24cee2e76f862891756cb35eed73f62ec0c5ca3d5"
+  },
+  "renderer-9b78f3a9": {
+   "files": 42,
+   "sha256": "612cdbf65e152ea2d3d8c82b86afd206b822c69ad81f9e852a5a9c33308f3ecc"
+  }
+ },
+ "studio_original_depois": {
+  "healthchecks-25597e41": {
+   "files": 932,
+   "sha256": "61cd25c106887c553db891d24cee2e76f862891756cb35eed73f62ec0c5ca3d5"
+  },
+  "renderer-9b78f3a9": {
+   "files": 42,
+   "sha256": "612cdbf65e152ea2d3d8c82b86afd206b822c69ad81f9e852a5a9c33308f3ecc"
+  }
+ },
+ "studio_original_inalterado": true
+}

@@ -1,0 +1,799 @@
+{
+ "descricao": "Estrato sorteado de links unique com receptor para metodo (antes do 2.4e). So medicao; o portao nao le este arquivo (ligar e da Parada 1 do 2.4e ou do 2.4f). Folha: docs/reports/fase-2/estrato-unique-revisao.md",
+ "semente": "estrato-unique-2026-11-25",
+ "script": "tools/precisao/estrato-unique.js",
+ "fontes": "3aeb2fa77adc9ec44716bc113822faa14395b71cb7f7217deb46b4e2b87c4726",
+ "runs": {
+  "hc": "20261125-234413",
+  "rt": "20261125-234657"
+ },
+ "populacao": {
+  "hc": 233,
+  "rt": 94
+ },
+ "chamadas": [
+  {
+   "id": "UQ-1",
+   "projeto": "hc",
+   "estrato": "unique-receptor-metodo",
+   "ocorrencia": "hc/integrations/pagertree/transport.py@1094-1116",
+   "local": "hc/integrations/pagertree/transport.py:29",
+   "texto": "flip.owner.tags_list()",
+   "dono": "PagerTree.notify",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Check.tags_list (hc/api/models.py:413)"
+    ]
+   },
+   "receptor": "flip.owner",
+   "tipo_no_grafo": "sem tipo escrito no grafo",
+   "conhecido": false,
+   "verdade": {
+    "alvo": "Check.tags_list (hc/api/models.py:413)"
+   },
+   "classe": "correta",
+   "certeza": "alta",
+   "justificativa": "= HC-26, validada (18/11). `flip: Flip` (`pagertree/transport.py:10`); `Flip.owner = ForeignKey(Check)` (`hc/api/models.py:1362`); nenhuma subclasse de `Check` no projeto",
+   "verdade_validada_por": "usuário (igual à verdade já validada da HC-26)",
+   "na_amostra_do_portao": "HC-26"
+  },
+  {
+   "id": "UQ-2",
+   "projeto": "hc",
+   "estrato": "unique-receptor-metodo",
+   "ocorrencia": "hc/integrations/spike/views.py@891-918",
+   "local": "hc/integrations/spike/views.py:28",
+   "texto": "channel.assign_all_checks()",
+   "dono": "add_spike",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Channel.assign_all_checks (hc/api/models.py:1067)"
+    ]
+   },
+   "receptor": "channel",
+   "tipo_no_grafo": "tipo do projeto (construtor), o dono do alvo",
+   "conhecido": false,
+   "verdade": {
+    "alvo": "Channel.assign_all_checks (hc/api/models.py:1067)"
+   },
+   "classe": "correta",
+   "certeza": "alta",
+   "justificativa": "`channel = Channel(project=project, kind=\"spike\")` (`spike/views.py:24`); nenhuma subclasse de `Channel`",
+   "verdade_validada_por": "usuário (25/11/2026, pela justificativa da folha)"
+  },
+  {
+   "id": "UQ-3",
+   "projeto": "hc",
+   "estrato": "unique-receptor-metodo",
+   "ocorrencia": "hc/integrations/signal/transport.py@2647-2666",
+   "local": "hc/integrations/signal/transport.py:91",
+   "texto": "reply.get_results()",
+   "dono": "Signal.send",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Signal.Reply.get_results (hc/integrations/signal/transport.py:48)"
+    ]
+   },
+   "receptor": "reply",
+   "tipo_no_grafo": "tipo escrito que não nomeia declaração do projeto (construtor)",
+   "conhecido": false,
+   "verdade": {
+    "alvo": "Signal.Reply.get_results (hc/integrations/signal/transport.py:48)"
+   },
+   "classe": "correta",
+   "certeza": "média",
+   "justificativa": "`reply = Signal.Reply.model_validate_json(reply_bytes)` (`signal/transport.py:80`); `Signal.Reply(BaseModel)` (`:44`). `model_validate_json` é o método de classe do pydantic que devolve uma instância da classe: semântica de fora do projeto. É a mesma leitura da HC-143 (`ZulipConf.model_validate_json`, `hc/api/models.py:1315`), validada. `get_results` só é declarado aqui no projeto",
+   "verdade_validada_por": "usuário (25/11/2026, conferida no editor)"
+  },
+  {
+   "id": "UQ-4",
+   "projeto": "hc",
+   "estrato": "unique-receptor-metodo",
+   "ocorrencia": "hc/lib/curl.py@4405-4433",
+   "local": "hc/lib/curl.py:139",
+   "texto": "c.setopt(pycurl.NOSIGNAL, 1)",
+   "dono": "request",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "FakeCurl.setopt (hc/lib/tests/test_curl.py:18)"
+    ]
+   },
+   "receptor": "c",
+   "tipo_no_grafo": "tipo escrito que não nomeia declaração do projeto (construtor)",
+   "conhecido": false,
+   "verdade": {
+    "externo": "pycurl: Curl.setopt"
+   },
+   "classe": "link_falso",
+   "certeza": "alta",
+   "justificativa": "`c = pycurl.Curl()` (`hc/lib/curl.py:138`); `FakeCurl` é o dublê que só os testes injetam. Mesma leitura da HC-27 (`c.getinfo`, mesma função), validada: dublê de teste não é alvo de código de produção (DEC-33). Não está entre os 18 conhecidos",
+   "verdade_validada_por": "usuário (25/11/2026, conferida no editor)"
+  },
+  {
+   "id": "UQ-5",
+   "projeto": "hc",
+   "estrato": "unique-receptor-metodo",
+   "ocorrencia": "hc/front/views.py@2850-2867",
+   "local": "hc/front/views.py:88",
+   "texto": "check.tags_list()",
+   "dono": "_tags_counts",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Check.tags_list (hc/api/models.py:413)"
+    ]
+   },
+   "receptor": "check",
+   "tipo_no_grafo": "sem tipo escrito no grafo",
+   "conhecido": false,
+   "verdade": {
+    "alvo": "Check.tags_list (hc/api/models.py:413)"
+   },
+   "classe": "correta",
+   "certeza": "alta",
+   "justificativa": "`checks: Iterable[Check]` (`hc/front/views.py:77`), `for check in checks` (`:82`)",
+   "verdade_validada_por": "usuário (25/11/2026, pela justificativa da folha)"
+  },
+  {
+   "id": "UQ-6",
+   "projeto": "hc",
+   "estrato": "unique-receptor-metodo",
+   "ocorrencia": "hc/integrations/whatsapp/transport.py@1896-1919",
+   "local": "hc/integrations/whatsapp/transport.py:59",
+   "texto": "profile.authorize_sms()",
+   "dono": "WhatsApp.notify",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Profile.authorize_sms (hc/accounts/models.py:310)"
+    ]
+   },
+   "receptor": "profile",
+   "tipo_no_grafo": "sem tipo escrito no grafo",
+   "conhecido": false,
+   "verdade": {
+    "alvo": "Profile.authorize_sms (hc/accounts/models.py:310)"
+   },
+   "classe": "correta",
+   "certeza": "alta",
+   "justificativa": "`profile = self.channel.project.owner_profile` (`whatsapp/transport.py:58`); `Transport.__init__(self, channel: Channel)` (`hc/api/transports.py:63-64`); `Channel.project = ForeignKey(Project)` (`hc/api/models.py:1021`); `@property owner_profile -> Profile` (`hc/accounts/models.py:467-468`); `WhatsApp(HttpTransport)` (`whatsapp/transport.py:17`) não redefine `__init__` nem `channel`",
+   "verdade_validada_por": "usuário (25/11/2026, conferida pela sessão com trechos do código e validada pelo usuário)"
+  },
+  {
+   "id": "UQ-7",
+   "projeto": "hc",
+   "estrato": "unique-receptor-metodo",
+   "ocorrencia": "hc/integrations/matrix/views.py@1202-1229",
+   "local": "hc/integrations/matrix/views.py:35",
+   "texto": "channel.assign_all_checks()",
+   "dono": "add",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Channel.assign_all_checks (hc/api/models.py:1067)"
+    ]
+   },
+   "receptor": "channel",
+   "tipo_no_grafo": "tipo do projeto (construtor), o dono do alvo",
+   "conhecido": false,
+   "verdade": {
+    "alvo": "Channel.assign_all_checks (hc/api/models.py:1067)"
+   },
+   "classe": "correta",
+   "certeza": "alta",
+   "justificativa": "`channel = Channel(project=project, kind=\"matrix\")` (`matrix/views.py:25`)",
+   "verdade_validada_por": "usuário (25/11/2026, pela justificativa da folha)"
+  },
+  {
+   "id": "UQ-8",
+   "projeto": "hc",
+   "estrato": "unique-receptor-metodo",
+   "ocorrencia": "hc/integrations/webhook/transport.py@2534-2576",
+   "local": "hc/integrations/webhook/transport.py:73",
+   "texto": "self.channel.webhook_spec(flip.new_status)",
+   "dono": "Webhook.notify",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Channel.webhook_spec (hc/api/models.py:1203)"
+    ]
+   },
+   "receptor": "self.channel",
+   "tipo_no_grafo": "sem tipo escrito no grafo",
+   "conhecido": false,
+   "verdade": {
+    "alvo": "Channel.webhook_spec (hc/api/models.py:1203)"
+   },
+   "classe": "correta",
+   "certeza": "alta",
+   "justificativa": "`Webhook(HttpTransport)` (`webhook/transport.py:13`), `HttpTransport(Transport)` (`hc/api/transports.py:132`), `self.channel = channel` com `channel: Channel` no `Transport.__init__` (`:63-64`); nem `Webhook` nem `HttpTransport` redefinem `__init__`",
+   "verdade_validada_por": "usuário (25/11/2026, pela justificativa da folha)"
+  },
+  {
+   "id": "UQ-9",
+   "projeto": "hc",
+   "estrato": "unique-receptor-metodo",
+   "ocorrencia": "hc/accounts/views.py@5785-5826",
+   "local": "hc/accounts/views.py:180",
+   "texto": "Profile.objects.for_user(magic_form.user)",
+   "dono": "login",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "ProfileManager.for_user (hc/accounts/models.py:62)"
+    ]
+   },
+   "receptor": "Profile.objects",
+   "tipo_no_grafo": "sem tipo escrito no grafo",
+   "conhecido": false,
+   "verdade": {
+    "alvo": "ProfileManager.for_user (hc/accounts/models.py:62)"
+   },
+   "classe": "correta",
+   "certeza": "alta",
+   "justificativa": "`objects = ProfileManager()` (`hc/accounts/models.py:115`); o gerenciador que o Django entrega por `Profile.objects` é desta classe (`ProfileManager(models.Manager[\"Profile\"])`, `:61`)",
+   "verdade_validada_por": "usuário (25/11/2026, pela justificativa da folha)"
+  },
+  {
+   "id": "UQ-10",
+   "projeto": "hc",
+   "estrato": "unique-receptor-metodo",
+   "ocorrencia": "hc/integrations/pd/transport.py@1072-1089",
+   "local": "hc/integrations/pd/transport.py:32",
+   "texto": "check.tags_list()",
+   "dono": "PagerDuty.notify",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Check.tags_list (hc/api/models.py:413)"
+    ]
+   },
+   "receptor": "check",
+   "tipo_no_grafo": "sem tipo escrito no grafo",
+   "conhecido": false,
+   "verdade": {
+    "alvo": "Check.tags_list (hc/api/models.py:413)"
+   },
+   "classe": "correta",
+   "certeza": "alta",
+   "justificativa": "`check = flip.owner` (`pd/transport.py:18`), `flip: Flip` (`:14`), `Flip.owner = ForeignKey(Check)` (`hc/api/models.py:1362`)",
+   "verdade_validada_por": "usuário (25/11/2026, pela justificativa da folha)"
+  },
+  {
+   "id": "UQ-11",
+   "projeto": "hc",
+   "estrato": "unique-receptor-metodo",
+   "ocorrencia": "hc/front/views.py@29679-29727",
+   "local": "hc/front/views.py:867",
+   "texto": "check.create_flip(\"new\", mark_as_processed=True)",
+   "dono": "resume",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Check.create_flip (hc/api/models.py:652)"
+    ]
+   },
+   "receptor": "check",
+   "tipo_no_grafo": "tipo escrito que não nomeia declaração do projeto (construtor)",
+   "conhecido": false,
+   "verdade": {
+    "alvo": "Check.create_flip (hc/api/models.py:652)"
+   },
+   "classe": "correta",
+   "certeza": "alta",
+   "justificativa": "`check = _get_rw_check_for_user(request, code)` (`hc/front/views.py:863`), `-> Check` (`:140`)",
+   "verdade_validada_por": "usuário (25/11/2026, pela justificativa da folha)"
+  },
+  {
+   "id": "UQ-12",
+   "projeto": "hc",
+   "estrato": "unique-receptor-metodo",
+   "ocorrencia": "hc/front/views.py@12002-12036",
+   "local": "hc/front/views.py:371",
+   "texto": "profile.checks_from_all_projects()",
+   "dono": "_get_project_summary",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Profile.checks_from_all_projects (hc/accounts/models.py:207)"
+    ]
+   },
+   "receptor": "profile",
+   "tipo_no_grafo": "tipo do projeto (parametro), o dono do alvo",
+   "conhecido": false,
+   "verdade": {
+    "alvo": "Profile.checks_from_all_projects (hc/accounts/models.py:207)"
+   },
+   "classe": "correta",
+   "certeza": "alta",
+   "justificativa": "`def _get_project_summary(profile: Profile)` (`hc/front/views.py:367`)",
+   "verdade_validada_por": "usuário (25/11/2026, pela justificativa da folha)"
+  },
+  {
+   "id": "UQ-13",
+   "projeto": "hc",
+   "estrato": "unique-receptor-metodo",
+   "ocorrencia": "hc/integrations/zulip/transport.py@1527-1560",
+   "local": "hc/integrations/zulip/transport.py:48",
+   "texto": "self.channel.zulip.formatted_to()",
+   "dono": "Zulip.notify",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "ZulipConf.formatted_to (hc/api/models.py:958)"
+    ]
+   },
+   "receptor": "self.channel.zulip",
+   "tipo_no_grafo": "sem tipo escrito no grafo",
+   "conhecido": false,
+   "verdade": {
+    "alvo": "ZulipConf.formatted_to (hc/api/models.py:958)"
+   },
+   "classe": "correta",
+   "certeza": "alta",
+   "justificativa": "= HC-143, validada (25/11). `@property zulip -> ZulipConf` (`hc/api/models.py:1313-1315`)",
+   "verdade_validada_por": "usuário (igual à verdade já validada da HC-143)",
+   "na_amostra_do_portao": "HC-143"
+  },
+  {
+   "id": "UQ-14",
+   "projeto": "hc",
+   "estrato": "unique-receptor-metodo",
+   "ocorrencia": "hc/integrations/email/views.py@3829-3849",
+   "local": "hc/integrations/email/views.py:108",
+   "texto": "channel.make_token()",
+   "dono": "unsubscribe",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Channel.make_token (hc/api/models.py:1071)"
+    ]
+   },
+   "receptor": "channel",
+   "tipo_no_grafo": "tipo escrito que não nomeia declaração do projeto (construtor)",
+   "conhecido": false,
+   "verdade": {
+    "alvo": "Channel.make_token (hc/api/models.py:1071)"
+   },
+   "classe": "correta",
+   "certeza": "alta",
+   "justificativa": "`channel = get_object_or_404(Channel, code=code, kind=\"email\")` (`email/views.py:107`): o Django devolve uma instância do modelo passado",
+   "verdade_validada_por": "usuário (25/11/2026, pela justificativa da folha)"
+  },
+  {
+   "id": "UQ-15",
+   "projeto": "hc",
+   "estrato": "unique-receptor-metodo",
+   "ocorrencia": "hc/api/views.py@13150-13161",
+   "local": "hc/api/views.py:371",
+   "texto": "spec.kind()",
+   "dono": "_update",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Spec.kind (hc/api/views.py:134)"
+    ]
+   },
+   "receptor": "spec",
+   "tipo_no_grafo": "tipo do projeto (parametro), o dono do alvo",
+   "conhecido": false,
+   "verdade": {
+    "alvo": "Spec.kind (hc/api/views.py:134)"
+   },
+   "classe": "correta",
+   "certeza": "alta",
+   "justificativa": "`def _update(check: Check, spec: Spec, v: int)` (`hc/api/views.py:332`); `class Spec(BaseModel)` (`:61`), sem subclasse",
+   "verdade_validada_por": "usuário (25/11/2026, pela justificativa da folha)"
+  },
+  {
+   "id": "UQ-16",
+   "projeto": "rt",
+   "estrato": "unique-receptor-metodo",
+   "ocorrencia": "src/triangle.rs@1797-1824",
+   "local": "src/triangle.rs:56",
+   "texto": "p1_to_origin.cross(self.e1)",
+   "dono": "impl Intersectable for Triangle::local_intersect",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "impl Tuple::cross (src/tuple.rs:131)"
+    ]
+   },
+   "receptor": "p1_to_origin",
+   "tipo_no_grafo": "sem tipo escrito no grafo",
+   "conhecido": false,
+   "verdade": {
+    "alvo": "impl Tuple::cross (src/tuple.rs:131)"
+   },
+   "classe": "correta",
+   "certeza": "alta",
+   "justificativa": "`let p1_to_origin = local_ray.origin - self.p1;` (`src/triangle.rs:49`); `local_ray: Ray` (`:38`), `Ray.origin: Tuple` (`src/ray.rs:6`), `Triangle.p1: Tuple` (`src/triangle.rs:11`), `impl ops::Sub for Tuple` com `Output = Self` (`src/tuple.rs:66-67`)",
+   "verdade_validada_por": "usuário (25/11/2026, pela justificativa da folha)"
+  },
+  {
+   "id": "UQ-17",
+   "projeto": "rt",
+   "estrato": "unique-receptor-metodo",
+   "ocorrencia": "src/object.rs@5613-5642",
+   "local": "src/object.rs:161",
+   "texto": "bounds.add_point(triangle.p1)",
+   "dono": "impl Intersectable for Object::bounds",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "impl Bounds::add_point (src/bounds.rs:23)"
+    ]
+   },
+   "receptor": "bounds",
+   "tipo_no_grafo": "tipo do projeto (caminho), o dono do alvo",
+   "conhecido": false,
+   "verdade": {
+    "alvo": "impl Bounds::add_point (src/bounds.rs:23)"
+   },
+   "classe": "correta",
+   "certeza": "alta",
+   "justificativa": "= RT-13, validada (18/11). `let mut bounds = Bounds::empty();` (`src/object.rs:160`)",
+   "verdade_validada_por": "usuário (igual à verdade já validada da RT-13)",
+   "na_amostra_do_portao": "RT-13"
+  },
+  {
+   "id": "UQ-18",
+   "projeto": "rt",
+   "estrato": "unique-receptor-metodo",
+   "ocorrencia": "src/bin/cena_video.rs@4615-4642",
+   "local": "src/bin/cena_video.rs:109",
+   "texto": "sorteio.between(0.15, 0.32)",
+   "dono": "main",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "impl Sorteio::between (src/bin/cena_video.rs:33)"
+    ]
+   },
+   "receptor": "sorteio",
+   "tipo_no_grafo": "sem tipo escrito no grafo",
+   "conhecido": false,
+   "verdade": {
+    "alvo": "impl Sorteio::between (src/bin/cena_video.rs:33)"
+   },
+   "classe": "correta",
+   "certeza": "alta",
+   "justificativa": "`let mut sorteio = Sorteio(2026);` (`src/bin/cena_video.rs:104`), struct de tupla (`:26`)",
+   "verdade_validada_por": "usuário (25/11/2026, pela justificativa da folha)"
+  },
+  {
+   "id": "UQ-19",
+   "projeto": "rt",
+   "estrato": "unique-receptor-metodo",
+   "ocorrencia": "src/camera.rs@4218-4231",
+   "local": "src/camera.rs:129",
+   "texto": "ordered.len()",
+   "dono": "impl Camera::benchmark_render",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "impl Groups::len (src/groups.rs:60)"
+    ]
+   },
+   "receptor": "ordered",
+   "tipo_no_grafo": "sem tipo escrito no grafo",
+   "conhecido": true,
+   "verdade": {
+    "externo": "std: Vec::len"
+   },
+   "classe": "link_falso",
+   "certeza": "alta",
+   "justificativa": "Um dos 18 conhecidos (PLANO, 2.4d). `let mut timings = Vec::with_capacity(samples);` (`src/camera.rs:111`), `timings.push(start.elapsed().as_nanos())` (`:121`), `let mut ordered = timings.clone();` (`:125`): `Vec<u128>`",
+   "verdade_validada_por": "usuário (25/11/2026, conferida no editor)"
+  },
+  {
+   "id": "UQ-20",
+   "projeto": "rt",
+   "estrato": "unique-receptor-metodo",
+   "ocorrencia": "src/obj.rs@5781-5804",
+   "local": "src/obj.rs:143",
+   "texto": "right.bounds().center()",
+   "dono": "build_bvh",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "impl Bounds::center (src/bounds.rs:39)"
+    ]
+   },
+   "receptor": "right.bounds()",
+   "tipo_no_grafo": "sem tipo escrito no grafo",
+   "conhecido": false,
+   "verdade": {
+    "alvo": "impl Bounds::center (src/bounds.rs:39)"
+   },
+   "classe": "correta",
+   "certeza": "alta",
+   "justificativa": "`fn build_bvh(mut objects: Vec<Object>)` (`src/obj.rs:123`), `objects.sort_by(|left, right| ..)` (`:141`): `right: &Object`; `Object::bounds(&self) -> Bounds` (`src/object.rs:157`)",
+   "verdade_validada_por": "usuário (25/11/2026, pela justificativa da folha)"
+  },
+  {
+   "id": "UQ-21",
+   "projeto": "rt",
+   "estrato": "unique-receptor-metodo",
+   "ocorrencia": "src/camera.rs@1583-1602",
+   "local": "src/camera.rs:55",
+   "texto": "transform.inverse()",
+   "dono": "impl Camera::new",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "impl Matrix<4>::inverse (src/matrix.rs:193)"
+    ]
+   },
+   "receptor": "transform",
+   "tipo_no_grafo": "tipo do projeto (caminho), o dono do alvo",
+   "conhecido": false,
+   "verdade": {
+    "alvo": "impl Matrix<4>::inverse (src/matrix.rs:193)"
+   },
+   "classe": "correta",
+   "certeza": "alta",
+   "justificativa": "`let transform = Matrix::identity();` (`src/camera.rs:54`); `identity` só existe em `impl Matrix<4>` (`src/matrix.rs:70-71`)",
+   "verdade_validada_por": "usuário (25/11/2026, pela justificativa da folha)"
+  },
+  {
+   "id": "UQ-22",
+   "projeto": "rt",
+   "estrato": "unique-receptor-metodo",
+   "ocorrencia": "src/bin/cena_video.rs@4661-4687",
+   "local": "src/bin/cena_video.rs:110",
+   "texto": "sorteio.between(-1.8, 2.5)",
+   "dono": "main",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "impl Sorteio::between (src/bin/cena_video.rs:33)"
+    ]
+   },
+   "receptor": "sorteio",
+   "tipo_no_grafo": "sem tipo escrito no grafo",
+   "conhecido": false,
+   "verdade": {
+    "alvo": "impl Sorteio::between (src/bin/cena_video.rs:33)"
+   },
+   "classe": "correta",
+   "certeza": "alta",
+   "justificativa": "Como UQ-18 (`src/bin/cena_video.rs:104`)",
+   "verdade_validada_por": "usuário (25/11/2026, pela justificativa da folha)"
+  },
+  {
+   "id": "UQ-23",
+   "projeto": "rt",
+   "estrato": "unique-receptor-metodo",
+   "ocorrencia": "src/bin/cena_video.rs@1517-1544",
+   "local": "src/bin/cena_video.rs:42",
+   "texto": "k.min(4. - k).clamp(0., 1.)",
+   "dono": "hue",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "impl Color::clamp (src/color.rs:24)"
+    ]
+   },
+   "receptor": "k.min(4. - k)",
+   "tipo_no_grafo": "sem tipo escrito no grafo",
+   "conhecido": false,
+   "verdade": {
+    "externo": "std: f64::clamp"
+   },
+   "classe": "link_falso",
+   "certeza": "alta",
+   "justificativa": "`fn hue(h: f64)` (`src/bin/cena_video.rs:39`), `|offset: f64|` (`:40`), `let k = (h * 6. + offset) % 6.;` (`:41`): `k` é `f64`, `f64::min` devolve `f64`, e `.clamp(0., 1.)` é o `f64::clamp` da biblioteca padrão. `Color::clamp` é de `Color` (`src/color.rs:24`). Não está entre os 18 conhecidos",
+   "verdade_validada_por": "usuário (25/11/2026, conferida no editor)"
+  },
+  {
+   "id": "UQ-24",
+   "projeto": "rt",
+   "estrato": "unique-receptor-metodo",
+   "ocorrencia": "src/intersection.rs@1158-1189",
+   "local": "src/intersection.rs:41",
+   "texto": "ray.direction.reflect(normal_v)",
+   "dono": "impl Computations::from",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "impl Tuple::reflect (src/tuple.rs:33)"
+    ]
+   },
+   "receptor": "ray.direction",
+   "tipo_no_grafo": "sem tipo escrito no grafo",
+   "conhecido": false,
+   "verdade": {
+    "alvo": "impl Tuple::reflect (src/tuple.rs:33)"
+   },
+   "classe": "correta",
+   "certeza": "alta",
+   "justificativa": "`fn from(intersection: Intersection, ray: Ray)` (`src/intersection.rs:22`), `Ray.direction: Tuple` (`src/ray.rs:7`)",
+   "verdade_validada_por": "usuário (25/11/2026, pela justificativa da folha)"
+  },
+  {
+   "id": "UQ-25",
+   "projeto": "rt",
+   "estrato": "unique-receptor-metodo",
+   "ocorrencia": "src/camera.rs@7484-7532",
+   "local": "src/camera.rs:207",
+   "texto": "camera.benchmark_render(world, warmups, samples)",
+   "dono": "render_external_benchmark",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "impl Camera::benchmark_render (src/camera.rs:110)"
+    ]
+   },
+   "receptor": "camera",
+   "tipo_no_grafo": "sem tipo escrito no grafo",
+   "conhecido": false,
+   "verdade": {
+    "alvo": "impl Camera::benchmark_render (src/camera.rs:110)"
+   },
+   "classe": "correta",
+   "certeza": "alta",
+   "justificativa": "`let (camera, world) = external_benchmark_scene(width, height);` (`src/camera.rs:206`), `-> (Camera, World)` (`:162`)",
+   "verdade_validada_por": "usuário (25/11/2026, pela justificativa da folha)"
+  },
+  {
+   "id": "UQ-26",
+   "projeto": "rt",
+   "estrato": "unique-receptor-metodo",
+   "ocorrencia": "src/transformations.rs@345-363",
+   "local": "src/transformations.rs:12",
+   "texto": "forward.cross(upn)",
+   "dono": "impl Transform for Tuple::view_transform",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "impl Tuple::cross (src/tuple.rs:131)"
+    ]
+   },
+   "receptor": "forward",
+   "tipo_no_grafo": "sem tipo escrito no grafo",
+   "conhecido": false,
+   "verdade": {
+    "alvo": "impl Tuple::cross (src/tuple.rs:131)"
+   },
+   "classe": "correta",
+   "certeza": "alta",
+   "justificativa": "`impl Transform for Tuple` (`src/transformations.rs:8`), `fn view_transform(self, to: Tuple, ..)` (`:9`), `let forward = (to - self).normalize();` (`:10`); `Sub` dá `Tuple` (`src/tuple.rs:66-67`), `normalize(&self) -> Self` (`:123`)",
+   "verdade_validada_por": "usuário (25/11/2026, pela justificativa da folha)"
+  },
+  {
+   "id": "UQ-27",
+   "projeto": "rt",
+   "estrato": "unique-receptor-metodo",
+   "ocorrencia": "src/tuple.rs@1244-1260",
+   "local": "src/tuple.rs:54",
+   "texto": "other.is_point()",
+   "dono": "impl ops::Add for Tuple::add",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "impl Tuple::is_point (src/tuple.rs:29)"
+    ]
+   },
+   "receptor": "other",
+   "tipo_no_grafo": "tipo do projeto (parametro), o dono do alvo",
+   "conhecido": false,
+   "verdade": {
+    "alvo": "impl Tuple::is_point (src/tuple.rs:29)"
+   },
+   "classe": "correta",
+   "certeza": "alta",
+   "justificativa": "`impl ops::Add for Tuple` (`src/tuple.rs:50`), `fn add(self, other: Self)` (`:53`)",
+   "verdade_validada_por": "usuário (25/11/2026, pela justificativa da folha)"
+  },
+  {
+   "id": "UQ-28",
+   "projeto": "rt",
+   "estrato": "unique-receptor-metodo",
+   "ocorrencia": "src/intersection.rs@719-755",
+   "local": "src/intersection.rs:27",
+   "texto": "intersection.object.normal_at(point)",
+   "dono": "impl Computations::from",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "Intersectable::normal_at (src/object.rs:35)"
+    ]
+   },
+   "receptor": "intersection.object",
+   "tipo_no_grafo": "sem tipo escrito no grafo",
+   "conhecido": false,
+   "verdade": {
+    "alvo": "Intersectable::normal_at (src/object.rs:35)"
+   },
+   "classe": "correta",
+   "certeza": "alta",
+   "justificativa": "`Intersection.object: Object` (`src/intersection.rs:68`); `impl Intersectable for Object` (`src/object.rs:90`) não define `normal_at`, e nenhum outro `impl` o define (só `src/object.rs:35`), nem há `impl Object { .. }` solto: roda o método padrão do trait",
+   "verdade_validada_por": "usuário (25/11/2026, conferida pela sessão com trechos do código e validada pelo usuário)"
+  },
+  {
+   "id": "UQ-29",
+   "projeto": "rt",
+   "estrato": "unique-receptor-metodo",
+   "ocorrencia": "src/intersection.rs@624-652",
+   "local": "src/intersection.rs:25",
+   "texto": "ray.position(intersection.t)",
+   "dono": "impl Computations::from",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "impl Ray::position (src/ray.rs:18)"
+    ]
+   },
+   "receptor": "ray",
+   "tipo_no_grafo": "tipo do projeto (parametro), o dono do alvo",
+   "conhecido": false,
+   "verdade": {
+    "alvo": "impl Ray::position (src/ray.rs:18)"
+   },
+   "classe": "correta",
+   "certeza": "alta",
+   "justificativa": "`ray: Ray` (`src/intersection.rs:22`)",
+   "verdade_validada_por": "usuário (25/11/2026, pela justificativa da folha)"
+  },
+  {
+   "id": "UQ-30",
+   "projeto": "rt",
+   "estrato": "unique-receptor-metodo",
+   "ocorrencia": "src/object.rs@1394-1418",
+   "local": "src/object.rs:40",
+   "texto": "world_normal.normalize()",
+   "dono": "Intersectable::normal_at",
+   "linha_de_base": {
+    "resolution": "unique",
+    "candidates": 1,
+    "alvos": [
+     "impl Tuple::normalize (src/tuple.rs:123)"
+    ]
+   },
+   "receptor": "world_normal",
+   "tipo_no_grafo": "sem tipo escrito no grafo",
+   "conhecido": false,
+   "verdade": {
+    "alvo": "impl Tuple::normalize (src/tuple.rs:123)"
+   },
+   "classe": "correta",
+   "certeza": "alta",
+   "justificativa": "`let mut world_normal = self.transform().inverse().transpose() * local_normal;` (`src/object.rs:38`); `fn transform(&self) -> Matrix<4>` (`:18`); `inverse` e `transpose` devolvem `Self` (`src/matrix.rs:193`, `:81`); `impl ops::Mul<Tuple> for Matrix<4>` com `Output = Tuple` (`:276-277`)",
+   "verdade_validada_por": "usuário (25/11/2026, conferida pela sessão com trechos do código e validada pelo usuário)"
+  }
+ ]
+}

@@ -239,10 +239,31 @@ corretas, lacunas explícitas e fatos aguardando aprovação humana.
   - **Propor como o gabarito entra no portão de cada passo (usuário,
     25/11/2026):** as discordâncias com pyright e rust-analyzer, em todas as
     chamadas, não podem subir; sem entrar no grafo.
-  - **Antes dele (usuário, 25/11/2026):** um estrato sorteado de 30 links
-    `unique` com receptor (15 Python, 15 Rust), com a verdade proposta para o
-    usuário validar, para uma primeira estimativa da taxa de link falso
-    (pendência no ESTADO-ATUAL).
+  - **Antes dele (usuário, 25/11/2026): feito.** O estrato sorteado de 30
+    links `unique` com receptor (UQ-1 a UQ-30; semente
+    `estrato-unique-2026-11-25`; verdade validada pelo usuário em 25/11/2026;
+    folha [estrato-unique-revisao.md](docs/reports/fase-2/estrato-unique-revisao.md)):
+    Python 1 de 15 `link_falso` (6,7%, IC 95% 0,2% a 31,9%), Rust 2 de 15
+    (13,3%, 1,7% a 40,5%). Piso contado: Python pelo menos 21 de 233,
+    verificado; Rust pelo menos 11 de 94. Decidido com ele (usuário,
+    25/11/2026), para este passo:
+    - **As duas contagens:** 233 (Python) e 94 (Rust) pela definição do
+      portão (fora de testes, sem `self.m()`, alvo método); 655 e 245 com
+      testes e `self.m()` (o `lista.js` do 2.4d, todas as chamadas).
+    - **Duas famílias a medir:** o dublê de teste ligado por código de
+      produção (17 links de `FakeCurl` em `hc/lib/curl.py`, com a HC-27) e o
+      método da biblioteca padrão do Rust com nome de método do projeto
+      (`len`, `next` e `clamp`, este pela UQ-23, `f64::clamp` →
+      `Color::clamp`).
+    - **Comparar:** medir a taxa nesta mesma população (233 e 94) e comparar
+      com a do estrato.
+    - **A conferir (não são links falsos conhecidos):** os dois `pixel.clamp`
+      de `src/canvas.rs:50` e `:97`, e os nomes `first`, `last` e `get`
+      chamados sobre `Vec` (ex.: `src/camera.rs`, em `benchmark_render`), se
+      algum tiver homônimo no projeto.
+    - **Portão:** a fixture `tools/precisao/fixtures/estrato-unique.json`
+      existe, e o portão não a lê. Ligá-la (só medir, tabela à parte, com
+      prova de veredito igual) é da Parada 1 deste passo ou do 2.4f.
   - Duas lacunas do Rust, achadas na amostra do 2.4d: o tipo do elemento de um
     array (PH-27: `self.data[1][1].equivalent(..)` sai possível, mas sempre
     roda o de `f64`) e o despacho pelo método padrão de uma trait (PH-34: o
@@ -260,6 +281,11 @@ corretas, lacunas explícitas e fatos aguardando aprovação humana.
     conhecidos;
   - (c) rebaixar sempre que o tipo é desconhecido, o que derruba corretas e
     exigiria exceção da DEC-34.
+  - Registrado sem decidir (usuário, 25/11/2026, estrato UQ): uma opção (d),
+    não ligar uma chamada de produção a um método declarado em arquivo de
+    teste (fecharia os 17 de `FakeCurl`), que só pode ser escolhida com a
+    contagem de quantas corretas ela derruba; e `clamp` na lista de nomes da
+    opção (b).
 - 2.5 PIL-G5/N7: relação "passa referência", nunca "chama".
 - 2.6 Genéricos (N6), por último (ch.notify: 33 → 1).
 - Portão de cada passo: `node tools/precisao/portao.js --studio .studio
