@@ -1,8 +1,8 @@
 # Mapeamento do repositório — parte 3: como uma chamada vira ligação
 
-**Estado:** pendente de validação do usuário. Feita só a Parada 1 (A a D); a Parada 2 (E a I) não começou. Em aberto: MAP-Q9, MAP-Q10.
+**Estado:** Pendente de validação do usuário: Paradas 1 e 2 (A a H). O gabarito do 2.4e (a antiga parte I) passou para a parte 4, [04-gabarito-2.4e.md](04-gabarito-2.4e.md), na Parada 3. Em aberto: MAP-Q9, MAP-Q10, MAP-Q11.
 
-**Data:** 26/11/2026. **Base:** `main` em `6ac1865`. Worktree: só os relatórios do mapeamento, não rastreados. **Só leitura**: nenhum código, documento, `.studio`, Healthchecks ou ray tracer foi alterado. A `.studio/` continua vazia (MAP-O1; `ls -la .studio` lista só `.` e `..`) e não foi tocada. O portão não foi rodado, nem nenhum binário que grava.
+**Data:** 26/11/2026. **Base:** `main` em `6ac1865` (Parada 1) e `be7d546` (Parada 2). Worktree: só os relatórios do mapeamento, não rastreados. **Só leitura**: nenhum código, documento, `.studio`, Healthchecks ou ray tracer foi alterado. A `.studio/` continua vazia (MAP-O1; `ls -la .studio` lista só `.` e `..`) e não foi tocada. O portão não foi rodado, nem nenhum binário que grava.
 
 **Escopo.** Da chamada crua que o extrator registra até a ligação que `/api/calls` e `/api/used-by` devolvem. O léxico, a pergunta, o envelope, o evidence e o resto do studio ficam fora; deles, só se cita onde leem as ligações. Ids novos continuam a numeração das partes [1](01-mapa-geral.md) e [2](02-core-graph-engine.md): `MAP-O16` em diante e `MAP-Q9` em diante.
 
@@ -99,19 +99,19 @@ Também vem do perfil o receptor próprio de cada linguagem: `self` nas duas (`r
 - **Seguir ou parar** (`v2.rs:567`): o caminho segue `runs` numa instanciação, nunca segue `decorates`, e segue o alvo de toda `resolution` diferente de `homonym`.
 - **2.4d:** `UseIndex` inverte o mesmo `answer` (`uses.rs:181`), e não uma regra própria.
 
-**O 2.4e não mexeu na regra** (verificado): `git show --stat aead3eb` só toca `tools/precisao/gabarito/` (11 arquivos), e o último commit em `resolve.rs` é o `665ff5b` do 2.4d (`git log -- crates/librarian-ingest/src/resolve.rs`). O gabarito do 2.4e é a parte I, na Parada 2.
+**O 2.4e não mexeu na regra** (verificado): `git show --stat aead3eb` só toca `tools/precisao/gabarito/` (11 arquivos), e o último commit em `resolve.rs` é o `665ff5b` do 2.4d (`git log -- crates/librarian-ingest/src/resolve.rs`). O gabarito do 2.4e fica para a parte 4 (Parada 3).
 
 **O que cada passo acrescentou, pelos testes.** Primeira linha de cada arquivo (diz ser) e nomes dos testes, por `grep -nE '^\s*fn [a-z0-9_]+\(\)'`:
 
 | Passo | Arquivo de teste | O que os nomes fixam |
 |---|---|---|
-| P1b | `tests/calls.rs` (3 testes) | seguir só quando o nome aponta para uma declaração; busca sem testes |
+| P1b | `tests/calls.rs` (2 testes; *correção da Parada 2:* dizia 3, mas o `#[test]` de `calls.rs:50` está dentro do texto de uma fixture, e a execução da seção H roda 2) | seguir só quando o nome aponta para uma declaração; busca sem testes |
 | 2.1 | `tests/resolve.rs` (11) | uma resolução por teste: `unique`, `receiver` só em `self.m()`, `type`, `type` acima do teto, `trait_default`, `trait`, `homonym`, `chosen` antes de tudo. Também: `calls_from` reporta um alvo e mantém vários como homônimos; `type` é seguido e `homonym` não; o dono só usa as ligações decididas |
 | 2.2 | `tests/resolve_forma.rs` (14) | método nunca chega a função livre; receptor de módulo do projeto; import de fora não chega a nada; nome local vence import; chamada simples nunca chega a método; o tipo escrito derruba o `unique`, mas não por `&`, `Box`, `Rc`, `Arc`, nem por um trait que o projeto implementa; `self.m()` acima do teto em Rust e em Python; `calls_from` reporta as admitidas |
 | 2.3a | `tests/tipos_2_3a.rs` (11) | anotação, construtor, campo do `__init__` e `self` dão o tipo; classe pelos imports; classe sem base derruba a candidata; classe acima do teto pelo import; `Protocol` não dá ligação; instanciação como relação própria, que roda o `__init__`; struct de tupla e variante; a regra de cada `receiver_type`; perfis antigos sem nada disso |
 | 2.3b | `tests/dono_2_3b.rs` (4) | chamada em decorador é `decorates` e não é seguida; o método responde pelos campos que declara; cada chamada contada uma vez; o texto do passo da cadeia |
 | 2.3c | `tests/retorno_2_3c.rs` (12) | o retorno tipa o receptor no mesmo arquivo e entre arquivos; `Optional` e `self`; campo de outro arquivo; nada por tipo de fora, genérico ou sem anotação; candidatas que concordam ou discordam; um nível só; a escolha da pessoa não chega à chamada que liga; `let x = T::f(..)` pelo retorno de `f`; invólucros não decidem |
-| 2.4a | `tests/escopo_2_4a.rs` (14) e `tests/escopo_visivel_2_4a.rs` (6) | def do módulo decide entre homônimos; o último def depois dos `@overload`; import e reexport; import de fora, variável e builtin descartam; o que o escopo não diz fica como antes; alias de import instancia e tipa; `scope` com `basis` próprio; item do módulo ou do bloco, `use`, glob e caminho de módulo; alias por `use as` e `type`. Depois de 24/11: `global`, `nonlocal` e só definição visível |
+| 2.4a | `tests/escopo_2_4a.rs` (12; *correção da Parada 2:* dizia 14, mas `t_proprio` e `t_glob`, `:253-260`, estão dentro do texto de uma fixture) e `tests/escopo_visivel_2_4a.rs` (6) | def do módulo decide entre homônimos; o último def depois dos `@overload`; import e reexport; import de fora, variável e builtin descartam; o que o escopo não diz fica como antes; alias de import instancia e tipa; `scope` com `basis` próprio; item do módulo ou do bloco, `use`, glob e caminho de módulo; alias por `use as` e `type`. Depois de 24/11: `global`, `nonlocal` e só definição visível |
 | 2.4b | `tests/heranca_2_4b.rs` (7) | método herdado pela ordem C3; o que a cadeia não diz fica indeciso; classe fora da cadeia nunca é alvo; `super()` nunca chega à própria classe; método abstrato dá as sobrescritas; instanciação roda o `__init__` herdado; sobrescritas acima do teto podem ser escolhidas |
 | 2.4c | `tests/despacho_2_4c.rs` (9) | método sobrescrito dá todos os corpos que podem rodar; sem sobrescrita, a ligação fica; `__new__` que constrói outra classe; nome privado; subclasse que liga o nome a outra coisa; sobrescrita vazia; a ligação nomeia o abstrato que saiu; os corpos podem ser escolhidos |
 | 2.4d-0 | `tests/classe_nome_2_4d0.rs` (7) | `Classe.m()` pelo escopo; sobe a cadeia e nunca desce; variável ou duas classes possíveis não são a classe; nome que não é só método; base de fora para a busca; o retorno do método tipa; a regra também acima do teto |
@@ -177,7 +177,7 @@ Também vem do perfil o receptor próprio de cada linguagem: `self` nas duas (`r
 
 ### D. Origem, certeza, evidência e validação humana
 
-**Campos de cada ligação de `/api/calls`** (`CallLink`, `v2.rs:330-372`, verificado) e o que cada um diz:
+**Campos de cada ligação de `/api/calls`** (`CallLink`, `v2.rs:330-374`; *correção da Parada 2:* dizia `:330-372`; verificado) e o que cada um diz:
 
 | Pergunta | Campo separado? | O que o código guarda |
 |---|---|---|
@@ -204,7 +204,7 @@ Também vem do perfil o receptor próprio de cada linguagem: `self` nas duas (`r
 
 ## Observações novas (Parada 1)
 
-- **MAP-O16.** As ligações **não são guardadas**. O grafo gravado (`graph-v2.json`, `store.rs:349-351`) só tem as arestas de nome (`name_candidate`). Cada ligação é decidida de novo a cada `/api/calls` (`v2.rs:454`) e na primeira `/api/used-by` de um run (cache em memória, `main.rs:297-308`). A regra também lê, a cada vez, os bytes da edition (`lib.rs:540-560`). Por isso a "ligação guardada no grafo" do ponto final da parte 3 é, no código, uma resposta calculada sobre o grafo.
+- **MAP-O16.** As ligações **não são guardadas**. O grafo gravado (`graph-v2.json`, `store.rs:349-351`) só tem as arestas de nome (`name_candidate`). Cada ligação é decidida de novo a cada `/api/calls` (`v2.rs:454`; *precisão da Parada 2:* um `Resolver` por pedido, dentro de `calls_from`, e não um por chamada escrita) e na primeira `/api/used-by` de um run (cache em memória, `main.rs:297-308`). A regra também lê, a cada vez, os bytes da edition (`lib.rs:540-560`). Por isso a "ligação guardada no grafo" do ponto final da parte 3 é, no código, uma resposta calculada sobre o grafo.
 - **MAP-O17.** Uma `Resolution::Linked` com **vários alvos** (`Trait`, `Type` com vários métodos ou impls, `TraitDefault` com vários) sai em `/api/calls` como `homonym`, com `basis: "graph_edge"`, sobre as **arestas admitidas** e não sobre os alvos da regra (`v2.rs:419-428`). Acima do teto, não há arestas: a ligação some e vira `above_candidate_limit` (`v2.rs:431-433`). O inventário trata o mesmo caso de outro jeito: segue todos os alvos (`inventory.rs:514-523`). *Leitura minha:* dois leitores da mesma regra dão respostas diferentes para o mesmo `Linked`.
 - **MAP-O18.** Três casos diferentes caem no mesmo motivo `no_candidate_in_project` (`v2.rs:423`, `:431-434`):
   - nenhum nome igual no projeto;
@@ -231,4 +231,276 @@ Também vem do perfil o receptor próprio de cada linguagem: `self` nas duas (`r
 
 ---
 
-*Parada 2 (E a I e "Em palavras simples"): aguardando liberação.*
+## Parada 2
+
+**Base e escrita.** `main` em `be7d546`, com a worktree limpa no início (`git status --porcelain -uall` vazio). A `.studio/` continua vazia (`ls -la .studio` lista só `.` e `..`) e não foi tocada. Não rodei o portão, o gabarito nem binários que gravam. Os únicos comandos que executaram código do repositório foram os testes da seção H e `sourceHash` de `tools/precisao/lib.js:173` (só lê arquivos e o `git ls-files`). Os scripts e as saídas desta parada estão no scratchpad da sessão, fora do repositório.
+
+**Fontes a mais, além das da Parada 1.** As quatro fixtures validadas (`tools/precisao/fixtures/amostra-hc.json`, `amostra-rt.json`, `estrato-unique.json`, `amostra-usos.json`) e a linha de base do portão, `tools/precisao/linha-de-base.json` (o JSON que o portão grava e compara, `portao.js:5-6`; tratado aqui como JSON de configuração). A pasta `docs/reports/fase-2/dados/2.4e/` só tem `tabelas.md` (`ls -la`), que não foi aberto.
+
+### E. Links falsos pela verdade validada
+
+**Que estado é "hoje"** (verificado, com o que não foi conferido):
+- **Amostras HC e RT:** o campo `resposta` de cada id em `linha-de-base.json` (`projetos.<hc|rt>.amostra`). São os runs `20261125-210527` (HC) e `20261125-210849` (RT), gravados pelo portão do 2.4d no commit `6254641`.
+  - O código da regra não mudou depois: o último commit em `resolve.rs` é o `665ff5b`, ancestral do `6254641` (`git merge-base --is-ancestor 665ff5b 6254641`).
+  - Nada que é compilado mudou depois: `git diff --stat 6254641 HEAD -- crates Cargo.toml Cargo.lock ':!*.md'` está vazio.
+  - **Não conferido por execução:** não regenerei as respostas (`.studio` vazia, MAP-O1). *Leitura minha:* com o mesmo código e os mesmos projetos nos mesmos commits, a resposta é a mesma.
+- **Estrato `unique` (UQ):** o `linha_de_base` gravado na própria fixture, com `fontes: 3aeb2fa7…` e os runs `20261125-234413`/`-234657`. O hash das fontes de hoje dá o mesmo: `node -e 'console.log(require("./tools/precisao/lib").sourceHash())'` → `3aeb2fa77adc9ec4…`, 250 arquivos.
+- **Amostra de usos:** o resultado gravado em `linha-de-base.json`, `projetos.<p>.usos.amostra`, montado por `usesSample` (`portao.js:185-211`).
+
+**Método.** O script `e-verdade.js` (scratchpad) roda com `node e-verdade.js <raiz do repositório>` e só lê os JSON acima. A regra de julgamento é minha, escrita no script:
+- **linha cheia** (os estados de `LINKED`, `portao.js:20`): é **verdadeira** quando o único alvo é o `verdade.alvo` validado; é **falsa** quando a verdade é de fora do projeto (`externo`), quando é `ambigua`, ou quando o alvo é outro;
+- **tracejada** (`homonym`): o alvo validado está entre as candidatas; ou todas as candidatas são falsas; ou a verdade é ambígua;
+- **sem linha**: é lacuna certa quando a verdade é de fora; é lacuna com o alvo no projeto quando ele estava lá.
+
+**Conferência cruzada:** os totais batem com a classificação que o próprio portão gravou na linha de base (`amostra_contagem`, função `classify`, `portao.js:34-57`):
+- HC: 96 corretas, 1 `link_falso`, 15 `candidatos_falsos`, 8 ambíguas, 51 sem candidato;
+- RT: 44 corretas, 0 `link_falso`, 1 `candidatos_falsos`, 10 ambíguas, 15 sem candidato.
+
+**Contagem por estado de hoje** (verificado, pela saída do script):
+
+| Estado (tabela C) | Python, HC (171) | Rust, RT (70) | Python, UQ (15) | Rust, UQ (15) |
+|---|---|---|---|---|
+| `unique` | 38 verdadeiras, **1 falsa** | 8 verdadeiras | 14 verdadeiras, **1 falsa** | 13 verdadeiras, **2 falsas** |
+| `import` | 9 verdadeiras | — | — | — |
+| `scope` | 5 verdadeiras | 2 verdadeiras | — | — |
+| `receiver` | 6 verdadeiras | 1 verdadeira | — | — |
+| `type` (um alvo) | 38 verdadeiras | 28 verdadeiras | — | — |
+| `trait_default` (um alvo) | — | 5 verdadeiras | — | — |
+| `chosen` | não medido: o portão pede sempre `chosen: {}` (`lib.js:112`, `portao.js:95`) | idem | — | — |
+| `homonym`, 2 ou mais candidatas | 1 com o alvo entre elas; **13 com todas falsas**; 5 com verdade ambígua | 9 com o alvo entre elas; **1 com todas falsas** | — | — |
+| `homonym`, 1 candidata | 2 em que a única candidata é a certa; **1 falsa** | — | — | — |
+| `above_candidate_limit` | 1 lacuna de fora (certa) | 1 lacuna com o alvo no projeto | — | — |
+| `no_candidate_in_project` | 51 lacunas, todas de fora (certas) | 15 lacunas, todas de fora (certas) | — | — |
+
+Notas da tabela:
+- **Os falsos de linha cheia, hoje, são 4, todos `unique` e todos com a verdade de fora do projeto:**
+  - HC-27: `c.getinfo(..)` → `FakeCurl.getinfo`, que é o dublê dos testes; o certo é o `pycurl`;
+  - UQ-4: `c.setopt(..)` → `FakeCurl.setopt`, o mesmo caso;
+  - UQ-19: `ordered.len()` → `impl Groups::len`; o certo é `Vec::len`;
+  - UQ-23: `k.min(4. - k).clamp(0., 1.)` → `impl Color::clamp`; o certo é `f64::clamp`.
+
+  Nenhum `import`, `scope`, `receiver`, `type` ou `trait_default` das amostras é falso.
+- **`homonym`, por `basis`:** a `resposta` gravada não traz o `basis` (formato em `portao.js:252`). Três delas são com certeza `basis: "type"` (corpos do despacho): HC-140 (12 candidatas), HC-141 (30) e HC-142 (14), todas acima do teto de 8.
+  - Por quê, pelo código: acima do teto não há arestas (`graph.rs:335-339`); o ramo `_` só lista arestas (`v2.rs:428`); e só `Overrides` conta os alvos em vez das arestas (`v2.rs:425-427`, `:437`).
+  - As outras 29 não dá para separar só pelos dados.
+- **`homonym` de 1 candidata:** HC-108 e HC-109 (a única candidata é a certa); HC-66, `self.client.login(..)` → `django.test.Client.login`, de fora.
+- **Os tracejados com todas as candidatas falsas** (HC 14, contando a de 1 candidata, e RT 1) têm sempre a verdade de fora (`dict.get`, `QuerySet.get`, `OutputWrapper.write`, `Vec::into_iter`…). Ex.: HC-40 a HC-50 e RT-28.
+
+**A vista dos usos** (`amostra-usos.json` e o resultado gravado; verificado pela saída do mesmo comando, no scratchpad):
+
+| | HC (18 símbolos) | RT (10 símbolos) |
+|---|---|---|
+| uso ligado certo | 43 | 39 |
+| **uso ligado falso** | **4** (UB-10 `Ping.get_body`) | **14** (UB-15 `impl Groups::len`, 4; UB-23 `impl Sorteio::next`, 10) |
+| uso possível certo | 5 | 1 |
+| **uso possível falso** | **2** (UB-6, UB-7) | **9** (UB-13, 1; UB-25, 8) |
+| na lacuna (`above_limit`) e na verdade | 1 (UB-1) | 0 |
+| uso da verdade que não aparece | 0 | 2 (UB-15) |
+| pares homônimo × candidata (PH): pode rodar | 0 de 20 | 4 de 20 |
+
+O resultado gravado não diz de qual estado vêm os usos ligados falsos: `usesSample` só guarda o lugar da chamada (`portao.js:198-199`). *Leitura minha:* `Groups::len` e `Sorteio::next` têm o mesmo padrão da UQ-19, um `unique` sem o tipo escrito do receptor.
+
+**A fixture guarda o estado da época?** (verificado)
+- Sim, e só o da época. O `linha_de_base` de cada chamada (`resolution`, `candidates`, `alvos`) é escrito quando a amostra é sorteada (`tools/precisao/amostra.js:54`). Nos estratos escolhidos à mão, é o estado do passo em que entraram (diz ser: campo `selecao` de `amostra-hc.json` e de `amostra-rt.json`).
+- O portão não o lê: `git grep -n linha_de_base -- tools/precisao/*.js tools/precisao/gabarito/*.js` só acha `amostra.js:54`. O portão compara a resposta do run novo com a `verdade` (`portao.js:251`).
+- **Mudou no código atual:** em **143 das 241** chamadas de HC e RT, a resposta de hoje é diferente do `linha_de_base`.
+- Pela mesma regra de julgamento, a época tinha estes links falsos de linha cheia:
+  - HC: 30 (25 `unique` de fora; 2 `receiver` de fora; 2 `receiver` com outro alvo; 1 `receiver` com verdade ambígua);
+  - RT: 13 (8 `unique` de fora; 4 `receiver` com outro alvo; 1 `receiver` de fora).
+
+  Hoje são 1 e 0. Comando: o `node -e` que lê `amostra-<p>.json`, no scratchpad.
+- **A verdade** (`alvo`, `externo`, `ambigua`, `relacao`, `executor`) fala do projeto no commit fixo (`fonte`: Healthchecks `6c05a7a`, renderer `e38254b`) e de convenções da medição, por exemplo "dublê de teste não conta como alvo de código de produção (DEC-33)" na justificativa da HC-27. Ela não depende do código do Librarian. Só muda se mudar o projeto ou a convenção.
+- Datas em `verdade_validada_por`, na HC: 18/11 (60), 19/11 (16), 20/11 (36), 24/11 (11), 25/11 (48).
+
+**MAP-O18 conferida com os dados, em três partes:**
+1. **O mesmo motivo para casos diferentes:** confirmado.
+   - Das 51 chamadas da HC que hoje são `no_candidate_in_project`, 28 tinham candidata na época (24 `unique`, 3 `homonym`, 1 `above_candidate_limit`), e 23 não tinham. No RT, são 8 e 7.
+   - Todas saem hoje com a mesma resposta, `no_candidate_in_project (0)`: o motivo e a contagem 0 são fixos (`v2.rs:433`), mesmo quando o grafo tem a aresta de nome que a regra descartou.
+   - Nas 66, a verdade é de fora: nas amostras, a afirmação negativa está sempre certa.
+2. **Descarte acima do teto contado como teto:** sem caso nos dados.
+   - O único `above_candidate_limit` de verdade de fora é a HC-169, `Thread.__init__(self)`, que hoje é `above_candidate_limit (30)`.
+   - Pelo código, ela é `AboveLimit` (`resolve.rs:2145`), e não `NoCandidate`: é método, e o passo do escopo só vale para `call_observed` (`scoped`, `resolve.rs:1635-1637`).
+   - *Leitura minha:* a forma sabe que o receptor é um import de fora (`Module::External`, `resolve.rs:769`; `Form::Outside`, `:1140`). Mesmo assim, a ligação diz "acima do teto", e não "de fora".
+3. **O falso "pode usar":** não aparece nos dados.
+   - Para a HC-169, `may_reach` dá falso, porque `Form::Outside` não alcança nada (`resolve.rs:1157`, `:1168-1170`). Ela não entra em `above_limit` (`uses.rs:210-215`).
+   - O caso que sobra, só pelo código: uma chamada simples `f()`. O escopo diz "de fora" (`Scoped::Nothing` → `NoCandidate`, `resolve.rs:2061`); ela tem mais de 8 homônimos (`v2.rs:432` → `above_candidate_limit`); e `may_reach` usa só a forma (`Form::Plain`) e o tipo, nunca o escopo. Por isso ela entra na lacuna, que a página apresenta como "podem usar este ponto" (`index.html:1118`, diz ser).
+   - As amostras não têm esse caso: a população do portão só tem `method_call_observed` (`lib.js:100`), e o único `above_limit` da amostra de usos é o da UB-1, que está na verdade.
+   - Nenhum teste fixa esse caso (`git grep -n above_limit -- crates/librarian-ingest/tests` só acha `usos_2_4d.rs`, onde os casos de lacuna são `x.abrir()` e `Alvo::from`/`f64::from`).
+
+### F. Links falsos conhecidos no código
+
+**Guardas que existem** (verificado, por leitura; o passo vem do comentário junto, que é "diz ser"):
+
+| Caso | Onde o código trata | Teste que fixa |
+|---|---|---|
+| **Método religado** (a classe liga o nome também a outra coisa: `tarefa_cn = solta_tarefa_cn` depois do `def`, `sinteticos/py/pkg/classe_nome.py:106-110`) | `ClassFacts.names` (`resolve.rs:112-113`). Na busca pela cadeia, o nome ligado a outra coisa deixa indeciso (`:1408`). Por `Classe.m()`, o achado numa classe que religa o nome volta ao que valia antes (`:1488`, 2.4d-0). No despacho, uma subclasse que liga o nome esconde os corpos (`:1559`) | `classe_nome_2_4d0.rs:155` (`cn_r_religada`, indeciso com 2 candidatas); `despacho_2_4c.rs:150` (subclasse que liga o nome, sem ligação única) |
+| Atributo gravado por `self`/`cls`, `__getattr__`, `Protocol`, metaclasse ou decorador de classe | `ClassFacts` (`resolve.rs:92-116`); busca (`:1399-1401`, `:1405-1410`); `opens` (`:1471-1475`); `type_rules_out` não descarta por classe com base, `__getattr__` ou `Protocol` (`:703-708`) | `tipos_2_3a.rs:418` (o `Protocol` fica `homonym`, 2 candidatas); `tipos_2_3a.rs:393`; `heranca_2_4b.rs:115` |
+| Nome privado `__m` | não é sobrescrito (`resolve.rs:1538-1540`) | `despacho_2_4c.rs:144` |
+| `super()` não chega à própria classe | busca depois da classe (`resolve.rs:1384-1413`, `after`) | `heranca_2_4b.rs:152` |
+| Receptor ligado a um import de fora | a forma não alcança nada (`resolve.rs:1140`, `:1157`) | `resolve_forma.rs:366` (`time.time()`, `auth.login(1)`, `TimestampSigner().sign(1)`) |
+| Chamada simples a um import de fora, variável ou builtin | `Scoped::Nothing` → sem ligação (`resolve.rs:2061`) | `escopo_2_4a.rs:469` (`join` de `os.path`, `len`) |
+| Referência, `Box`, `Rc`, `Arc`, ou um trait que o projeto implementa para o tipo | **não** descartam: a guarda é contra o descarte errado, não contra o link falso (`WRAPPERS`, `resolve.rs:38`; `:736-738`) | `resolve_forma.rs:421-445` |
+
+**Casos conhecidos sem guarda** (verificado, por leitura e busca):
+- **O dublê `FakeCurl`** (HC-27, UQ-4). A regra não conhece código de teste: `git grep -n is_test -- crates/librarian-ingest/src/resolve.rs crates/librarian-ingest/src/graph.rs crates/librarian-ingest/src/graph/` está vazio. O `is_test` do extrator (`python.rs:794`, `rust.rs:245`) só é lido pela busca e pelo envelope (`search.rs:191`, `:249`; `envelope.rs:192`, `:286`, `:414`).
+  - Em Python, o retorno de uma chamada de fora (`c = pycurl.Curl()`) não entra no descarte: `type_rules_out` só olha o retorno fora do Python (`resolve.rs:713-722`).
+  - O teste mais perto fixa o efeito com duas candidatas: `retorno_2_3c.rs:443` (`d.fechar()` sem tipo de fora fica `homonym`). Com uma candidata só, o resultado é `unique`. Nenhum teste fixa o caso de uma só.
+- **`f64::clamp` → `Color::clamp`** (UQ-23) e **`Vec::len` → `Groups::len`** (UQ-19). Sem tipo escrito do receptor, nada descarta a única candidata. O tipo de fora só descarta um método inerente de um tipo do projeto, e só quando o tipo é conhecido (`outside_rules_out`, `resolve.rs:735-740`).
+  - Comentário que diz o limite: `may_reach` "rules out neither by a primitive (`f64::from`) nor by a type that implements the same trait" (`resolve.rs:1166-1167`).
+  - Testes que fixam o resultado como **esperado**:
+    - `usos_2_4d.rs:300-305`: `f64::from(1u8)` fica na lacuna "pode usar" de `Alvo::from` e de `Outro::from` ("known limit", `:302`);
+    - `retorno_2_3c.rs:512-520`: `p.take()` com `Option<Self>` fica `homonym` entre `Nota::take` e `Pedido::take`, e o comentário diz que roda o `Option::take` (`:514`). Todas as candidatas tracejadas são falsas.
+- **Argumentos genéricos não são comparados**: `m.det()` com `m: &M<3>` dá `type` com `M<2>::det` e `M<3>::det` (`tests/resolve.rs:323-324`). O teste fixa `M<2>::det` como alvo.
+- Comentários que avisam do não saber: `UnresolvedCall.reason` "does not say the call is external" (`v2.rs:308-310`); o `CallLink.candidate_edge` nulo (`v2.rs:345-347`).
+
+**O que o método não pega:** a busca (`git grep -nIiE "FakeCurl|clamp|religad|rebound|rebind|false link|link_falso|dubl|test double|known false|Vec::len|primitive|f64::from" -- crates tools/precisao/sinteticos ':!*.md' ':!*.json' ':!*.jsonl' ':!*.html'`) acha só palavras escritas. Uma guarda sem comentário com essas palavras só foi achada pela leitura de `resolve.rs`, nos trechos citados.
+
+### G. Como a ligação chega ao Studio
+
+**`/api/calls`** (`POST`, `main.rs:137-146`, verificado):
+- **Entrada:** `key`, `run`, `node`, `depth` e `chosen`, um mapa de ocorrência para homônimo escolhido (`:139-142`).
+- **O que roda a cada pedido:**
+  - a edition é aberta e relida (`Catalog::load(..).call_syntax()`, `:143`);
+  - o grafo vem de um cache de **um** par (key, run) (`graph`, `main.rs:283-294`, que lê o `graph-v2.json` gravado);
+  - `calls_from` cria **um** `Resolver` por pedido (`v2.rs:454`) e decide cada chamada ali (`v2.rs:520`);
+  - o teto de nós é `USED_BY_NODES = 120` (`main.rs:280`).
+- **Resposta, `Calls`** (`v2.rs:284-295`): `seed`, `depth`, `max_nodes`, `truncated`, `nodes`, `links` e `unresolved`. Cada nó (`UsedNode`, `v2.rs:154-165`) traz `id`, `label`, `kind`, `language`, `layer`, `container`, `path` e `line`.
+- **Por ligação, `CallLink`** (`v2.rs:330-374`): `from`, `to`, `occurrence`, `occurrence_kind`, `text`, `candidates`, `resolution`, `candidate_edge`, `basis`, `relation` e `evidence`. Opcionais: `runs`, `via`, `type_rule` e `abstract_method`.
+  - Um `homonym` de *n* alvos são *n* `CallLink` com a mesma `occurrence` (`v2.rs:538-…`).
+  - A `evidence` (`graph.rs:24-33`) traz `source_id`, `path`, `source_sha256`, `start_byte`, `end_byte`, `start_line`, `end_line` e `excerpt_sha256`.
+- **Por chamada sem ligação, `UnresolvedCall`** (`v2.rs:299-327`): `from`, `occurrence`, `occurrence_kind`, `text`, `reason`, `candidates` e `evidence`, mais `via`. Só com `node_limit`: `resolution`, `to` e `candidate_edge`.
+
+**`/api/used-by`** (`GET`, `main.rs:130-136`, verificado):
+- **Entrada:** `key`, `run`, `node` e `depth`.
+- **O que roda:** o `UseIndex` é montado na primeira pergunta de um run (`UseIndex::build`, um `Resolver`, `uses.rs:134-135`). Ele fica em memória, **um run por vez**: trocar de run monta de novo (`main.rs:296-308`).
+- **Resposta, `Uses`** (`uses.rs:113-128`): `seed`, `depth`, `max_nodes`, `truncated`, `nodes`, `links`, `counts` (`linked`, `possible_type`, `possible_homonym`, `name`, `above_limit`, `abstract_calls`, `ruled_out`; `uses.rs:102-110`), `above_limit`, `abstract_calls` e `ruled_out`.
+- **Por uso, `Use`** (`uses.rs:58-87`): `from`, `to`, `occurrence`, `occurrence_kind`, `text`, `use` (`linked`, `possible`, `name`), `candidates`, `candidate_edge` e `evidence`. Opcionais: `resolution`, `basis`, `relation`, `instance_of`, `via` e `type_rule`. `use` é `possible` só quando `resolution == "homonym"` (`uses.rs:252`).
+- **Por chamada à parte, `Aside`** (`uses.rs:91-98`): só `from`, `occurrence`, `occurrence_kind`, `text`, `candidates` e `evidence`. Não traz `resolution` nem o motivo: a lista em que está é o motivo.
+
+**O que não chega por nenhuma das duas rotas** (o mesmo da seção D): um campo de certeza separado da origem; quem validou; e o que sustenta a decisão (import, definição, anotação, bases). A `evidence` é sempre o lugar da chamada.
+
+**Diz ser × faz:** o comentário de `Use.basis` diz "For `possible`" (`uses.rs:74`), mas o código preenche o `basis` em todo uso de chamada, também nos `linked` (`uses.rs:256`).
+
+**MAP-O16 conferida:** nenhuma das duas rotas lê uma ligação gravada. As duas leem o grafo (nós e arestas de nome) e a edition, e decidem com um `Resolver` novo: um por pedido em `/api/calls` e um por run em `/api/used-by` (citações acima).
+
+**MAP-O17 confirmada com um caso concreto** (sintético de `tests/resolve.rs`, verificado pela execução da seção H):
+- **Abaixo do teto.** `n_generic(m: &M<3>)` chama `m.det()` (`tests/resolve.rs:143-144`). O projeto tem três `det`: `impl M<2>`, `impl M<3>` e `impl Z` (`:89-104`).
+  - A regra diz `type` com **dois** alvos, `M<2>::det` e `M<3>::det` (`:324`).
+  - `/api/calls` devolve **três** `homonym`, um para cada aresta admitida, `Z::det` incluído, que o tipo exclui (`:386-387`).
+- **Acima do teto.** No sintético de `usos_2_4d.rs:300`, com 9 `impl From<Ai> for Alvo` e mais `impl Outro::from`, a chamada `Alvo::from(A0)` tem 10 homônimos.
+  - A regra dá `type` com os 9 corpos de `Alvo` (*leitura minha* do código: `resolve.rs:2124-2128`).
+  - A ligação sai sem alvo, como `above_candidate_limit`. Isso o teste confere pelo inverso: a chamada está na lacuna de `impl From<A3> for Alvo::from` (`:304`), e `uses.rs:210` só põe na lacuna o que saiu como `above_candidate_limit`.
+  - E ela não está na lacuna de `Outro::from` (`:305`), porque o tipo a exclui ali (`may_reach`).
+
+### H. Testes que fixam a regra
+
+São os arquivos da tabela B mais `g3.rs` e `g6.rs`, que fixam as candidatas e as chamadas sem ligação. Fora desses, os arquivos de `tests/` que citam `resolution` falam do envelope, do inventário, das editions e dos perfis antigos (busca `grep -cE "calls_from|Resolver::new|\.resolve\(|UseIndex|used_by\(|name_candidate|ambiguous_candidates"` por arquivo).
+
+Os sintéticos vêm de dois lugares:
+- **embutidos de `tools/precisao/sinteticos/`:** `heranca_2_4b.rs:20-22`, `despacho_2_4c.rs:19` e `classe_nome_2_4d0.rs:19-21`, por `include_str!`; e `usos_2_4d.rs:62-65`, que lê as pastas `py` e `rs` inteiras em execução (`:145`, `:153`);
+- **escritos pelo próprio teste:** os outros arquivos montam projetos pequenos com o texto que o teste guarda em constantes e os gravam numa pasta temporária do sistema, apagada no fim (ex.: `tests/resolve.rs:195-221`).
+
+| Arquivo | Testes | O que verifica | Sintéticos |
+|---|---:|---|---|
+| `calls.rs` | 2 | seguir só onde o nome aponta para uma declaração; busca sem testes | no próprio arquivo |
+| `resolve.rs` | 11 | uma resolução por teste (`unique`, `receiver` só em `self.m()`, `type`, `type` acima do teto, `trait_default`, `trait`, `homonym`, `chosen` antes de tudo); o que `/api/calls` reporta, vários alvos como homônimos; `type` seguido e `homonym` não; o dono só usa as ligações decididas | no próprio arquivo (Rust e Python) |
+| `resolve_forma.rs` | 14 | a forma: método nunca chega a função livre; receptor de módulo; import de fora não chega a nada; nome local vence import; chamada simples nunca chega a método; o tipo escrito derruba o `unique`, mas não por `&`, `Box`, `Rc`, `Arc` nem por trait implementado; `self.m()` acima do teto; as admitidas na API | no próprio arquivo |
+| `tipos_2_3a.rs` | 11 | o tipo Python do receptor (anotação, construtor, campo, `self`); classe pelos imports; classe sem base descarta; acima do teto pelo import; `Protocol` sem ligação; instanciação; struct de tupla e variante; a regra de cada `receiver_type`; perfis antigos | no próprio arquivo |
+| `dono_2_3b.rs` | 4 | chamada em decorador é `decorates` e não é seguida; o método responde pelos campos; uma contagem por chamada; o texto da cadeia | no próprio arquivo |
+| `retorno_2_3c.rs` | 12 | o retorno escrito tipa o receptor (mesmo arquivo, entre arquivos, `Optional`, `self`, campo de outro arquivo); nada por tipo de fora, genérico ou sem anotação; candidatas que concordam ou não; um nível só; a escolha não chega à chamada que liga; `let x = T::f(..)`; invólucros não decidem; retorno de fora | no próprio arquivo |
+| `escopo_2_4a.rs` | 12 | o escopo de quem chama: def do módulo, o último depois de `@overload`, import e reexport, import de fora/variável/builtin descartam, o que o escopo não diz, alias, `scope` com `basis` próprio; em Rust, item do módulo ou bloco, `use`, glob, caminho, alias | no próprio arquivo |
+| `escopo_visivel_2_4a.rs` | 6 | `global`, `nonlocal` e só a definição visível, em Python e Rust | no próprio arquivo |
+| `heranca_2_4b.rs` | 7 | a cadeia C3; o que ela não diz fica indeciso; fora da cadeia nunca é alvo; `super()`; abstrato dá as sobrescritas; `__init__` herdado; sobrescritas acima do teto | `sinteticos/py/pkg/heranca_apoio.py`, `heranca.py`, `heranca_regras.py` |
+| `despacho_2_4c.rs` | 9 | todos os corpos que podem rodar; sem sobrescrita a ligação fica; `__new__`; nome privado; subclasse que liga o nome; sobrescrita vazia; o abstrato que saiu; os corpos podem ser escolhidos | `sinteticos/py/pkg/despacho.py` |
+| `classe_nome_2_4d0.rs` | 7 | `Classe.m()` pelo escopo; sobe a cadeia e nunca desce; variável ou duas classes não são a classe; nome que não é só método (o religado); base de fora; o retorno tipa; a regra acima do teto | `sinteticos/py/pkg/classe_nome.py`, `classe_nome_fora.py`, `classe_nome_usos.py` |
+| `usos_2_4d.rs` | 7 | toda ligação é um uso e todo uso é uma ligação; os tipos de uso à parte; instanciação usa a classe e o `__init__`; o caminho sobe só pelos ligados; o teto corta o desenho; acima do teto é lacuna filtrada pela forma e pelo tipo, com o limite do primitivo | `sinteticos/py` e `sinteticos/rs` inteiros, mais textos no arquivo |
+| `g3.rs` | 5 | chamada acima do teto com a contagem e sem candidata; sem nome igual no projeto; `node_limit` à parte; chamada sem nome escrito não some; campos antigos ficam | no próprio arquivo |
+| `g6.rs` | 4 | campos são símbolos; acessos, chamadas e bases são candidatas, nunca resoluções; homônimos demais guardam só a contagem; usos pelo nome em camadas | no próprio arquivo |
+
+**Execução** (verificado):
+
+```
+cargo test -p librarian-ingest --locked --test calls --test resolve --test resolve_forma \
+  --test tipos_2_3a --test dono_2_3b --test retorno_2_3c --test escopo_2_4a \
+  --test escopo_visivel_2_4a --test heranca_2_4b --test despacho_2_4c \
+  --test classe_nome_2_4d0 --test usos_2_4d --test g3 --test g6
+```
+
+O exit foi 0, com **111 testes aprovados**, 0 falhas e 0 ignorados (log no scratchpad). Por binário:
+
+| `calls` | `classe_nome_2_4d0` | `despacho_2_4c` | `dono_2_3b` | `escopo_2_4a` | `escopo_visivel_2_4a` | `g3` | `g6` | `heranca_2_4b` | `resolve` | `resolve_forma` | `retorno_2_3c` | `tipos_2_3a` | `usos_2_4d` |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 2 | 7 | 9 | 4 | 12 | 6 | 5 | 4 | 7 | 11 | 14 | 12 | 11 | 7 |
+
+Depois da execução, `git status --porcelain -uall` continuou vazio, fora este relatório.
+
+---
+
+## Em palavras simples
+
+*À parte das seções acima, sem números nem nomes de arquivo. Foi escrita com a skill "elementary school teacher" (nível newcomer).*
+
+Quando o código de um projeto chama alguma coisa pelo nome, o Librarian tenta dizer **qual** coisa é. Ele desenha essa resposta de três jeitos.
+
+**Linha cheia: "é esta".** Ela aparece quando o Librarian tem um motivo para afirmar:
+- o nome foi trazido de outro arquivo por um import;
+- o nome foi definido ali mesmo, onde a chamada está;
+- o tipo do objeto está escrito e só uma declaração serve a ele;
+- ou o nome só combina com uma coisa dentro do projeto.
+
+Nas chamadas que uma pessoa já conferiu, quase todas as linhas cheias estão certas. **Mas não todas.** As erradas que sobraram são todas do último caso, o "só tem uma com esse nome". Em algumas chamadas, a coisa que roda de verdade vem de fora do projeto: da linguagem ou de uma biblioteca. O Librarian não vê o que está fora. Então ele liga a chamada à única coisa do projeto que tem o mesmo nome.
+
+Exemplos:
+- um "dublê" que só os testes usam, no lugar da biblioteca de rede verdadeira;
+- o "tamanho de uma lista" da linguagem, ligado a um método do projeto com o mesmo nome;
+- o "limitar um número" da linguagem, ligado ao "limitar uma cor" do projeto.
+
+Na pergunta "quem usa isto?", aparecem erros do mesmo tipo.
+
+**Linha tracejada: "pode ser esta ou aquela".** Ela aparece quando há várias coisas com o mesmo nome e nada decide entre elas. Às vezes a dúvida é honesta: o objeto pode ser de vários tipos, e qualquer um dos corpos pode rodar. Mas, na maioria das vezes que uma pessoa conferiu, **nenhuma** das opções tracejadas era a certa: a coisa que roda vinha de fora do projeto. A linha tracejada parece dizer "uma destas", mas muitas vezes quer dizer "talvez nenhuma destas".
+
+**Lacuna: "não sei".** A chamada não ganha linha. Isso acontece quando o nome não existe no projeto, ou quando há tantas coisas com o mesmo nome que o Librarian nem as lista. Nas chamadas conferidas, quase todas as lacunas eram mesmo coisas de fora, e não esquecimentos.
+
+Mas a mesma frase "não há nada no projeto" serve para duas situações diferentes. Numa, nenhum nome igual existia. Na outra, o Librarian **descartou** os nomes iguais, porque sabia que a chamada ia para fora. Quem lê a resposta não sabe qual foi. E há um caso em que o descarte se perde: se a chamada tem nomes iguais demais, ela aparece como "nomes demais", e na pergunta "quem usa isto?" pode aparecer como "talvez use". Isso foi lido no código, mas não aconteceu em nenhuma chamada conferida.
+
+**Duas coisas a lembrar:**
+- Essas respostas não ficam guardadas: o Librarian as calcula de novo cada vez que alguém pergunta.
+- Quando a regra diz "é uma destas duas", a página às vezes mostra mais opções do que a regra disse, ou nenhuma.
+
+---
+
+## Observações novas (Parada 2)
+
+- **MAP-O24.** Nas amostras validadas, **todo link falso de linha cheia de hoje é `unique`** (4 de 4: HC-27, UQ-4, UQ-19, UQ-23), sempre com a verdade de fora do projeto (seção E). Não há falso em `import`, `scope`, `receiver`, `type` ou `trait_default`. Isso bate com o motivo da tabela C para o `unique`: "esta ou algo de fora". Na vista dos usos, há 18 usos ligados falsos em três símbolos (HC 4, RT 14), cujo estado o resultado gravado não guarda.
+- **MAP-O25.** O `linha_de_base` das fixtures é o estado da época da seleção (`amostra.js:54`). Ninguém o atualiza, e o portão não o lê: 143 das 241 chamadas de HC e RT respondem diferente hoje.
+  - O estado de hoje está em `linha-de-base.json` (`resposta`), que **não grava o hash das fontes** (as chaves são `projetos`, `editions`, `fatos`, `niveis` e `studio_original`). Só o estrato `unique` grava (`fontes`).
+  - Ligar uma resposta ao código depende do Git (seção E).
+- **MAP-O26.** O tracejado por homônimo é falso na maior parte das vezes conferidas:
+  - das 32 chamadas `homonym` de hoje nas amostras (HC 22, RT 10), 15 têm todas as candidatas falsas;
+  - dos 40 pares PH, em 36 a candidata não pode rodar.
+- **MAP-O27.** MAP-O17 confirmada com um sintético (seção G): a regra diz 2 alvos, e a API mostra 3 homônimos; acima do teto, a regra decide por tipo, e a API diz `above_candidate_limit`.
+- **MAP-O28.** MAP-O18 conferida em parte (seção E):
+  - o mesmo motivo para "sem nome igual" e para "descartada" está nos dados, com contagem 0 nos dois;
+  - o falso "pode usar" por escopo é possível pelo código, mas não aparece nos dados nem nos testes;
+  - a HC-169 mostra outro caso vizinho: a forma sabe que o receptor é de fora, e a ligação diz "acima do teto".
+- **MAP-O29.** As guardas contra link falso que existem são do Python: nome religado, atributo, `__getattr__`, `Protocol`, metaclasse, nome privado e `super()`. Não há guarda contra:
+  - um dublê de teste (a regra não lê `is_test`);
+  - um tipo da linguagem ou de fora que não está escrito.
+
+  Três testes fixam como **esperado** um resultado que a verdade diria falso (seção F): `tests/resolve.rs:324` (`M<2>::det`), `usos_2_4d.rs:304-305` (`f64::from` como "pode usar") e `retorno_2_3c.rs:514` (`take` tracejado entre dois métodos do projeto, quando roda o de `Option`).
+- **MAP-O30.** Diz ser × faz: `Use.basis` "For `possible`" (`uses.rs:74`), mas o código o preenche em todo uso de chamada (`uses.rs:256`).
+- **MAP-O31.** Correções da Parada 1, feitas no lugar e marcadas:
+  - `calls.rs` tem 2 testes, e não 3;
+  - `escopo_2_4a.rs` tem 12, e não 14;
+  - `CallLink` vai até `v2.rs:374`;
+  - em MAP-O16, é um `Resolver` por pedido.
+
+## Perguntas (Parada 2)
+
+- **MAP-Q11.** A convenção "dublê de teste não conta como alvo de código de produção" (DEC-33, citada na justificativa da HC-27 e da UQ-4) vive só na verdade das fixtures. A regra não conhece código de teste (seção F). No mapa, ela é **regra do sistema** que falta, ou **convenção da medição**? A resposta muda se a HC-27 e a UQ-4 contam como link falso "do Librarian" ou como diferença de critério.
+
+MAP-Q9 e MAP-Q10 continuam em aberto. A tabela C mantém o `unique` como "não cabe", e a seção D responde pelos dois sentidos de "acervo".
+
+---
+
+*Parada 3 (o gabarito do 2.4e, no relatório 04): aguardando liberação.*
