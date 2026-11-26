@@ -355,6 +355,17 @@ Fatos F1–F26 e níveis N0–N8: iguais à linha de base.
 
 **3. A sonda** (`sonda.js`, no scratchpad; `node sonda.js <repo> <saida>`). Ela usa o mesmo `withStudio` sobre outra cópia, gera runs novos (HC `20261126-075402`, RT `20261126-075517`) e pede `/api/calls` com `depth: 1` e `chosen: {}` ao dono de cada chamada. O dono é achado pela aresta `observes` da ocorrência, como o portão faz. A sonda guarda o que a resposta gravada não traz: `basis`, `type_rule` e os alvos de um `homonym`. Ela também confere o hash das fontes (`3aeb2fa7…`, 250) e o da `.studio` antes e depois (iguais).
 
+**Como repetir a medição das 30 chamadas UQ** (o portão não as mede; só a sonda):
+- **Onde está:** `C:\Users\beatl\AppData\Local\Temp\claude\09139e964f85837f\994f9711-cddd-4683-b9ea-bc7761f48d58\scratchpad\sonda.js`, com a saída em `sonda.json` na mesma pasta. O scratchpad é da sessão e pode ser apagado. O script não está no repositório.
+- **Comando:** `node sonda.js <raiz do repositório> <saida.json>`, depois do portão, porque usa o `target/release` que ele compilou. A sonda não compila nada.
+- **Sobre qual `.studio`:** a `<raiz>/.studio` é só lida. `withStudio` (`tools/precisao/lib.js:127-139`) copia os dois projetos (`healthchecks-25597e41`, `renderer-9b78f3a9`) para uma pasta nova em `os.tmpdir()` (`copyStudio`, `:73-77`). Sobe o `librarian_studio` com `LIBRARIAN_ROOT` nessa cópia (`startStudio`, `:47-70`) e confere o hash do original antes e depois (`:128`, `:135-136`).
+- **O que ela chama, por projeto:**
+  1. `POST /api/generate {key}`: um run novo, na cópia;
+  2. lê o `graph-v2.json` desse run (`loadGraph`, `lib.js:80-89`) e indexa cada ocorrência de chamada pela chave `path@start_byte-end_byte` (`occKey`), com o dono vindo da aresta `observes`;
+  3. para cada chamada de `tools/precisao/fixtures/estrato-unique.json` do projeto, acha a ocorrência pela `ocorrencia` da fixture e pede `POST /api/calls {key, run, node: <dono>, depth: 1, chosen: {}}`, uma vez por dono;
+  4. dos `links` com aquela `occurrence`, junta os que saíram por `node_limit` em `unresolved`. Guarda `resolution`, `candidates`, `basis`, `type_rule` e os alvos como `rótulo (caminho:linha)`. Para os não ligados, guarda o `reason` de `unresolved`.
+- **A comparação:** `resolution`, `candidates` e os alvos ordenados, contra o `linha_de_base` da fixture (gravado pelo `estrato-unique.js` em 25/11, fontes `3aeb2fa7…`).
+
 - **Estrato `unique` (UQ):** as 30 chamadas dão hoje **o mesmo** `resolution`, `candidates` e alvos do `linha_de_base` da fixture. São todas `unique (1)`, com `basis: "graph_edge"`. Os falsos continuam os mesmos: UQ-4 (`FakeCurl.setopt`), UQ-19 (`impl Groups::len`) e UQ-23 (`impl Color::clamp`).
 - **Os 4 falsos de linha cheia** (HC-27, UQ-4, UQ-19, UQ-23): `unique`, `basis: "graph_edge"`, 1 candidata, sem `type_rule`.
 - **`homonym` da amostra, por `basis`** (a contagem da tabela de cima não muda, só se divide):
