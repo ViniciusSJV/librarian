@@ -222,23 +222,59 @@ corretas, lacunas explícitas e fatos aguardando aprovação humana.
     receptor sem tipo.
 - 2.4e Caça às lacunas (proposta aceita pelo usuário em 25/11/2026; entre o
   2.4d e o 2.4f; Parada 1 ainda não aberta). Só medição, sem mudar regra.
-  - Dois gabaritos, comparados com a resposta do Librarian em todas as
-    chamadas: um de execução (a suíte do Healthchecks rodada gravando as
-    chamadas reais, quem chamou quem) e um de tipos (pyright ou mypy;
-    rust-analyzer no ray tracer).
-  - Entrega: a lista de lacunas, ordenada pelo número de chamadas afetadas; o
-    usuário escolhe quais viram passo.
-  - O gabarito é ferramenta de teste: não entra no grafo como evidência
-    ("código não prova execução" vale nos dois sentidos).
+  - **Decidido pelo usuário em 25/11/2026 (DEC-48, itens 1 a 8):**
+    - **Workflows:** a sessão do 2.4e propõe as funções de entrada dos 4
+      workflows do Healthchecks e dos caminhos do ray tracer, a partir do PIL
+      e dos fatos HC-F1 a HC-F26; o usuário valida antes da medição.
+    - **Alcance de cada workflow:** a união do que o grafo alcança e do que
+      o gabarito de execução percorre; o que só o grafo alcança fica marcado
+      "alcançado só pelo grafo". Motivo: medir o workflow só pelo grafo
+      usaria as ligações sob suspeita para medir a si mesmas.
+    - **Entrega:** a lista de lacunas, ordenada pelo número de chamadas
+      afetadas, com a coluna "cai num workflow".
+    - **Regra de parada** (no lugar de "o usuário escolhe quais viram
+      passo"): a unidade é a família de erro. Uma família vira passo próprio
+      (2.4g, 2.4h...) se tiver ligação falsa dentro de um workflow ou se
+      afetar mais de X chamadas no total; X é fixado pelo usuário com os
+      números da Parada 1 do 2.4e. Uma ligação que falta fora dos workflows
+      ganha selo de lacuna, sem passo. Ligação falsa pesa mais que ligação
+      que falta.
+    - **Dois gabaritos**, comparados com a resposta do Librarian em todas as
+      chamadas: um de execução (a suíte do Healthchecks rodada gravando as
+      chamadas reais, quem chamou quem) e um de tipos (no Python, pyright ou
+      mypy com django-stubs; no Rust, rust-analyzer no ray tracer). O mypy
+      fica como alternativa porque o pyright é fraco no Django dinâmico, que
+      é o que pesa na 2B. No ray tracer, o gabarito de execução é proposto
+      na Parada 1 do 2.4e.
+    - **O gabarito é só régua:** serve para medir e para o portão, nunca é
+      evidência e nunca entra no grafo (quem mede não pode ser quem
+      responde; "código não prova execução" vale nos dois sentidos).
+    - **Porta aberta (adaptador opcional):** se o 2.4e mostrar que o pyright
+      liga, de forma barata, a maior parte das ligações "ligado pelo nome",
+      pode-se abrir uma decisão própria para um adaptador opcional e
+      plugável, fora do núcleo (como o perfil do Django; DEC-21), com selo
+      próprio, condicional: "ligado pelo verificador externo", com a
+      ferramenta e a versão registradas, só existe se essa decisão for
+      aprovada. A decisão própria tem de respeitar ou reabrir a DEC-29,
+      princípio 4 ("o Librarian não executa ferramentas externas"; por
+      exemplo, lendo uma saída gerada fora do Librarian). Nesse caso, a régua
+      do portão passa a ser a execução ou outra ferramenta, nunca a mesma que
+      responde.
+    - A automação da aprovação de fatos é decidida na Fase 3.
   - Serve também para conferir o 2.4d e a Fase 2B.
   - **Prioridade (usuário, 25/11/2026):** separar os links `unique` com
-    receptor (cerca de 900: 655 no Python e 245 no Rust) em confirmados ou não
-    pelo tipo. É a família de `Ping.get_body`, `Groups::len`, `FakeCurl` e
-    HC-27. As 18 chamadas de `Ping.get_body`, `Groups::len` e `Sorteio::next`
-    são links falsos conhecidos, a medir aqui.
+    receptor (cerca de 900: 655 no Python e 245 no Rust; 233 e 94 pela
+    definição do portão, no item "Antes dele: feito", abaixo) em ligados pelo
+    tipo ou pelo nome. É a família de `Ping.get_body`, `Groups::len`,
+    `FakeCurl` e HC-27. As 18 chamadas de `Ping.get_body`, `Groups::len` e
+    `Sorteio::next` são links falsos conhecidos, a medir aqui.
   - **Propor como o gabarito entra no portão de cada passo (usuário,
-    25/11/2026):** as discordâncias com pyright e rust-analyzer, em todas as
-    chamadas, não podem subir; sem entrar no grafo.
+    25/11/2026):** comparado com os gabaritos (pyright ou mypy com
+    django-stubs; rust-analyzer) em todas as chamadas, sem entrar no grafo.
+    Quando o gabarito entrar no portão (proposta do 2.4e,
+    com aprovação do usuário e linha de base nova, DEC-37), as discordâncias
+    não podem subir; até lá, ele mede à parte, sem reprovar. Dizer se uma
+    discordância é link falso cabe ao usuário (DEC-22; DEC-48, item 6).
   - **Antes dele (usuário, 25/11/2026): feito.** O estrato sorteado de 30
     links `unique` com receptor (UQ-1 a UQ-30; semente
     `estrato-unique-2026-11-25`; verdade validada pelo usuário em 25/11/2026;
@@ -270,11 +306,11 @@ corretas, lacunas explícitas e fatos aguardando aprovação humana.
     2.4c só existe no Python).
   - Medir também a lacuna de `T::from` no Rust, quase toda impossível (115 das
     132 de `Patterns::from`, medido).
-- 2.4f Correção dos links `unique` sem tipo confirmado (registrado pelo usuário
+- 2.4f Correção dos links `unique` ligados pelo nome (registrado pelo usuário
   em 25/11/2026; entre o 2.4e e o 2.5; sem passo aberto). É a família de
   `Ping.get_body`, `Groups::len`, `Sorteio::next`, `FakeCurl` e HC-27, com os
   18 links falsos conhecidos. A Parada 1 escolhe, com os números do 2.4e:
-  - (a) separar "ligado pelo tipo" de "ligado só pelo nome": não tira nenhum
+  - (a) separar "ligado pelo tipo" de "ligado pelo nome": não tira nenhum
     link, e entra de qualquer forma;
   - (b) rebaixar para possível quando o nome existe numa biblioteca conhecida
     (`next`, `len`, `get_body`), o que antecipa parte do perfil de externos
@@ -286,6 +322,26 @@ corretas, lacunas explícitas e fatos aguardando aprovação humana.
     teste (fecharia os 17 de `FakeCurl`), que só pode ser escolhida com a
     contagem de quantas corretas ela derruba; e `clamp` na lista de nomes da
     opção (b).
+  - **Direção (decidida pelo usuário em 25/11/2026, sem DEC):** (a)+(b), a
+    confirmar com os números do 2.4e; a (a) entra de qualquer forma; a (c)
+    fica descartada. A (d) e o `clamp` na (b) continuam registrados sem
+    decidir.
+  - **Selos, onde entram e composição do envelope: DEC-49.** Quatro selos
+    ("ligado pelo tipo", "ligado pelo nome", "possível" e "lacuna"), com o
+    motivo e, quando houver, a família conhecida; o mesmo selo no "o que
+    chama" e no "quem usa" pela regra. Na tela, no "o que chama" e no "Onde é
+    usado?"; no envelope, no "o que chama", e a nota ao modelo passa a dizer
+    "pelo nome" em cada chamador do "quem usa" (fecha a pendência do
+    "caminho: chama um alvo"). Se a mudança da nota pedir versão nova do
+    envelope, ou se a (b) tirar um `unique` rebaixado a "possível" do filtro
+    SETTLED, a Parada 1 decide se isso pede `envelope-2`, com a evidência do
+    2.4e exigida pela DEC-13.
+  - **Pendências da DEC-49 (registradas sem decidir):** a classificação de
+    cada resolução (`unique`, `type`, `trait_default`, `import`, `scope`,
+    `receiver`, `chosen`) num dos selos é proposta na Parada 1 do 2.4f, com
+    contagem, e validada pelo usuário; um tipo que nasce de um candidato só
+    pelo nome (DEC-41, caso b; HC-110) não vira "ligado pelo tipo" sem
+    decisão; a Parada 1 do 2.4f propõe.
 - 2.5 PIL-G5/N7: relação "passa referência", nunca "chama".
 - 2.6 Genéricos (N6), por último (ch.notify: 33 → 1).
 - Portão de cada passo: `node tools/precisao/portao.js --studio .studio
@@ -312,10 +368,13 @@ framework são externas conhecidas e como ele escolhe implementações
 como perfis novos, sem mudar o núcleo nem as regras do Python. A Parada 1 da
 2B propõe a forma desse perfil e diz o que do Django não cabe nela.
 
-**Condição para a Parada 1 da 2B (usuário, 25/11/2026):** a taxa de link falso
-entre os ligados, medida pelo gabarito do 2.4e em todas as chamadas (não na
-amostra), abaixo de um limite que o usuário fixa depois do 2.4e; e nenhum fluxo
-da 2B segue um link "só pelo nome" sem marcá-lo como incerto.
+**Condição para a Parada 1 da 2B (usuário, 25/11/2026; reescrita pela DEC-48,
+item 9):** dois limites por linguagem, medidos pelo gabarito do 2.4e em todas
+as chamadas, não na amostra: nas "ligadas pelo tipo", nenhuma ligação falsa sem
+explicação (uma só bloqueia); nas "ligadas pelo nome", um teto fixado pelo
+usuário depois do 2.4e; e nenhum fluxo da 2B usa uma ligação "ligado pelo nome"
+sem mostrar o selo. Referência: o piso do estrato UQ (Python pelo menos 21 de
+233; Rust pelo menos 11 de 94); o estrato dá só a ordem de grandeza.
 
 - Pontos de entrada: rotas (PIL-G4), management commands, jobs.
 - Chamadas soltas no topo dos arquivos Python (Q2 da Parada 1 do 2.3b,
@@ -357,12 +416,52 @@ da 2B segue um link "só pelo nome" sem marcá-lo como incerto.
   oficial continua no acervo do Librarian; o Langfuse é a visão operacional
   e, se divergir, vale o acervo. Nada disso entra no núcleo (DEC-29).
 
+**Contrato de evidência entre o Librarian e o agente** (proposta aceita como
+direção pelo usuário em 25/11/2026; não abre passo nem decisão; vira DEC na
+Fase 3, junto com o agente aprovador):
+1. *O pedido:* o usuário pergunta em linguagem normal; o agente traduz num
+   pedido ao Librarian (ex.: "o caminho a partir do recebimento de e-mail").
+2. *O pacote:* o Librarian entrega trechos, linhas, ligações com selo e
+   lacunas com motivo; não entrega o grafo para o agente passear.
+3. *O rascunho:* o agente monta o rascunho; um caminho vale pelo elo mais
+   fraco (com um elo incerto, o caminho inteiro é incerto).
+4. *A pergunta-chave:* sem elo incerto, vai para a entrega; com elo incerto,
+   o agente não chuta: pede evidência, primeiro nos piores elos (família de
+   taxa mais alta, elo dentro de workflow).
+5. *O pedido de evidência* é específico sobre o elo fraco (ex.: "de onde vem
+   o message da linha 37?") e é respondido só com o que o código mostra: onde
+   a variável nasce, o tipo anotado, o retorno, a herança e as sobrescritas.
+   O gabarito nunca é evidência. O selo é do Librarian: o agente não o muda;
+   anota a evidência e propõe ("a ligação diz X, a evidência aponta Y; humano
+   confirmar"). Até 3 pedidos por elo; depois, declara a lacuna, sem ficar
+   em círculo. O 3 é valor inicial, revisto nos primeiros usos (Fase 7).
+6. *A entrega:* seta sólida; seta tracejada (hipótese, com o motivo e a
+   evidência); buraco marcado (lacuna, com o que faltaria para fechar); uma
+   lista curta de perguntas ao usuário; o registro do que o agente
+   consultou.
+7. *A validação:* o humano aprova o sólido, decide o tracejado e responde as
+   perguntas; só então algo vira fato, com autoria humana. Se o agente
+   aprovador da Fase 3 vier, ele faz esta etapa e o humano audita no fim; o
+   fluxo não muda. Isso depende da reabertura da DEC-22 na Fase 3 (proposta
+   do agente aprovador); enquanto ela vigorar, só o humano promove.
+8. *O acervo:* o fato aprovado fica guardado e volta na próxima pergunta que
+   passar pelo trecho.
+
+Três regras: o Librarian nunca finge certeza (todo elo tem selo); o agente
+nunca muda um selo nem promove um elo sozinho; só o humano transforma
+hipótese em fato (DEC-22, vigente). Em aberto, para a Fase 3: se "sólido"
+vale só para "ligado pelo tipo" ou também para o que a evidência sustentou
+depois da validação; onde entra "possível" (tracejado ou lacuna); o nome de
+"sólido", que não pode sugerir "verificado" (DEC-46, DEC-49).
+
 ### Antes da Fase 3: o envelope e o "Medir tudo" pela regra
 Registrado em 25/11/2026 (Q9 do 2.4d). Parada 1 não aberta.
-- **Ponto principal: a nota ao modelo.** Ela diz "caminho: chama um alvo", sem
-  "pelo nome", e é lida pelos agentes. O `envelope-1` declara que os chamadores
-  são por nome no campo `limits` da resposta e na ajuda da tela; a nota, não. O
-  texto da tela ("chama X pelo nome escrito") foi corrigido no 2.4d.
+- **A nota ao modelo.** Ela diz "caminho: chama um alvo", sem "pelo nome", e é
+  lida pelos agentes. O `envelope-1` declara que os chamadores são por nome no
+  campo `limits` da resposta e na ajuda da tela; a nota, não. O texto da tela
+  ("chama X pelo nome escrito") foi corrigido no 2.4d. No 2.4f, a nota passa a
+  dizer "pelo nome" em cada chamador (DEC-49). Fica neste item a leitura pela
+  regra, com os selos, no "quem usa" do envelope e no "Medir tudo".
 - Os chamadores do envelope e do "Medir tudo" usam o `used_by` por nome, com um
   candidato só. A regra nega 1.101 dos 2.316 no Python e 15 dos 1.041 no Rust, e
   liga 727 e 697 que não aparecem lá.
@@ -394,6 +493,20 @@ Etapa 6 vai para as trilhas paralelas, DEC-31)
   - Divisão em 3a (antes da Fase 4) e 3b (depois).
   - Ver também, a decidir: o orquestrador do aprovador e os papéis das peças,
     em [Propostas de arquitetura](#propostas-de-arquitetura-a-decidir).
+- **Proposta aceita pelo usuário (25/11/2026), ao lado do agente aprovador:**
+  decidir junto com o contrato de evidência (em
+  [Propostas de arquitetura](#propostas-de-arquitetura-a-decidir)).
+  - O humano aprova fatos, não ligações: as ligações têm selo e o portão as
+    vigia.
+  - Fatos mecânicos com concordância de fontes independentes (regra, tipo e
+    execução) podem ser aprovados por agente, com auditoria do usuário por
+    amostra sorteada; um erro na amostra devolve o lote à revisão. Depende
+    da reabertura da DEC-22 na Fase 3 (proposta do agente aprovador);
+    enquanto ela vigorar, só o humano promove.
+  - Fatos interpretativos ("este workflow serve para X", "isto é seguro de
+    mudar") continuam humanos.
+  - Todo fato tem validade: quando o código por trás muda, volta para
+    revisão.
 
 ### Fase 4 — Evidence Request
 - Primeiro consumidor de referência: o agente de workflows.
@@ -405,6 +518,9 @@ Etapa 6 vai para as trilhas paralelas, DEC-31)
   cada uma apoiada em fatos aprovados e com as lacunas declaradas. É o
   que o agente de workflows produz e o agente de documentação consome
   (DEC-36).
+- **Item de trabalho (usuário, 25/11/2026):** o pedido do agente "de onde vem
+  esta variável?" não existe; construir antes dos agentes, junto com a lista
+  do que o agente pode perguntar ao Librarian.
 - **Proposta do usuário (25/11/2026), a decidir:** restrição proposta para as
   Fases 4 e 6: ids únicos entre projetos (fatos, workflows, símbolos) e fatos
   que podem citar mais de um projeto. Nota: a citação de fatos sem prefixo
