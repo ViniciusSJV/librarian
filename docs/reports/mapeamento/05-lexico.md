@@ -1,6 +1,6 @@
 # Mapeamento do repositório — parte 5: o léxico e a busca
 
-**Estado:** Pendente de validação do usuário: Parada 1 (A a D). A Parada 2 (E a H, a busca até o nó de entrada) espera a liberação do usuário.
+**Estado:** Pendente de validação do usuário: Parada 2 (E a H); Parada 1 validada.
 
 **Data:** 26/11/2026. **Base:** `main` em `10b0f2e` (worktree limpa no início). **Só leitura**: nenhum código, documento, `.studio`, Healthchecks ou ray tracer foi alterado. Nenhum LLM foi chamado (nem Ollama, nem Claude). A execução foi feita só sobre uma **cópia** da `.studio`, no scratchpad da sessão, e só nas rotas `/api/lexicon/suggest` (com o perfil `manual`, que não chama ninguém) e `/api/lexicon/check`. No fim, o original foi conferido e a cópia, apagada (seção "Execução").
 
@@ -234,3 +234,242 @@ Tudo no Git Bash. `S` é o scratchpad da sessão.
 
 - **MAP-Q16.** O léxico atual do ray tracer foi importado do `librarian.json` do projeto (`imported_from`). Ele tem 10 stop words que a conferência de hoje recusaria (`line`, `call`, `changing`, `make`…) e 2 grupos sem termo do código (seção D). O código não registra se ele passou por alguma conferência. A regra das stop words existe desde `15eb294` (26/10) e a dos grupos desde `2e0837f` (20/10) (`git log -S`). Esse léxico foi feito à mão, ou antes dessas regras? Ele deve continuar como está nos experimentos?
 - **MAP-Q17.** O vocabulário que vai ao LLM inclui testes, blocos `impl` e stop words embutidas (MAP-O43), e "existe no código" tem três sentidos (MAP-O45). Isso é para ficar registrado só como fato, ou entra numa lista de pontos a decidir na reestruturação?
+
+---
+
+## Parada 2: a busca até o nó de entrada
+
+**Base:** `main` em `5802a41`. As mesmas regras da Parada 1. A execução foi feita sobre uma **nova cópia** da `.studio`, no scratchpad. Rotas usadas: `/api/ask` no studio da cópia e o comando `search` do `librarian_ingest` sobre a edition da cópia. Para variar `exclude_tests`, `hits` e `radius`, editei o `project.json` **da cópia** (seção "Execução (Parada 2)"). Nenhum LLM foi chamado.
+
+Caminhos abreviados novos: `prepare.rs` e `graph.rs` são de `crates/librarian-ingest/src/`; `claims.rs` é de `crates/librarian-studio/src/`; `graph_engine.rs` é `crates/librarian-graph-engine/src/graph_engine.rs`.
+
+### E. A pergunta, de `/api/ask` até `SearchIndex::search`
+
+**O caminho** (verificado, por leitura):
+
+```
+POST /api/ask {key, run, question}          main.rs:184-188
+ → Store::ask                               store.rs:461-473
+   → SearchIndex::new(catalog, settings.lexicon)      store.rs:464   (search.rs:126-181)
+   → .without_tests() se settings.exclude_tests        store.rs:465-467 (search.rs:185-198)
+   → .search(question, settings.top, settings.depth)   store.rs:468   (search.rs:200-295)
+   → request(settings, question, None, …)              store.rs:471   (store.rs:1378-1401)
+   → new_turn → new_turn_with                          store.rs:472 → :874 → :883
+       grava search.json (o da busca acima)            store.rs:909-911
+       grava prepare-request.json                      store.rs:913
+       → prepare::write + prepare::verify              store.rs:915
+         → prepare::prepare, ramo sem targets          prepare.rs:118, :160-180
+             SearchIndex::new + without_tests + search, DE NOVO, com o léxico, top, depth e
+             exclude_tests do pedido                   prepare.rs:167-171
+             recusa se hits.len() < request.hits       prepare.rs:172-178
+             fichas E1..En dos primeiros `hits`        prepare.rs:189 (take(chosen))
+```
+
+A busca roda **duas vezes** com o mesmo pedido: uma no `Store::ask` (para o `search.json` da pergunta) e outra dentro do `prepare` (para o `prepared/search.json`). Leitura minha: as duas são iguais porque a busca é determinística, e o teste `lexical_search_expands_explicit_aliases_and_abstains` confere bytes iguais em duas buscas (`crates/librarian-ingest/tests/editions.rs:49-56`). **Verificado no caso real:** `cmp turns/01/search.json turns/01/prepared/search.json` deu arquivos iguais.
+
+**Como a pergunta vira termos** (verificado, `search.rs:208-221`):
+1. `tokens(question)`, a mesma função do léxico (Parada 1, A): minúsculas, sem acento, quebra de identificadores (`:210`).
+2. Tira as stop words: as embutidas mais as do léxico, juntadas em `SearchIndex::new` (`:143-146`, `:212`).
+3. Cada termo vira o seu grupo de sinônimos inteiro (o "alias"), ou só ele mesmo se não está em grupo nenhum (`:214-218`).
+4. Termos do mesmo grupo contam uma vez: a chave é a primeira palavra do grupo em ordem alfabética (`:219`), e o primeiro termo escrito é o que fica como `term` (`:220`). O comentário diz ser contra o plural inflar a cobertura (`:208`).
+
+**O que se busca** (verificado, `search.rs:147-172`): um "documento" por símbolo da edition, menos os de tipo de navegação do extrator (`impl` e `module` no Rust, `class` no Python; `:150-157`). Cada documento tem 4 campos, cada um com um peso:
+
+| Campo | Peso | De onde |
+|---|---:|---|
+| `name` | 8 | tokens do nome |
+| `scope` | 3 | tokens do nome qualificado |
+| `path` | 1 | tokens do caminho do arquivo |
+| `code` | 1 | tokens do trecho inteiro do símbolo (corpo, comentários, strings) |
+
+**Pontuação e ordem** (verificado, `search.rs:222-280`):
+- Para cada termo, o peso é o **maior** dos campos onde algum sinônimo aparece (`:226-233`). Cada termo que pega gera um `MatchReason` com o termo, os sinônimos e os campos (`:234-241`).
+- **Corte por cobertura:** o símbolo só entra se pegar pelo menos 60% dos termos (`reasons*5 < groups*3` → fora, `:243`).
+- **Pontos:** `100 × termos que pegaram + soma dos pesos − 20 se é teste` (`:248-249`).
+- **Ordem:** pontos (maior primeiro); depois o que não é teste; depois o trecho menor; depois o id (`:252-261`).
+- **Corte:** até `top` hits. Pula um símbolo cujo trecho se sobrepõe ao de um hit melhor do mesmo arquivo (`:270-278`). Cada trecho é cortado em 4.000 bytes, e o total dos trechos em 16.000 (`:263`, `:299-308`).
+- **Situação:** `status` vale `candidates`, ou `no_lexical_evidence` sem hits (`:289`). `limits` traz os textos do perfil do extrator e, com `exclude_tests`, mais um (`:291-293`).
+
+**Caso real** (cópia; `/api/ask`; as configurações gravadas: `top` 5, `depth` 2, `hits` 1, `radius` 0):
+
+| Projeto · pergunta | `terms` | Hits (pontos) | Termos sem hit |
+|---|---|---|---|
+| ray tracer · "Como a câmera calcula a direção do raio para um pixel?" | `camera`, `direcao`, `pixel`, `raio` (`como`, `a`, `do`, `para`, `um` são embutidas; `calcula` é stop word do léxico) | 5: `impl Camera::ray_from_pixel` (420), três `tests_camera::constructing_a_ray_…` (398, 393, 393), `impl Camera::render` (305) | nenhum |
+| Healthchecks · "Como o ping atualiza o status do check?" (léxico vazio) | `atualiza`, `check`, `ping`, `status` | 5, todos com 3 dos 4 termos: `Check.ping` (312), `ping_body` em dois arquivos (310), `status` (310), `check_urls` (310) | `atualiza` |
+| ray tracer · "Onde fica o banco de dados de usuários?" | `banco`, `dados`, `fica`, `usuarios` | 0: `status: "no_lexical_evidence"`; `prepare_error: "Search returned 0 candidates; 1 requested"` | os 4 |
+
+Conta dos pontos do 1º hit do ray tracer, a partir dos `reasons` gravados: 4 termos × 100, mais `camera` 3 (escopo e caminho), `direcao` 1 (código), `pixel` 8 (nome) e `raio` 8 (nome), dá 420. Os testes ficam 20 abaixo: `constructing_a_ray_when_the_camera_is_transformed` dá 4×100 + 8 + 1 + 1 + 8 − 20 = 398.
+
+**O dicionário decide o caso do ray tracer** (CLI sobre a edition da cópia, `librarian_ingest search <edition> "<pergunta>" - 5 2`, sem léxico): `terms` = `calcula`, `camera`, `direcao`, `pixel`, `raio` e **0 hits**. Só `camera` e `pixel` existem no código: 2 de 5 termos ficam abaixo dos 60%.
+
+**Acréscimo 1: por que as 14 perguntas do Healthchecks têm `terms: []`.** Elas **não passaram pela busca**. Foram feitas por outro caminho, o da pergunta "reunida" (P4). O léxico vazio não é a causa: nesse caminho o léxico não é usado. Verificado, por leitura e nos arquivos da cópia:
+- **Os registros:** o `question.json` da pergunta 01 tem o campo `gathered` com os `nodes` escolhidos. O `prepare-request.json` tem `"gathered": true` e 5 `targets` (e `lexicon` vazio, que não é lido). O `search.json` das 14 tem `version: "chain-step-v1"`, `status: "gathered"` e `terms: []`.
+- **O caminho:**
+
+```
+página: com declarações reunidas (ou uma investigação), manda /api/gathered-question;
+        sem elas, /api/ask                                   index.html:4274-4279
+POST /api/gathered-question                                  main.rs:155-163
+ → Store::ask_gathered → ask_gathered_parts                  store.rs:503-506, :515-557
+   → request(settings, question, Some(targets), …)           store.rs:554
+     request.gathered = true                                 store.rs:555
+   → new_turn_with(…, search: None, …)                       store.rs:557
+     → prepare::prepare, ramo com targets                    prepare.rs:122-158
+       origem StepOrigin::Gathered                           prepare.rs:128-133
+       → chain_report (nada é buscado)                       prepare.rs:154 → search.rs:339-358
+           terms: vec![], status "gathered", lexicon_sha256: ""   search.rs:345-346, :355-357
+     → sem search próprio, copia prepared/search.json para a pergunta   store.rs:920-922
+```
+
+- O próprio pedido diz que, num passo com alvos, "`top`, `hits` and `lexicon` are then unused" (diz ser: `prepare.rs:39-40`). O texto de limite gravado diz: "Gathered step: declarations the person gathered one by one; nothing was searched." (`search.rs:346`).
+- **Homônimo na página:** para `terms: []`, a página mostra "nenhum termo após as stop words" (`index.html:5443`, texto `turn.noTerms`, `:1343`). Isso vale também para as perguntas reunidas, em que nenhuma stop word foi tirada porque nada foi buscado. Ver MAP-O52.
+
+### F. As configurações da busca
+
+**Onde moram:** todas no `Settings` do `project.json` (`store.rs:187-222`), editadas na página em Configurações (`index.html:502-509`) e gravadas por `PUT /api/project` (`save_settings`, `store.rs:325-337`). Os padrões de um projeto novo estão em `store.rs:1479-1496`. O `librarian.json` do projeto pode trazer `search.top`, `search.depth`, `search.hits`, `search.exclude_tests`, `prepare.radius` e `prepare.numbered_lines`, lidos só ao abrir o projeto (`store.rs:1517-1522`). Toda pergunta copia as configurações para o pedido do `prepare` (`request`, `store.rs:1378-1401`), gravado em `prepare-request.json` e em `prepared/request.json`.
+
+**As quatro que o usuário lembra**, mais as outras do código (verificado, por leitura; efeitos conferidos na cópia):
+
+| Configuração | Padrão | Limites e onde são conferidos | Muda o que a busca acha? | Quem lê |
+|---|---|---|---|---|
+| **`top`**: quantos resultados a busca devolve | 5 (`store.rs:1481`) | 1 a 10: `search.rs:203` (recusa a pergunta: "top 1..10"); página `min=1 max=10` (`index.html:503`) | **Corta** a lista: quais nós entram como hits, até `top`. Não muda quem passa nos 60% nem a ordem. Caso: "Como a esfera calcula a normal?" deu 1, 5 e 10 hits com `top` 1, 5 e 10 (CLI); `top` 11 → recusa | `search.json` (a lista da página, `#1…#n`, `index.html:2687`, `:5394-5397`). Ao pacote, só os primeiros `hits` vão como fichas; os outros ficam só no `search.json` (diz ser: `prepare.rs:25`), cujo hash entra no pacote (`search_sha256`, `evidence.rs:872`) |
+| **`hits`**: quantos dos primeiros viram fichas E1…En | 1 (`store.rs:1483`) | 1 a `top`: `save_settings` (`store.rs:331`) e `prepare` (`prepare.rs:161-162`); página `min=1 max=10` (`index.html:505`) | **Não.** Escolhe quantos dos hits já achados vão ao pacote (`prepare.rs:189`). Se a busca achou menos que `hits`, o `prepare` recusa ("Search returned N candidates; M requested", `prepare.rs:172-178`), a recusa fica no `question.json` e não há pacote (`store.rs:915-918`) | **A resposta para fora**: as fichas da consulta. Na página, a marca `E1…En` × `#n` (`index.html:2687`, `:5390`, `:5396`). Num passo com alvos, não é usado (`prepare.rs:39-40`) |
+| **`depth`**: quanto dos vizinhos acende no mapa | 2 (`store.rs:1482`) | 0 a 3: `search.rs:204` e `graph.rs:163`; página `min=0 max=3` (`index.html:504`). Tetos fixos: 48 nós e 96 arestas (`search.rs:284`) | **Não.** Só a vizinhança do **primeiro** hit (`search.rs:281-285`). Caso (CLI, ray tracer): `depth` 0 → 1 nó, 1 → 36 nós e 35 arestas, 2 → 48 e 52 (cortada), 3 → 48 e 61 (cortada); os hits e os pontos não mudam | **Só a página**: acende os nós e as arestas (`attachSearch`, `index.html:2690-2698`). A vizinhança fica no `search.json` (`graph`), mas **não vai na consulta**: no caso real, `claims/query.json` só tem `evidence.items`, `limits` e `line_map`. Vai só o texto fixo "Graph expands only the first hit… Depth bounded to 0..3, 48 nodes, 96 edges" nos limites. Também é usado num passo com alvos (`prepare.rs:154`) |
+| **`radius`**: linhas a mais acima e abaixo da ficha | 0 (`store.rs:1484`) | ≥ 0, sem teto. Só é cortado no começo e no fim do arquivo (`graph_engine.rs:217-218`); página `min=0` (`index.html:506`) | **Não.** Só o recorte de linhas montado depois (`prepare.rs:427` → `prepare_query_formatted`). Caso (cópia, `radius` 3): fichas 52–54 → 49–57, 102–111 → 99–114, 47–178 → 44–178 | **A resposta para fora**: as linhas de cada ficha na consulta. Também registrado em `composition.radius` (`prepare.rs:436`) |
+| `exclude_tests` | `false` (`store.rs:1496`) | sim/não; só para a busca lexical (`store.rs:1391`: `settings.exclude_tests && targets.is_none()`) | **Sim**: tira os símbolos de teste e o que está dentro deles (`search.rs:185-198`). Caso: "Como a esfera calcula a normal?" deu 3 hits, nenhum teste (com `top` 5); sem ele, 5 hits, 2 de teste no top 5 e 7 no top 10 | **A resposta para fora**: um limite a mais, "Test symbols marked by the extractor … were left out" (`search.rs:292`), que vai aos `unknowns` (`prepare.rs:457`) e aparece nos `limits` da consulta. E o `search.json` |
+| `lexicon` | vazio (`store.rs:1479`) | palavra única e sem palavra em dois grupos, conferidos ao construir o índice (`search.rs:131-140`) | **Sim**: stop words e sinônimos mudam os termos e os acertos (caso: 5 hits com o léxico, 0 sem) | O pedido do `prepare` (com o léxico inteiro, `prepare.rs:22`) e o `search.json` (`lexicon_sha256`). A consulta não leva o léxico |
+| `numbered_lines` | `true` num projeto novo (`store.rs:1485`); `false` se o `librarian.json` não diz (`store.rs:1522`) | sim/não | **Não**: a forma das linhas (`prepare.rs:418-422`) | A resposta para fora |
+| `accept_diagnostics` | `false` | sim/não | **Não**: o `prepare` recusa uma edition com diagnósticos (`prepare.rs:119-121`) | O pacote (recusa ou não) |
+
+**Fixos no código, sem configuração** (verificado):
+- cobertura mínima de 60% (`search.rs:243`);
+- pesos 8, 3, 1 e 1 (`:165-168`);
+- desconto de 20 para teste (`:249`);
+- pergunta de até 8.192 bytes (`:202`);
+- trecho de até 4.000 bytes por hit e 16.000 no total (`:263`, `:304`);
+- vizinhança com até 48 nós e 96 arestas (`:284`), e rótulos de até 256 bytes (`graph.rs:208-215`, `:228`).
+
+Diferença entre caminhos: a CLI usa `top` 5 e `depth` **1** por padrão (`cli.rs:13-14`), e o studio usa `depth` 2; a CLI não tem `exclude_tests`.
+
+**A palavra "hits" tem dois sentidos** (homônimo). No relatório da busca, `hits` é a lista de resultados, até `top` (`search.rs:102`). Nas configurações e no pedido, `hits` é quantos desses viram fichas (`prepare.rs:25-26`). A página diz o segundo: "Quantos primeiros resultados viram fichas E1…En" (`index.html:953`). Ver MAP-O53.
+
+### G. O nó de entrada
+
+**Qual é** (verificado): só o **primeiro hit**. A vizinhança é `graph.neighborhood(&hits[0].symbol_id, depth, 48, 96)` (`search.rs:281-285`). Os outros hits não são expandidos (o limite diz isso: "Graph expands only the first hit", `extractors/mod.rs:143`).
+
+**Como se percorre** (verificado, `graph.rs:155-232`):
+- É uma busca em largura a partir do nó do primeiro hit, sobre o grafo sintático (`Graph::build`, `search.rs:281`), nos **dois sentidos** de cada aresta (`graph.rs:171-175`, `:186-190`), até `depth` níveis.
+- Um nó `source` é folha (`:181`).
+- Ao bater no teto de nós ou de arestas, para de crescer e marca `truncated: true` (`:191-195`).
+- As arestas seguidas são de **todos** os tipos do grafo sintático: `declares`, `contains`, as de observação (`call_observed`, `attribute_access`, `receiver_type`…) e também `name_candidate`, a aresta de nome para cada homônimo (parte 3, A).
+
+**O que acende na página** (verificado, `attachSearch`, `index.html:2675-2719`):
+- os hits que têm nó no grafo v2 da página, com rótulo `E1…En` (fichas) ou `#n` (`:2687`, `:2707-2711`);
+- os nós da vizinhança, casados **por id** com o grafo v2 (`:2690-2693`);
+- as arestas, casadas por `from|to|bytes da evidência` (`:2694-2698`). O grafo v2 renomeia as de observação para `observes` (parte 3, A), mas a chave é a mesma;
+- uma nota: "Vizinhança: {n} pontos e {m} ligações do primeiro resultado, associados por ID" (`:2715`, texto `:1023`) e, se algum hit não tem nó, "{n} resultado(s) sem nó correspondente no grafo" (`:2698`, `:2716`).
+
+**Caso real** (cópia; contagem com `node` sobre o `search.json` e o `graph-v2.json`):
+
+| | ray tracer, pergunta 01 | Healthchecks, pergunta 15 |
+|---|---|---|
+| Nó de entrada | `impl Camera::ray_from_pixel` (`src/camera.rs:81-93`) | `Check.ping` (`hc/api/models.py:493-573`) |
+| Vizinhança (`depth` 2) | 48 nós (o teto), 52 arestas, `truncated: true` | 48 nós (o teto), 48 arestas, `truncated: true` |
+| Casam com o grafo v2 | 48 de 48 nós, 52 de 52 arestas | 48 de 48, 48 de 48 |
+| Arestas `name_candidate` acesas | 13 | 5 |
+| Hits com nó no v2 | 5 de 5 | 5 de 5 |
+
+**Acréscimo 3: o que fica de fora, e se é declarado** (verificado, por leitura e nos arquivos da cópia):
+
+| O que fica de fora | Gravado? | Declarado na consulta (o que vai para fora)? | Na página? |
+|---|---|---|---|
+| Hits depois dos primeiros `hits` (no caso: 4 de 5) | sim, em `search.json`, com pontos e `reasons` | **não**. A consulta só tem as fichas (no caso, `items` = só `E1`) e os limites fixos. Nada diz que houve outros candidatos | sim, na lista, como `#2…#5` (`index.html:5394-5397`) |
+| Candidatos depois de `top` | **não**: a lista ordenada é descartada depois do corte (`search.rs:264-280`) | não | não |
+| Candidatos abaixo dos 60% de cobertura | não (`search.rs:243`) | só o texto fixo "Minimum coverage: 60% of query term groups" | não |
+| Símbolos pulados por sobreposição com um hit melhor | não (`search.rs:270-278`) | não | não |
+| Trecho cortado pelo limite de bytes | sim: `excerpt_truncated` por hit (`search.rs:321`) | só o texto fixo "Excerpts limited to 4000 UTF-8 bytes each and 16000 total" | — |
+| Termos sem hit (no caso do Healthchecks: `atualiza`) | sim, de forma indireta: `terms` e os `reasons[].term` estão no `search.json`; a diferença não é um campo | **não** | sim: cada termo vira uma etiqueta "tocou" ou "não tocou nenhum resultado" (`index.html:5439-5442`, textos `:1341-1342`). Também alimenta os `missed_terms` do léxico (Parada 1, A) |
+| Vizinhança cortada pelo teto | sim: `graph.truncated` no `search.json` (`graph.rs:229`) | não (a vizinhança não vai) | **não**: `attachSearch` não lê `truncated` (nenhum texto de `truncated` da página é do overlay: `grep -n truncated index.html`) |
+| Os outros hits como pontos de entrada | não se aplica: não são expandidos | só o texto fixo "Graph expands only the first hit" | os rótulos `#n` aparecem; a vizinhança deles, não |
+
+Os textos fixos chegam à consulta assim: `search.limits` → `report_limits` (`prepare.rs:445-461`) → `unknowns` do dossiê (`prepare.rs:408-411`) → `evidence_unknowns` de cada seleção → os `limits` da consulta de claims (`claims.rs:64-68`). Verificado no caso real: os 5 `limits` de `claims/query.json` são os 4 do perfil mais "Fichas descrevem onde estão declarações; não respondem à pergunta nem afirmam comportamento" (`prepare.rs:349-354`).
+
+**Acréscimo 4: a busca confere "teve hit no código"?** Além da conferência do léxico (Parada 1, D), há quatro pontos no código (verificado). Nenhum deles confere termo a termo:
+1. **Por candidato:** o corte de 60% (`search.rs:243`). Um símbolo com menos termos não é hit.
+2. **Pela busca inteira:** `status: "no_lexical_evidence"` quando não há hit (`search.rs:289`). A busca não falha; o relatório é gravado (caso real: pergunta 02 do ray tracer).
+3. **No `prepare`:** recusa quando há menos hits que `hits` (`prepare.rs:172-178`). O erro fica em `prepare_error` no `question.json` (`store.rs:915-918`), a pergunta não ganha pacote e não pode ser enviada (diz ser: `store.rs:870-872`). Caso real: "Search returned 0 candidates; 1 requested". A página mostra "Nenhum resultado: o léxico não alcançou símbolos do projeto" (`index.html:5447`, texto `:1344`).
+4. **Na CLI:** `librarian_ingest search` sai com código 2 sem hits (`cli.rs:17`).
+
+**Não há** conferência de que **cada termo** da pergunta tem hit: um termo que não toca nada (como `atualiza`) passa sem aviso na consulta. Só a página o marca. Ver MAP-O54.
+
+### H. Os testes do léxico e da busca
+
+Achados com `git grep -lE "SearchIndex|search::|vocabulary\(|tokens\(|\.search\(|lexicon"` em `crates/*/tests/*.rs` e `crates/*/src/*.rs`, e lidos um a um. **O que o método não pega:** testes que exercitam a busca só por dentro de outra rota sem citar esses nomes (por exemplo, testes de `ask_path` ou da escada que chamam `Store::ask`), e as baterias de tela (`.js`), que ficam fora do cargo.
+
+| Teste | Arquivo:linha | O que verifica |
+|---|---|---|
+| `lexical_tokens_handle_portuguese_and_identifier_boundaries` | `crates/librarian-ingest/tests/editions.rs:11` | `tokens` tira acentos (também os combinantes) e quebra `ray_from_pixel` e `HTTPServer` |
+| `lexical_search_expands_explicit_aliases_and_abstains` | `editions.rs:21` | Os sinônimos levam a `ray_from_pixel` com 3 razões; o trecho traz o corpo; uma pergunta sem acerto dá `no_lexical_evidence`; só stop words dão 0 hits; pergunta vazia, `top` 0 e `depth` 4 são recusados; duas buscas iguais dão os mesmos bytes |
+| `python_methods_are_searched_and_prepared_like_rust` | `crates/librarian-ingest/tests/python.rs:152` | Em Python, a classe é navegação e não é hit; o método é. O `prepare` monta a ficha e as linhas numeradas |
+| `vocabulary_lists_name_tokens_by_frequency` | `python.rs:202` | `vocabulary` conta por símbolo, deixa de fora tokens curtos e ordena por frequência e depois alfabeticamente |
+| `a_search_without_tests_leaves_out_test_functions_and_what_is_written_inside_them` | `crates/librarian-ingest/tests/calls.rs:166` | `without_tests` tira a função de teste e o auxiliar escrito dentro dela, mantém o resto e acrescenta o limite |
+| `search_matches_frozen_v1_goldens` | `crates/librarian-ingest/tests/v1_regression.rs:173` | Os bytes da busca são iguais aos congelados em `tests/fixtures/v1/` (`search-camera.json`, `search-abstain.json`, `search-test-penalty.json`, com o `lexicon.json` de lá), inclusive o desconto de teste |
+| `cut_off_answers_keep_only_complete_groups` | `crates/librarian-studio/src/lexicon.rs:215` | `parse` aproveita só os grupos inteiros de uma resposta cortada e marca `recovered`; uma resposta inteira é lida sem a marca; sem JSON aproveitável, erro |
+| `open_generate_and_ask_light_the_graph_and_prepare_a_numbered_query` | `crates/librarian-studio/src/store.rs:2041` | `Store::ask` com léxico: o 1º hit é `ray_from_pixel`, a consulta tem linhas numeradas, o envio fica ligado ao pacote conferido; uma pergunta sem acerto grava a busca com a recusa do `prepare`; numeração das perguntas |
+| `lexicon_proposals_are_checked_and_profiles_exported_on_request` | `store.rs:2554` | `missed_terms` (`fica`, `hoje`); o pedido `manual`; o pedido em inglês com os mesmos termos; idioma desconhecido recusado; a conferência de grupos e de stop words (Parada 1, D); resposta cortada; `id` com `../` recusado; exportação do perfil |
+| `routes_that_make_no_question_make_no_package` | `store.rs:7136` | Entre outras rotas, `/api/lexicon/suggest` não cria pergunta nem pacote |
+| `routes_typed_questions_by_words_and_lexicon` | `crates/librarian-studio/src/questions.rs:503` | A pergunta de performance usa os sinônimos do léxico para reconhecer as palavras da regra |
+
+**Execução** (só esses):
+- `cargo test --locked -p librarian-ingest --test editions --test python --test calls --test v1_regression -- --exact <os 6 nomes>`: **exit 0, 6 aprovados**, 0 falhas;
+- `cargo test --locked -p librarian-studio --bin librarian_studio -- --exact <os 5 nomes com o módulo>`: **exit 0, 5 aprovados**, 0 falhas (177 filtrados).
+
+Logs no scratchpad (`testes-ingest.log`, `testes-studio.log`). `git status --porcelain` depois: vazio.
+
+---
+
+## Execução (Parada 2)
+
+1. **Original antes:** o mesmo comando da Parada 1 deu os mesmos dois hashes e contagens (healthchecks `61cd25c1…5ca3d5`, 932; renderer `612cdbf6…f3ecc`, 42).
+2. **Cópia nova:** `cp -r .studio/projects/* $S/busca/root/.studio/projects/`. Studio sobre ela: `LIBRARIAN_ROOT=$S/busca/root target/release/librarian_studio.exe --port 8792`; o log confirmou a pasta de dados da cópia.
+3. **Perguntas** (`POST /api/ask`), nesta ordem: ray tracer "Como a câmera calcula a direção do raio para um pixel?" (virou a pergunta 01 do run); Healthchecks "Como o ping atualiza o status do check?" (15); ray tracer "Onde fica o banco de dados de usuários?" (02).
+4. **CLI:** `target/release/librarian_ingest.exe search <edition da cópia> "<pergunta>" <léxico extraído da cópia | -> <top> <depth>`, com `top` 1, 5, 10 e 11 e `depth` 0 a 4.
+5. **Configurações na cópia:** no `project.json` do ray tracer **da cópia**, `exclude_tests: true`, `hits: 3`, `radius: 3`. Depois, `/api/ask` "Como a esfera calcula a normal?" (virou a pergunta 03).
+6. **Testes:** seção H.
+7. **Fim:** o studio da cópia foi encerrado (`Stop-Process` no processo da porta 8792). O hash do original foi refeito: os mesmos dois valores e contagens do passo 1; `ls .studio/projects/renderer-9b78f3a9/runs/*/` não mostra `turns`. A cópia foi apagada (`rm -rf $S/busca`).
+
+---
+
+## Em palavras simples
+
+*Esta seção está à parte das seções E a H: sem números nem nomes de arquivo. Foi escrita com a ideia da skill "elementary school teacher" (nível newcomer).*
+
+Pense na biblioteca de novo. A pessoa chega ao balcão com uma pergunta escrita.
+
+**Primeiro, o bibliotecário limpa a pergunta.** Ele tira as palavras de ligação ("como", "o", "de") e troca cada palavra pelo seu grupo de sinônimos do dicionário. "Raio" vira "raio ou ray". Se o dicionário estiver vazio, uma pergunta em português não encontra nomes em inglês.
+
+**Depois, ele procura nas fichas do catálogo.** Cada ficha é uma parte do código. Uma palavra que aparece no nome vale muito, no caminho da estante vale pouco, e dentro do texto vale pouco também. Uma ficha só entra na lista se combinar com a maior parte das palavras da pergunta. As fichas de teste perdem um pouco de pontos.
+
+**Ele separa as melhores.** Fica com as primeiras da lista, até um número combinado. Dessas, só as primeiras vão para a mesa de quem responde; as outras ficam anotadas no registro da pergunta. Se ele não acha nenhuma, a pergunta fica registrada, mas não é preparada para envio.
+
+**Ele acende o mapa.** Só a primeira ficha vira o ponto de partida no mapa da cidade. Dali, acende os vizinhos até uma distância combinada, com um limite de tamanho. Entre os vizinhos aparecem também os "mesmos nomes" (homônimos), que não são ligações certas. O mapa é só para a pessoa ver: quem responde não recebe o mapa, só as fichas.
+
+**O que não se avisa a quem responde.** Que havia outras fichas na lista, que alguma palavra da pergunta não achou nada e que o mapa foi cortado pelo limite. Isso fica no registro ou aparece só para a pessoa na tela.
+
+**Um outro caminho de pergunta.** A pessoa também pode juntar as fichas com a mão e perguntar sobre elas. Aí o bibliotecário não procura nada, e o dicionário não entra. Todas as perguntas guardadas do segundo projeto de teste foram feitas assim.
+
+---
+
+## Observações novas (Parada 2)
+
+- **MAP-O52.** As 14 perguntas do Healthchecks são "reunidas" (`/api/gathered-question`) e não buscaram. O `terms: []` vem de `chain_report` (`search.rs:355-357`), não do léxico vazio. A página mostra o mesmo texto, "nenhum termo após as stop words", para uma busca que tirou todos os termos e para uma pergunta que não buscou (`index.html:5443`). Por isso os `missed_terms` do Healthchecks são 0 (Parada 1, A): o léxico do Healthchecks nunca foi exercitado por uma pergunta nessa `.studio`.
+- **MAP-O53.** Homônimo `hits`: no relatório da busca, é a lista de resultados (até `top`); nas configurações e no pedido, é quantos deles viram fichas (`search.rs:102` × `prepare.rs:25-26`).
+- **MAP-O54.** A consulta que vai para fora não declara o que ficou de fora da busca: os hits além de `hits`, os termos sem hit e o corte da vizinhança. Só leva os textos fixos do perfil. O `search.json`, cujo hash entra no pacote (`evidence.rs:872`), guarda os hits até `top`, os termos e as razões; os candidatos depois de `top`, abaixo dos 60% ou pulados por sobreposição não são gravados em lugar nenhum (`search.rs:243`, `:264-280`). Na página, a vizinhança cortada (`truncated`) não é dita.
+- **MAP-O55.** O mapa acende a vizinhança do grafo **sintático**, nos dois sentidos, com as arestas `name_candidate` (13 no caso do ray tracer, 5 no do Healthchecks). Ele não usa as ligações resolvidas de `/api/calls` (parte 3, C). Leitura minha: o que acende em volta do nó de entrada inclui homônimos, que a regra de ligação não afirmaria.
+- **MAP-O56.** A busca de `/api/ask` roda duas vezes por pergunta, no `Store::ask` e no `prepare` (`store.rs:468`, `prepare.rs:171`). No caso real, os dois `search.json` são iguais.
+- **MAP-O57.** Padrões diferentes conforme o caminho: `depth` 2 no studio × 1 na CLI (`store.rs:1482`, `cli.rs:14`); `numbered_lines` `true` num projeto novo × `false` num `librarian.json` que não diz nada (`store.rs:1485`, `:1522`). `radius` não tem teto além do tamanho do arquivo (`graph_engine.rs:217-218`).
+
+## Perguntas (Parada 2)
+
+- **MAP-Q18.** As 14 perguntas do Healthchecks foram todas feitas pelo caminho "reunido" (MAP-O52). O código não diz por quê. Foi uma escolha do piloto (escolher as declarações à mão em vez de buscar)? Ou ainda falta exercitar a busca pelo léxico no Healthchecks?
+- **MAP-Q19.** "Quanto dos vizinhos acende no mapa" é o `depth`, que só a página lê (seção F). Ele também vale para os passos com alvos (`prepare.rs:154`) e acende homônimos (MAP-O55). É essa a configuração de que o usuário lembrava, ou havia outra (por exemplo, um controle só na página)? No código não há outra além do botão que liga e desliga o destaque (`index.html:1018`).
