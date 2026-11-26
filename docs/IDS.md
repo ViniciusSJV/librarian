@@ -31,6 +31,9 @@ Muitos ids se repetem com sentidos diferentes nos documentos antigos. Daqui em d
 | `UB-1`–`UB-28` | Símbolos da amostra "quem usa B" do portão (passo 2.4d): UB-1 a UB-16 escolhidos, UB-17 a UB-28 sorteados; validados em 25/11 | [tools/precisao/fixtures/amostra-usos.json](../tools/precisao/fixtures/amostra-usos.json) | `HC-*`, `RT-*` (chamadas) |
 | `UQ-1`–`UQ-30` | Estrato sorteado de links `unique` com receptor para método (antes do 2.4e; só medição): UQ-1 a UQ-15 Healthchecks, UQ-16 a UQ-30 ray tracer; semente `estrato-unique-2026-11-25`; validados em 25/11 | [estrato-unique-revisao.md](reports/fase-2/estrato-unique-revisao.md), fixture [estrato-unique.json](../tools/precisao/fixtures/estrato-unique.json) | `UB-*` (símbolos), `HC-*`, `RT-*` (UQ-1, UQ-13 e UQ-17 são também HC-26, HC-143 e RT-13) |
 | `PH-1`–`PH-40` | Pares sorteados do possível por homônimo (passo 2.4d; só registro; validados em 25/11) | [amostra-usos.json](../tools/precisao/fixtures/amostra-usos.json) (`pares`) | — |
+| `FM-1`–`FM-5` | Famílias de erro da regra de resolução (passo 2.4e; Parada 1, Q10), cada uma com um critério para medir e um que o Librarian aplica sozinho | [2.4e-parada-2.md](reports/fase-2/2.4e-parada-2.md) | `F1`–`F26` (fatos), `CR-*` (caminhos do ray tracer) |
+| `FM-6` | Chamada dentro de macro do Rust: o Librarian não vê a ocorrência (lacuna, sem passo; 43 em produção e 272 em teste; aprovado pelo usuário em 26/11/2026) | [2.4e-parada-2.md](reports/fase-2/2.4e-parada-2.md), seção 10 | `FM-1`–`FM-5` |
+| `CR-1`–`CR-3` | Caminhos do ray tracer medidos no 2.4e (render, malha OBJ, gravação da imagem) | [2.4e-parada-1.md](reports/fase-2/2.4e-parada-1.md), Q2 | `RT-*` (chamadas) |
 | `1B-A`–`1B-E` | Partes do diagnóstico do Piloto 1b | 1B-02, 1B-03 | — |
 | `INV-D1`–`INV-D6` | Seções do inventário dos MDs | 1B-03 | demais D |
 | `N0`–`N8` | Níveis de tipos (Python e Rust) | 1B-02, Parte B | — |
