@@ -1,8 +1,8 @@
 # Mapeamento do repositório — parte 3: como uma chamada vira ligação
 
-**Estado:** Pendente de validação do usuário: Paradas 1 e 2 (A a H). O gabarito do 2.4e (a antiga parte I) passou para a parte 4, [04-gabarito-2.4e.md](04-gabarito-2.4e.md), na Parada 3. Em aberto: MAP-Q9, MAP-Q10, MAP-Q11.
+**Estado:** Pendente de validação do usuário: Paradas 1, 2 e 2-bis (A a H). O gabarito do 2.4e (a antiga parte I) passou para a parte 4, [04-gabarito-2.4e.md](04-gabarito-2.4e.md), na Parada 3. Em aberto: MAP-Q9, MAP-Q10, MAP-Q11.
 
-**Data:** 26/11/2026. **Base:** `main` em `6ac1865` (Parada 1) e `be7d546` (Parada 2). Worktree: só os relatórios do mapeamento, não rastreados. **Só leitura**: nenhum código, documento, `.studio`, Healthchecks ou ray tracer foi alterado. A `.studio/` continua vazia (MAP-O1; `ls -la .studio` lista só `.` e `..`) e não foi tocada. O portão não foi rodado, nem nenhum binário que grava.
+**Data:** 26/11/2026. **Base:** `main` em `6ac1865` (Parada 1), `be7d546` (Parada 2) e `ecae7a4` (Parada 2-bis). Worktree: só os relatórios do mapeamento. **Só leitura**: nenhum código, documento, `.studio`, Healthchecks ou ray tracer foi alterado. Nas Paradas 1 e 2 a `.studio/` estava vazia (MAP-O1) e o portão não foi rodado. Na Parada 2-bis ela já estava restaurada (MAP-O1, parte 1); o portão e uma sonda rodaram sobre **cópias** dela, e o original não mudou (seção E, "Parada 2-bis").
 
 **Escopo.** Da chamada crua que o extrator registra até a ligação que `/api/calls` e `/api/used-by` devolvem. O léxico, a pergunta, o envelope, o evidence e o resto do studio ficam fora; deles, só se cita onde leem as ligações. Ids novos continuam a numeração das partes [1](01-mapa-geral.md) e [2](02-core-graph-engine.md): `MAP-O16` em diante e `MAP-Q9` em diante.
 
@@ -243,7 +243,7 @@ Também vem do perfil o receptor próprio de cada linguagem: `self` nas duas (`r
 - **Amostras HC e RT:** o campo `resposta` de cada id em `linha-de-base.json` (`projetos.<hc|rt>.amostra`). São os runs `20261125-210527` (HC) e `20261125-210849` (RT), gravados pelo portão do 2.4d no commit `6254641`.
   - O código da regra não mudou depois: o último commit em `resolve.rs` é o `665ff5b`, ancestral do `6254641` (`git merge-base --is-ancestor 665ff5b 6254641`).
   - Nada que é compilado mudou depois: `git diff --stat 6254641 HEAD -- crates Cargo.toml Cargo.lock ':!*.md'` está vazio.
-  - **Não conferido por execução:** não regenerei as respostas (`.studio` vazia, MAP-O1). *Leitura minha:* com o mesmo código e os mesmos projetos nos mesmos commits, a resposta é a mesma.
+  - **Verificado por execução na Parada 2-bis** (subseção no fim desta seção E): os runs gerados de novo dão as mesmas 241 respostas. *Texto da Parada 2, mantido como registro:* "não conferido por execução: não regenerei as respostas (`.studio` vazia, MAP-O1). Leitura minha: com o mesmo código e os mesmos projetos nos mesmos commits, a resposta é a mesma."
 - **Estrato `unique` (UQ):** o `linha_de_base` gravado na própria fixture, com `fontes: 3aeb2fa7…` e os runs `20261125-234413`/`-234657`. O hash das fontes de hoje dá o mesmo: `node -e 'console.log(require("./tools/precisao/lib").sourceHash())'` → `3aeb2fa77adc9ec4…`, 250 arquivos.
 - **Amostra de usos:** o resultado gravado em `linha-de-base.json`, `projetos.<p>.usos.amostra`, montado por `usesSample` (`portao.js:185-211`).
 
@@ -280,9 +280,9 @@ Notas da tabela:
   - UQ-23: `k.min(4. - k).clamp(0., 1.)` → `impl Color::clamp`; o certo é `f64::clamp`.
 
   Nenhum `import`, `scope`, `receiver`, `type` ou `trait_default` das amostras é falso.
-- **`homonym`, por `basis`:** a `resposta` gravada não traz o `basis` (formato em `portao.js:252`). Três delas são com certeza `basis: "type"` (corpos do despacho): HC-140 (12 candidatas), HC-141 (30) e HC-142 (14), todas acima do teto de 8.
+- **`homonym`, por `basis`:** a `resposta` gravada não traz o `basis` (formato em `portao.js:252`). Pelos dados gravados, três delas eram com certeza `basis: "type"` (corpos do despacho): HC-140 (12 candidatas), HC-141 (30) e HC-142 (14), todas acima do teto de 8. *A Parada 2-bis separou todas por execução:* são 4 com `type` e 28 com `graph_edge` (abaixo).
   - Por quê, pelo código: acima do teto não há arestas (`graph.rs:335-339`); o ramo `_` só lista arestas (`v2.rs:428`); e só `Overrides` conta os alvos em vez das arestas (`v2.rs:425-427`, `:437`).
-  - As outras 29 não dá para separar só pelos dados.
+  - As outras 29 não dava para separar só pelos dados gravados. Separadas na Parada 2-bis.
 - **`homonym` de 1 candidata:** HC-108 e HC-109 (a única candidata é a certa); HC-66, `self.client.login(..)` → `django.test.Client.login`, de fora.
 - **Os tracejados com todas as candidatas falsas** (HC 14, contando a de 1 candidata, e RT 1) têm sempre a verdade de fora (`dict.get`, `QuerySet.get`, `OutputWrapper.write`, `Vec::into_iter`…). Ex.: HC-40 a HC-50 e RT-28.
 
@@ -298,7 +298,7 @@ Notas da tabela:
 | uso da verdade que não aparece | 0 | 2 (UB-15) |
 | pares homônimo × candidata (PH): pode rodar | 0 de 20 | 4 de 20 |
 
-O resultado gravado não diz de qual estado vêm os usos ligados falsos: `usesSample` só guarda o lugar da chamada (`portao.js:198-199`). *Leitura minha:* `Groups::len` e `Sorteio::next` têm o mesmo padrão da UQ-19, um `unique` sem o tipo escrito do receptor.
+O resultado gravado não diz de qual estado vêm os usos ligados falsos: `usesSample` só guarda o lugar da chamada (`portao.js:198-199`). *Leitura da Parada 2:* `Groups::len` e `Sorteio::next` têm o mesmo padrão da UQ-19, um `unique` sem o tipo escrito do receptor. **Confirmado por execução na Parada 2-bis:** os 18 são `unique`, com `basis: "graph_edge"` e 1 candidata (abaixo).
 
 **A fixture guarda o estado da época?** (verificado)
 - Sim, e só o da época. O `linha_de_base` de cada chamada (`resolution`, `candidates`, `alvos`) é escrito quando a amostra é sorteada (`tools/precisao/amostra.js:54`). Nos estratos escolhidos à mão, é o estado do passo em que entraram (diz ser: campo `selecao` de `amostra-hc.json` e de `amostra-rt.json`).
@@ -321,11 +321,83 @@ O resultado gravado não diz de qual estado vêm os usos ligados falsos: `usesSa
    - O único `above_candidate_limit` de verdade de fora é a HC-169, `Thread.__init__(self)`, que hoje é `above_candidate_limit (30)`.
    - Pelo código, ela é `AboveLimit` (`resolve.rs:2145`), e não `NoCandidate`: é método, e o passo do escopo só vale para `call_observed` (`scoped`, `resolve.rs:1635-1637`).
    - *Leitura minha:* a forma sabe que o receptor é um import de fora (`Module::External`, `resolve.rs:769`; `Form::Outside`, `:1140`). Mesmo assim, a ligação diz "acima do teto", e não "de fora".
-3. **O falso "pode usar":** não aparece nos dados.
+3. **O falso "pode usar":** não aparece nos dados. *Na Parada 2-bis, também não nos runs inteiros* (abaixo).
    - Para a HC-169, `may_reach` dá falso, porque `Form::Outside` não alcança nada (`resolve.rs:1157`, `:1168-1170`). Ela não entra em `above_limit` (`uses.rs:210-215`).
    - O caso que sobra, só pelo código: uma chamada simples `f()`. O escopo diz "de fora" (`Scoped::Nothing` → `NoCandidate`, `resolve.rs:2061`); ela tem mais de 8 homônimos (`v2.rs:432` → `above_candidate_limit`); e `may_reach` usa só a forma (`Form::Plain`) e o tipo, nunca o escopo. Por isso ela entra na lacuna, que a página apresenta como "podem usar este ponto" (`index.html:1118`, diz ser).
    - As amostras não têm esse caso: a população do portão só tem `method_call_observed` (`lib.js:100`), e o único `above_limit` da amostra de usos é o da UB-1, que está na verdade.
    - Nenhum teste fixa esse caso (`git grep -n above_limit -- crates/librarian-ingest/tests` só acha `usos_2_4d.rs`, onde os casos de lacuna são `x.abrir()` e `Alvo::from`/`f64::from`).
+
+### E, Parada 2-bis: o mesmo por execução
+
+**Base e escrita.** `main` em `ecae7a4`, worktree limpa no início, fora o 01 já editado na Parada 0. A `.studio` foi conferida antes (MAP-O1, parte 1): `healthchecks-25597e41` (932 arquivos, `61cd25c1…`) e `renderer-9b78f3a9` (42, `612cdbf6…`), com o Healthchecks em `6c05a7a` e o ray tracer em `e38254b`, sem mudança local. Tudo o que subiu o Studio rodou sobre uma cópia temporária, por `withStudio` (`tools/precisao/lib.js:127-139`), que copia (`copyStudio`, `:73-77`) e recusa se o original mudar (`:135-136`). Saídas no scratchpad da sessão.
+
+**1. O portão, só para medir** (verificado, por execução):
+
+```
+node tools/precisao/portao.js --studio .studio --base tools/precisao/linha-de-base.json --saida <scratchpad>/portao
+```
+
+- Ele compilou antes (`cargo build --release --locked -p librarian-studio -p librarian-ingest`, `lib.js:145-150`; só `librarian-evidence` e `librarian-studio` recompilaram, em 14 s).
+- **Hash das fontes:** `3aeb2fa77adc9ec44716bc113822faa14395b71cb7f7217deb46b4e2b87c4726`, 250 arquivos. É o mesmo `3aeb2fa7…` da Parada 2 e do `fontes` da fixture UQ. Identidade gravada no binário: `recorded:ecae7a4…:false`.
+- Runs novos: HC `20261126-074952`, RT `20261126-075336`. Exit 0, **APROVADO** contra a linha de base. `--gravar-base` não foi usado.
+- `grafo_novo_igual_ao_de_referencia` é `false` nos dois projetos, como na linha de base: o grafo do run novo difere do run de 18/11 nos dois casos. A comparação vale contra a linha de base do 2.4d, e não contra o run de 18/11.
+
+**2. A resposta de cada chamada contra a linha de base** (verificado, por um `node -e` que compara `resultado.json` com `linha-de-base.json`, id a id):
+
+| O quê | HC | RT |
+|---|---|---|
+| `resposta` e `categoria` da amostra | **171 de 171 iguais** | **70 de 70 iguais** |
+| amostra de usos, símbolo a símbolo (o objeto inteiro de `usesSample`) | **18 de 18 iguais** | **10 de 10 iguais** |
+| invariante do `used_by` | igual (0 exceções) | igual (0 exceções) |
+| população (`populacao`) | igual | igual |
+
+Fatos F1–F26 e níveis N0–N8: iguais à linha de base.
+
+**3. A sonda** (`sonda.js`, no scratchpad; `node sonda.js <repo> <saida>`). Ela usa o mesmo `withStudio` sobre outra cópia, gera runs novos (HC `20261126-075402`, RT `20261126-075517`) e pede `/api/calls` com `depth: 1` e `chosen: {}` ao dono de cada chamada. O dono é achado pela aresta `observes` da ocorrência, como o portão faz. A sonda guarda o que a resposta gravada não traz: `basis`, `type_rule` e os alvos de um `homonym`. Ela também confere o hash das fontes (`3aeb2fa7…`, 250) e o da `.studio` antes e depois (iguais).
+
+- **Estrato `unique` (UQ):** as 30 chamadas dão hoje **o mesmo** `resolution`, `candidates` e alvos do `linha_de_base` da fixture. São todas `unique (1)`, com `basis: "graph_edge"`. Os falsos continuam os mesmos: UQ-4 (`FakeCurl.setopt`), UQ-19 (`impl Groups::len`) e UQ-23 (`impl Color::clamp`).
+- **Os 4 falsos de linha cheia** (HC-27, UQ-4, UQ-19, UQ-23): `unique`, `basis: "graph_edge"`, 1 candidata, sem `type_rule`.
+- **`homonym` da amostra, por `basis`** (a contagem da tabela de cima não muda, só se divide):
+
+  | | `basis: "type"` (despacho, `Overrides`) | `basis: "graph_edge"` |
+  |---|---|---|
+  | HC, 2 ou mais, verdade ambígua | 4: HC-140 (12, `type_rule` `cls`), HC-141 (30, `propriedade`), HC-142 (14, `propriedade`), **HC-144** (2, `self`) | 1: HC-79 |
+  | HC, 2 ou mais, alvo entre elas | — | 1: HC-59 |
+  | HC, 2 ou mais, todas falsas | — | 13 (HC-37, 38, 40, 41, 44 a 47, 50, 57, 60, 111 e 112; verdade sempre de fora) |
+  | HC, 1 candidata | — | 3: HC-108 e HC-109 (a certa), HC-66 (falsa, de fora) |
+  | RT, 2 ou mais, alvo entre elas | — | 9: RT-10, 17 a 21, 26, 29 e 60 |
+  | RT, 2 ou mais, todas falsas | — | 1: RT-28 (de fora) |
+
+  Ou seja: os 4 de `type` têm todos verdade ambígua, como deve ser num despacho. **Todo tracejado com as candidatas todas falsas é `graph_edge`** (14 na HC, 1 no RT). A HC-144 (`homonym (2)`, abaixo do teto) é o quarto `type`, que os dados gravados não mostravam.
+
+**4. Os 18 usos ligados falsos da vista dos usos** (item 7; verificado por execução). A sonda pediu `/api/used-by` dos três símbolos e, para cada uso `linked`, `/api/calls` no dono da chamada:
+
+| Símbolo | Usos `linked` hoje | Falsos (os de `estrato-unique.js:22-28`) | Estado no `/api/used-by` | Estado no `/api/calls` |
+|---|---|---|---|---|
+| UB-10 `Ping.get_body` | 4 | 4: `message.get_body(..)` em `smtpd.py:37` e `:41`; `parsed.get_body(..)` em `views.py:800` e `:805` | `unique`, `graph_edge`, 1 candidata | o mesmo, alvo `Ping.get_body (hc/api/models.py:772)` |
+| UB-15 `impl Groups::len` | 4 | 4: `face.len()` (`obj.rs:90`), `ordered.len()` (`camera.rs:129`), `"librarian-measure cpu_ms=".len()` (`count.rs:133` e `:151`) | `unique`, `graph_edge`, 1 | o mesmo, alvo `impl Groups::len (src/groups.rs:60)` |
+| UB-23 `impl Sorteio::next` | 11 | 10: `fields.next()`, `f.next()`, `parts.next()`, `field.split('/').next()` (`obj.rs:19-81`) e `….split(' ').next()` (`count.rs:133`, `:151`). O 11º, `self.next()` em `src/bin/cena_video.rs:34`, é o certo | `unique`, `graph_edge`, 1 | o mesmo, alvo `impl Sorteio::next (src/bin/cena_video.rs:29)` |
+
+Contagens de `/api/used-by`: `Ping.get_body` `linked 4`; `Groups::len` `linked 4, ruled_out 8`; `Sorteio::next` `linked 11, ruled_out 3`. Nenhum `above_limit` nem `possible`.
+
+→ **A leitura da Parada 2 fica confirmada:** os 18 são `unique` pelo nome (`basis: "graph_edge"`, sem `type_rule`), com a verdade de fora (`Message.get_body` do Python, `Vec::len`/`str::len`, `Iterator::next`). O `basis` da `Use` é o mesmo da `CallLink`, o que mostra por execução que o `UseIndex` inverte o mesmo `answer` (seção B, 2.4d).
+
+**5. MAP-O18, o falso "pode usar" por escopo acima do teto** (item 8). A sonda listou toda ocorrência `call_observed` com `ambiguous_candidates` nos runs novos. Para cada uma, guardou o que `/api/calls` responde e se ela está no `above_limit` de algum símbolo de mesmo nome curto.
+
+| | Chamadas simples acima do teto | `/api/calls` responde | Na lacuna de algum símbolo |
+|---|---:|---|---:|
+| HC | 48 (`Command(..)` 42, `notify(..)` 6; todas de um segmento) | **todas `import`** | 0 |
+| RT | 640 (todas com caminho `T::f`; nenhuma de um segmento) | `type` 475, `above_candidate_limit` 165 | 132 |
+
+- **Os 132 do RT que entram na lacuna:** `Object::from` 82, `f64::from` 32, `Patterns::from` 17 e `crate::object::Object::from` 1. **Nenhum é o caso da MAP-O18.** Pelo código, o escopo do Rust só devolve `Scoped::Nothing` para um nome de **um segmento** (`resolve.rs:1793-1817`, `Nothing` em `:1817`). Um caminho com cabeça maiúscula (`Object::from`) vai para a regra do tipo (`:1821-1823` → `Undecided`). Um caminho de cabeça minúscula que não é módulo do projeto (`f64::from`) também fica `Undecided` (`:1824-1835`).
+  - `f64::from` na lacuna dos `from` do projeto é o limite do primitivo já registrado na seção F (`resolve.rs:1166-1167`; `usos_2_4d.rs:300-305`).
+  - `Object::from` e `Patterns::from` saem `above_candidate_limit` com um tipo escrito. *Leitura minha:* é o caso acima do teto da MAP-O17 (`type` com vários corpos, sem arestas → `above_candidate_limit`), agora num run real.
+- **Os 165 `above_candidate_limit` que não entram na lacuna** são caminhos de fora (`Vec::new`, `String::from`, `Mutex::new`, `Sha256::new`, `Option::from`, `png::Encoder::new`…). `may_reach` os tira pelo tipo.
+- **Python:** as 48 chamadas simples acima do teto são decididas pelo import. Nenhuma chega ao `Scoped::Nothing`.
+
+→ **Não há caso real da MAP-O18 nos runs** de hoje, nem no Python nem no Rust. O caso continua só pelo código.
+
+**6. A `.studio` original depois de tudo** (item 9; verificado): `hashProject` dá de novo `61cd25c1…` (932) e `612cdbf6…` (42), nos registros do portão (`studio_original.inalterado: true`), no fim da sonda e numa conferência separada no fim da parada. Ver MAP-O33 sobre as cópias temporárias.
 
 ### F. Links falsos conhecidos no código
 
@@ -383,6 +455,8 @@ O resultado gravado não diz de qual estado vêm os usos ligados falsos: `usesSa
 
 **MAP-O16 conferida:** nenhuma das duas rotas lê uma ligação gravada. As duas leem o grafo (nós e arestas de nome) e a edition, e decidem com um `Resolver` novo: um por pedido em `/api/calls` e um por run em `/api/used-by` (citações acima).
 
+**Por execução (Parada 2-bis, seção E):** sobre runs gerados de novo, `/api/calls` e `/api/used-by` deram as mesmas respostas da linha de base do 2.4d (241 chamadas, 28 símbolos). Nos 18 usos ligados falsos, o `Use` de `/api/used-by` traz o mesmo `resolution` e `basis` da `CallLink` de `/api/calls`.
+
 **MAP-O17 confirmada com um caso concreto** (sintético de `tests/resolve.rs`, verificado pela execução da seção H):
 - **Abaixo do teto.** `n_generic(m: &M<3>)` chama `m.det()` (`tests/resolve.rs:143-144`). O projeto tem três `det`: `impl M<2>`, `impl M<3>` e `impl Z` (`:89-104`).
   - A regra diz `type` com **dois** alvos, `M<2>::det` e `M<3>::det` (`:324`).
@@ -391,6 +465,7 @@ O resultado gravado não diz de qual estado vêm os usos ligados falsos: `usesSa
   - A regra dá `type` com os 9 corpos de `Alvo` (*leitura minha* do código: `resolve.rs:2124-2128`).
   - A ligação sai sem alvo, como `above_candidate_limit`. Isso o teste confere pelo inverso: a chamada está na lacuna de `impl From<A3> for Alvo::from` (`:304`), e `uses.rs:210` só põe na lacuna o que saiu como `above_candidate_limit`.
   - E ela não está na lacuna de `Outro::from` (`:305`), porque o tipo a exclui ali (`may_reach`).
+- **Num run real** (Parada 2-bis, seção E, item 5): no ray tracer, `Object::from(..)` (82 chamadas) e `Patterns::from(..)` (17) saem `above_candidate_limit` com 14 homônimos e entram na lacuna dos `from` do projeto. *Leitura minha:* é o mesmo caso acima do teto.
 
 ### H. Testes que fixam a regra
 
@@ -471,7 +546,7 @@ Mas a mesma frase "não há nada no projeto" serve para duas situações diferen
 
 ## Observações novas (Parada 2)
 
-- **MAP-O24.** Nas amostras validadas, **todo link falso de linha cheia de hoje é `unique`** (4 de 4: HC-27, UQ-4, UQ-19, UQ-23), sempre com a verdade de fora do projeto (seção E). Não há falso em `import`, `scope`, `receiver`, `type` ou `trait_default`. Isso bate com o motivo da tabela C para o `unique`: "esta ou algo de fora". Na vista dos usos, há 18 usos ligados falsos em três símbolos (HC 4, RT 14), cujo estado o resultado gravado não guarda.
+- **MAP-O24.** Nas amostras validadas, **todo link falso de linha cheia de hoje é `unique`** (4 de 4: HC-27, UQ-4, UQ-19, UQ-23), sempre com a verdade de fora do projeto (seção E). Não há falso em `import`, `scope`, `receiver`, `type` ou `trait_default`. Isso bate com o motivo da tabela C para o `unique`: "esta ou algo de fora". Na vista dos usos, há 18 usos ligados falsos em três símbolos (HC 4, RT 14), cujo estado o resultado gravado não guarda. *Parada 2-bis:* por execução, os 18 também são `unique` (`graph_edge`, 1 candidata).
 - **MAP-O25.** O `linha_de_base` das fixtures é o estado da época da seleção (`amostra.js:54`). Ninguém o atualiza, e o portão não o lê: 143 das 241 chamadas de HC e RT respondem diferente hoje.
   - O estado de hoje está em `linha-de-base.json` (`resposta`), que **não grava o hash das fontes** (as chaves são `projetos`, `editions`, `fatos`, `niveis` e `studio_original`). Só o estrato `unique` grava (`fontes`).
   - Ligar uma resposta ao código depende do Git (seção E).
@@ -481,7 +556,7 @@ Mas a mesma frase "não há nada no projeto" serve para duas situações diferen
 - **MAP-O27.** MAP-O17 confirmada com um sintético (seção G): a regra diz 2 alvos, e a API mostra 3 homônimos; acima do teto, a regra decide por tipo, e a API diz `above_candidate_limit`.
 - **MAP-O28.** MAP-O18 conferida em parte (seção E):
   - o mesmo motivo para "sem nome igual" e para "descartada" está nos dados, com contagem 0 nos dois;
-  - o falso "pode usar" por escopo é possível pelo código, mas não aparece nos dados nem nos testes;
+  - o falso "pode usar" por escopo é possível pelo código, mas não aparece nos dados nem nos testes. *Parada 2-bis:* também não aparece nos runs inteiros. No HC, as 48 chamadas simples acima do teto são `import`. No RT não há nenhuma de um segmento, e só nelas o escopo do Rust dá `Nothing` (`resolve.rs:1817`);
   - a HC-169 mostra outro caso vizinho: a forma sabe que o receptor é de fora, e a ligação diz "acima do teto".
 - **MAP-O29.** As guardas contra link falso que existem são do Python: nome religado, atributo, `__getattr__`, `Protocol`, metaclasse, nome privado e `super()`. Não há guarda contra:
   - um dublê de teste (a regra não lê `is_test`);
@@ -494,6 +569,15 @@ Mas a mesma frase "não há nada no projeto" serve para duas situações diferen
   - `escopo_2_4a.rs` tem 12, e não 14;
   - `CallLink` vai até `v2.rs:374`;
   - em MAP-O16, é um `Resolver` por pedido.
+
+## Observações novas (Parada 2-bis)
+
+- **MAP-O32.** A Parada 2 fica conferida por execução: o portão (fontes `3aeb2fa7…`, aprovado) e a sonda, sobre runs novos, dão as mesmas respostas da linha de base em HC, RT, UQ e usos. Nenhuma contagem da seção E muda. O que a execução acrescentou:
+  - os `homonym` da amostra são 4 com `basis: "type"` (HC-140, 141, 142, 144) e 28 com `graph_edge`;
+  - os tracejados com todas as candidatas falsas são todos `graph_edge`;
+  - os 18 usos ligados falsos são `unique` pelo nome.
+- **MAP-O33.** `withStudio` tenta apagar a cópia temporária, mas ignora a falha no Windows ("the studio may still hold a file", `lib.js:137`). Na pasta temporária do sistema há **121** pastas `librarian-precisao-*`, de 18/11 a 25/11 (3, 23, 7, 2 e 86 por dia; `ls -ld --time-style=+%F "$LOCALAPPDATA"/Temp/librarian-precisao-*`). Nenhuma é de 26/11: as cópias desta parada foram apagadas. As antigas são cópias da `.studio` deixadas por medições anteriores, fora do repositório. Não as apaguei. Só o fato.
+- **MAP-O34.** No ray tracer, 640 chamadas `T::f(..)` passam do teto. 475 são decididas pelo tipo. 165 saem `above_candidate_limit`, e 132 delas (`Object::from`, `Patterns::from`, `f64::from`) entram na lacuna "pode usar" dos `from` do projeto (seção E, item 5). Das 132, 32 são `f64::from`, cuja verdade é de fora (o limite do primitivo, seção F).
 
 ## Perguntas (Parada 2)
 

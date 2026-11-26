@@ -1,6 +1,6 @@
 # Mapeamento do repositório — parte 1: o mapa geral
 
-**Estado:** validado pelo usuário em 26/11/2026 (inclusive a Parada 1 de ajustes). Em aberto: MAP-Q1 (.studio vazia).
+**Estado:** validado pelo usuário em 26/11/2026 (inclusive a Parada 1 de ajustes). MAP-Q1 respondida em 26/11/2026: a `.studio` foi restaurada (conferência na MAP-O1).
 
 **Data:** 26/11/2026. **Base:** `main` em `6ac1865` (worktree limpa no início, depois de o usuário remover o `estrutura.txt`). **Só leitura:** nada no repositório, no Healthchecks ou no ray tracer foi alterado; a única escrita é este arquivo, não rastreado.
 
@@ -61,7 +61,7 @@ Só arquivos rastreados (`git ls-files`: **938 arquivos**, 215 commits desde `16
 
 - `target/`: saída do cargo.
 - `tools/precisao/node_modules/`: 8,2 MB, só `playwright-core` (`du -sh`, `ls`).
-- `.studio/`: **vazia** (`ls -la .studio` e `dir /a .studio`: 0 arquivos, 0 pastas; data da pasta 26/11 03:06). Ver MAP-O1 e MAP-Q1.
+- `.studio/`: **vazia** quando esta parte foi escrita (`ls -la .studio` e `dir /a .studio`: 0 arquivos, 0 pastas; data da pasta 26/11 03:06). *Atualização de 26/11/2026:* restaurada pelo usuário e conferida (MAP-O1).
 
 ---
 
@@ -360,6 +360,7 @@ Há mais detalhe por trás de cada um (por exemplo, o que a regra de chamadas ai
 Só as que o código não responde.
 
 - **MAP-Q1.** A pasta `.studio/` está **vazia** agora (`ls -la .studio`: 0 arquivos; data 26/11 03:06, a mesma hora do `estrutura.txt`). Mas o ESTADO-ATUAL.md:54 diz que os dados de execução ficam ali (`renderer-9b78f3a9`, `healthchecks-25597e41`), e o portão roda com `--studio .studio` (`ESTADO-ATUAL.md:37`). Os dados foram movidos de propósito (para onde?) ou é algo a investigar? Esta parte não precisa deles, mas o portão e o teste ignorado `gabarito.rs` precisam.
+  - **Resposta do usuário (26/11/2026):** o usuário apagou e restaurou a `.studio` em 26/11/2026. Conferência na MAP-O1.
 - **MAP-Q2.** O mapeamento deve incluir os projetos de teste ao lado do repositório (`../renderer`, `../pilotos/healthchecks`), só para registrar como o Librarian os usa, ou ficam fora, como nesta parte?
   - **Resposta do usuário:** os projetos de teste ficam fora do mapeamento do código. Só se registra como o Librarian os usa: caminho, commit fixo e ids dos runs.
 - **MAP-Q3.** As 9 baterias de tela vivas que moram em `docs/reports/.../dados/` (seção 3) devem ser mapeadas com a interface (parte 8 da proposta) ou com os relatórios (parte 9)?
@@ -372,6 +373,10 @@ Só as que o código não responde.
 ## Observações registradas (sem classificar)
 
 - **MAP-O1.** `.studio/` está vazia (MAP-Q1). Reconferido em 26/11/2026, na Parada 1 da parte 2: continua vazia (`ls -la .studio` lista só `.` e `..`). Nada foi criado nem copiado.
+  - **Respondida (26/11/2026):** o usuário apagou e restaurou a `.studio` em 26/11/2026. Conferido na Parada 0 da parte 3, só lendo:
+    1. **Conteúdo:** `.studio/projects/` tem só `healthchecks-25597e41` (932 arquivos, 165.966.284 bytes: `facts.jsonl`, `project.json`, `runs/20261118-061046`) e `renderer-9b78f3a9` (42 arquivos, 21.916.992 bytes: `project.json`, `runs/20261118-020654`). Comandos: `ls -la`, `find -type f | wc -l`, `du -sb`.
+    2. **Integridade:** o hash agregado bate com os dois registros. Pelo `hashProject` do portão (`tools/precisao/lib.js:23-37`): healthchecks `61cd25c1…5ca3d5` (932 arquivos) e renderer `612cdbf6…f3ecc` (42), os mesmos de `studio_original` em `tools/precisao/linha-de-base.json`. Pelo comando gravado em `docs/reports/piloto-1b/dados/p1/original-before.sha256-agregado.txt` (`find … | xargs -0 sha256sum | sed … | LC_ALL=C sort -k2 | sha256sum`): os mesmos dois hashes.
+    3. **Projetos-fonte nos commits fixos:** `git -C ../pilotos/healthchecks rev-parse HEAD` → `6c05a7adf266…`; `git -C ../renderer rev-parse HEAD` → `e38254bc5da5…`. `git status --porcelain` vazio nos dois.
 - **MAP-O2.** O `librarian-ingest` declara `librarian-core` (`crates/librarian-ingest/Cargo.toml:15`), mas nenhum código do crate o usa (`git grep librarian_core -- crates/librarian-ingest` acha só essa linha).
 - **MAP-O3.** O grafo de chamadas não está no `librarian-graph-engine`, e sim em `librarian-ingest/src/graph/`. O graph-engine trata de dossiês, validação e consulta preparada (seção 2.2). Leitura minha, pelos módulos.
 - **MAP-O4.** Há dependências entre crates por arquivo, fora do Cargo: o teste do evidence lê uma fixture dentro do studio (`independence.rs:48`), e os testes do ingest embutem arquivos de `tools/precisao/sinteticos/`.
