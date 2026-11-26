@@ -1,0 +1,13 @@
+# Gabarito de execucao do Rust (passo 2.4e, DEC-48; Parada 1, Q4, opcao a): copia um projeto e insere, na copia,
+# uma sonda na entrada de cada funcao. Fora do workspace do Librarian e fora da trava do portao.
+[package]
+name = "rs-sonda"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+syn = { version = "2", features = ["full", "visit"] }
+proc-macro2 = { version = "1", features = ["span-locations"] }
+
+[workspace]
