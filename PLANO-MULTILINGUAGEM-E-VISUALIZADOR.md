@@ -222,7 +222,21 @@ corretas, lacunas explícitas e fatos aguardando aprovação humana.
     `src/count.rs:133`, `:151`, que são de `Iterator`). São 18, `unique` com
     receptor sem tipo.
 - 2.4e Caça às lacunas (proposta aceita pelo usuário em 25/11/2026; entre o
-  2.4d e o 2.4f; Parada 1 ainda não aberta). Só medição, sem mudar regra.
+  2.4d e o 2.4f; Parada 1 aprovada com ajustes; Parada 2 validada em
+  26/11/2026; [2.4e-parada-2.md](docs/reports/fase-2/2.4e-parada-2.md)).
+  Só medição, sem mudar regra; fechado como medição.
+  - **Pendentes depois da Parada 2 (26/11/2026), decididos pelo usuário depois
+    do mapeamento do repositório:**
+    - o X (DEC-48, item 4);
+    - o teto das "ligadas pelo nome" (DEC-48, item 9; medido: Python 6,8%,
+      Rust 8,8%, fora de testes, agrupamento provisório);
+    - os valores da cobertura baixa (complemento à DEC-48, item 9);
+    - o teto do caminho: o D e o CR-1 passam das 6 camadas, e o D passa dos
+      120 nós do Studio.
+    Validados pelo usuário em 26/11/2026: a verdade dos 10 candidatos novos
+    da FM-2 (link falso nos 10) e o `FM-6` (chamada dentro de macro do
+    Rust: lacuna, sem passo; 43 em produção e 272 em teste). A família de 2.166 homônimos para externo
+    fica sem id (é a recolhida da DEC-46).
   - **Decidido pelo usuário em 25/11/2026 (DEC-48, itens 1 a 8):**
     - **Workflows:** a sessão do 2.4e propõe as funções de entrada dos 4
       workflows do Healthchecks e dos caminhos do ray tracer, a partir do PIL

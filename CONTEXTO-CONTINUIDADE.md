@@ -1284,3 +1284,12 @@ Escrever o teste de regressão do P1 **antes** da correção: uma função Pytho
 - **2.4e.** A medição informa a cobertura do gabarito em cada família e em cada workflow, não só a taxa ("o gabarito não discorda" pode ser "o gabarito não viu"); a Parada 1 diz como cada gabarito roda (ambiente) e com que versões registradas.
 - **Estratos na ordem.** Refazer os estratos da estimativa ponderada (com o `type` e a população do UQ, verdade validada pelo usuário), já decidido em 25/11, vira passo próprio: 2.4e → 2.4f → 2.5 → estratos → Fase 2B → 2.6.
 - **Complemento à DEC-48, item 9** (na coluna de estado; o texto do item não muda): um workflow com cobertura baixa do gabarito não passa a terceira condição da 2B por ausência de discordância; precisa de um estrato sorteado com a verdade validada pelo usuário. O limite é proposto na Parada 1 do 2.4e e fixado pelo usuário.
+
+## 37. Passo 2.4e: caça às lacunas, medição validada (26/11/2026)
+
+**Estado nesta data.** O estado vigente fica no [ESTADO-ATUAL.md](ESTADO-ATUAL.md). Só medição: nenhuma regra, código de produção, fixture, linha de base nem fato do acervo mudou; as fontes continuam `3aeb2fa7…`. Relatórios: [2.4e-parada-1.md](docs/reports/fase-2/2.4e-parada-1.md) e [2.4e-parada-2.md](docs/reports/fase-2/2.4e-parada-2.md).
+
+- **O que mediu:** toda chamada dos dois projetos, comparada com dois gabaritos (execução e tipos) que só servem de régua, com o alcance de cada workflow e as famílias de erro.
+- **Validação do usuário (26/11):** a Parada 2; a verdade dos 10 candidatos novos da FM-2 (link falso nos 10, conferidos no editor); o `FM-6` (chamada dentro de macro do Rust, lacuna sem passo).
+- **Pendentes, para depois do mapeamento do repositório** (nada muda antes de a estrutura central estar mapeada e validada): o X, o teto das "ligadas pelo nome", os valores da cobertura baixa e o teto do caminho.
+- **Erros meus:** números do relatório vindos de passadas anteriores do medidor, achados e corrigidos na revisão (seção 13 do relatório); `.pyc` e `.mypy_cache` gravados no Healthchecks pelas sondagens, removidos.
