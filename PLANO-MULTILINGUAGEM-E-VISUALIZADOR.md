@@ -127,8 +127,9 @@ corretas, lacunas explícitas e fatos aguardando aprovação humana.
   (`:=` em compreensão, `pub`, base de fora que delega, `cls(..)`, campo
   herdado).
   **Ordem do resto da Fase 2 (decidida pelo usuário em 25/11/2026):** 2.4d-0
-  → 2.4d → 2.4e → 2.4f → 2.5 → Fase 2B → 2.6 (2.4e e 2.4f incluídos na
-  validação do 2.4d). Os workflows A, B e C do Healthchecks só
+  → 2.4d → 2.4e → 2.4f → 2.5 → estratos → Fase 2B → 2.6 (2.4e e 2.4f
+  incluídos na validação do 2.4d; os estratos, passo próprio desde o lote de
+  25/11/2026, abaixo do 2.5). Os workflows A, B e C do Healthchecks só
   dependem da 2B e do 2.5 (as rotas passam a view como referência); o 2.6 só
   serve ao workflow D (`ch.notify`, F22). **Condição para a Parada 1 da 2B:**
   decidir, com contagem, se o tipo do elemento das coleções do Django
@@ -261,6 +262,13 @@ corretas, lacunas explícitas e fatos aguardando aprovação humana.
       do portão passa a ser a execução ou outra ferramenta, nunca a mesma que
       responde.
     - A automação da aprovação de fatos é decidida na Fase 3.
+  - **Cobertura do gabarito (usuário, 25/11/2026):** a medição informa, além
+    da taxa, a cobertura de cada gabarito em cada família e em cada workflow:
+    "o gabarito não discorda" pode ser "o gabarito não viu". A Parada 1 diz
+    também como cada gabarito roda (ambiente: virtualenv, banco, cargo) e com
+    que versões, registradas. Ela propõe, com os números, o limite de
+    "cobertura baixa" da terceira condição da 2B (complemento à DEC-48, item
+    9), fixado pelo usuário, como o X e o teto.
   - Serve também para conferir o 2.4d e a Fase 2B.
   - **Prioridade (usuário, 25/11/2026):** separar os links `unique` com
     receptor (cerca de 900: 655 no Python e 245 no Rust; 233 e 94 pela
@@ -343,6 +351,12 @@ corretas, lacunas explícitas e fatos aguardando aprovação humana.
     pelo nome (DEC-41, caso b; HC-110) não vira "ligado pelo tipo" sem
     decisão; a Parada 1 do 2.4f propõe.
 - 2.5 PIL-G5/N7: relação "passa referência", nunca "chama".
+- Estratos (passo próprio desde o lote do usuário de 25/11/2026; entre o 2.5
+  e a Fase 2B; sem passo aberto): refazer os estratos da estimativa
+  ponderada, com o estrato `type` e a população do UQ, com a verdade validada
+  pelo usuário. Já decidido em 25/11/2026 (pendência da estimativa ponderada,
+  no ESTADO e no [README do portão](tools/precisao/README.md)); agora com
+  lugar na ordem.
 - 2.6 Genéricos (N6), por último (ch.notify: 33 → 1).
 - Portão de cada passo: `node tools/precisao/portao.js --studio .studio
   --base tools/precisao/linha-de-base.json`. Reprova se `link_falso`
@@ -351,8 +365,9 @@ corretas, lacunas explícitas e fatos aguardando aprovação humana.
 
 ### Fase 2B — Relações de workflow
 **Ordem do resto da Fase 2 (decidida pelo usuário em 25/11/2026):** 2.4d-0 →
-2.4d → 2.4e → 2.4f → 2.5 → Fase 2B → 2.6 (2.4e e 2.4f incluídos na validação
-do 2.4d). Os workflows A, B e C do Healthchecks só dependem
+2.4d → 2.4e → 2.4f → 2.5 → estratos → Fase 2B → 2.6 (2.4e e 2.4f incluídos na
+validação do 2.4d; os estratos, passo próprio desde o lote de 25/11/2026).
+Os workflows A, B e C do Healthchecks só dependem
 da 2B e do 2.5; o 2.6 só serve ao workflow D (`ch.notify`, F22).
 
 **Condição para a Parada 1 da 2B (usuário, 25/11/2026):** decidir, com
@@ -375,6 +390,12 @@ explicação (uma só bloqueia); nas "ligadas pelo nome", um teto fixado pelo
 usuário depois do 2.4e; e nenhum fluxo da 2B usa uma ligação "ligado pelo nome"
 sem mostrar o selo. Referência: o piso do estrato UQ (Python pelo menos 21 de
 233; Rust pelo menos 11 de 94); o estrato dá só a ordem de grandeza.
+**Complemento (usuário, 25/11/2026; registrado no estado da DEC-48, sem mudar
+o texto do item 9):** um workflow com cobertura baixa do gabarito não passa
+esta condição por ausência de discordância; precisa de um estrato sorteado com
+a verdade validada pelo usuário, como o UQ. O limite de "cobertura baixa" é
+proposto na Parada 1 do 2.4e com os números e fixado pelo usuário, como o X e
+o teto.
 
 - Pontos de entrada: rotas (PIL-G4), management commands, jobs.
 - Chamadas soltas no topo dos arquivos Python (Q2 da Parada 1 do 2.3b,
@@ -449,10 +470,39 @@ Fase 3, junto com o agente aprovador):
 
 Três regras: o Librarian nunca finge certeza (todo elo tem selo); o agente
 nunca muda um selo nem promove um elo sozinho; só o humano transforma
-hipótese em fato (DEC-22, vigente). Em aberto, para a Fase 3: se "sólido"
-vale só para "ligado pelo tipo" ou também para o que a evidência sustentou
-depois da validação; onde entra "possível" (tracejado ou lacuna); o nome de
-"sólido", que não pode sugerir "verificado" (DEC-46, DEC-49).
+hipótese em fato (DEC-22, vigente). Em aberto, para a Fase 3: onde entra
+"possível" (tracejado ou lacuna); o nome de "sólido", que não pode sugerir
+"verificado" (DEC-46, DEC-49); e se o que a evidência sustentou depois da
+validação entra como sólido. O que é sólido foi resolvido pela família
+calibrada (abaixo, item b).
+
+**Família calibrada** (direção do usuário para a Fase 3, 25/11/2026; nenhuma
+DEC muda; vira DEC na Fase 3, junto com este contrato; CTX seção 36):
+- a) *Objetivo:* o Librarian nunca apresenta como certo o que não sabe. Toda
+  ligação tem selo; uma ligação falsa só é aceitável dentro de um selo que já
+  diz "incerto". O pacote entregue ao agente não chama ligação de fato; fato é
+  só o que o humano aprovou e está no acervo.
+- b) *Seta sólida:* sólido = "ligado pelo tipo", numa família com taxa de
+  ligação falsa medida perto de zero no projeto. "Ligado pelo nome" é sempre
+  tracejado (hipótese, com o motivo).
+- c) *Validação em bloco:* o humano pode validar o sólido em bloco, por
+  família, e gastar a atenção no tracejado. A seta sólida continua sendo
+  ligação feita pela regra, não fato provado. É validação humana; não reabre a
+  DEC-22. Risco aceito: "perto de zero" não é zero (atenuado pela validade do
+  fato, pela revogação que se propaga e pela amostra sorteada); com tolerância
+  zero, a validação é um a um.
+- d) *O gabarito calibra famílias, nunca decide um fato:* mede a taxa de cada
+  família e, onde houver, mede o agente aprovador; nunca aprova nem sustenta
+  um fato específico. Complementa a DEC-48, item 6, sem mudá-la.
+- e) *Aprovação por agente:* na Fase 3, abaixo ("Proposta aceita pelo
+  usuário (25/11/2026), ao lado do agente aprovador").
+- f) *Família sem taxa medida no projeto* conta como risco alto (tracejado)
+  até ter um estrato sorteado com a verdade validada pelo usuário, como o UQ.
+  Vale para projetos novos, Java e IaC.
+- g) *Riscos registrados:* a taxa não viaja entre projetos (`FakeCurl` é do
+  Healthchecks); uma família desconhecida é invisível quando a regra e o
+  gabarito erram juntos (mais provável no gabarito de tipos); o custo de
+  calibração por linguagem nova.
 
 ### Antes da Fase 3: o envelope e o "Medir tudo" pela regra
 Registrado em 25/11/2026 (Q9 do 2.4d). Parada 1 não aberta.
@@ -498,11 +548,21 @@ Etapa 6 vai para as trilhas paralelas, DEC-31)
   [Propostas de arquitetura](#propostas-de-arquitetura-a-decidir)).
   - O humano aprova fatos, não ligações: as ligações têm selo e o portão as
     vigia.
-  - Fatos mecânicos com concordância de fontes independentes (regra, tipo e
-    execução) podem ser aprovados por agente, com auditoria do usuário por
-    amostra sorteada; um erro na amostra devolve o lote à revisão. Depende
-    da reabertura da DEC-22 na Fase 3 (proposta do agente aprovador);
-    enquanto ela vigorar, só o humano promove.
+  - Fatos mecânicos cujos elos são todos "ligado pelo tipo", em famílias com
+    taxa medida perto de zero no projeto, podem ser aprovados por agente, que
+    registra a evidência do código que leu, com auditoria do usuário por
+    amostra sorteada; um erro na amostra devolve o lote. Depende da
+    reabertura da DEC-22 na Fase 3 (proposta do agente aprovador); enquanto
+    ela vigorar, só o humano promove. (Texto trocado pelo usuário em
+    25/11/2026, CTX seção 36: o anterior, "com concordância de fontes
+    independentes (regra, tipo e execução)", usava os gabaritos de tipo e de
+    execução como evidência para aprovar fato, contra a DEC-48, item 6, e o
+    item 5 do contrato de evidência.)
+  - A família calibrada (objetivo, seta sólida, validação em bloco, o
+    gabarito que calibra famílias e nunca decide fato, família sem taxa
+    medida e riscos) está junto do
+    [contrato de evidência](#propostas-de-arquitetura-a-decidir) e vira DEC
+    nesta fase, com ele.
   - Fatos interpretativos ("este workflow serve para X", "isto é seguro de
     mudar") continuam humanos.
   - Todo fato tem validade: quando o código por trás muda, volta para
