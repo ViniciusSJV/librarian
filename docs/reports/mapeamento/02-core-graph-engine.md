@@ -1,6 +1,6 @@
 # Mapeamento do repositório — parte 2: `librarian-core`, `librarian-graph-engine` e `examples/maintenance`
 
-**Estado:** pendente de validação do usuário (seções 1 a 9). Respostas já dadas: MAP-Q6, MAP-Q7, MAP-Q8.
+**Estado:** validado pelo usuário em 26/11/2026.
 
 **Data:** 26/11/2026. **Base:** `main` em `6ac1865`. Worktree: só os relatórios do mapeamento, não rastreados. **Só leitura**: nenhum código, documento, `.studio`, Healthchecks ou ray tracer foi alterado. A `.studio/` continua vazia (MAP-O1) e não foi tocada. O portão não foi rodado.
 

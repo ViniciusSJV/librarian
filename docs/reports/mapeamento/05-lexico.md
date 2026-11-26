@@ -1,6 +1,6 @@
 # Mapeamento do repositório — parte 5: o léxico e a busca
 
-**Estado:** Pendente de validação do usuário: Parada 2 (E a H); Parada 1 validada.
+**Estado:** validado pelo usuário em 26/11/2026 (Paradas 1 e 2). MAP-Q16 a MAP-Q19 respondidas.
 
 **Data:** 26/11/2026. **Base:** `main` em `10b0f2e` (worktree limpa no início). **Só leitura**: nenhum código, documento, `.studio`, Healthchecks ou ray tracer foi alterado. Nenhum LLM foi chamado (nem Ollama, nem Claude). A execução foi feita só sobre uma **cópia** da `.studio`, no scratchpad da sessão, e só nas rotas `/api/lexicon/suggest` (com o perfil `manual`, que não chama ninguém) e `/api/lexicon/check`. No fim, o original foi conferido e a cópia, apagada (seção "Execução").
 

@@ -1,6 +1,6 @@
 # Mapeamento do repositório — parte 4: o gabarito do 2.4e
 
-**Estado:** Pendente de validação do usuário: etapa 3a, respostas do 2.4e e J5 (comparação refeita a partir das saídas guardadas; réguas não refeitas).
+**Estado:** validado pelo usuário em 26/11/2026. J5: comparação refeita a partir das saídas guardadas; réguas não refeitas.
 
 **Data:** 26/11/2026. **Base:** `main` em `5b79e1c`. Worktree: só os relatórios do mapeamento. **Só leitura**: nenhum código, documento, `.studio`, Healthchecks ou ray tracer foi alterado. Nada foi instalado nem compilado. Na etapa 3a, nenhum script do gabarito foi rodado; no J5, só o `medir.js` e o `tabelas.js`, sobre cópias das saídas guardadas, com a saída no scratchpad (J5). Os únicos comandos executados só leram ou pediram versão: `git`, `ls`, `find`, `grep`, `cat`, os `--version` das ferramentas, `uv python list --only-installed` e `python.exe -I -c "import sys; print(sys.version)"` no Python que o uv já tinha instalado.
 

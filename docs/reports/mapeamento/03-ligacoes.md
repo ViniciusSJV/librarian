@@ -1,6 +1,6 @@
 # Mapeamento do repositório — parte 3: como uma chamada vira ligação
 
-**Estado:** Pendente de validação do usuário: Paradas 1, 2 e 2-bis (A a H). O gabarito do 2.4e (a antiga parte I) passou para a parte 4, [04-gabarito-2.4e.md](04-gabarito-2.4e.md), na Parada 3. Em aberto: MAP-Q9, MAP-Q10, MAP-Q11.
+**Estado:** validado pelo usuário em 26/11/2026 (Paradas 1, 2 e 2-bis). MAP-Q9 e MAP-Q11 respondidas: o `unique` sai da linha cheia e vira tracejada com 'fora do projeto'; o dublê de teste é regra do sistema que falta. MAP-Q10 em aberto.
 
 **Data:** 26/11/2026. **Base:** `main` em `6ac1865` (Parada 1), `be7d546` (Parada 2) e `ecae7a4` (Parada 2-bis). Worktree: só os relatórios do mapeamento. **Só leitura**: nenhum código, documento, `.studio`, Healthchecks ou ray tracer foi alterado. Nas Paradas 1 e 2 a `.studio/` estava vazia (MAP-O1) e o portão não foi rodado. Na Parada 2-bis ela já estava restaurada (MAP-O1, parte 1); o portão e uma sonda rodaram sobre **cópias** dela, e o original não mudou (seção E, "Parada 2-bis").
 
