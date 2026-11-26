@@ -1,6 +1,6 @@
 # Mapeamento do repositório — parte 6: o extrator
 
-**Estado:** Pendente de validação do usuário: Parada 2 (E a I, ajustes 2 a 4 e anexo); Parada 1 avaliada (MAP-Q20 respondida).
+**Estado:** Validado pelo usuário em 26/11/2026 (Paradas 1 e 2).
 
 **Data:** 26/11/2026. **Base:** `main` em `66efcbf` (worktree limpa no início). **Só leitura**: nenhum código, documento, `.studio`, Healthchecks ou ray tracer foi alterado. Nenhum LLM foi chamado. A execução foi feita só sobre uma **cópia** da `.studio`, no scratchpad da sessão. No fim, o original foi conferido e a cópia, apagada (seção "Execução").
 
